@@ -19,7 +19,7 @@ class TestCreateResource(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
@@ -61,7 +61,7 @@ class TestCreateResource(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
@@ -171,7 +171,7 @@ class TestCreateResource(HSRESTTestCase):
                   'title': title,
                   'metadata': json.dumps(metadata),
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
@@ -433,7 +433,7 @@ class TestCreateResource(HSRESTTestCase):
                   'title': title,
                   'metadata': json.dumps(metadata),
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
         return params
 

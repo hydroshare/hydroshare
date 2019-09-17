@@ -11,7 +11,7 @@ class TestTickets(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
 
         url = '/hsapi/resource/'
@@ -55,7 +55,7 @@ class TestTickets(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
 
         # should be able to create resource
@@ -100,7 +100,7 @@ class TestTickets(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
 
         # should be able to create resource

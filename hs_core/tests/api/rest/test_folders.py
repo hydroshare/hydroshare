@@ -15,7 +15,7 @@ class TestFolders(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
@@ -68,7 +68,7 @@ class TestFolders(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'file': ('cea.tif',
-                           open('hs_core/tests/data/cea.tif'),
+                           open('hs_core/tests/data/cea.tif', 'rb'),
                            'image/tiff')}
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
@@ -90,7 +90,7 @@ class TestFolders(HSRESTTestCase):
         # put a file 'test.txt' into folder 'foo'
         url4 = str.format('/hsapi/resource/{}/files/foo/', res_id)
         params = {'file': ('test.txt',
-                           open('hs_core/tests/data/test.txt'),
+                           open('hs_core/tests/data/test.txt', 'rb'),
                            'text/plain')}
         response = self.client.post(url4, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
