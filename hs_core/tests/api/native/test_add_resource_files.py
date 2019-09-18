@@ -42,9 +42,9 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         test_file.close()
 
         # open files for read and upload
-        self.myfile1 = open(self.n1, "r")
-        self.myfile2 = open(self.n2, "r")
-        self.myfile3 = open(self.n3, "r")
+        self.myfile1 = open(self.n1, "rb")
+        self.myfile2 = open(self.n2, "rb")
+        self.myfile3 = open(self.n3, "rb")
 
     def tearDown(self):
         super(TestAddResourceFiles, self).tearDown()

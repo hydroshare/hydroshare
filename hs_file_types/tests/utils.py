@@ -37,7 +37,7 @@ class CompositeResourceTestMixin(object):
         files = []
         full_paths = {}
         for file_name in file_to_upload:
-            file_obj = open(file_name, 'r')
+            file_obj = open(file_name, 'rb')
             if folder:
                 full_paths[file_obj] = os.path.join(folder, file_name)
             uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))

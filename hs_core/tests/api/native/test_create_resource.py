@@ -339,7 +339,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             res.delete()
 
     def test_create_resource_with_file(self):
-        raster = open(self.raster_file_path)
+        raster = open(self.raster_file_path, 'rb')
         res = resource.create_resource('GenericResource',
                                        self.user,
                                        'My Test resource',

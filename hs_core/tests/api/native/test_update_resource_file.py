@@ -84,7 +84,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
 
         # test if the content of the file matches
         resource_file = hydroshare.get_resource_file(new_res.short_id, new_file_name).resource_file
-        self.assertEqual(resource_file.read(),  new_file_data, msg="resource file content didn't match")
+        self.assertEqual(resource_file.read().encode('utf-8'),  new_file_data, msg="resource file content didn't match")
 
         # reset the original resource file name for 2nd time resource file update
         original_file_name = new_file_name
