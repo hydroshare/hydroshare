@@ -291,7 +291,7 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     session.get_pty()
     session.exec_command(exec_cmd)
     stdin = session.makefile('wb', -1)
-    stdout = session.makefile('rb', -1)
+    stdout = session.makefile('r', -1)
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
     logger = logging.getLogger(__name__)
