@@ -179,7 +179,9 @@ $(document).ready(function () {
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
 
         var formData = new FormData();
-        title = "Untitled Resource";
+        if (!title) {
+            title = "Untitled Resource";
+        }
         formData.append("csrfmiddlewaretoken", csrf_token);
         formData.append("title", title);
         formData.append("resource-type", type);
