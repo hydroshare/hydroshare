@@ -62,7 +62,7 @@ def get_nc_dump_string_by_ncdump(nc_file_name):
     """
 
     try:
-        process = subprocess.Popen(['ncdump', '-h', nc_file_name], stdout=subprocess.PIPE)
+        process = subprocess.Popen(['ncdump', '-h', nc_file_name], stdout=subprocess.PIPE, encoding="UTF-8")
         nc_dump_string = process.communicate()[0]
     except Exception:
         nc_dump_string = ''
