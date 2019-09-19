@@ -57,7 +57,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
 
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        json_content = json.loads(response.content)
+        json_content = json.loads(response.content.decode())
         self.assertEqual(json_content['status'], 'success')
         res_id = json_content['resource_url'].split('/')[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
@@ -82,7 +82,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
 
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        json_content = json.loads(response.content)
+        json_content = json.loads(response.content.decode())
         self.assertEqual(json_content['status'], 'success')
         self.assertEqual(json_content['file_upload_status'], 'success')
         res_id = json_content['resource_url'].split('/')[2]

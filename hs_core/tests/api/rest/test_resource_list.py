@@ -19,7 +19,7 @@ class TestResourceList(HSRESTTestCase):
 
         response = self.client.get('/hsapi/resource/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], pid)
 
@@ -50,7 +50,7 @@ class TestResourceList(HSRESTTestCase):
 
         response = self.client.get('/hsapi/resource/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         self.assertEqual(content['results'][0]['resource_id'], gen_pid)
@@ -71,7 +71,7 @@ class TestResourceList(HSRESTTestCase):
         # Filter by type (single)
         response = self.client.get('/hsapi/resource/', {'type': 'RasterResource'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
 
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
@@ -83,7 +83,7 @@ class TestResourceList(HSRESTTestCase):
         response = self.client.get('/hsapi/resource/', {'type': ['RasterResource', 'ToolResource']},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
@@ -114,22 +114,22 @@ class TestResourceList(HSRESTTestCase):
 
         response = self.client.get('/hsapi/resource/', {'subject': 'one'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
         response = self.client.get('/hsapi/resource/', {'subject': 'other'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
         response = self.client.get('/hsapi/resource/', {'subject': 'one,other'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 4)
 
         response = self.client.get('/hsapi/resource/', {'subject': 'oth'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_obsolete(self):
@@ -146,14 +146,14 @@ class TestResourceList(HSRESTTestCase):
         # the default for include_obsolete is False which should NOT return obsoleted resources
         response = self.client.get('/hsapi/resource/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], new_ver_gen_res_one.short_id)
 
         # set include_obsolete to True, which should return all resources including obsoleted ones
         response = self.client.get('/hsapi/resource/', {'include_obsolete': True}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
         result_res_id_list = []
@@ -198,7 +198,7 @@ class TestResourceList(HSRESTTestCase):
                                                         'south': '50',
                                                         'west': '30'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 1)
 
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'box',
@@ -207,7 +207,7 @@ class TestResourceList(HSRESTTestCase):
                                                         'south': '40',
                                                         'west': '100'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 1)
 
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'box',
@@ -216,7 +216,7 @@ class TestResourceList(HSRESTTestCase):
                                                         'south': '30',
                                                         'west': '0'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # Bad coverage has no effect
@@ -253,25 +253,25 @@ class TestResourceList(HSRESTTestCase):
         # resources by group id
         response = self.client.get('/hsapi/resource/', {'group': str(group_one.pk)}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         response = self.client.get('/hsapi/resource/', {'group': str(group_two.pk)}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
         # resources by group name
         response = self.client.get('/hsapi/resource/', {'group': str(group_one.name)},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         response = self.client.get('/hsapi/resource/', {'group': str(group_two.name)},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_by_user(self):
@@ -287,56 +287,56 @@ class TestResourceList(HSRESTTestCase):
         # resources by owner username
         response = self.client.get('/hsapi/resource/', {'owner': self.user.username}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by owner email
         response = self.client.get('/hsapi/resource/', {'owner': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by creator username
         response = self.client.get('/hsapi/resource/', {'creator': self.user.username},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by creator email
         response = self.client.get('/hsapi/resource/', {'creator': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by user username
         response = self.client.get('/hsapi/resource/', {'user': self.user.username},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by user email
         response = self.client.get('/hsapi/resource/', {'user': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by author email
         response = self.client.get('/hsapi/resource/', {'author': self.user.email}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
         # resources by author email bad
         response = self.client.get('/hsapi/resource/',
                                    {'author': ','.join(self.user.email + "bad")}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 0)
 
         # resources by author bad
         response = self.client.get('/hsapi/resource/', {'author': "bad"}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 0)

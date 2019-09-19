@@ -24,7 +24,7 @@ class TestCreateResource(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -33,19 +33,19 @@ class TestCreateResource(HSRESTTestCase):
         sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['resource_type'], rtype)
         self.assertEqual(content['resource_title'], title)
         # Get resource bag
         response = self.getResourceBag(res_id)
         if response['Content-Type'] == 'application/json':
-            content = json.loads(response.content)
+            content = json.loads(response.content.decode())
             if content['bag_status'] == "Not ready":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
                 task_id = content['task_id']
                 status_response = self.getDownloadTaskStatus(task_id)
-                status_content = json.loads(status_response.content)
+                status_content = json.loads(status_response.content.decode())
                 if status_content['status']:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
@@ -66,7 +66,7 @@ class TestCreateResource(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -75,20 +75,20 @@ class TestCreateResource(HSRESTTestCase):
         sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         # generic has been deprecated and now defaults to Composite (#2575)
         self.assertEqual(content['resource_type'], "CompositeResource")
         self.assertEqual(content['resource_title'], title)
         # Get resource bag
         response = self.getResourceBag(res_id)
         if response['Content-Type'] == 'application/json':
-            content = json.loads(response.content)
+            content = json.loads(response.content.decode())
             if content['bag_status'] == "Not ready":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
                 task_id = content['task_id']
                 status_response = self.getDownloadTaskStatus(task_id)
-                status_content = json.loads(status_response.content)
+                status_content = json.loads(status_response.content.decode())
                 if status_content['status']:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
@@ -176,7 +176,7 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         resource = get_resource_by_shortkey(res_id)
         self.assertEqual(resource.metadata.coverages.all().count(), 1)
@@ -279,7 +279,7 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         resource = get_resource_by_shortkey(res_id)
 
@@ -324,7 +324,7 @@ class TestCreateResource(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # test core metadata
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         resource = get_resource_by_shortkey(res_id)
         self.assertEqual(resource.metadata.coverages.all().count(), 1)
@@ -353,7 +353,7 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         resource = get_resource_by_shortkey(res_id)
 
@@ -474,7 +474,7 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         resource = get_resource_by_shortkey(res_id)
 

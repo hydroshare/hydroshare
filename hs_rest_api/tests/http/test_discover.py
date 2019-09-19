@@ -18,7 +18,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         # Just need to test it works, more thorough tests exist in the discover view
         response = self.client.get(reverse('discover-hsapi', kwargs={}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         self.assertEqual(response_json.get("count"), 0)
 
         # Create resource
@@ -27,7 +27,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             'title': "File Metadata Test Resource"
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         res_id = response_json.get("resource_id")
         self.resources_to_delete.append(res_id)
 

@@ -20,7 +20,7 @@ class TestFolders(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -29,13 +29,13 @@ class TestFolders(HSRESTTestCase):
         # should not be able to ls non-existent folder
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content, 'Cannot list path')
 
         # should not be able to delete non-existent folder
         response = self.client.delete(url2, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content, "Cannot remove folder")
 
         # create a folder
@@ -48,7 +48,7 @@ class TestFolders(HSRESTTestCase):
 
         # list that folder: should work, should be empty
         response = self.client.get(url2, {})
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(len(content['folders']), 0)
         self.assertEqual(len(content['files']), 0)
 
@@ -59,7 +59,7 @@ class TestFolders(HSRESTTestCase):
         # should not be able to ls non-existent folder
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content, 'Cannot list path')
 
     def test_file_in_folder(self):
@@ -73,7 +73,7 @@ class TestFolders(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -103,7 +103,7 @@ class TestFolders(HSRESTTestCase):
 
         # list that folder: should contain one file and one folder
         response = self.client.get(url2, {})
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(len(content['folders']), 1)
         self.assertEqual(content['folders'][0], 'bar')
         self.assertEqual(len(content['files']), 1)

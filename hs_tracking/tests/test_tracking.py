@@ -214,7 +214,7 @@ class TrackingTests(TestCase):
         client.login(username=self.user.username, password='password')
 
         response = client.get('/tracking/reports/profiles/')
-        reader = csv.reader(StringIO(response.content))
+        reader = csv.reader(StringIO(response.content.decode()))
         rows = list(reader)
 
         self.assertEqual(response.status_code, 200)
@@ -231,7 +231,7 @@ class TrackingTests(TestCase):
         client = Client()
         response = client.get('/tracking/reports/history/')
         self.assertEqual(response.status_code, 200)
-        reader = csv.reader(StringIO(response.content))
+        reader = csv.reader(StringIO(response.content.decode()))
         rows = list(reader)
         count = Variable.objects.all().count()
         self.assertEqual(len(rows), count + 1)  # +1 to account for the session header
@@ -246,7 +246,7 @@ class TrackingTests(TestCase):
 
         response = client.get('/tracking/reports/history/')
         self.assertEqual(response.status_code, 200)
-        reader = csv.DictReader(StringIO(response.content))
+        reader = csv.DictReader(StringIO(response.content.decode()))
         rows = list(reader)
         data = rows[-1]
 

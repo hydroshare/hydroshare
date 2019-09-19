@@ -17,7 +17,7 @@ class TestTickets(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -25,20 +25,20 @@ class TestTickets(HSRESTTestCase):
         url2 = str.format('/hsapi/resource/{}/ticket/read/data/contents/', res_id)
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         ticket_id = content['ticket_id']
 
         # should be able to list ticket
         url3 = str.format('/hsapi/resource/{}/ticket/{}/', res_id, ticket_id)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['ticket_id'], ticket_id)
 
         # should be able to delete ticket
         response = self.client.delete(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['ticket_id'], ticket_id)
 
         # should not be able to delete a ticket twice
@@ -62,7 +62,7 @@ class TestTickets(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -70,20 +70,20 @@ class TestTickets(HSRESTTestCase):
         url2 = str.format('/hsapi/resource/{}/ticket/read/data/contents/cea/cea.tif/', res_id)
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         ticket_id = content['ticket_id']
 
         # should be able to list ticket
         url3 = str.format('/hsapi/resource/{}/ticket/{}/', res_id, ticket_id)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['ticket_id'], ticket_id)
 
         # should be able to delete ticket
         response = self.client.delete(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['ticket_id'], ticket_id)
 
         # should not be able to delete a ticket twice
@@ -107,7 +107,7 @@ class TestTickets(HSRESTTestCase):
         url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         res_id = content['resource_id']
         self.resources_to_delete.append(res_id)
 
@@ -115,20 +115,20 @@ class TestTickets(HSRESTTestCase):
         url2 = str.format('/hsapi/resource/{}/ticket/bag/', res_id)
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         ticket_id = content['ticket_id']
 
         # should be able to list ticket
         url3 = str.format('/hsapi/resource/{}/ticket/{}/', res_id, ticket_id)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['ticket_id'], ticket_id)
 
         # should be able to delete ticket
         response = self.client.delete(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['ticket_id'], ticket_id)
 
         # should not be able to delete a ticket twice

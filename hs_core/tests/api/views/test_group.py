@@ -506,7 +506,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         response = self._share_resource_with_group(group=new_group, privilege='view')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_content = json.loads(response.content)
+        response_content = json.loads(response.content.decode())
         self.assertEqual(response_content['status'], 'success')
         self.assertIn(self.resource, new_group.gaccess.view_resources)
 
@@ -517,7 +517,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         response = self._share_resource_with_group(group=new_group, privilege='edit')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_content = json.loads(response.content)
+        response_content = json.loads(response.content.decode())
         self.assertEqual(response_content['status'], 'success')
         self.assertIn(self.resource, new_group.gaccess.edit_resources)
 
@@ -529,7 +529,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         response = self._share_resource_with_group(group=new_group, privilege='owner')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_content = json.loads(response.content)
+        response_content = json.loads(response.content.decode())
         self.assertEqual(response_content['status'], 'error')
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
 
@@ -549,7 +549,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         response = unshare_resource_with_group(request, shortkey=self.resource.short_id,
                                                group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_content = json.loads(response.content)
+        response_content = json.loads(response.content.decode())
         self.assertEqual(response_content['status'], 'success')
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
 
@@ -569,7 +569,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         response = unshare_resource_with_group(request, shortkey=self.resource.short_id,
                                                group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_content = json.loads(response.content)
+        response_content = json.loads(response.content.decode())
         self.assertEqual(response_content['status'], 'error')
         self.assertIn(self.resource, new_group.gaccess.view_resources)
 

@@ -84,7 +84,7 @@ class TestResourceMap(ResMapTestCase):
         url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['resource_id'], self.pid)
 
         # download the resource map and # make sure the new file appears
