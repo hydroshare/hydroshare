@@ -828,6 +828,10 @@ class AbstractLogicalFile(models.Model):
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
 
+        if file_id is not None and folder_path is not None:
+            raise ValueError("Must specify either id of the file or path of the folder to set as an "
+                             "aggregation type, but not both.")
+
         if cls.__name__ == 'FileSetLogicalFile' and folder_path is None:
             raise ValueError("Must specify path of the folder to set as a "
                              "fileset aggregation type")
