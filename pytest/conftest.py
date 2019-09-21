@@ -3,10 +3,36 @@ import uuid
 
 import pytest
 from django.contrib.auth.models import User, Group
+from django.conf import settings
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
 from hs_labels.models import UserLabels
+
+
+@pytest.fixture(scope="function")
+def mock_irods():
+    if settings.IRODS_HOST != 'data.local.org':
+        from mock import patch
+
+        irods_patchers = (
+            patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
+            patch("hs_core.hydroshare.hs_bagit.create_bag"),
+            patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
+            patch("hs_core.tasks.create_bag_by_irods"),
+            patch("hs_core.hydroshare.utils.copy_resource_files_and_AVUs"),
+        )
+
+        for patcher in irods_patchers:
+            patcher.start()
+        print(">> irods mock setup")
+    yield
+
+    """Stop iRODS patchers."""
+    if settings.IRODS_HOST != 'data.local.org':
+        for patcher in irods_patchers:
+            patcher.stop()
+        print(">> irods mock teardown")
 
 
 @pytest.mark.django_db
