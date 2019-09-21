@@ -24,6 +24,14 @@ class ModelProgramResourceFileType(models.Model):
     res_file = models.ForeignKey(ResourceFile, on_delete=models.CASCADE)
     mp_metadata = models.ForeignKey('ModelProgramFileMetaData', on_delete=models.CASCADE, related_name='mp_file_types')
 
+    @classmethod
+    def type_from_string(cls, type_string):
+        type_map = {'release notes': cls.RELEASE_NOTES, 'documentation': cls.DOCUMENTATION,
+                    'software': cls.SOFTWARE, 'engine': cls.ENGINE}
+
+        type_string = type_string.lower()
+        return type_map.get(type_string, None)
+
 
 class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     # version
