@@ -2,6 +2,7 @@ import os
 import logging
 
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from hs_core.models import ResourceFile
@@ -155,7 +156,7 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
 
-            if folder_path is not None:
+            if folder_path is not None and file_id is None:
                 logical_file.folder = folder_path
                 logical_file.save()
                 # make all the files in the selected folder as part of the aggregation
@@ -165,4 +166,23 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
                 log.info("Model Program aggregation was created for file:{}.".format(res_file.storage_path))
             ft_ctx.logical_file = logical_file
 
+    def set_res_file_as_mp_file_type(self, res_file, mp_file_type):
+        """Creates an instance of ModelProgramResourceFileType using the specified resource file *res_file*
+        :param  res_file: An instance of ResourceFile that is already part of this aggregation
+        :param  mp_file_type: Model program file type to set. Valid values are: software, engine, release notes,
+        documentation
+        """
 
+        # check that the resource file is part of this aggregation
+        if res_file not in self.files.all():
+            raise ValidationError("Res file is not part of the aggregation")
+        # check that the res_file is not already set to a model program file type
+        if self.metadata.mp_file_types.filter(res_file=res_file).exists():
+            raise ValidationError("Res file is already set to model program file type")
+        # validate mp_file_type
+        mp_file_type = ModelProgramResourceFileType.type_from_string(mp_file_type)
+        if mp_file_type is None:
+            raise ValidationError("Not a valid model program file type")
+        # create an instance of ModelProgramResourceFileType
+        ModelProgramResourceFileType.objects.create(file_type=mp_file_type, res_file=res_file,
+                                                    mp_metadata=self.metadata)
