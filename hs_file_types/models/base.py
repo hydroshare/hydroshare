@@ -836,7 +836,7 @@ class AbstractLogicalFile(models.Model):
             raise ValueError("Must specify path of the folder to set as a "
                              "fileset aggregation type")
 
-        if cls.__name__ != 'FileSetLogicalFile' and file_id is None:
+        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile'] and file_id is None:
             raise ValueError("Must specify id of the file to set as an "
                              "aggregation type")
 
@@ -861,7 +861,7 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-        if cls.__name__ != 'FileSetLogicalFile':
+        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile']:
             if res_file is None or not res_file.exists:
                 raise ValidationError("File not found.")
 
