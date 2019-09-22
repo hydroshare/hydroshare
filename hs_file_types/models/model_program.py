@@ -1,5 +1,7 @@
 import os
 import logging
+import json
+import jsonschema
 
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
@@ -165,6 +167,19 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
             else:
                 log.info("Model Program aggregation was created for file:{}.".format(res_file.storage_path))
             ft_ctx.logical_file = logical_file
+
+    def set_mi_schema(self, json_schema_string):
+        """Sets the mi_schema_json fields of the aggregation with valid json schema
+        :param  json_schema_string: a string containing json schema
+        """
+        json_schema = json.loads(json_schema_string)
+        # validate schema
+        try:
+            jsonschema.Draft4Validator.check_schema(json_schema)
+        except jsonschema.SchemaError as ex:
+            raise ValidationError("Not a valid json schema.{}".format(ex.message))
+        self.mi_schema_json = json_schema
+        self.save()
 
     def set_res_file_as_mp_file_type(self, res_file, mp_file_type):
         """Creates an instance of ModelProgramResourceFileType using the specified resource file *res_file*
