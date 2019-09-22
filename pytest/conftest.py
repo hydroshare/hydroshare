@@ -1,13 +1,17 @@
+import os
 import json
 import uuid
 
 import pytest
 from django.contrib.auth.models import User, Group
 from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
+from hs_core.hydroshare import add_file_to_resource
 from hs_labels.models import UserLabels
+from hs_file_types.models import ModelProgramLogicalFile
 
 
 @pytest.fixture(scope="function")
@@ -140,3 +144,21 @@ def composite_resource():
     yield _res, user
     _res.delete()
     user.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def composite_resource_with_mp_aggregation(composite_resource):
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    upload_folder = None
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+
+    # set file to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
+    yield res, user
