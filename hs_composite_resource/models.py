@@ -51,6 +51,8 @@ class CompositeResource(BaseResource):
             yield lf
         for lf in self.timeserieslogicalfile_set.all():
             yield lf
+        for lf in self.modelprogramlogicalfile_set.all():
+            yield lf
 
     @property
     def can_be_published(self):
