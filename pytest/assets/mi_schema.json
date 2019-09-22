@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+        "ModelOutput": {
+          "type": "object",
+          "properties": {
+              "IncludesOutPut": {"type":  "boolean"}
+          }
+        },
+        "ModelObjective": {
+          "type": "object",
+          "properties": {
+            "ModelObjectives": {
+                "type": ["array", "null"],
+                "items": {"type": "string"},
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+  }
