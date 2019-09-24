@@ -99,6 +99,141 @@ timestamp should go with a template tags to convert to a human readble day.
 
             </table>
         </div>
+        
+        <!-- Recommended resources for the user  -->
+        {% if recommended_resources_list %}
+            <div class="container dashboard-section-container">
+                <div class="row dashboard-section-container-title-row">
+                    <span>
+                    <h3 class="home-page-block-title">Recommended Resources </h3>
+                    </span>
+                </div>
+	        <div class="row dashboard-section-container-title-row">
+		    Recommendations based on your interests in these keywords: <b>{{ resources_matched_genres|join:", " }}</b>
+	        </div>
+                <table class="table-hover table-striped resource-custom-table" id="my-recommended-resources-list"
+                       style="width: 100%;">
+                    <thead>
+                    <tr>
+                        <th style="padding-left: 10px;">Title</th>
+                        <th style="padding-left: 10px;">First Author</th>
+                        <th style="padding-left: 10px;">Resource Type</th>
+                        <th style="padding-left: 10px;">Visibility</th>
+                    </tr>
+                    </thead>
+                    {# ====================================== #}
+                    {# == Here comes the data from backend == #}
+                    {# ====================================== #}
+                    <tbody>
+                    {% for r in recommended_resources_list %}
+                        {% if r.rec_type == "Propensity" and r.relevance > 0 %}
+                            <tr class="data-row">
+                                <td>
+                                    {% autoescape off %}
+                                        {% resource_link_builder r.candidate_resource.title r.candidate_resource.short_id %}
+                                    {% endautoescape %}
+                                </td>
+                                <td>{{ r.candidate_resource.first_creator }}</td>
+                                <td>
+                                    {% autoescape off %}
+                                        {% resource_verbose_name_builder r.candidate_resource.resource_type %}
+                                    {% endautoescape %}
+                                </td>
+                                <td>{% build_privacy_status r.candidate_resource.published r.candidate_resource.public r.candidate_resource.discoverable %}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <!-- Recommended users for the user  -->
+        {% if recommended_users_list %}
+            <div class="container dashboard-section-container">
+                <div class="row dashboard-section-container-title-row">
+                    <span>
+                    <h3 class="home-page-block-title">Recommended Users </h3>
+                    </span>
+                </div>
+	        <div class="row dashboard-section-container-title-row">
+		    Recommendations based on your interests in these keywords: <b>{{ users_matched_genres|join:", " }}</b>
+	        </div>
+                <table class="table-hover table-striped resource-custom-table" id="my-recommended-users-list"
+                       style="width: 100%;">
+                    <thead>
+                    <tr>
+                        <th style="padding-left: 10px;">Username</th>
+                        <th style="padding-left: 10px;">Resources Owned by the User</th>
+			<th style="padding-left: 10px;">Resources Created by the User in last 30 days</th>
+                        <th style="padding-left: 10px;">Resources Shared by the User in last 30 days</th>
+                    </tr>
+                    </thead>
+                    {# ====================================== #}
+                    {# == Here comes the data from backend == #}
+                    {# ====================================== #}
+                    <tbody>
+                    {% for u in recommended_users_list %}
+                        {% if u.relevance > 0 %}
+                            <tr class="data-row">
+                                <td>
+				    <a href="/user/{{ u.user_id }}/">{{ u.username }}</a>
+                                </td>
+                                <td>{{u.owned_by}}</td>
+				<td>{{u.created_by}}</td>
+                                <td>{{u.shared_to_others}}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+
+        <!-- Recommended groups for the user  -->
+        {% if recommended_groups_list %}
+            <div class="container dashboard-section-container">
+                <div class="row dashboard-section-container-title-row">
+                    <span>
+                    <h3 class="home-page-block-title">Recommended Groups </h3>
+                    </span>
+                </div>
+                <table class="table-hover table-striped resource-custom-table" id="my-recommended-groups-list"
+                       style="width: 100%;">
+                    <thead>
+                    <tr>
+                        <th style="padding-left: 10px;">Name</th>
+                        <th style="padding-left: 10px;">Number of group members</th>
+                        <th style="padding-left: 10px;">Favored keywords</th>
+                        <th style="padding-left: 10px;">Resources shared with the group in last 30 days</th>
+                        <! ---<th style="padding-left: 10px;">Number of public product of the group</th> -->
+                    </tr>
+                    </thead>
+                    {# ====================================== #}
+                    {# == Here comes the data from backend == #}
+                    {# ====================================== #}
+                    <tbody>
+                    {% for g in recommended_groups_list %}
+                        {% if g.relevance > 0 %}
+                            <tr class="data-row">
+                                <td>
+                                    <a href="/group/{{ g.group_id }}/">{{ g.group_name }}</a>
+                                </td>
+                                <td>{{ g.group_members }}</td>
+                                <td>{{ g.group_favored_keyword | join:", " }}</td>
+                                <td>{{ g.shared_with_group }}</td>
+                                <!-- <td>{{ g.group_public }}</td> -->
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
 
         <div class="container dashboard-section-container">
             {% trans "Featured Apps" as whole_title %}

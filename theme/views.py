@@ -40,6 +40,12 @@ from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
 from theme.utils import get_quota_message
 from .forms import SignupForm
+from hs_explore.models import RecommendedResource, RecommendedUser, \
+    RecommendedGroup, Status, GroupPreferences, GroupPrefToPair
+from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, PrivilegeCodes
+from datetime import date, timedelta
+from django.db.models import Max
+from hs_core.models import BaseResource
 
 
 class UserProfileView(TemplateView):
@@ -496,10 +502,109 @@ def dashboard(request, template="pages/dashboard.html"):
     my_username = request.user.username
     user = User.objects.get(username=my_username)
     my_recent = Variable.recent_resources(user, days=60, n_resources=5)
+    today = date(2018, 07, 31)
+    beginning = today - timedelta(30)
 
-    context = {'recent': my_recent}
+    my_recommended_resources_list = RecommendedResource.objects\
+        .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
+        .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+    resources_matched_genres = set()
+    # mark relevant records as shown
+    for r in my_recommended_resources_list:
+        if r.state == Status.STATUS_NEW:
+	    r.shown()
+        keywords = r.keywords.all()
+        if keywords:
+            for k in keywords:
+                resources_matched_genres.add(k.value)
+
+    my_recommended_users_context_list = []
+    my_recommended_users_list = RecommendedUser.objects\
+        .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
+        .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+
+    granted_to_others = 0
+    granted_to_groups = 0
+    owned_by = 0
+    created_by = 0
+    users_matched_genres = set()
+    for u in my_recommended_users_list:
+        if u.state == Status.STATUS_NEW:
+            u.shown()
+        recommended_user = u.candidate_user
+        recommended_username = recommended_user.username
+        recommended_user_id = recommended_user.id
+        owned_by = UserResourcePrivilege.objects\
+		.filter(user=recommended_user, privilege=PrivilegeCodes.OWNER).count()
+        created_by = BaseResource.objects\
+                .filter(created__gt=beginning,
+                        r2urp__user=recommended_user,
+                        r2urp__privilege=PrivilegeCodes.OWNER).count()
+        shared_to_others = BaseResource.objects\
+                .filter(Q(r2urp__grantor=recommended_user,
+                          r2urp__start__gte=beginning) |\
+	                Q(r2grp__grantor=recommended_user,
+                          r2grp__start__gte=beginning)).distinct().count()
+
+        keywords = u.keywords.all()
+        if keywords:
+	    for k in keywords:
+		users_matched_genres.add(k.value)
+        user_context = {
+	    'username': recommended_user,
+	    'user_id': recommended_user_id,
+            'relevance': u.relevance,
+            'owned_by': owned_by,
+	    'created_by': created_by,
+            'shared_to_others': shared_to_others
+	}
+	my_recommended_users_context_list.append(user_context)
+
+    my_recommended_groups_context_list = []
+    my_recommended_groups_list = RecommendedGroup.objects\
+        .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
+        .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
+    for r in my_recommended_groups_list:
+        if r.state == Status.STATUS_NEW:
+            r.shown()
+        group = r.candidate_group
+        group_members = User.objects.filter(u2ugp__group=group).count()
+        shared_with_group = BaseResource.objects\
+                                .filter(r2grp__group=group, 
+                                        r2grp__start__gte=beginning).distinct().count()
+        # ga = GroupAccess.objects.get(group=group)
+        # group_public = group.public_resources().count()
+        gp = GroupPreferences.objects.get(group=group)
+        all_gps = gp.preferences.all()
+        group_keywords = GroupPrefToPair.objects\
+				.filter(group_pref=gp, pair__key='subject', pair__in=all_gps, weight__gt=1)\
+				.order_by('-weight')[:5]
+
+        group_favored_keywords = []
+        if group_keywords:
+            for keyword in group_keywords:
+                group_favored_keywords.append(keyword.pair.value)
+        group_context = {
+            'group_id': group.id,
+            'group_name': group.name,
+            'relevance': r.relevance,
+            'group_members': group_members,
+            'shared_with_group': shared_with_group,
+            # 'group_public': group_public,
+	    'group_favored_keyword': group_favored_keywords[:5]
+	}
+        my_recommended_groups_context_list.append(group_context)
+
+    context = {
+        'recent': my_recent, 
+        'recommended_resources_list': my_recommended_resources_list,
+        'resources_matched_genres': resources_matched_genres,
+        'recommended_groups_list': my_recommended_groups_context_list,
+	'recommended_users_list': my_recommended_users_context_list,
+        'users_matched_genres': users_matched_genres
+    }
     return render(request, template, context)
-
 
 def login(request, template="accounts/account_login.html",
           form_class=LoginForm, extra_context=None):
