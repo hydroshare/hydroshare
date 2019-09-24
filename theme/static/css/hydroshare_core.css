@@ -107,6 +107,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     width: 350px;
     height: auto;
     margin: unset;
+	margin-bottom: 40px;
 }
 
 .profile-card .flex > div {
@@ -125,31 +126,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 
 .profile-card table .fa {
 	margin-right: 4px;
-}
-
-.profile-card .location-wrapper span:not(:first-child)::before {
-	content: ", ";
-}
-
-.profile-card [data-name] {
-	line-height: 1.5em;
-}
-
-.org-wrapper, .subjectareas-wrapper, .externalprofiles-wrapper {
-	margin-top: 10px;
-}
-
-.contributions-wrapper, .joined-wrapper {
-	margin-top: 10px;
-}
-
-.authors-wrapper .ui-state-highlight {
-    width: 150px;
-    display: inline-block;
-    height: 1.5em;
-    top: 0.25em;
-    position: relative;
-    border: 1px dashed #fcefa1;
 }
 
 .navbar-inverse .navbar-nav > .open > a:hover,
@@ -420,6 +396,13 @@ a.sign-out-inline:hover {
 	width: 50px;
 	margin: 0 15px 15px 0;
 	float: left;
+	overflow: hidden;
+}
+
+#add-author-modal .author-types > button, #add-contributor-dialog .author-types > button {
+	flex-grow: 1;
+	flex-basis: 0;
+	text-overflow: ellipsis;
 	overflow: hidden;
 }
 
@@ -1007,8 +990,11 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
-.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+.authors-wrapper > a:not(:first-child)::before,
+.authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before,
+.owners-wrapper > a:not(:first-child)::before,
+.separate :not(:first-child)::before {
     content: "";
     width: 1px;
     display: inline-block;
@@ -1019,8 +1005,21 @@ li.account p{
     top: 2px;
 }
 
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before {
+	margin: 0 -6px;
+}
+
 .authors-wrapper.sortable span:last-child a {
     margin-right: 10px;
+}
+
+.authors-wrapper .ui-state-highlight {
+	width: 100px;
+	height: 1em;
+	display: inline-block;
+	margin-left: 8px;
+	margin-right: 4px;
+	padding: 0;
 }
 
 .authors-wrapper a {
@@ -1121,8 +1120,9 @@ table.info-table {
     display: none;
 }
 
-#resourceSpecificTab{
-    overflow-x:hidden;
+#resourceSpecificTab {
+	overflow-x: hidden;
+	word-break: break-word;
 }
 
 #variables .custom-well {
@@ -1229,10 +1229,10 @@ div.readme .readme-header h4 > span {
 	height: 155px;
 }
 
-span.remove {
-    position: absolute;
-    right: 1px;
-    top: 4px;
+.hilight > span.remove {
+	position: absolute;
+	right: 8px;
+	top: 10px;
 }
 
 .form-control, .controls .input-group .form-control {
@@ -1364,10 +1364,6 @@ a[data-toggle='tab']{
 	width: 100%;
 	border: 1px solid #CCC;
 	min-height: 34px;
-}
-
-#invite-to-group #id_user-wrapper {
-    width: calc(100% - 144px);
 }
 
 #permission-panel .panel-body{
@@ -1613,18 +1609,17 @@ body > .main-container {
     width: 100%;
 }
 
-.btn-add-access {
+.btn-add-access, #btn-confirm-add-access {
 	height: 34px;
-	border-radius: 0;
 	width: 100%;
 }
 
-#invite-to-group .btn-add-access {
-	height: 34px;
-	width: 160px;
-	top: 0;
+#btn-confirm-add-access {
 	border-radius: 0;
-	margin-top:15px;
+}
+
+#invite-to-group .btn-add-access {
+	width: 160px;
 }
 
 .btn-default {
@@ -1773,6 +1768,10 @@ body > .main-container {
 #btn-select-irods-file, #rep-res-bag {
 	margin: 10px 0;
 	max-width: 100%;
+}
+
+#btn-select-irods-file.disabled {
+	pointer-events: none;
 }
 
 div#sharing-status .col-sm-12{
@@ -2282,7 +2281,7 @@ table.user-scope tr {
     background-color: #f5f5f5;
 }
 
-.user-roles li.loading, .access-table tr.loading {
+.user-roles li.loading, .access-table tr.loading, .authors-wrapper.loading {
 	animation: grayScaleChange 1s; /* animation-name followed by duration in seconds*/
 	/* you could also use milliseconds (ms) or something like 2.5s */
 	-webkit-animation: grayScaleChange 1s; /* Chrome and Safari */
@@ -3075,7 +3074,7 @@ span.you-flag {
 }
 
 .facet-list .list-group {
-	max-height: 200px;
+	max-height: 400px;
 	overflow-y: auto;
 }
 
@@ -3454,6 +3453,15 @@ span.you-flag {
 
 .come-in:nth-child(odd) {
   animation-duration: 0.6s; /* So they look staggered */
+}
+
+.fade-enter-active, .fade-leave-active {
+	transition: opacity .35s;
+	transition-timing-function: ease;
+}
+
+.fade-enter, .fade-leave-to {
+	opacity: 0;
 }
 
 @keyframes come-in {
@@ -4036,21 +4044,6 @@ div.group-add-photo {
 	float: right;
 }
 
-.center-radio-inline {
-    padding: 8px;
-    border-radius: 4px;
-    width: 190px;
-}
-
-.center-radio-inline input[type='radio']{
-	float: none;
-	margin: 0;
-}
-
-.center-radio-inline label {
-	cursor: pointer;
-}
-
 .or-separator {
 	margin-top: 20px;
 }
@@ -4121,6 +4114,16 @@ form#covereage-search-fields {
 
 #fb-bread-crumbs li:not(.active):hover span {
 	text-decoration: underline;
+}
+
+#fb-bread-crumbs .fb-aggregation-icon img {
+	width: 24px;
+	position: absolute;
+	margin-top: -3px;
+}
+
+#fb-bread-crumbs .crumb-aggregation-name {
+	margin-left: 24px;
 }
 
 .fb-view-grid .fb-folder, .fb-view-grid .fb-file {
@@ -4858,7 +4861,7 @@ span.caption-file-type {
 	width: 220px;
 }
 
-div.tooltip-inner, .res-dropdown div.tooltip-inner {
+.res-dropdown div.tooltip-inner {
     width: 350px;
 }
 
@@ -4915,33 +4918,20 @@ a[data-toggle="modal"] {
 }
 
 .external-profiles .identifier-icon i, .external-profiles .identifier-icon img {
-    background: #FFF;
     border-radius: 4px;
     font-size: 24px;
     padding: 4px 6px;
     cursor: pointer;
-    margin: 0;
-    text-align: center;
+}
+
+.external-profiles .identifier-icon img {
+	height: 32px;
+	margin-top: -8px;
 }
 
 .identifier-icon img {
     height: 100%;
 }
-
-/*.page-stamp {*/
-    /*position: absolute;*/
-    /*box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);*/
-/*}*/
-
-/*.page-stamp:after {*/
-    /*content: "";*/
-    /*position: absolute;*/
-    /*bottom: -6px;*/
-    /*left: 0;*/
-    /*border: 3px solid transparent;*/
-    /*border-top-color: #acacac;*/
-    /*border-right-color: #acacac;*/
-/*}*/
 
 #stamp-contributions {
     left: -12px;
@@ -4969,11 +4959,7 @@ a[data-toggle="modal"] {
 }
 
 .external-profiles > a {
-    height: 28px;
-    width: 28px;
     display: inline-block;
-    margin: 0 8px 0 0;
-    vertical-align: middle;
 }
 
 .external-profiles .fa-address-card {

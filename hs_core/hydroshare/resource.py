@@ -487,7 +487,7 @@ def create_resource(
         resource.resource_type = resource_type
 
         # by default make resource private
-        resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
+        resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
         resource.save()
 
         if not metadata:
@@ -777,7 +777,7 @@ def add_resource_files(pk, *files, **kwargs):
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, new_folders, ret)
+            utils.check_aggregations(resource, ret)
         # some file(s) added, need to update quota usage
         update_quota_usage(res=resource)
     return ret

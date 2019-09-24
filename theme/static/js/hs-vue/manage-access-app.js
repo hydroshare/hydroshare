@@ -10,7 +10,7 @@ let manageAccessApp = new Vue({
             user.loading = false;
             return user;
         }),
-        currentUser: CURRENT_USER_PK,
+        currentUser: CURRENT_USER_ID,
         selfAccessLevel: SELF_ACCESS_LEVEL,
         quotaHolder: USERS_JSON.find(function(user) {
             return user.id === QUOTA_HOLDER_PK;
@@ -35,6 +35,11 @@ let manageAccessApp = new Vue({
         isProcessing: false,
         isProcessingAccess: false,
         isProcessingShareable: false,
+        isChangingQuotaHolder: false,
+        cardPosition: {
+            top: 0,
+            left: 0,
+        },
     },
     watch: {
         resAccess: function (newAccess, oldAccess) {
@@ -52,6 +57,11 @@ let manageAccessApp = new Vue({
                 accessStr = "Discoverable"
             }
             $("#hl-sharing-status").text(accessStr);    // Update highlight sharing status
+        },
+        users: function () {
+            leftHeaderApp.$data.owners = this.users.filter(function (user) {
+                return user.access === 'owner';
+            });
         }
     },
     computed: {
@@ -91,11 +101,7 @@ let manageAccessApp = new Vue({
                 }
 
                 if (resp.status == "success") {
-                    // Access changes to self can't be undone
-                    user.can_undo = !(vue.currentUser === user.id);
-
-                    user.access = resp.privilege_granted;
-                    vue.users.splice(index, 1, user);
+                    user = resp.user;
                     if (vue.currentUser === user.id) {
                         vue.selfAccessLevel = user.access;
                     }
@@ -300,7 +306,7 @@ let manageAccessApp = new Vue({
                 if (resp.status === "success") {
                     if (index >= 0) {
                         // An entry was found, update the data
-                        user.access = resp.privilege_granted;
+                        user.access = resp.user.access;
                         user.loading = false;
                         vue.users.splice(index, 1, user);
                         if (vue.currentUser === user.id) {
@@ -309,26 +315,8 @@ let manageAccessApp = new Vue({
                     }
                     else {
                         // No entry found. Push new data
-
-                        let pictureUrl;
-                        if (vue.isInviteUsers) {
-                            pictureUrl = resp.profile_pic === "None" ? null : resp.profile_pic;
-                        }
-                        else {
-                            pictureUrl = resp.group_pic === "None" ? null : resp.group_pic;
-                        }
-
-                        const newUserAccess = {
-                            user_type: vue.isInviteUsers ? 'user' : 'group',
-                            access: resp.privilege_granted,
-                            id: targetUserId,
-                            pictureUrl: pictureUrl,
-                            best_name: resp.name,
-                            user_name: resp.username,
-                            loading: false,
-                            can_undo: true,
-                        };
-
+                        let newUserAccess = resp.user;
+                        newUserAccess.loading = false;
                         vue.users.push(newUserAccess);
                     }
                 }
@@ -416,6 +404,7 @@ let manageAccessApp = new Vue({
         setQuotaHolder: function (username) {
             let vue = this;
             vue.quotaError = "";
+            vue.isChangingQuotaHolder = true;
 
             $.post('/hsapi/_internal/' + this.resShortId + '/change-quota-holder/',
                 {new_holder_username: username}, function (resp) {
@@ -440,6 +429,7 @@ let manageAccessApp = new Vue({
                     else {
                         vue.quotaError = resp.message;
                     }
+                    vue.isChangingQuotaHolder = false;
                 }
             );
         },
@@ -452,6 +442,12 @@ let manageAccessApp = new Vue({
             };
             // The metadata is insufficient
             this.canBePublicDiscoverable = false;
+        },
+        onLoadQuotaHolderCard: function (data) {
+            let el = $(data.event.target);
+            let cardWidth = 350;
+            this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
+            this.cardPosition.top = el.position().top + 30;
         }
     },
 });

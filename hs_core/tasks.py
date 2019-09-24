@@ -24,6 +24,7 @@ from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
 
@@ -31,6 +32,7 @@ from django_irods.icommands import SessionException
 
 from hs_core.models import BaseResource
 from theme.utils import get_quota_message
+
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -203,8 +205,9 @@ def manage_task_nightly():
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1))
-def manage_task_weekly():
+@periodic_task(ignore_result=True, run_every=crontab(minute=15, hour=0, day_of_week=1,
+                                                     day_of_month='1-7'))
+def send_over_quota_emails():
     # check over quota cases and send quota warning emails as needed
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
@@ -324,25 +327,30 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip=False):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False):
     """ Create temporary zip file from input_path and store in output_path
+    :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
-    :param sf_aggregation: if True, include logical metadata files
+    :param aggregation_name: The name of the aggregation to zip
+    :param sf_zip: signals a single file to zip
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
+    aggregation = None
+    if aggregation_name:
+        aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
     istorage = res.get_irods_storage()  # invoke federated storage as necessary
 
     if res.resource_type == "CompositeResource":
         if '/data/contents/' in input_path:
             short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
-            res.create_aggregation_xml_documents(aggregation_name=short_path)
+            res.create_aggregation_xml_documents(path=short_path)
         else:  # all metadata included, e.g., /data/*
             res.create_aggregation_xml_documents()
 
     try:
-        if sf_zip:
+        if aggregation or sf_zip:
             # input path points to single file aggregation
             # ensure that foo.zip contains aggregation metadata
             # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
@@ -350,15 +358,20 @@ def create_temp_zip(resource_id, input_path, output_path, sf_aggregation, sf_zip
             head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
             out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
             istorage.copyFiles(input_path, out_with_folder)
-            if sf_aggregation:
+            if aggregation:
                 try:
-                    istorage.copyFiles(input_path + '_resmap.xml',  out_with_folder + '_resmap.xml')
+                    istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(input_path + '_resmap.xml'))
+                    logger.error("cannot copy {}".format(aggregation.map_file_path))
                 try:
-                    istorage.copyFiles(input_path + '_meta.xml', out_with_folder + '_meta.xml')
+                    istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(input_path + '_meta.xml'))
+                    logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+                for file in aggregation.files.all():
+                    try:
+                        istorage.copyFiles(file.storage_path, temp_folder_name)
+                    except SessionException:
+                        logger.error("cannot copy {}".format(file.storage_path))
             istorage.zipup(temp_folder_name, output_path)
             istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
         else:  # regular folder to zip
@@ -406,7 +419,7 @@ def create_bag_by_irods(resource_id):
         is_bagit_readme_exist = istorage.exists(bagit_readme_file)
         bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
         bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
         bagit_files = [
             '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
@@ -512,7 +525,7 @@ def update_quota_usage_task(username):
     # get quota size for the user in iRODS user zone
     try:
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
                                      settings.IRODS_BAGIT_PATH)
         uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
         if uqUserZoneSize is None:
@@ -574,8 +587,9 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     resource.save()
 
                 for url in response_content["content"]:
-                    lf = resource.logical_files[[i.aggregation_name for i in
-                                                resource.logical_files].index(
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
                                                     url["layer_name"].encode("utf-8")
                                                 )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
@@ -590,3 +604,11 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)
         return e
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
+def daily_odm2_sync():
+    """
+    ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
+    """
+    ODM2Variable.sync()

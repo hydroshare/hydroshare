@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
@@ -41,6 +42,15 @@
                 </div>
             </div>
         {% endif %}
+
+        {# Needs to be included first so it's available before other instances initialize #}
+        {% include "includes/profile-card.html" %}
+
+        {%  block modal %}
+            {% include "resource-landing-page/modals.html" %}
+            {% include "includes/author-preview.html" %}
+            {% include "resource-landing-page/coordinates_picker.html" %}
+        {%  endblock %}
 
         {# ======= Title ======= #}
         {% include "resource-landing-page/title-section.html" %}
@@ -212,33 +222,6 @@
                         </span>
                     </li>
                 {%  endif %}
-                {% if relevant_tools %}
-                    <li role="separator" class="divider"></li>
-                    {% for tool in relevant_tools.tool_list %}
-                        {% if tool.openwithlist %}
-                            {% if tool.agg_types %}
-                                <li class="btn-open-with" data-menu-name="web-app" agg-types="{{ tool.agg_types }}" url_aggregation="{% url 'tracking-applaunch' %}?url={{tool.url_aggregation|urlencode}};name={{tool.title}}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                            {% if tool.file_extensions %}
-                                <li class="btn-open-with" data-menu-name="web-app" file-extensions="{{ tool.file_extensions }}" url_file="{% url 'tracking-applaunch' %}?url={{tool.url_file|urlencode}};name={{tool.title}}">
-                                    <img class="file-options-webapp-icon" src="{{ tool.icon_url }}">
-                                     {% if tool.title|length > 20 %}
-                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                                    {% else %}
-                                        <span>{{ tool.title }}</span>
-                                    {% endif %}
-                                </li>
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
             </ul>
 
             {# POPUP MENU - Right clicking empty space in file browser #}
@@ -274,13 +257,6 @@
                     <span class="fa fa-th-large icon-blue"></span>
                     <span>Select all</span>
                 </li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
-                    <li role="separator" class="divider"></li>
-                    <li data-menu-name="paste">
-                        <span class="fa fa-clipboard icon-blue"></span>
-                        <span>Paste</span>
-                    </li>
-                {% endif %}
             </ul>
 
             <div class="col-xs-12 content-block">
@@ -381,7 +357,7 @@
                     </div>
                     {# ======= Modal window ends =======#}
 
-                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path=""
+                    <div id="hs-file-browser" data-current-path=""
                          {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
                          data-supported-files="{{ cm.get_supported_upload_file_types }}"
                          data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
@@ -478,7 +454,7 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                <a type="button"
+                                                <a type="button" data-fb-action="uploadFiles"
                                                    class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                     <i class="fa fa-plus"></i> Add files
                                                 </a>
@@ -502,6 +478,7 @@
                                                         </li>
 
                                                         <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                            data-fb-action="uploadFiles"
                                                             data-toggle="modal" data-target="#irodsContent">
                                                             <a>
                                                                 <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
@@ -655,7 +632,7 @@
                                             <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
                                             <small class="uploading-message">
                                                 <strong>Uploading files to:</strong>&nbsp;
-                                                <span id="root-path">contents</span><span id="upload-folder-path"></span>
+                                                <span id="root-path">contents</span>
                                                 <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
                                                 <span id="upload-progress"></span>
                                             </small>
@@ -808,33 +785,71 @@
 
         {# ======= Comments ======= #}
         {% include "resource-landing-page/comments.html" %}
-
-        {%  block modal %}
-            {% include "resource-landing-page/modals.html" %}
-            {% include "includes/author-preview.html" %}
-            {% include "resource-landing-page/coordinates_picker.html" %}
-        {%  endblock %}
         </div>
 {% endblock %}
 
 {% block extra_js %}
+    {% set_page_permissions page %}
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
       const FILE_COUNT = {{ cm.files.all.count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
-      const CURRENT_USER_ID = {{ request.user.id }};
+      const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
+      const USERS_JSON = {{ users_json|safe }};
+      const AUTHORS = [
+          {% for author in creators %}
+              {
+                  "id": "{{ author.id }}",
+                  "name": "{{ author.name|default:"" }}",
+                  "email": "{{ author.email|default:"" }}",
+                  "organization": "{{ author.organization|default:"" }}",
+                  "identifiers": {
+                      {% for name, link in author.identifiers.items %}
+                          "{{ name }}": "{{ link }}",
+                      {% endfor %}
+                  },
+                  "address": "{{ author.address|default:"" }}",
+                  "phone": "{{ author.phone|default:"" }}",
+                  "homepage": "{{ author.homepage|default:"" }}",
+                  "profileUrl": "{{ author.description|default:"" }}",
+                  "order": "{{ author.order }}"
+              },
+          {% endfor %}
+      ];
+      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
+
+      {% with cm.last_changed_by as usr %}
+          const LAST_CHANGED_BY = {
+          "id": {{ usr.id }},
+          "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
+          "best_name": "{{ usr|best_name }}",
+          "email": "{{ usr.email|safe }}",
+          "organization": "{{ usr.userprofile.organization }}",
+          "title": "{{ usr.userprofile.title }}",
+          "contributions": "{{ usr.uaccess.owned_resources|length  }}",
+          "subject_areas": "{{ usr.userprofile.subject_areas }}",
+          "identifiers": {
+              {% for name, link in usr.userprofile.identifiers.items %}
+                  "{{ name }}": "{{ link }}",
+              {% endfor %}
+          },
+          "state": "{{ usr.userprofile.state }}",
+          "country": "{{ usr.userprofile.country }}",
+          "joined": "{{ usr.date_joined|date:"M d, Y" }}"
+      };
+      {% endwith %}
+
       {% if show_manage_access %}
-          const USERS_JSON = {{ users_json|safe }};
           const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const CURRENT_USER_PK = {{ current_user.pk }};
           const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
           const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
           const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
@@ -858,8 +873,5 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
 
-    {% if relevant_tools %}
-        <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
-    {% endif %}
 {% endblock %}
 

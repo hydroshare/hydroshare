@@ -7,8 +7,8 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 
 
-from hs_file_types.models import GenericLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
-    NetCDFLogicalFile, TimeSeriesLogicalFile, FileSetLogicalFile
+from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 
@@ -36,18 +36,21 @@ class CompositeResource(BaseResource):
 
     @property
     def logical_files(self):
-        """Returns a list of all logical file type objects associated with this resource """
-
-        lf_list = []
-        lf_list.extend(self.filesetlogicalfile_set.all())
-        lf_list.extend(self.genericlogicalfile_set.all())
-        lf_list.extend(self.geofeaturelogicalfile_set.all())
-        lf_list.extend(self.netcdflogicalfile_set.all())
-        lf_list.extend(self.georasterlogicalfile_set.all())
-        lf_list.extend(self.reftimeserieslogicalfile_set.all())
-        lf_list.extend(self.timeserieslogicalfile_set.all())
-
-        return lf_list
+        """A generator that returns each of the logical files of this resource"""
+        for lf in self.filesetlogicalfile_set.all():
+            yield lf
+        for lf in self.genericlogicalfile_set.all():
+            yield lf
+        for lf in self.geofeaturelogicalfile_set.all():
+            yield lf
+        for lf in self.netcdflogicalfile_set.all():
+            yield lf
+        for lf in self.georasterlogicalfile_set.all():
+            yield lf
+        for lf in self.reftimeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.timeserieslogicalfile_set.all():
+            yield lf
 
     @property
     def can_be_published(self):
@@ -83,10 +86,7 @@ class CompositeResource(BaseResource):
         """
 
         aggregation_path = dir_path[len(self.file_path) + 1:]
-        try:
-            return self.get_aggregation_by_name(aggregation_path)
-        except ObjectDoesNotExist:
-            return None
+        return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
@@ -95,80 +95,37 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        for res_file in self.files.all():
-            if res_file.full_path == file_path:
-                if res_file.has_logical_file:
-                    return res_file.logical_file
-        return None
+        relative_file_path = file_path[len(self.file_path) + 1:]
+        folder, base = os.path.split(relative_file_path)
+        try:
+            res_file = ResourceFile.get(self, file=base, folder=folder)
+            if res_file.has_logical_file:
+                return res_file.logical_file
+            return None
+        except ObjectDoesNotExist:
+            return None
 
-    def get_folder_aggregation_type_to_set(self, dir_path):
-        """Returns an aggregation (file type) type that the specified folder *dir_path* can
-        possibly be set to.
+    def can_set_folder_to_fileset(self, dir_path):
+        """Checks if the specified folder *dir_path* can be set to Fileset aggregation
 
         :param dir_path: Resource file directory path (full folder path starting with resource id)
-        for which the possible aggregation type that can be set needs to be determined
+        for which the FileSet aggregation to be set
 
         :return If the specified folder is already represents an aggregation or does
-        not contain suitable file(s) then returns "" (empty string). If the specified folder
-        contains only the files that meet the requirements of a supported aggregation, and
-        does not contain other folders or does not have a parent folder then return the
-        class name of that matching aggregation type.
+        not contain any files then returns False, otherwise True
         """
 
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
-            return None
+            return False
 
-        istorage = self.get_irods_storage()
         irods_path = dir_path
         if self.is_federated:
             irods_path = os.path.join(self.resource_federation_path, irods_path)
-        store = istorage.listdir(irods_path)
-        files_in_folder = ResourceFile.list_folder(self, folder=irods_path, sub_folders=False)
 
-        if not files_in_folder:
-            # folder is empty
-            # check sub folders for files - if file exist we can set FileSet aggregation
-            files_in_sub_folders = ResourceFile.list_folder(self, folder=irods_path,
-                                                            sub_folders=True)
-            if files_in_sub_folders:
-                return FileSetLogicalFile.__name__
-
-            return None
-        if store[0]:
-            # there are folders under dir_path as well as files - only FileSet can bet set
-            return FileSetLogicalFile.__name__
-
-        if len(files_in_folder) > 1:
-            # check for geo feature
-            aggregation_type_to_set = GeoFeatureLogicalFile.check_files_for_aggregation_type(
-                files_in_folder)
-            if aggregation_type_to_set:
-                return aggregation_type_to_set
-
-            # check for raster
-            aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
-                files_in_folder)
-            if aggregation_type_to_set:
-                return aggregation_type_to_set
-            return FileSetLogicalFile.__name__
-        else:
-            # check for raster
-            aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
-                files_in_folder)
-            if aggregation_type_to_set:
-                return aggregation_type_to_set
-            # check for NetCDF aggregation type
-            aggregation_type_to_set = NetCDFLogicalFile.check_files_for_aggregation_type(
-                files_in_folder)
-            if aggregation_type_to_set:
-                return aggregation_type_to_set
-            # check for TimeSeries aggregation type
-            aggregation_type_to_set = TimeSeriesLogicalFile.check_files_for_aggregation_type(
-                files_in_folder)
-            if aggregation_type_to_set:
-                return aggregation_type_to_set
-            return FileSetLogicalFile.__name__
+        files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+        # if there are any files in the dir_path, we can set the folder to fileset aggregation
+        return len(files_in_path) > 0
 
     @property
     def supports_folders(self):
@@ -194,65 +151,145 @@ class CompositeResource(BaseResource):
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
-    def create_aggregation_xml_documents(self, aggregation_name=None):
-        """Creates aggregation map and metadata xml files for each of the contained aggregations
-
-        :param  aggregation_name: (optional) name of the the specific aggregation for which xml
-        documents need to be created
+    def _recreate_fileset_xml_docs(self, folder):
+        """Recreates xml files for all fileset aggregations that exist under the path 'folder'
+        as well as for any parent fileset that may exist relative to path 'folder'
         """
 
-        if aggregation_name is None:
+        filesets = self.filesetlogicalfile_set.filter(folder__startswith=folder)
+        for fs in filesets:
+            fs.create_aggregation_xml_documents()
+
+        # Also need to recreate xml doc for any parent fileset that may exist relative to path
+        # *folder*
+        if '/' in folder:
+            path = os.path.dirname(folder)
+            parent_fs = self.get_fileset_aggregation_in_path(path)
+            if parent_fs is not None:
+                parent_fs.create_aggregation_xml_documents()
+
+    def create_aggregation_xml_documents(self, path=None):
+        """Creates aggregation map and metadata xml files for each of the contained aggregations
+
+        :param  path: (optional) file or folder path for which xml documents need to be created for
+        all associated aggregations of that path
+        """
+
+        if path is None:
+            # create xml docs far all aggregation of this resource
             for aggregation in self.logical_files:
                 if aggregation.metadata.is_dirty:
                     aggregation.create_aggregation_xml_documents()
         else:
+            # first check if the path is a folder path or file path
+            _, ext = os.path.splitext(path)
+            is_path_a_folder = ext == ''
             try:
-                aggregation = self.get_aggregation_by_name(aggregation_name)
-                if aggregation.metadata.is_dirty:
-                    aggregation.create_aggregation_xml_documents()
+                if is_path_a_folder:
+                    # need to create all aggregations that exist under path
+                    self._create_xml_docs_for_folder(folder=path)
+                else:
+                    # path is a file path
+                    aggregation = self.get_aggregation_by_name(path)
+                    # need to create xml docs only for this aggregation
+                    if aggregation.metadata.is_dirty:
+                        aggregation.create_aggregation_xml_documents()
             except ObjectDoesNotExist:
-                # aggregation_name must be a folder path that doesn't represent an aggregation
-                # there may be single file aggregation in that folder for which xml documents
-                # need to be created
-                self._recreate_xml_docs_for_folder(aggregation_name, check_metadata_dirty=True)
+                # path representing a file path is not an aggregation - nothing to do
+                pass
 
-    def _recreate_xml_docs_for_folder(self, folder, check_metadata_dirty=False):
-        """Re-creates xml metadata and map documents associated with the specified folder.
-        If the *folder* represents an aggregation then map and metadata xml documents are
-        recreated only for that aggregation. Otherwise, xml documents are created for any
-        aggregation that may exist in the specified folder and its sub-folders.
+    def _recreate_xml_docs_for_folder(self, new_folder, old_folder):
+        """Re-creates xml metadata and map documents for all aggregations that exists under
+        the specified folder *new_folder
 
-        :param  folder: folder for which xml documents need to be re-created
-        :param  check_metadata_dirty: if true, then xml files will be created only if the
-        aggregation metadata is dirty
+        :param  new_folder: folder path for which xml documents need to be re-created for all
+        aggregations that exist under this folder path
+        :param  old_folder: folder path prior to folder path changed to as
+        per 'new_folder'
         """
 
-        # first check if the the folder represents an aggregation
-        try:
-            aggregation = self.get_aggregation_by_name(folder)
-            if check_metadata_dirty:
-                if aggregation.metadata.is_dirty:
-                    aggregation.create_aggregation_xml_documents()
-            else:
-                aggregation.create_aggregation_xml_documents()
-                # if we found an aggregation by the folder name that means this folder doesn't
-                # have any sub folders as multi-file aggregation folder can't have sub folders
-        except ObjectDoesNotExist:
-            # create xml map and metadata xml documents for all aggregations that exist
-            # in *folder* and its sub-folders
-            if not folder.startswith(self.file_path):
-                folder = os.path.join(self.file_path, folder)
+        def update_fileset_folder():
+            """Updates the folder attribute of all filesets that exist under 'old_folder' when
+            the folder is renamed to *new_folder*"""
 
-            res_file_objects = ResourceFile.list_folder(self, folder)
-            aggregations = []
-            for res_file in res_file_objects:
-                if res_file.has_logical_file and res_file.logical_file not in aggregations:
-                    aggregations.append(res_file.logical_file)
+            filesets = self.filesetlogicalfile_set.filter(folder__startswith=old_folder)
+            for fs in filesets:
+                fs.folder = new_folder + fs.folder[len(old_folder):]
+                fs.save()
 
-            if check_metadata_dirty:
-                aggregations = [aggr for aggr in aggregations if aggr.metadata.is_dirty]
-            for aggregation in aggregations:
-                aggregation.create_aggregation_xml_documents()
+        # recreate xml files for all fileset aggregations that exist under new_folder
+        if new_folder.startswith(self.file_path):
+            new_folder = new_folder[len(self.file_path) + 1:]
+
+        if old_folder.startswith(self.file_path):
+            old_folder = old_folder[len(self.file_path) + 1:]
+
+        # first update folder attribute of all filesets that exist under *old_folder*
+        update_fileset_folder()
+        self._recreate_fileset_xml_docs(folder=new_folder)
+
+        # create xml files for all non fileset aggregations
+        if not new_folder.startswith(self.file_path):
+            new_folder = os.path.join(self.file_path, new_folder)
+
+        # create xml docs for all non-fileset aggregations
+        logical_files = self._get_aggregations_by_folder(new_folder)
+        for lf in logical_files:
+            lf.create_aggregation_xml_documents()
+
+    def _create_xml_docs_for_folder(self, folder):
+        """Creates xml metadata and map documents for any aggregation that is part of the
+        the specified folder *folder*. Also xml docs are created for an aggregation only if the
+        aggregation metadata is dirty
+
+        :param  folder: folder for which xml documents need to be created for all aggregations that
+        exist in folder *folder*
+        """
+
+        # create xml map and metadata xml documents for all aggregations that exist
+        # in *folder* and its sub-folders
+        if not folder.startswith(self.file_path):
+            folder = os.path.join(self.file_path, folder)
+
+        # create xml docs for all non fileset aggregations
+        # note: we can't get to all filesets from resource files since
+        # it is possible to have filesets without any associated resource files
+        logical_files = self._get_aggregations_by_folder(folder)
+        for lf in logical_files:
+            if lf.metadata.is_dirty:
+                lf.create_aggregation_xml_documents()
+
+        # create xml docs for all fileset aggregations that exist under folder *folder*
+        if folder.startswith(self.file_path):
+            folder = folder[len(self.file_path) + 1:]
+
+        filesets = self.filesetlogicalfile_set.filter(folder__startswith=folder)
+        for fs in filesets:
+            if fs.metadata.is_dirty:
+                fs.create_aggregation_xml_documents()
+
+    def _get_aggregations_by_folder(self, folder):
+        """Get a list of all non-fileset aggregations associated with resource files that
+        exist in the specified file path *folder*
+        :param  folder: the folder path for which aggregations need to be searched
+        """
+        res_file_objects = ResourceFile.list_folder(self, folder)
+        logical_files = set(res_file.logical_file for res_file in res_file_objects if
+                            res_file.has_logical_file and not res_file.logical_file.is_fileset)
+        return logical_files
+
+    def get_aggregation_by_aggregation_name(self, aggregation_name):
+        """Get an aggregation that matches the aggregation dataset_name specified by *dataset_name*
+        :param  aggregation_name: aggregation_name (aggregation path) of the aggregation to find
+        :return an aggregation object if found
+        :raises ObjectDoesNotExist if no matching aggregation is found
+        """
+        for aggregation in self.logical_files:
+            if aggregation.aggregation_name == aggregation_name:
+                return aggregation
+
+        raise ObjectDoesNotExist("No matching aggregation was found for "
+                                 "name:{}".format(aggregation_name))
 
     def get_aggregation_by_name(self, name):
         """Get an aggregation that matches the aggregation name specified by *name*
@@ -260,12 +297,26 @@ class CompositeResource(BaseResource):
         :return an aggregation object if found
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
-        for aggregation in self.logical_files:
-            # remove the last slash in aggregation_name if any
-            if aggregation.aggregation_name.rstrip('/') == name:
-                return aggregation
+        # check if aggregation path *name* is a file path or a folder
+        _, ext = os.path.splitext(name)
+        is_aggr_path_a_folder = ext == ''
+        if is_aggr_path_a_folder:
+            folder_full_path = os.path.join(self.file_path, name)
+            aggregation = self.get_folder_aggregation_object(folder_full_path)
+            if aggregation is None:
+                raise ObjectDoesNotExist(
+                    "No matching aggregation was found for name:{}".format(name))
+            return aggregation
+        else:
+            folder, base = os.path.split(name)
+            if folder == '':
+                folder = None
+            res_file = ResourceFile.get(self, file=base, folder=folder)
+            if res_file.has_logical_file:
+                return res_file.logical_file
 
-        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+            raise ObjectDoesNotExist(
+                    "No matching aggregation was found for name:{}".format(name))
 
     def get_fileset_aggregation_in_path(self, path):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
@@ -289,27 +340,28 @@ class CompositeResource(BaseResource):
         else:
             return get_fileset(path)
 
-    def recreate_aggregation_xml_docs(self, orig_aggr_name, new_aggr_name):
+    def recreate_aggregation_xml_docs(self, orig_path, new_path):
         """
         When a folder or file representing an aggregation is renamed or moved,
         the associated map and metadata xml documents are deleted
         and then regenerated
-        :param  orig_aggr_name: original aggregation name - used for deleting existing
-        xml documents
-        :param  new_aggr_name: new aggregation name - used for finding a matching
-        aggregation so that new xml documents can be recreated
+        :param  orig_path: original file/folder path prior to move/rename
+        :param  new_path: new file/folder path after move/rename
         """
 
         def delete_old_xml_files(folder=''):
             istorage = self.get_irods_storage()
-            meta_xml_file_name = orig_aggr_name + "_meta.xml"
-            map_xml_file_name = orig_aggr_name + "_resmap.xml"
+            # remove file extension from aggregation name (note: aggregation name is a file path
+            # for all aggregation types except fileset
+            xml_file_name, _ = os.path.splitext(orig_path)
+            meta_xml_file_name = xml_file_name + METADATA_FILE_ENDSWITH
+            map_xml_file_name = xml_file_name + RESMAP_FILE_ENDSWITH
             if not folder:
-                # case if file rename/move for single file aggregation
+                # case of file rename/move for single file aggregation
                 meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
                 map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
             else:
-                # case of folder rename - multi-file aggregation
+                # case of folder rename - fileset aggregation
                 _, meta_xml_file_name = os.path.split(meta_xml_file_name)
                 _, map_xml_file_name = os.path.split(map_xml_file_name)
                 meta_xml_file_full_path = os.path.join(self.file_path, folder, meta_xml_file_name)
@@ -321,32 +373,21 @@ class CompositeResource(BaseResource):
             if istorage.exists(map_xml_file_full_path):
                 istorage.delete(map_xml_file_full_path)
 
-        # first check if the new_aggr_name is a folder path or file path
-        name, ext = os.path.splitext(new_aggr_name)
-        is_new_aggr_a_folder = ext == ''
+        # first check if the new_path is a folder path or file path
+        name, ext = os.path.splitext(new_path)
+        is_new_path_a_folder = ext == ''
 
-        if is_new_aggr_a_folder:
-            delete_old_xml_files(folder=new_aggr_name)
-            try:
-                # in case of fileset aggregation need to update aggregation folder attribute to the
-                # new folder name
-                aggregation = self.get_aggregation_by_name(orig_aggr_name)
-                if aggregation.is_fileset:
-                    # update folder attribute of this fileset aggregation and all nested
-                    # fileset aggregations of this aggregation
-                    aggregation.update_folder(new_folder=new_aggr_name)
-            except ObjectDoesNotExist:
-                # not renaming a fileset aggregation folder
-                pass
-            self._recreate_xml_docs_for_folder(new_aggr_name)
+        if is_new_path_a_folder:
+            delete_old_xml_files(folder=new_path)
+            self._recreate_xml_docs_for_folder(new_folder=new_path, old_folder=orig_path)
         else:
-            # check if there is a matching single file aggregation
+            # check if there is a matching aggregation based on file path *new_path*
             try:
-                aggregation = self.get_aggregation_by_name(new_aggr_name)
+                aggregation = self.get_aggregation_by_name(new_path)
                 delete_old_xml_files()
                 aggregation.create_aggregation_xml_documents()
             except ObjectDoesNotExist:
-                # the file path *new_aggr_name* is not a single file aggregation - no more
+                # the file path *new_path* does not represent an aggregation - no more
                 # action is needed
                 pass
 
@@ -355,42 +396,14 @@ class CompositeResource(BaseResource):
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith('_meta.xml') or file_path.endswith('_resmap.xml')):
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH) or
+                file_path.endswith(RESMAP_FILE_ENDSWITH)):
             return False
         for logical_file in self.logical_files:
             if logical_file.metadata_file_path == file_path or \
                     logical_file.map_file_path == file_path:
                 return True
         return False
-
-    def supports_folder_creation(self, folder_full_path):
-        """this checks if it is allowed to create a folder at the specified path
-        :param  folder_full_path: the target path where the new folder needs to be created
-
-        :return True or False
-        """
-
-        if __debug__:
-            assert(folder_full_path.startswith(self.file_path))
-
-        # determine containing folder
-        if "/" in folder_full_path:
-            path_to_check, _ = os.path.split(folder_full_path)
-        else:
-            path_to_check = folder_full_path
-
-        # find if the path represents a multi-file aggregation
-        if path_to_check.startswith(self.file_path):
-            aggregation_path = path_to_check[len(self.file_path) + 1:]
-        else:
-            aggregation_path = path_to_check
-        try:
-            aggregation = self.get_aggregation_by_name(aggregation_path)
-            return aggregation.can_contain_folders
-        except ObjectDoesNotExist:
-            # target path doesn't represent an aggregation - so it is OK to create a folder
-            pass
-        return True
 
     def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed
@@ -447,16 +460,24 @@ class CompositeResource(BaseResource):
                     return aggregation.supports_resource_file_rename
                 except ObjectDoesNotExist:
                     # check if the source file represents an aggregation
-                    aggregation_path = os.path.join(aggregation_path, src_file_name)
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
+                    # get source resource file object from source file path
+                    src_res_file = ResourceFile.get(self, src_file_name, aggregation_path)
+                    aggregation = src_res_file.logical_file
+                    if aggregation is None:
+                        raise ObjectDoesNotExist("No aggregation found at {}".format(
+                            aggregation_path))
                     if is_renaming_file:
                         return aggregation.supports_resource_file_rename
                     else:
                         return aggregation.supports_resource_file_move
             else:
-                # check if the source file represents an aggregation
-                aggregation_path = src_file_name
-                aggregation = self.get_aggregation_by_name(aggregation_path)
+                # get source resource file object from source file path
+                src_res_file = ResourceFile.get(self, src_file_name)
+                # check if the source file is part of an aggregation
+                aggregation = src_res_file.logical_file
+                if aggregation is None:
+                    raise ObjectDoesNotExist("No aggregation found at {}".format(src_file_name))
+
                 if is_renaming_file:
                     return aggregation.supports_resource_file_rename
                 else:
@@ -474,32 +495,11 @@ class CompositeResource(BaseResource):
             # check source - see if the folder containing the file represents an aggregation
             try:
                 can_move = check_file_rename_or_move()
-                if not can_move:
-                    return can_move
+                return can_move
             except ObjectDoesNotExist:
-                pass
+                return True
 
-            # check target folder only if it is not the root
-            if tgt_file_dir != self.file_path:
-                aggregation_path = tgt_file_dir[len(self.file_path) + 1:]
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    return aggregation.supports_resource_file_add
-                except ObjectDoesNotExist:
-                    # target folder is not an aggregation - no restriction
-                    return True
-            return True
         elif is_moving_folder:
-            # no check on source is needed in this case
-            # check target - only if it is not the root
-            if tgt_file_dir != self.file_path:
-                aggregation_path = tgt_file_dir[len(self.file_path) + 1:]
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    return aggregation.can_contain_folders
-                except ObjectDoesNotExist:
-                    # target folder doesn't represent an aggregation - no restriction
-                    return True
             return True
 
     def can_add_files(self, target_full_path):

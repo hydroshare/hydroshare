@@ -318,10 +318,6 @@ class TestCopyResource(TestCase):
             auto_aggregate=False
         )
 
-        # run the resource post creation signal
-        utils.resource_post_create_actions(resource=self.composite_resource, user=self.owner,
-                                           metadata=self.composite_resource.metadata)
-
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
@@ -352,6 +348,10 @@ class TestCopyResource(TestCase):
                                                                   action='copy')
         new_composite_resource = hydroshare.copy_resource(self.composite_resource,
                                                           new_composite_resource)
+
+        self.assertEqual(new_composite_resource.files.count(), 2)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
         # check that there is 2 GeoRasterLogicalFile objects
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 2)
 
@@ -361,17 +361,17 @@ class TestCopyResource(TestCase):
         copy_res_file = new_composite_resource.files.first()
         copy_geo_raster_lfo = copy_res_file.logical_file
 
-        # check that we put the 2 files in a new folder (cea)
+        # check that the 2 files are at the same location
         for res_file in self.composite_resource.files.all():
             file_path, base_file_name = res_file.full_path, res_file.file_name
-            expected_file_path = "{}/data/contents/cea/{}"
+            expected_file_path = "{}/data/contents/{}"
             expected_file_path = expected_file_path.format(self.composite_resource.root_path,
                                                            base_file_name)
             self.assertEqual(file_path, expected_file_path)
 
         for res_file in new_composite_resource.files.all():
             file_path, base_file_name = res_file.full_path, res_file.file_name
-            expected_file_path = "{}/data/contents/cea/{}"
+            expected_file_path = "{}/data/contents/{}"
             expected_file_path = expected_file_path.format(new_composite_resource.root_path,
                                                            base_file_name)
             self.assertEqual(file_path, expected_file_path)

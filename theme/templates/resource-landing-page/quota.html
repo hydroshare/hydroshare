@@ -5,12 +5,10 @@
     </div>
     <div class="panel-body">
         <span>The quota holder of this resource is: </span>
-        <span><a :href="'/user/' + quotaHolder.id">${quotaHolder.best_name}</a></span>
-        {# TODO: create a reusable component for this template #}
-{#        <span>#}
-{#            {% include "includes/profile-link.html" with user=quota_holder %}#}
-{#            {% include "includes/profile-card.html" %}#}
-{#        </span>#}
+        <span>
+            <profile-link v-on:load-card="onLoadQuotaHolderCard($event)" :user="quotaHolder"></profile-link>
+            <profile-card :user="quotaHolder" :position="cardPosition"></profile-card>
+        </span>
 
         <button v-show="!hasOnlyOneOwner"
                 id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
@@ -45,12 +43,17 @@
                 </fieldset>
             </div>
 
-            <button type="button" class="btn btn-default space-right" data-toggle="collapse"
-                    data-target="#form-quota-holder">Cancel
+            <button
+                :class="{disabled: isChangingQuotaHolder}"
+                class="btn btn-default space-right" data-toggle="collapse"
+                type="button"
+                data-target="#form-quota-holder">Cancel
             </button>
 
-            <button type="button" class="btn btn-primary"
-                    @click="setQuotaHolder($refs.newHolder.value)">Save Changes
+            <button @click="setQuotaHolder($refs.newHolder.value)"
+                    :class="{disabled: isChangingQuotaHolder}"
+                    class="btn btn-primary"
+                    type="button">${isChangingQuotaHolder ? "Saving Changes..." : "Save Changes"}
             </button>
         </div>
         <hr>

@@ -4,6 +4,8 @@ import datetime
 import pytz
 import logging
 
+from drf_yasg.utils import swagger_auto_schema
+
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -15,7 +17,6 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.template import RequestContext
 from django.core import signing
 from django.db import Error, IntegrityError
 from django import forms
@@ -44,6 +45,8 @@ from hs_core.models import GenericResource, resource_processor, CoreMetaData, Su
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -58,10 +61,9 @@ from . import apps
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
 
 from hs_collection_resource.models import CollectionDeletedResource
-
 logger = logging.getLogger(__name__)
 
 
@@ -137,6 +139,7 @@ def change_quota_holder(request, shortkey):
     return JsonResponse(ajax_response_data)
 
 
+@swagger_auto_schema(method='post', auto_schema=None)
 @api_view(['POST'])
 def update_quota_usage(request, username):
     req_user = request.user
@@ -262,6 +265,12 @@ def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def get_relevant_tools(request, shortkey, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    relevant_tools = resource_level_tool_urls(res, request)
+    return HttpResponse(json.dumps(relevant_tools))
 
 
 def update_key_value_metadata(request, shortkey, *args, **kwargs):
@@ -575,6 +584,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+@swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
@@ -595,7 +605,8 @@ def file_download_url_mapper(request, shortkey):
     istorage = res.get_irods_storage()
     url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
     zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
-    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped))
+    aggregation = True if request.GET.get('aggregation', 'false').lower() == 'true' else False
+    return HttpResponseRedirect(istorage.url(public_file_path, url_download, zipped, aggregation))
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
@@ -605,6 +616,17 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def delete_author(request, shortkey, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    try:
+        res.metadata.delete_element('creator', element_id)
+        resource_modified(res, request.user, overwrite_bag=False)
+        ajax_response_data = {'status': 'success', 'message': "Author was deleted successfully"}
+    except Error as exp:
+        ajax_response_data = {'status': 'error', 'message': exp.message}
+    return JsonResponse(ajax_response_data)
 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
@@ -917,38 +939,22 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     else:
         status = 'error'
 
-    current_user_privilege = res.raccess.get_effective_privilege(user)
-    if current_user_privilege == PrivilegeCodes.VIEW:
-        current_user_privilege = "view"
-    elif current_user_privilege == PrivilegeCodes.CHANGE:
-        current_user_privilege = "change"
-    elif current_user_privilege == PrivilegeCodes.OWNER:
-        current_user_privilege = "owner"
+    from hs_core.models import get_access_object
 
     if user_or_group == 'user':
-        is_current_user = False
-        if user == user_to_share_with:
-            is_current_user = True
+        user_can_undo = request.user.uaccess.can_undo_share_resource_with_user(res, user_to_share_with)
+        user_to_share_with.can_undo = user_can_undo
 
-        picture_url = None
-        if user_to_share_with.userprofile.picture:
-            picture_url = user_to_share_with.userprofile.picture.url
-
-        ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                              'username': user_to_share_with.username, 'privilege_granted': privilege,
-                              'current_user_privilege': current_user_privilege,
-                              'profile_pic': picture_url, 'is_current_user': is_current_user,
-                              'error_msg': err_message}
-
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(user_to_share_with, "user", privilege)}
     else:
-        group_pic_url = None
-        if group_to_share_with.gaccess.picture:
-            group_pic_url = group_to_share_with.gaccess.picture.url
+        group_can_undo = request.user.uaccess.can_undo_share_resource_with_group(res, group_to_share_with)
+        group_to_share_with.can_undo = group_can_undo
 
-        ajax_response_data = {'status': status, 'name': group_to_share_with.name,
-                              'privilege_granted': privilege, 'group_pic': group_pic_url,
-                              'current_user_privilege': current_user_privilege,
-                              'error_msg': err_message}
+        ajax_response_data = {'status': status,
+                              'error_msg': err_message,
+                              'user': get_access_object(group_to_share_with, "group", privilege)}
 
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
@@ -1179,15 +1185,6 @@ class GroupUpdateForm(GroupForm):
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
-
-# @processor_for('my-resources')
-# @login_required
-# def my_resources(request, page):
-#
-#     resource_collection = get_my_resources_list(request)
-#     context = {'collection': resource_collection}
-#
-#     return context
 
 
 @processor_for(GenericResource)
@@ -1474,6 +1471,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
     View for the link in the verification email that was sent to a user
@@ -1587,9 +1585,9 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user = utils.user_from_id(user_or_group_id)
 
         if user.userprofile.middle_name:
-            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+            user_name = "{}, {} {}".format(user.last_name, user.first_name, user.userprofile.middle_name)
         else:
-            user_name = "{} {}".format(user.first_name, user.last_name)
+            user_name = "{}, {}".format(user.last_name, user.first_name)
 
         user_data['name'] = user_name
         user_data['email'] = user.email
@@ -1731,6 +1729,41 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
     return None
 
 
+class FindGroupsView(TemplateView):
+    template_name = 'pages/groups-unauthenticated.html'  # default view is for users not logged in
+
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/groups-authenticated.html'  # update template if user is logged in
+        return super(FindGroupsView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        if self.request.user.is_authenticated():
+            u = User.objects.get(pk=self.request.user.id)
+
+            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+            for g in groups:
+                g.is_user_member = u in g.gaccess.members
+                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                    request_from=u).exists()
+                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                    invitation_to=u).exists()
+                g.join_request = None
+                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            return {
+                'profile_user': u,
+                'groups': groups
+            }
+        else:
+            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")  # active is included in this query
+
+            return {
+                'groups': groups
+            }
+
+
 class MyGroupsView(TemplateView):
     template_name = 'pages/my-groups.html'
 
@@ -1741,7 +1774,7 @@ class MyGroupsView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
-        groups = u.uaccess.view_groups
+        groups = u.uaccess.my_groups
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
             group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
@@ -1762,29 +1795,21 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+    user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
 
 class GroupView(TemplateView):
-    template_name = 'pages/group.html'
+    template_name = 'pages/group-unauthenticated.html'
 
-    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/group.html'
         return super(GroupView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
-        u = User.objects.get(pk=self.request.user.id)
-        u.is_group_owner = u.uaccess.owns_group(g)
-        u.is_group_editor = g in u.uaccess.edit_groups
-        u.is_group_viewer = g in u.uaccess.view_groups
 
-        g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-        g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-        g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-
-        grantors = []
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
@@ -1793,44 +1818,37 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
-            grantors.append(res.grantor)
-        group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
-        # TODO: need to sort this resource list using the date_granted field
+        group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
-        return {
-            'profile_user': u,
-            'group': g,
-            'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-            'group_resources': group_resources,
-            'add_view_user_form': AddUserForm(),
-            'grantors': set(grantors)
-        }
+        if self.request.user.is_authenticated():
 
+            u = User.objects.get(pk=self.request.user.id)
+            u.is_group_owner = u.uaccess.owns_group(g)
+            u.is_group_editor = g in u.uaccess.edit_groups
+            u.is_group_viewer = g in u.uaccess.view_groups
 
-class CollaborateView(TemplateView):
-    template_name = 'pages/collaborate.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CollaborateView, self).dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-        return {
-            'profile_user': u,
-            'groups': groups,
-        }
+            g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+
+            return {
+                'profile_user': u,
+                'group': g,
+                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+                'group_resources': group_resources,
+                'add_view_user_form': AddUserForm(),
+                'communities_enabled': settings.COMMUNITIES_ENABLED
+            }
+        else:
+            public_group_resources = [r for r in group_resources if r.raccess.public]
+
+            return {
+                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+                'group_resources': public_group_resources,
+                'add_view_user_form': AddUserForm(),
+                'communities_enabled': settings.COMMUNITIES_ENABLED
+            }
 
 
 class MyResourcesView(TemplateView):
@@ -1842,7 +1860,7 @@ class MyResourcesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        
+
         resource_collection = get_my_resources_list(u)
 
         return {

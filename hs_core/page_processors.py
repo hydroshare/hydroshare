@@ -2,19 +2,23 @@
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
 from forms import ExtendedMetadataForm
+from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     can_user_copy_resource
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 import json
+
+from hs_odm2.models import ODM2Variable
 
 
 @processor_for(GenericResource)
@@ -67,7 +71,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     belongs_to_collections = content_model.collections.all()
 
-    relevant_tools = None
     tool_homepage_url = None
     if not resource_edit:  # In view mode
         landing_page_res_obj = content_model
@@ -75,8 +78,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if landing_page_res_type_str.lower() == "toolresource":
             if landing_page_res_obj.metadata.app_home_page_url:
                 tool_homepage_url = content_model.metadata.app_home_page_url.value
-        else:
-            relevant_tools = resource_level_tool_urls(landing_page_res_obj, request)
 
     just_created = False
     just_copied = False
@@ -120,6 +121,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     has_web_ref = res_has_web_reference(content_model)
 
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
+    if settings.COMMUNITIES_ENABLED:
+        topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+        topics = list(topics)  # force QuerySet evaluation
+    else:
+        topics = []
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -194,7 +200,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'missing_metadata_elements': missing_metadata_elements,
                    'validation_error': validation_error if validation_error else None,
                    'resource_creation_error': create_resource_error,
-                   'relevant_tools': relevant_tools,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
@@ -278,6 +283,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
+    grps_member_of = []
+    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+    # for each group set group dynamic attributes
+    for g in groups:
+        g.is_user_member = user in g.gaccess.members
+        if g.is_user_member:
+            grps_member_of.append(g)
+
     context = {
                'cm': content_model,
                'resource_edit_mode': resource_edit,
@@ -311,7 +324,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                               type_value != 'hasPart'),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
-               'maps_key': maps_key
+               'maps_key': maps_key,
+               'communities_enabled': settings.COMMUNITIES_ENABLED,
+               'topics_json': mark_safe(escapejs(json.dumps(topics))),
+               'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
+               'odm2_terms': list(ODM2Variable.all())
     }
 
     return context
