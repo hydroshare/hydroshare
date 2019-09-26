@@ -12,9 +12,15 @@ from nameparser import HumanName
 import probablepeople
 from string import maketrans
 import logging
-# # SOLR extension needs to be installed for this to work
+import re
+
+# # SOLR extension needs to be installed for the following to work
 # from haystack.utils.geo import Point
 
+
+adjacent_caps = re.compile("[A-Z][A-Z]")
+
+initials = re.compile("([A-Z]\.)")
 
 def remove_whitespace(thing):
     intab = ""
@@ -38,28 +44,57 @@ def normalize_name(name):
     `nameparser`.
 
     """
-    sname = name.encode('utf-8').strip()  # remove spaces
+    sname = name.strip()  # remove leading and trailing spaces
+    # Recognizer tends to mistake concatenated initials for Corporation name. 
+    # Pad initials with spaces before running recognizer
+    nname = re.sub(u"(?P<thing>[A-Z]\.)(?=[A-Z])", u"\g<thing> ", sname)
+    
     try:
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
-        _, type = probablepeople.tag(name)  # discard parser result
+        _, type = probablepeople.tag(nname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
         return sname
 
     if type == 'Corporation':
         return sname  # do not parse and reorder company names
 
+    # special case for capitalization
+    if (adjacent_caps.match(sname)): 
+        return sname
+
     # treat anything else as a human name
-    nameparts = HumanName(sname)
-    normalized = nameparts.last.capitalize()
+    nameparts = HumanName(nname)
+    normalized = ""
+    if nameparts.last: 
+        normalized = nameparts.last
+
     if nameparts.suffix:
-        normalized = normalized + ' ' + nameparts.suffix
-    normalized = normalized + ','
+        if not normalized: 
+            normalized = nameparts.suffix
+        else: 
+            normalized = normalized + u' ' + nameparts.suffix
+
+    if normalized: 
+        normalized = normalized + u','
+
     if nameparts.title:
-        normalized = normalized + ' ' + nameparts.title
+        if not normalized: 
+            normalized = nameparts.title
+        else: 
+            normalized = normalized + u' ' + nameparts.title
+
     if nameparts.first:
-        normalized = normalized + ' ' + nameparts.first.capitalize()
+        if not normalized: 
+            normalized = nameparts.first
+        else: 
+            normalized = normalized + u' ' + nameparts.first
+
     if nameparts.middle:
-        normalized = ' ' + normalized + ' ' + nameparts.middle.capitalize()
+        if not normalized: 
+            normalized = nameparts.middle
+        else: 
+            normalized = u' ' + normalized + u' ' + nameparts.middle
+
     return normalized.strip()
 
 
