@@ -6,7 +6,6 @@ Test name canonicalization
 
 from django.core.management.base import BaseCommand
 from hs_core.search_indexes import normalize_name
-import sys
 
 names = [
     u"A. Argerich",
@@ -187,7 +186,6 @@ names = [
     u"Grizelle Gonzalez",
     u"Grizelle González",
     u"Guo, Qinghua",
-    u"Gu, Xin;",
     u"Gu, Xin",
     u"Hahm, Jesse",
     u"Hallie R. Adams",
@@ -481,7 +479,6 @@ names = [
     u"Suzanne Anderson",
     u"Sweeney, B.",
     u"Szabo, Timea",
-    u"Tang, Qicheng;",
     u"Tang, Qicheng",
     u"Tess Russo",
     u"Thomas, Evan",
@@ -553,7 +550,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for n in names:
             output = normalize_name(n)
-            if not isinstance(output, unicode): 
+            if not isinstance(output, unicode):
                 print("output is str")
             if n != output:
                 print(output + "|" + n)

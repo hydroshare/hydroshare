@@ -20,7 +20,6 @@ import re
 
 adjacent_caps = re.compile("[A-Z][A-Z]")
 
-initials = re.compile("([A-Z]\.)")
 
 def remove_whitespace(thing):
     intab = ""
@@ -31,7 +30,7 @@ def remove_whitespace(thing):
 
 def normalize_name(name):
     """
-    Normalize a name for sorting.
+    Normalize a name for sorting and indexing.
 
     This uses two powerful python libraries for differing reasons.
 
@@ -41,14 +40,17 @@ def normalize_name(name):
 
     However, the actual name parser in `probablepeople` is unnecessarily complex,
     so that strings that it determines to be human names are parsed instead by
-    `nameparser`.
+    the simpler `nameparser`.
 
     """
     sname = name.strip()  # remove leading and trailing spaces
-    # Recognizer tends to mistake concatenated initials for Corporation name. 
-    # Pad initials with spaces before running recognizer
+
+    # Recognizer tends to mistake concatenated initials for Corporation name.
+    # Pad potential initials with spaces before running recognizer
+    # For any character A-Z followed by "." and another character A-Z, add a space after the first.
+    # (?=[A-Z]) means to find A-Z after the match string but not match it.
     nname = re.sub(u"(?P<thing>[A-Z]\.)(?=[A-Z])", u"\g<thing> ", sname)
-    
+
     try:
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
         _, type = probablepeople.tag(nname)  # discard parser result
@@ -59,40 +61,40 @@ def normalize_name(name):
         return sname  # do not parse and reorder company names
 
     # special case for capitalization
-    if (adjacent_caps.match(sname)): 
+    if (adjacent_caps.match(sname)):
         return sname
 
     # treat anything else as a human name
     nameparts = HumanName(nname)
     normalized = ""
-    if nameparts.last: 
+    if nameparts.last:
         normalized = nameparts.last
 
     if nameparts.suffix:
-        if not normalized: 
+        if not normalized:
             normalized = nameparts.suffix
-        else: 
+        else:
             normalized = normalized + u' ' + nameparts.suffix
 
-    if normalized: 
+    if normalized:
         normalized = normalized + u','
 
     if nameparts.title:
-        if not normalized: 
+        if not normalized:
             normalized = nameparts.title
-        else: 
+        else:
             normalized = normalized + u' ' + nameparts.title
 
     if nameparts.first:
-        if not normalized: 
+        if not normalized:
             normalized = nameparts.first
-        else: 
+        else:
             normalized = normalized + u' ' + nameparts.first
 
     if nameparts.middle:
-        if not normalized: 
+        if not normalized:
             normalized = nameparts.middle
-        else: 
+        else:
             normalized = u' ' + normalized + u' ' + nameparts.middle
 
     return normalized.strip()
