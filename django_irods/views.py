@@ -15,8 +15,6 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from . import models as m
-from .icommands import Session, GLOBAL_SESSION
 from drf_yasg.utils import swagger_auto_schema
 
 import logging
@@ -134,7 +132,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             # equivalent to irods_path = path and irods_output_path = output_path
             irods_path = os.path.join(res.resource_federation_path, path)
             irods_output_path = os.path.join(res.resource_federation_path, output_path)
-
 
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
@@ -335,7 +332,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         if __debug__:
             logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
-
 
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated
