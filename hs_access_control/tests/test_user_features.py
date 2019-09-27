@@ -51,5 +51,3 @@ class UserFeatures(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.feature_enabled(FeatureCodes.CZO))
         cat.uaccess.uncustomize(FeatureCodes.CZO)
         self.assertFalse(cat.uaccess.feature_enabled(FeatureCodes.CZO))
-
-
