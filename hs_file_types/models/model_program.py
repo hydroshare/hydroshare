@@ -6,8 +6,10 @@ import jsonschema
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
+from lxml import etree
+from dominate import tags as dom_tags
 
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, CoreMetaData
 from base import AbstractLogicalFile, FileTypeContext
 from generic import GenericFileMetaDataMixin
 
@@ -35,6 +37,16 @@ class ModelProgramResourceFileType(models.Model):
         type_string = type_string.lower()
         return type_map.get(type_string, None)
 
+    def add_to_xml_container(self, xml_container):
+        xml_name_map = {self.RELEASE_NOTES: 'modelReleaseNotes',
+                        self.DOCUMENTATION: "modelDocumentation",
+                        self.SOFTWARE: "modelSoftware",
+                        self.ENGINE: "modelEngine"
+                        }
+        element_xml_name = xml_name_map[self.file_type]
+        element = etree.SubElement(xml_container, '{%s}%s' % (CoreMetaData.NAMESPACES['hsterms'], element_xml_name))
+        element.text = self.res_file.short_path
+
 
 class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     # version
@@ -61,6 +73,84 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     code_repository = models.URLField(verbose_name='Software Repository', null=True,
                                       blank=True, max_length=255,
                                       help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
+
+    # TODO: needs to test this function once there is UI for populating metadata for this aggregation
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(ModelProgramFileMetaData, self)._get_xml_containers()
+        for mp_file_type in self.mp_file_types.all():
+            mp_file_type.add_to_xml_container(xml_container=container_to_add_to)
+        if self.version:
+            model_version = etree.SubElement(container_to_add_to,
+                                             '{%s}modelVersion' % CoreMetaData.NAMESPACES['hsterms'])
+            model_version.text = self.version
+        if self.release_date:
+            model_release_date = etree.SubElement(container_to_add_to,
+                                                  '{%s}modelReleaseDate' % CoreMetaData.NAMESPACES['hsterms'])
+            model_release_date.text = self.release_date.isoformat()
+        if self.website:
+            model_website = etree.SubElement(container_to_add_to,
+                                             '{%s}modelWebsite' % CoreMetaData.NAMESPACES['hsterms'])
+            model_website.text = self.website
+        if self.code_repository:
+            model_code_repo = etree.SubElement(container_to_add_to,
+                                               '{%s}modelCodeRepository' % CoreMetaData.NAMESPACES['hsterms'])
+            model_code_repo.text = self.code_repository
+        if self.programming_languages:
+            model_program_language = etree.SubElement(container_to_add_to,
+                                                      '{%s}modelProgramLanguage' % CoreMetaData.NAMESPACES['hsterms'])
+            model_program_language.text = ", ".join(self.programming_languages)
+        if self.operating_systems:
+            model_os = etree.SubElement(container_to_add_to,
+                                        '{%s}modelOperatingSystem' % CoreMetaData.NAMESPACES['hsterms'])
+            model_os.text = ", ".join(self.operating_systems)
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
+
+    # TODO: needs to override this base class method
+    def get_html(self, include_extra_metadata=True, **kwargs):
+        raise NotImplementedError
+
+    # TODO: needs to override this base class method
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
+        """This generates html form code to add/update the following metadata attributes
+        version
+        release_date
+
+        """
+        form_action = "/hsapi/_internal/{0}/{1}/update-generic-metadata/"
+        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        root_div = dom_tags.div("{% load crispy_forms_tags %}")
+        with root_div:
+            super(ModelProgramFileMetaData, self).get_html_forms()
+            with dom_tags.div():
+                dom_tags.legend("General Information")
+                with dom_tags.form(action=form_action, id="filetype-generic",
+                                   method="post", enctype="multipart/form-data"):
+                    dom_tags.div("{% csrf_token %}")
+                    with dom_tags.div(cls="form-group"):
+                        with dom_tags.div(cls="control-group"):
+                            dom_tags.legend('Version')
+                            with dom_tags.div(cls="controls"):
+                                dom_tags.input(value=self.version,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_version", maxlength="250",
+                                               name="version", type="text")
+                            dom_tags.legend('Release Date')
+                            with dom_tags.div(cls="controls"):
+                                dom_tags.input(value=self.release_date,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_release_date", maxlength="250",
+                                               name="release_date", type="text")
+                            # TODO: need to add the remaining metadata attributes
+
+                    with dom_tags.div(cls="row", style="margin-top:10px;"):
+                        with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                            dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                                            style="display: none;", type="button")
 
 
 class ModelProgramLogicalFile(AbstractLogicalFile):
