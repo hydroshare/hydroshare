@@ -174,40 +174,7 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
                     status=json_response.status_code)
 
 
-# TODO: This view function needs to be deleted as the actual view function for deleting
-# logical_file/aggregation is 'delete_aggregation'
-@login_required
-def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs):
-    """deletes an instance of a specific file type and all its associated resource files"""
-
-    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    if res.resource_type != "CompositeResource":
-        err_msg = "Aggregation type can be deleted only in composite resource."
-        messages.error(request, err_msg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-    if hs_file_type != "GeoRaster":
-        err_msg = "Currently only an instance of Geo Raster aggregation type can be deleted."
-        messages.error(request, err_msg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    logical_file_to_delete = GeoRasterLogicalFile.objects.filter(id=file_type_id).first()
-    if logical_file_to_delete is None:
-        err_msg = "No matching Geo Raster aggregation type was found."
-        messages.error(request, err_msg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    if logical_file_to_delete.resource.short_id != res.short_id:
-        err_msg = "Geo Raster aggregation type doesn't belong to the specified resource."
-        messages.error(request, err_msg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    logical_file_to_delete.logical_delete(request.user)
-    resource_modified(res, request.user, overwrite_bag=False)
-    msg = "Geo Raster aggregation type was deleted."
-    messages.success(request, msg)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
+@authorise_for_aggregation_edit
 @login_required
 def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
     """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
