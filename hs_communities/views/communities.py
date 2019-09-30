@@ -4,7 +4,7 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
@@ -29,6 +29,7 @@ class CommunityView(TemplateView):
 
         community = community_from_name_or_id(kwargs['community_id'])
         community_resources = community.public_resources
+        print(len(community_resources))
         raw_groups = community.groups_with_public_resources()
         groups = []
 
@@ -104,9 +105,18 @@ class TopicsView(TemplateView):
     """
 
     def get(self, request, *args, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+        if u.username not in ['czo_national', 'czo_sierra', 'czo_boulder', 'czo_christina', 'czo_luquillo', 'czo_eel',
+                              'czo_catalina-jemez', 'czo_reynolds', 'czo_calhoun', 'czo_shale-hills']:
+            return redirect('/' % request.path)
+
         return render(request, 'pages/topics.html', {'topics_json': self.get_topics_data()})
 
     def post(self, request, *args, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+        if u.username != 'czo_national':
+            return redirect('/' % request.path)
+
         if request.POST.get('action') == 'CREATE':
             new_topic = Topic()
             new_topic.name = request.POST.get('name').replace("--", "")
