@@ -54,13 +54,13 @@ def normalize_name(name):
     try:
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
         _, type = probablepeople.tag(nname)  # discard parser result
-    except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
-        return sname
+    except probablepeople.RepeatedLabelError:  # if it can't understand the name, it's foreign
+        type = 'Unknown'
 
     if type == 'Corporation':
         return sname  # do not parse and reorder company names
 
-    # special case for capitalization
+    # special case for capitalization: flag as corporation
     if (adjacent_caps.match(sname)):
         return sname
 
