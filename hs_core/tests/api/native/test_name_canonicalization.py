@@ -46,7 +46,7 @@ class NameTest(TestCase):
             [u" IITF ", u"IITF"],
             [u"Ingo Heidbuechel", u"Ingo Heidbuechel"],  # miscategorized as corporation
             [u"Luquillo Critical Zone Observatory", u"Luquillo Critical Zone Observatory"],
-            [u"M. Yekta", u"Yekta, M."],
+            [u"M. Yekta", u"M. Yekta"],
             [u"NADP", u"NADP"],
             [u"National Ocean Service (NOS)", u"National Ocean Service (NOS)"],
             [u"National Park Service", u"National Park Service"],
@@ -82,8 +82,6 @@ class NameTest(TestCase):
             [u"Sharon Billings", u"Billings, Sharon"],
             [u"Sharon Cantrell", u"Cantrell, Sharon"],
             [u"S. Havens", u"Havens, S."],
-            [u"Southern Sierra Critical Zone Observatory", u"Southern Sierra Critical Zone Observatory"],
-            [u"Stone M.M.", u"Stone M.M."],
             [u"Stone, M.M.", u"Stone, M. M."],
             [u"Stromberg, Mark", u"Stromberg, Mark"],
             [u"Stroud Water Research Center", u"Stroud Water Research Center"],
