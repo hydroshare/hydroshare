@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Test name canonicalization
+Test name canonicalization: This is a test and should be deleted after approval. 
 
 """
 
@@ -545,7 +545,7 @@ names = [
 
 
 class Command(BaseCommand):
-    help = "Set resource 'metadata_dirty' and 'bag_modified' AVUs to true"
+    help = "Results of name canonicalization for review by @cuahsimarko"
 
     def handle(self, *args, **options):
         for n in names:
