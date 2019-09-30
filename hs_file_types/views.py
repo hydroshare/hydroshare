@@ -1,29 +1,30 @@
-import os
 import json
+import os
 
-from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.db import Error
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.db import Error
+from django.http import JsonResponse
 from django.template import Template, Context
-
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     ResourceFile, utils
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
-from hs_core.hydroshare.utils import resource_modified
 from hs_core.hydroshare.resource import update_quota_usage
+from hs_core.hydroshare.utils import resource_modified
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
-
-from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
-
+from .models import FileSetLogicalFile
+from .models import GenericLogicalFile
+from .models import GeoFeatureLogicalFile
+from .models import GeoRasterLogicalFile
+from .models import ModelProgramLogicalFile
+from .models import NetCDFLogicalFile
+from .models import RefTimeseriesLogicalFile
+from .models import TimeSeriesLogicalFile
 from .utils import set_logical_file_type
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
@@ -32,8 +33,40 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "NetCDFLogicalFile": NetCDFLogicalFile,
                  "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
                  "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
-                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile
+                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
+                 "ModelProgramLogicalFile": ModelProgramLogicalFile
                  }
+
+
+def authorise_for_aggregation_edit(f=None, file_type=None):
+    """a decorator for checking if the user has edit permission to the resource for which the aggregation needs to
+    be edited"""
+
+    def real_decorator(view_func):
+        def wrapper(request, *args, **kwargs):
+            file_type_id = kwargs['file_type_id']
+            hs_file_type = kwargs.get('hs_file_type', file_type)
+
+            logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+            if json_response is not None:
+                return json_response
+
+            resource_id = logical_file.resource.short_id
+            resource, authorized, _ = authorize(request, resource_id,
+                                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                                raises_exception=False)
+            ajax_response_data = {}
+            if not authorized:
+                ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                                      'message': "Permission denied"}
+
+            kwargs['logical_file'] = logical_file
+            kwargs['error_response'] = ajax_response_data
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    if f is None:
+        return real_decorator
+    return real_decorator(f)
 
 
 @login_required
@@ -182,8 +215,15 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     """
 
     response_data = {'status': 'error'}
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    aggregation = kwargs['logical_file']
+
+    res = aggregation.resource
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be deleted only in composite resource."
         response_data['message'] = err_msg
@@ -192,14 +232,6 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
         err_msg = err_msg.format(FILE_TYPE_MAP.keys())
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
-    if aggregation is None:
-        err_msg = "No matching aggregation was found."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -212,33 +244,29 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
     """Deletes all files associated with an aggregation and all the associated metadata.
     """
 
     response_data = {'status': 'error'}
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    aggregation = kwargs['logical_file']
+
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
         err_msg = err_msg.format(FILE_TYPE_MAP.keys())
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    if res.resource_type != "CompositeResource":
-        err_msg = "Aggregation type can be deleted only in composite resource."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
-    if aggregation is None:
-        err_msg = "No matching aggregation was found."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
     aggregation.logical_delete(request.user)
+    res = aggregation.resource
     update_quota_usage(res)
     msg = "Aggregation was successfully deleted."
     response_data['status'] = 'success'
@@ -248,29 +276,29 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", **kwargs):
     """moves all files associated with an aggregation and all the associated metadata.
     """
     response_data = {'status': 'error'}
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_200_OK)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    aggregation = kwargs['logical_file']
+
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
         err_msg = err_msg.format(FILE_TYPE_MAP.keys())
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    res, _, user = authorize(request, resource_id,
-                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res = aggregation.resource
     if res.resource_type != "CompositeResource":
         err_msg = "Aggregation type can be deleted only in composite resource."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
-    if aggregation is None:
-        err_msg = "No matching aggregation was found."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -285,34 +313,29 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
     res.recreate_aggregation_xml_docs(orig_path=orig_aggregation_name,
                                       new_path=new_aggregation_name)
-    resource_modified(res, user, overwrite_bag=False)
+    resource_modified(res, request.user, overwrite_bag=False)
     msg = "Aggregation was successfully moved to {}.".format(tgt_path)
     response_data['status'] = 'success'
     response_data['message'] = msg
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit(file_type='FileSetLogicalFile')
 @login_required
-def update_aggregation_coverage(request, file_type_id, coverage_type):
+def update_aggregation_coverage(request, file_type_id, coverage_type, **kwargs):
     """Updates fileset aggregation level coverage using coverage data from the contained
     aggregations
     :param  file_type_id:   id of the fileset aggregation for which coverage needs to be updated
     :param  coverage_type:  a value of either temporal or spatial
     """
     response_data = {'status': 'error'}
-    fs_aggr = FileSetLogicalFile.objects.filter(id=file_type_id).first()
-    if fs_aggr is None:
-        err_msg = "No matching fileset aggregation was found."
-        response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
-    resource_id = fs_aggr.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    if not authorized:
-        response_data['message'] = "Permission denied"
-        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    fs_aggr = kwargs['logical_file']
 
     if coverage_type.lower() not in ('temporal', 'spatial'):
         err_msg = "Invalid coverage type specified."
@@ -339,30 +362,23 @@ def update_aggregation_coverage(request, file_type_id, coverage_type):
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                             element_id, **kwargs):
     err_msg = "Failed to update metadata element '{}'. {}."
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
-    if logical_file is None:
-        err_msg = "No matching aggregation type was found."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = element_name
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': element_name, 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     validation_response = logical_file.metadata.validate_element_data(request, element_name)
     is_update_success = False
+    resource = logical_file.resource
     if validation_response['is_valid']:
         element_data_dict = validation_response['element_data_dict']
         try:
@@ -412,35 +428,28 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kwargs):
     err_msg = "Failed to create metadata element '{}'. {}."
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
 
-    if logical_file is None:
-        err_msg = "No matching aggregation type was found."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = element_name
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': element_name, 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     validation_response = logical_file.metadata.validate_element_data(request, element_name)
     is_add_success = False
+    resource = logical_file.resource
     if validation_response['is_valid']:
         element_data_dict = validation_response['element_data_dict']
         try:
             element = logical_file.metadata.create_element(element_name, **element_data_dict)
-            resource_modified(logical_file.resource, request.user, overwrite_bag=False)
+            resource_modified(resource, request.user, overwrite_bag=False)
             is_add_success = True
         except ValidationError as ex:
             err_msg = err_msg.format(element_name, ex.message)
@@ -488,6 +497,7 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def delete_coverage_element(request, hs_file_type, file_type_id,
                             element_id, **kwargs):
@@ -495,28 +505,19 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
     aggregation"""
 
     element_type = 'coverage'
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = element_type
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
+
     if hs_file_type not in ('GenericLogicalFile', 'FileSetLogicalFile'):
         err_msg = "Coverage can be deleted only for single file content or file set content."
         ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
-
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
-    if logical_file is None:
-        err_msg = "No matching aggregation type was found."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
-
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': element_type, 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     coverage_element = logical_file.metadata.coverages.filter(id=element_id).first()
     if coverage_element is None:
@@ -527,7 +528,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     # delete the coverage element
     logical_file.metadata.delete_element(element_type, element_id)
-
+    resource = logical_file.resource
     if resource.can_be_public_or_discoverable:
         metadata_status = METADATA_STATUS_SUFFICIENT
     else:
@@ -552,6 +553,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     """add/update key/value extended metadata for a given logical file
@@ -560,26 +562,22 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     If the key already exists, the value then gets updated, otherwise, the key/value is added
     to the hstore dict type field
     """
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'key_value'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'key_value', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     def validate_key():
         if key in logical_file.metadata.extra_metadata.keys():
             ajax_response_data = {'status': 'error',
                                   'logical_file_type': logical_file.type_name(),
                                   'message': "Update failed. Key already exists."}
-            return False, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+            return False, JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
         return True, None
 
     key_original = request.POST.get('key_original', None)
@@ -604,6 +602,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.is_dirty = True
     logical_file.metadata.save()
+    resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     extra_metadata_div = super(logical_file.metadata.__class__,
                                logical_file.metadata).get_extra_metadata_html_form()
@@ -616,26 +615,25 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     """deletes one pair of key/value extended metadata for a given logical file
     key data is expected as part of the request.POST data
     If key is found the matching key/value pair is deleted from the hstore dict type field
     """
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'key_value', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'key_value'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     key = request.POST['key']
+    resource = logical_file.resource
     if key in logical_file.metadata.extra_metadata.keys():
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.is_dirty = True
@@ -653,6 +651,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     """adds one or more keywords for a given logical file
@@ -663,30 +662,26 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     NOTE: This view function must be called via ajax call
     """
 
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'keyword'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'keyword', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_keywords_in_json:
         # if there are keywords in json file, we don't allow adding new keyword
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'keyword', 'message':
                                   "Adding of keyword is not allowed"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     keywords = request.POST['keywords']
     keywords = keywords.split(",")
     existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
+    resource = logical_file.resource
     if not any(kw.lower() in keywords for kw in existing_keywords):
         metadata = logical_file.metadata
         metadata.keywords += keywords
@@ -710,6 +705,7 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     """deletes a keyword for a given logical file
@@ -717,26 +713,20 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     NOTE: This view function must be called via ajax call
     """
 
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'keyword'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_keywords_in_json:
         # if there are keywords in json file, we don't allow deleting keyword
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'keyword', 'message':
-                                  "Keyword delete is not allowed"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
-
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'keyword', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+                              'element_name': 'keyword', 'message': "Keyword delete is not allowed"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     keyword = request.POST['keyword']
     existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
@@ -747,6 +737,7 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
             metadata = logical_file.metadata
             metadata.is_dirty = True
             metadata.save()
+        resource = logical_file.resource
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'deleted_keyword': keyword,
@@ -758,29 +749,26 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit
 @login_required
 def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     """updates the dataset_name (title) attribute of the specified logical file object
     """
 
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'dataset_name'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'datatset_name', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_title_in_json:
         # if json file has title, we can't update title (dataset name)
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'title', 'message': "Title can't be updated"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     dataset_name = request.POST['dataset_name']
     logical_file.dataset_name = dataset_name
@@ -788,9 +776,10 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     metadata = logical_file.metadata
     metadata.is_dirty = True
     metadata.save()
+    resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                          'element_name': 'datatset_name', "is_dirty": metadata.is_dirty,
+                          'element_name': 'dataset_name', "is_dirty": metadata.is_dirty,
                           'message': "Update was successful"}
     if logical_file.type_name() == "TimeSeriesLogicalFile":
         ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
@@ -798,31 +787,29 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit(file_type='RefTimeseriesLogicalFile')
 @login_required
 def update_refts_abstract(request, file_type_id, **kwargs):
     """updates the abstract for ref time series specified logical file object
     """
 
-    logical_file, json_response = _get_logical_file('RefTimeseriesLogicalFile', file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'abstract'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'abstract', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     if logical_file.metadata.has_abstract_in_json:
         # if json file has abstract, we can't update abstract
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     abstract = request.POST['abstract']
+    resource = logical_file.resource
     if abstract.strip():
         logical_file.metadata.abstract = abstract
         logical_file.metadata.is_dirty = True
@@ -837,25 +824,23 @@ def update_refts_abstract(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit(file_type='TimeSeriesLogicalFile')
 @login_required
 def update_timeseries_abstract(request, file_type_id, **kwargs):
     """updates the abstract for time series specified logical file object
     """
 
-    logical_file, json_response = _get_logical_file('TimeSeriesLogicalFile', file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        error_response['element_name'] = 'abstract'
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'abstract', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     abstract = request.POST['abstract']
+    resource = logical_file.resource
     if abstract.strip():
         metadata = logical_file.metadata
         metadata.abstract = abstract
@@ -873,25 +858,20 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit(file_type="NetCDFLogicalFile")
 @login_required
 def update_netcdf_file(request, file_type_id, **kwargs):
     """updates (writes the metadata) the netcdf file associated with a instance of a specified
     NetCDFLogicalFile file object
     """
 
-    hs_file_type = "NetCDFLogicalFile"
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'datatset_name', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     try:
         logical_file.update_netcdf_file(request.user)
@@ -900,31 +880,27 @@ def update_netcdf_file(request, file_type_id, **kwargs):
                               'message': ex.message}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
+    resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'message': "NetCDF file update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit(file_type="TimeSeriesLogicalFile")
 @login_required
 def update_sqlite_file(request, file_type_id, **kwargs):
     """updates (writes the metadata) the SQLite file associated with a instance of a specified
     TimeSeriesLogicalFile file object
     """
 
-    hs_file_type = "TimeSeriesLogicalFile"
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-    if json_response is not None:
-        return json_response
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-    resource_id = logical_file.resource.short_id
-    resource, authorized, _ = authorize(request, resource_id,
-                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                        raises_exception=False)
-    if not authorized:
-        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'datatset_name', 'message': "Permission denied"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
 
     try:
         logical_file.update_sqlite_file(request.user)
@@ -933,10 +909,19 @@ def update_sqlite_file(request, file_type_id, **kwargs):
                               'message': ex.message}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
+    resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'message': "SQLite file update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def update_model_program_generic_metadata(request, file_type_id, **kwargs):
+    """adds/update any/all of the following metadata attributes associated metadata object
+
+    """
+    pass
 
 
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
@@ -1020,7 +1005,13 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
 
 
 def _get_logical_file(hs_file_type, file_type_id):
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    try:
+        content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    except ObjectDoesNotExist:
+        err_msg = "Invalid aggregation type name:{}.".format(hs_file_type)
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return None, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     logical_file_type_class = content_type.model_class()
     logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
     if logical_file is None:
