@@ -1034,7 +1034,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = update_dataset_name(request, hs_file_type="RefTimeseriesLogicalFile",
                                        file_type_id=logical_file.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_dict = json.loads(response.content)
         self.assertEqual('error', response_dict['status'])
         # check dataset_name after updating via the view function
@@ -1113,7 +1113,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         request.user = self.user
         # this is the view function we are testing
         response = update_refts_abstract(request, file_type_id=logical_file.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_dict = json.loads(response.content)
         self.assertEqual('error', response_dict['status'])
         # check abstract after updating via the view function
@@ -1255,7 +1255,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = add_keyword_metadata(request, hs_file_type=file_type,
                                         file_type_id=logical_file.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_dict = json.loads(response.content)
         self.assertEqual('error', response_dict['status'])
         self.assertEqual(len(logical_file.metadata.keywords), 2)
@@ -1270,7 +1270,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = delete_keyword_metadata(request, hs_file_type=file_type,
                                            file_type_id=logical_file.id)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_dict = json.loads(response.content)
         self.assertEqual('error', response_dict['status'])
 
