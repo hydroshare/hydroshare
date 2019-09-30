@@ -53,6 +53,7 @@ class Feature(models.Model):
     user = models.ForeignKey(User, null=True, related_name='feature')
     feature = models.IntegerField(choices=FeatureCodes.CHOICES, default=FeatureCodes.NONE)
     enabled = models.BooleanField(null=False, blank=False, default=False)
+
     class Meta:
         unique_together = ('user', 'feature')
 
