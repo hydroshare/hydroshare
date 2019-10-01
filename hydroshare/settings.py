@@ -727,3 +727,10 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
+
+####################
+# Allow Unicode printout to terminals
+####################
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
