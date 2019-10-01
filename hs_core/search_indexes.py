@@ -12,8 +12,13 @@ from nameparser import HumanName
 import probablepeople
 from string import maketrans
 import logging
-# # SOLR extension needs to be installed for this to work
+import re
+
+# # SOLR extension needs to be installed for the following to work
 # from haystack.utils.geo import Point
+
+
+adjacent_caps = re.compile("[A-Z][A-Z]")
 
 
 def remove_whitespace(thing):
@@ -25,7 +30,7 @@ def remove_whitespace(thing):
 
 def normalize_name(name):
     """
-    Normalize a name for sorting.
+    Normalize a name for sorting and indexing.
 
     This uses two powerful python libraries for differing reasons.
 
@@ -35,31 +40,63 @@ def normalize_name(name):
 
     However, the actual name parser in `probablepeople` is unnecessarily complex,
     so that strings that it determines to be human names are parsed instead by
-    `nameparser`.
+    the simpler `nameparser`.
 
     """
-    sname = name.encode('utf-8').strip()  # remove spaces
+    sname = name.strip()  # remove leading and trailing spaces
+
+    # Recognizer tends to mistake concatenated initials for Corporation name.
+    # Pad potential initials with spaces before running recognizer
+    # For any character A-Z followed by "." and another character A-Z, add a space after the first.
+    # (?=[A-Z]) means to find A-Z after the match string but not match it.
+    nname = re.sub(u"(?P<thing>[A-Z]\.)(?=[A-Z])", u"\g<thing> ", sname)
+
     try:
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
-        _, type = probablepeople.tag(name)  # discard parser result
-    except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
-        return sname
+        _, type = probablepeople.tag(nname)  # discard parser result
+    except probablepeople.RepeatedLabelError:  # if it can't understand the name, it's foreign
+        type = 'Unknown'
 
     if type == 'Corporation':
         return sname  # do not parse and reorder company names
 
+    # special case for capitalization: flag as corporation
+    if (adjacent_caps.match(sname)):
+        return sname
+
     # treat anything else as a human name
-    nameparts = HumanName(sname)
-    normalized = nameparts.last.capitalize()
+    nameparts = HumanName(nname)
+    normalized = ""
+    if nameparts.last:
+        normalized = nameparts.last
+
     if nameparts.suffix:
-        normalized = normalized + ' ' + nameparts.suffix
-    normalized = normalized + ','
+        if not normalized:
+            normalized = nameparts.suffix
+        else:
+            normalized = normalized + u' ' + nameparts.suffix
+
+    if normalized:
+        normalized = normalized + u','
+
     if nameparts.title:
-        normalized = normalized + ' ' + nameparts.title
+        if not normalized:
+            normalized = nameparts.title
+        else:
+            normalized = normalized + u' ' + nameparts.title
+
     if nameparts.first:
-        normalized = normalized + ' ' + nameparts.first.capitalize()
+        if not normalized:
+            normalized = nameparts.first
+        else:
+            normalized = normalized + u' ' + nameparts.first
+
     if nameparts.middle:
-        normalized = ' ' + normalized + ' ' + nameparts.middle.capitalize()
+        if not normalized:
+            normalized = nameparts.middle
+        else:
+            normalized = u' ' + normalized + u' ' + nameparts.middle
+
     return normalized.strip()
 
 
