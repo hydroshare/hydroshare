@@ -385,6 +385,9 @@
                                 </div>
                             </template>
                         </div>
+                        <div v-if="edit_author_error" class="alert alert-danger space-top">
+                          ${edit_author_error}
+                        </div>
                     </div>
 
                     <div class="modal-footer">

@@ -26,6 +26,7 @@ Vue.component('edit-author-modal', {
         can_remove: {type: Boolean, required: true},
         is_updating_author: {type: Boolean, required: false},
         is_deleting_author: {type: Boolean, required: false},
+        edit_author_error: {type: String, required: false},
     },
     data: function () {
         let identifiers = [];
