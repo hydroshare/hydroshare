@@ -83,12 +83,10 @@ Vue.component('edit-author-modal', {
             let identifiers = [];
             let localAuthor = $.extend(true, {}, this._author);
 
-            if (!this.is_person) {
-                $.each(this._author.identifiers, function (identifierName, identifierLink) {
-                    identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
-                });
-                localAuthor.identifiers = identifiers;
-            }
+            $.each(this._author.identifiers, function (identifierName, identifierLink) {
+                identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
+            });
+            localAuthor.identifiers = identifiers;
 
             this.author = localAuthor;
             this.showConfirmDelete = false;
