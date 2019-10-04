@@ -359,7 +359,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
         if hasattr(obj, 'metadata'):
-            return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
+            return obj.metadata.relations.filter(type='isReplacedBy').exists()
         else:
             return False
 
@@ -471,17 +471,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["start"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        if len(parsed_date) == 3: 
+                        if len(parsed_date) == 3:
                             start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else: 
+                        else:
                             start_date = ""
-                    elif "-" in clean_date: 
+                    elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
-                        if len(parsed_date) == 3: 
+                        if len(parsed_date) == 3:
                             start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else: 
+                        else:
                             start_date = ""
-                        
+
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -505,15 +505,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["end"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        if len(parsed_date) == 3: 
+                        if len(parsed_date) == 3:
                             end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else: 
+                        else:
                             end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
-                        if len(parsed_date) == 3: 
+                        if len(parsed_date) == 3:
                             end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else: 
+                        else:
                             end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
