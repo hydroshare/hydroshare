@@ -46,14 +46,3 @@
 <tr><td>published</td><td>{{ raccess.published }}</td></tr>
 </tbody> 
 </table>
-
-{% if irods_issues %}
-    <h2>iRODs issues found</h2>
-    <ul>
-    {% for issue in irods_issues %}
-        <li><code>{{ issue }}</code></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <h2>No irods issues found.</h2>
-{% endif %}
