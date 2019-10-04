@@ -36,15 +36,15 @@ def irods_issues(request, shortkey):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-    task = resource_debug.apply_async((resource.short_id))
+    task = resource_debug.apply_async((resource.short_id,))
     return redirect("get_debug_task_status", task_id=task.task_id)
 
 def check_task_status(request, task_id=None, *args, **kwargs):
     ''' Checks the task status of the resource_debug job specified by the task_id '''
-    if AsyncResult(task_id).state:
+    if AsyncResult(task_id).ready():
         status = "SUCCESS"
         try:
-            irods_issues, irods_errors = irods_issues, irods_errors = resource_debug.AsyncResult(task_id)
+            irods_issues, irods_errors = resource_debug.AsyncResult(task_id)
         except Exception as e:
             status = "ERROR - {}".format(e)
         context = {
