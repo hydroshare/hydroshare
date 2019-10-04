@@ -471,10 +471,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["start"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                    else:
+                        if len(parsed_date) == 3: 
+                            start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else: 
+                            start_date = ""
+                    elif "-" in clean_date: 
                         parsed_date = clean_date.split("-")
-                        start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        if len(parsed_date) == 3: 
+                            start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else: 
+                            start_date = ""
+                        
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -498,10 +505,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["end"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        if len(parsed_date) == 3: 
+                            end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else: 
+                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
-                        end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        if len(parsed_date) == 3: 
+                            end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else: 
+                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
