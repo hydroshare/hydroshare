@@ -606,7 +606,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         return e
 
 @shared_task
-def reosource_debug(resource_id):
+def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey

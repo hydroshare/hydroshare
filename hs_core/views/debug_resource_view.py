@@ -4,8 +4,9 @@ from django.http import HttpResponse
 from django.template import loader
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_access_control.models import PrivilegeCodes
-from hs_core.tasks import reosource_debug
+from hs_core.tasks import resource_debug
 from django.shortcuts import redirect
+from celery.result import AsyncResult
 
 
 def debug_resource(request, shortkey):
@@ -35,18 +36,17 @@ def irods_issues(request, shortkey):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-    task = reosource_debug.apply_async((resource))
+    task = resource_debug.apply_async((resource.short_id))
     return redirect("get_debug_task_status", task_id=task.task_id)
 
 def check_task_status(request, task_id=None, *args, **kwargs):
     ''' Checks the task status of the resource_debug job specified by the task_id '''
-    status = "SUCCESS"
-    try:
-        result = reosource_debug.AsyncResult(task_id)
-    except Exception as e:
-        status = "ERROR - {}".format(e)
-    if result.ready():
-        irods_issues, irods_errors = result.get()
+    if AsyncResult(task_id).state:
+        status = "SUCCESS"
+        try:
+            irods_issues, irods_errors = irods_issues, irods_errors = resource_debug.AsyncResult(task_id)
+        except Exception as e:
+            status = "ERROR - {}".format(e)
         context = {
             'status': status,
             'irods_issue': irods_issues,
