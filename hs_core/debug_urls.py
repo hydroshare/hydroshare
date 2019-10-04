@@ -8,4 +8,7 @@ urlpatterns = [
     url(r'^resource/(?P<shortkey>[0-9a-f-]+)/debug/$',
         views.debug_resource_view.debug_resource,
         name='debug_resource'),
+    url(r'^resource/(?P<shortkey>[0-9a-f-]+)/debug/irods-issues/$',
+        views.debug_resource_view.irods_issues,
+        name='debug_resource'),
 ]
