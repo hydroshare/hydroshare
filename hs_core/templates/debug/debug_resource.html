@@ -115,9 +115,10 @@
       }
       else if (response.status === null) {
         // Resend the request
+        let url = this.responseURL;
         setTimeout(function () {
           console.log("Resending...");
-          xhttp.open("GET", "irods-issues/", true);
+          xhttp.open("GET", url, true);
           xhttp.send();
         }, 1000);
       }
