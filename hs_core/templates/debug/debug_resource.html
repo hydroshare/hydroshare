@@ -100,6 +100,8 @@
             list.appendChild(listItem);
           }
           irodsIssuesDiv.appendChild(list);
+          // Remove loading indicator
+          document.querySelector("#irods-issues > .loading").remove();
         }
         else {
           // No issues found
@@ -107,18 +109,27 @@
           let titleText = document.createTextNode("No iRODs issues found.");
           title.appendChild(titleText);
           irodsIssuesDiv.appendChild(title);
+          // Remove loading indicator
+          document.querySelector("#irods-issues > .loading").remove();
         }
+      }
+      else if (response.status === null) {
+        // Resend the request
+        setTimeout(function () {
+          console.log("Resending...");
+          xhttp.open("GET", "irods-issues/", true);
+          xhttp.send();
+        }, 1000);
       }
       else {
         // Failed to retrieve data
         let title = document.createElement("P");
         let titleText = document.createTextNode("Failed to debug resource.");
         title.appendChild(titleText);
-        irodsIssuesDiv.appendChild(title)
+        irodsIssuesDiv.appendChild(title);
+        // Remove loading indicator
+        document.querySelector("#irods-issues > .loading").remove();
       }
-
-      // Remove loading indicator
-      document.querySelector("#irods-issues > .loading").remove();
     }
   };
   xhttp.open("GET", "irods-issues/", true);
