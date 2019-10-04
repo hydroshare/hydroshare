@@ -588,10 +588,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if obj.verbose_name != 'Composite Resource':
             return [obj.discovery_content_type]
         else:
-            output = []
+            output = set()
             for f in obj.logical_files:
-                output.append(f.get_discovery_content_type())
-            return output
+                output.add(f.get_discovery_content_type())
+            if len(output) == 0:
+                output.add("Generic Data")
+            return list(output)
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
