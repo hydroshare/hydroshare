@@ -191,7 +191,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def index_queryset(self, using=None):
         """Return queryset including discoverable and public resources."""
         return self.get_model().objects.filter(Q(raccess__discoverable=True) |
-                                               Q(raccess__public=True))
+                                               Q(raccess__public=True)).distinct()
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
