@@ -60,41 +60,41 @@ class Command(BaseCommand):
                                               Q(raccess__public=True))
             print("Django count = {}".format(dqs.count()))
 
-            if sqs.count() != dqs.count():
-                # what is in django that isn't in SOLR:
-                found = set()
-                count = 0
-                for r in list(sqs):
-                    found.add(r.short_id)
-                    # resource = get_resource_by_shortkey(r.short_id)
-                    # print("{} {} found".format(r.short_id, resource.discovery_content_type))
-                for r in dqs:
+            # what is in Django that isn't in SOLR:
+            found = set()
+            count = 0
+            for r in list(sqs):
+                found.add(r.short_id)
+                # resource = get_resource_by_shortkey(r.short_id)
+                # print("{} {} found".format(r.short_id, resource.discovery_content_type))
+            for r in dqs:
+                resource = get_resource_by_shortkey(r.short_id)
+                if r.short_id not in found:
+                    print("{} {} NOT FOUND in SOLR: adding to index".format(
+                            r.short_id, resource.discovery_content_type))
+                    count += 1
+                    ind.update_object(r)
+                # # This always returns True whether or not SOLR needs updating
+                # elif ind.should_update(r):
+                #     print("{} {} needs SOLR update: updating in index".format(
+                #             r.short_id, resource.discovery_content_type))
+                #     ind.update_object(r)
+                #     count += 1
+
+            print("{} resources in Django refreshed in SOLR".format(count))
+
+            # what is in SOLR that isn't in Django:
+            found = set()
+            count = 0
+            for r in list(dqs):
+                found.add(r.short_id)
+                # resource = get_resource_by_shortkey(r.short_id)
+                # print("{} {} found".format(r.short_id, resource.discovery_content_type))
+            for r in sqs:
+                if r.short_id not in found:
                     resource = get_resource_by_shortkey(r.short_id)
-                    if r.short_id not in found:
-                        print("{} {} NOT FOUND in SOLR: adding to index".format(
-                                r.short_id, resource.discovery_content_type))
-                        count += 1
-                        ind.update_object(r)
-                    elif ind.should_update(r):
-                        print("{} {} needs SOLR update: updating in index".format(
-                                r.short_id, resource.discovery_content_type))
-                        ind.update_object(r)
-                        count += 1
-
-                print("{} resources in Django refreshed in SOLR".format(count))
-
-                # what is in SOLR that isn't in django:
-                found = set()
-                count = 0
-                for r in list(dqs):
-                    found.add(r.short_id)
-                    # resource = get_resource_by_shortkey(r.short_id)
-                    # print("{} {} found".format(r.short_id, resource.discovery_content_type))
-                for r in sqs:
-                    if r.short_id not in found:
-                        resource = get_resource_by_shortkey(r.short_id)
-                        print("{} {} NOT FOUND in Django; removing from SOLR".format(
-                                r.short_id, resource.discovery_content_type))
-                        ind.remove_object(r)
-                        count += 1
-                print("{} resources in not in Django removed from SOLR".format(count))
+                    print("{} {} NOT FOUND in Django; removing from SOLR".format(
+                            r.short_id, resource.discovery_content_type))
+                    ind.remove_object(r)
+                    count += 1
+            print("{} resources in not in Django removed from SOLR".format(count))
