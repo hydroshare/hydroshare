@@ -6,6 +6,7 @@ import jsonschema
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.template import Template
 from lxml import etree
 from dominate import tags as dom_tags
 
@@ -129,11 +130,13 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         release_date
 
         """
-        form_action = "/hsapi/_internal/{0}/{1}/update-generic-metadata/"
-        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        form_action = "/hsapi/_internal/{}/update-modelprogram-metadata/"
+        form_action = form_action.format(self.logical_file.id)
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
+        base_div, context = super(ModelProgramFileMetaData, self).get_html_forms(render=False)
+
         with root_div:
-            super(ModelProgramFileMetaData, self).get_html_forms()
+            dom_tags.div().add(base_div)
             with dom_tags.div():
                 dom_tags.legend("General Information")
                 with dom_tags.form(action=form_action, id="filetype-generic",
@@ -143,22 +146,67 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                         with dom_tags.div(cls="control-group"):
                             dom_tags.legend('Version')
                             with dom_tags.div(cls="controls"):
-                                dom_tags.input(value=self.version,
+                                if self.version:
+                                    version = self.version
+                                else:
+                                    version = ""
+                                dom_tags.input(value=version,
                                                cls="form-control input-sm textinput textInput",
                                                id="file_version", maxlength="250",
                                                name="version", type="text")
                             dom_tags.legend('Release Date')
                             with dom_tags.div(cls="controls"):
-                                dom_tags.input(value=self.release_date,
+                                if self.release_date:
+                                    release_date = self.release_date.strftime('%m/%d/%Y')
+                                else:
+                                    release_date = ""
+                                dom_tags.input(value=release_date,
                                                cls="form-control input-sm textinput textInput",
                                                id="file_release_date", maxlength="250",
                                                name="release_date", type="text")
                             # TODO: need to add the remaining metadata attributes
-
+                            dom_tags.legend('Website')
+                            with dom_tags.div(cls="controls"):
+                                if self.website:
+                                    website = self.website
+                                else:
+                                    website = ""
+                                dom_tags.input(value=website,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_website", maxlength="250",
+                                               name="website", type="text")
+                            dom_tags.legend('Code Repository')
+                            with dom_tags.div(cls="controls"):
+                                if self.code_repository:
+                                    code_repo = self.code_repository
+                                else:
+                                    code_repo = ""
+                                dom_tags.input(value=code_repo,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_code_repository", maxlength="250",
+                                               name="code_repository", type="text")
+                            dom_tags.legend('Operating Systems')
+                            with dom_tags.div(cls="controls"):
+                                operating_systems = self.operating_systems_as_string
+                                dom_tags.input(value=operating_systems,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_operating_systems", maxlength="250",
+                                               name="operating_systems", type="text")
+                            dom_tags.legend('Programming Languages')
+                            with dom_tags.div(cls="controls"):
+                                programming_languages = self.programming_languages_as_string
+                                dom_tags.input(value=programming_languages,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_programming_languages", maxlength="250",
+                                               name="programming_languages", type="text")
                     with dom_tags.div(cls="row", style="margin-top:10px;"):
                         with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                             dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
                                             style="display: none;", type="button")
+
+        template = Template(root_div.render())
+        rendered_html = template.render(context)
+        return rendered_html
 
 
 class ModelProgramLogicalFile(AbstractLogicalFile):
