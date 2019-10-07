@@ -87,6 +87,11 @@ urlpatterns = [
         views.update_timeseries_abstract,
         name="update_timeseries_abstract"),
 
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/'
+        r'update-modelprogram-metadata/$',
+        views.update_model_program_metadata,
+        name="update_modelprogram_metadata"),
+
     url(r'^_internal/(?P<file_type_id>[0-9]+)/update-netcdf-file/$',
         views.update_netcdf_file,
         name="update_netcdf_file"),
