@@ -122,5 +122,5 @@ class Command(BaseCommand):
                     else:
                         solr_replaced += 1
             print("{} resources not in Django removed from SOLR".format(solr_deleted))
-            print("Django contains {} discoverable resources and {} replaced resources"
+            print("SOLR contains {} discoverable resources and {} replaced resources"
                   .format(in_solr, solr_replaced))
