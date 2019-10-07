@@ -75,7 +75,7 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, render=True):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")
@@ -137,8 +137,10 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         context_dict["temp_form"] = temp_cov_form
         context_dict["spatial_form"] = spatial_cov_form
         context = Context(context_dict)
-        rendered_html = template.render(context)
-        return rendered_html
+        if render:
+            rendered_html = template.render(context)
+            return rendered_html
+        return root_div, context
 
     @classmethod
     def validate_element_data(cls, request, element_name):
