@@ -188,6 +188,7 @@ function updateSelectionMenuContext() {
         "setNetCDFFileType",
         "setRefTimeseriesFileType",
         "setTimeseriesFileType",
+        "setModelProgramFileType",
         "subMenuSetContentType",
         "unzip",
         "updateRefUrl",
@@ -249,6 +250,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setGeoFeatureFileType.disabled = true;
         uiActionStates.setRefTimeseriesFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
+        uiActionStates.setModelProgramFileType.disabled = true;
 
         for (let i = 0; i < selected.length; i++) {
             const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
@@ -320,6 +322,7 @@ function updateSelectionMenuContext() {
             let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
             if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+                uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
             }
         }
         //  ------------- The item selected is a file -------------
@@ -425,6 +428,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setGeoRasterFileType.disabled = true;
         uiActionStates.setGeoFeatureFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
+        uiActionStates.setModelProgramFileType.disabled = true;
 
         if (resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
@@ -2059,6 +2063,11 @@ $(document).ready(function () {
     // set Timeseries file type method
     $("#btn-set-timeseris-file-type").click(function () {
         setFileType("TimeSeries");
+    });
+
+    // set Model Program file type method
+    $("#btn-set-model-program-file-type").click(function () {
+        setFileType("ModelProgram");
     });
 
     // set remove aggregation (file type) method
