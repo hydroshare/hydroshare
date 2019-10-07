@@ -26,6 +26,7 @@ from .models import NetCDFLogicalFile
 from .models import RefTimeseriesLogicalFile
 from .models import TimeSeriesLogicalFile
 from .utils import set_logical_file_type
+from .forms import ModelProgramMetadataValidationForm
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -883,12 +884,43 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@authorise_for_aggregation_edit(file_type="ModelProgramLogicalFile")
 @login_required
-def update_model_program_generic_metadata(request, file_type_id, **kwargs):
+def update_model_program_metadata(request, file_type_id, **kwargs):
     """adds/update any/all of the following metadata attributes associated metadata object
 
     """
-    pass
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
+    metadata = logical_file.metadata
+    mp_validation_form = ModelProgramMetadataValidationForm(request.POST)
+    if not mp_validation_form.is_valid():
+        for fld in mp_validation_form.errors.keys():
+            # get the validation error with any one metadata field/attribute
+            err_message = mp_validation_form.errors[fld][0]
+            ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                                  'element_name': fld, 'message': err_message}
+            return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    # TODO: move the code to update metadata fields to the form: mp_validation_form.update_metadata(metadata)
+    metadata.version = mp_validation_form.cleaned_data['version']
+    metadata.website = mp_validation_form.cleaned_data['website']
+    metadata.code_repository = mp_validation_form.cleaned_data['code_repository']
+    metadata.release_date = mp_validation_form.cleaned_data['release_date']
+    metadata.operating_systems = mp_validation_form.cleaned_data['operating_systems']
+    metadata.programming_languages = mp_validation_form.cleaned_data['programming_languages']
+    metadata.save()
+    resource = logical_file.resource
+    resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'element_name': 'multiple-elements', 'message': "Update was successful"}
+
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
