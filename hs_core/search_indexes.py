@@ -191,7 +191,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def index_queryset(self, using=None):
         """Return queryset including discoverable and public resources."""
         return self.get_model().objects.filter(Q(raccess__discoverable=True) |
-                                               Q(raccess__public=True))
+                                               Q(raccess__public=True)).distinct()
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -358,8 +358,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
-        if hasattr(obj, 'metadata'):
-            return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
+        if hasattr(obj, 'metadata') and obj.metadata is not None:
+            return obj.metadata.relations.filter(type='isReplacedBy').exists()
         else:
             return False
 
@@ -471,10 +471,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["start"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                    else:
+                        if len(parsed_date) == 3:
+                            start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else:
+                            start_date = ""
+                    elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
-                        start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        if len(parsed_date) == 3:
+                            start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else:
+                            start_date = ""
+
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -498,10 +505,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["end"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        if len(parsed_date) == 3:
+                            end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else:
+                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
-                        end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        if len(parsed_date) == 3:
+                            end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else:
+                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
@@ -588,10 +601,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if obj.verbose_name != 'Composite Resource':
             return [obj.discovery_content_type]
         else:
-            output = []
+            output = set()
             for f in obj.logical_files:
-                output.append(f.get_discovery_content_type())
-            return output
+                output.add(f.get_discovery_content_type())
+            if len(output) == 0:
+                output.add("Generic Data")
+            return list(output)
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
