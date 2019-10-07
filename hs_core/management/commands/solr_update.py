@@ -97,6 +97,7 @@ class Command(BaseCommand):
                   .format(in_django, django_replaced))
 
             # what is in SOLR that isn't in Django:
+            sqs = SearchQuerySet().all()  # refresh for changes from above 
             found = set()
             in_solr = 0
             solr_deleted = 0
