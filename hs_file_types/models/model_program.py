@@ -249,11 +249,6 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
         return "Model Program"
 
     @classmethod
-    def get_main_file_type(cls):
-        """The main file type for this aggregation - no specific main file"""
-        return ".*"
-
-    @classmethod
     def check_files_for_aggregation_type(cls, files):
         """Checks if the specified files can be used to set this aggregation type
         :param  files: a list of ResourceFile objects
