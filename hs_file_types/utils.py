@@ -4,8 +4,16 @@ from dateutil import parser
 from operator import lt, gt
 from hs_core.hydroshare import utils
 
-from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
+from .models import (
+    GenericLogicalFile,
+    GeoRasterLogicalFile,
+    NetCDFLogicalFile,
+    GeoFeatureLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    FileSetLogicalFile,
+    ModelProgramLogicalFile
+)
 
 from hs_file_types.models.base import AbstractLogicalFile
 from django.apps import apps
@@ -217,11 +225,13 @@ def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
                      "NetCDF": NetCDFLogicalFile,
                      'GeoFeature': GeoFeatureLogicalFile,
                      'RefTimeseries': RefTimeseriesLogicalFile,
-                     'TimeSeries': TimeSeriesLogicalFile}
+                     'TimeSeries': TimeSeriesLogicalFile,
+                     'ModelProgram': ModelProgramLogicalFile}
+
     if hs_file_type not in file_type_map:
         if fail_feedback:
             raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
-                             "}".format(ext_to_type.keys()))
+                             "}".format(file_type_map.keys()))
         return None
     logical_file_type_class = file_type_map[hs_file_type]
     return logical_file_type_class
