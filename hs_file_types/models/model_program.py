@@ -74,6 +74,14 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                       blank=True, max_length=255,
                                       help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
+    @property
+    def operating_systems_as_string(self):
+        return ", ".join(self.operating_systems)
+
+    @property
+    def programming_languages_as_string(self):
+        return ", ".join(self.programming_languages)
+
     # TODO: needs to test this function once there is UI for populating metadata for this aggregation
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
