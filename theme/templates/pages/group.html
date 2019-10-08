@@ -11,7 +11,11 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="collaborate-nav">
-                        <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                        {% if communities_enabled %}
+                            <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                        {% else %}
+                            <a href="{% url "groups" %}" class="collaborate-nav-item">Find Groups</a>
+                        {% endif %}
                         <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
                     </div>
                 </div>
@@ -20,6 +24,7 @@
     </div>
 
     <div class="container">
+
         <div class="row">
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
@@ -36,6 +41,7 @@
                     </div>
                 {% endif %}
             {% endif %}
+
             <div class="col-sm-3">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}

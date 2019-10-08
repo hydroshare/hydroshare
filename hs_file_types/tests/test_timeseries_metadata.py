@@ -939,8 +939,8 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test logical file/aggregation
         # check that there is now one TimeSeriesLogicalFile object
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 1)
         base_sqlite_file_name, _ = os.path.splitext(self.sqlite_file_name)
         res_file = logical_file.files.first()

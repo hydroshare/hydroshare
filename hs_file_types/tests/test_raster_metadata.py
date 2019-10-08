@@ -150,8 +150,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 3)
 
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
         expected_file_folder = new_folder
@@ -197,8 +197,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
         expected_file_folder = '{}'.format(new_folder)

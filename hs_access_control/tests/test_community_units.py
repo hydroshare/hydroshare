@@ -354,7 +354,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         record = GroupCommunityProvenance.get_current_record(
             community=rebels, group=bikers)
@@ -369,7 +369,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertTrue(
             is_equal_to_as_set(
@@ -390,13 +390,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityProvenance.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
 
     def test_groupcommunityprivilege_update(self):
         george = self.george
@@ -410,13 +410,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityProvenance.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
 
     def test_groupcommunityprivilege_undo_share(self):
         george = self.george
@@ -430,13 +430,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityProvenance.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
@@ -483,13 +483,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityProvenance.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
         GroupCommunityProvenance.undo_share(community=rebels, group=bikers, grantor=george)
         self.assertEqual(
             GroupCommunityProvenance.get_privilege(
@@ -509,13 +509,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityProvenance.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityProvenance.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
 
     def test_groupcommunityresult_get_privilege(self):
         george = self.george
@@ -529,13 +529,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityPrivilege.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
 
     def test_groupcommunityresult_update(self):
         george = self.george
@@ -549,13 +549,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupCommunityPrivilege.update(
             community=rebels,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
+            privilege=PrivilegeCodes.VIEW,
             grantor=george)
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(
                 community=rebels,
                 group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
 
     def test_can_undo_share_community_with_group(self):
         george = self.george
@@ -565,10 +565,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
             PrivilegeCodes.NONE)
-        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.CHANGE)
+        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.VIEW)
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
         self.assertTrue(george.uaccess.can_undo_share_community_with_group(rebels, bikers))
         george.uaccess.undo_share_community_with_group(rebels, bikers)
 
@@ -594,10 +594,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
             PrivilegeCodes.NONE)
-        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.CHANGE)
+        george.uaccess.share_community_with_group(rebels, bikers, PrivilegeCodes.VIEW)
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),
-            PrivilegeCodes.CHANGE)
+            PrivilegeCodes.VIEW)
         george.uaccess.undo_share_community_with_group(rebels, bikers)
         self.assertEqual(
             GroupCommunityPrivilege.get_privilege(community=rebels, group=bikers),

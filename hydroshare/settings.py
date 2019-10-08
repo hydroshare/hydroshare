@@ -304,8 +304,10 @@ INSTALLED_APPS = (
     "hs_composite_resource",
     "hs_rest_api",
     "hs_dictionary",
+    "hs_odm2",
     "security",
-    "markdown"
+    "markdown",
+    "hs_communities"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -692,6 +694,8 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
 
+COMMUNITIES_ENABLED = False
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
@@ -723,3 +727,10 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
+
+####################
+# Allow Unicode printout to terminals
+####################
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)

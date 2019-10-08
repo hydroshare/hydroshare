@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q, F, Exists, OuterRef
 
 from hs_core.models import BaseResource
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
@@ -108,18 +108,6 @@ class GroupAccess(models.Model):
                  u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
 
     @property
-    def __edit_users_of_community(self):
-        """
-        Q expression for community members who can edit a group according to community privilege
-
-        Only members of a supergroup (with CHANGE privilege) can edit individual groups.
-        """
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__group=self.group,
-                 u2ugp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
-
-    @property
     def edit_users(self):
         """
         Return list of users who can add members to a group.
@@ -139,15 +127,6 @@ class GroupAccess(models.Model):
         return Q(is_active=True,
                  u2ugp__group=self.group,
                  u2ugp__privilege__lte=PrivilegeCodes.VIEW)
-
-    @property
-    def __view_users_of_community(self):
-        """
-        Q expression for community members who can view a group according to community privilege
-        """
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__group=self.group)
 
     @property
     def view_users(self):
@@ -184,7 +163,6 @@ class GroupAccess(models.Model):
                 (Q(u2ugp__group__gaccess__active=True,
                    u2ugp__group=self.group) |
                  Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__allow_view=True,
                    u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
                    u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
 
@@ -218,32 +196,15 @@ class GroupAccess(models.Model):
                  r2grp__privilege__lte=PrivilegeCodes.CHANGE)
 
     @property
-    def __view_resources_of_community(self):
+    def __owned_resources_of_group(self):
         """
-        Subquery Q expression for viewable resources according to community memberships
+        resources owned by some group member
 
-        Used in BaseResource queries only
+        Used in queries of BaseResource
         """
-        return Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__allow_view=True,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group) |\
-               Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group)
-
-    @property
-    def __edit_resources_of_community(self):
-        """
-        Subquery Q expression for editable resources according to community memberships
-
-        Used in BaseResource queries only.
-        """
-        return Q(raccess__immutable=False,
-                 r2grp__group__gaccess__active=True,
-                 r2grp__privilege=PrivilegeCodes.CHANGE,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group,
-                 r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
+        return Q(r2grp__group=self.group,
+                 r2urp__user__u2ugp__group=self.group,
+                 r2urp__privilege=PrivilegeCodes.OWNER)
 
     @property
     def view_resources(self):
@@ -267,9 +228,21 @@ class GroupAccess(models.Model):
         :return: List of resource objects that can be edited by this group.
 
         These include resources that are directly editable, as well as those editable
-        due to oversight privileges over a community
+        via membership in a group.
         """
         return BaseResource.objects.filter(self.__edit_resources_of_group)
+
+    @property
+    def owned_resources(self):
+        """
+        QuerySet of resources that are owned by some group member
+
+        :return: List of resource objects owned by some group member.
+
+        This is independent of whether the resource is editable by the group.
+
+        """
+        return BaseResource.objects.filter(self.__owned_resources_of_group)
 
     @property
     def group_membership_requests(self):
@@ -360,6 +333,33 @@ class GroupAccess(models.Model):
             return p.privilege
         except UserGroupPrivilege.DoesNotExist:
             return PrivilegeCodes.NONE
+
+    @classmethod
+    def groups_with_public_resources(cls):
+        """ Return the list of groups that have discoverable or public resources
+            These must contain at least one resource that is discoverable and
+            is owned by a group member.
+
+            This query is subtle. See
+                https://medium.com/@hansonkd/\
+                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16
+            for details of how this improves performance.
+
+           As a short summary, all we need to know is that one resource exists.
+           This is not possible to notate in the main query except through an annotation.
+           However, that annotation is really efficient, and is implemented as a postgres
+           subquery. This is a Django 1.11 extension.
+        """
+        return Group.objects\
+            .annotate(
+                has_public_resources=Exists(
+                    BaseResource.objects.filter(
+                        raccess__discoverable=True,
+                        r2grp__group__id=OuterRef('id'),
+                        r2urp__user__u2ugp__group__id=OuterRef('id'),
+                        r2urp__privilege=PrivilegeCodes.OWNER)))\
+            .filter(has_public_resources=True)\
+            .order_by('name')
 
     @property
     def public_resources(self):
