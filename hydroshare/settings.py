@@ -307,7 +307,8 @@ INSTALLED_APPS = (
     "hs_odm2",
     "security",
     "markdown",
-    "hs_communities"
+    "hs_communities",
+    "freshly"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -391,6 +392,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "freshly.middleware.assets.AssetVersioningMiddleware",
 )
 
 # security settings
@@ -695,6 +697,14 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
+
+FRESHLY_ASSETS_EXTENTIONS = [
+     'css', 'js'
+ ]
+
+ # Add `FRESHLY_ASSETS_VERSION` to your setting file.
+
+FRESHLY_ASSETS_VERSION = '1.27'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
