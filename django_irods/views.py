@@ -99,7 +99,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
     istorage = res.get_irods_storage()
-    irods_path = res.get_irods_path(path)
+
+    irods_path = res.get_irods_path(path, prepend_short_id=False)
 
     # in many cases, path and output_path are the same.
     output_path = path
@@ -125,7 +126,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
 
-            irods_path = res.get_irods_path(path)
+            irods_path = res.get_irods_path(path, prepend_short_id=False)
             irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
@@ -133,7 +134,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            irods_output_path = res.get_irods_path(output_path)
+            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
             if __debug__:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
