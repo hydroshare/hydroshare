@@ -99,10 +99,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             return response
 
     istorage = res.get_irods_storage()
-    # res.resource_federation_path would only be non-empty when potentially third-party federated
-    # zones join HydroShare. The line below would work currently when res.resource_federation_path
-    # is empty and in the future when a third-party federated zone potentially joins HydroShare
-    irods_path = os.path.join(res.resource_federation_path, path)
+    irods_path = res.get_irods_path(path)
 
     # in many cases, path and output_path are the same.
     output_path = path
@@ -128,19 +125,15 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
 
-            # when res.resource_federation_path is empty, the following statements would be
-            # equivalent to irods_path = path and irods_output_path = output_path
-            irods_path = os.path.join(res.resource_federation_path, path)
-            irods_output_path = os.path.join(res.resource_federation_path, output_path)
+            irods_path = res.get_irods_path(path)
+            irods_output_path = res.get_irods_path(output_path)
 
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            # when res.resource_federation_path is empty, the following statements would be
-            # equivalent to irods_output_path = output_path
-            irods_output_path = os.path.join(res.resource_federation_path, output_path)
+            irods_output_path = res.get_irods_path(output_path)
 
             if __debug__:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
@@ -152,7 +145,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-                irods_output_path = os.path.join(res.resource_federation_path, output_path)
+                irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
