@@ -126,7 +126,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
 
             irods_path = res.get_irods_path(path)
-            irods_output_path = res.get_irods_path(output_path)
+            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
         store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
