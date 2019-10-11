@@ -314,9 +314,11 @@
 <script type="application/ld+json">
 {
     "@context": {
-        "@vocab": "http://schema.org/",
-        "geolink": "http://schema.geolink.org/1.0/base/main#"
+        "@vocab": "http://www.schema.org/",
+        "datacite": "http://purl.org/spar/datacite/"
     },
+    "@id": {{ identifier_url }},
+
     "@type": "Dataset",
     "additionalType": ["http://schema.geolink.org/1.0/base/main#Dataset", "http://vivoweb.org/ontology/core#Dataset"],
     "name": "{{ title }}",
