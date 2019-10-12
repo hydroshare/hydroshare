@@ -907,14 +907,8 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
                                   'element_name': fld, 'message': err_message}
             return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO: move the code to update metadata fields to the form: mp_validation_form.update_metadata(metadata)
-    metadata.version = mp_validation_form.cleaned_data['version']
-    metadata.website = mp_validation_form.cleaned_data['website']
-    metadata.code_repository = mp_validation_form.cleaned_data['code_repository']
-    metadata.release_date = mp_validation_form.cleaned_data['release_date']
-    metadata.operating_systems = mp_validation_form.cleaned_data['operating_systems']
-    metadata.programming_languages = mp_validation_form.cleaned_data['programming_languages']
-    metadata.save()
+    mp_validation_form.update_metadata(metadata)
+
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
