@@ -199,6 +199,18 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                cls="form-control input-sm textinput textInput",
                                                id="file_programming_languages", maxlength="250",
                                                name="programming_languages", type="text")
+                            with dom_tags.div(cls="controls"):
+                                json_schema = self.logical_file.mi_schema_json
+                                if json_schema:
+                                    json_schema = json.dumps(json_schema)
+                                else:
+                                    json_schema = ''
+                                dom_tags.label("Model Instance Metadata JSON Schema", fr="file_mi_json_schema")
+                                dom_tags.textarea(json_schema,
+                                               cls="form-control input-sm textinput textInput",
+                                               id="file_mi_json_schema",
+                                               name="mi_json_schema", rows="15")
+
                     with dom_tags.div(cls="row", style="margin-top:10px;"):
                         with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                             dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
