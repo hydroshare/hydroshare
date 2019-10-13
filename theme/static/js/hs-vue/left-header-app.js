@@ -26,6 +26,7 @@ Vue.component('edit-author-modal', {
         can_remove: {type: Boolean, required: true},
         is_updating_author: {type: Boolean, required: false},
         is_deleting_author: {type: Boolean, required: false},
+        edit_author_error: {type: String, required: false},
     },
     data: function () {
         let identifiers = [];
@@ -83,12 +84,10 @@ Vue.component('edit-author-modal', {
             let identifiers = [];
             let localAuthor = $.extend(true, {}, this._author);
 
-            if (!this.is_person) {
-                $.each(this._author.identifiers, function (identifierName, identifierLink) {
-                    identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
-                });
-                localAuthor.identifiers = identifiers;
-            }
+            $.each(this._author.identifiers, function (identifierName, identifierLink) {
+                identifiers.push({identifierName: identifierName, identifierLink: identifierLink})
+            });
+            localAuthor.identifiers = identifiers;
 
             this.author = localAuthor;
             this.showConfirmDelete = false;
