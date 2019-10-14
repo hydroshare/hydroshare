@@ -29,7 +29,6 @@ class CommunityView(TemplateView):
 
         community = community_from_name_or_id(kwargs['community_id'])
         community_resources = community.public_resources
-        print(len(community_resources))
         raw_groups = community.groups_with_public_resources()
         groups = []
 
