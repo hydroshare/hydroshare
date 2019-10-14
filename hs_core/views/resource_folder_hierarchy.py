@@ -19,6 +19,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     add_reference_url_to_resource, edit_reference_url_in_resource
 
 from hs_file_types.models import FileSetLogicalFile
+from hs_file_types.models import ModelProgramLogicalFile
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -91,11 +92,14 @@ def data_store_structure(request):
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
-                if not aggregation_object.is_fileset:
+                if not aggregation_object.is_fileset and not aggregation_object.is_model_program:
                     main_file = aggregation_object.get_main_file.file_name
             else:
+                # find if ModelProgram aggregation type can be created from this folder
+                if resource.can_set_folder_to_mp_aggregation(dir_path):
+                    folder_aggregation_type_to_set = ModelProgramLogicalFile.__name__
                 # find if FileSet aggregation type that can be created from this folder
-                if resource.can_set_folder_to_fileset(dir_path):
+                elif resource.can_set_folder_to_fileset(dir_path):
                     folder_aggregation_type_to_set = FileSetLogicalFile.__name__
                 else:
                     folder_aggregation_type_to_set = ""
