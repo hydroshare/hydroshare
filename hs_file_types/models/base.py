@@ -902,6 +902,11 @@ class AbstractLogicalFile(models.Model):
         """Return True if this aggregation is a fileset aggregation, otherwise False"""
         return self.get_aggregation_class_name() == 'FileSetLogicalFile'
 
+    @property
+    def is_model_program(self):
+        """Return True if this aggregation is a model program aggregation, otherwise False"""
+        return self.get_aggregation_class_name() == 'ModelProgramLogicalFile'
+
     @staticmethod
     def get_aggregation_type_name():
         """Return the appropriate aggregation name needed for aggregation xml metadata and
