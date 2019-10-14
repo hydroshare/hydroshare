@@ -134,6 +134,33 @@ class CompositeResource(BaseResource):
         # if there are any files in the dir_path, we can set the folder to fileset aggregation
         return len(files_in_path) > 0
 
+    def can_set_folder_to_mp_aggregation(self, dir_path):
+        """Checks if the specified folder *dir_path* can be set to ModelProgram aggregation
+
+        :param dir_path: Resource file directory path (full folder path starting with resource id)
+        for which the ModelProgram aggregation to be set
+
+        :return If the specified folder is already represents an aggregation or does
+        not contain any files or any fo the contained files is part of an aggregation then returns False,
+        otherwise True
+        """
+
+        if self.get_folder_aggregation_object(dir_path) is not None:
+            # target folder is already an aggregation
+            return False
+
+        irods_path = dir_path
+        if self.is_federated:
+            irods_path = os.path.join(self.resource_federation_path, irods_path)
+
+        files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+        # if none of the resource files has logical file then we can set the folder to model program aggregation
+        if files_in_path:
+            return not any(res_file.has_logical_file for res_file in files_in_path)
+
+        # path has no files - can't set the folder to aggregation
+        return False
+
     @property
     def supports_folders(self):
         """ allow folders for CompositeResources """
