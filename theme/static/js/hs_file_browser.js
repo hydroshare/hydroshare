@@ -44,7 +44,7 @@ function clearSourcePaths() {
 }
 
 function getFolderTemplateInstance(folder) {
-    if (folder['folder_aggregation_type'] === "FileSetLogicalFile") {
+    if (folder['folder_aggregation_type'] === "FileSetLogicalFile" || folder['folder_aggregation_type'] === "ModelProgramLogicalFile") {
         var folderIcons = getFolderIcons();
         let iconTemplate = folderIcons.DEFAULT;
 
@@ -99,6 +99,9 @@ function getVirtualFolderTemplateInstance(agg) {
 // Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(file) {
     var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
+    if (file['logical_type'] === "ModelProgramLogicalFile") {
+        fileTypeExt = "MP";
+    }
     var iconTemplate;
     var fileIcons = getFileIcons();
 
@@ -1178,7 +1181,7 @@ function onOpenFolder() {
     let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
     let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
 
-    if (aggregationId && logicalFileType !== "FileSetLogicalFile") {
+    if (aggregationId && logicalFileType !== "FileSetLogicalFile" && logicalFileType !== "ModelProgramLogicalFile") {
         // Remove further paths from the log
         let range = pathLog.length - pathLogIndex;
         pathLog.splice(pathLogIndex + 1, range);
