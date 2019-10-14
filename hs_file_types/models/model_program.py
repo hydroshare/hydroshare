@@ -6,7 +6,7 @@ import jsonschema
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.template import Template
+from django.template import Template, Context
 from lxml import etree
 from dominate import tags as dom_tags
 
@@ -119,11 +119,57 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print)
 
-    # TODO: needs to override this base class method
     def get_html(self, include_extra_metadata=True, **kwargs):
-        raise NotImplementedError
+        html_string = super(ModelProgramFileMetaData, self).get_html()
+        if self.version:
+            version_div = dom_tags.div(cls="content-block")
+            with version_div:
+                dom_tags.legend("Version")
+                dom_tags.p(self.version)
+            html_string += version_div.render()
+        if self.release_date:
+            release_date_div = dom_tags.div(cls="content-block")
+            with release_date_div:
+                dom_tags.legend("Release Date")
+                dom_tags.p(self.release_date.strftime('%m/%d/%Y'))
+            html_string += release_date_div.render()
+        if self.website:
+            website_div = dom_tags.div(cls="content-block")
+            with website_div:
+                dom_tags.legend("Website")
+                dom_tags.p(self.website)
+            html_string += website_div.render()
+        if self.code_repository:
+            code_repo_div = dom_tags.div(cls="content-block")
+            with code_repo_div:
+                dom_tags.legend("Code Repository")
+                dom_tags.p(self.code_repository)
+            html_string += code_repo_div.render()
+        if self.operating_systems:
+            os_div = dom_tags.div(cls="content-block")
+            with os_div:
+                dom_tags.legend("Operating Systems")
+                dom_tags.p(self.operating_systems_as_string)
+            html_string += os_div.render()
+        if self.programming_languages:
+            pl_div = dom_tags.div(cls="content-block")
+            with pl_div:
+                dom_tags.legend("Programming Languages")
+                dom_tags.p(self.programming_languages_as_string)
+            html_string += pl_div.render()
+        json_schema = self.logical_file.mi_schema_json
+        if json_schema:
+            mi_schema_div = dom_tags.div(cls="content-block")
+            with mi_schema_div:
+                dom_tags.legend("Model Instance Metadata JSON Schema")
+                json_schema = json.dumps(json_schema)
+                dom_tags.p(json_schema)
+            html_string += mi_schema_div.render()
+        # TODO: need to add the code for displaying mp file types here
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
 
-    # TODO: needs to override this base class method
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """This generates html form code to add/update the following metadata attributes
         version
@@ -164,7 +210,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                cls="form-control input-sm textinput textInput",
                                                id="file_release_date", maxlength="250",
                                                name="release_date", type="text")
-                            # TODO: need to add the remaining metadata attributes
+
                             dom_tags.legend('Website')
                             with dom_tags.div(cls="controls"):
                                 if self.website:
@@ -210,6 +256,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                cls="form-control input-sm textinput textInput",
                                                id="file_mi_json_schema",
                                                name="mi_json_schema", rows="15")
+
+                            # TODO: need to add the code for editing mp file types here
 
                     with dom_tags.div(cls="row", style="margin-top:10px;"):
                         with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
