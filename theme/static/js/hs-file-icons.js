@@ -28,6 +28,11 @@ function getFolderIcons() {
         "<img src='/static/img/resource-icons/geographicfeature48x48.png' " +
         "alt='Geographic Feature Aggregation Icon'/></span>";
 
+    folderIcons.ModelProgramLogicalFile =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/modelprogram48x48.png' " +
+        "alt='Model Program Aggregation Icon'/></span>";
+
     folderIcons.DEFAULT =
         "<span class='fa-stack fb-stack'>" +
         "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-aggregation' aria-hidden='true'></i>" +
@@ -158,6 +163,11 @@ function getFileIcons() {
         "<i class='fa fa-file-o fa-stack-2x'></i>" +
         "<i class='fa fa-external-link fa-stack-1x'></i>" +
         "</span>";
+    // This is for any single file associated with ModelProgramLogicalFile. Note "MP" is not a file extension
+    fileIcons.MP =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='/static/img/resource-icons/modelprogram48x48.png' " +
+        "alt='Model Program Aggregation Icon'/></span>";
 
     fileIcons.DEFAULT =
         "<span class='fb-file-icon fa fa-file-o'></span>";
