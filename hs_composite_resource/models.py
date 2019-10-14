@@ -88,7 +88,12 @@ class CompositeResource(BaseResource):
         """
 
         aggregation_path = dir_path[len(self.file_path) + 1:]
-        return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
+        # first check for model program aggregation
+        mp_aggr = self.modelprogramlogicalfile_set.filter(folder=aggregation_path).first()
+        if mp_aggr is None:
+            # no model program aggr - check for fileset aggr
+            return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
+        return mp_aggr
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
