@@ -718,6 +718,9 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     }
                     selectedAgg.files.push(file);   // Push the aggregation files to the collection
                 }
+                else if (file['logical_type'] === "ModelProgramLogicalFile") {
+                     $('#fb-files-container').append(getFileTemplateInstance(file));
+                }
                 else {
                     // Regular files
                     $('#fb-files-container').append(getFileTemplateInstance(file));
@@ -1340,8 +1343,8 @@ function updateEditCoverageStateFileType() {
 function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker){
     var $id_type_filetype_div = $("#id_type_filetype");
 
-    if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile"){
-        // don't allow changing coverage type if aggregation type is not GenericLogicalFile or FileSetLogicalFile
+    if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile" && logical_type !== "ModelProgramLogicalFile"){
+        // don't allow changing coverage type if aggregation type is not GenericLogicalFile or FileSetLogicalFile or ModelProgramLogicalFile
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find(radioBoxSelector).attr('onclick', 'return false');
         $id_type_filetype_div.find(radioPointSelector).attr('onclick', 'return false');
@@ -1372,7 +1375,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         }
     }
     else {
-        // file type is "GenericLogicalFile" or "FileSetLogicalFile"
+        // file type is "GenericLogicalFile" or "FileSetLogicalFile or ModelProgramLogicalFile"
         // allow changing coverage type
         // provide option to delete spatial coverage at the aggregation level
         $id_type_filetype_div.find("input:radio").change(updateEditCoverageStateFileType);
@@ -1425,7 +1428,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
     // #id_type_1 is the box radio button
     if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked" ||
         (logical_type !== 'GeoFeatureLogicalFile' && logical_type !== 'RefTimeseriesLogicalFile' &&
-            logical_type !== 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile")) {
+            logical_type !== 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile" && logical_type !== "ModelProgramLogicalFile")) {
         // coverage type is box or logical file type is either NetCDF or TimeSeries
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();
