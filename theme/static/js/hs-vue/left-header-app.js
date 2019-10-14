@@ -168,7 +168,7 @@ Vue.component('add-author-modal', {
                         url: '/hsapi/_internal/' + vue.resShortId + '/creator/add-metadata/',
                         success: function (response) {
                             if (response.status === "success") {
-                                let newAuthor = {
+                                const newAuthor = {
                                     "id": response.element_id.toString(),
                                     "name": author.name,
                                     "email": author.email !== null ? author.email : "",
@@ -190,6 +190,7 @@ Vue.component('add-author-modal', {
 
                                 $("#add-author-modal").modal("hide");
                                 showCompletedMessage(response);
+                                $("#add-author-modal .hilight > span.remove").trigger("click");   // Clear the input
                             }
                             else {
                                 vue.addAuthorError = response.message;
@@ -265,7 +266,7 @@ Vue.component('add-author-modal', {
                         // Person specific fields
                         if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                             newAuthor.name = author.name;
-                            newAuthor.identifiers = author.identifiers,
+                            newAuthor.identifiers = author.identifiers;
                             newAuthor.profileUrl = null;
                         }
 
