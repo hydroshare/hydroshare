@@ -629,8 +629,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name.capitalize() +
-                                      ' ' + owner.last_name.capitalize())
+                name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 names.append(name)
         return names
 
@@ -642,8 +641,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         output2 = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name.capitalize() +
-                                      ' ' + owner.last_name.capitalize())
+                name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 output0.append(name)
 
         if hasattr(obj, 'metadata'):

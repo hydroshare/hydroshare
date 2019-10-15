@@ -87,10 +87,11 @@ class Command(BaseCommand):
                 # # This always returns True whether or not SOLR needs updating
                 # # This is likely a Haystack bug.
                 # elif ind.should_update(r):
-                #     print("{} {} needs SOLR update: updating in index".format(
-                #             r.short_id, resource.discovery_content_type))
-                #     ind.update_object(r)
-                #     refreshed += 1
+                # update everything to be safe.
+                    print("{} {} needs SOLR update: updating in index".format(
+                          r.short_id, resource.discovery_content_type))
+                    ind.update_object(r)
+                    django_refreshed += 1
 
             print("{} resources in Django refreshed in SOLR".format(django_refreshed))
             print("Django contains {} discoverable resources and {} replaced resources"
