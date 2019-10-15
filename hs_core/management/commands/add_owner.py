@@ -1,4 +1,6 @@
 """ Add an owner to a resource or resources
+
+Usage: add_owner {username} {resource list}
 """
 
 from django.core.management.base import BaseCommand
@@ -28,5 +30,6 @@ class Command(BaseCommand):
                                             resource=resource,
                                             privilege=PrivilegeCodes.OWNER,
                                             grantor=admin)
+                print("added owner {} to {}".format(options['new_owner'], rid))
         else:
             print("No resource list specified.")
