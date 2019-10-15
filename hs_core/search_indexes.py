@@ -100,6 +100,46 @@ def normalize_name(name):
     return normalized.strip()
 
 
+def get_extension_content_types(res):
+    """ return a set of content types matching extensions in a resource """
+
+    resource = res.get_content_model()
+
+    # What extensions indicate each kind of high-level content type
+    documents = ['doc', 'docx', 'pdf', 'odt', 'rtf']
+    spreadsheets = ['csv', 'xls', 'xlsx', 'ods']
+    presentations = ['ppt', 'pptx', 'odp']
+
+    types = set()  # accumulate high-level content types.
+    exts = set()  # track individual file extensions
+    for f in resource.files.all():
+        if not f.has_logical_file:
+            t = 'Generic Data'
+        else:
+            t = type(f.logical_file).get_discovery_content_type()
+        if t == "Generic Data":
+            s = f.short_path
+            s = s.split(".")
+            if len(s) > 1:
+                ext = s[len(s)-1]
+                if len(ext) <= 5:
+                    exts.add(ext.lower())
+        else:
+            types.add(t)
+    if exts & set(documents):
+        types.add('Document')
+        exts -= set(documents)
+    if exts & set(spreadsheets):
+        types.add('Spreadsheet')
+        exts -= set(spreadsheets)
+    if exts & set(presentations):
+        types.add('Presentation')
+        exts -= set(presentations)
+    if exts:
+        types.add('Generic Data')
+        return types
+
+
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
@@ -598,12 +638,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.verbose_name
 
     def prepare_content_type(self, obj):
+        """ register content types for both logical files and some MIME types """
         if obj.verbose_name != 'Composite Resource':
             return [obj.discovery_content_type]
         else:
             output = set()
             for f in obj.logical_files:
                 output.add(f.get_discovery_content_type())
+            output += get_extension_content_types(obj)
             if len(output) == 0:
                 output.add("Generic Data")
             return list(output)
