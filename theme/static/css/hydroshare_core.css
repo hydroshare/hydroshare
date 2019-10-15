@@ -1085,7 +1085,7 @@ table.info-table > tbody > tr > td {
     vertical-align: top;
 }
 
-.res-header table.info-table > tbody > tr > td {
+table.info-table > tbody > tr > td {
     padding-bottom: 8px;
 }
 

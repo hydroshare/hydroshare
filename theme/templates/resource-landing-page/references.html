@@ -25,7 +25,7 @@
                 {% for relation in relations %}
                     {% if relation.type|lower != "haspart" %}
                         <tr>
-                            {% include "includes/relation-type-cell.html" %}
+                            <th class="dataset-label">{% include "includes/relation-type-cell.html" %}</th>
                             <td class="dataset-details">{{ relation.value|urlize }}</td>
                         </tr>
                     {% endif %}
@@ -90,23 +90,24 @@ Click this button to add a relationship to another resource, external website, o
 {#        {% else %}#}
 {#            <p class="small text-muted">No sources have been added.</p>#}
 {#        {% endif %}#}
-{#    </div>#}
+    {#    </div>#}
     <div class="col-xs-12 content-block">
-      <div class="alert alert-info alert-dismissible" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <div class="flex">
-          <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-          <em style="padding-right:20px;">If this resource is related to other documents, datasets, websites, etc., you
-            can record those relationships here as related resources. For example, if this resource is cited by a paper
-            you published, select a relationship type of "The content of this resource serves as the data for" and then
-            provide a full text citation for the paper that used the data, including the paper's DOI encoded as an HTTP
-            URL if available. This records that this resource is the data for the paper that cited it. If you enter a
-            URL as part of the citation, it will be converted to an active link. If the data in your resource was
-            derived from another source or dataset, you can cite or acknowledge those relationships here.</em>
+        <div class="alert alert-info alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="flex">
+                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                <em style="padding-right:20px;">If this resource is related to other documents, datasets, websites,
+                    etc., you can record those relationships here as related resources. For example, if this resource is
+                    cited by a paper you published, select a relationship type of "The content of this resource serves
+                    as the data for" and then provide a full text citation for the paper that used the data, including
+                    the paper's DOI encoded as an HTTP URL if available. This records that this resource is the data for
+                    the paper that cited it. If you enter a URL as part of the citation, it will be converted to an
+                    active link. If the data in your resource was derived from another source or dataset, you can cite
+                    or acknowledge those relationships here.</em>
+            </div>
         </div>
-      </div>
 
         {% if relations %}
         <table class="table hs-table">
@@ -114,19 +115,19 @@ Click this button to add a relationship to another resource, external website, o
             {% for relation in relations %}
                 {% if  relation.type|lower != "haspart" %}
                     <tr>
-                        {% include "includes/relation-type-cell.html" %}
+                        <th scope="row" class="dataset-label">{% include "includes/relation-type-cell.html" %}</th>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
-                        {% if relation.type != "isVersionOf" %}
-                            <td style="min-width: 120px;">
+                        <td style="min-width: 120px;">
+                            {% if relation.type != "isVersionOf" %}
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
-                                   class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
-                                   data-target="#edit-relation-dialog_{{ relation.id }}">
+                                      class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                                      data-target="#edit-relation-dialog_{{ relation.id }}">
                                 </span>
                                 <span data-toggle="modal" data-placement="auto" title="Remove"
-                                   class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                                   data-target="#delete-relation-element-dialog{{ relation.id }}"></span>
-                            </td>
-                        {% endif %}
+                                      class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                                      data-target="#delete-relation-element-dialog{{ relation.id }}"></span>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endif %}
             {% endfor %}
