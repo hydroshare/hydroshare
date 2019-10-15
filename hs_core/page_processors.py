@@ -319,9 +319,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and
+                                              if type_value != 'hasVersion' and
                                               type_value != 'isVersionOf' and
-                                              type_value != 'hasPart'),
+                                              type_value != 'isReplacedBy' and
+                                              type_value != 'replaces' and
+                                              type_value != 'hasPart' and
+                                              type_value != 'replaces'),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,

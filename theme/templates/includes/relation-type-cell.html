@@ -1,0 +1,41 @@
+<td class="dataset-label">
+    {% if relation.type == "conformsTo" %}
+        This resource conforms to established standard described by:
+    {% elif relation.type == "createdBy" %}
+        The content of this resource was created by a related App or software program:
+    {% elif relation.type == "executedBy" %}
+        This content of this resource can be executed by:
+    {% elif relation.type == "hasFormat" %}
+        This resource has a related resource in another format:
+    {% elif relation.type == "hasPart" %}
+        This resource includes:
+    {% elif relation.type == "hasVersion" %}
+        This resource has a version:
+    {% elif relation.type == "isDataFor" %}
+        The content of this resource serves as the data for:
+    {% elif relation.type == "isDescribedBy" %}
+        This resource is described by:
+    {% elif relation.type == "isFormatOf" %}
+        This resource is a different format of:
+    {% elif relation.type == "isPartOf" %}
+        The content of this resource is part of:
+    {% elif relation.type == "isReferencedBy" %}
+        This resource is referenced by:
+    {% elif relation.type == "isReplacedBy" %}
+        This resource has been replaced by a newer version:
+    {% elif relation.type == "isRequiredBy" %}
+        This resource is required by:
+    {% elif relation.type == "isVersionOf" %}
+        This resource updates and replaces a previous version:
+    {% elif relation.type == "references" %}
+        The content of this resource references:
+    {% elif relation.type == "replaces" %}
+        This resource replaces:
+    {% elif relation.type == "requires" %}
+        This resource requires:
+    {% elif relation.type == "source" %}
+        The content of this resource is derived from:
+    {% else %}
+        {{ relation.type }}
+    {% endif %}
+</td>

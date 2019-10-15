@@ -827,23 +827,36 @@ class Date(AbstractMetaDataElement):
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
+    # Terms
+    # (String: Semantic Term, String: Human readable text, Boolean: Relationship user editable)
     SOURCE_TYPES = (
-        ('isHostedBy', 'The content of this resource is hosted by'),
-        ('isCopiedFrom', 'The content of this resource was copied from'),
-        ('isPartOf', 'The content of this resource is part of'),
-        ('hasPart', 'Has Part'),
-        ('isExecutedBy', 'The content of this resource can be executed by'),
-        ('isCreatedBy', 'The content of this resource was created by'),
-        ('isVersionOf', 'Version Of'),
-        ('isReplacedBy', 'Replaced By'),
+        ('conformsTo', 'This resource conforms to established standard described by'),
+        ('createdBy', 'The content of this resource was created by a related App or software program'),
+        ('executedBy', 'This content of this resource can be executed by'),
+        ('hasFormat', 'This resource has a related resource in another format'),
+        ('hasPart', 'This resource includes'),
+        ('hasVersion', 'This resource has a version'),
         ('isDataFor', 'The content of this resource serves as the data for'),
-        ('cites', 'This resource cites'),
         ('isDescribedBy', 'This resource is described by'),
+        ('isFormatOf', 'This resource is a different format of'),
+        ('isPartOf', 'The content of this resource is part of'),
+        ('isReferencedBy', 'This resource is referenced by'),
+        ('isReplacedBy', 'This resource has been replaced by a newer version'),
+        ('isRequiredBy', 'This resource is required by'),
+        ('isVersionOf', 'This resource updates and replaces a previous version'),
+        ('references', 'The content of this resource references'),
+        ('replaces', 'This resource replaces'),
+        ('requires', 'This resource requires'),
+        ('source', 'The content of this resource is derived from')
     )
 
-    # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
-                         'cites', 'isDescribedBy')
+    # Specifies which ones are HydroShare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = (
+        'createdBy',
+        'executedBy',
+        'isDataFor',
+        'isDescribedBy'
+    )
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
@@ -1605,6 +1618,7 @@ class Subject(AbstractMetaDataElement):
         sub.delete()
 
 
+# TODO: delete Source class once moved to related resources
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
