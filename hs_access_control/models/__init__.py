@@ -3,7 +3,7 @@ from privilege import PrivilegeCodes,\
         UserCommunityPrivilege, GroupCommunityPrivilege
 from provenance import UserResourceProvenance, UserGroupProvenance, GroupResourceProvenance, \
         UserCommunityProvenance, GroupCommunityProvenance
-from user import UserAccess
+from user import UserAccess, FeatureCodes, Feature
 from group import GroupAccess, GroupMembershipRequest
 from resource import ResourceAccess
 from community import Community
