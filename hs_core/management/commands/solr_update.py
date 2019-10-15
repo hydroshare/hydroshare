@@ -36,7 +36,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # a list of resource id's: none does nothing.
+        # Named (optional) arguments
+        parser.add_argument(
+            '--force',
+            action='store_true',  # True for presence, False for absence
+            dest='force',  # value is options['log']
+            help='force refresh for unchanged resources',
+        )
+
+        # a list of resource id's: none acts on everything.
         parser.add_argument('resource_ids', nargs='*', type=str)
 
     def handle(self, *args, **options):
@@ -88,7 +96,8 @@ class Command(BaseCommand):
                 # # This is likely a Haystack bug.
                 # elif ind.should_update(r):
                 # update everything to be safe.
-                    print("{} {} needs SOLR update: updating in index".format(
+                elif options['force']:
+                    print("{} {}: refreshing index (forced)".format(
                           r.short_id, resource.discovery_content_type))
                     ind.update_object(r)
                     django_refreshed += 1

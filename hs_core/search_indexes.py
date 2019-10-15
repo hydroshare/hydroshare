@@ -137,7 +137,7 @@ def get_extension_content_types(res):
         exts -= set(presentations)
     if exts:
         types.add('Generic Data')
-        return types
+    return types
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -645,7 +645,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             output = set()
             for f in obj.logical_files:
                 output.add(f.get_discovery_content_type())
-            output += get_extension_content_types(obj)
+            output |= get_extension_content_types(obj)
             if len(output) == 0:
                 output.add("Generic Data")
             return list(output)
