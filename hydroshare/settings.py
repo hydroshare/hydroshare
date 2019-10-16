@@ -333,7 +333,8 @@ APPS_TO_NOT_RUN = (
     'test_without_migrations',
     'robots',
     'heartbeat',
-    'filebrowser_safe'
+    'filebrowser_safe',
+    'freshly'
     # etc...
 )
 
