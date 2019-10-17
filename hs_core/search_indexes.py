@@ -109,7 +109,9 @@ extension_content_types = {
 
 
 def get_extension_content_types(res):
-    """ return a set of content types matching extensions in a resource """
+    """ return a set of content types matching extensions in a resource.
+        These include content types of logical files, as well as the generic
+        content types 'Document', 'Spreadsheet', 'Presentation'.  """
 
     resource = res.get_content_model()  # enable full logical file interface
 
@@ -118,19 +120,16 @@ def get_extension_content_types(res):
 
     # categorize logical files by type, and files without a logical file by extension.
     for f in resource.files.all():
-        if not f.has_logical_file:
-            candidate_type = 'Generic Data'
-        else:
+        if f.has_logical_file:
             candidate_type = type(f.logical_file).get_discovery_content_type()
-        if candidate_type == "Generic Data":
+            types.add(candidate_type)
+        else:  # collect extensions of files not corresponding to logical metadata
             path = f.short_path
             path = path.split(".")  # determine last extension
             if len(path) > 1:
                 ext = path[len(path)-1]
                 if len(ext) <= 5:  # skip obviously non-MIME extensions
                     exts.add(ext.lower())
-        else:
-            types.add(candidate_type)
 
     # categorize common extensions that are not part of logical files.
     for ext_type in extension_content_types:
