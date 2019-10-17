@@ -104,18 +104,22 @@ def normalize_name(name):
 extension_content_types = {
     'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf']),
     'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
-    'Presentation': set(['ppt', 'pptx', 'odp'])
+    'Presentation': set(['ppt', 'pptx', 'odp']),
+    'Jupyter Notebook': set(['ipynb'])
 }
 
 
-def get_extension_content_types(res):
+def get_content_types(res):
     """ return a set of content types matching extensions in a resource.
         These include content types of logical files, as well as the generic
-        content types 'Document', 'Spreadsheet', 'Presentation'.  """
+        content types 'Document', 'Spreadsheet', 'Presentation'.
+
+        This is only meaningful for Generic or Composite resources.
+    """
 
     resource = res.get_content_model()  # enable full logical file interface
 
-    types = set()  # accumulate high-level content types.
+    types = set([res.discovery_content_type])  # accumulate high-level content types.
     exts = set()  # track individual file extensions
 
     # categorize logical files by type, and files without a logical file by extension.
@@ -140,7 +144,7 @@ def get_extension_content_types(res):
     if exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
 
-    return types
+    return (types, exts)
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -642,16 +646,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_content_type(self, obj):
         """ register content types for both logical files and some MIME types """
-        if obj.verbose_name != 'Composite Resource':
-            return [obj.discovery_content_type]
-        else:
-            output = set()
-            for f in obj.logical_files:
-                output.add(f.get_discovery_content_type())
-            output |= get_extension_content_types(obj)
-            if len(output) == 0:
-                output.add("Generic Data")
+        if obj.verbose_name == 'Composite Resource' or \
+           obj.verbose_name == 'Generic Resource':
+            output = get_content_types(obj)[0]
             return list(output)
+        else:
+            return [obj.discovery_content_type]
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
