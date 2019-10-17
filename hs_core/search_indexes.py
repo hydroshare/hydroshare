@@ -100,43 +100,47 @@ def normalize_name(name):
     return normalized.strip()
 
 
+# What extensions indicate each kind of high-level content type
+extension_content_types = {
+    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf']),
+    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
+    'Presentation': set(['ppt', 'pptx', 'odp'])
+}
+
+
 def get_extension_content_types(res):
     """ return a set of content types matching extensions in a resource """
 
-    resource = res.get_content_model()
-
-    # What extensions indicate each kind of high-level content type
-    documents = ['doc', 'docx', 'pdf', 'odt', 'rtf']
-    spreadsheets = ['csv', 'xls', 'xlsx', 'ods']
-    presentations = ['ppt', 'pptx', 'odp']
+    resource = res.get_content_model()  # enable full logical file interface
 
     types = set()  # accumulate high-level content types.
     exts = set()  # track individual file extensions
+
+    # categorize logical files by type, and files without a logical file by extension.
     for f in resource.files.all():
         if not f.has_logical_file:
-            t = 'Generic Data'
+            candidate_type = 'Generic Data'
         else:
-            t = type(f.logical_file).get_discovery_content_type()
-        if t == "Generic Data":
-            s = f.short_path
-            s = s.split(".")
-            if len(s) > 1:
-                ext = s[len(s)-1]
-                if len(ext) <= 5:
+            candidate_type = type(f.logical_file).get_discovery_content_type()
+        if candidate_type == "Generic Data":
+            path = f.short_path
+            path = path.split(".")  # determine last extension
+            if len(path) > 1:
+                ext = path[len(path)-1]
+                if len(ext) <= 5:  # skip obviously non-MIME extensions
                     exts.add(ext.lower())
         else:
-            types.add(t)
-    if exts & set(documents):
-        types.add('Document')
-        exts -= set(documents)
-    if exts & set(spreadsheets):
-        types.add('Spreadsheet')
-        exts -= set(spreadsheets)
-    if exts & set(presentations):
-        types.add('Presentation')
-        exts -= set(presentations)
-    if exts:
+            types.add(candidate_type)
+
+    # categorize common extensions that are not part of logical files.
+    for ext_type in extension_content_types:
+        if exts & extension_content_types[ext_type]:
+            types.add(ext_type)
+            exts -= extension_content_types[ext_type]
+
+    if exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
+
     return types
 
 
