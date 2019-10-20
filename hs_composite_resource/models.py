@@ -374,6 +374,18 @@ class CompositeResource(BaseResource):
         else:
             return get_fileset(path)
 
+    def get_mp_aggregation_at_path(self, path):
+        """Get the model program aggregation at the specified path
+        :param  path: directory path at which to llok for model program aggregation
+        :return a model program aggregation object if found, otherwise None
+        """
+        try:
+            aggregation = self.get_aggregation_by_name(path)
+            if aggregation.is_model_program:
+                return aggregation
+        except ObjectDoesNotExist:
+            return None
+
     def recreate_aggregation_xml_docs(self, orig_path, new_path):
         """
         When a folder or file representing an aggregation is renamed or moved,
