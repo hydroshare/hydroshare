@@ -910,9 +910,11 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
             if folder is not None and resource.resource_type == 'CompositeResource':
-                aggregation = resource.get_fileset_aggregation_in_path(folder)
+                aggregation = resource.get_mp_aggregation_at_path(folder)
+                if aggregation is None:
+                    aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
-                    # make the added file part of the fileset aggregation
+                    # make the added file part of the fileset or model program aggregation
                     aggregation.add_resource_file(ret)
 
         # add format metadata element if necessary
