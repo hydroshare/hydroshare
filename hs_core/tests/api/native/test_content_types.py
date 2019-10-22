@@ -49,18 +49,27 @@ class TestContentTypes(MockIRODSTestCaseMixin,
             test_file = open(f, 'w')
             test_file.close()
 
+        # create empty files with non-conforming extensions
+        self.weird_filenames = ['file.foo', 'file.bar']
+        self.weird_extensions = ['foo', 'bar']
+        for f in self.weird_filenames:
+            test_file = open(f, 'w')
+            test_file.close()
+
     def tearDown(self):
         super(TestContentTypes, self).tearDown()
         for f in self.filenames:
             os.remove(f)
+        for f in self.weird_filenames:
+            os.remove(f)
 
-    def test_generic_data_classification(self):
+    def test_file_extension_classification(self):
         """ files with recognized extensions are classified properly """
         # resource should not have any files at this point
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        # add one file to the resource
+        # add all files to the resource
         for f in self.filenames:
             test_file_handle = open(f, 'r')
             hydroshare.add_resource_files(self.res.short_id, test_file_handle)
@@ -75,6 +84,92 @@ class TestContentTypes(MockIRODSTestCaseMixin,
                              'Jupyter Notebook']))
 
         self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
+
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)
+
+    def test_pdf_classification(self):
+        """ files with recognized extensions are classified properly """
+        # resource should not have any files at this point
+        self.assertEqual(self.res.files.all().count(), 0,
+                         msg="resource file count didn't match")
+
+        # add one file to the resource
+        test_file_handle = open(self.filenames[0], 'r')
+        hydroshare.add_resource_files(self.res.short_id, test_file_handle)
+
+        self.assertEqual(self.res.files.all().count(), 1,
+                         msg="resource file count didn't match")
+
+        types = get_content_types(self.res)
+        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', self.content_types[0]]))
+
+        self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
+
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)
+
+    def test_ppt_classification(self):
+        """ files with recognized extensions are classified properly """
+        # resource should not have any files at this point
+        self.assertEqual(self.res.files.all().count(), 0,
+                         msg="resource file count didn't match")
+
+        # add one file to the resource
+        test_file_handle = open(self.filenames[2], 'r')
+        hydroshare.add_resource_files(self.res.short_id, test_file_handle)
+
+        self.assertEqual(self.res.files.all().count(), 1,
+                         msg="resource file count didn't match")
+
+        types = get_content_types(self.res)
+        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', self.content_types[2]]))
+
+        self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
+
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)
+
+    def test_csv_classification(self):
+        """ files with recognized extensions are classified properly """
+        # resource should not have any files at this point
+        self.assertEqual(self.res.files.all().count(), 0,
+                         msg="resource file count didn't match")
+
+        # add one file to the resource
+        test_file_handle = open(self.filenames[3], 'r')
+        hydroshare.add_resource_files(self.res.short_id, test_file_handle)
+
+        self.assertEqual(self.res.files.all().count(), 1,
+                         msg="resource file count didn't match")
+
+        types = get_content_types(self.res)
+        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', self.content_types[3]]))
+
+        self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
+
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)
+
+    def test_weird_extensions(self):
+        """ files with unrecognized extensions are classified properly """
+        # resource should not have any files at this point
+        self.assertEqual(self.res.files.all().count(), 0,
+                         msg="resource file count didn't match")
+
+        # add all files to the resource
+        for f in self.weird_filenames:
+            test_file_handle = open(f, 'r')
+            hydroshare.add_resource_files(self.res.short_id, test_file_handle)
+
+        self.assertEqual(self.res.files.all().count(), 2,
+                         msg="resource file count didn't match")
+
+        types = get_content_types(self.res)
+        # no extensions match content types
+        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', 'Generic Data']))
+        # extensions are flagged as not matching
+        self.assertTrue(is_equal_to_as_set(types[1], self.weird_extensions))
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
