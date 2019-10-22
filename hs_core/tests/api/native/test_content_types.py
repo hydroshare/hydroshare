@@ -55,7 +55,7 @@ class TestContentTypes(MockIRODSTestCaseMixin,
             os.remove(f)
 
     def test_generic_data_classification(self):
-        """ a file of type .txt is classified as generic data. """
+        """ files with recognized extensions are classified properly """
         # resource should not have any files at this point
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
