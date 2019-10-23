@@ -102,10 +102,13 @@ def normalize_name(name):
 
 # What extensions indicate each kind of high-level content type
 extension_content_types = {
-    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf']),
+    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
     'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
     'Presentation': set(['ppt', 'pptx', 'odp']),
-    'Jupyter Notebook': set(['ipynb'])
+    'Jupyter Notebook': set(['ipynb']),
+    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
+    'Multidimensional (NetCDF)': set(['nc']),
+    'Multidimensional (HDF)': set(['hdf']),
 }
 
 
