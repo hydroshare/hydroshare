@@ -307,7 +307,8 @@ INSTALLED_APPS = (
     "hs_odm2",
     "security",
     "markdown",
-    "hs_communities"
+    "hs_communities",
+    "freshly"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -332,7 +333,8 @@ APPS_TO_NOT_RUN = (
     'test_without_migrations',
     'robots',
     'heartbeat',
-    'filebrowser_safe'
+    'filebrowser_safe',
+    'freshly'
     # etc...
 )
 
@@ -391,6 +393,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "freshly.middleware.assets.AssetVersioningMiddleware",
 )
 
 # security settings
@@ -696,7 +699,15 @@ HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
 
+# sets the concurrency of the celery worker
 CELERY_CONCURRENCY = 4
+
+FRESHLY_ASSETS_EXTENTIONS = [
+     'css', 'js'
+ ]
+
+# Update every time a css or js file is updated in a release
+FRESHLY_ASSETS_VERSION = '1.27'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
