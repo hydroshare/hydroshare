@@ -699,9 +699,6 @@ HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
 
-# sets the concurrency of the celery worker
-CELERY_CONCURRENCY = 4
-
 FRESHLY_ASSETS_EXTENTIONS = [
      'css', 'js'
  ]
