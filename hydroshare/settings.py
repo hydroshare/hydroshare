@@ -696,6 +696,17 @@ HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
 
+# Categorization in discovery of content types 
+# according to file extension of otherwise unaggregated files. 
+DISCOVERY_EXTENSION_CONTENT_TYPES = { 
+    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
+    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
+    'Presentation': set(['ppt', 'pptx', 'odp']),
+    'Jupyter Notebook': set(['ipynb']),
+    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
+    'Multidimensional (NetCDF)': set(['nc'])
+} 
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################

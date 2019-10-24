@@ -11,6 +11,7 @@ from datetime import datetime
 from nameparser import HumanName
 import probablepeople
 from string import maketrans
+from django.conf import settings
 import logging
 import re
 
@@ -100,18 +101,6 @@ def normalize_name(name):
     return normalized.strip()
 
 
-# What extensions indicate each kind of high-level content type
-extension_content_types = {
-    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
-    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
-    'Presentation': set(['ppt', 'pptx', 'odp']),
-    'Jupyter Notebook': set(['ipynb']),
-    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
-    'Multidimensional (NetCDF)': set(['nc']),
-    'Multidimensional (HDF)': set(['hdf']),
-}
-
-
 def get_content_types(res):
     """ return a set of content types matching extensions in a resource.
         These include content types of logical files, as well as the generic
@@ -139,10 +128,10 @@ def get_content_types(res):
                     exts.add(ext.lower())
 
     # categorize common extensions that are not part of logical files.
-    for ext_type in extension_content_types:
-        if exts & extension_content_types[ext_type]:
+    for ext_type in settings.DISCOVERY_EXTENSION_CONTENT_TYPES:
+        if exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
             types.add(ext_type)
-            exts -= extension_content_types[ext_type]
+            exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
 
     if exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
