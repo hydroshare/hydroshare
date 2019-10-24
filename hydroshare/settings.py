@@ -696,6 +696,8 @@ HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
 
+CELERY_CONCURRENCY = 4
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
