@@ -956,8 +956,37 @@ function showFileTypeMetadata(file_type_time_series, url){
                     fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
                  });
              }
+              if (logical_type === "ModelProgramLogicalFile") {
+                  setupModelProgramFileTypeUI();
+              }
         }
     });
+}
+
+function setupModelProgramFileTypeUI() {
+    // controls the UI for associating aggregation files to specific model program file type
+    // (release notes, model engine etc)
+    var mpContentFiles = $("#mp_content_files");
+    $(mpContentFiles).find("select").change(function (e) {
+        var inputElement =  $(mpContentFiles).find("input");
+        var selectedOptions = $(mpContentFiles).find("option:selected");
+        var inputElementValue = "";
+        for(var i=0; i< selectedOptions.length; i++) {
+            var selectedFileType = $(selectedOptions[i]).val();
+            if (!selectedFileType) {
+                selectedFileType = "None";
+            }
+            if(i == 0) {
+                inputElementValue += $(selectedOptions[i]).parents(".file-row").find("p").text() + ":" + selectedFileType;
+            }
+            else {
+                inputElementValue += ";" + $(selectedOptions[i]).parents(".file-row").find("p").text() + ":" + selectedFileType;
+            }
+        }
+        inputElement.attr("value", inputElementValue);
+
+        $(this).parents("form").find(".btn-form-submit").show();
+    })
 }
 
 function InitializeTimeSeriesFileTypeForms() {
