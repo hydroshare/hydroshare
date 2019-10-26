@@ -305,8 +305,6 @@ function updateSelectionMenuContext() {
             uiActionStates.setGenericFileType.fileMenu.hidden = true;
 
             // Disable creating aggregations from folders
-            uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
-            uiActionStates.subMenuSetContentType.disabled = true;
 
             uiActionStates.setRefTimeseriesFileType.disabled = true;
             uiActionStates.setTimeseriesFileType.disabled = true;
