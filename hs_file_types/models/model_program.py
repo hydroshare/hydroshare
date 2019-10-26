@@ -33,7 +33,7 @@ class ModelProgramResourceFileType(models.Model):
     @classmethod
     def type_from_string(cls, type_string):
         type_map = {'release notes': cls.RELEASE_NOTES, 'documentation': cls.DOCUMENTATION,
-                    'software': cls.SOFTWARE, 'engine': cls.ENGINE}
+                    'software': cls.SOFTWARE, 'computational engine': cls.ENGINE}
 
         type_string = type_string.lower()
         return type_map.get(type_string, None)
@@ -181,6 +181,31 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
         base_div, context = super(ModelProgramFileMetaData, self).get_html_forms(render=False)
 
+        def get_html_form_mp_file_types():
+            aggregation = self.logical_file
+            res_file_options_div = dom_tags.div(cls="col-12")
+            with res_file_options_div:
+                dom_tags.input(type="text", name="mp_file_types", value="", style="display: None;")
+            for res_file in aggregation.files.all():
+                with dom_tags.div(cls="row file-row"):
+                    with dom_tags.div(cls="col-md-6"):
+                        dom_tags.p(res_file.file_name)
+                    with dom_tags.div(cls="col-md-6"):
+                        mp_file_type_obj = self.mp_file_types.filter(res_file=res_file).first()
+                        with dom_tags.select():
+                            dom_tags.option("Select file type", value="")
+                            for mp_file_type in ModelProgramResourceFileType.CHOICES:
+                                mp_file_type_name = mp_file_type[1]
+                                if mp_file_type_obj is not None:
+                                    if mp_file_type_obj.file_type == mp_file_type[0]:
+                                        dom_tags.option(mp_file_type_name, selected="selected", value=mp_file_type_name)
+                                    else:
+                                        dom_tags.option(mp_file_type_name, value=mp_file_type_name)
+                                else:
+                                    dom_tags.option(mp_file_type_name, value=mp_file_type_name)
+
+            return res_file_options_div
+
         with root_div:
             dom_tags.div().add(base_div)
             with dom_tags.div():
@@ -257,7 +282,10 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                id="file_mi_json_schema",
                                                name="mi_json_schema", rows="15")
 
-                            # TODO: need to add the code for editing mp file types here
+                        with dom_tags.div(id="mp_content_files", cls="control-group"):
+                            with dom_tags.div(cls="controls"):
+                                dom_tags.legend('Content Files')
+                                get_html_form_mp_file_types()
 
                     with dom_tags.div(cls="row", style="margin-top:10px;"):
                         with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
