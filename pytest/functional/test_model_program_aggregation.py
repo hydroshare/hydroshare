@@ -153,7 +153,7 @@ def test_create_aggregation_from_folder_failure(composite_resource, mock_irods):
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize('mp_type', ['software', 'engine', 'documentation', 'release notes'])
+@pytest.mark.parametrize('mp_type', ['software', 'computational engine', 'documentation', 'release notes'])
 def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_irods):
     """test that we can mark a resource file that is part of a model program aggregation as one of the model program
     file types"""
