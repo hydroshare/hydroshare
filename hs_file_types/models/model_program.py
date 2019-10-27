@@ -38,6 +38,16 @@ class ModelProgramResourceFileType(models.Model):
         type_string = type_string.lower()
         return type_map.get(type_string, None)
 
+    @classmethod
+    def type_name_from_type(cls, type_number):
+        """Gets model program file type name for the specified file type number
+        :param  type_number: a number between 1 and 4
+        """
+        type_map = {cls.RELEASE_NOTES: 'Release Notes', cls.DOCUMENTATION: 'Documentation',
+                    cls.SOFTWARE: 'Software', cls.ENGINE: 'Computational Engine'}
+
+        return type_map.get(type_number, None)
+
     def add_to_xml_container(self, xml_container):
         xml_name_map = {self.RELEASE_NOTES: 'modelReleaseNotes',
                         self.DOCUMENTATION: "modelDocumentation",
@@ -165,7 +175,21 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 json_schema = json.dumps(json_schema)
                 dom_tags.p(json_schema)
             html_string += mi_schema_div.render()
-        # TODO: need to add the code for displaying mp file types here
+
+        if self.mp_file_types.all():
+            mp_files_div = dom_tags.div(cls="content-block")
+            with mp_files_div:
+                dom_tags.legend("Content Files")
+                for mp_file in self.mp_file_types.all():
+                    with dom_tags.div(cls="row"):
+                        with dom_tags.div(cls="col-md-6"):
+                            dom_tags.p(mp_file.res_file.file_name)
+                        with dom_tags.div(cls="col-md-6"):
+                            mp_file_type_name = ModelProgramResourceFileType.type_name_from_type(mp_file.file_type)
+                            dom_tags.p(mp_file_type_name)
+
+            html_string += mp_files_div.render()
+
         template = Template(html_string)
         context = Context({})
         return template.render(context)
