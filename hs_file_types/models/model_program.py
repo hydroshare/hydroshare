@@ -161,6 +161,13 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         html_string = super(ModelProgramFileMetaData, self).get_html()
+        mp_program_type_div = dom_tags.div()
+        with mp_program_type_div:
+            dom_tags.legend("Model Program Type")
+            mp_types_dict = dict(ModelProgramType.CHOICES)
+            dom_tags.p(mp_types_dict[self.logical_file.model_program_type])
+        html_string += mp_program_type_div.render()
+
         if self.version:
             version_div = dom_tags.div(cls="content-block")
             with version_div:
