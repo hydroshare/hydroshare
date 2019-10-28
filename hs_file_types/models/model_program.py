@@ -95,11 +95,11 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                help_text='The software version or build number of the model')
 
     # program language
-    programming_languages = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[],
+    programming_languages = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list,
                                        help_text="The programming language(s) that the model is written in")
 
     # operating system
-    operating_systems = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[],
+    operating_systems = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list,
                                    help_text="Compatible operating systems to setup and run the model")
 
     # release date
@@ -275,7 +275,21 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                     dom_tags.div("{% csrf_token %}")
                     with dom_tags.div(cls="form-group"):
                         with dom_tags.div(cls="control-group"):
-                            dom_tags.legend('Version')
+                            with dom_tags.div(id="mp-program-type"):
+                                dom_tags.legend('Model Program Type')
+                                dom_tags.input(type="text", name="mp_program_type",
+                                               value=self.logical_file.model_program_type, style="display: none;")
+                                with dom_tags.div(cls="controls"):
+                                    mp_types_dict = dict(ModelProgramType.CHOICES)
+                                    with dom_tags.select(style="width: 100%;"):
+                                        for mp_type_key in mp_types_dict:
+                                            if self.logical_file.model_program_type == mp_type_key:
+                                                dom_tags.option(mp_types_dict[mp_type_key], selected="selected",
+                                                                value=mp_type_key)
+                                            else:
+                                                dom_tags.option(mp_types_dict[mp_type_key], value=mp_type_key)
+
+                            dom_tags.legend('Version', style="padding-top: 15px;")
                             with dom_tags.div(cls="controls"):
                                 if self.version:
                                     version = self.version
