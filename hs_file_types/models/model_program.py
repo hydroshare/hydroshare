@@ -15,6 +15,38 @@ from base import AbstractLogicalFile, FileTypeContext
 from generic import GenericFileMetaDataMixin
 
 
+class ModelProgramType(object):
+    UNKNOWN_PROGRAM = 1
+    SWAT_PROGRAM = 2
+    MODFLOW_PROGRAM = 3
+    UEB_PROGRAM = 4
+
+    CHOICES = (
+        (UNKNOWN_PROGRAM, "Unknown Model Program"),
+        (SWAT_PROGRAM, "SWAT Model Program"),
+        (MODFLOW_PROGRAM, "MODFLOW Model Program"),
+        (UEB_PROGRAM, "UEB Model Program")
+    )
+
+    @classmethod
+    def from_string(cls, model_program_name):
+        if model_program_name.lower() == "unknown model program":
+            return ModelProgramType.UNKNOWN_PROGRAM
+        if model_program_name.lower() == "swat model program":
+            return ModelProgramType.SWAT_PROGRAM
+        if model_program_name.lower() == "modflow model program":
+            return ModelProgramType.MODFLOW_PROGRAM
+        if model_program_name.lower() == "ueb model program":
+            return ModelProgramType.UEB_PROGRAM
+        return None
+
+    @classmethod
+    def from_number(cls, model_program_number):
+        model_types = dict(ModelProgramType.CHOICES)
+        model_type_name = model_types.get(model_program_number, None)
+        return model_type_name
+
+
 class ModelProgramResourceFileType(models.Model):
     RELEASE_NOTES = 1
     DOCUMENTATION = 2
@@ -43,9 +75,7 @@ class ModelProgramResourceFileType(models.Model):
         """Gets model program file type name for the specified file type number
         :param  type_number: a number between 1 and 4
         """
-        type_map = {cls.RELEASE_NOTES: 'Release Notes', cls.DOCUMENTATION: 'Documentation',
-                    cls.SOFTWARE: 'Software', cls.ENGINE: 'Computational Engine'}
-
+        type_map = dict(cls.CHOICES)
         return type_map.get(type_number, None)
 
     def add_to_xml_container(self, xml_container):
@@ -137,36 +167,42 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 dom_tags.legend("Version")
                 dom_tags.p(self.version)
             html_string += version_div.render()
+
         if self.release_date:
             release_date_div = dom_tags.div(cls="content-block")
             with release_date_div:
                 dom_tags.legend("Release Date")
                 dom_tags.p(self.release_date.strftime('%m/%d/%Y'))
             html_string += release_date_div.render()
+
         if self.website:
             website_div = dom_tags.div(cls="content-block")
             with website_div:
                 dom_tags.legend("Website")
                 dom_tags.p(self.website)
             html_string += website_div.render()
+
         if self.code_repository:
             code_repo_div = dom_tags.div(cls="content-block")
             with code_repo_div:
                 dom_tags.legend("Code Repository")
                 dom_tags.p(self.code_repository)
             html_string += code_repo_div.render()
+
         if self.operating_systems:
             os_div = dom_tags.div(cls="content-block")
             with os_div:
                 dom_tags.legend("Operating Systems")
                 dom_tags.p(self.operating_systems_as_string)
             html_string += os_div.render()
+
         if self.programming_languages:
             pl_div = dom_tags.div(cls="content-block")
             with pl_div:
                 dom_tags.legend("Programming Languages")
                 dom_tags.p(self.programming_languages_as_string)
             html_string += pl_div.render()
+
         json_schema = self.logical_file.mi_schema_json
         if json_schema:
             mi_schema_div = dom_tags.div(cls="content-block")
@@ -323,6 +359,11 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
 class ModelProgramLogicalFile(AbstractLogicalFile):
     """ One file or more than one files in a specific folder can be part of this aggregation """
+
+    # attribute to store type of model program (SWAT, UEB etc)
+    # not setting the CHOICE option here to avoid  new migration as the ModelProgramType.CHOICE will be
+    # changing as we support more model program types
+    model_program_type = models.PositiveSmallIntegerField(default=ModelProgramType.UNKNOWN_PROGRAM)
 
     metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file")
 
