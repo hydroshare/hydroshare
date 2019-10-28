@@ -4,6 +4,7 @@ import jsonschema
 from django import forms
 from models.model_program import ModelProgramResourceFileType
 
+
 class ModelProgramMetadataValidationForm(forms.Form):
     version = forms.CharField(required=False, max_length=250)
     release_date = forms.DateField(required=False)
@@ -13,6 +14,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     operating_systems = forms.CharField(required=False)
     mi_json_schema = forms.CharField(max_length=5000, required=False)
     mp_file_types = forms.CharField(max_length=255, required=False)
+    mp_program_type = forms.IntegerField()
 
     def clean_version(self):
         version = self.cleaned_data['version'].strip()
@@ -82,6 +84,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
         metadata.save()
         logical_file = metadata.logical_file
         logical_file.mi_schema_json = self.cleaned_data['mi_json_schema']
+        logical_file.model_program_type = self.cleaned_data['mp_program_type']
         logical_file.save()
         # recreate ModelProgramResourceFileType objects
         if self.cleaned_data["mp_file_types"]:
