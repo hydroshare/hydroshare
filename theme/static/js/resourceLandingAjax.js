@@ -708,7 +708,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Render each file. Aggregation files get loaded in memory instead.
             $.each(files, function (i, file) {
                 // Check if the file belongs to an aggregation. Exclude FileSets and their files.
-                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile") {
+                if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile" && file['logical_type'] !== "ModelProgramLogicalFile") {
                     let selectedAgg = currentAggregations.filter(function (agg) {
                         return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
                     })[0];
@@ -717,9 +717,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                         selectedAgg.files = [];     // Initialize the array
                     }
                     selectedAgg.files.push(file);   // Push the aggregation files to the collection
-                }
-                else if (file['logical_type'] === "ModelProgramLogicalFile") {
-                     $('#fb-files-container').append(getFileTemplateInstance(file));
                 }
                 else {
                     // Regular files
@@ -739,7 +736,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
 
             // Default display message for empty directories
             if (!files.length && !folders.length) {
-                if (mode == "edit") {
+                if (mode === "edit") {
                     $('#fb-files-container').append(
                         '<div>' +
                             '<span class="text-muted fb-empty-dir space-bottom">This directory is empty</span>' +
@@ -791,7 +788,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
 
-            if (mode == "edit" && result.hasOwnProperty('spatial_coverage')){
+            if (mode === "edit" && result.hasOwnProperty('spatial_coverage')){
                 var spatialCoverage = result.spatial_coverage;
                 updateResourceSpatialCoverage(spatialCoverage);
             }
