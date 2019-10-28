@@ -956,6 +956,7 @@ function showFileTypeMetadata(file_type_time_series, url){
              }
               if (logical_type === "ModelProgramLogicalFile") {
                   setupModelProgramFileTypeUI();
+                  setupModelProgramTypeUI();
               }
         }
     });
@@ -985,6 +986,16 @@ function setupModelProgramFileTypeUI() {
 
         $(this).parents("form").find(".btn-form-submit").show();
     })
+}
+
+function setupModelProgramTypeUI() {
+    var mpProgramType = $("#mp-program-type");
+    $(mpProgramType).find("select").change(function (e) {
+        var inputElement =  $(mpProgramType).find("input");
+        var selectedOption = $(mpProgramType).find("option:selected");
+        inputElement.attr("value", $(selectedOption).val());
+        $(this).parents("form").find(".btn-form-submit").show();
+     })
 }
 
 function InitializeTimeSeriesFileTypeForms() {
