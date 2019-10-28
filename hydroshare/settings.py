@@ -703,7 +703,7 @@ FRESHLY_ASSETS_EXTENTIONS = [
      'css', 'js'
 ]
 
-# Add `FRESHLY_ASSETS_VERSION` to your setting file.
+# Update every time a css or js file is updated in a release
 FRESHLY_ASSETS_VERSION = '1.27'
 
 # Categorization in discovery of content types 

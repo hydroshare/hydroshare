@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:3621-django-freshly
+FROM hydroshare/hs_docker_base:hydro-flower
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 # inplaceedit in pip doesn't seem compatible with Django 1.11 yet...
