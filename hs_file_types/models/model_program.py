@@ -415,12 +415,16 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
         return "ModelProgramLogicalFile"
 
     # used in discovery faceting to aggregate native and composite content types
-    @staticmethod
-    def get_discovery_content_type():
+    def get_discovery_content_type(self):
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
-        return "Model Program"
+        return ModelProgramType.from_number(self.model_program_type)
+
+    @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation - no specific main file"""
+        return ".*"
 
     @classmethod
     def check_files_for_aggregation_type(cls, files):
