@@ -701,10 +701,21 @@ COMMUNITIES_ENABLED = False
 
 FRESHLY_ASSETS_EXTENTIONS = [
      'css', 'js'
- ]
+]
 
 # Update every time a css or js file is updated in a release
 FRESHLY_ASSETS_VERSION = '1.27'
+
+# Categorization in discovery of content types 
+# according to file extension of otherwise unaggregated files. 
+DISCOVERY_EXTENSION_CONTENT_TYPES = { 
+    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
+    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
+    'Presentation': set(['ppt', 'pptx', 'odp']),
+    'Jupyter Notebook': set(['ipynb']),
+    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
+    'Multidimensional (NetCDF)': set(['nc'])
+} 
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
