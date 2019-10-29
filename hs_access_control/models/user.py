@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q, Subquery
 from django.core.exceptions import PermissionDenied
 
@@ -17,6 +17,45 @@ from hs_access_control.models.community import Community
 # There is a one-one correspondence between instances of UserAccess and instances of User.
 # UserAccess annotates each user with information and methods necessary for access control.
 #############################################
+
+
+class FeatureCodes(object):
+    """
+    Feature codes describe what capabilities a user has in the UI
+
+        * 1 or FeatureCodes.CZO:
+            CZO custom interface.
+    """
+    NONE = 0
+    CZO = 1
+    CHOICES = (
+        (NONE, 'None'),
+        (CZO, 'CZO'),
+    )
+    # Names of privileges for printing
+    NAMES = ('None', 'CZO')
+
+    @classmethod
+    def from_string(self, privilege):
+        """ Converts a string representation to a PrivilegeCode """
+        if privilege.lower() == 'None':
+            return self.NONE
+        if privilege.lower() == 'CZO':
+            return self.CZO
+        return self.NONE
+
+
+class Feature(models.Model):
+    """
+    A UI customization can be enabled or disabled, and is a property of a User.
+
+    """
+    user = models.ForeignKey(User, null=True, related_name='feature')
+    feature = models.IntegerField(choices=FeatureCodes.CHOICES, default=FeatureCodes.NONE)
+    enabled = models.BooleanField(null=False, blank=False, default=False)
+
+    class Meta:
+        unique_together = ('user', 'feature')
 
 
 class UserAccess(models.Model):
@@ -3412,3 +3451,30 @@ class UserAccess(models.Model):
                                      .values("pk")))
 
         return selected
+
+    def customize(self, feature, enabled):
+        """ create or update a UI customization """
+        # get_or_create is not atomic!
+        with transaction.atomic():
+            # ensure that a customization record with the feature exists
+            record, create = Feature.objects.get_or_create(
+                defaults={'enabled': enabled}, user=self.user, feature=feature)
+            # and set the enabled flag if the feature already exists.
+            if not create:
+                record.enabled = enabled
+                record.save()
+
+    def uncustomize(self, feature):
+        """ remove a custom UI option; this makes it unavailable to a user """
+        try:
+            record = Feature.objects.get(user=self.user, feature=feature)
+            record.delete()
+        except Feature.DoesNotExist:
+            pass
+
+    def feature_enabled(self, feature):
+        try:
+            record = Feature.objects.get(user=self.user, feature=feature)
+            return record.enabled
+        except Feature.DoesNotExist:
+            return False

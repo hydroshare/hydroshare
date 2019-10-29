@@ -306,7 +306,9 @@ INSTALLED_APPS = (
     "hs_dictionary",
     "hs_odm2",
     "security",
-    "markdown"
+    "markdown",
+    "hs_communities",
+    "freshly"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -331,7 +333,8 @@ APPS_TO_NOT_RUN = (
     'test_without_migrations',
     'robots',
     'heartbeat',
-    'filebrowser_safe'
+    'filebrowser_safe',
+    'freshly'
     # etc...
 )
 
@@ -390,6 +393,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "freshly.middleware.assets.AssetVersioningMiddleware",
 )
 
 # security settings
@@ -693,6 +697,15 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
 
+COMMUNITIES_ENABLED = False
+
+FRESHLY_ASSETS_EXTENTIONS = [
+     'css', 'js'
+ ]
+
+# Update every time a css or js file is updated in a release
+FRESHLY_ASSETS_VERSION = '1.27'
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
@@ -724,3 +737,10 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
+
+####################
+# Allow Unicode printout to terminals
+####################
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)

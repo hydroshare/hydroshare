@@ -61,10 +61,9 @@ from . import apps
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
 
 from hs_collection_resource.models import CollectionDeletedResource
-
 logger = logging.getLogger(__name__)
 
 
@@ -320,7 +319,6 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         messages.error(request, err_message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 @api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
@@ -1188,15 +1186,6 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
-# @processor_for('my-resources')
-# @login_required
-# def my_resources(request, page):
-#
-#     resource_collection = get_my_resources_list(request)
-#     context = {'collection': resource_collection}
-#
-#     return context
-
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):
@@ -1482,6 +1471,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
     View for the link in the verification email that was sent to a user
@@ -1739,6 +1729,41 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
     return None
 
 
+class FindGroupsView(TemplateView):
+    template_name = 'pages/groups-unauthenticated.html'  # default view is for users not logged in
+
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/groups-authenticated.html'  # update template if user is logged in
+        return super(FindGroupsView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        if self.request.user.is_authenticated():
+            u = User.objects.get(pk=self.request.user.id)
+
+            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+            for g in groups:
+                g.is_user_member = u in g.gaccess.members
+                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                    request_from=u).exists()
+                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                    invitation_to=u).exists()
+                g.join_request = None
+                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            return {
+                'profile_user': u,
+                'groups': groups
+            }
+        else:
+            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")  # active is included in this query
+
+            return {
+                'groups': groups
+            }
+
+
 class MyGroupsView(TemplateView):
     template_name = 'pages/my-groups.html'
 
@@ -1749,7 +1774,7 @@ class MyGroupsView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
-        groups = u.uaccess.view_groups
+        groups = u.uaccess.my_groups
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
             group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
@@ -1770,27 +1795,20 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+    user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
 
 class GroupView(TemplateView):
-    template_name = 'pages/group.html'
+    template_name = 'pages/group-unauthenticated.html'
 
-    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated():
+            self.template_name = 'pages/group.html'
         return super(GroupView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
-        u = User.objects.get(pk=self.request.user.id)
-        u.is_group_owner = u.uaccess.owns_group(g)
-        u.is_group_editor = g in u.uaccess.edit_groups
-        u.is_group_viewer = g in u.uaccess.view_groups
-
-        g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-        g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-        g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
@@ -1800,42 +1818,39 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
-        group_resources = sorted(group_resources, key=lambda  x:x.date_granted, reverse=True)
 
-        # TODO: need to sort this resource list using the date_granted field
+        group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
-        return {
-            'profile_user': u,
-            'group': g,
-            'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-            'group_resources': group_resources,
-            'add_view_user_form': AddUserForm(),
-        }
+        if self.request.user.is_authenticated():
 
+            u = User.objects.get(pk=self.request.user.id)
+            u.is_group_owner = u.uaccess.owns_group(g)
+            u.is_group_editor = g in u.uaccess.edit_groups
+            u.is_group_viewer = g in u.uaccess.view_groups
 
-class CollaborateView(TemplateView):
-    template_name = 'pages/collaborate.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CollaborateView, self).dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = u in g.gaccess.members
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
-            g.join_request = None
-            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
-        return {
-            'profile_user': u,
-            'groups': groups,
-        }
+            g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+
+            return {
+                'group': g,
+                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+                'group_resources': group_resources,
+                'add_view_user_form': AddUserForm(),
+                'communities_enabled': settings.COMMUNITIES_ENABLED,
+                'profile_user': u
+            }
+        else:
+            public_group_resources = [r for r in group_resources 
+                                      if r.raccess.public or r.raccess.discoverable]
+
+            return {
+                'group': g,
+                'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+                'group_resources': public_group_resources,
+                'add_view_user_form': AddUserForm(),
+                'communities_enabled': settings.COMMUNITIES_ENABLED
+            }
 
 
 class MyResourcesView(TemplateView):
@@ -1847,7 +1862,7 @@ class MyResourcesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        
+
         resource_collection = get_my_resources_list(u)
 
         return {
