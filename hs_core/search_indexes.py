@@ -11,6 +11,7 @@ from datetime import datetime
 from nameparser import HumanName
 import probablepeople
 from string import maketrans
+from django.conf import settings
 import logging
 import re
 
@@ -98,6 +99,44 @@ def normalize_name(name):
             normalized = u' ' + normalized + u' ' + nameparts.middle
 
     return normalized.strip()
+
+
+def get_content_types(res):
+    """ return a set of content types matching extensions in a resource.
+        These include content types of logical files, as well as the generic
+        content types 'Document', 'Spreadsheet', 'Presentation'.
+
+        This is only meaningful for Generic or Composite resources.
+    """
+
+    resource = res.get_content_model()  # enable full logical file interface
+
+    types = set([res.discovery_content_type])  # accumulate high-level content types.
+    exts = set()  # track individual file extensions
+
+    # categorize logical files by type, and files without a logical file by extension.
+    for f in resource.files.all():
+        if f.has_logical_file:
+            candidate_type = type(f.logical_file).get_discovery_content_type()
+            types.add(candidate_type)
+        else:  # collect extensions of files not corresponding to logical metadata
+            path = f.short_path
+            path = path.split(".")  # determine last extension
+            if len(path) > 1:
+                ext = path[len(path)-1]
+                if len(ext) <= 5:  # skip obviously non-MIME extensions
+                    exts.add(ext.lower())
+
+    # categorize common extensions that are not part of logical files.
+    for ext_type in settings.DISCOVERY_EXTENSION_CONTENT_TYPES:
+        if exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
+            types.add(ext_type)
+            exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
+
+    if exts:  # if there is anything left over, then mark as Generic
+        types.add('Generic Data')
+
+    return (types, exts)
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -602,15 +641,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.verbose_name
 
     def prepare_content_type(self, obj):
-        if obj.verbose_name != 'Composite Resource':
-            return [obj.discovery_content_type]
-        else:
-            output = set()
-            for f in obj.logical_files:
-                output.add(f.get_discovery_content_type())
-            if len(output) == 0:
-                output.add("Generic Data")
+        """ register content types for both logical files and some MIME types """
+        if obj.verbose_name == 'Composite Resource' or \
+           obj.verbose_name == 'Generic Resource':
+            output = get_content_types(obj)[0]
             return list(output)
+        else:
+            return [obj.discovery_content_type]
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
@@ -633,8 +670,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess') and obj.raccess is not None:
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name.capitalize() +
-                                      ' ' + owner.last_name.capitalize())
+                name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 names.append(name)
         return names
 
@@ -646,8 +682,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         output2 = []
         if hasattr(obj, 'raccess') and obj.raccess is not None:
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name.capitalize() +
-                                      ' ' + owner.last_name.capitalize())
+                name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 output0.append(name)
 
         if hasattr(obj, 'metadata') and obj.metadata is not None:

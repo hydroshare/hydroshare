@@ -89,11 +89,8 @@
         <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
-                <li role="presentation" class="active">
-                    <a href="#overview" aria-controls="overview" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> Overview</a></li>
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                <li role="presentation">
+                <li role="presentation" class="active">
                     <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-file"></i> Resources</a>
                 </li>
@@ -109,87 +106,6 @@
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane fade in active" id="overview">
-                    <div class="row">
-                        <div class="col-sm-12">
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                            <h4>Recent Activity</h4>
-                            {% if group_resources %}
-                                {% for res in group_resources %}
-                                    <div class="group-activity-block activity-block">
-                                        {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
-                                            <div style="background-image: url('{{ res.grantor.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
-                                        {% else %}
-                                            <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                        {% endif %}
-                                        <div>
-                                            <h5 class="text-muted pull-right">{{ res.date_granted|date:"M d, Y" }} at {{ res.date_granted|time }}</h5>
-                                            <div class="shared-resource-info">
-                                                <strong><a>{{ res.grantor|contact }}</a></strong><span class="text-muted"> shared</span>
-                                                <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                            </div>
-                                            <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
-                                            </h5>
-                                        </div>
-
-                                        {% if res.metadata.description %}
-                                            <div class="activity-description col-sm-12" style="max-height: 50px;">
-                                                <p class="description"><strong>ABSTRACT: </strong>
-                                                </p> {{ res.metadata.description|linebreaks }}
-                                            </div>
-                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                        {% endif %}
-                                    </div>
-                            {% endfor %}
-                                {% else %}
-                                <i>No recent activity.</i>
-                            {% endif %}
-                        {% else %}
-                            {% if group.gaccess.active %}
-                            <h4><i>You are not a member of this group.</i></h4>
-                            {% if group.join_request_waiting_user_action %}
-                                <div class="request-block pull-left">
-                                    <span class="flag-joined">You have been invited to join!</span>
-                                    <br><br>
-                                    <div class="height-fix">
-                                        <form class="act-on-request height-fix"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-success"
-                                                    data-user-action="Accept">Accept
-                                            </button>
-                                        </form>
-
-                                        <form class="act-on-request height-fix"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-default">
-                                                Decline
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            {% elif group.join_request_waiting_owner_action %}
-                                <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>
-                            {% else %}
-                                <form id="join-{{ group.id }}" method="post"
-                                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary" role="button">Ask to join</button>
-                                </form>
-                            {% endif %}
-                                {% else %}
-                                <h4><i>This group is currently inactive.</i></h4>
-                            {% endif %}
-                        {% endif %}
-                        </div>
-                    </div>
-                </div>
-
                 <div role="tabpanel" class="tab-pane fade" id="members">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
@@ -466,7 +382,7 @@
                 </div>
 
                 {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                    <div role="tabpanel" class="tab-pane fade" id="resources">
+                    <div role="tabpanel" class="tab-pane fade in active" id="resources">
                      <div class="row">
                         <div class="col-lg-2" id="facets">
                             <div class="panel panel-default">
