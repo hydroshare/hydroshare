@@ -116,8 +116,9 @@ timestamp should go with a template tags to convert to a human readble day.
                     <thead>
                     <tr>
                         <th style="padding-left: 10px;">Title</th>
-                        <th style="padding-left: 10px;">First Author</th>
-                        <th style="padding-left: 10px;">Resource Type</th>
+                        <th style="padding-left: 10px;">Common keywords</th>
+                        <th style="padding-left: 10px;">First author</th>
+                        <th style="padding-left: 10px;">Resource type</th>
                         <th style="padding-left: 10px;">Visibility</th>
                     </tr>
                     </thead>
@@ -126,24 +127,22 @@ timestamp should go with a template tags to convert to a human readble day.
                     {# ====================================== #}
                     <tbody>
                     {% for r in recommended_resources_list %}
-                        {% if r.rec_type == "Propensity" and r.relevance > 0 %}
-                            <tr class="data-row">
-                                <td>
-                                    {% autoescape off %}
-                                        {% resource_link_builder r.candidate_resource.title r.candidate_resource.short_id %}
-                                    {% endautoescape %}
-                                </td>
-                                <td>{{ r.candidate_resource.first_creator }}</td>
-                                <td>
-                                    {% autoescape off %}
-                                        {% resource_verbose_name_builder r.candidate_resource.resource_type %}
-                                    {% endautoescape %}
-                                </td>
-                                <td>{% build_privacy_status r.candidate_resource.published r.candidate_resource.public r.candidate_resource.discoverable %}</td>
-                            </tr>
-                        {% endif %}
+                        <tr class="data-row">
+                            <td>
+                                {% autoescape off %}
+                                    {% resource_link_builder r.resource_title r.resource_short_id %}
+                                {% endautoescape %}
+                            </td>
+                            <td>{{ r.common_keywords | join:", " }}</td>
+                            <td>{{ r.resource_first_creator }}</td>
+                            <td>
+                                {% autoescape off %}
+                                    {% resource_verbose_name_builder r.resource_type %}
+                                {% endautoescape %}
+                            </td>
+                            <td>{% build_privacy_status r.published r.public r.discoverable %}</td>
+                        </tr>
                     {% endfor %}
-
                     </tbody>
                 </table>
             </div>
@@ -165,9 +164,9 @@ timestamp should go with a template tags to convert to a human readble day.
                     <thead>
                     <tr>
                         <th style="padding-left: 10px;">Username</th>
-                        <th style="padding-left: 10px;">Resources Owned by the User</th>
-			<th style="padding-left: 10px;">Resources Created by the User in last 30 days</th>
-                        <th style="padding-left: 10px;">Resources Shared by the User in last 30 days</th>
+                        <th style="padding-left: 10px;">Common Keywords</th>
+                        <th style="padding-left: 10px;">Resources owned by the user</th>
+			<th style="padding-left: 10px;">Resources created by the user in last 30 days</th>
                     </tr>
                     </thead>
                     {# ====================================== #}
@@ -180,9 +179,9 @@ timestamp should go with a template tags to convert to a human readble day.
                                 <td>
 				    <a href="/user/{{ u.user_id }}/">{{ u.username }}</a>
                                 </td>
-                                <td>{{u.owned_by}}</td>
-				<td>{{u.created_by}}</td>
-                                <td>{{u.shared_to_others}}</td>
+                                <td>{{ u.common_keywords | join:", " }}</td>
+                                <td>{{ u.owned_by }}</td>
+				<td>{{ u.created_since }}</td>
                             </tr>
                         {% endif %}
                     {% endfor %}
@@ -206,10 +205,10 @@ timestamp should go with a template tags to convert to a human readble day.
                     <thead>
                     <tr>
                         <th style="padding-left: 10px;">Name</th>
+                        <th style="padding-left: 10px;">Common keywords</th>
                         <th style="padding-left: 10px;">Number of group members</th>
-                        <th style="padding-left: 10px;">Favored keywords</th>
+                        <th style="padding-left: 10px;">Resources shared with the group</th>
                         <th style="padding-left: 10px;">Resources shared with the group in last 30 days</th>
-                        <! ---<th style="padding-left: 10px;">Number of public product of the group</th> -->
                     </tr>
                     </thead>
                     {# ====================================== #}
@@ -222,10 +221,10 @@ timestamp should go with a template tags to convert to a human readble day.
                                 <td>
                                     <a href="/group/{{ g.group_id }}/">{{ g.group_name }}</a>
                                 </td>
+                                <td>{{ g.common_keywords | join:", " }}</td>
                                 <td>{{ g.group_members }}</td>
-                                <td>{{ g.group_favored_keyword | join:", " }}</td>
                                 <td>{{ g.shared_with_group }}</td>
-                                <!-- <td>{{ g.group_public }}</td> -->
+                                <td>{{ g.shared_with_group_since }}</td>
                             </tr>
                         {% endif %}
                     {% endfor %}

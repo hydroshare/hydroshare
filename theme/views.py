@@ -502,7 +502,8 @@ def dashboard(request, template="pages/dashboard.html"):
     my_username = request.user.username
     user = User.objects.get(username=my_username)
     my_recent = Variable.recent_resources(user, days=60, n_resources=5)
-    today = date(2018, 07, 31)
+    # today = date(2019, 10, 17)
+    today = date.today()
     beginning = today - timedelta(30)
 
     my_recommended_resources_list = RecommendedResource.objects\
@@ -511,13 +512,30 @@ def dashboard(request, template="pages/dashboard.html"):
 
     resources_matched_genres = set()
     # mark relevant records as shown
+    my_recommended_resources_context_list = []
     for r in my_recommended_resources_list:
         if r.state == Status.STATUS_NEW:
 	    r.shown()
-        keywords = r.keywords.all()
-        if keywords:
-            for k in keywords:
-                resources_matched_genres.add(k.value)
+        if r.rec_type == 'Propensity' and r.relevance > 0:
+            recommended_resource = r.candidate_resource
+            keywords = r.keywords.all()
+            common_keywords = []
+            if keywords:
+                for k in keywords:
+                    resources_matched_genres.add(k.value)
+                    common_keywords.append(k.value)
+            resource_context = {
+                'resource_title': recommended_resource.title,
+                'resource_short_id': recommended_resource.short_id,
+                'resource_first_creator': recommended_resource.first_creator,
+                'resource_type': recommended_resource.resource_type,
+                'common_keywords': common_keywords[:5],
+                'published': recommended_resource.raccess.published,
+                'public': recommended_resource.raccess.public,
+                'discoverable': recommended_resource.raccess.discoverable
+
+            }
+            my_recommended_resources_context_list.append(resource_context)
 
     my_recommended_users_context_list = []
     my_recommended_users_list = RecommendedUser.objects\
@@ -537,7 +555,7 @@ def dashboard(request, template="pages/dashboard.html"):
         recommended_user_id = recommended_user.id
         owned_by = UserResourcePrivilege.objects\
 		.filter(user=recommended_user, privilege=PrivilegeCodes.OWNER).count()
-        created_by = BaseResource.objects\
+        created_since = BaseResource.objects\
                 .filter(created__gt=beginning,
                         r2urp__user=recommended_user,
                         r2urp__privilege=PrivilegeCodes.OWNER).count()
@@ -548,16 +566,19 @@ def dashboard(request, template="pages/dashboard.html"):
                           r2grp__start__gte=beginning)).distinct().count()
 
         keywords = u.keywords.all()
+        common_keywords = []
         if keywords:
 	    for k in keywords:
 		users_matched_genres.add(k.value)
+                common_keywords.append(k.value)
+
         user_context = {
 	    'username': recommended_user,
 	    'user_id': recommended_user_id,
             'relevance': u.relevance,
             'owned_by': owned_by,
-	    'created_by': created_by,
-            'shared_to_others': shared_to_others
+	    'created_since': created_since,
+            'common_keywords': common_keywords[:5]
 	}
 	my_recommended_users_context_list.append(user_context)
 
@@ -569,36 +590,45 @@ def dashboard(request, template="pages/dashboard.html"):
         if r.state == Status.STATUS_NEW:
             r.shown()
         group = r.candidate_group
-        group_members = User.objects.filter(u2ugp__group=group).count()
+        # group_members = User.objects.filter(u2ugp__group=group).count()
+        group_members = group.gaccess.members.count()
+        shared_with_group = BaseResource.objects\
+                                .filter(r2grp__group=group).distinct().count()
+        shared_with_group_since = BaseResource.objects\
+                                      .filter(r2grp__group=group,
+                                              r2grp__start__gte=beginning).distinct().count()
+        '''
         shared_with_group = BaseResource.objects\
                                 .filter(r2grp__group=group, 
                                         r2grp__start__gte=beginning).distinct().count()
-        # ga = GroupAccess.objects.get(group=group)
-        # group_public = group.public_resources().count()
-        gp = GroupPreferences.objects.get(group=group)
-        all_gps = gp.preferences.all()
-        group_keywords = GroupPrefToPair.objects\
-				.filter(group_pref=gp, pair__key='subject', pair__in=all_gps, weight__gt=1)\
-				.order_by('-weight')[:5]
+        '''
+        group_viewable = group.gaccess.view_resources.count()
+        group_editable = group.gaccess.edit_resources.count()
+        group_own = group.gaccess.owned_resources.count()
 
-        group_favored_keywords = []
-        if group_keywords:
-            for keyword in group_keywords:
-                group_favored_keywords.append(keyword.pair.value)
+        keywords = r.keywords.all()
+        common_keywords = []
+        if keywords:
+            for k in keywords:
+                common_keywords.append(k.value)
         group_context = {
             'group_id': group.id,
             'group_name': group.name,
             'relevance': r.relevance,
             'group_members': group_members,
             'shared_with_group': shared_with_group,
-            # 'group_public': group_public,
-	    'group_favored_keyword': group_favored_keywords[:5]
+            'shared_with_group_since': shared_with_group_since,
+            'group_viewable': group_viewable,
+            'group_editable': group_editable,
+            'group_own': group_own,
+	    'common_keywords': common_keywords[:5]
 	}
         my_recommended_groups_context_list.append(group_context)
 
     context = {
         'recent': my_recent, 
-        'recommended_resources_list': my_recommended_resources_list,
+        # 'recommended_resources_list': my_recommended_resources_list,
+        'recommended_resources_list': my_recommended_resources_context_list,
         'resources_matched_genres': resources_matched_genres,
         'recommended_groups_list': my_recommended_groups_context_list,
 	'recommended_users_list': my_recommended_users_context_list,

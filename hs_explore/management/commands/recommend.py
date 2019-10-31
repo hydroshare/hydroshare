@@ -22,6 +22,8 @@ def get_resource_to_subjects():
     all_subjects = set()
     resource_to_subjects = {}
     for res in BaseResource.objects.all():
+        if res is None or res.metadata is None or res.metadata.subjects is None:
+            continue
         raw_subjects = [subject.value.strip() for subject in res.metadata.subjects.all()
                                 .exclude(value__isnull=True)]
         subjects = [sub.lower() for sub in raw_subjects]
@@ -173,9 +175,11 @@ def store_recommended_resources(user_to_recommended_resources_list, res_to_subs)
                                                        state='Seen',
                                                        pref_for='Resource')
         user_res_preferences_set = set()
+        user_res_pref_to_weight = {}
         for p in user_resources_preferences:
             if p.pair.key == 'subject':
                 user_res_preferences_set.add(p.pair.value)
+                user_res_pref_to_weight[p.pair.value] = p.weight
 
         for res_id, sim in recommend_resources_list:
             recommended_res = get_resource_by_shortkey(res_id)
@@ -187,7 +191,7 @@ def store_recommended_resources(user_to_recommended_resources_list, res_to_subs)
             common_subjects = set.intersection(user_res_preferences_set,
                                                 set(recommended_subjects))
             for cs in common_subjects:
-                r.relate('subject', cs, 1)
+                r.relate('subject', cs, user_res_pref_to_weight[cs])
 
 
 def cal_nn_matrix(m_ug):
@@ -195,7 +199,8 @@ def cal_nn_matrix(m_ug):
     ug_jac_sim = 1 - pairwise_distances(nonzero_m_ug, metric="cosine")
     ug_jac_sim = pd.DataFrame(ug_jac_sim, index=nonzero_m_ug.index,
                               columns=nonzero_m_ug.index)
-    knn = 10
+    num_row_m_ug = m_ug.shape[0]
+    knn = min(10, num_row_m_ug)
     order = np.argsort(-ug_jac_sim.values, axis=1)[:, :knn]
     ug_nearest_neighbors = pd.DataFrame(ug_jac_sim.columns[order],
                                         columns=['neighbor{}'
@@ -251,15 +256,17 @@ def store_recommended_users(user_to_recommended_users_list):
         user = user_from_id(username)
         user_preferences = PropensityPreferences.objects.get(user=user)
         user_preferences_pairs = user_preferences.preferences.all()
-        user_resources_preferences = PropensityPrefToPair.objects.\
+        user_users_preferences = PropensityPrefToPair.objects.\
                                                 filter(prop_pref=user_preferences,
                                                        pair__in=user_preferences_pairs,
                                                        state='Seen',
                                                        pref_for='User')
         user_preferences_set = set()
-        for p in user_resources_preferences:
+        user_user_pref_to_weight = {}
+        for p in user_users_preferences:
             if p.pair.key == 'subject':
                 user_preferences_set.add(p.pair.value)
+                user_user_pref_to_weight[p.pair.value] = p.weight
 
         for neighbor_name, sim in recommended_users_list.iteritems():
             neighbor = user_from_id(neighbor_name)
@@ -279,7 +286,7 @@ def store_recommended_users(user_to_recommended_users_list):
             common_subjects = set.intersection(user_preferences_set, neighbor_preferences_set)
 
             for cs in common_subjects:
-                r.relate('subject', cs, 1)
+                r.relate('subject', cs, user_user_pref_to_weight[cs])
 
 
 def get_group_to_held_resources_and_members(res_to_subs):
@@ -361,8 +368,8 @@ def recommend_groups(m_ug, m_hg, group_to_members):
             cos_sim = 1 - sp.distance.cosine(user_vec, group_vec)
             if cos_sim > 0:
                 groups_to_sim[group_name] = cos_sim
-            top10_sorted_group_list = sorted(groups_to_sim.iteritems(),
-                                             key=lambda (k, v): (v, k), reverse=True)[:10]
+        top10_sorted_group_list = sorted(groups_to_sim.iteritems(),
+                                         key=lambda (k, v): (v, k), reverse=True)[:10]
         user_to_recommended_groups_list[username] = top10_sorted_group_list
     return user_to_recommended_groups_list
 
@@ -380,9 +387,11 @@ def store_recommended_groups(user_to_recommended_groups_list, active_user_set, a
                                                        state='Seen',
                                                        pref_for='Group')
         user_preferences_set = set()
+        user_group_pref_to_weight = {}
         for p in user_group_preferences:
             if p.pair.key == 'subject':
                 user_preferences_set.add(p.pair.value)
+                user_group_pref_to_weight[p.pair.value] = p.weight
 
         for group_name, sim in recommended_groups_list:
             if group_name not in active_groups_set:
@@ -401,7 +410,7 @@ def store_recommended_groups(user_to_recommended_groups_list, active_user_set, a
             common_subjects = set.intersection(user_preferences_set, group_subjects)
 
             for cs in common_subjects:
-                r.relate('subject', cs, 1)
+                r.relate('subject', cs, user_group_pref_to_weight[cs])
 
 
 def clear_old_data():
@@ -422,8 +431,8 @@ def main():
     res_df, res_to_subs = get_resource_to_subjects()
     all_subjects_list = list(res_df.columns.values)
     all_res_ids = list(res_df.index)
-    end_date = date(2018, 07, 31)
-    start_date = end_date - timedelta(days=6)
+    end_date = date.today()
+    start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     m_ur, m_rg, m_ug = get_user_cumulative_profiles(user_to_resources, res_to_subs,
                                                     all_res_ids, all_subjects_list, all_usernames)
