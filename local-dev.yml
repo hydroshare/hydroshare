@@ -192,6 +192,8 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
+    ports:
+      - "5555:5555"
     volumes:
       - ".:/hydroshare"
     links:
