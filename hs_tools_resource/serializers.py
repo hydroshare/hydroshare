@@ -92,37 +92,37 @@ class ToolIconMetaDataSerializer(serializers.ModelSerializer):
         fields = ('value',)
 
 
-class MailingListSerializer(serializers.Serializer):
+class MailingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = MailingListUrl
         fields = ('value',)
 
 
-class TestingProtocolSerializer(serializers.Serializer):
+class TestingProtocolSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestingProtocolUrl
         fields = ('value',)
 
 
-class HelpPageSerializer(serializers.Serializer):
+class HelpPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = HelpPageUrl
         fields = ('value',)
 
 
-class SourceCodeSerializer(serializers.Serializer):
+class SourceCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SourceCodeUrl
         fields = ('value',)
 
 
-class IssuesPageSerializer(serializers.Serializer):
+class IssuesPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = IssuesPageUrl
         fields = ('value',)
 
 
-class RoadmapSerializer(serializers.Serializer):
+class RoadmapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Roadmap
         fields = ('value',)
