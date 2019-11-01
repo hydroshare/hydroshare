@@ -621,6 +621,11 @@ class ToolMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        # TODO The json metadata has underscores, remove those to matche the metadata elements.  This is probably an
+        # issue in the other metadata implementations as well.
+        for key, value in metadata.items():
+            if "_" in key:
+                metadata[key.replace("_", "")] = metadata.pop(key)
         keys_to_update = metadata.keys()
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
@@ -770,7 +775,6 @@ class ToolMetaData(CoreMetaData):
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
-
         # update resource specific metadata
 
         def validate_form(form):
