@@ -863,6 +863,58 @@ class ToolMetaData(CoreMetaData):
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+                elif 'mailinglisturl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['mailinglisturl'])
+                    validate_form(validation_form)
+                    mailing_list_url = self.mailing_list_url
+                    if mailing_list_url is not None:
+                        self.update_element('mailinglisturl', mailing_list_url.id,
+                                            **dict_item['mailinglisturl'])
+                    else:
+                        self.create_element('mailinglisturl', **dict_item['mailinglisturl'])
+                elif 'testingprotocolurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['testingprotocolurl'])
+                    validate_form(validation_form)
+                    testing_protocol_url = self.testing_protocol_url
+                    if testing_protocol_url is not None:
+                        self.update_element('testingprotocolurl', testing_protocol_url.id,
+                                            **dict_item['testingprotocolurl'])
+                    else:
+                        self.create_element('testingprotocolurl', **dict_item['testingprotocolurl'])
+                elif 'helppageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['helppageurl'])
+                    validate_form(validation_form)
+                    help_page_url = self.help_page_url
+                    if help_page_url is not None:
+                        self.update_element('helppageurl', help_page_url.id,
+                                            **dict_item['helppageurl'])
+                    else:
+                        self.create_element('helppageurl', **dict_item['helppageurl'])
+                elif 'sourcecodeurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['sourcecodeurl'])
+                    validate_form(validation_form)
+                    source_code_url = self.source_code_url
+                    if source_code_url is not None:
+                        self.update_element('sourcecodeurl', source_code_url.id,
+                                            **dict_item['sourcecodeurl'])
+                    else:
+                        self.create_element('sourcecodeurl', **dict_item['sourcecodeurl'])
+                elif 'issuespageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['issuespageurl'])
+                    validate_form(validation_form)
+                    issues_page_url = self.issues_page_url
+                    if issues_page_url is not None:
+                        self.update_element('issuespageurl', issues_page_url.id,
+                                            **dict_item['issuespageurl'])
+                    else:
+                        self.create_element('issuespageurl', **dict_item['issuespageurl'])
+                elif 'roadmap' in dict_item:
+                    roadmap = self.roadmap
+                    if roadmap is not None:
+                        self.update_element('roadmap', roadmap.id,
+                                            **dict_item['roadmap'])
+                    else:
+                        self.create_element('roadmap', **dict_item['roadmap'])
 
     def __str__(self):
         return self.title.value
