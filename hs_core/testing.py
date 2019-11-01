@@ -66,10 +66,10 @@ class TestCaseCommonUtilities(object):
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
                                      pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
-            if output:
-                if 'ERROR:' in output.upper():
+            for out_str in output:
+                if 'ERROR:' in out_str.upper():
                     # irods account failed to create
-                    self.assertRaises(SessionException(-1, output, output))
+                    self.assertRaises(SessionException(-1, out_str, out_str))
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = True
@@ -87,9 +87,10 @@ class TestCaseCommonUtilities(object):
                                      pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
-                if 'ERROR:' in output.upper():
-                    # there is an error from icommand run, report the error
-                    self.assertRaises(SessionException(-1, output, output))
+                for out_str in output:
+                    if 'ERROR:' in out_str.upper():
+                        # there is an error from icommand run, report the error
+                        self.assertRaises(SessionException(-1, out_str, out_str))
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = False
