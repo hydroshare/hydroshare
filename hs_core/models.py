@@ -3211,7 +3211,7 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3492,7 +3492,7 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for GenericResource model."""
