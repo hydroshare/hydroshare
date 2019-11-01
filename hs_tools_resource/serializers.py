@@ -4,7 +4,8 @@ from hs_core.views.resource_metadata_rest_api import CoreMetaDataSerializer
 from models import AppHomePageUrl, RequestUrlBase, ToolVersion, SupportedResTypeChoices, \
     SupportedResTypes, SupportedSharingStatusChoices, SupportedSharingStatus, ToolIcon, \
     ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices, SupportedFileExtensions, \
-    RequestUrlBaseAggregation, RequestUrlBaseFile
+    RequestUrlBaseAggregation, RequestUrlBaseFile, MailingListUrl, TestingProtocolUrl, \
+    HelpPageUrl, SourceCodeUrl, IssuesPageUrl, Roadmap, ShowOnOpenWithList
 
 
 class SupportedResTypeChoicesMetaDataSerializer(serializers.ModelSerializer):
@@ -91,6 +92,42 @@ class ToolIconMetaDataSerializer(serializers.ModelSerializer):
         fields = ('value',)
 
 
+class MailingListSerializer(serializers.Serializer):
+    class Meta:
+        model = MailingListUrl
+        fields = ('value',)
+
+
+class TestingProtocolSerializer(serializers.Serializer):
+    class Meta:
+        model = TestingProtocolUrl
+        fields = ('value',)
+
+
+class HelpPageSerializer(serializers.Serializer):
+    class Meta:
+        model = HelpPageUrl
+        fields = ('value',)
+
+
+class SourceCodeSerializer(serializers.Serializer):
+    class Meta:
+        model = SourceCodeUrl
+        fields = ('value',)
+
+
+class IssuesPageSerializer(serializers.Serializer):
+    class Meta:
+        model = IssuesPageUrl
+        fields = ('value',)
+
+
+class RoadmapSerializer(serializers.Serializer):
+    class Meta:
+        model = Roadmap
+        fields = ('value',)
+
+
 class ToolMetaDataSerializer(CoreMetaDataSerializer):
     url_base = RequestUrlBaseMetaDataSerializer(required=False, many=False)
     url_base_aggregation = RequestUrlBaseAggregationMetaDataSerializer(required=False, many=False)
@@ -104,6 +141,12 @@ class ToolMetaDataSerializer(CoreMetaDataSerializer):
     supported_file_extensions = SupportedFileExtensionsMetaDataSerializer(required=False,
                                                                           many=False)
     app_home_page_url = AppHomePageUrlMetaDataSerializer(required=False, many=False)
+    mailing_list_url = MailingListSerializer(required=False, many=False)
+    testing_protocol_url = TestingProtocolSerializer(required=False, many=False)
+    help_page_url = HelpPageSerializer(required=False, many=False)
+    source_code_url = SourceCodeSerializer(required=False, many=False)
+    issues_page_url = IssuesPageSerializer(required=False, many=False)
+    roadmap = RoadmapSerializer(required=False, many=False)
 
     class Meta:
         model = ToolMetaData

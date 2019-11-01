@@ -534,12 +534,12 @@ class ToolMetaData(CoreMetaData):
     _homepage_url = GenericRelation(AppHomePageUrl)
 
     approved = models.BooleanField(default=False)
-    testing_protocol_url = GenericRelation(TestingProtocolUrl)
-    help_page_url = GenericRelation(HelpPageUrl)
-    source_code_url = GenericRelation(SourceCodeUrl)
-    issues_page_url = GenericRelation(IssuesPageUrl)
-    mailing_list_url = GenericRelation(MailingListUrl)
-    roadmap = GenericRelation(Roadmap)
+    _testing_protocol_url = GenericRelation(TestingProtocolUrl)
+    _help_page_url = GenericRelation(HelpPageUrl)
+    _source_code_url = GenericRelation(SourceCodeUrl)
+    _issues_page_url = GenericRelation(IssuesPageUrl)
+    _mailing_list_url = GenericRelation(MailingListUrl)
+    _roadmap = GenericRelation(Roadmap)
     show_on_open_with_list = GenericRelation(ShowOnOpenWithList)
 
     @property
@@ -587,6 +587,30 @@ class ToolMetaData(CoreMetaData):
         return self._tool_icon.first()
 
     @property
+    def mailing_list_url(self):
+        return self._mailing_list_url.first()
+
+    @property
+    def testing_protocol_url(self):
+        return self._testing_protocol_url.first()
+
+    @property
+    def help_page_url(self):
+        return self._help_page_url.first()
+
+    @property
+    def source_code_url(self):
+        return self._source_code_url.first()
+
+    @property
+    def issues_page_url(self):
+        return self._issues_page_url.first()
+
+    @property
+    def roadmap(self):
+        return self._roadmap.first()
+
+    @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
         from serializers import ToolMetaDataSerializer
@@ -630,6 +654,30 @@ class ToolMetaData(CoreMetaData):
         if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append(
                 {"supportedsharingstatus": metadata.pop('supportedsharingstatus')})
+
+        if 'testingprotocolurl' in keys_to_update:
+            parsed_metadata.append(
+                {"testingprotocolurl": metadata.pop('testingprotocolurl')})
+
+        if 'helppageurl' in keys_to_update:
+            parsed_metadata.append(
+                {"helppageurl": metadata.pop('helppageurl')})
+
+        if 'sourcecodeurl' in keys_to_update:
+            parsed_metadata.append(
+                {"sourcecodeurl": metadata.pop('sourcecodeurl')})
+
+        if 'issuespageurl' in keys_to_update:
+            parsed_metadata.append(
+                {"issuespageurl": metadata.pop('issuespageurl')})
+
+        if 'mailinglisturl' in keys_to_update:
+            parsed_metadata.append(
+                {"mailinglisturl": metadata.pop('mailinglisturl')})
+
+        if 'roadmap' in keys_to_update:
+            parsed_metadata.append(
+                {"roadmap": metadata.pop('roadmap')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -703,12 +751,12 @@ class ToolMetaData(CoreMetaData):
         self._supported_file_extensions.all().delete()
         self._homepage_url.all().delete()
 
-        self.testing_protocol_url.all().delete()
-        self.help_page_url.all().delete()
-        self.source_code_url.all().delete()
-        self.issues_page_url.all().delete()
-        self.mailing_list_url.all().delete()
-        self.roadmap.all().delete()
+        self._testing_protocol_url.all().delete()
+        self._help_page_url.all().delete()
+        self._source_code_url.all().delete()
+        self._issues_page_url.all().delete()
+        self._mailing_list_url.all().delete()
+        self._roadmap.all().delete()
         self.show_on_open_with_list.all().delete()
 
     def update(self, metadata, user):
