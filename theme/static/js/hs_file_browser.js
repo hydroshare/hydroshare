@@ -1176,7 +1176,8 @@ function onOpenFile() {
 function isVirtualFolder(item) {
     item = $(item);
     let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
-    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
+    let isModelProgramFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelProgramLogicalFile";
+    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder;
 }
 
 function startDownload(zipped) {
