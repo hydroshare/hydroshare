@@ -6,7 +6,7 @@ from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
     VersionForm, SupportedResTypesForm, SupportedAggTypesForm, \
     SupportedSharingStatusForm, ToolIconForm, UrlBaseForm, SupportedFileExtensionsForm, \
-    UrlBaseAggregationForm, UrlBaseFileForm, ShowOnOpenWithListForm
+    UrlBaseAggregationForm, UrlBaseFileForm
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_file_types.utils import get_SupportedAggTypes_choices

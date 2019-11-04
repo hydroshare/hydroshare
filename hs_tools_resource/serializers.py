@@ -5,7 +5,7 @@ from models import AppHomePageUrl, RequestUrlBase, ToolVersion, SupportedResType
     SupportedResTypes, SupportedSharingStatusChoices, SupportedSharingStatus, ToolIcon, \
     ToolMetaData, SupportedAggTypes, SupportedAggTypeChoices, SupportedFileExtensions, \
     RequestUrlBaseAggregation, RequestUrlBaseFile, MailingListUrl, TestingProtocolUrl, \
-    HelpPageUrl, SourceCodeUrl, IssuesPageUrl, Roadmap, ShowOnOpenWithList
+    HelpPageUrl, SourceCodeUrl, IssuesPageUrl, Roadmap
 
 
 class SupportedResTypeChoicesMetaDataSerializer(serializers.ModelSerializer):
