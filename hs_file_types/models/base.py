@@ -968,6 +968,17 @@ class AbstractLogicalFile(models.Model):
     @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
+
+        if self.is_model_program and self.folder:
+            # this model program aggregation has ben created from a folder
+            # aggregation folder path is the aggregation name
+            return self.folder
+        elif self.is_model_program:
+            # this model program aggregation has been created from a single resource file
+            # the path of the resource file is the aggregation name
+            single_res_file = self.files.first()
+            return single_res_file.short_path
+
         if not self.is_fileset:
             # any aggregation that is not a fileset type, the path of the aggregation primary file
             # is the aggregation name
@@ -975,6 +986,7 @@ class AbstractLogicalFile(models.Model):
             if not primary_file:
                 return ""
             return primary_file.short_path
+
         # self is a fileset aggregation - aggregation folder path is the aggregation name
         return self.folder
 
