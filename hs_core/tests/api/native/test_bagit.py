@@ -34,19 +34,6 @@ class TestBagIt(TestCase):
             self.test_res.delete()
         GenericResource.objects.all().delete()
 
-    def test_create_bag(self):
-        # the resource should have only one bags object
-        self.assertEquals(self.test_res.bags.count(), 1)
-        old_bag = self.test_res.bags.all().first()
-
-        # this is the api call we are testing
-        new_bag = hs_bagit.create_bag(self.test_res)
-
-        # resource should have one new bags object
-        self.assertEquals(self.test_res.bags.count(), 1)
-        self.assertEquals(new_bag, self.test_res.bags.all().first())
-        self.assertNotEquals(old_bag, new_bag)
-
     def test_create_bag_files(self):
         # this is the api call we are testing
         irods_storage_obj = hs_bagit.create_bag_files(self.test_res)

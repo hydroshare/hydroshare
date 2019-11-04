@@ -12,12 +12,16 @@ import json
 from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
+from time import sleep
+
 import requests
 from celery import shared_task
 from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
+
 from rest_framework import status
 
 from hs_core.hydroshare import utils
@@ -398,6 +402,26 @@ def create_bag_by_irods(resource_id):
 
     res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()
+    bag_full_name = res.get_irods_path('bags/{res_id}.zip'.format(res_id=resource_id), prepend_short_id=False)
+
+    if res.locked:
+        # resource is locked meaning its bag is being created by another celery task, wait until the lock
+        # is released which indicates the bag is available
+        while res.locked:
+            sleep(1)
+
+        # lock is released, check if resource bag indeed exists
+        if istorage.exists(bag_full_name):
+            # the bag is made available by another celery task
+            return True
+        else:
+            # the lock is released, but resource bag does not exist, which indicates bag generation failure
+            return False
+    else:
+        with transaction.atomic():
+            # lock the resource first before doing bag creation
+            res.locked = True
+            res.save()
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
@@ -406,50 +430,40 @@ def create_bag_by_irods(resource_id):
             create_bag_files(res)
         except Exception as ex:
             logger.error('Failed to create bag files. Error:{}'.format(ex.message))
+            with transaction.atomic():
+                # release the lock before returning bag creation failure
+                res.locked = False
+                res.save()
             return False
 
-    bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
-    if res.resource_federation_path:
-        irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
-        is_exist = istorage.exists(irods_bagit_input_path)
-        # check to see if bagit readme.txt file exists or not
-        bagit_readme_file = '{fed_path}/{res_id}/readme.txt'.format(
-            fed_path=res.resource_federation_path,
-            res_id=resource_id)
-        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
-        bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
-        bagit_files = [
-            '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
-                                                   res_id=resource_id),
-            '{fed_path}/{res_id}/manifest-md5.txt'.format(
-                fed_path=res.resource_federation_path, res_id=resource_id),
-            '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
-                fed_path=res.resource_federation_path, res_id=resource_id),
-            '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
-                                                  res_id=resource_id)
-        ]
-    else:
-        is_exist = istorage.exists(resource_id)
-        # check to see if bagit readme.txt file exists or not
-        bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)
-        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
+    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+    # check to see if bagit readme.txt file exists or not
+    bagit_readme_file = res.get_irods_path('readme.txt')
+    is_bagit_readme_exist = istorage.exists(bagit_readme_file)
+    if irods_bagit_input_path.startswith(resource_id):
+        # resource is in data zone, need to append the full path for iRODS bagit rule execution
         irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
         irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
             def_res=settings.IRODS_DEFAULT_RESOURCE)
-        bagit_files = [
-            '{res_id}/bagit.txt'.format(res_id=resource_id),
-            '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
-            '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
-            'bags/{res_id}.zip'.format(res_id=resource_id)
-        ]
+    else:
+        # this will need to be changed with the default resource in whatever federated zone the
+        # resource is stored in when we have such use cases to support
+        bagit_input_resource = "*DESTRESC='{def_res}'".format(
+            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+
+    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+
+    bagit_files = [
+        res.get_irods_path('bagit.txt'),
+        res.get_irods_path('manifest-md5.txt'),
+        res.get_irods_path('tagmanifest-md5.txt'),
+        bag_full_name
+    ]
 
     # only proceed when the resource is not deleted potentially by another request
     # when being downloaded
+    is_exist = istorage.exists(irods_bagit_input_path)
     if is_exist:
         # if bagit readme.txt does not exist, add it.
         if not is_bagit_readme_exist:
@@ -477,9 +491,17 @@ def create_bag_by_irods(resource_id):
                 if istorage.exists(fname):
                     istorage.delete(fname)
             logger.error(ex.stderr)
+            with transaction.atomic():
+                # release the lock before returning bag creation failure
+                res.locked = False
+                res.save()
             return False
     else:
         logger.error('Resource does not exist.')
+        with transaction.atomic():
+            # release the lock before returning bag creation failure
+            res.locked = False
+            res.save()
         return False
 
 

@@ -598,18 +598,17 @@
                                                 </a>
                                             {% endif %}
 
-                                            {% for b in cm.bags.all %}
-                                                <a id="btn-download-all" type="button"
-                                                   title="Download all content as Zipped BagIt Archive"
-                                                        {% if cm.raccess.require_download_agreement %}
-                                                   data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                                   data-placement="auto"
-                                                   {% else %}href="{{ cm.bag_url }}"{% endif %}>
-                                                    <span class="fa fa-briefcase icon-blue"></span>
-                                                </a>
-                                                <a class="small" target="_blank"
-                                                   href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
-                                            {% endfor %}
+                                            <a id="btn-download-all" type="button"
+                                               title="Download all content as Zipped BagIt Archive"
+                                                    {% if cm.raccess.require_download_agreement %}
+                                               data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                               data-placement="auto"
+                                               {% else %}href="{{ cm.bag_url }}"{% endif %}>
+                                                <span class="fa fa-briefcase icon-blue"></span>
+                                            </a>
+                                            <a class="small" target="_blank"
+                                               href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
+
                                         </div>
                                     </div>
                                 </div>
