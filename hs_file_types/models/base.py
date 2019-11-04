@@ -398,6 +398,8 @@ class AbstractFileMetaData(models.Model):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
+        self.is_dirty = True
+
         if element_model_name.lower() == "coverage":
             aggr = element.metadata.logical_file
             # aggregation won't have resource files in case of coverage element being
