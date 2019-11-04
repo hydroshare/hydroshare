@@ -39,6 +39,7 @@ def irods_issues(request, shortkey):
     task = resource_debug.apply_async((resource.short_id,))
     return redirect("get_debug_task_status", task_id=task.task_id)
 
+
 def check_task_status(request, task_id=None, *args, **kwargs):
     ''' Checks the task status of the resource_debug job specified by the task_id '''
     if resource_debug.AsyncResult(task_id).ready():
@@ -57,4 +58,3 @@ def check_task_status(request, task_id=None, *args, **kwargs):
         return HttpResponse(json.dumps({"status": None,
                                         "state": AsyncResult(task_id).state}),
                             content_type="application/json")
-

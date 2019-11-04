@@ -605,6 +605,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         logger.error(e)
         return e
 
+
 @shared_task
 def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
@@ -614,6 +615,7 @@ def resource_debug(resource_id):
     resource = get_resource_by_shortkey(resource_id)
     from hs_core.management.utils import check_irods_files
     return check_irods_files(resource, log_errors=False, return_errors=True)
+
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
 def daily_odm2_sync():
