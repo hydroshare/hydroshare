@@ -37,10 +37,15 @@ class CommunityView(TemplateView):
             groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
 
         groups = sorted(groups, key=lambda key: key['name'])
+
+        u = User.objects.get(pk=self.request.user.id)
+        is_admin = u.username == 'czo_national'
+
         return {
             'community_resources': community_resources,
             'groups': groups,
             'grpfilter': grpfilter,
+            'is_admin': is_admin
         }
 
 
