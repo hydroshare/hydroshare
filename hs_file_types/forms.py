@@ -81,6 +81,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
         metadata.release_date = self.cleaned_data['release_date']
         metadata.operating_systems = self.cleaned_data['operating_systems']
         metadata.programming_languages = self.cleaned_data['programming_languages']
+        metadata.is_dirty = True
         metadata.save()
         logical_file = metadata.logical_file
         logical_file.mi_schema_json = self.cleaned_data['mi_json_schema']
