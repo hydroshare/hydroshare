@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from hs_core import hydroshare
@@ -39,19 +39,11 @@ class TestBagIt(TestCase):
         irods_storage_obj = hs_bagit.create_bag_files(self.test_res)
         self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
 
-    def test_create_bag_by_irods(self):
-        try:
-            # this is the api call we testing
-            create_bag_by_irods(self.test_res.short_id)
-        except Exception as ex:
-            self.fail("create_bag_by_irods() raised exception.{}".format(ex.message))
-
-    def test_delete_files_and_bag(self):
-        # check resource bag exist at this point
-        istorage = self.test_res.get_irods_storage()
-        bag_path = self.test_res.bag_path
-        self.assertTrue(istorage.exists(bag_path))
-        # this is the api we are testing
+    def test_bag_creation_and_deletion(self):
+        status = create_bag_by_irods(self.test_res.short_id)
+        self.assertTrue(status)
         hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
+        istorage = self.test_res.get_irods_storage()
+        bag_path = self.test_res.bag_path
         self.assertFalse(istorage.exists(bag_path))

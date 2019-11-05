@@ -12,6 +12,8 @@ from rest_framework.decorators import api_view
 from django_irods import icommands
 from hs_core.hydroshare import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.task_utils import create_bag_by_irods_async
+
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
@@ -235,7 +237,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 # task parameter has to be passed in as a tuple or list, hence (res_id,) is needed
                 # Note that since we are using JSON for task parameter serialization, no complex
                 # object can be passed as parameters to a celery task
-                task = create_bag_by_irods.apply_async((res_id,), countdown=3)
+                task = create_bag_by_irods_async(res_id)
                 if rest_call:
                     return HttpResponse(json.dumps({'bag_status': 'Not ready',
                                                     'task_id': task.task_id}),

@@ -386,6 +386,28 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
 
 @shared_task
+def create_bag_by_irods_wait(resource_id):
+    """
+    Task to check whether the resource bag being locked and created by another celery task is
+    available for download
+    :param resource_id: uuid of the resource the bag is being created for
+    :return: True if bag creation succeeds
+    """
+    res = utils.get_resource_by_shortkey(resource_id)
+    istorage = res.get_irods_storage()
+    bag_path = res.bag_path
+    if res.locked:
+        return False
+    elif istorage.exists(bag_path):
+        return True
+    else:
+        # bag creation by another task failed to create a valid bag
+        # TO DO: should raise an exception to the task poller instead rather than indicating
+        # the bag is not ready by returning False
+        return False
+
+
+@shared_task
 def create_bag_by_irods(resource_id):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
 
@@ -397,30 +419,19 @@ def create_bag_by_irods(resource_id):
     :return: True if bag creation operation succeeds;
              False if there is an exception raised or resource does not exist.
     """
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = utils.get_resource_by_shortkey(resource_id)
 
-    res = get_resource_by_shortkey(resource_id)
+    if res.locked:
+        # this will only potentially happen when this task is being called directly, i.e., not from within
+        # create_bag_by_irods_async() in task_utils.py
+        return False
+
+    # lock the resource first before doing bag creation
+    res.locked = True
+    res.save()
     istorage = res.get_irods_storage()
 
     bag_path = res.bag_path
-
-    if res.locked:
-        # resource is locked meaning its bag is being created by another celery task, wait until the lock
-        # is released which indicates the bag is available
-        while res.locked:
-            sleep(1)
-
-        # lock is released, check if resource bag indeed exists
-        if istorage.exists(bag_path):
-            # the bag is made available by another celery task
-            return True
-        else:
-            # the lock is released, but resource bag does not exist, which indicates bag generation failure
-            return False
-    else:
-        # lock the resource first before doing bag creation
-        res.locked = True
-        res.save()
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
