@@ -20,7 +20,6 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db import transaction
 
 from rest_framework import status
 
@@ -419,10 +418,9 @@ def create_bag_by_irods(resource_id):
             # the lock is released, but resource bag does not exist, which indicates bag generation failure
             return False
     else:
-        with transaction.atomic():
-            # lock the resource first before doing bag creation
-            res.locked = True
-            res.save()
+        # lock the resource first before doing bag creation
+        res.locked = True
+        res.save()
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
@@ -431,10 +429,9 @@ def create_bag_by_irods(resource_id):
             create_bag_files(res)
         except Exception as ex:
             logger.error('Failed to create bag files. Error:{}'.format(ex.message))
-            with transaction.atomic():
-                # release the lock before returning bag creation failure
-                res.locked = False
-                res.save()
+            # release the lock before returning bag creation failure
+            res.locked = False
+            res.save()
             return False
 
     irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
