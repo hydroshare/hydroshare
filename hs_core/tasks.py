@@ -402,7 +402,8 @@ def create_bag_by_irods(resource_id):
 
     res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()
-    bag_full_name = res.get_irods_path('bags/{res_id}.zip'.format(res_id=resource_id), prepend_short_id=False)
+
+    bag_path = res.bag_path
 
     if res.locked:
         # resource is locked meaning its bag is being created by another celery task, wait until the lock
@@ -411,7 +412,7 @@ def create_bag_by_irods(resource_id):
             sleep(1)
 
         # lock is released, check if resource bag indeed exists
-        if istorage.exists(bag_full_name):
+        if istorage.exists(bag_path):
             # the bag is made available by another celery task
             return True
         else:
@@ -458,7 +459,7 @@ def create_bag_by_irods(resource_id):
         res.get_irods_path('bagit.txt'),
         res.get_irods_path('manifest-md5.txt'),
         res.get_irods_path('tagmanifest-md5.txt'),
-        bag_full_name
+        bag_path
     ]
 
     # only proceed when the resource is not deleted potentially by another request
@@ -481,7 +482,7 @@ def create_bag_by_irods(resource_id):
             # multiple ibun commands try to create the same zip file or the very same resource
             # gets deleted by another request when being downloaded
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-            istorage.zipup(irods_bagit_input_path, bag_full_name)
+            istorage.zipup(irods_bagit_input_path, bag_path)
             istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
             return True
         except SessionException as ex:
@@ -491,17 +492,15 @@ def create_bag_by_irods(resource_id):
                 if istorage.exists(fname):
                     istorage.delete(fname)
             logger.error(ex.stderr)
-            with transaction.atomic():
-                # release the lock before returning bag creation failure
-                res.locked = False
-                res.save()
-            return False
-    else:
-        logger.error('Resource does not exist.')
-        with transaction.atomic():
             # release the lock before returning bag creation failure
             res.locked = False
             res.save()
+            return False
+    else:
+        logger.error('Resource does not exist.')
+        # release the lock before returning bag creation failure
+        res.locked = False
+        res.save()
         return False
 
 

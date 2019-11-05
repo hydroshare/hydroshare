@@ -47,9 +47,11 @@ class TestBagIt(TestCase):
             self.fail("create_bag_by_irods() raised exception.{}".format(ex.message))
 
     def test_delete_files_and_bag(self):
-        # check we have one bag at this point
-        self.assertEquals(self.test_res.bags.count(), 1)
+        # check resource bag exist at this point
+        istorage = self.test_res.get_irods_storage()
+        bag_path = self.test_res.bag_path
+        self.assertTrue(istorage.exists(bag_path))
         # this is the api we are testing
         hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
-        self.assertEquals(self.test_res.bags.count(), 0)
+        self.assertFalse(istorage.exists(bag_path))
