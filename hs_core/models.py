@@ -346,14 +346,6 @@ class AbstractMetaDataElement(models.Model):
     content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    def __unicode__(self):
-        """Implement in derived classes for templates"""
-        pass
-
-    def __str__(self):
-        """Return unicode for python 3 compatibility in templates"""
-        return self.__unicode__()
-
     @property
     def metadata(self):
         """Return content object that describes metadata."""
@@ -1958,21 +1950,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # must start with a / in order to concat with current_site_url.
         return '/' + os.path.join('resource', self.short_id, path)
 
-    def get_public_path(self, path):
-        """Return the public path for a specific path within the resource.
-           This is the path that appears in public URLs.
-           The input path includes data/contents/ as needed.
-        """
-        return os.path.join(self.short_id, path)
-
-    def get_irods_path(self, path):
+    def get_irods_path(self, path, prepend_short_id=True):
         """Return the irods path by which the given path is accessed.
            The input path includes data/contents/ as needed.
         """
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, self.get_public_path(path))
+        if prepend_short_id and not path.startswith(self.short_id):
+            full_path = os.path.join(self.short_id, path)
         else:
-            return self.get_public_path(path)
+            full_path = path
+
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, full_path)
+        else:
+            return full_path
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -3221,7 +3211,7 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3397,7 +3387,7 @@ class BaseResource(Page, AbstractResource):
             name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
-            ROOT, pretty_print=pretty_print).decode()
+            ROOT, pretty_print=pretty_print)
 
     @property
     def size(self):
@@ -3502,7 +3492,7 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for GenericResource model."""
@@ -4138,8 +4128,7 @@ class CoreMetaData(models.Model):
                                              '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                       pretty_print=pretty_print).decode()
+        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py

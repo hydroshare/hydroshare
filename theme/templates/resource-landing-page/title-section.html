@@ -181,7 +181,6 @@
         </div>
         <hr>
     {% else %}
-        </div>
         {# ======= Communities ======= #}
         {% if communities_enabled %}
             <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
@@ -209,8 +208,8 @@
                                        title-left="Available Topics" title-right="Selected Topics"
                                        moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
                                 </mover>
-                                <a style="cursor:help" title="To add Topics make a request to admin@criticalzone.org"
-                                   href="mailto:admin@criticalzone.org?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
+                                <a style="cursor:help" title="To add Topics make a request to CriticalZoneOrg@gmail.com"
+                                   href="mailto:CriticalZoneOrg@gmail.com?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
                                 <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
                                        v-on:keyup="updateTitle()" size="51"
                                        maxlength="50" placeholder="Optional Custom Text"/><br/>
@@ -263,6 +262,7 @@
             </fieldset>
         </form>
     {% endif %}
+</div>
 
 {% if is_replaced_by %}
     <div class="col-xs-12">

@@ -307,7 +307,8 @@ INSTALLED_APPS = (
     "hs_odm2",
     "security",
     "markdown",
-    "hs_communities"
+    "hs_communities",
+    "freshly"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -332,7 +333,8 @@ APPS_TO_NOT_RUN = (
     'test_without_migrations',
     'robots',
     'heartbeat',
-    'filebrowser_safe'
+    'filebrowser_safe',
+    'freshly'
     # etc...
 )
 
@@ -391,6 +393,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "freshly.middleware.assets.AssetVersioningMiddleware",
 )
 
 # security settings
@@ -696,6 +699,24 @@ HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
 
+FRESHLY_ASSETS_EXTENTIONS = [
+     'css', 'js'
+]
+
+# Update every time a css or js file is updated in a release
+FRESHLY_ASSETS_VERSION = '1.27'
+
+# Categorization in discovery of content types 
+# according to file extension of otherwise unaggregated files. 
+DISCOVERY_EXTENSION_CONTENT_TYPES = { 
+    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
+    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
+    'Presentation': set(['ppt', 'pptx', 'odp']),
+    'Jupyter Notebook': set(['ipynb']),
+    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
+    'Multidimensional (NetCDF)': set(['nc'])
+} 
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
@@ -727,3 +748,10 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
+
+####################
+# Allow Unicode printout to terminals
+####################
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)

@@ -15,8 +15,6 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from . import models as m
-from .icommands import Session, GLOBAL_SESSION
 from drf_yasg.utils import swagger_auto_schema
 
 import logging
@@ -100,16 +98,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             response.content = "<h1>" + content_msg + "</h1>"
             return response
 
-    # default values are changed later as needed
-
     istorage = res.get_irods_storage()
-    if res.is_federated:
-        irods_path = os.path.join(res.resource_federation_path, path)
-    else:
-        irods_path = path
+
+    irods_path = res.get_irods_path(path, prepend_short_id=False)
+
     # in many cases, path and output_path are the same.
     output_path = path
-
     irods_output_path = irods_path
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
@@ -131,22 +125,17 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            if res.is_federated:
-                irods_path = os.path.join(res.resource_federation_path, path)
-                irods_output_path = os.path.join(res.resource_federation_path, output_path)
-            else:
-                irods_path = path
-                irods_output_path = output_path
+
+            irods_path = res.get_irods_path(path, prepend_short_id=False)
+            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
         store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            if res.is_federated:
-                irods_output_path = os.path.join(res.resource_federation_path, output_path)
-            else:
-                irods_output_path = output_path
+            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+
             if __debug__:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
         elif istorage.exists(irods_path):
@@ -157,10 +146,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-                if res.is_federated:
-                    irods_output_path = os.path.join(res.resource_federation_path, output_path)
-                else:
-                    irods_output_path = output_path
+                irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
@@ -172,32 +158,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     # if none of these are set, it's a normal download
 
     # determine active session
-    if res.is_federated:
-        # the resource is stored in federated zone
+    if icommands.ACTIVE_SESSION:
+        if __debug__:
+            logger.debug("using ACTIVE_SESSION")
         session = icommands.ACTIVE_SESSION
     else:
-        # TODO: From Alva: I do not understand the use case for changing the environment.
-        # TODO: This seems an enormous potential vulnerability, as arguments are
-        # TODO: passed from the URI directly to IRODS without verification.
-        if 'environment' in kwargs:
-            logger.warn("setting iRODS from environment")
-            environment = int(kwargs['environment'])
-            environment = m.RodsEnvironment.objects.get(pk=environment)
-            session = Session("/tmp/django_irods", settings.IRODS_ICOMMANDS_PATH,
-                              session_id=uuid4())
-            session.create_environment(environment)
-            session.run('iinit', None, environment.auth)
-        elif getattr(settings, 'IRODS_GLOBAL_SESSION', False):
-            if __debug__:
-                logger.debug("using GLOBAL_SESSION")
-            session = GLOBAL_SESSION
-        elif icommands.ACTIVE_SESSION:
-            if __debug__:
-                logger.debug("using ACTIVE_SESSION")
-            session = icommands.ACTIVE_SESSION
-        else:
-            raise KeyError('settings must have IRODS_GLOBAL_SESSION set '
-                           'if there is no environment object')
+        raise KeyError('settings must have IRODS_GLOBAL_SESSION set ')
 
     resource_cls = check_resource_type(res.resource_type)
 
@@ -245,10 +211,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)
-        if not res.is_federated:
-            irods_output_path = output_path
-        else:
-            irods_output_path = os.path.join(res.resource_federation_path, output_path)
+        irods_output_path = res.bag_path
 
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
@@ -338,18 +301,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         #    /irods-data/{resource-id}/... on nginx. This URI is configured to read the file
         #    directly from the iRODS vault via NFS, and does not work for direct access to the
         #    vault due to the 'internal;' declaration in NGINX.
-        # 3. This deals with federated resources by reading their path, matching local vaults, and
-        #    redirecting to URIs that are in turn mapped to read from appropriate iRODS vaults. At
-        #    present, the only one of these is /irods-user, which handles files whose federation
-        #    path is stored in the variable 'userpath'.
-        # 4. If there is no vault available for the resource, the file is transferred without
+        # 3. If there is no vault available for the resource, the file is transferred without
         #    NGINX, exactly as it was transferred previously.
-
-        # If this path is resource_federation_path, then the file is a local user file
-        userpath = '/' + os.path.join(
-            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-            'home',
-            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
 
         # stop NGINX targets that are non-existent from hanging forever.
         if not istorage.exists(irods_output_path):
@@ -361,35 +314,18 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 response.content = "<h1>" + content_msg + "</h1>"
             return response
 
-        if not res.is_federated:
-            # track download count
-            res.update_download_count()
-
-            # invoke X-Accel-Redirect on physical vault file in nginx
-            response = HttpResponse(content_type=mtype)
-            response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-                name=output_path.split('/')[-1])
-            response['Content-Length'] = flen
-            response['X-Accel-Redirect'] = '/'.join([
-                getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-            if __debug__:
-                logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
-            return response
-
-        elif res.resource_federation_path == userpath:  # this guarantees a "user" resource
-            # track download count
-            res.update_download_count()
-
-            # invoke X-Accel-Redirect on physical vault file in nginx
-            response = HttpResponse(content_type=mtype)
-            response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-                name=output_path.split('/')[-1])
-            response['Content-Length'] = flen
-            response['X-Accel-Redirect'] = os.path.join(
-                getattr(settings, 'IRODS_USER_URI', '/irods-user'), output_path)
-            if __debug__:
-                logger.debug("Reverse proxying user {}".format(response['X-Accel-Redirect']))
-            return response
+        # track download count
+        res.update_download_count()
+        # invoke X-Accel-Redirect on physical vault file in nginx
+        response = HttpResponse(content_type=mtype)
+        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
+            name=output_path.split('/')[-1])
+        response['Content-Length'] = flen
+        response['X-Accel-Redirect'] = '/'.join([
+            getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
+        if __debug__:
+            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
+        return response
 
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated

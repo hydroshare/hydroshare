@@ -873,6 +873,16 @@ function showFileTypeMetadata(file_type_time_series, url){
              }
          });
 
+        if (logical_type === 'TimeSeriesLogicalFile') {
+            $("#series_id_file_type").change(function () {
+                var $url = $(this.form).attr('action');
+                $url = $url.replace('series_id', $(this).val());
+                $url = $url.replace('resource_mode', resource_mode);
+                // make a recursive call to this function
+                showFileTypeMetadata(true, $url);
+            });
+        }
+
         if (RESOURCE_MODE === "Edit") {
              $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
              $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
@@ -905,13 +915,6 @@ function showFileTypeMetadata(file_type_time_series, url){
                  $endDateElement.css('pointer-events', 'none');
              }
              if (logical_type === 'TimeSeriesLogicalFile') {
-                 $("#series_id_file_type").change(function () {
-                     var $url = $(this.form).attr('action');
-                     $url = $url.replace('series_id', $(this).val());
-                     $url = $url.replace('resource_mode', resource_mode);
-                     // make a recursive call to this function
-                     showFileTypeMetadata(true, $url);
-                 });
                  if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
                      $("#div-sqlite-file-update").hide();
                  }

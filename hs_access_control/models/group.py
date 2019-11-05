@@ -108,18 +108,6 @@ class GroupAccess(models.Model):
                  u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
 
     @property
-    def __edit_users_of_community(self):
-        """
-        Q expression for community members who can edit a group according to community privilege
-
-        Only members of a supergroup (with CHANGE privilege) can edit individual groups.
-        """
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__group=self.group,
-                 u2ugp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.CHANGE)
-
-    @property
     def edit_users(self):
         """
         Return list of users who can add members to a group.
@@ -139,15 +127,6 @@ class GroupAccess(models.Model):
         return Q(is_active=True,
                  u2ugp__group=self.group,
                  u2ugp__privilege__lte=PrivilegeCodes.VIEW)
-
-    @property
-    def __view_users_of_community(self):
-        """
-        Q expression for community members who can view a group according to community privilege
-        """
-        return Q(is_active=True,
-                 u2ugp__group__gaccess__active=True,
-                 u2ugp__group__g2gcp__community__c2gcp__group=self.group)
 
     @property
     def view_users(self):
@@ -217,14 +196,15 @@ class GroupAccess(models.Model):
                  r2grp__privilege__lte=PrivilegeCodes.CHANGE)
 
     @property
-    def __view_resources_of_community(self):
+    def __owned_resources_of_group(self):
         """
-        Subquery Q expression for viewable resources according to community memberships
+        resources owned by some group member
 
-        Used in BaseResource queries only
+        Used in queries of BaseResource
         """
-        return Q(r2grp__group__gaccess__active=True,
-                 r2grp__group__g2gcp__community__c2gcp__group=self.group)
+        return Q(r2grp__group=self.group,
+                 r2urp__user__u2ugp__group=self.group,
+                 r2urp__privilege=PrivilegeCodes.OWNER)
 
     @property
     def view_resources(self):
@@ -251,6 +231,18 @@ class GroupAccess(models.Model):
         via membership in a group.
         """
         return BaseResource.objects.filter(self.__edit_resources_of_group)
+
+    @property
+    def owned_resources(self):
+        """
+        QuerySet of resources that are owned by some group member
+
+        :return: List of resource objects owned by some group member.
+
+        This is independent of whether the resource is editable by the group.
+
+        """
+        return BaseResource.objects.filter(self.__owned_resources_of_group)
 
     @property
     def group_membership_requests(self):

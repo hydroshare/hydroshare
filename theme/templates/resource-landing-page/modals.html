@@ -204,6 +204,7 @@
                                         </div>
                                     </template>
                                 </div>
+                                <div v-if="addAuthorError" v-html="addAuthorError" class="alert alert-danger space-top"></div>
                             </div>
 
                             <div class="modal-footer">
@@ -382,6 +383,7 @@
                                 </div>
                             </template>
                         </div>
+                        <div v-if="edit_author_error" v-html="edit_author_error" class="alert alert-danger space-top"></div>
                     </div>
 
                     <div class="modal-footer">

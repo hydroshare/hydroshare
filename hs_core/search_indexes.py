@@ -10,21 +10,28 @@ from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
+from string import maketrans
+from django.conf import settings
 import logging
-# # SOLR extension needs to be installed for this to work
+import re
+
+# # SOLR extension needs to be installed for the following to work
 # from haystack.utils.geo import Point
+
+
+adjacent_caps = re.compile("[A-Z][A-Z]")
 
 
 def remove_whitespace(thing):
     intab = ""
     outtab = ""
-    trantab = str.maketrans(intab, outtab, " \t\r\n")
-    return str(thing).translate(trantab)
+    trantab = maketrans(intab, outtab)
+    return str(thing).translate(trantab, " \t\r\n")
 
 
 def normalize_name(name):
     """
-    Normalize a name for sorting.
+    Normalize a name for sorting and indexing.
 
     This uses two powerful python libraries for differing reasons.
 
@@ -34,32 +41,102 @@ def normalize_name(name):
 
     However, the actual name parser in `probablepeople` is unnecessarily complex,
     so that strings that it determines to be human names are parsed instead by
-    `nameparser`.
+    the simpler `nameparser`.
 
     """
-    sname = name.encode('utf-8').strip()  # remove spaces
+    sname = name.strip()  # remove leading and trailing spaces
+
+    # Recognizer tends to mistake concatenated initials for Corporation name.
+    # Pad potential initials with spaces before running recognizer
+    # For any character A-Z followed by "." and another character A-Z, add a space after the first.
+    # (?=[A-Z]) means to find A-Z after the match string but not match it.
+    nname = re.sub("(?P<thing>[A-Z]\.)(?=[A-Z])", "\g<thing> ", sname)
+
     try:
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
-        _, type = probablepeople.tag(name)  # discard parser result
-    except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
-        return sname
+        _, type = probablepeople.tag(nname)  # discard parser result
+    except probablepeople.RepeatedLabelError:  # if it can't understand the name, it's foreign
+        type = 'Unknown'
 
     if type == 'Corporation':
         return sname  # do not parse and reorder company names
 
+    # special case for capitalization: flag as corporation
+    if (adjacent_caps.match(sname)):
+        return sname
+
     # treat anything else as a human name
-    nameparts = HumanName(sname)
-    normalized = nameparts.last.capitalize()
+    nameparts = HumanName(nname)
+    normalized = ""
+    if nameparts.last:
+        normalized = nameparts.last
+
     if nameparts.suffix:
-        normalized = normalized + ' ' + nameparts.suffix
-    normalized = normalized + ','
+        if not normalized:
+            normalized = nameparts.suffix
+        else:
+            normalized = normalized + ' ' + nameparts.suffix
+
+    if normalized:
+        normalized = normalized + ','
+
     if nameparts.title:
-        normalized = normalized + ' ' + nameparts.title
+        if not normalized:
+            normalized = nameparts.title
+        else:
+            normalized = normalized + ' ' + nameparts.title
+
     if nameparts.first:
-        normalized = normalized + ' ' + nameparts.first.capitalize()
+        if not normalized:
+            normalized = nameparts.first
+        else:
+            normalized = normalized + ' ' + nameparts.first
+
     if nameparts.middle:
-        normalized = ' ' + normalized + ' ' + nameparts.middle.capitalize()
+        if not normalized:
+            normalized = nameparts.middle
+        else:
+            normalized = ' ' + normalized + ' ' + nameparts.middle
+
     return normalized.strip()
+
+
+def get_content_types(res):
+    """ return a set of content types matching extensions in a resource.
+        These include content types of logical files, as well as the generic
+        content types 'Document', 'Spreadsheet', 'Presentation'.
+
+        This is only meaningful for Generic or Composite resources.
+    """
+
+    resource = res.get_content_model()  # enable full logical file interface
+
+    types = set([res.discovery_content_type])  # accumulate high-level content types.
+    exts = set()  # track individual file extensions
+
+    # categorize logical files by type, and files without a logical file by extension.
+    for f in resource.files.all():
+        if f.has_logical_file:
+            candidate_type = type(f.logical_file).get_discovery_content_type()
+            types.add(candidate_type)
+        else:  # collect extensions of files not corresponding to logical metadata
+            path = f.short_path
+            path = path.split(".")  # determine last extension
+            if len(path) > 1:
+                ext = path[len(path)-1]
+                if len(ext) <= 5:  # skip obviously non-MIME extensions
+                    exts.add(ext.lower())
+
+    # categorize common extensions that are not part of logical files.
+    for ext_type in settings.DISCOVERY_EXTENSION_CONTENT_TYPES:
+        if exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
+            types.add(ext_type)
+            exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
+
+    if exts:  # if there is anything left over, then mark as Generic
+        types.add('Generic Data')
+
+    return (types, exts)
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -153,7 +230,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def index_queryset(self, using=None):
         """Return queryset including discoverable and public resources."""
         return self.get_model().objects.filter(Q(raccess__discoverable=True) |
-                                               Q(raccess__public=True))
+                                               Q(raccess__public=True)).distinct()
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -320,8 +397,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
-        if hasattr(obj, 'metadata'):
-            return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
+        if hasattr(obj, 'metadata') and obj.metadata is not None:
+            return obj.metadata.relations.filter(type='isReplacedBy').exists()
         else:
             return False
 
@@ -433,10 +510,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["start"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                    else:
+                        if len(parsed_date) == 3:
+                            start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else:
+                            start_date = ""
+                    elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
-                        start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        if len(parsed_date) == 3:
+                            start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else:
+                            start_date = ""
+
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -460,10 +544,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     clean_date = coverage.value["end"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
-                        end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        if len(parsed_date) == 3:
+                            end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else:
+                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
-                        end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        if len(parsed_date) == 3:
+                            end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else:
+                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
@@ -547,13 +637,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.verbose_name
 
     def prepare_content_type(self, obj):
-        if obj.verbose_name != 'Composite Resource':
-            return [obj.discovery_content_type]
+        """ register content types for both logical files and some MIME types """
+        if obj.verbose_name == 'Composite Resource' or \
+           obj.verbose_name == 'Generic Resource':
+            output = get_content_types(obj)[0]
+            return list(output)
         else:
-            output = []
-            for f in obj.logical_files:
-                output.append(f.get_discovery_content_type())
-            return output
+            return [obj.discovery_content_type]
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
@@ -576,8 +666,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name.capitalize() +
-                                      ' ' + owner.last_name.capitalize())
+                name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 names.append(name)
         return names
 
@@ -589,8 +678,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         output2 = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = normalize_name(owner.first_name.capitalize() +
-                                      ' ' + owner.last_name.capitalize())
+                name = normalize_name(owner.first_name + ' ' + owner.last_name)
                 output0.append(name)
 
         if hasattr(obj, 'metadata'):
