@@ -294,6 +294,8 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
     output = stdout.readlines()
+    if output:
+        logger.debug(output)
     return output
 
 
