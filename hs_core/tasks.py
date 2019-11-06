@@ -12,8 +12,6 @@ import json
 from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
-from time import sleep
-
 import requests
 from celery import shared_task
 from celery.schedules import crontab
