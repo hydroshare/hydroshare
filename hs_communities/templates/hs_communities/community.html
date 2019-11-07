@@ -36,10 +36,12 @@
                         <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
                     </li>
+                    {% if is_admin %}
                     <li role="presentation">
                         <a href="#admin" aria-controls="admin" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-file"></i>&nbsp;ADMIN</a>
                     </li>
+                    {% endif %}
                 </ul>
 
                 <!-- Tab panes -->
