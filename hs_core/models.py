@@ -1950,21 +1950,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # must start with a / in order to concat with current_site_url.
         return '/' + os.path.join('resource', self.short_id, path)
 
-    def get_public_path(self, path):
-        """Return the public path for a specific path within the resource.
-           This is the path that appears in public URLs.
-           The input path includes data/contents/ as needed.
-        """
-        return os.path.join(self.short_id, path)
-
-    def get_irods_path(self, path):
+    def get_irods_path(self, path, prepend_short_id=True):
         """Return the irods path by which the given path is accessed.
            The input path includes data/contents/ as needed.
         """
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, self.get_public_path(path))
+        if prepend_short_id and not path.startswith(self.short_id):
+            full_path = os.path.join(self.short_id, path)
         else:
-            return self.get_public_path(path)
+            full_path = path
+
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, full_path)
+        else:
+            return full_path
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -3213,7 +3211,7 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3494,7 +3492,7 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for GenericResource model."""

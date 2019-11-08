@@ -1833,17 +1833,19 @@ class GroupView(TemplateView):
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
             return {
-                'profile_user': u,
                 'group': g,
                 'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
                 'group_resources': group_resources,
                 'add_view_user_form': AddUserForm(),
-                'communities_enabled': settings.COMMUNITIES_ENABLED
+                'communities_enabled': settings.COMMUNITIES_ENABLED,
+                'profile_user': u
             }
         else:
-            public_group_resources = [r for r in group_resources if r.raccess.public]
+            public_group_resources = [r for r in group_resources 
+                                      if r.raccess.public or r.raccess.discoverable]
 
             return {
+                'group': g,
                 'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
                 'group_resources': public_group_resources,
                 'add_view_user_form': AddUserForm(),
