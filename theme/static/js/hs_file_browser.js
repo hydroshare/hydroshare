@@ -333,7 +333,7 @@ function updateSelectionMenuContext() {
         //  ------------- The item selected is a file -------------
         else {
             const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
-
+            const fileHasModelProgramAggrFolder = $(selected).attr("data-has-model-program-aggr-folder").trim();
             // Disable add metadata to folder
             uiActionStates.setFileSetFileType.disabled = true;
             uiActionStates.setFileSetFileType.fileMenu.hidden = true;
@@ -408,11 +408,20 @@ function updateSelectionMenuContext() {
             }
             else {
                 // The selected file is part of a logical file type
-                if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile") {
+                if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"
+                    && logicalFileType !== "ModelProgramLogicalFile") {
                     // if the selected file is not part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation)
-                    // dont't show the Remove Aggregation option
+                    // or ModelProgramLogicalFile dont't show the Remove Aggregation option
                     uiActionStates.removeAggregation.disabled = true;
                     uiActionStates.removeAggregation.fileMenu.hidden = true;
+                }
+                else {
+                    if (logicalFileType === "ModelProgramLogicalFile" && fileHasModelProgramAggrFolder === "true") {
+                        // don't show option to remove aggregation for a file that's part of a model program aggregation
+                        // created based on a folder
+                        uiActionStates.removeAggregation.disabled = true;
+                        uiActionStates.removeAggregation.fileMenu.hidden = true;
+                    }
                 }
             }
         }
@@ -831,6 +840,13 @@ function showFileTypeMetadata(file_type_time_series, url){
             $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
             updateSelectionMenuContext();
             return;
+        }
+        else if (logical_type === "ModelProgramLogicalFile") {
+            if (selectedItem.attr('data-has-model-program-aggr-folder') === 'true') {
+                $("#fileTypeMetaData").html(no_metadata_alert);
+                $("#btnSideAddMetadata").addClass("disabled");
+                return;
+            }
         }
     }
     var resource_mode = RESOURCE_MODE;
