@@ -126,7 +126,7 @@ function getFileTemplateInstance(file) {
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
-        file.is_single_file_aggregation + "'>" +
+        file.is_single_file_aggregation + "' data-has-model-program-aggr-folder='" + file.has_model_program_aggr_folder +"'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + file.name + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
