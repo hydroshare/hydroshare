@@ -138,6 +138,10 @@ def data_store_structure(request):
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
+        # flag for UI to know if a file is part of a model program aggregation that has been created from a folder
+        # Note: model program aggregation can be created either from a single file of a folder that has one or more
+        # files
+        has_model_program_aggr_folder = False
         if f.has_logical_file:
             main_extension = f.logical_file.get_main_file_type()
             if not main_extension:
@@ -157,11 +161,18 @@ def data_store_structure(request):
             if 'url' in f.logical_file.extra_data:
                 f_ref_url = f.logical_file.extra_data['url']
 
+            # check if this file (f) is part of a model program folder aggregation
+            if logical_file_type == "ModelProgramLogicalFile":
+                if f.file_folder is not None:
+                    if f.file_folder == f.logical_file.folder:
+                        has_model_program_aggr_folder = True
+
         files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
-                      'logical_file_id': logical_file_id})
+                      'logical_file_id': logical_file_id,
+                      'has_model_program_aggr_folder': has_model_program_aggr_folder})
 
     return_object = {'files': files,
                      'folders': dirs,
