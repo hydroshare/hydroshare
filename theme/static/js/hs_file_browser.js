@@ -99,7 +99,7 @@ function getVirtualFolderTemplateInstance(agg) {
 // Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(file) {
     var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
-    if (file['logical_type'] === "ModelProgramLogicalFile") {
+    if (file['logical_type'] === "ModelProgramLogicalFile" && !file.has_model_program_aggr_folder) {
         fileTypeExt = "MP";
     }
     var iconTemplate;
@@ -388,7 +388,7 @@ function updateSelectionMenuContext() {
                 // disable remove aggregation option if it is URL file
                 uiActionStates.removeAggregation.disabled = true;
 
-                if (mode != "edit") {
+                if (mode !== "edit") {
                     uiActionStates.updateRefUrl.disabled = true;
                     uiActionStates.updateRefUrl.fileMenu.hidden = true;
                 }
