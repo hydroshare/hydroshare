@@ -987,15 +987,25 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
 
+    def can_delete_logical_file(logical_file):
+        if not logical_file.is_fileset and not logical_file.is_model_program:
+            # delete logical file if any resource file that belongs to logical file
+            # gets deleted for any logical file other than fileset or modelprogram logical file
+            return True
+        elif logical_file.is_model_program and logical_file.folder is None:
+            # this is a single file based model program aggregation and not a folder based model program
+            # aggregation - we need to delete the logical file
+            return True
+        return False
+
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(filename_or_id, f):
-            if delete_logical_file:
-                if f.has_logical_file and not f.logical_file.is_fileset:
-                    # delete logical file if any resource file that belongs to logical file
-                    # gets deleted for any logical file other than fileset logical file
+            if delete_logical_file and f.has_logical_file:
+                logical_file = f.logical_file
+                if can_delete_logical_file(logical_file):
                     # logical_delete() calls this function (delete_resource_file())
                     # to delete each of its contained ResourceFile objects
-                    f.logical_file.logical_delete(user)
+                    logical_file.logical_delete(user)
                     return filename_or_id
 
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
