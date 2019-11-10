@@ -3,6 +3,7 @@ from dateutil import parser
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from hs_core import hydroshare
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_file_types.models import ModelProgramLogicalFile
@@ -124,6 +125,7 @@ def test_upload_file_to_aggregation_folder(composite_resource, mock_irods):
     for res_file in res.files.all():
         assert res_file.has_logical_file
 
+
 @pytest.mark.django_db(transaction=True)
 def test_create_aggregation_from_folder_failure(composite_resource, mock_irods):
     """test that we can't create a model program aggregation from a folder that does not contain any resource file"""
@@ -150,6 +152,67 @@ def test_create_aggregation_from_folder_failure(composite_resource, mock_irods):
     assert res_file.file_folder is None
     # no model program logical file object was created
     assert ModelProgramLogicalFile.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_delete_aggregation_res_file_1(composite_resource, mock_irods):
+    """ test when we delete a resource file from which we have created a model program aggregation
+    the aggregation gets deleted"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    upload_folder = None
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+    assert res.files.count() == 1
+    # create model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set file to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has no folder
+    assert res_file.file_folder is None
+    assert ModelProgramLogicalFile.objects.count() == 1
+    # delete resource file
+    hydroshare.delete_resource_file(res.short_id, res_file.id, user)
+    assert res.files.count() == 0
+    # aggregation object should have been deleted
+    assert ModelProgramLogicalFile.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_delete_aggregation_res_file_2(composite_resource, mock_irods):
+    """ test when we delete a resource file that belongs to a folder based model program aggregation
+    the aggregation doesn't get deleted"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    new_folder = 'mp_folder'
+    ResourceFile.create_folder(res, new_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=new_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set folder to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=new_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == new_folder
+    assert ModelProgramLogicalFile.objects.count() == 1
+    # delete resource file
+    hydroshare.delete_resource_file(res.short_id, res_file.id, user)
+    assert res.files.count() == 0
+    # aggregation object should still exist
+    assert ModelProgramLogicalFile.objects.count() == 1
 
 
 @pytest.mark.django_db(transaction=True)
