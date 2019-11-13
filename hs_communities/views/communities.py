@@ -28,7 +28,7 @@ class CommunityView(TemplateView):
         grpfilter = self.request.GET.get('grp')
 
         community = community_from_name_or_id(kwargs['community_id'])
-        community_resources = community.public_resources
+        community_resources = community.public_resources.distinct()
         raw_groups = community.groups_with_public_resources()
         groups = []
 
