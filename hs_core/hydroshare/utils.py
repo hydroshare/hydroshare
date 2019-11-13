@@ -902,15 +902,15 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
 
     if f:
         if check_target_folder and folder is not None:
-                tgt_full_upload_path = os.path.join(resource.file_path, folder)
-                if not resource.can_add_files(target_full_path=tgt_full_upload_path):
-                    err_msg = "File can't be added to this folder which represents an aggregation"
-                    raise ValidationError(err_msg)
+            tgt_full_upload_path = os.path.join(resource.file_path, folder)
+            if not resource.can_add_files(target_full_path=tgt_full_upload_path):
+                err_msg = "File can't be added to this folder which represents an aggregation"
+                raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
             if folder is not None and resource.resource_type == 'CompositeResource':
-                aggregation = resource.get_mp_aggregation_at_path(folder)
+                aggregation = resource.get_mp_aggregation_in_path(folder)
                 if aggregation is None:
                     aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
