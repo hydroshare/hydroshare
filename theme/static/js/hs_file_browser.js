@@ -329,6 +329,9 @@ function updateSelectionMenuContext() {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
                 uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
             }
+            else if (logicalFileTypeToSet !=="ModelProgramLogicalFile") {
+                uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
+            }
         }
         //  ------------- The item selected is a file -------------
         else {
