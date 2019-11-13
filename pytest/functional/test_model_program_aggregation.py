@@ -122,8 +122,46 @@ def test_upload_file_to_aggregation_folder(composite_resource, mock_irods):
                                   name=os.path.basename(file_path))
     add_file_to_resource(res, file_to_upload, folder=new_folder, check_target_folder=True)
     assert res.files.count() == 2
+    # both files should be part of the aggregation
     for res_file in res.files.all():
         assert res_file.has_logical_file
+
+    assert mp_aggregation.files.count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+def test_upload_file_to_aggregation_sub_folder(composite_resource, mock_irods):
+    """test that when we upload a file to a model program aggregation sub folder that file becomes part of the
+    aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    new_folder = 'mp_folder'
+    ResourceFile.create_folder(res, new_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=new_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # set folder to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=new_folder)
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggregation = ModelProgramLogicalFile.objects.first()
+    assert mp_aggregation.files.count() == 1
+    assert mp_aggregation.folder == new_folder
+    assert mp_aggregation.dataset_name == new_folder
+    # add another file to the model program aggregation sub folder
+    file_path = 'pytest/assets/logan.vrt'
+    new_sub_folder = 'mp_folder/mp_sub_folder'
+    ResourceFile.create_folder(res, new_sub_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+    add_file_to_resource(res, file_to_upload, folder=new_sub_folder, check_target_folder=True)
+    assert res.files.count() == 2
+    # both files should be part of the aggregation
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+    assert mp_aggregation.files.count() == 2
 
 
 @pytest.mark.django_db(transaction=True)
