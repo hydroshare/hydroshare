@@ -374,16 +374,33 @@ class CompositeResource(BaseResource):
         else:
             return get_fileset(path)
 
-    def get_mp_aggregation_at_path(self, path):
-        """Get the model program aggregation at the specified path
-        :param  path: directory path at which to llok for model program aggregation
+    def get_mp_aggregation_in_path(self, path):
+        """Get the model program aggregation in the path moving up (towards the root)in the path
+        :param  path: directory path in which to search for a model program aggregation
         :return a model program aggregation object if found, otherwise None
         """
-        try:
-            aggregation = self.get_aggregation_by_name(path)
-            if aggregation.is_model_program:
+
+        def get_aggregation(path):
+            try:
+                aggregation = self.get_aggregation_by_name(path)
                 return aggregation
-        except ObjectDoesNotExist:
+            except ObjectDoesNotExist:
+                return None
+
+        while '/' in path:
+            aggr = get_aggregation(path)
+            if aggr is None:
+                path = os.path.dirname(path)
+            elif aggr.is_model_program:
+                return aggr
+            else:
+                # the aggregation is some other type of aggregation - no need to search further
+                # as model program aggregation can't contain other aggregations
+                return None
+        else:
+            aggr = get_aggregation(path)
+            if aggr is not None and aggr.is_model_program:
+                return aggr
             return None
 
     def recreate_aggregation_xml_docs(self, orig_path, new_path):
