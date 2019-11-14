@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from collections import defaultdict
 import scipy.spatial as sp
@@ -13,7 +12,6 @@ from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedG
     GroupPreferences, GroupPrefToPair, PropensityPrefToPair, PropensityPreferences, \
     UserInteractedResources, UserNeighbors
 from haystack.query import SQ
-from sklearn.metrics.pairwise import pairwise_distances
 from django.contrib.auth.models import Group, User
 
 
@@ -31,12 +29,7 @@ def get_resource_to_subjects():
         resource_ids.add(res.short_id)
         resource_to_subjects[res.short_id] = set(subjects)
     all_subjects_list = list(all_subjects)
-    res_df = pd.DataFrame(0, index=list(resource_ids), columns=all_subjects_list)
-    for res, subjects in resource_to_subjects.iteritems():
-        for sub in subjects:
-            if res in res_df.index and sub in res_df.columns:
-                res_df.at[res, sub] = 1
-    return res_df, resource_to_subjects
+    return resource_to_subjects, all_subjects_list
 
 
 def get_users_interacted_resources(beginning, today):
@@ -64,65 +57,62 @@ def get_users_interacted_resources(beginning, today):
     return user_to_resources, all_usernames
 
 
-def get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids,
-                                 all_subjects_list, all_usernames):
-    m_ur = pd.DataFrame(0, index=list(all_usernames), columns=all_res_ids)
-    for username, res_ids in user_to_resources.iteritems():
-        for res_id in res_ids:
-            if username in m_ur.index and res_id in m_ur.columns:
-                m_ur.at[username, res_id] = 1
-
-    m_rg = pd.DataFrame(0, index=all_res_ids, columns=all_subjects_list)
+def get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids, all_subjects_list):
+    user_to_subs = {}
     for res_id, subs in res_to_subs.iteritems():
-        for sub in subs:
-            if res_id in m_rg.index and sub in m_rg.columns:
-                m_rg.at[res_id, sub] = 1
-
-    m_ur_values = m_ur.values
-    m_rg_values = m_rg.values
-    m_ug_values = np.matmul(m_ur_values, m_rg_values)
-    m_ug = pd.DataFrame(m_ug_values, index=list(all_usernames), columns=all_subjects_list)
-    return m_ur, m_rg, m_ug
-
-
-def store_user_preferences(m_ug, user_to_resources, all_subjects_list):
-    active_user_set = set()
-    for username, row in m_ug.iterrows():
-        if username not in user_to_resources:
-            continue
-        user = user_from_id(username)
-        user_nonzero_index = row.nonzero()
-        if len(user_nonzero_index[0]) == 0:
-            continue
-        prop_pref_subjects = []
-        for i in user_nonzero_index[0]:
-            if row.iat[i] == 0:
-                break
-            subject = all_subjects_list[i]
-            prop_pref_subjects.append(('subject', subject, row.iat[i]))
-        PropensityPreferences.prefer(user, 'Resource', prop_pref_subjects)
-        PropensityPreferences.prefer(user, 'User', prop_pref_subjects)
-        PropensityPreferences.prefer(user, 'Group', prop_pref_subjects)
-        active_user_set.add(username)
-    return active_user_set
+        for username, res_ids in user_to_resources.iteritems():
+            if username not in user_to_subs:
+                user_to_subs[username] = defaultdict(int)
+            user_sub_to_freq = user_to_subs[username]
+            for rid in res_ids:
+                if rid == res_id:
+                    for s in subs:
+                        user_sub_to_freq[s] += 1
+    return user_to_subs
 
 
-def get_user_to_top5_keywords(m_ug_freq):
-    all_subjects_list = list(m_ug_freq.columns.values)
+def get_user_to_top5_keywords(user_to_subs):
     user_to_top5_keywords = defaultdict(list)
-    for username, row in m_ug_freq.iterrows():
-        sorted_row = (-row).argsort()
-        for i in sorted_row[:5]:
-            if row.iat[i] == 0:
-                break
-            subject = all_subjects_list[i]
-            user_to_top5_keywords[username].append(subject)
-
+    for username, user_sub_to_freq in user_to_subs.iteritems():
+        for sub in sorted(user_sub_to_freq, key=user_sub_to_freq.get, reverse=True)[:5]:
+            user_to_top5_keywords[username].append(sub)
     return user_to_top5_keywords
 
 
-def recommend_resources(res_to_subs, user_to_resources, user_to_top5_keywords, m_ug, res_df):
-    all_res_ids = list(res_df.index)
+def store_user_preferences(user_to_subs):
+    active_user_set = set()
+    for username, user_sub_to_freq in user_to_subs.iteritems():
+        user = user_from_id(username)
+        prop_pref_subjects = []
+        active_user_set.add(username)
+        for sub, freq in user_sub_to_freq.iteritems():
+            prop_pref_subjects.append(('subject', sub, freq))
+        PropensityPreferences.prefer(user, 'Resource', prop_pref_subjects)
+        PropensityPreferences.prefer(user, 'User', prop_pref_subjects)
+        PropensityPreferences.prefer(user, 'Group', prop_pref_subjects)
+    return active_user_set
+
+
+def get_res_sub_vec(res_subs, all_subjects_list):
+    vec_len = len(all_subjects_list)
+    res_vec = np.zeros(vec_len)
+    for sub in res_subs:
+        ind = all_subjects_list.index(sub)
+        res_vec[ind] = 1
+    return res_vec
+
+
+def get_user_freq_vec(sub_to_freq, all_subjects_list):
+    vec_len = len(all_subjects_list)
+    freq_vec = np.zeros(vec_len)
+    for sub, freq in sub_to_freq.iteritems():
+        ind = all_subjects_list.index(sub)
+        freq_vec[ind] = freq
+    return freq_vec
+
+
+def recommend_resources(res_to_subs, user_to_resources, user_to_top5_keywords, user_to_subs, all_subjects_list):
+    all_res_ids = list(res_to_subs.keys())
     user_to_recommended_resources_list = {}
     for username, top5_keywords in user_to_top5_keywords.iteritems():
         if len(top5_keywords) == 0 or not top5_keywords:
@@ -147,13 +137,13 @@ def recommend_resources(res_to_subs, user_to_resources, user_to_top5_keywords, m
         if user_out.count() == 0:
             continue
 
-        user_freq_vec = m_ug.loc[username].values
+        user_freq_vec = get_user_freq_vec(user_to_subs[username], all_subjects_list)
         top5_filter_recommendations_sim = {}
         for candidate_res in user_out:
             res_id = candidate_res.short_id
             if res_id not in all_res_ids:
                 continue
-            res_vec = res_df.loc[res_id].values
+            res_vec = get_res_sub_vec(res_to_subs[res_id], all_subjects_list)
             cos_sim = 1 - sp.distance.cosine(user_freq_vec, res_vec)
             if cos_sim > 0:
                 top5_filter_recommendations_sim[res_id] = cos_sim
@@ -194,60 +184,60 @@ def store_recommended_resources(user_to_recommended_resources_list, res_to_subs)
                 r.relate('subject', cs, user_res_pref_to_weight[cs])
 
 
-def cal_nn_matrix(m_ug):
-    nonzero_m_ug = m_ug[(m_ug.T != 0).any()]
-    ug_jac_sim = 1 - pairwise_distances(nonzero_m_ug, metric="cosine")
-    ug_jac_sim = pd.DataFrame(ug_jac_sim, index=nonzero_m_ug.index,
-                              columns=nonzero_m_ug.index)
-    num_row_m_ug = m_ug.shape[0]
-    knn = min(10, num_row_m_ug)
-    order = np.argsort(-ug_jac_sim.values, axis=1)[:, :knn]
-    ug_nearest_neighbors = pd.DataFrame(ug_jac_sim.columns[order],
-                                        columns=['neighbor{}'
-                                                    .format(i) for i in range(1, knn+1)],
-                                        index=ug_jac_sim.index)
+def cal_nn(user_to_subs, all_subjects_list):
+    user_to_users = {}
+    for user1, subs1 in user_to_subs.iteritems():
+        if user1 not in user_to_users:
+            user_to_users[user1] = defaultdict(float)
+        user1_to_user_sim = user_to_users[user1]
+        user1_freq_vec = get_user_freq_vec(user_to_subs[user1], all_subjects_list)
+        for user2, subs2 in user_to_subs.iteritems():
+            if user1 == user2:
+                continue
+            if user2 in user_to_users:
+                user2_to_user_sim = user_to_users[user2]
+                user1_to_user_sim[user2] = user2_to_user_sim[user1]
+            else:
+                user2_freq_vec = get_user_freq_vec(user_to_subs[user2], all_subjects_list)
+                cos_sim = 1 - sp.distance.cosine(user1_freq_vec, user2_freq_vec)
+                user1_to_user_sim[user2] = cos_sim
+    return user_to_users
 
-    return ug_nearest_neighbors
+
+def get_user_knn(user_to_users):
+    user_to_knn = defaultdict(list)
+    for username, user_to_user_sim in user_to_users.iteritems():
+        for neigh in sorted(user_to_user_sim, key=user_to_user_sim.get, reverse=True)[:10]:
+            user_to_knn[username].append(neigh)
+
+    return user_to_knn
 
 
-def store_nn(ug_nearest_neighbors):
-    for username, ranked_neighbors in ug_nearest_neighbors.iterrows():
+def store_nn(user_to_knn):
+    for username, neighbors_usernames in user_to_knn.iteritems():
+        neighbors = []
         try:
             user = user_from_id(username)
-            neighbors = []
-            if len(ranked_neighbors) == 0 or not ranked_neighbors:
-                continue
-            for neighbor_name in ranked_neighbors.values:
-                if username == neighbor_name:
-                    continue
+            for neighbor_username in neighbors_usernames:
                 try:
-                    neighbor = user_from_id(neighbor_name)
+                    neighbor = user_from_id(neighbor_username)
                     neighbors.append(neighbor)
                 except:
                     continue
-            UserNeighbors.relate_neighbos(user, neighbors)
+            UserNeighbors.relat_neighbors(user, neighbors)
         except:
             continue
 
 
-def recommend_users(m_ug, ug_nearest_neighbors):
+def recommend_users(user_to_users, user_to_knn):
     user_to_recommended_users_list = {}
-    for username, ranked_neighbors in ug_nearest_neighbors.iterrows():
-        if username not in m_ug.index:
-            continue
-        user_vec = m_ug.loc[username].values
-        if len(ranked_neighbors.values) == 0:
-            continue
-        user_top10_nearest_neighbors = {}
-        for neighbor_name in ranked_neighbors.values:
-            if neighbor_name in m_ug.index:
-                if neighbor_name == username:
-                    continue
-                neighbor_vec = m_ug.loc[neighbor_name].values
-                cos_sim = 1 - sp.distance.cosine(user_vec, neighbor_vec)
-                if cos_sim > 0:
-                    user_top10_nearest_neighbors[neighbor_name] = cos_sim
-        user_to_recommended_users_list[username] = user_top10_nearest_neighbors
+    for username, nn in user_to_knn.iteritems():
+        user_to_user_sim = user_to_users[username]
+        user_top10_nn = {}
+        for neighbor in nn:
+            if user_to_user_sim[neighbor] > 0:
+                user_top10_nn[neighbor] = user_to_user_sim[neighbor]
+        user_to_recommended_users_list[username] = user_top10_nn
     return user_to_recommended_users_list
 
 
@@ -311,60 +301,44 @@ def get_group_to_held_resources_and_members(res_to_subs):
     return group_to_res, group_to_subjects, group_to_members
 
 
-def get_group_profiles(group_to_subjects, all_subjects_list,
-                       group_to_members, m_ug, active_user_set):
-    all_group_names = list(group_to_subjects.keys())
-    m_hg = pd.DataFrame(0, index=all_group_names, columns=all_subjects_list)
-
+def get_group_profiles(group_to_subjects, group_to_members, user_to_subs):
+    group_to_profiles = {}
     for group_name, members in group_to_members.iteritems():
-        group_subjects = group_to_subjects[group_name]
+        group_subjecst = group_to_subjects[group_name]
+        if group_name not in group_to_profiles:
+            group_to_profiles[group_name] = defaultdict(int)
+        group_profile = group_to_profiles[group_name]
         for member_name in members:
-            if member_name not in active_user_set:
+            if member_name not in user_to_subs:
                 continue
-            member = user_from_id(member_name)
-            member_preferences = PropensityPreferences.objects.get(user=member)
-            member_preferences_pairs = member_preferences.preferences.all()
-            member_resources_preferences = PropensityPrefToPair.objects.\
-                                                    filter(prop_pref=member_preferences,
-                                                           pair__in=member_preferences_pairs,
-                                                           state='Seen',
-                                                           pref_for='Group')
-            member_preferences_set = set()
-            for p in member_resources_preferences:
-                if p.pair.key == 'subject':
-                    member_preferences_set.add(p.pair.value)
-
-            for member_subject in member_preferences_set:
-                if member_subject in group_subjects:
-                    if group_name in m_hg.index and member_subject in m_hg.columns and \
-                       member_subject in m_ug.columns:
-                        m_hg.at[group_name, member_subject] += m_ug.at[member_name, member_subject]
-    return m_hg
+            member_to_sub_freq = user_to_subs[member_name]
+            for sub, freq in member_to_sub_freq.iteritems():
+                if sub in group_subjecst:
+                    group_profile[sub] += freq
+    return group_to_profiles
 
 
-def store_group_preferences(m_hg, all_subjects_list):
+def store_group_preferences(group_to_profiles, all_subjects_list):
     active_groups_set = set()
-    for group_name, row in m_hg.iterrows():
+    for group_name, group_to_sub_freq in group_to_profiles.iteritems():
         group = Group.objects.get(name=group_name)
-        group_nonzero_index = row.nonzero()
         group_subjects = []
-        for i in group_nonzero_index[0]:
-            subject = all_subjects_list[i]
-            group_subjects.append(('subject', subject, row.iat[i]))
+        for sub, freq in group_to_sub_freq.iteritems():
+            group_subjects.append(('subject', sub, freq))
         GroupPreferences.prefer(group, group_subjects)
         active_groups_set.add(group_name)
     return active_groups_set
 
 
-def recommend_groups(m_ug, m_hg, group_to_members):
+def recommend_groups(group_to_profiles, user_to_subs, group_to_members, all_subjects_list):
     user_to_recommended_groups_list = {}
-    for username, user_freq_pref in m_ug.iterrows():
-        user_vec = user_freq_pref.values
+    for username, user_to_sub_freq in user_to_subs.iteritems():
+        user_vec = get_user_freq_vec(user_to_sub_freq, all_subjects_list)
         groups_to_sim = {}
-        for group_name, group_freq_pref in m_hg.iterrows():
+        for group_name, group_to_sub_freq in group_to_profiles.iteritems():
             if username in group_to_members[group_name]:
                 continue
-            group_vec = group_freq_pref.values
+            group_vec = get_user_freq_vec(group_to_sub_freq, all_subjects_list)
             cos_sim = 1 - sp.distance.cosine(user_vec, group_vec)
             if cos_sim > 0:
                 groups_to_sim[group_name] = cos_sim
@@ -428,33 +402,36 @@ def clear_old_data():
 
 def main():
     clear_old_data()
-    res_df, res_to_subs = get_resource_to_subjects()
-    all_subjects_list = list(res_df.columns.values)
-    all_res_ids = list(res_df.index)
-    end_date = date.today()
+    res_to_subs, all_subjects_list = get_resource_to_subjects()
+    all_res_ids = list(res_to_subs.keys())
+    end_date = date(2019, 10, 17)
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
-    m_ur, m_rg, m_ug = get_user_cumulative_profiles(user_to_resources, res_to_subs,
-                                                    all_res_ids, all_subjects_list, all_usernames)
-    active_user_set = store_user_preferences(m_ug, user_to_resources, all_subjects_list)
-    user_to_top5_keywords = get_user_to_top5_keywords(m_ug)
+    user_to_subs = get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids, all_subjects_list)
+    user_to_top5_keywords = get_user_to_top5_keywords(user_to_subs)
+    active_user_set = store_user_preferences(user_to_subs)
     user_to_recommended_resources_list = recommend_resources(res_to_subs, user_to_resources,
-                                                             user_to_top5_keywords, m_ug, res_df)
+                                                             user_to_top5_keywords, user_to_subs,
+                                                             all_subjects_list)
     store_recommended_resources(user_to_recommended_resources_list, res_to_subs)
-    ug_nearest_neighbors = cal_nn_matrix(m_ug)
-    user_to_recommended_users_list = recommend_users(m_ug, ug_nearest_neighbors)
+    user_to_users = cal_nn(user_to_subs, all_subjects_list)
+    user_to_knn = get_user_knn(user_to_users)
+    store_nn(user_to_knn)
+    user_to_recommended_users_list = recommend_users(user_to_users, user_to_knn)
     store_recommended_users(user_to_recommended_users_list)
     group_to_res, group_to_subjects,\
                   group_to_members = get_group_to_held_resources_and_members(res_to_subs)
-    m_hg = get_group_profiles(group_to_subjects, all_subjects_list,
-                              group_to_members, m_ug, active_user_set)
-    active_groups_set = store_group_preferences(m_hg, all_subjects_list)
-    user_to_recommended_groups_list = recommend_groups(m_ug, m_hg, group_to_members)
+    group_to_profiles = get_group_profiles(group_to_subjects, group_to_members, user_to_subs)
+    active_groups_set = store_group_preferences(group_to_profiles, all_subjects_list)
+    user_to_recommended_groups_list = recommend_groups(group_to_profiles,
+                                                       user_to_subs,
+                                                       group_to_members,
+                                                       all_subjects_list)
     store_recommended_groups(user_to_recommended_groups_list, active_user_set, active_groups_set)
 
 
 class Command(BaseCommand):
-    help = "Compare jaccard and cosine for user short-term data"
+    help = "Make recommendations using dictionary representations for data."
 
     def handle(self, *args, **options):
         main()
