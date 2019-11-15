@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import UploadedFile
 from hs_core import hydroshare
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
-from hs_file_types.models import ModelProgramLogicalFile
+from hs_file_types.models import ModelProgramLogicalFile, FileSetLogicalFile
 from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
 
 
@@ -165,7 +165,7 @@ def test_upload_file_to_aggregation_sub_folder(composite_resource, mock_irods):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_create_aggregation_from_folder_failure(composite_resource, mock_irods):
+def test_create_aggregation_from_folder_failure_1(composite_resource, mock_irods):
     """test that we can't create a model program aggregation from a folder that does not contain any resource file"""
 
     res, user = composite_resource
@@ -188,6 +188,42 @@ def test_create_aggregation_from_folder_failure(composite_resource, mock_irods):
     assert not res_file.has_logical_file
     # file has no folder
     assert res_file.file_folder is None
+    # no model program logical file object was created
+    assert ModelProgramLogicalFile.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_aggregation_from_folder_failure_2(composite_resource, mock_irods):
+    """test that we can't create a model program aggregation from a folder that contains a sub-folder representing
+    a fileset aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    parent_mp_folder = 'mp_folder'
+    child_fs_folder = '{}/fs_folder'.format(parent_mp_folder)
+    ResourceFile.create_folder(res, parent_mp_folder)
+    ResourceFile.create_folder(res, child_fs_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=parent_mp_folder, check_target_folder=True)
+    file_path = 'pytest/assets/logan.vrt'
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=child_fs_folder, check_target_folder=True)
+    assert res.files.count() == 2
+    assert FileSetLogicalFile.objects.count() == 0
+    FileSetLogicalFile.set_file_type(res, user, folder_path=child_fs_folder)
+    assert FileSetLogicalFile.objects.count() == 1
+    fs_aggr = FileSetLogicalFile.objects.first()
+    assert fs_aggr.folder == child_fs_folder
+    # create model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # setting the folder 'parent_mp_folder' to model program aggregation type should fail
+    with pytest.raises(ValidationError):
+        ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=parent_mp_folder)
+
     # no model program logical file object was created
     assert ModelProgramLogicalFile.objects.count() == 0
 
