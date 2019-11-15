@@ -858,10 +858,16 @@ class AbstractLogicalFile(models.Model):
                 raise ValidationError(msg)
 
             # check if a FileSet aggregation can be created from the specified folder
-            if not resource.can_set_folder_to_fileset(path_to_check):
-                msg = "FileSet aggregation can't be created from the specified folder:{}"
-                msg = msg.format(path_to_check)
-                raise ValidationError(msg)
+            if cls.__name__ == "FileSetLogicalFile":
+                if not resource.can_set_folder_to_fileset(path_to_check):
+                    msg = "FileSet aggregation can't be created from the specified folder:{}"
+                    msg = msg.format(path_to_check)
+                    raise ValidationError(msg)
+            elif cls.__name__ == "ModelProgramLogicalFile":
+                if not resource.can_set_folder_to_mp_aggregation(path_to_check):
+                    msg = "Model Program aggregation can't be created from the specified folder:{}"
+                    msg = msg.format(path_to_check)
+                    raise ValidationError(msg)
 
         if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile']:
             if res_file is None or not res_file.exists:
