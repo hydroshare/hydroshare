@@ -119,12 +119,22 @@ class CompositeResource(BaseResource):
         for which the FileSet aggregation to be set
 
         :return If the specified folder is already represents an aggregation or does
-        not contain any files then returns False, otherwise True
+        not contain any files or if any parent folder is a model program aggregation
+        then returns False, otherwise True
         """
 
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
             return False
+
+        path = os.path.dirname(dir_path)
+        while '/' in path:
+            aggr = self.get_folder_aggregation_object(path)
+            if aggr is None:
+                path = os.path.dirname(path)
+            elif aggr.is_model_program:
+                # avoid creating a fileset aggregation inside a model program aggregation folder
+                return False
 
         irods_path = dir_path
         if self.is_federated:
