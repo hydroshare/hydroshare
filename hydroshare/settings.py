@@ -307,8 +307,7 @@ INSTALLED_APPS = (
     "hs_odm2",
     "security",
     "markdown",
-    "hs_communities",
-    "freshly"
+    "hs_communities"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -333,8 +332,7 @@ APPS_TO_NOT_RUN = (
     'test_without_migrations',
     'robots',
     'heartbeat',
-    'filebrowser_safe',
-    'freshly'
+    'filebrowser_safe'
     # etc...
 )
 
@@ -393,7 +391,6 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
-    "freshly.middleware.assets.AssetVersioningMiddleware",
 )
 
 # security settings
@@ -698,13 +695,6 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 HSWS_ACTIVATED = False
 
 COMMUNITIES_ENABLED = False
-
-FRESHLY_ASSETS_EXTENTIONS = [
-     'css', 'js'
-]
-
-# Update every time a css or js file is updated in a release
-FRESHLY_ASSETS_VERSION = '1.27'
 
 # Categorization in discovery of content types 
 # according to file extension of otherwise unaggregated files. 
