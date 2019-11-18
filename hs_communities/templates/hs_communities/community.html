@@ -37,10 +37,10 @@
                             <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
                     </li>
                     {% if is_admin %}
-                    <li role="presentation">
-                        <a href="#admin" aria-controls="admin" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-file"></i>&nbsp;ADMIN</a>
-                    </li>
+                        <li role="presentation">
+                            <a href="#admin" aria-controls="admin" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-file"></i>&nbsp;ADMIN</a>
+                        </li>
                     {% endif %}
                 </ul>
 
@@ -96,7 +96,8 @@
                                             <input id="resource-search-input" type="text" class="form-control"
                                                    placeholder="Search" size="600px"/>
                                             <span id="btn-clear-search-input"
-                                                  class="glyphicon glyphicon-remove-sign btn-clear-search" style="right: 10px"></span>
+                                                  class="glyphicon glyphicon-remove-sign btn-clear-search"
+                                                  style="right: 10px"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -128,7 +129,8 @@
                                         {# Needed for datatable to function properly #}
                                     </tr>
                                     </thead>
-                                    <div id="filter-querystring" style="display: none;">{{ grpfilter|default_if_none:'' }}</div>
+                                    <div id="filter-querystring"
+                                         style="display: none;">{{ grpfilter|default_if_none:'' }}</div>
                                     <tbody>
                                     {% for res in community_resources %}
                                         <tr class="data-row" v-show="isVisible({{ res.group_id }})">
@@ -200,7 +202,9 @@
                     <div role="tabpanel" class="tab-pane fade in" id="admin">
                         <div class="row">
                             <div class="col-sm-12 col-md-3">
-                                <a style="text-decoration: none;" href="/topics/"><h4><span style="::before" class="glyphicon glyphicon-pencil"></span>&nbsp;Edit Topics</h4></a>
+                                <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
+                                                                                            class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
+                                    Topics</h4></a>
                                 Someone has requested a topic to be created or modified for use in the Title Assistant
                             </div>
                         </div>
