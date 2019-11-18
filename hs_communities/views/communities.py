@@ -38,8 +38,11 @@ class CommunityView(TemplateView):
 
         groups = sorted(groups, key=lambda key: key['name'])
 
-        u = User.objects.get(pk=self.request.user.id)
-        is_admin = u.username == 'czo_national'
+        try:
+            u = User.objects.get(pk=self.request.user.id)
+            is_admin = u.username == 'czo_national'
+        except:
+            is_admin = False
 
         return {
             'community_resources': community_resources,
