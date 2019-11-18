@@ -164,7 +164,7 @@ def data_store_structure(request):
             # check if this file (f) is part of a model program folder aggregation
             if logical_file_type == "ModelProgramLogicalFile":
                 if f.file_folder is not None:
-                    if f.file_folder == f.logical_file.folder:
+                    if f.file_folder.startswith(f.logical_file.folder):
                         has_model_program_aggr_folder = True
 
         files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
