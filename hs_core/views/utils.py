@@ -788,16 +788,17 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     src_folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
                                                                 test_exists=False)
     tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
-    file_move = src_folder != tgt_folder
+    file_or_folder_move = src_folder != tgt_folder
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
-        # if the source file is part of a FileSet, we need to remove it from that FileSet in the
-        # case file being moved
-        if file_move and resource.resource_type == 'CompositeResource':
-            if res_file_obj.has_logical_file and res_file_obj.logical_file.is_fileset:
+        # if the source file is part of a FileSet or Model Program aggregation, we need to remove it from that
+        # aggregation in the case file being moved out of that aggregation
+        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+            if res_file_obj.has_logical_file and (res_file_obj.logical_file.is_fileset or
+                                                  res_file_obj.logical_file.is_model_program):
                 try:
                     aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
-                    if aggregation.is_fileset:
+                    if aggregation.is_fileset or aggregation.is_model_program:
                         # remove aggregation form the file
                         res_file_obj.logical_file_content_object = None
                         res_file_obj.save()
@@ -807,15 +808,20 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         # checks tgt_name as a side effect.
         ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
-        # if the file is getting moved into a folder that represents a FileSet or to a folder
-        # inside a fileset folder, then make the file part of that FileSet
-        if file_move and res_file_obj.file_folder is not None and \
-                resource.resource_type == 'CompositeResource':
-            aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
-            if aggregation is not None and not res_file_obj.has_logical_file:
-                # make the moved file part of the fileset aggregation unless the file is
-                # already part of another aggregation (single file aggregation)
-                aggregation.add_resource_file(res_file_obj)
+        if resource.resource_type == 'CompositeResource':
+            # if the file is getting moved into a folder that represents a FileSet or to a folder
+            # inside a fileset folder, then make the file part of that FileSet
+            if file_or_folder_move:
+                if res_file_obj.file_folder is not None and not res_file_obj.has_logical_file:
+                    # first check for model program aggregation
+                    aggregation = resource.get_mp_aggregation_in_path(res_file_obj.file_folder)
+                    if aggregation is None:
+                        # check for fileset aggregation
+                        aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
+                    if aggregation is not None:
+                        # make the moved file part of the fileset or model program aggregation unless the file is
+                        # already part of another aggregation (single file aggregation)
+                        aggregation.add_resource_file(res_file_obj)
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
@@ -1236,7 +1242,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
                 raise ValidationError("File/folder move is not allowed. "
-                                      "Target folder seems to contain aggregation(s).")
+                                      "Either the target folder or the source folder represents an aggregation "
+                                      "that doesn't permit file move.")
 
     for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)
