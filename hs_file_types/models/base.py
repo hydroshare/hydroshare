@@ -972,6 +972,11 @@ class AbstractLogicalFile(models.Model):
         return True
 
     @property
+    def can_contain_aggregations(self):
+        """aggregation is not allowed to contain other aggregations"""
+        return False
+
+    @property
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 

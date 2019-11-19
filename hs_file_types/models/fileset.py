@@ -21,6 +21,11 @@ class FileSetLogicalFile(AbstractLogicalFile):
     folder = models.CharField(max_length=4096)
     data_type = "GenericData"
 
+    @property
+    def can_contain_aggregations(self):
+        """aggregation is allowed to contain other aggregations"""
+        return True
+
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
