@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import
 
 import json
 
@@ -28,7 +28,7 @@ class CommunityView(TemplateView):
         grpfilter = self.request.GET.get('grp')
 
         community = community_from_name_or_id(kwargs['community_id'])
-        community_resources = community.public_resources
+        community_resources = community.public_resources.distinct()
         raw_groups = community.groups_with_public_resources()
         groups = []
 
@@ -37,10 +37,15 @@ class CommunityView(TemplateView):
             groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
 
         groups = sorted(groups, key=lambda key: key['name'])
+
+        u = User.objects.get(pk=self.request.user.id)
+        is_admin = u.username == 'czo_national'
+
         return {
             'community_resources': community_resources,
             'groups': groups,
             'grpfilter': grpfilter,
+            'is_admin': is_admin
         }
 
 
@@ -126,7 +131,7 @@ class TopicsView(TemplateView):
                 update_topic.name = request.POST.get('name')
                 update_topic.save()
             except Exception as e:
-                print(("TopicsView error updating topic {}".format(e)))
+                print("TopicsView error updating topic {}".format(e))
         elif request.POST.get('action') == 'DELETE':
             try:
                 delete_topic = Topic.objects.get(id=request.POST.get('id'))
