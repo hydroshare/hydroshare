@@ -130,11 +130,10 @@ class CompositeResource(BaseResource):
         path = os.path.dirname(dir_path)
         while '/' in path:
             aggr = self.get_folder_aggregation_object(path)
-            if aggr is None:
-                path = os.path.dirname(path)
-            elif aggr.is_model_program:
+            if aggr is not None and aggr.is_model_program:
                 # avoid creating a fileset aggregation inside a model program aggregation folder
                 return False
+            path = os.path.dirname(path)
 
         irods_path = dir_path
         if self.is_federated:
@@ -164,6 +163,20 @@ class CompositeResource(BaseResource):
         # so that we can avoid nesting a fileset aggregation inside a model program aggregation
         if self.filesetlogicalfile_set.filter(folder__startswith=dir_path).exists():
             return False
+
+        # get the parent folder path
+        path = os.path.dirname(dir_path)
+        while '/' in path:
+            aggr = self.get_folder_aggregation_object(path)
+            if aggr is not None:
+                if aggr.is_model_program:
+                    # avoid creating a model program aggregation inside a model program aggregation folder
+                    return False
+                elif aggr.is_fileset:
+                    # allow creating a model program aggregation inside a fileset aggregation
+                    return True
+            # get the next parent folder path
+            path = os.path.dirname(path)
 
         irods_path = dir_path
         if self.is_federated:
