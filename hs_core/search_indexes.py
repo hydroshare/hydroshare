@@ -10,7 +10,6 @@ from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
-from string import maketrans
 from django.conf import settings
 import logging
 import re
@@ -25,7 +24,7 @@ adjacent_caps = re.compile("[A-Z][A-Z]")
 def remove_whitespace(thing):
     intab = ""
     outtab = ""
-    trantab = maketrans(intab, outtab)
+    trantab = str.maketrans(intab, outtab)
     return str(thing).translate(trantab, " \t\r\n")
 
 
