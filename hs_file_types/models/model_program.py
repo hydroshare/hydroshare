@@ -406,6 +406,11 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
         # the caller must save this to DB
         return cls(metadata=mp_metadata, resource=resource)
 
+    @property
+    def supports_resource_file_move(self):
+        """resource files that are part of this logical file can't be moved"""
+        return False
+
     @staticmethod
     def get_aggregation_display_name():
         return 'Model Program Content: One or more files with specific metadata'
