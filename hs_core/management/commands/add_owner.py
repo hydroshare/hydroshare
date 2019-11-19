@@ -18,18 +18,18 @@ def set_quota_holder(resource, user):
     except SessionException as ex:
         # some resources copied from www for testing do not exist in the iRODS backend,
         # hence need to skip these test artifects
-        print(resource.short_id + ' raised SessionException when setting quota holder: ' +
-              ex.stderr)
+        print((resource.short_id + ' raised SessionException when setting quota holder: ' +
+              ex.stderr))
     except AttributeError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised AttributeError when setting quota holder: ' +
-              ex.message)
+        print((resource.short_id + ' raised AttributeError when setting quota holder: ' +
+              ex.message))
     except ValueError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised ValueError when setting quota holder: ' +
-              ex.message)
+        print((resource.short_id + ' raised ValueError when setting quota holder: ' +
+              ex.message))
 
 
 class Command(BaseCommand):
@@ -68,11 +68,11 @@ class Command(BaseCommand):
                                                 resource=resource,
                                                 privilege=PrivilegeCodes.OWNER,
                                                 grantor=admin)
-                    print("added owner {} to {}".format(options['new_owner'], resource.short_id))
+                    print(("added owner {} to {}".format(options['new_owner'], resource.short_id)))
                     if options['set_quota_holder']:
                         set_quota_holder(resource, user)
-                        print("set quota holder to {} for {}".format(options['new_owner'],
-                              resource.short_id))
+                        print(("set quota holder to {} for {}".format(options['new_owner'],
+                              resource.short_id)))
 
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
 
@@ -83,8 +83,8 @@ class Command(BaseCommand):
                                                 resource=resource,
                                                 privilege=PrivilegeCodes.OWNER,
                                                 grantor=admin)
-                    print("added owner {} to {}".format(options['new_owner'], rid))
+                    print(("added owner {} to {}".format(options['new_owner'], rid)))
                     if options['set_quota_holder']:
                         set_quota_holder(resource, user)
-                        print("set quota holder to {} for {}".format(options['new_owner'],
-                              resource.short_id))
+                        print(("set quota holder to {} for {}".format(options['new_owner'],
+                              resource.short_id)))

@@ -364,7 +364,7 @@ class AbstractMetaDataElement(models.Model):
     def update(cls, element_id, **kwargs):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
                 setattr(element, key, value)
         element.save()
         return element
@@ -1225,14 +1225,14 @@ class Coverage(AbstractMetaDataElement):
                 cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in value_arg_dict.items()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in value_arg_dict.items()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('name', 'east', 'north', 'units', 'elevation',
                                            'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in value_arg_dict.items()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                            'westlimit', 'name', 'uplimit', 'downlimit',
                                            'zunits', 'projection')}
@@ -4239,7 +4239,7 @@ class CoreMetaData(models.Model):
                                                 '{%s}homepage' % self.NAMESPACES['hsterms'])
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
-        for name, link in person.identifiers.items():
+        for name, link in list(person.identifiers.items()):
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)

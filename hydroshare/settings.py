@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+
 #TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import json
 
@@ -131,7 +131,7 @@ class TopicsView(TemplateView):
                 update_topic.name = request.POST.get('name')
                 update_topic.save()
             except Exception as e:
-                print("TopicsView error updating topic {}".format(e))
+                print(("TopicsView error updating topic {}".format(e)))
         elif request.POST.get('action') == 'DELETE':
             try:
                 delete_topic = Topic.objects.get(id=request.POST.get('id'))
