@@ -280,12 +280,28 @@ class CompositeResource(BaseResource):
                 fs.folder = new_folder + fs.folder[len(old_folder):]
                 fs.save()
 
+        def update_model_program_folder():
+            """Updates the folder attribute of all folder based model program aggregation that exist under
+            'old_folder' when the folder is renamed to *new_folder*"""
+
+            mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=old_folder)
+            for mp_aggr in mp_aggregations:
+                if mp_aggr.folder is not None:
+                    mp_aggr.folder = new_folder + mp_aggr.folder[len(old_folder):]
+                    mp_aggr.save()
+
         # recreate xml files for all fileset aggregations that exist under new_folder
         if new_folder.startswith(self.file_path):
             new_folder = new_folder[len(self.file_path) + 1:]
 
         if old_folder.startswith(self.file_path):
             old_folder = old_folder[len(self.file_path) + 1:]
+
+        # first update folder attribute of any model program aggregation that exist under *old_folder*
+        update_model_program_folder()
+        mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=new_folder)
+        for mp_aggr in mp_aggregations:
+            mp_aggr.create_aggregation_xml_documents()
 
         # first update folder attribute of all filesets that exist under *old_folder*
         update_fileset_folder()
