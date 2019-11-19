@@ -530,56 +530,67 @@ class CompositeResource(BaseResource):
         else:
             is_moving_folder = True
 
-        def check_file_rename_or_move():
+        def check_target_folder():
+            """checks if the target folder allows rename/move action"""
+
+            tgt_aggr_path = tgt_file_dir[len(self.file_path) + 1:]
+            try:
+                tgt_aggregation = self.get_aggregation_by_name(tgt_aggr_path)
+                if is_moving_file:
+                    return tgt_aggregation.supports_resource_file_move
+                elif is_moving_folder:
+                    return tgt_aggregation.can_contain_aggregations
+                return True
+            except ObjectDoesNotExist:
+                return True
+
+        def check_src_aggregation(src_aggr):
+            """checks if the aggregation at the source allows rename/move action"""
+            if src_aggr is None:
+                return True
+
+            if is_renaming_file:
+                return src_aggr.supports_resource_file_rename
+            elif is_moving_file:
+                if src_aggr.supports_resource_file_move:
+                    # source aggregation allows file move now check target folder
+                    return check_target_folder()
+                return False
+
+        if src_file_dir != self.file_path:
             # see if the folder containing the file represents an aggregation
-            if src_file_dir != self.file_path:
-                aggregation_path = src_file_dir[len(self.file_path) + 1:]
-                try:
-                    aggregation = self.get_aggregation_by_name(aggregation_path)
-                    return aggregation.supports_resource_file_rename
-                except ObjectDoesNotExist:
-                    # check if the source file represents an aggregation
-                    # get source resource file object from source file path
-                    src_res_file = ResourceFile.get(self, src_file_name, aggregation_path)
-                    aggregation = src_res_file.logical_file
-                    if aggregation is None:
-                        raise ObjectDoesNotExist("No aggregation found at {}".format(
-                            aggregation_path))
-                    if is_renaming_file:
-                        return aggregation.supports_resource_file_rename
-                    else:
-                        return aggregation.supports_resource_file_move
-            else:
+            aggregation_path = src_file_dir[len(self.file_path) + 1:]
+            try:
+                src_aggregation = self.get_aggregation_by_name(aggregation_path)
+                if src_ext:
+                    # case of file rename or move
+                    return check_src_aggregation(src_aggregation)
+                else:
+                    # moving folder
+                    return check_target_folder()
+            except ObjectDoesNotExist:
+                # source folder does not represent an aggregation
+                # check if the source file represents an aggregation
                 # get source resource file object from source file path
+                if src_ext:
+                    # case of file rename or move
+                    src_res_file = ResourceFile.get(self, src_file_name, aggregation_path)
+                    src_aggregation = src_res_file.logical_file
+                    return check_src_aggregation(src_aggregation)
+                else:
+                    # moving folder
+                    return check_target_folder()
+        else:
+            # get source resource file object from source file path
+            if src_ext:
+                # case of file rename or move
                 src_res_file = ResourceFile.get(self, src_file_name)
                 # check if the source file is part of an aggregation
-                aggregation = src_res_file.logical_file
-                if aggregation is None:
-                    raise ObjectDoesNotExist("No aggregation found at {}".format(src_file_name))
-
-                if is_renaming_file:
-                    return aggregation.supports_resource_file_rename
-                else:
-                    return aggregation.supports_resource_file_move
-
-        if is_renaming_file:
-            # see if the folder containing the file represents an aggregation
-            try:
-                can_rename = check_file_rename_or_move()
-                return can_rename
-            except ObjectDoesNotExist:
-                return True
-
-        elif is_moving_file:
-            # check source - see if the folder containing the file represents an aggregation
-            try:
-                can_move = check_file_rename_or_move()
-                return can_move
-            except ObjectDoesNotExist:
-                return True
-
-        elif is_moving_folder:
-            return True
+                src_aggregation = src_res_file.logical_file
+                return check_src_aggregation(src_aggregation)
+            else:
+                # moving folder
+                return check_target_folder()
 
     def can_add_files(self, target_full_path):
         """
