@@ -1190,7 +1190,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
         # read the first row - header
         header = next(csv_reader)
         # read the 1st data row
-        start_date_str = csv_reader.next()[0]
+        start_date_str = next(csv_reader)[0]
         last_row = None
         data_row_count = 1
         for row in csv_reader:
