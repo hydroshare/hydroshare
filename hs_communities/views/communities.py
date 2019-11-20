@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 
 from hs_access_control.management.utilities import community_from_name_or_id
 from hs_access_control.models.community import Community
+from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
 from hs_communities.models import Topic
 
 
@@ -40,7 +41,10 @@ class CommunityView(TemplateView):
 
         try:
             u = User.objects.get(pk=self.request.user.id)
-            is_admin = u.username == 'czo_national'
+            # user must own the community to get admin privilege
+            is_admin = UserCommunityPrivilege(user=u,
+                                              community=community,
+                                              privilege=PrivilegeCodes.OWNER).exists()
         except:
             is_admin = False
 
