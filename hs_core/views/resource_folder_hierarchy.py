@@ -82,7 +82,7 @@ def data_store_structure(request):
         folder_aggregation_id = ''
         folder_aggregation_type_to_set = ''
         if resource.resource_type == "CompositeResource":
-            dir_path = resource.get_public_path(d_store_path)
+            dir_path = resource.get_irods_path(d_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path)
             # folder aggregation type is not relevant for single file aggregation types - which

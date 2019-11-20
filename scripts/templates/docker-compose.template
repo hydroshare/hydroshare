@@ -64,6 +64,8 @@ defaultworker:
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
     C_FORCE_ROOT: 1
+  ports:
+    - "5555:5555"
   volumes_from:
     - hydroshare
   volumes:
