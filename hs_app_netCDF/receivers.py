@@ -59,7 +59,7 @@ def netcdf_post_create_resource(sender, **kwargs):
             # create the ncdump text file
             dump_file = create_header_info_txt_file(temp_file, nc_file_name)
             dump_file_name = nc_file_name + '_header_info.txt'
-            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            uploaded_file = UploadedFile(file=open(dump_file, mode="rb"), name=dump_file_name)
             utils.add_file_to_resource(resource, uploaded_file)
         else:
             delete_resource_file_only(resource, res_file)
