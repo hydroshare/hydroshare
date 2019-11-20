@@ -37,7 +37,7 @@ class TestFolderDownloadZip(TestCase):
         test_file.write("Test text file in test1.txt")
         test_file.close()
 
-        self.test_file = open(self.n1, "r")
+        self.test_file = open(self.n1, "rb")
         add_resource_files(self.res.short_id, self.test_file, folder='foo')
 
         # copy refts file into new file to be added to the resource as an aggregation
