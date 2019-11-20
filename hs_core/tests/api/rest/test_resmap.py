@@ -38,7 +38,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # collect response from stream
-        output = ""
+        output = b""
         while True:
             try:
                 output += next(response2.streaming_content)
@@ -47,7 +47,7 @@ class TestResourceMap(ResMapTestCase):
 
         # parse as simple RDF graph
         g = Graph()
-        g.parse(data=output)
+        g.parse(data=output.decode("utf-8"))
 
         documents = g.triples(
             (None, term.URIRef('http://purl.org/spar/cito/documents'), None)
@@ -94,7 +94,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # collect the map from the stream
-        output = ""
+        output = b""
         while True:
             try:
                 output += next(response2.streaming_content)
@@ -103,7 +103,7 @@ class TestResourceMap(ResMapTestCase):
 
         # parse as a simple RDF file of triples
         g = Graph()
-        g.parse(data=output)
+        g.parse(data=output.decode("utf-8"))
 
         # check that the graph contains an appropriate "documents" node
         documents = g.triples(
