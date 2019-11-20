@@ -42,7 +42,7 @@ class TestFolderDownloadZip(TestCase):
 
         # copy refts file into new file to be added to the resource as an aggregation
         reft_data_file = open('hs_core/tests/data/multi_sites_formatted_version1.0.refts.json', 'rb')
-        refts_file = open('multi_sites_formatted_version1.0.refts.json', 'w')
+        refts_file = open('multi_sites_formatted_version1.0.refts.json', 'wb')
         refts_file.writelines(reft_data_file.readlines())
         refts_file.close()
         self.refts_file = open('multi_sites_formatted_version1.0.refts.json', 'rb')
