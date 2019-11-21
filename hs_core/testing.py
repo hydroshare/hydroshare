@@ -326,10 +326,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(float(box_coverage.value['northlimit']), 42.11270614966863)
-        self.assertEqual(float(box_coverage.value['eastlimit']), -111.45699925047542)
-        self.assertEqual(float(box_coverage.value['southlimit']), 41.66222054591102)
-        self.assertEqual(float(box_coverage.value['westlimit']), -111.81761887121905)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['northlimit'])), 42.11270614966863)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['eastlimit'])), -111.45699925047542)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['southlimit'])), 41.66222054591102)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['westlimit'])), -111.81761887121905)
 
         # there should be 2 format elements
         self.assertEqual(self.resRaster.metadata.formats.all().count(), 2)
@@ -341,10 +341,10 @@ class TestCaseCommonUtilities(object):
         # testing extended metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEqual(ori_coverage, None)
-        self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
-        self.assertEqual(float(ori_coverage.value['eastlimit']), 461954.01909127034)
-        self.assertEqual(float(ori_coverage.value['southlimit']), 4612592.446916306)
-        self.assertEqual(float(ori_coverage.value['westlimit']), 432404.01909127034)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['northlimit'])), 4662392.446916306)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['eastlimit'])), 461954.01909127034)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['southlimit'])), 4612592.446916306)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['westlimit'])), 432404.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'meter')
         self.assertEqual(ori_coverage.value['projection'], "NAD83 / UTM zone 12N")
         self.assertEqual(ori_coverage.value['datum'], "North_American_Datum_1983")
@@ -376,7 +376,7 @@ class TestCaseCommonUtilities(object):
         # testing extended metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
+        self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
         self.assertEqual(band_info.maximumValue, '3031.44311523')
         self.assertEqual(band_info.minimumValue, '1358.33459473')
 
@@ -428,10 +428,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resNetcdf.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
-        self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
-        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
-        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['northlimit'])), 41.867126409)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['eastlimit'])), -111.505940368)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['southlimit'])), 41.8639080745)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['westlimit'])), -111.51138808)
 
         temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -457,10 +457,10 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
         proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
-        self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
-        self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
-        self.assertEqual(float(ori_coverage.value['southlimit']), 4.63479e+06)
-        self.assertEqual(float(ori_coverage.value['westlimit']), 457560.0)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['northlimit'])), 4.63515e+06)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['eastlimit'])), 458010.0)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['southlimit'])), 4.63479e+06)
+        self.assertEqual(float("%0.9" % float(ori_coverage.value['westlimit'])), 457560.0)
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
@@ -548,10 +548,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(float(box_coverage.value['northlimit']), 41.718473)
-        self.assertEqual(float(box_coverage.value['eastlimit']), -111.799324)
-        self.assertEqual(float(box_coverage.value['southlimit']), 41.495409)
-        self.assertEqual(float(box_coverage.value['westlimit']), -111.946402)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['northlimit'])), 41.718473)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['eastlimit'])), -111.799324)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['southlimit'])), 41.495409)
+        self.assertEqual(float("%0.9" % float(box_coverage.value['westlimit'])), -111.946402)
 
         temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(
             type='period').first()
