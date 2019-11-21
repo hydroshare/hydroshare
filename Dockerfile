@@ -7,6 +7,7 @@ RUN pip install git+https://github.com/theromis/django-inplaceedit.git@e6fa12355
 RUN pip install git+https://github.com/sblack-usu/foresite-toolkit.git#subdirectory=foresite-python/trunk
 RUN pip install --upgrade matplotlib
 RUN pip install --upgrade PyCRS
+RUN pip install --upgrade dominate
 USER root
 WORKDIR /hydroshare
 

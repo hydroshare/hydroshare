@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, button, input, p, \
+from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
     textarea, span
 
 from hs_core.hydroshare import utils
@@ -320,9 +320,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                 span("NOTE:", style="color:red;")
                                 span("New resource specific metadata elements can't be created "
                                      "after you update the SQLite file.")
-                    eval(input(id="metadata-dirty", type="hidden", value=is_dirty))
-                    eval(input(id="can-update-sqlite-file", type="hidden",
-                               value=can_update_sqlite_file))
+                    _input(id="metadata-dirty", type="hidden", value=is_dirty)
+                    _input(id="can-update-sqlite-file", type="hidden",
+                               value=can_update_sqlite_file)
                     with form(action=form_action, method="post", id="update-sqlite-file"):
                         button("Update SQLite File", type="button", cls="btn btn-primary",
                                id="id-update-sqlite-file")

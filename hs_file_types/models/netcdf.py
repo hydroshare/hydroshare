@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, textarea, input
+from dominate.tags import div, legend, form, button, p, textarea, _input
 from lxml import etree
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
@@ -171,7 +171,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    eval(input(id="metadata-dirty", type="hidden", value=self.is_dirty))
+                    _input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
                                id="id-update-netcdf-file")

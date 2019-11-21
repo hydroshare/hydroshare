@@ -19,7 +19,7 @@ from django.contrib.postgres.fields import HStoreField, ArrayField
 from mezzanine.conf import settings
 
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
-    span, a, form, button, label, textarea, h4, input, ul, li, p
+    span, a, form, button, label, textarea, h4, _input, ul, li, p
 
 from lxml import etree
 
@@ -173,13 +173,13 @@ class AbstractFileMetaData(models.Model):
             legend("Keywords")
             with form(id="id-keywords-filetype", action=action, method="post",
                       enctype="multipart/form-data"):
-                eval(input(id="id-delete-keyword-filetype-action", type="hidden",
-                           value=delete_action))
+                _input(id="id-delete-keyword-filetype-action", type="hidden",
+                           value=delete_action)
                 with div(cls="tags"):
                     with div(id="add-keyword-wrapper", cls="input-group"):
-                        eval(input(id="txt-keyword-filetype", cls="form-control",
+                        _input(id="txt-keyword-filetype", cls="form-control",
                                    placeholder="keyword",
-                                   type="text", name="keywords"))
+                                   type="text", name="keywords")
                         with span(cls="input-group-btn"):
                             a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
                               type="button")
@@ -490,10 +490,10 @@ class AbstractFileMetaData(models.Model):
                     with div(cls="control-group"):
                         legend('Title')
                         with div(cls="controls"):
-                            eval(input(value=dataset_name,
+                            _input(value=dataset_name,
                                        cls="form-control input-sm textinput textInput",
                                        id="file_dataset_name", maxlength="250",
-                                       name="dataset_name", type="text"))
+                                       name="dataset_name", type="text")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
@@ -523,9 +523,9 @@ class AbstractFileMetaData(models.Model):
                                     label("Key", cls="control-label requiredField",
                                           fr="file_extra_meta_name")
                                     with div(cls="controls"):
-                                        eval(input(cls="form-control input-sm textinput textInput",
+                                        _input(cls="form-control input-sm textinput textInput",
                                                    id="file_extra_meta_name", maxlength="100",
-                                                   name="name", type="text"))
+                                                   name="name", type="text")
                                 with div(cls="control-group"):
                                     label("Value", cls="control-label requiredField",
                                           fr="file_extra_meta_value")
@@ -576,21 +576,21 @@ class AbstractFileMetaData(models.Model):
                                                   cls="control-label requiredField",
                                                   fr="file_extra_meta_key_original")
                                             with div(cls="controls"):
-                                                eval(input(value=k, readonly="readonly",
+                                                _input(value=k, readonly="readonly",
                                                            cls="form-control input-sm textinput "
                                                                "textInput",
                                                            id="file_extra_meta_key_original",
                                                            maxlength="100",
-                                                           name="key_original", type="text"))
+                                                           name="key_original", type="text")
                                         with div(cls="control-group"):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_key")
                                             with div(cls="controls"):
-                                                eval(input(value=k,
+                                                _input(value=k,
                                                            cls="form-control input-sm textinput "
                                                                "textInput",
                                                            id="file_extra_meta_key", maxlength="100",
-                                                           name="key", type="text"))
+                                                           name="key", type="text")
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -640,10 +640,10 @@ class AbstractFileMetaData(models.Model):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_name")
                                             with div(cls="controls"):
-                                                eval(input(cls="form-control input-sm textinput "
+                                                _input(cls="form-control input-sm textinput "
                                                                "textInput", value=k,
                                                            id="file_extra_meta_key", maxlength="100",
-                                                           name="key", type="text", readonly="readonly"))
+                                                           name="key", type="text", readonly="readonly")
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
