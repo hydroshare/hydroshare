@@ -372,7 +372,7 @@ class IrodsStorage(Storage):
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "file size".format(name))
-        return int(stdout)
+        return int(float(stdout))
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})

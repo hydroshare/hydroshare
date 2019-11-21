@@ -2199,20 +2199,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         return author_name + ", "
 
-    def get_id_url(self):
-        """
-        get identifier URL to fill in @id and url elements for schema.org implementation
-        :return: resource identifier URL
-        """
-        if self.metadata.identifiers.all().filter(name="doi"):
-            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        else:
-            return None
-
-        return hs_identifier.url
-
     def get_citation(self):
         """Get citation or citations from resource metadata."""
         citation_str_lst = []

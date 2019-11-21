@@ -317,16 +317,18 @@
         "@vocab": "http://www.schema.org/",
         "datacite": "http://purl.org/spar/datacite/"
     },
-    "@id": {{ identifier_url }},
-
+    "@id": "{{ cm|resource_id_url }}",
+    {% if cm.raccess.published %} "sameAs": "{{ cm|resource_url }}", {% endif %}
+    "url": "{{ cm|resource_id_url }}",
     "@type": "Dataset",
-    "additionalType": ["http://schema.geolink.org/1.0/base/main#Dataset", "http://vivoweb.org/ontology/core#Dataset"],
+    "additionalType": "{{ cm.metadata.type.url }}",
     "name": "{{ title }}",
     "description": "{{ cm.metadata.description | escapejs }}",
-    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}/",
-    "version": "2017-06-04",
-    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    "keywords": "{{ keywords | escapejs }}",
+    "keywords": [
+        {% for sub in cm.metadata.subjects %}
+        "{{ sub }}"
+        {% endfor %}
+    ],
     {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
         "license": "http://creativecommons.org/licenses/by/4.0/",
     {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
@@ -406,5 +408,6 @@
     "publisher": {
         "@id": "https://www.hydroshare.org"
     }
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
 }
 </script>

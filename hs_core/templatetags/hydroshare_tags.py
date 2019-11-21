@@ -238,3 +238,33 @@ def normalize_human_name(name):
 def display_name_to_class(value):
     """ Converts an aggregation display name to a string that is usable as a CSS class name """
     return value.replace(" ", "_").lower()
+
+
+@register.filter
+def resource_url(content):
+    if not content:
+        return ''
+
+    hs_id_filter = content.metadata.identifiers.all().filter(name="hydroShareIdentifier")
+    if hs_id_filter:
+        hs_identifier = hs_id_filter[0]
+        return hs_identifier.url
+    else:
+        return ''
+
+
+@register.filter
+def resource_id_url(content):
+    if not content:
+        return ''
+
+    doi_filter = content.metadata.identifiers.all().filter(name="doi")
+    if doi_filter:
+        hs_identifier = doi_filter[0]
+    else:
+        hs_id_filter = content.metadata.identifiers.all().filter(name="hydroShareIdentifier")
+        if hs_id_filter:
+            hs_identifier = hs_id_filter[0]
+        else:
+            return ''
+    return hs_identifier.url
