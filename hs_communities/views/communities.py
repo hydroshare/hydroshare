@@ -42,9 +42,10 @@ class CommunityView(TemplateView):
         try:
             u = User.objects.get(pk=self.request.user.id)
             # user must own the community to get admin privilege
-            is_admin = UserCommunityPrivilege(user=u,
-                                              community=community,
-                                              privilege=PrivilegeCodes.OWNER).exists()
+            is_admin = UserCommunityPrivilege.objects.filter(user=u,
+                                                             community=community,
+                                                             privilege=PrivilegeCodes.OWNER)\
+                                                     .exists()
         except:
             is_admin = False
 
