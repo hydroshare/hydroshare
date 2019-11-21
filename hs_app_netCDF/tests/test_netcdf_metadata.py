@@ -58,6 +58,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         temp_text_file = os.path.join(self.temp_dir, 'netcdf_text.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("NetCDF records")
+        text_file.close()
         self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):

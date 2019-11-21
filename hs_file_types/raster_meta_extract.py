@@ -19,7 +19,7 @@ from osgeo import osr
 from collections import OrderedDict
 import re
 import logging
-import pycrs
+from pycrs.parse import from_unknown_wkt
 import numpy
 
 
@@ -190,7 +190,7 @@ def get_wgs84_coverage_info(raster_dataset):
             # USA_Contiguous_Albers_Equal_Area_Conic_USGS_version
             # then use the following workaround that uses wkt
             if transform.this is None:
-                ogc_wkt = pycrs.parser.from_unknown_wkt(proj).to_ogc_wkt()
+                ogc_wkt = from_unknown_wkt(proj).to_ogc_wkt()
                 original_cs.ImportFromWkt(ogc_wkt)
                 # create transform object
                 transform = osr.CoordinateTransformation(original_cs, wgs84_cs)

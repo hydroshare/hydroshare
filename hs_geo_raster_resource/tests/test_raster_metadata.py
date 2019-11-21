@@ -115,6 +115,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         temp_text_file = os.path.join(self.temp_dir, 'raster_text.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("Raster records")
+        text_file.close()
         self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):
@@ -762,8 +763,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
-        self.assertEqual(band_info.maximumValue, '3031.44311523')
-        self.assertEqual(band_info.minimumValue, '1358.33459473')
+        self.assertEqual(band_info.maximumValue, '3031.443115234375')
+        self.assertEqual(band_info.minimumValue, '1358.3345947265625')
         self.assertEqual(band_info.name, 'Band_1')
         # updating of bandinformation using a name that does not exist (band-name) should fail
         band_data = {'original_band_name': 'band-name',

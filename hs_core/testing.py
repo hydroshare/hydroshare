@@ -377,8 +377,8 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
-        self.assertEqual(band_info.maximumValue, '3031.44311523')
-        self.assertEqual(band_info.minimumValue, '1358.33459473')
+        self.assertEqual(band_info.maximumValue, '3031.443115234375')
+        self.assertEqual(band_info.minimumValue, '1358.3345947265625')
 
     def netcdf_metadata_extraction(self, expected_creators_count=1):
         """Test NetCDF metadata extraction.
