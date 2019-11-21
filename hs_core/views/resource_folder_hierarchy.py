@@ -163,7 +163,7 @@ def data_store_structure(request):
 
             # check if this file (f) is part of a model program folder aggregation
             if logical_file_type == "ModelProgramLogicalFile":
-                if f.file_folder is not None:
+                if f.file_folder is not None and f.logical_file.folder is not None:
                     if f.file_folder.startswith(f.logical_file.folder):
                         has_model_program_aggr_folder = True
 
