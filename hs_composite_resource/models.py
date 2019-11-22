@@ -151,8 +151,7 @@ class CompositeResource(BaseResource):
 
         :return If the specified folder is already represents an aggregation or does
         not contain any files or any of the contained files is part of an aggregation or if any of the sub-folders
-        is a fileset aggregation then returns False,
-        otherwise True
+        is a fileset aggregation then returns False, otherwise True
         """
 
         if self.get_folder_aggregation_object(dir_path) is not None:
@@ -164,25 +163,46 @@ class CompositeResource(BaseResource):
         if self.filesetlogicalfile_set.filter(folder__startswith=dir_path).exists():
             return False
 
-        # get the parent folder path
-        path = os.path.dirname(dir_path)
-        while '/' in path:
-            aggr = self.get_folder_aggregation_object(path)
-            if aggr is not None:
-                if aggr.is_model_program:
-                    # avoid creating a model program aggregation inside a model program aggregation folder
-                    return False
-                elif aggr.is_fileset:
-                    # allow creating a model program aggregation inside a fileset aggregation
-                    return True
-            # get the next parent folder path
-            path = os.path.dirname(path)
+        # check that we don't have any sub folder of dir_path representing a model program aggregation
+        # so that we can avoid nesting a model program aggregation inside a model program aggregation
+        if self.modelprogramlogicalfile_set.filter(folder__startswith=dir_path).exists():
+            return False
 
         irods_path = dir_path
         if self.is_federated:
             irods_path = os.path.join(self.resource_federation_path, irods_path)
 
-        files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+        files_in_path = []
+        # get the parent folder path
+        path = os.path.dirname(dir_path)
+        parent_aggregation = None
+        while '/' in path:
+            if path == self.file_path:
+                break
+            parent_aggregation = self.get_folder_aggregation_object(path)
+            if parent_aggregation is not None:
+                break
+            # get the next parent folder path
+            path = os.path.dirname(path)
+
+        if parent_aggregation is not None:
+            if parent_aggregation.is_model_program:
+                # avoid creating a model program aggregation inside a model program aggregation folder
+                return False
+            elif parent_aggregation.is_fileset:
+                # check that all resource files under the 'dir_path' are associated with fileset only
+                files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+                # if all the resource files are associated with fileset then can set the folder to model program
+                # aggregation
+                if files_in_path:
+                    return all(res_file.has_logical_file and res_file.logical_file.is_fileset for
+                               res_file in files_in_path)
+                return False
+            return False
+
+        if not files_in_path:
+            files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+
         # if none of the resource files has logical file then we can set the folder to model program aggregation
         if files_in_path:
             return not any(res_file.has_logical_file for res_file in files_in_path)
