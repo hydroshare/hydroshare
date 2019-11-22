@@ -69,16 +69,6 @@ class CompositeResource(BaseResource):
                 return False
         return True
 
-    def set_default_logical_file(self):
-        """sets an instance of GenericLogicalFile to any resource file objects of this instance
-        of the resource that is not already associated with a logical file. """
-
-        for res_file in self.files.all():
-            if not res_file.has_logical_file:
-                logical_file = GenericLogicalFile.create()
-                res_file.logical_file_content_object = logical_file
-                res_file.save()
-
     def get_folder_aggregation_object(self, dir_path):
         """Returns an aggregation (file type) object if the specified folder *dir_path* represents a
          file type aggregation (logical file), otherwise None.

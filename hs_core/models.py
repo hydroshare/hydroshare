@@ -2426,16 +2426,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Check if resource allows associating resource file objects with logical file."""
         return False
 
-    def set_default_logical_file(self):
-        """Do nothing (noop).
-
-        Sets an instance of default logical file type to any resource file objects of
-        this instance of the resource that is not already associated with a logical file.
-        Each specific resource type needs to override this function in order to to support logical
-        file types
-        """
-        pass
-
     def supports_folder_creation(self, folder_full_path):
         """Check if resource supports creation of folder at the specified path."""
         return True
