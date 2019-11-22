@@ -362,7 +362,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                             42.5732416) < self.allowance)
         self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
                          'GCS_WGS_1984')
         self.resGeoFeature.delete()
@@ -407,7 +407,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                             42.5732416) < self.allowance)
         self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
                          'GCS_WGS_1984')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
@@ -498,7 +498,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
                          'GCS_North_American_1983')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.eastlimit, -66.9692712587578)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.northlimit, 71.406235393967)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.southlimit, 18.921786345087)

@@ -236,7 +236,7 @@ class GeographicFeatureResource(BaseResource):
                 ".mxs")
 
     def has_required_content_files(self):
-        if self.files.all().count < 3:
+        if self.files.all().count() < 3:
             return False
         file_extensions = [f.extension for f in self.files.all()]
         return all(ext in file_extensions for ext in ['.shp', '.shx', '.dbf'])

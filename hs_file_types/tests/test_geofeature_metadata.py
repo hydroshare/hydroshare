@@ -187,7 +187,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                             42.5732416) < self.allowance)
         self.assertTrue(abs(logical_file.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(logical_file.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(logical_file.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
                          'GCS_WGS_1984')
 
