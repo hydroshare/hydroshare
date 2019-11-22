@@ -579,16 +579,36 @@ class CompositeResource(BaseResource):
         else:
             is_moving_folder = True
 
-        def check_target_folder():
-            """checks if the target folder allows rename/move action"""
+        def check_target_folder(src_aggr=None):
+            """checks if the target folder allows file/folder move action"""
 
             tgt_aggr_path = tgt_file_dir[len(self.file_path) + 1:]
+            # check if this move would create a nested model program aggregation - nested model program aggregation
+            # is not allowed
+            if src_aggr is not None and src_aggr.is_model_program:
+                if is_moving_file or is_moving_folder:
+                    src_mp_aggr = src_aggr
+                    #  find if there is any model program aggregation in the target path
+                    tgt_mp_aggr = self.get_mp_aggregation_in_path(tgt_aggr_path)
+                    if tgt_mp_aggr is not None:
+                        if src_mp_aggr.folder is None:
+                            # file/folder being moved is part of a model aggregation - we can't move that
+                            # into a folder based model program aggregation as it will result in nested
+                            # model program aggregations
+                            return False
+
+                        # check if the move is within the same aggregation folder hierarchy - allow the move
+                        return tgt_mp_aggr.folder == src_mp_aggr.folder
+
+                    # target folder is either a normal folder or fileset folder - file or folder move is allowed
+                    return True
+                return True
             try:
                 tgt_aggregation = self.get_aggregation_by_name(tgt_aggr_path)
-                if is_moving_file:
+                if is_moving_file or is_moving_folder:
+                    if src_aggr is not None:
+                        return tgt_aggregation.can_contain_aggregations
                     return tgt_aggregation.supports_resource_file_move
-                elif is_moving_folder:
-                    return tgt_aggregation.can_contain_aggregations
                 return True
             except ObjectDoesNotExist:
                 return True
@@ -603,7 +623,7 @@ class CompositeResource(BaseResource):
             elif is_moving_file:
                 if src_aggr.supports_resource_file_move:
                     # source aggregation allows file move now check target folder
-                    return check_target_folder()
+                    return check_target_folder(src_aggr)
                 return False
 
         if src_file_dir != self.file_path:
@@ -612,11 +632,11 @@ class CompositeResource(BaseResource):
             try:
                 src_aggregation = self.get_aggregation_by_name(aggregation_path)
                 if src_ext:
-                    # case of file rename or move
+                    # file rename or move
                     return check_src_aggregation(src_aggregation)
                 else:
                     # moving folder
-                    return check_target_folder()
+                    return check_target_folder(src_aggregation)
             except ObjectDoesNotExist:
                 # source folder does not represent an aggregation
                 # check if the source file represents an aggregation
