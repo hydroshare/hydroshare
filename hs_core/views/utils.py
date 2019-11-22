@@ -791,19 +791,25 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     file_or_folder_move = src_folder != tgt_folder
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
-        # if the source file is part of a FileSet or Model Program aggregation, we need to remove it from that
-        # aggregation in the case file being moved out of that aggregation
+        # if the source file is part of a FileSet or Model Program aggregation (based on folder), we need to remove it
+        # from that aggregation in the case the file is being moved out of that aggregation
         if file_or_folder_move and resource.resource_type == 'CompositeResource':
             if res_file_obj.has_logical_file and (res_file_obj.logical_file.is_fileset or
                                                   res_file_obj.logical_file.is_model_program):
-                try:
-                    aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
-                    if aggregation.is_fileset or aggregation.is_model_program:
-                        # remove aggregation form the file
-                        res_file_obj.logical_file_content_object = None
-                        res_file_obj.save()
-                except ObjectDoesNotExist:
-                    pass
+                if res_file_obj.file_folder is not None:
+                    try:
+                        aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
+                        if aggregation == res_file_obj.logical_file:
+                            if aggregation.is_fileset or (aggregation.is_model_program and
+                                                          aggregation.folder is not None):
+                                # remove aggregation association with the file
+                                # the removed aggregation is a fileset aggregation or a model program aggregation
+                                # based on folder (note: model program aggregation can also be created from a
+                                # single file)
+                                res_file_obj.logical_file_content_object = None
+                                res_file_obj.save()
+                    except ObjectDoesNotExist:
+                        pass
 
         # checks tgt_name as a side effect.
         ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
@@ -811,12 +817,14 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         if resource.resource_type == 'CompositeResource':
             # if the file is getting moved into a folder that represents a FileSet or to a folder
             # inside a fileset folder, then make the file part of that FileSet
+            # if the file is moved into a model program aggregation folder or to a folder inside the model program
+            # folder, make the file as part of the model program aggregation
             if file_or_folder_move:
                 if res_file_obj.file_folder is not None and not res_file_obj.has_logical_file:
                     # first check for model program aggregation
                     aggregation = resource.get_mp_aggregation_in_path(res_file_obj.file_folder)
                     if aggregation is None:
-                        # check for fileset aggregation
+                        # then check for fileset aggregation
                         aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
                     if aggregation is not None:
                         # make the moved file part of the fileset or model program aggregation unless the file is
