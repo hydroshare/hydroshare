@@ -470,6 +470,13 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
                 folder_path = res_file.file_folder
                 dataset_name, _ = os.path.splitext(res_file.file_name)
 
+            # remove any previously associated logical files from the files
+            # before making them part of this new logical file
+            for res_file in res_files:
+                if res_file.has_logical_file:
+                    res_file.logical_file_content_object = None
+                    res_file.save()
+
             # create a model program logical file object
             logical_file = cls.create_aggregation(dataset_name=dataset_name,
                                                   resource=resource,
