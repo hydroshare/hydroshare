@@ -317,49 +317,88 @@
         "@vocab": "http://www.schema.org/",
         "datacite": "http://purl.org/spar/datacite/"
     },
-    "@id": "{{ cm|resource_id_url }}",
-    {% if cm.raccess.published %} "sameAs": "{{ cm|resource_url }}", {% endif %}
-    "url": "{{ cm|resource_id_url }}",
+
+    {% if cm.raccess.published %}
+        "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    {% else %}
+        "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+        "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
     "@type": "Dataset",
     "additionalType": "{{ cm.metadata.type.url }}",
     "name": "{{ title }}",
     "description": "{{ cm.metadata.description | escapejs }}",
-    "keywords": [
-        {% for sub in cm.metadata.subjects %}
-        "{{ sub }}"
+    "keywords": JSON.parse({{ keywords }}),
+    {% if cm.raccess.published %}
+        "creativeWorkStatus": "Published",
+    {% elif cm.raccess.public %}
+        "creativeWorkStatus": "Public",
+    {% elif cm.raccess.discoverable %}
+        "creativeWorkStatus": "Discoverable",
+    {% elif is_replaced_by %}
+        "creativeWorkStatus": "Obsolete",
+    {% else %}
+        "creativeWorkStatus": "Private",
+    {% endif %}
+    "inLanguage": "{{ cm.metadata.language.code }}",
+    "identifier": {
+        "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+        {% if cm.raccess.published %}
+            "datacite:usersIdentifierScheme": {
+                "@id": "datacite:doi"
+            },
+            "propertyId": "DOI",
+            "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+            "value": "10.4211/hs.{{ cm.short_id }}"
+        {% else %}
+            "datacite:usesIdentifierScheme": {
+                "@id": "datacite:local-resource-identifier-scheme"
+            },
+            "propertyId": "UUID",
+            "value": "uuid:{{ cm.short_id }}"
+        {% endif %}
+    },
+    "creator": [
+        {% for cr in creators %}
+        {
+            {% if cr.email %}
+                "email": "{{ cr.email }}",
+            {% endif %}
+            {% if cr.address %}
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "{{ cr.address }}"
+                },
+            {% endif %}
+            {% if cr.name %}
+                "@type": "Person",
+                "name": "{{ cr.name }}",
+                "affiliation": {
+                    "@type": "Organization",
+                    "name": "{{ cr.organization }}"
+                },
+                {% if cr.identifiers %}
+                    "url": [
+                        "https://www.hydroshare.org{{ cr.description }}/",
+                        {% for key, val in cr.identifiers %}
+                        "{{ value }}"
+                        {%if not forloop.last%},{%endif%}
+                        {% endfor %}
+                    ]
+                {% else %}
+                    "url", "https://www.hydroshare.org{{ cr.description }}/"
+                {% endif %}
+            {% else %}
+                "@type": "Organization",
+                "name": "{{ cr.organization }}",
+                "url": "{{ cr.description }}"
+            {% endif %}
+        }
+        {%if not forloop.last%},{%endif%}
         {% endfor %}
     ],
-    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-        "license": "http://creativecommons.org/licenses/by/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-        "license": "http://creativecommons.org/licenses/by-sa/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-        "license": "http://creativecommons.org/licenses/by-nd/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-        "license": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-        "license": "http://creativecommons.org/licenses/by-nc/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-    "license": "http://creativecommons.org/licenses/by-nc-nd/4.0/",
-    {% endif %}
-    {% if cm.raccess.published %}
-    "identifier": {
-        "@type": "PropertyValue",
-        "additionalType": ["http://schema.geolink.org/1.0/base/main#Identifier", "http://purl.org/spar/datacite/Identifier"],
-        "propertyID": "http://purl.org/spar/datacite/doi",
-        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-        "value": "10.4211/hs.{{ cm.short_id }}"
-    },
-    {% endif %}
-    "citation": "{{ citation }}",
-    "includedInDataCatalog": {
-        "@id": "https://www.hydroshare.org"
-    },
-    "distribution": {
-        "@type": "DataDownload",
-        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
-        "encodingFormat": "application/zip"
-    },
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
@@ -378,36 +417,47 @@
         }
     },
     {% endif %}
-    "creator": [
-        {% for cr in creators %}
-        {
-            "@id": "{{ cr.description }}",
-            "@type": "Role",
-            "additionalType": "http://schema.geolink.org/1.0/base/main#Participant",
-            "roleName": "Author",
-            "url": "{{ cr.description }}",
-            "creator": {
-                "@id": "{{ cr.description }}",
-                "@type": "Person",
-                "additionalType": "http://schema.geolink.org/1.0/base/main#Person",
-                "name": "{{ cr.name }}",
-                "url": "{{ cr.description }}/"
-            }
-        }
-        {%if not forloop.last%},{%endif%}
-        {% endfor %}
-    ],
+    {% if cm.raccess.published %}
+    "publisher": {
+        "@id": "https://www.hydroshare.org",
+    }
+    {% endif %}
     "provider": {
         "@id": "https://www.hydroshare.org",
         "@type": "Organization",
-        "additionalType": "http://schema.geolink.org/1.0/base/main#Organization",
-        "legalName": "HydroShare",
         "name": "HydroShare",
         "url": "https://www.hydroshare.org"
     },
-    "publisher": {
-        "@id": "https://www.hydroshare.org"
-    }
+    "includedInDataCatalog": {
+		"@type": "DataCatalog",
+		"name": "HydroShare",
+    	"url": "https://www.hydroshare.org/search/"
+	},
+	"license": {
+	    "@type": "CreativeWork",
+	    "text": "{{ cm.metadata.rights.statement }}",
+	    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+            "url": "http://creativecommons.org/licenses/by/4.0/"
+        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+            "url": "http://creativecommons.org/licenses/by-sa/4.0/"
+        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+            "url": "http://creativecommons.org/licenses/by-nd/4.0/"
+        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+            "url": "http://creativecommons.org/licenses/by-nc-sa/4.0/"
+        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+            "url": "http://creativecommons.org/licenses/by-nc/4.0/"
+        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+            "url": "http://creativecommons.org/licenses/by-nc-nd/4.0/"
+        {% endif %}
+	},
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+
+    
+    "citation": "{{ citation }}",
+    "distribution": {
+        "@type": "DataDownload",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "encodingFormat": "application/zip"
+    }
 }
 </script>
