@@ -1162,9 +1162,9 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # testing extended metadata element: band information
         self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
         band_info = logical_file.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '2880.00708008')
-        self.assertEqual(band_info.minimumValue, '2274.95898438')
+        self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+        self.assertEqual(band_info.maximumValue, '2880.007080078125')
+        self.assertEqual(band_info.minimumValue, '2274.958984375')
 
     def test_main_file(self):
         self.create_composite_resource()
