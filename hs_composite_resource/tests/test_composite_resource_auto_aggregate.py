@@ -147,7 +147,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, RefTimeseriesLogicalFile.objects.count())
         # test add a file that auto-aggregates
         open_file = open(self.test_file_path.format("multi_sites_formatted_version1.0.refts.json"),
-                         'r')
+                         'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(open_file,), user=self.user)
 
