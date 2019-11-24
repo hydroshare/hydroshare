@@ -8,6 +8,7 @@ from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource
 
 
 from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models import ModelProgramResourceFileType
 from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
@@ -68,6 +69,47 @@ class CompositeResource(BaseResource):
             if 'url' in lf.extra_data:
                 return False
         return True
+
+    def remove_aggregation_from_file(self, moved_res_file):
+        """removes association with aggregation (fileset or model program) from this
+        moved resource file
+        :param  moved_res_file: an instance of a ResourceFile which has been moved to a different folder
+        """
+        if moved_res_file.has_logical_file and (moved_res_file.logical_file.is_fileset or
+                                                moved_res_file.logical_file.is_model_program):
+            if moved_res_file.file_folder is not None:
+                try:
+                    aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
+                    if aggregation == moved_res_file.logical_file:
+                        if aggregation.is_fileset or (aggregation.is_model_program and
+                                                      aggregation.folder is not None):
+                            # remove aggregation association with the file
+                            # the removed aggregation is a fileset aggregation or a model program aggregation
+                            # based on folder (note: model program aggregation can also be created from a
+                            # single file)
+                            moved_res_file.logical_file_content_object = None
+                            moved_res_file.save()
+                            # delete any instance of ModelProgramResourceFileType associated with this moved file
+                            if aggregation.is_model_program:
+                                ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                except ObjectDoesNotExist:
+                    pass
+
+    def add_file_to_aggregation(self, moved_res_file):
+        """adds the moved file to the aggregation (fileset or model program) into which the file has been moved
+        :param  moved_res_file: an instance of ResourceFile which has been moved into a folder that represents
+        either a fileset or a model program aggregation
+        """
+        if moved_res_file.file_folder is not None and not moved_res_file.has_logical_file:
+            # first check for model program aggregation
+            aggregation = self.get_mp_aggregation_in_path(moved_res_file.file_folder)
+            if aggregation is None:
+                # then check for fileset aggregation
+                aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder)
+            if aggregation is not None:
+                # make the moved file part of the fileset or model program aggregation unless the file is
+                # already part of another aggregation (single file aggregation)
+                aggregation.add_resource_file(moved_res_file)
 
     def get_folder_aggregation_object(self, dir_path):
         """Returns an aggregation (file type) object if the specified folder *dir_path* represents a
