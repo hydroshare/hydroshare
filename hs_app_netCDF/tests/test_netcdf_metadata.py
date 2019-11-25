@@ -352,9 +352,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # update
         # update original coverage element
-        value_2 = {"northlimit": '12.5', "projection": "transverse_mercator",
-                   "units": "meter", "southlimit": '10.5',
-                   "eastlimit": '23.5', "westlimit": '2.5'}
+        value_2 = {"northlimit": 12.5, "projection": "transverse_mercator",
+                   "units": "meter", "southlimit": 10.5,
+                   "eastlimit": 23.5, "westlimit": 2.5}
         self.resNetcdf.metadata.update_element('originalcoverage',
                                                ori_coverage.id,
                                                value=value_2,
@@ -481,13 +481,13 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         metadata.append({'originalcoverage': {'value': value}})
         self.resNetcdf.metadata.update(metadata, self.user)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
-        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '12')
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], 12.0)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
                             "transverse_mercator-new")
         # 'datum', 'projection_string_type', 'projection_string_text' should be ignored
-        value = {"northlimit": '15', "projection": "transverse_mercator-new",
-                 "units": "meter", "southlimit": '10',
-                 "eastlimit": '23', "westlimit": '2'}
+        value = {"northlimit": 15.0, "projection": "transverse_mercator-new",
+                 "units": "meter", "southlimit": 10.0,
+                 "eastlimit": 23.0, "westlimit": 2.0}
         del metadata[:]
         metadata.append({'originalcoverage': {'value': value, 'datum': 'some datum',
                                               'projection_string_type': 'some proj string type',
