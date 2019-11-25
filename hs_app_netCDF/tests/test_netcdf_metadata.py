@@ -296,9 +296,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_extended_metadata_CRUD(self):
         # create original coverage element
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
-        value = {"northlimit": '12.0', "projection": "transverse_mercator",
-                 "units": "meter", "southlimit": '10.0',
-                 "eastlimit": '23.0', "westlimit": '2.0'}
+        value = {"northlimit": 12.0, "projection": "transverse_mercator",
+                 "units": "meter", "southlimit": 10.0,
+                 "eastlimit": 23.0, "westlimit": 2.0}
         self.resNetcdf.metadata.create_element(
             'originalcoverage',
             value=value,
@@ -470,7 +470,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
         self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'],
-                         '4635150.0')
+                         4635150.0)
 
         # projection should be ignored by the update
         value = {"northlimit": '12', "projection": "transverse_mercator-new",
