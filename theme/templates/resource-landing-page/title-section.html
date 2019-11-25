@@ -1,3 +1,5 @@
+{% load hydroshare_tags %}
+
 {# ======= Resource Publication just published notification =======#}
 {% if cm.raccess.published and just_published %}
     <div class="col-xs-12">
@@ -319,45 +321,48 @@
     },
 
     {% if cm.raccess.published %}
-        "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-        "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
-        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
     {% else %}
-        "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
-        "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
     {% endif %}
     "@type": "Dataset",
     "additionalType": "{{ cm.metadata.type.url }}",
     "name": "{{ title }}",
     "description": "{{ cm.metadata.description | escapejs }}",
-    "keywords": JSON.parse({{ keywords }}),
+    "keywords": {{ keywords|safe }},
     {% if cm.raccess.published %}
-        "creativeWorkStatus": "Published",
+    "creativeWorkStatus": "Published",
     {% elif cm.raccess.public %}
-        "creativeWorkStatus": "Public",
+    "creativeWorkStatus": "Public",
     {% elif cm.raccess.discoverable %}
-        "creativeWorkStatus": "Discoverable",
+    "creativeWorkStatus": "Discoverable",
     {% elif is_replaced_by %}
-        "creativeWorkStatus": "Obsolete",
+    "creativeWorkStatus": "Obsolete",
     {% else %}
-        "creativeWorkStatus": "Private",
+    "creativeWorkStatus": "Private",
     {% endif %}
     "inLanguage": "{{ cm.metadata.language.code }}",
     "identifier": {
-        "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+        "@type": [
+            "PropertyValue",
+            "datacite:ResourceIdentifier"
+        ],
         {% if cm.raccess.published %}
-            "datacite:usersIdentifierScheme": {
-                "@id": "datacite:doi"
-            },
-            "propertyId": "DOI",
-            "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-            "value": "10.4211/hs.{{ cm.short_id }}"
+        "datacite:usersIdentifierScheme": {
+            "@id": "datacite:doi"
+        },
+        "propertyId": "DOI",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "value": "10.4211/hs.{{ cm.short_id }}"
         {% else %}
-            "datacite:usesIdentifierScheme": {
-                "@id": "datacite:local-resource-identifier-scheme"
-            },
-            "propertyId": "UUID",
-            "value": "uuid:{{ cm.short_id }}"
+        "datacite:usersIdentifierScheme": {
+            "@id": "datacite:local-resource-identifier-scheme"
+        },
+        "propertyId": "UUID",
+        "value": "uuid:{{ cm.short_id }}"
         {% endif %}
     },
     "creator": [
@@ -381,14 +386,14 @@
                 },
                 {% if cr.identifiers %}
                     "url": [
-                        "https://www.hydroshare.org{{ cr.description }}/",
+                        "https://www.hydroshare.org{{ cr.description }}",
                         {% for key, val in cr.identifiers %}
                         "{{ value }}"
                         {%if not forloop.last%},{%endif%}
                         {% endfor %}
                     ]
                 {% else %}
-                    "url", "https://www.hydroshare.org{{ cr.description }}/"
+                    "url", "https://www.hydroshare.org{{ cr.description }}"
                 {% endif %}
             {% else %}
                 "@type": "Organization",
@@ -437,27 +442,62 @@
 	    "@type": "CreativeWork",
 	    "text": "{{ cm.metadata.rights.statement }}",
 	    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-            "url": "http://creativecommons.org/licenses/by/4.0/"
+        "url": "http://creativecommons.org/licenses/by/4.0/"
         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-            "url": "http://creativecommons.org/licenses/by-sa/4.0/"
+        "url": "http://creativecommons.org/licenses/by-sa/4.0/"
         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-            "url": "http://creativecommons.org/licenses/by-nd/4.0/"
+        "url": "http://creativecommons.org/licenses/by-nd/4.0/"
         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-            "url": "http://creativecommons.org/licenses/by-nc-sa/4.0/"
+        "url": "http://creativecommons.org/licenses/by-nc-sa/4.0/"
         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-            "url": "http://creativecommons.org/licenses/by-nc/4.0/"
+        "url": "http://creativecommons.org/licenses/by-nc/4.0/"
         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-            "url": "http://creativecommons.org/licenses/by-nc-nd/4.0/"
+        "url": "http://creativecommons.org/licenses/by-nc-nd/4.0/"
         {% endif %}
 	},
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-
-    
-    "citation": "{{ citation }}",
+    "citation": [
+    {% for relation in relations %}
+        {% if relation.type == "isDataFor" %}
+        "{{ relation.value }}"{%if not forloop.last%},{%endif%}
+        {% endif %}
+    {% endfor %}
+    ],
+    {% if fundingagencies %}
+    "funder": [
+    {% for agency in fundingagencies %}
+        {
+            "@type": "Organization",
+            "name": "{{ agency.agency_name }}"
+            "url": "{{ agency.agency_url }}"
+        }{%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    {% endif %}
+    "dateCreated": "{{ cm.created }}",
+    "dateModified": "{{ cm.last_updated }}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date }}", {% endif %}
+    "subjectOf": {
+        "@type": "CreativeWork",
+        "name": "Dublin Core Metadata Document Describing the Dataset",
+        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
+        "encodingFormat": "application/rdf+xml"
+    },
     "distribution": {
         "@type": "DataDownload",
+        "contentSize": "{{ cm.size|filesizeformat }}",
+        "encodingFormat": "application/zip",
         "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
-        "encodingFormat": "application/zip"
+        "description": "Zipped BagIt Bag containing the HydroShare Resource",
+        "dateModified": "{{ cm.last_updated }}",
+        "identifier": {
+            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+            "datacite:usesIdentifierScheme": {
+                "@id": "datacite:local-resource-identifier-scheme"
+            },
+            "propertyId": "UUID",
+            "value": "uuid:{{ cm.short_id }}"
+        }
     }
 }
 </script>
