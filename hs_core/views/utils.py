@@ -62,11 +62,11 @@ def json_or_jsonp(r, i, code=200):
     if not isinstance(i, str):
         i = json.dumps(i)
 
-    if 'callback' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['callback'], i=i),
+    if 'callback' in r:
+        return HttpResponse('{c}({i})'.format(c=r['callback'], i=i),
                             content_type='text/javascript')
-    elif 'jsonp' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['jsonp'], i=i),
+    elif 'jsonp' in r:
+        return HttpResponse('{c}({i})'.format(c=r['jsonp'], i=i),
                             content_type='text/javascript')
     else:
         return HttpResponse(i, content_type='application/json', status=code)
@@ -537,7 +537,7 @@ def create_form(formclass, request):
     try:
         params = formclass(data=json.loads(request.body))
     except ValueError:
-        params = formclass(data=request.REQUEST)
+        params = formclass(data=request)
 
     return params
 
