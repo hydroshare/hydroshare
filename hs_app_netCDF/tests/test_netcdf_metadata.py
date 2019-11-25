@@ -296,9 +296,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_extended_metadata_CRUD(self):
         # create original coverage element
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
-        value = {"northlimit": '12', "projection": "transverse_mercator",
-                 "units": "meter", "southlimit": '10',
-                 "eastlimit": '23', "westlimit": '2'}
+        value = {"northlimit": '12.0', "projection": "transverse_mercator",
+                 "units": "meter", "southlimit": '10.0',
+                 "eastlimit": '23.0', "westlimit": '2.0'}
         self.resNetcdf.metadata.create_element(
             'originalcoverage',
             value=value,
@@ -470,7 +470,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
         self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'],
-                         '4.63515e+06')
+                         '4635150.0')
 
         # projection should be ignored by the update
         value = {"northlimit": '12', "projection": "transverse_mercator-new",
@@ -621,10 +621,10 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # testing extended metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertNotEqual(ori_coverage, None)
-        self.assertEqual(ori_coverage.value['northlimit'], '4662377.44692')
-        self.assertEqual(ori_coverage.value['eastlimit'], '461939.019091')
-        self.assertEqual(ori_coverage.value['southlimit'], '4612607.44692')
-        self.assertEqual(ori_coverage.value['westlimit'], '432419.019091')
+        self.assertEqual(ori_coverage.value['northlimit'], 4662377.446916306)
+        self.assertEqual(ori_coverage.value['eastlimit'], 461939.01909127034)
+        self.assertEqual(ori_coverage.value['southlimit'], 4612607.446916306)
+        self.assertEqual(ori_coverage.value['westlimit'], 432419.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N')
 

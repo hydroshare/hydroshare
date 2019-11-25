@@ -24,8 +24,8 @@ adjacent_caps = re.compile("[A-Z][A-Z]")
 def remove_whitespace(thing):
     intab = ""
     outtab = ""
-    trantab = str.maketrans(intab, outtab)
-    return str(thing).translate(trantab, " \t\r\n")
+    trantab = str.maketrans(intab, outtab, " \t\r\n")
+    return str(thing).translate(trantab)
 
 
 def normalize_name(name):

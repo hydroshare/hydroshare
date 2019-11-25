@@ -428,10 +428,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resNetcdf.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
-        self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
-        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
-        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
+        self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
+        self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
+        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
+        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
 
         temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -455,7 +455,7 @@ class TestCaseCommonUtilities(object):
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-        proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+        proj_text = '+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
         self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
