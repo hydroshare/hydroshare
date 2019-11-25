@@ -364,7 +364,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                             (-0.3263017)) < self.allowance)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
         self.resGeoFeature.delete()
 
     def test_delete_shp_shx_dbf_file(self):
@@ -409,7 +409,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                             (-0.3263017)) < self.allowance)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
 
         # find the .prj file and delete it
@@ -496,7 +496,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.datum,
                          'North_American_Datum_1983')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
-                         'GCS_North_American_1983')
+                         'NAD83')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.eastlimit, -66.9692712587578)
