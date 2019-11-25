@@ -497,7 +497,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         self.resNetcdf.metadata.update(metadata, self.user)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
-        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '15')
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], 15.0)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
                             "transverse_mercator-new")
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.datum, 'some datum')
