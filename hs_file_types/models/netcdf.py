@@ -776,9 +776,11 @@ def create_header_info_txt_file(nc_temp_file, nc_file_name):
         dump_str = "".join(dump_str_list)
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write(dump_str)
+            dump_file_obj.close()
     else:
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write("")
+            dump_file_obj.close()
 
     return dump_file
 
