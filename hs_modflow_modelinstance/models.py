@@ -658,6 +658,7 @@ class MODFLOWModelInstanceResource(BaseResource):
                     nam_file_count += 1
                     name_file = res_file.resource_file.file
                     for row in name_file:
+                        row = row.decode('utf-8')
                         row = row.strip()
                         row = row.replace("'", "")
                         row = row.replace('"', "")
