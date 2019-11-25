@@ -279,7 +279,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
                 break
         self.assertNotEqual(nc_dump_res_file, None)
         self.assertIn('title = "new title"',
-                      nc_dump_res_file.resource_file.read())
+                      nc_dump_res_file.resource_file.read().encode('utf-8'))
         res_metadata.refresh_from_db()
         self.assertFalse(res_metadata.is_dirty)
 

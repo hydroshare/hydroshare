@@ -880,7 +880,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # there should be spatial coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
         spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.867126409)
+        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.86712640899591)
 
         coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87,
                          'southlimit': 41.863,
@@ -1521,7 +1521,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                 nc_dump_res_file = f
                 break
         self.assertNotEqual(nc_dump_res_file, None)
-        self.assertIn('keywords = "Snow water equivalent"', nc_dump_res_file.resource_file.read())
+        self.assertIn('keywords = "Snow water equivalent"', nc_dump_res_file.resource_file.read().decode('utf-8'))
         logical_file.metadata.keywords = ["keyword-1", 'keyword-2']
         logical_file.metadata.save()
         url_params = {'file_type_id': logical_file.id}
@@ -1539,7 +1539,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                 nc_dump_res_file = f
                 break
         self.assertNotEqual(nc_dump_res_file, None)
-        self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read())
+        self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read().decode('utf-8'))
         self.composite_resource.delete()
 
     def test_update_sqlite_file_for_aggregation(self):
