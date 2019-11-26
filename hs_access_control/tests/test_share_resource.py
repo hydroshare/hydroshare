@@ -2294,14 +2294,14 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # format sharing record for user
         foo = str(UserResourcePrivilege.objects.get(user=cat, resource=holes))
-        self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)
+        self.assertTrue(foo.find(holes.short_id) >= 0)
 
         # format sharing record for group
         foo = str(
             GroupResourcePrivilege.objects.get(
                 group=meowers,
                 resource=holes))
-        self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)
+        self.assertTrue(foo.find(holes.short_id) >= 0)
 
     def test_privilege_to_string(self):
         self.assertEqual(PrivilegeCodes.VIEW, PrivilegeCodes.from_string("view"))
