@@ -55,7 +55,7 @@
 #         self.user.uaccess.delete()
 #         self.user.delete()
 #         self.hs_group.delete()
-# 
+#
 #         User.objects.all().delete()
 #         Group.objects.all().delete()
 #         GenericResource.objects.all().delete()
