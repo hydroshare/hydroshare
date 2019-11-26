@@ -54,7 +54,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
@@ -91,7 +91,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #    Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
@@ -140,7 +140,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
