@@ -458,7 +458,6 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
         if soap_or_rest == 'soap':
             client = connect_wsdl_url(service_url)
             response = client.service.GetValues(site_code, variable_code, start_date, end_date, auth_token)
-            response = response.text.encode('utf-8')
         elif soap_or_rest == 'rest':
             r = requests.get(service_url, verify=False)
             if r.status_code != 200:
