@@ -221,7 +221,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
             method_id = method_obj.id if hasattr(method_obj, "id") else None
             method_description = method_obj.description if hasattr(method_obj, "description") else None
             if type(method_description) is str:
-                method_description = method_description.encode('ascii', 'ignore')
+                method_description = method_description
         if method_code is None:
             method_code = method_code_query
 
@@ -458,6 +458,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
         if soap_or_rest == 'soap':
             client = connect_wsdl_url(service_url)
             response = client.service.GetValues(site_code, variable_code, start_date, end_date, auth_token)
+            response = response.text.encode('utf-8')
         elif soap_or_rest == 'rest':
             r = requests.get(service_url, verify=False)
             if r.status_code != 200:

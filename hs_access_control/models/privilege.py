@@ -403,8 +403,8 @@ class UserResourcePrivilege(PrivilegeBase):
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
-                          str(self.resource.title).encode('ascii'),
-                          str(self.resource.short_id).encode('ascii'),
+                          str(self.resource.title),
+                          str(self.resource.short_id),
                           str(self.grantor.username), str(self.grantor.id))
 
     @classmethod
@@ -569,8 +569,8 @@ class GroupResourcePrivilege(PrivilegeBase):
                           str(self.group.name), str(self.group.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
-                          str(self.resource.title).encode('ascii'),
-                          str(self.resource.short_id).encode('ascii'),
+                          str(self.resource.title),
+                          str(self.resource.short_id),
                           str(self.grantor.username), str(self.grantor.id))
 
     @classmethod

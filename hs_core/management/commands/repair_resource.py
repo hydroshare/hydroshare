@@ -58,7 +58,7 @@ class Command(BaseCommand):
                 if count:
                     msg = "... affected resource {} has type {}, title '{}'"\
                           .format(resource.short_id, resource.resource_type,
-                                  resource.title.encode('ascii', 'replace'))
+                                  resource.title)
                     if log_errors:
                         logger.info(msg)
                     if echo_errors:
@@ -81,7 +81,7 @@ class Command(BaseCommand):
                 if count:
                     msg = "... affected resource {} has type {}, title '{}'"\
                           .format(resource.short_id, resource.resource_type,
-                                  resource.title.encode('ascii', 'replace'))
+                                  resource.title)
                     if log_errors:
                         logger.info(msg)
                     if echo_errors:
