@@ -132,7 +132,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         })
 
         # check for logical_file in metadata
-        self.assertEqual(json_response.get("logical_file"), {})
+        self.assertTrue("logical_file" in json_response)
 
     def test_metadata_spatial_create_update(self):
         # Create resource
