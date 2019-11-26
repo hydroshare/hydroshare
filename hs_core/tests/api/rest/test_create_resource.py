@@ -14,7 +14,7 @@ from .base import HSRESTTestCase
 class TestCreateResource(HSRESTTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_UPLIFTED_post_resource_get_sysmeta(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
