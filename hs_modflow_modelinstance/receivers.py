@@ -254,6 +254,7 @@ def add_metadata_from_dis_file(dis_file, res):
     study_area_info = dict()
     stress_period_info = dict()
     for l in lines:
+        l = l.decode('utf-8')
         l = l.strip()
         l = l.split()
         first_char = l[0].strip()

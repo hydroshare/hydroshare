@@ -144,9 +144,9 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     :return: file object being added into resource if successful, otherwise, return None
     """
     # create URL file
-    urltempfile = NamedTemporaryFile(mode="w")
+    urltempfile = NamedTemporaryFile()
     urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
-    urltempfile.write(urlstring)
+    urltempfile.write(urlstring.encode())
     fileobj = File(file=urltempfile, name=ref_file_name)
 
     filelist = add_resource_files(res_id, fileobj, folder=curr_path)
