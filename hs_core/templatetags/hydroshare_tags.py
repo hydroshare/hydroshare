@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 from future.builtins import int
 
 from django.utils.html import format_html
+from django.conf import settings
 
 from mezzanine import template
 
@@ -246,3 +247,8 @@ def normalize_human_name(name):
 def display_name_to_class(value):
     """ Converts an aggregation display name to a string that is usable as a CSS class name """
     return value.replace(" ", "_").lower()
+
+
+@register.filter
+def is_debug(page):
+    return settings.DEBUG
