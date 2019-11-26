@@ -189,7 +189,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                             (-0.3263017)) < self.allowance)
         self.assertEqual(logical_file.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
 
         # there should be file level keywords
         for key in ('Logan River', 'TauDEM'):
