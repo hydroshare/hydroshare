@@ -43,7 +43,6 @@ class Command(BaseCommand):
             groupname = czo[1]
             prefix = czo[2]  # prefix for all titles for this group.
 
-
             print("checking user {} against group {}".format(username, groupname))
             user = User.objects.get(username=username)
             group = Group.objects.get(name=groupname)
@@ -51,10 +50,10 @@ class Command(BaseCommand):
             # first check that group is in the community
             if not Community.objects.filter(c2gcp__community=community, c2gcp__group=group).exists():
                 print("group {} is not in community {}".format(group.name, community.name))
-		# fix it NOW
-		GroupCommunityPrivilege.share(group=group, community=community, 
-					      privilege=PrivilegeCodes.VIEW, 
-					      grantor=national)
+                # fix it NOW
+                GroupCommunityPrivilege.share(group=group, community=community,
+                                              privilege=PrivilegeCodes.VIEW,
+                                              grantor=national)
 
             user_resources = set(BaseResource.objects.filter(r2urp__user=user))
             group_resources = set(BaseResource.objects.filter(r2grp__group=group))
@@ -135,7 +134,6 @@ class Command(BaseCommand):
                         for g in groups:
                             print("    {}".format(g.name))
 
-
             else:  # czo national user
                 for r in group_resources:
                     print("checking {}".format(r.short_id))
@@ -189,10 +187,10 @@ class Command(BaseCommand):
                         # print("  prefix {} is for group {}".format(prefix, newgroupname))
                         newgroup = Group.objects.get(name=newgroupname)
                         if newgroup not in Group.objects.filter(g2grp__resource=r):
-                             print("  resource {} {} should be in group {}"
-                                   .format(r.short_id,
-                                           r.title.encode('ascii', 'ignore'),
-                                           newgroupname))
+                            print("  resource {} {} should be in group {}"
+                                  .format(r.short_id,
+                                          r.title.encode('ascii', 'ignore'),
+                                          newgroupname))
                     else:
                         print("  prefix {} is unknown".format(prefix))
 
