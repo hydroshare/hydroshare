@@ -3749,13 +3749,19 @@ button.no-style:focus {
 }
 
 .group-thumbnail {
-	display: block;
 	padding: 4px;
 	margin-bottom: 20px;
 	line-height: 1.42857143;
 	background-color: #fff;
 	border: 1px solid #ddd;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+div.group-thumbnails {
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .group-container {
@@ -3768,7 +3774,14 @@ button.no-style:focus {
 }
 
 .group-caption {
-    padding: 10px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.spacer {
+	flex: 1 1 auto;
 }
 
 .users-joined {
@@ -3966,9 +3979,6 @@ button.no-style:focus {
 }
 
 .group-thumbnail-footer {
-	padding-top: 10px;
-	position: absolute;
-	bottom: 14px;
 }
 
 .group-thumbnail-footer .btn-ask-to-join {
