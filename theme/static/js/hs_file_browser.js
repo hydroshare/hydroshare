@@ -51,27 +51,30 @@ function getFolderTemplateInstance(folder) {
         if (folderIcons[folder['folder_aggregation_type']]) {
             iconTemplate = folderIcons[folder['folder_aggregation_type']];
         }
-        return "<li class='fb-folder droppable draggable' data-url='" +
+
+        return "<li class='fb-folder droppable draggable' data-logical-file-type='' data-url='" +
             folder['url'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] +
             "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] + "' >" +
             iconTemplate +
             "<span class='fb-file-name'>" + folder['name'] + "</span>" +
             "<span class='fb-file-type'>File Folder</span>" +
-            "<span class='fb-logical-file-type' data-logical-file-type='" +
-            folder['folder_aggregation_type'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] + "'>" +
-            folder['folder_aggregation_name'] + "</span>" +
+            // "<span class='fb-logical-file-type' data-logical-file-type='" +
+            // folder['folder_aggregation_type'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] + "'>" +
+            // folder['folder_aggregation_name'] + "</span>" +
             "<span class='fb-file-size'></span>" +
             "</li>"
     }
 
     // Default
-    return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" +
+    return "<li class='fb-folder droppable draggable' " +
+        "data-logical-file-type-to-set='"+ folder['folder_aggregation_type_to_set'] +
+        "' data-url='" + folder.url + "' title='" +
         folder.name + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
         "<span class='fb-file-name'>" + folder.name + "</span>" +
         "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type-to-set='" +
-        folder['folder_aggregation_type_to_set'] + "'></span>" +
+        // "<span class='fb-logical-file-type' data-logical-file-type-to-set='" +
+        // folder['folder_aggregation_type_to_set'] + "'></span>" +
         "<span class='fb-file-size'></span>" +
         "</li>";
 }
@@ -84,16 +87,17 @@ function getVirtualFolderTemplateInstance(agg) {
       iconTemplate = folderIcons[agg.logical_type];
     }
 
-    return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
-      "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
-      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file + "' >" +
-      iconTemplate +
-      "<span class='fb-file-name'>" + agg.name + "</span>" +
-      "<span class='fb-file-type'>File Folder</span>" +
-      "<span class='fb-logical-file-type' data-logical-file-type='" + agg.logical_type +
-      "' data-logical-file-id='" + agg.logical_file_id + "'>" + agg.logical_type + "</span>" +
-      "<span class='fb-file-size'></span>" +
-      "</li>";
+    return "<li class='fb-folder droppable draggable' data-logical-file-type='" + agg.logical_type +
+        "' data-url='" + agg.url +
+        "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
+        agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file + "' >" +
+        iconTemplate +
+        "<span class='fb-file-name'>" + agg.name + "</span>" +
+        "<span class='fb-file-type'>File Folder</span>" +
+        // "<span class='fb-logical-file-type' data-logical-file-type='" + agg.logical_type +
+        // "' data-logical-file-id='" + agg.logical_file_id + "'>" + agg.logical_type + "</span>" +
+        "<span class='fb-file-size'></span>" +
+        "</li>";
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
@@ -120,15 +124,17 @@ function getFileTemplateInstance(file) {
         var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
             formatBytes(parseInt(file.size));
     }
-    return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
+    return "<li data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" + file.logical_file_id + "' " +
+        "data-pk='" + file.pk + "' data-url='" +
+        file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
         file.is_single_file_aggregation + "'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + file.name + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
-        file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
+        // "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
+        // file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
         "<span class='fb-file-size' data-file-size=" + file.size + ">" + formatBytes(parseInt(file.size)) +
         "</span></li>"
 }
@@ -304,8 +310,8 @@ function updateSelectionMenuContext() {
             uiActionStates.subMenuSetContentType.disabled = true;
 
             uiActionStates.setRefTimeseriesFileType.disabled = true;
-            if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
-                !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
+            if (!selected.attr("data-logical-file-type") ||
+                !!selected.attr("data-logical-file-type-to-set")) {
                 uiActionStates.removeAggregation.disabled = true;
                 uiActionStates.removeAggregation.fileMenu.hidden = true;
             }
@@ -317,14 +323,14 @@ function updateSelectionMenuContext() {
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
             }
 
-            let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+            let logicalFileTypeToSet = selected.attr("data-logical-file-type-to-set");
             if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
             }
         }
         //  ------------- The item selected is a file -------------
         else {
-            const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
+            const logicalFileType = $(selected).attr("data-logical-file-type");
 
             // Disable add metadata to folder
             uiActionStates.setFileSetFileType.disabled = true;
@@ -530,7 +536,7 @@ function paste(destPath) {
     sourcePaths.selected.each(function () {
         if (isVirtualFolder(this)) {
             let item = $(this);
-            const hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+            const hs_file_type = item.attr("data-logical-file-type");
             const file_type_id = item.attr("data-logical-file-id");
             calls.push(move_virtual_folder_ajax_submit(hs_file_type, file_type_id, destPath.join('/')));
         }
@@ -738,7 +744,7 @@ function bindFileBrowserItemEvents() {
 
             // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
             if (isVirtualFolder(target) || target.attr("main-file") || target.attr("is-single-file-aggregation") === "true"){
-                fileAggType = target.find("span.fb-logical-file-type").attr("data-logical-file-type");
+                fileAggType = target.attr("data-logical-file-type");
             }
             var fileName = target.find("span.fb-file-name").text();
             var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
@@ -810,7 +816,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
 
-    var logical_type = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type");
+    var logical_type = selectedItem.attr("data-logical-file-type");
     if (!logical_type) {
         return;
     }
@@ -1126,7 +1132,7 @@ function onOpenFile() {
 // Takes an element and returns true if the element is a virtual folder
 function isVirtualFolder(item) {
     item = $(item);
-    let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
+    let isFileSet = item.attr("data-logical-file-type") === "FileSetLogicalFile";
     return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
 }
 
@@ -1175,7 +1181,7 @@ function startDownload(zipped) {
 function onOpenFolder() {
     let selectedFolder = $("#fb-files-container li.ui-selected");
     let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
-    let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
+    let logicalFileType = selectedFolder.attr("data-logical-file-type");
 
     if (aggregationId && logicalFileType !== "FileSetLogicalFile") {
         // Remove further paths from the log
@@ -1893,7 +1899,7 @@ $(document).ready(function () {
                 else {
                     if (isVirtualFolder(item.first())) {
                         // Item is a virtual folder
-                        let hs_file_type = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+                        let hs_file_type = item.attr("data-logical-file-type");
                         let file_type_id = item.attr("data-logical-file-id");
                         calls.push(delete_virtual_folder_ajax_submit(hs_file_type, file_type_id));
                     }
@@ -1964,7 +1970,7 @@ $(document).ready(function () {
         var newNamePath = getCurrentPath().path.concat(newName);
 
         if (isVirtualFolder(selected.first())){
-            let fileType = selected.children(".fb-logical-file-type").attr("data-logical-file-type");
+            let fileType = selected.attr("data-logical-file-type");
             let fileTypeId = selected.attr("data-logical-file-id");
             calls.push(rename_virtual_folder_ajax_submit(fileType, fileTypeId, newName));
         }
@@ -2021,7 +2027,7 @@ $(document).ready(function () {
         var basePath = window.location.protocol + "//" + window.location.host;
 
         if (item.hasClass("fb-folder") && item.attr("data-logical-file-id") &&
-            item.find(".fb-logical-file-type").attr("data-logical-file-type") !== "FileSetLogicalFile") {
+            item.attr("data-logical-file-type") !== "FileSetLogicalFile") {
             // The selected item is a virtual folder
             let parameters = ["zipped=true", "aggregation=true"];
             url += "?" + parameters.join("&");
@@ -2230,8 +2236,8 @@ function updateResourceUI() {
 
 // used for removing aggregation (file type) within composite resource
 function removeAggregation(){
-    var aggregationType = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    var aggregationID = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-id");
+    var aggregationType = $("#fb-files-container li.ui-selected").attr("data-logical-file-type");
+    var aggregationID = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
     var url = "/hsapi/_internal/" + SHORT_ID + "/" + aggregationType + "/" + aggregationID + "/remove-aggregation/";
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
