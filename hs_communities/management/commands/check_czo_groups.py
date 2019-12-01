@@ -61,7 +61,7 @@ class Command(BaseCommand):
             print("  There are {} group resources".format(len(group_resources)))
 
             if username != 'czo_national':
-                 # For every group but the master group, user should own all group resources
+                # For every group but the master group, user should own all group resources
                 if not is_equal_to_as_set(user_resources, group_resources):
                     if len(user_resources - group_resources) != 0:
                         print("  The following user resources are not group resources")
