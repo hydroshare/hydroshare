@@ -1,9 +1,8 @@
 """
 Check that CZO groups are set up properly.
-If a resource is owned by a CZO owner, and not part of the CZO group, i
+If a resource is owned by a CZO owner, and not part of the CZO group,
   then add it to the group.
-If a resource has a duplicate name for another not in the CZO group,
-  then delete the other one and make this one owned by czo_national.
+If a resource is not owned by CZO national, make it owned by CZO national.
 """
 
 from django.core.management.base import BaseCommand
