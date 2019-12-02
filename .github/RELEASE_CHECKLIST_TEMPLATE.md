@@ -11,10 +11,9 @@ Add the issues included in the release and update this document as release tasks
 - [ ] Diff RC to master to identify and manually make changes in the following files:
   * hsctl
   * config/hydroshare-config.yaml
-  * hydroshare/local_settings.py
-  * hydroshare/settings.py
   * nginx/config-files/hydroshare-ssl-nginx.conf.template
   * scripts/templates/docker-compose.template
+- [ ] Changes in hydroshare/local_settings.py need to be coordinated for manual update
 - [ ] Deployed to Beta
 - [ ] check_resource beta results match current www results
 - [ ] Review the search and discovery pages

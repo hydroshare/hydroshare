@@ -80,6 +80,9 @@ class Command(BaseCommand):
             for r in dqs:
                 resource = get_resource_by_shortkey(r.short_id)
                 repl = False
+                if hasattr(resource, 'metadata') and resource.metadata is None:
+                    print("skipping {} resource in Django, metadata is None".format(r.short_id))
+                    continue
                 if hasattr(resource, 'metadata') and resource.metadata is not None:
                     repl = resource.metadata.relations.filter(type='isReplacedBy').exists()
                 if not repl:
