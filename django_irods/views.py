@@ -3,6 +3,7 @@ import json
 import mimetypes
 import os
 from uuid import uuid4
+from celery.result import AsyncResult
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -365,7 +366,7 @@ def check_task_status(request, task_id=None, *args, **kwargs):
     '''
     if not task_id:
         task_id = request.POST.get('task_id')
-    result = create_bag_by_irods.AsyncResult(task_id)
+    result = AsyncResult(task_id)
     if result.ready():
         return HttpResponse(json.dumps({"status": result.get()}),
                             content_type="application/json")
