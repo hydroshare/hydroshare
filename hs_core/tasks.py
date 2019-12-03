@@ -383,7 +383,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
     return True
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, max_retries=10)
 def create_bag_by_irods_wait(self, resource_id):
     """
     Task to check whether the resource bag being locked and created by another celery task is
