@@ -383,8 +383,8 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
     return True
 
 
-@shared_task
-def create_bag_by_irods_wait(resource_id):
+@shared_task(bind=True)
+def create_bag_by_irods_wait(self, resource_id):
     """
     Task to check whether the resource bag being locked and created by another celery task is
     available for download
@@ -395,7 +395,7 @@ def create_bag_by_irods_wait(resource_id):
     istorage = res.get_irods_storage()
     bag_path = res.bag_path
     if res.locked:
-        create_bag_by_irods_wait.retry(countdown=15)
+        self.retry(countdown=15)
     elif istorage.exists(bag_path):
         return True
     else:

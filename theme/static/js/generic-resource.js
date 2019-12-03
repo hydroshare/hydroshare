@@ -236,7 +236,7 @@ function update_download_status(task_id, download_path) {
             task_id: task_id
         },
         success: function(data) {
-            if(data.status) {
+            if(data.status == 'true') {
                 $("#loading").html('');
                 if(download_status_timeout_id > -1)
                     clearTimeout(download_status_timeout_id);

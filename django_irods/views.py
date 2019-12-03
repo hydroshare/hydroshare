@@ -368,8 +368,8 @@ def check_task_status(request, task_id=None, *args, **kwargs):
         task_id = request.POST.get('task_id')
     result = AsyncResult(task_id)
     if result.ready():
-        ret_value = result.get()
-        if ret_value:
+        ret_value = str(result.get()).lower()
+        if ret_value == 'true':
             return JsonResponse({"status": ret_value})
         else:
             return JsonResponse({"status": ret_value}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
