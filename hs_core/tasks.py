@@ -395,13 +395,11 @@ def create_bag_by_irods_wait(resource_id):
     istorage = res.get_irods_storage()
     bag_path = res.bag_path
     if res.locked:
-        return False
+        create_bag_by_irods_wait.retry(countdown=15)
     elif istorage.exists(bag_path):
         return True
     else:
         # bag creation by another task failed to create a valid bag
-        # TO DO: should raise an exception to the task poller instead rather than indicating
-        # the bag is not ready by returning False
         return False
 
 

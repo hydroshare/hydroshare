@@ -259,8 +259,7 @@ function update_download_status(task_id, download_path) {
             if(download_status_timeout_id > -1)
                 clearTimeout(download_status_timeout_id);
             $("#btn-download-all").removeAttr('disabled');
-            console.log(errmsg);
-            alert("Resource bag cannot be generated due to download poll errors: " + errmsg);
+            $("#download-status-info").html("Resource bag cannot be generated. Check server log for details.");
         }
     });
 }
