@@ -11,7 +11,7 @@ from hs_core import hydroshare
 from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, \
     ToolIcon, AppHomePageUrl, SupportedSharingStatus, \
     RequestUrlBaseAggregation, SupportedFileExtensions, \
-    SupportedAggTypes, RequestUrlBaseFile
+    SupportedAggTypes, RequestUrlBaseFile, ShowOnOpenWithList
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
     metadata_element_pre_update_handler
 from hs_core.hydroshare import create_empty_resource, copy_resource
@@ -521,6 +521,13 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual('GeoRasterLogicalFile', tl['agg_types'])
         self.assertEqual('', tl['file_extensions'])
 
+        # Remove appkey to turn off openwithlist for this resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should have no approved resources')
+
     def test_file_extensions(self):
         # set url launching pattern for aggregations
         metadata = [
@@ -573,6 +580,13 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(tl['openwithlist'])
         self.assertEqual('', tl['agg_types'])
         self.assertEqual('.tif', tl['file_extensions'])
+
+        # Remove appkey to turn off openwithlist for this resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should have no approved resources')
 
     def test_copy(self):
 
