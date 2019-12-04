@@ -355,8 +355,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(tl['res_id'], self.resWebApp.short_id)
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual(tl['agg_types'], '')
         self.assertEqual(tl['file_extensions'], '')
 
@@ -516,8 +514,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(0, tc)
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(self.resWebApp.short_id, tl['res_id'])
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual('GeoRasterLogicalFile', tl['agg_types'])
         self.assertEqual('', tl['file_extensions'])
 
@@ -576,8 +572,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(0, tc)
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(self.resWebApp.short_id, tl['res_id'])
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual('', tl['agg_types'])
         self.assertEqual('.tif', tl['file_extensions'])
 

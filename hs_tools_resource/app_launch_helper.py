@@ -101,8 +101,6 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
                   'url': tool_url_resource_new,
                   'url_aggregation': tool_url_agg_new,
                   'url_file': tool_url_file_new,
-                  'openwithlist': is_open_with_app,
-                  'approved': is_approved_app,
                   'agg_types': agg_types,
                   'file_extensions': file_extensions
                   }
