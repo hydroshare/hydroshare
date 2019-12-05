@@ -11,7 +11,7 @@ from hs_core import hydroshare
 from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, \
     ToolIcon, AppHomePageUrl, SupportedSharingStatus, \
     RequestUrlBaseAggregation, SupportedFileExtensions, \
-    SupportedAggTypes, RequestUrlBaseFile, ShowOnOpenWithList
+    SupportedAggTypes, RequestUrlBaseFile
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
     metadata_element_pre_update_handler
 from hs_core.hydroshare import create_empty_resource, copy_resource
