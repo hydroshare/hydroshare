@@ -1,14 +1,21 @@
-from hs_core.tasks import create_bag_by_irods, create_bag_by_irods_wait
 from hs_core.hydroshare.utils import get_resource_by_shortkey
+from celery.task.control import inspect
 
 
-def create_bag_by_irods_async(res_id):
+def get_resource_bag_task(res_id):
+    i = inspect()
+    active_jobs = i.active()
+    if active_jobs:
+        workers = active_jobs.keys()
+        for worker in workers:
+            for job in active_jobs[worker]:
+                if job['name'] == 'hs_core.tasks.create_bag_by_irods':
+                    if res_id in job['args']:
+                        return job['id']
+    # either there is no active job or the job for creating the resource bag has ended, so unlock the resource if
+    # it is still locked for some reason
     res = get_resource_by_shortkey(res_id)
-
     if res.locked:
-        # resource is locked meaning its bag is being created by another celery task
-        task = create_bag_by_irods_wait.apply_async((res_id,), countdown=3)
-        return task
-    else:
-        task = create_bag_by_irods.apply_async((res_id,), countdown=3)
-        return task
+        res.locked = False
+        res.save()
+    return None
