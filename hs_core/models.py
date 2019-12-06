@@ -3175,11 +3175,6 @@ class BaseResource(Page, AbstractResource):
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
 
-    # this locked boolean field is currently used for synchronizing iRODS bagit operations which
-    # run in celery tasks, as opposed to the locked_time field which is currently used for
-    # resource versioning to enforce a single versioning chain.
-    locked = models.BooleanField(default=False)
-
     # this resource_federation_path is added to record where a HydroShare resource is
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
