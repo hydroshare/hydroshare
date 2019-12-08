@@ -28,19 +28,19 @@ def delete_files_and_bag(resource):
     istorage = resource.get_irods_storage()
 
     # delete resource directory first to remove all generated bag-related files for the resource
-    if istorage.exists(resource.root_path):
-        try:
+    try:
+        if istorage.exists(resource.root_path):
             istorage.delete(resource.root_path)
-        except Exception as e:
-            logger = logging.getLogger(__name__)
-            logger.error("cannot remove {}: {}".format(resource.root_path, e))
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error("cannot remove {}: {}".format(resource.root_path, e))
 
-    if istorage.exists(resource.bag_path):
-        try:
+    try:
+        if istorage.exists(resource.bag_path):
             istorage.delete(resource.bag_path)
-        except Exception as e:
-            logger = logging.getLogger(__name__)
-            logger.error("cannot remove {}: {}".format(resource.bag_path, e))
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error("cannot remove {}: {}".format(resource.bag_path, e))
 
     # TODO: delete this whole mechanism; redundant.
     # delete the bags table
