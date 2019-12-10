@@ -312,7 +312,7 @@
     {% endblock %}
 {% endif %}
 
-{% if not page|is_debug %}
+{# {% if not page|is_debug %} #}
 {# ======= JSON-LD Structure ======= #}
 <script type="application/ld+json">
 {
@@ -320,7 +320,6 @@
         "@vocab": "http://www.schema.org/",
         "datacite": "http://purl.org/spar/datacite/"
     },
-
     {% if cm.raccess.published %}
     "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
     "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
@@ -367,39 +366,33 @@
         {% endif %}
     },
     "creator": [
-        {% for cr in creators %}
-        {
-            {% if cr.email %}
-                "email": "{{ cr.email }}",
-            {% endif %}
+        {% for cr in creators %} {
+            {% if cr.email %}"email": "{{ cr.email }}",{% endif %}
             {% if cr.address %}
-                "address": {
-                    "@type": "PostalAddress",
-                    "streetAddress": "{{ cr.address }}"
-                },
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "{{ cr.address }}"
+            },
             {% endif %}
             {% if cr.name %}
-                "@type": "Person",
-                "name": "{{ cr.name }}",
-                "affiliation": {
-                    "@type": "Organization",
-                    "name": "{{ cr.organization }}"
-                },
-                {% if cr.identifiers %}
-                    "url": [
-                        "https://www.hydroshare.org{{ cr.description }}",
-                        {% for key, val in cr.identifiers %}
-                        "{{ value }}"
-                        {%if not forloop.last%},{%endif%}
-                        {% endfor %}
-                    ]
-                {% else %}
-                    "url", "https://www.hydroshare.org{{ cr.description }}"
-                {% endif %}
-            {% else %}
+            "@type": "Person",
+            "name": "{{ cr.name }}",
+            {% if cr.organization %}
+            "affiliation": {
                 "@type": "Organization",
-                "name": "{{ cr.organization }}",
-                "url": "{{ cr.description }}"
+                "name": "{{ cr.organization }}"
+            },
+            {% endif %}
+            {% if cr.identifiers %}
+            "url": [
+                "https://www.hydroshare.org{{ cr.description }}",
+                {% for key, val in cr.identifiers.items %}"{{ val }}"{%if not forloop.last%},{%endif%}{% endfor %}
+            ]
+            {% elif cr.description %}"url": "https://www.hydroshare.org{{ cr.description }}"{% endif %}
+            {% else %}
+            "@type": "Organization",
+            "name": "{{ cr.organization }}",
+            "url": "{{ cr.description }}"
             {% endif %}
         }
         {%if not forloop.last%},{%endif%}
@@ -502,4 +495,4 @@
     }
 }
 </script>
-{% endif %}
+{# {% endif %} #}
