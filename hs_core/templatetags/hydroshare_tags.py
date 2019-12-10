@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 from future.builtins import int
+from json import dumps
 
 from django.utils.html import format_html
 from django.conf import settings
@@ -247,6 +248,53 @@ def normalize_human_name(name):
 def display_name_to_class(value):
     """ Converts an aggregation display name to a string that is usable as a CSS class name """
     return value.replace(" ", "_").lower()
+
+
+@register.filter
+def creator_json_ld_element(crs):
+    """ return json ld element for one creator for schema.org script embedded on resource landing page"""
+    crs_array = []
+    for cr in crs:
+        cr_dict = {"url": ""}
+        urls = []
+        if cr.email:
+            cr_dict["email"] = cr.email
+        if cr.address:
+            cr_dict["address"] = {
+                "@type": "PostalAddress",
+                "streetAddress": cr.address
+            }
+        if cr.name:
+            cr_dict["@type"] = "Person"
+            cr_dict["name"] = cr.name
+            if cr.organization:
+                cr_dict["affiliation"] = {
+                    "@type": "Organization",
+                    "name": cr.organization
+                },
+        else:
+            cr_dict["@type"] = "Organization"
+            cr_dict["name"] = cr.organization
+
+        if cr.description:
+            if cr.name:
+                # append www.hydroshare.org since schema.org script is only embedded in production
+                urls.append("https://www.hydroshare.org" + cr.description)
+            else:
+                # organization
+                urls.append(cr.description)
+        if cr.homepage:
+            urls.append(cr.homepage)
+        if cr.identifiers:
+            for k, v in cr.identifiers.iteritems():
+                urls.append(v)
+        if len(urls) == 1:
+            cr_dict['url'] = urls[0]
+        elif len(urls) > 1:
+            cr_dict['url'] = urls
+        crs_array.append(cr_dict)
+
+    return dumps(crs_array, sort_keys=True, indent=4)
 
 
 @register.filter

@@ -312,7 +312,7 @@
     {% endblock %}
 {% endif %}
 
-{# {% if not page|is_debug %} #}
+{% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
 <script type="application/ld+json">
 {
@@ -344,7 +344,7 @@
     {% else %}
     "creativeWorkStatus": "Private",
     {% endif %}
-    "inLanguage": "{{ cm.metadata.language.code }}",
+    "inLanguage": "en-US",
     "identifier": {
         "@type": [
             "PropertyValue",
@@ -365,39 +365,7 @@
         "value": "uuid:{{ cm.short_id }}"
         {% endif %}
     },
-    "creator": [
-        {% for cr in creators %} {
-            {% if cr.email %}"email": "{{ cr.email }}",{% endif %}
-            {% if cr.address %}
-            "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "{{ cr.address }}"
-            },
-            {% endif %}
-            {% if cr.name %}
-            "@type": "Person",
-            "name": "{{ cr.name }}",
-            {% if cr.organization %}
-            "affiliation": {
-                "@type": "Organization",
-                "name": "{{ cr.organization }}"
-            },
-            {% endif %}
-            {% if cr.identifiers %}
-            "url": [
-                "https://www.hydroshare.org{{ cr.description }}",
-                {% for key, val in cr.identifiers.items %}"{{ val }}"{%if not forloop.last%},{%endif%}{% endfor %}
-            ]
-            {% elif cr.description %}"url": "https://www.hydroshare.org{{ cr.description }}"{% endif %}
-            {% else %}
-            "@type": "Organization",
-            "name": "{{ cr.organization }}",
-            "url": "{{ cr.description }}"
-            {% endif %}
-        }
-        {%if not forloop.last%},{%endif%}
-        {% endfor %}
-    ],
+    "creator": {{ creators | creator_json_ld_element | safe }},
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
@@ -462,15 +430,15 @@
     {% for agency in fundingagencies %}
         {
             "@type": "Organization",
-            "name": "{{ agency.agency_name }}"
+            "name": "{{ agency.agency_name }}",
             "url": "{{ agency.agency_url }}"
         }{%if not forloop.last%},{%endif%}
         {% endfor %}
     ],
     {% endif %}
-    "dateCreated": "{{ cm.created }}",
-    "dateModified": "{{ cm.last_updated }}",
-    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date }}", {% endif %}
+    "dateCreated": "{{ cm.created | date:"c" }}",
+    "dateModified": "{{ cm.last_updated | date:"c"}}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
     "subjectOf": {
         "@type": "CreativeWork",
         "name": "Dublin Core Metadata Document Describing the Dataset",
@@ -495,4 +463,4 @@
     }
 }
 </script>
-{# {% endif %} #}
+{% endif %}
