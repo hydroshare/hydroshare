@@ -266,7 +266,7 @@ def creator_json_ld_element(crs):
             }
         if cr.name:
             cr_dict["@type"] = "Person"
-            cr_dict["name"] = cr.name
+            cr_dict["name"] = name_without_commas(cr.name)
             if cr.organization:
                 cr_dict["affiliation"] = {
                     "@type": "Organization",
