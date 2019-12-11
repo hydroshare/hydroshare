@@ -35,7 +35,7 @@ class TestScienceMetadata(SciMetaTestCase):
             # Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_orig = os.path.join(tmp_dir, self.RESOURCE_METADATA_OLD)
-            with open(sci_meta_orig, 'w') as f:
+            with open(sci_meta_orig, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
@@ -60,7 +60,7 @@ class TestScienceMetadata(SciMetaTestCase):
             #    Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
