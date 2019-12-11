@@ -312,7 +312,7 @@
     {% endblock %}
 {% endif %}
 
-{# {% if not page|is_debug %} #}
+{% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
 <script type="application/ld+json">
 {
@@ -468,4 +468,4 @@
     }
 }
 </script>
-{# {% endif %} #}
+{% endif %}
