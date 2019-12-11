@@ -246,7 +246,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-    proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+    proj_text = 'proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
     self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
     self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
