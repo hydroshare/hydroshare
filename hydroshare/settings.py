@@ -694,9 +694,7 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
 
-COMMUNITIES_ENABLED = False
-
-# Categorization in discovery of content types 
+# Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 
 DISCOVERY_EXTENSION_CONTENT_TYPES = { 
     'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
