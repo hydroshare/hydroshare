@@ -312,7 +312,7 @@
     {% endblock %}
 {% endif %}
 
-{% if not page|is_debug %}
+{# {% if not page|is_debug %} #}
 {# ======= JSON-LD Structure ======= #}
 <script type="application/ld+json">
 {
@@ -351,14 +351,14 @@
             "datacite:ResourceIdentifier"
         ],
         {% if cm.raccess.published %}
-        "datacite:usersIdentifierScheme": {
+        "datacite:usesIdentifierScheme": {
             "@id": "datacite:doi"
         },
         "propertyId": "DOI",
         "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
         "value": "10.4211/hs.{{ cm.short_id }}"
         {% else %}
-        "datacite:usersIdentifierScheme": {
+        "datacite:usesIdentifierScheme": {
             "@id": "datacite:local-resource-identifier-scheme"
         },
         "propertyId": "UUID",
@@ -372,6 +372,9 @@
     {% if spatial_coverage %}
     "spatialCoverage": {
         "@type": "Place",
+        {% if spatial_coverage.name %}
+        "name": "{{ spatial_coverage.name }}",
+        {% endif %}
         "geo": {
             {% if spatial_coverage.type == 'point' %}
             "@type": "GeoCoordinates",
@@ -415,6 +418,8 @@
         "url": "http://creativecommons.org/licenses/by-nc/4.0/"
         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
         "url": "http://creativecommons.org/licenses/by-nc-nd/4.0/"
+        {% elif cm.metadata.rights.url %}
+        "url": "{{ cm.metadata.rights.url }}"
         {% endif %}
 	},
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
@@ -451,7 +456,7 @@
         "encodingFormat": "application/zip",
         "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
         "description": "Zipped BagIt Bag containing the HydroShare Resource",
-        "dateModified": "{{ cm.last_updated }}",
+        "dateModified": "{{ cm.last_updated | date:"c" }}",
         "identifier": {
             "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
             "datacite:usesIdentifierScheme": {
@@ -463,4 +468,4 @@
     }
 }
 </script>
-{% endif %}
+{# {% endif %} #}

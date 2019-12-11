@@ -255,7 +255,7 @@ def creator_json_ld_element(crs):
     """ return json ld element for one creator for schema.org script embedded on resource landing page"""
     crs_array = []
     for cr in crs:
-        cr_dict = {"url": ""}
+        cr_dict = {}
         urls = []
         if cr.email:
             cr_dict["email"] = cr.email
@@ -268,10 +268,11 @@ def creator_json_ld_element(crs):
             cr_dict["@type"] = "Person"
             cr_dict["name"] = name_without_commas(cr.name)
             if cr.organization:
-                cr_dict["affiliation"] = {
+                affl_dict = {
                     "@type": "Organization",
                     "name": cr.organization
-                },
+                }
+                cr_dict["affiliation"] = affl_dict
         else:
             cr_dict["@type"] = "Organization"
             cr_dict["name"] = cr.organization
