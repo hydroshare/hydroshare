@@ -1,6 +1,7 @@
 import json
 from rest_framework import status
 from .base import HSRESTTestCase
+from unittest import skip
 
 
 class TestTickets(HSRESTTestCase):
@@ -49,6 +50,7 @@ class TestTickets(HSRESTTestCase):
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @skip("TODO: was not running before python3 upgrade")
     def test_file_ticket(self):
         rtype = 'GenericResource'
         title = 'My Test resource'
