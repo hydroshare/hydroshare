@@ -345,6 +345,10 @@ class AbstractMetaDataElement(models.Model):
     content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    def __str__(self):
+        """Return unicode for python 3 compatibility in templates"""
+        return self.__unicode__()
+
     @property
     def metadata(self):
         """Return content object that describes metadata."""
@@ -363,7 +367,7 @@ class AbstractMetaDataElement(models.Model):
     def update(cls, element_id, **kwargs):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
                 setattr(element, key, value)
         element.save()
         return element
@@ -1224,14 +1228,14 @@ class Coverage(AbstractMetaDataElement):
                 cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in value_arg_dict.items()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in value_arg_dict.items()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('name', 'east', 'north', 'units', 'elevation',
                                            'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in value_arg_dict.items()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                            'westlimit', 'name', 'uplimit', 'downlimit',
                                            'zunits', 'projection')}
@@ -3364,7 +3368,7 @@ class BaseResource(Page, AbstractResource):
             name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
-            ROOT, pretty_print=pretty_print)
+            ROOT, pretty_print=pretty_print).decode()
 
     @property
     def size(self):
@@ -4105,7 +4109,7 @@ class CoreMetaData(models.Model):
                                              '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
 
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py
