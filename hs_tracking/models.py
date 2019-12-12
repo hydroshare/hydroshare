@@ -159,7 +159,7 @@ class Variable(models.Model):
     def format_kwargs(cls, **kwargs):
         msg_items = []
         for k, v in list(kwargs.items()):
-            msg_items.append('%s=%s' % (str(k).encode(), str(v).encode()))
+            msg_items.append('%s=%s' % (str(k), str(v)))
         return '|'.join(msg_items)
 
     @classmethod
