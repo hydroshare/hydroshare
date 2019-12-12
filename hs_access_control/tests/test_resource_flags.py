@@ -132,7 +132,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             cat.uaccess.share_resource_with_user(
                 bones, bat, PrivilegeCodes.VIEW)
-        self.assertEqual(str(cm.exception),
+        self.assertEqual(cm.exception.message,
                          'User must own resource or have sharing privilege')
 
         # django admin still can share
@@ -324,4 +324,4 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         resource_short_id = chewies.short_id
         hydroshare.delete_resource(chewies.short_id)
         with self.assertRaises(Http404):
-            hydroshare.get_resource(resource_short_id)
+            hydroshare.get_resource_by_shortkey(resource_short_id)

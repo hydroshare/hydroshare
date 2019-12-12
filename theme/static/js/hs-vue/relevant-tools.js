@@ -56,7 +56,7 @@ let relevantToolsApp = new Vue({
                 });
 
                 vue.openWithTools = vue.tools.filter(function(tool) {
-                    return tool.url && tool.openwithlist;
+                    return tool.url;
                 });
 
                 // Append menu items to right click menu in file browser

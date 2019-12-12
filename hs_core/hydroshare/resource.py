@@ -78,21 +78,6 @@ def res_has_web_reference(res):
     return False
 
 
-def get_resource(pk):
-    """
-    Retrieve an instance of type Bags associated with the resource identified by **pk**
-
-    Parameters:    pk - Unique HydroShare identifier for the resource to be retrieved.
-
-    Returns:    An instance of type Bags.
-
-    Raises:
-    Exceptions.NotFound - The resource identified by pid does not exist
-    """
-
-    return utils.get_resource_by_shortkey(pk).baseresource.bags.first()
-
-
 def get_science_metadata(pk):
     """
     Describes the resource identified by the pid by returning the associated science metadata
@@ -540,7 +525,7 @@ def create_resource(
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = list(element.items())[0]
+                k, v = element.items()[0]
                 resource.metadata.create_element(k, **v)
 
             for keyword in keywords:
@@ -742,7 +727,7 @@ def add_resource_files(pk, *files, **kwargs):
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
-            print(("kwargs[{}]".format(k)))
+            print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
 
     prefix_path = 'data/contents'

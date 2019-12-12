@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import
 
 import json
 
@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 
 from hs_access_control.management.utilities import community_from_name_or_id
 from hs_access_control.models.community import Community
+from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
 from hs_communities.models import Topic
 
 
@@ -38,8 +39,15 @@ class CommunityView(TemplateView):
 
         groups = sorted(groups, key=lambda key: key['name'])
 
-        u = User.objects.get(pk=self.request.user.id)
-        is_admin = u.username == 'czo_national'
+        try:
+            u = User.objects.get(pk=self.request.user.id)
+            # user must own the community to get admin privilege
+            is_admin = UserCommunityPrivilege.objects.filter(user=u,
+                                                             community=community,
+                                                             privilege=PrivilegeCodes.OWNER)\
+                                                     .exists()
+        except:
+            is_admin = False
 
         return {
             'community_resources': community_resources,
@@ -131,7 +139,7 @@ class TopicsView(TemplateView):
                 update_topic.name = request.POST.get('name')
                 update_topic.save()
             except Exception as e:
-                print(("TopicsView error updating topic {}".format(e)))
+                print("TopicsView error updating topic {}".format(e))
         elif request.POST.get('action') == 'DELETE':
             try:
                 delete_topic = Topic.objects.get(id=request.POST.get('id'))

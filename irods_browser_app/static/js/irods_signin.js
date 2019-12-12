@@ -3,32 +3,17 @@ $(document).ready(function () {
         if (sessionStorage.IRODS_username) {
             $("#username").val(sessionStorage.IRODS_username);
         }
-        else {
-            $("#username").val('');
-        }
         if (sessionStorage.IRODS_password) {
             $("#password").val(sessionStorage.IRODS_password);
-        }
-        else {
-            $("#password").val('');
         }
         if (sessionStorage.IRODS_host) {
             $("#host").val(sessionStorage.IRODS_host);
         }
-        else {
-            $('#host').val('');
-        }
         if (sessionStorage.IRODS_port) {
             $("#port").val(sessionStorage.IRODS_port);
         }
-        else {
-            $("#port").val('1247');
-        }
         if (sessionStorage.IRODS_zone) {
             $("#zone").val(sessionStorage.IRODS_zone);
-        }
-        else {
-            $('#zone').val('');
         }
     });
 

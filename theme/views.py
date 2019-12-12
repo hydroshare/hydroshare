@@ -1,5 +1,7 @@
 from json import dumps
 
+from rest_framework import status
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -11,7 +13,7 @@ from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -34,7 +36,6 @@ from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command, get_metadata_contenttypes
 from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
-from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
@@ -194,13 +195,13 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         try:
             new_user = form.save()
         except ValidationError as e:
-            if str(e) == "Email already in use.":
+            if e.message == "Email already in use.":
                 messages.error(request, '<p>An account with this email already exists.  Log in '
                                 'or click <a href="' + reverse("mezzanine_password_reset") +
                                '" >here</a> to reset password',
                                extra_tags="html")
             else:
-                messages.error(request, str(e))
+                messages.error(request, e.message)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
             if not new_user.is_active:
@@ -269,7 +270,7 @@ def update_user_profile(request):
         post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
         identifiers = post_data_dict.get('identifiers', {})
     except Exception as ex:
-        messages.error(request, "Update failed. {}".format(str(ex)))
+        messages.error(request, "Update failed. {}".format(ex.message))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     dict_items = request.POST['organization'].split(";")
@@ -334,11 +335,11 @@ def update_user_profile(request):
                 if not profile_form.is_valid():
                     errors.update(profile_form.errors)
 
-                msg = ' '.join([err[0] for err in list(errors.values())])
+                msg = ' '.join([err[0] for err in errors.values()])
                 messages.error(request, msg)
 
     except Exception as ex:
-        messages.error(request, str(ex))
+        messages.error(request, ex.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -580,25 +581,26 @@ def delete_irods_account(request):
             exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE, pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                             exec_cmd=exec_cmd)
-            if output:
-                if 'ERROR:' in output.upper():
+            for out_str in output:
+                if 'ERROR:' in out_str.upper():
                     # there is an error from icommand run, report the error
-                    return HttpResponse(
-                        dumps({"error": 'iRODS server failed to delete this iRODS account {0}. Check the server log for details.'.format(user.username)}),
-                        content_type = "application/json"
+                    return JsonResponse(
+                        {"error": 'iRODS server failed to delete this iRODS account {0}. '
+                                  'Check the server log for details.'.format(user.username)},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
 
             user_profile = UserProfile.objects.filter(user=user).first()
             user_profile.create_irods_user_account = False
             user_profile.save()
-            return HttpResponse(
-                    dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
-                    content_type = "application/json"
+            return JsonResponse(
+                    {"success": "iRODS account {0} is deleted successfully".format(user.username)},
+                    status=status.HTTP_200_OK
             )
         except Exception as ex:
-            return HttpResponse(
-                    dumps({"error": str(ex)}),
-                    content_type = "application/json"
+            return JsonResponse(
+                    {"error": ex.message},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -614,34 +616,31 @@ def create_irods_account(request):
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
                                      pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
-            if output:
-                if 'ERROR:' in output.upper() and \
-                        not 'CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME' in output.upper():
+            for out_str in output:
+                if 'bash:' in out_str or ('ERROR:' in out_str.upper() and \
+                        not 'CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME' in out_str.upper()):
                     # there is an error from icommand run which is not about the fact 
                     # that the user already exists, report the error
-                    return HttpResponse(
-                        dumps({"error": 'iRODS server failed to create this iRODS account {0}. '
-                                        'Check the server log for details.'.format(user.username)}),
-                        content_type = "application/json"
+                    return JsonResponse(
+                        {"error": 'iRODS server failed to create this iRODS account {0}. '
+                                  'Check the server log for details.'.format(user.username)},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
 
             user_profile = UserProfile.objects.filter(user=user).first()
             user_profile.create_irods_user_account = True
             user_profile.save()
-            return HttpResponse(
-                    dumps({"success": "iRODS account {0} is created successfully".format(
-                        user.username)}),
-                    content_type = "application/json"
+            return JsonResponse(
+                    {"success": "iRODS account {0} is created successfully".format(user.username)},
+                    status=status.HTTP_200_OK
             )
         except Exception as ex:
-            return HttpResponse(
-                    dumps({"error": str(ex) + ' - iRODS server failed to create this '
-                                                 'iRODS account.'}),
-                    content_type = "application/json"
+            return JsonResponse(
+                    {"error": ex.message + ' - iRODS server failed to create this iRODS account.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     else:
-        return HttpResponse(
-            dumps({"error": "Not POST request"}),
-            content_type="application/json"
+        return JsonResponse(
+            {"error": "Not POST request"},
+            status=status.HTTP_400_BAD_REQUEST
         )
-

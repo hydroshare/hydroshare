@@ -1,4 +1,4 @@
-from urllib.parse import urlparse, parse_qs
+from urlparse import urlparse, parse_qs
 
 from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
@@ -355,8 +355,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(tl['res_id'], self.resWebApp.short_id)
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual(tl['agg_types'], '')
         self.assertEqual(tl['file_extensions'], '')
 
@@ -481,7 +479,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, SupportedAggTypes.objects.all().count())
 
         # add a geo raster aggregation to the resource
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
         resource_file_add_process(resource=self.resComposite,
                                   files=(open_file,), user=self.user)
 
@@ -516,10 +514,15 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(0, tc)
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(self.resWebApp.short_id, tl['res_id'])
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual('GeoRasterLogicalFile', tl['agg_types'])
         self.assertEqual('', tl['file_extensions'])
+
+        # Remove appkey to turn off openwithlist for this resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should have no approved resources')
 
     def test_file_extensions(self):
         # set url launching pattern for aggregations
@@ -534,7 +537,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedFileExtensions.objects.all().count(), 1)
 
         # add a geo raster aggregation to the resource
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
         resource_file_add_process(resource=self.resComposite,
                                   files=(open_file,), user=self.user)
 
@@ -569,10 +572,15 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(0, tc)
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(self.resWebApp.short_id, tl['res_id'])
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual('', tl['agg_types'])
         self.assertEqual('.tif', tl['file_extensions'])
+
+        # Remove appkey to turn off openwithlist for this resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should have no approved resources')
 
     def test_copy(self):
 
