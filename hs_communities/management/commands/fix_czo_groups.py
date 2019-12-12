@@ -9,7 +9,7 @@ from hs_access_control.models import GroupResourcePrivilege
 
 
 class Command(BaseCommand):
-    help = "check syntax"
+    help = "CZO national group should not contain resources in other CZO groups"
 
     def handle(self, *args, **options):
         user = User.objects.get(username='czo_national')
