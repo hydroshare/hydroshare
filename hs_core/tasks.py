@@ -1,7 +1,5 @@
 """Define celery tasks for hs_core app."""
 
-
-
 import os
 import sys
 import traceback

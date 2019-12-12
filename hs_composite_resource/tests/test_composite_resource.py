@@ -85,7 +85,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(BaseResource.objects.count(), 0)
 
-        self.create_composite_resource(self.raster_file)  # There should not be a GenericLogicalFile object at this point
+        self.create_composite_resource(self.raster_file)  # There should not be a GenericLogicalFile at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # there should be one resource at this point
