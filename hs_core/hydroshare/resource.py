@@ -78,21 +78,6 @@ def res_has_web_reference(res):
     return False
 
 
-def get_resource(pk):
-    """
-    Retrieve an instance of type Bags associated with the resource identified by **pk**
-
-    Parameters:    pk - Unique HydroShare identifier for the resource to be retrieved.
-
-    Returns:    An instance of type Bags.
-
-    Raises:
-    Exceptions.NotFound - The resource identified by pid does not exist
-    """
-
-    return utils.get_resource_by_shortkey(pk).baseresource.bags.first()
-
-
 def get_science_metadata(pk):
     """
     Describes the resource identified by the pid by returning the associated science metadata

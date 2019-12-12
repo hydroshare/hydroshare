@@ -3,15 +3,19 @@ import json
 import mimetypes
 import os
 from uuid import uuid4
+from celery.result import AsyncResult
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse, FileResponse, HttpResponseRedirect
+from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view
+from rest_framework import status
 
 from django_irods import icommands
 from hs_core.hydroshare import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.task_utils import get_resource_bag_task
+
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
@@ -235,13 +239,16 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 # task parameter has to be passed in as a tuple or list, hence (res_id,) is needed
                 # Note that since we are using JSON for task parameter serialization, no complex
                 # object can be passed as parameters to a celery task
-                task = create_bag_by_irods.apply_async((res_id,), countdown=3)
-                if rest_call:
-                    return HttpResponse(json.dumps({'bag_status': 'Not ready',
-                                                    'task_id': task.task_id}),
-                                        content_type="application/json")
 
-                request.session['task_id'] = task.task_id
+                task_id = get_resource_bag_task(res_id)
+                if not task_id:
+                    task = create_bag_by_irods.apply_async((res_id,), countdown=3)
+                    task_id = task.task_id
+                if rest_call:
+                    return JsonResponse({'bag_status': 'Not ready',
+                                         'task_id': task_id})
+
+                request.session['task_id'] = task_id
                 request.session['download_path'] = request.path
                 return HttpResponseRedirect(res.get_absolute_url())
             else:
@@ -363,13 +370,15 @@ def check_task_status(request, task_id=None, *args, **kwargs):
     '''
     if not task_id:
         task_id = request.POST.get('task_id')
-    result = create_bag_by_irods.AsyncResult(task_id)
+    result = AsyncResult(task_id)
     if result.ready():
-        return HttpResponse(json.dumps({"status": result.get()}),
-                            content_type="application/json")
+        ret_value = str(result.get()).lower()
+        if ret_value == 'true':
+            return JsonResponse({"status": ret_value})
+        else:
+            return JsonResponse({"status": ret_value}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return HttpResponse(json.dumps({"status": None}),
-                            content_type="application/json")
+        return JsonResponse({"status": None})
 
 
 @swagger_auto_schema(method='get', auto_schema=None)
