@@ -10,7 +10,7 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 import bagit
-from hs_core.models import Bags, ResourceFile
+from hs_core.models import ResourceFile
 
 
 class HsBagitException(Exception):
@@ -41,11 +41,6 @@ def delete_files_and_bag(resource):
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error("cannot remove {}: {}".format(resource.bag_path, e))
-
-    # TODO: delete this whole mechanism; redundant.
-    # delete the bags table
-    for bag in resource.bags.all():
-        bag.delete()
 
 
 def create_bag_files(resource):
@@ -238,15 +233,7 @@ def create_bag(resource):
     # created when user clicks on download button
     resource.setAVU("bag_modified", True)
 
-    # delete if there exists any bags for the resource
-    resource.bags.all().delete()
-    # link the zipped bag file in IRODS via bag_url for bag downloading
-    b = Bags.objects.create(
-        content_object=resource.baseresource,
-        timestamp=resource.updated
-    )
-
-    return b
+    return
 
 
 def read_bag(bag_path):
