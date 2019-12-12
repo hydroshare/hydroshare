@@ -1,6 +1,6 @@
 """Define celery tasks for hs_core app."""
 
-from __future__ import absolute_import
+
 
 import os
 import sys
@@ -571,7 +571,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                 resource = utils.get_resource_by_shortkey(res_id)
                 response_content = json.loads(response.content)
 
-                for key, value in response_content["resource"].iteritems():
+                for key, value in response_content["resource"].items():
                     resource.extra_metadata[key] = value
                     resource.save()
 

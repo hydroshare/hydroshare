@@ -2,7 +2,7 @@ from crispy_forms.layout import Layout, HTML
 from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
-from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
+from .forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
     VersionForm, SupportedResTypesForm, SupportedAggTypesForm, \
     SupportedSharingStatusForm, ToolIconForm, UrlBaseForm, SupportedFileExtensionsForm, \
@@ -10,8 +10,8 @@ from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_file_types.utils import get_SupportedAggTypes_choices
-from models import ToolResource
-from utils import get_SupportedResTypes_choices
+from .models import ToolResource
+from .utils import get_SupportedResTypes_choices
 
 
 @processor_for(ToolResource)
