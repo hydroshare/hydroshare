@@ -280,7 +280,7 @@ class BaseBandInfoFormSet(BaseFormSet):
     def get_metadata_dict(self):
         bands_data = []
         for form in self.forms:
-            band_data = {k: v for k, v in form.cleaned_data.items()}
+            band_data = {k: v for k, v in list(form.cleaned_data.items())}
             bands_data.append({'BandInformation': band_data})
         return bands_data
 

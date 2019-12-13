@@ -43,7 +43,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             scimeta = etree.parse('hs_core/tests/data/swat-resourcemetadata-1.xml')
             self.updateScimetaResourceID(scimeta, pid)
             #   Write out to a file
-            out = etree.tostring(scimeta, pretty_print=True)
+            out = etree.tostring(scimeta, pretty_print=True).decode()
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
             with open(sci_meta_new, 'w') as f:
                 f.writelines(out)
@@ -54,7 +54,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
@@ -91,7 +91,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #    Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 
@@ -129,7 +129,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             self.updateScimetaResourceID(scimeta, pid)
             self.updateExecutedBy(scimeta, model_prog_name_2, model_prog_id_2)
             #   Write out to a file
-            out = etree.tostring(scimeta, pretty_print=True)
+            out = etree.tostring(scimeta, pretty_print=True).decode()
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
             with open(sci_meta_new, 'w') as f:
                 f.writelines(out)
@@ -140,7 +140,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            with open(sci_meta_updated, 'w') as f:
+            with open(sci_meta_updated, 'wb') as f:
                 for l in response.streaming_content:
                     f.write(l)
 

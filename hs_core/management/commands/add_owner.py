@@ -23,13 +23,13 @@ def set_quota_holder(resource, user):
     except AttributeError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised AttributeError when setting quota holder: ' +
-              ex.message)
+        print((resource.short_id + ' raised AttributeError when setting quota holder: ' +
+              str(ex)))
     except ValueError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised ValueError when setting quota holder: ' +
-              ex.message)
+        print((resource.short_id + ' raised ValueError when setting quota holder: ' +
+              str(ex)))
 
 
 class Command(BaseCommand):

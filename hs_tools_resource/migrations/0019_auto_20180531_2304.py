@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('value', models.CharField(default=b'', max_length=1024, blank=True)),
+                ('value', models.CharField(default='', max_length=1024, blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_tools_resource_supportedfileextensions_related', to='contenttypes.ContentType')),
             ],
         ),

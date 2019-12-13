@@ -85,10 +85,10 @@ class Command(BaseCommand):
             print("{}: {} {}".format(timestamp, var_name, value))
         else:
             start, end = period
-            print("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
-                                                    start.year, start.month,
-                                                    end.year, end.month,
-                                                    var_name, value))
+            print(("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
+                                                     start.year, start.month,
+                                                     end.year, end.month,
+                                                     var_name, value)))
 
     def monthly_users_counts(self, start_date, end_date):
         profiles = User.objects.filter(date_joined__lte=end_date, is_active=True)

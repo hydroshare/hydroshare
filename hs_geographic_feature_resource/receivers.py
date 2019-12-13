@@ -104,7 +104,7 @@ def post_create_resource(sender, **kwargs):
     try:
         _process_uploaded_file(resource, res_file, base_err_msg)
     except Exception as ex:
-        raise ValidationError(ex.message)
+        raise ValidationError(str(ex))
 
     if files_failed_validation:
         # some files got deleted
@@ -321,7 +321,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
             _process_uploaded_file(resource, res_file, base_err_msg)
         except Exception as ex:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = ex.message
+            validate_files_dict['message'] = str(ex)
 
     if files_failed_validation:
         # some of the uploaded files did not pass validation
@@ -358,7 +358,7 @@ def _process_uploaded_file(resource, res_file, err_msg):
             files_failed_validation.append(f.file_name)
             f.delete()
 
-        err_msg = err_msg.format(reason=ex.message, files=", ".join(files_failed_validation))
+        err_msg = err_msg.format(reason=str(ex), files=", ".join(files_failed_validation))
         raise ValidationError(err_msg)
     # upload generated files in case of zip file
     if res_file.extension.lower() == '.zip':

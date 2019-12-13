@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='baseresource',
             name='resource_federation_path',
-            field=models.CharField(default=b'', max_length=100, blank=True),
+            field=models.CharField(default='', max_length=100, blank=True),
         ),
     ]

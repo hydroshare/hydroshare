@@ -132,7 +132,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             cat.uaccess.share_resource_with_user(
                 bones, bat, PrivilegeCodes.VIEW)
-        self.assertEqual(cm.exception.message,
+        self.assertEqual(str(cm.exception),
                          'User must own resource or have sharing privilege')
 
         # django admin still can share

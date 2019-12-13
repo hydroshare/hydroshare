@@ -39,13 +39,13 @@ def measure_resource(short_id):
         status = "private"
 
     if istorage.exists(resource.file_path):
-        print("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
-                                         resource.resource_type, resource.title))
+        print(("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
+                                          resource.resource_type, resource.title)))
     else:
-        print("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
-                                                        resource.storage_type,
-                                                        resource.resource_type,
-                                                        resource.title))
+        print(("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
+                                                         resource.storage_type,
+                                                         resource.resource_type,
+                                                         resource.title)))
 
 
 class Command(BaseCommand):

@@ -66,7 +66,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # saved in json_file_content field of the file metadata object
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
+        self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
         # test resource file is not in a folder
         self.assertEqual(res_file.file_folder, None)
@@ -110,7 +110,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # saved in json_file_content field of the file metadata object
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
+        self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
         # test resource file is in a folder
         self.assertEqual(res_file.file_folder, new_folder)
@@ -615,7 +615,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(json_res_file.has_logical_file)
         logical_file = json_res_file.logical_file
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
-        self.assertEqual(logical_file.metadata.json_file_content,
+        self.assertEqual(logical_file.metadata.json_file_content.encode(),
                          json_res_file.resource_file.read())
         self.composite_resource.delete()
 

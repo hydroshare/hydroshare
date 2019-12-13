@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, button, input, p, \
+from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
     textarea, span
 
 from hs_core.hydroshare import utils
@@ -320,9 +320,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                 span("NOTE:", style="color:red;")
                                 span("New resource specific metadata elements can't be created "
                                      "after you update the SQLite file.")
-                    eval(input(id="metadata-dirty", type="hidden", value=is_dirty))
-                    eval(input(id="can-update-sqlite-file", type="hidden",
-                          value=can_update_sqlite_file))
+                    _input(id="metadata-dirty", type="hidden", value=is_dirty)
+                    _input(id="can-update-sqlite-file", type="hidden",
+                               value=can_update_sqlite_file)
                     with form(action=form_action, method="post", id="update-sqlite-file"):
                         button("Update SQLite File", type="button", cls="btn btn-primary",
                                id="id-update-sqlite-file")
@@ -400,7 +400,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         add_to_xml_container_helper(self, container_to_add_to)
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
@@ -591,7 +591,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     file_type_success = True
                     ft_ctx.logical_file = logical_file
                 except Exception as ex:
-                    msg = msg.format(ex.message)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
 
             if not file_type_success:
@@ -759,8 +759,8 @@ def validate_odm2_db_file(sqlite_file_path):
         log.error(sqlite_err_msg)
         return sqlite_err_msg
     except Exception as e:
-        log.error(e.message)
-        return e.message
+        log.error(str(e))
+        return str(e)
 
 
 def validate_csv_file(csv_file_path):
@@ -864,7 +864,7 @@ def add_blank_sqlite_file(resource, upload_folder):
         log.info("Blank SQLite file was added.")
         return new_res_file
     except Exception as ex:
-        log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
+        log.exception("Error when adding the blank SQLite file. Error:{}".format(str(ex)))
         raise ex
 
 
@@ -1146,7 +1146,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
         log.error(sqlite_err_msg)
         return sqlite_err_msg
     except Exception as ex:
-        log.error(ex.message)
+        log.error(str(ex))
         return err_message
 
 
@@ -1190,7 +1190,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
         # read the first row - header
         header = next(csv_reader)
         # read the 1st data row
-        start_date_str = csv_reader.next()[0]
+        start_date_str = next(csv_reader)[0]
         last_row = None
         data_row_count = 1
         for row in csv_reader:
@@ -1789,7 +1789,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
             log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
+            log.exception("Failed to update SQLite file. Error:{}".format(str(ex)))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):

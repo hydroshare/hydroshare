@@ -329,7 +329,7 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def _validate_time_step(cls, **kwargs):
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             if val == 'Choose a type':
                 kwargs[key] = ''
             elif val != '':
@@ -548,7 +548,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                 ]
             self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(SWATModelInstanceMetaData, self).delete_all_elements()

@@ -124,13 +124,13 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                         resource_title=rm.title,
                                         page_redirect_url_key=None)
     except ResourceFileSizeException as ex:
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     except ResourceFileValidationException as ex:
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     except Exception as ex:
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     # Create the resource
     resource = None
@@ -165,7 +165,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                    **kwargs)
     except Exception as ex:
         logger.exception("Resource creation failed.")
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     # Add additional metadata
     assert(resource is not None)

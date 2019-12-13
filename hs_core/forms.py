@@ -297,7 +297,7 @@ class BaseCreatorFormSet(BaseFormSet):
         """Collect and append creator data to form fields."""
         creators_data = []
         for form in self.forms:
-            creator_data = {k: v for k, v in form.cleaned_data.items()}
+            creator_data = {k: v for k, v in list(form.cleaned_data.items())}
             if creator_data:
                 creators_data.append({'creator': creator_data})
 
@@ -380,7 +380,7 @@ class BaseContributorFormSet(BaseFormSet):
         """Collect and append contributor data to form fields."""
         contributors_data = []
         for form in self.forms:
-            contributor_data = {k: v for k, v in form.cleaned_data.items()}
+            contributor_data = {k: v for k, v in list(form.cleaned_data.items())}
             if contributor_data:
                 contributors_data.append({'contributor': contributor_data})
 

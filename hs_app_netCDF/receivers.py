@@ -59,7 +59,7 @@ def netcdf_post_create_resource(sender, **kwargs):
             # create the ncdump text file
             dump_file = create_header_info_txt_file(temp_file, nc_file_name)
             dump_file_name = nc_file_name + '_header_info.txt'
-            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            uploaded_file = UploadedFile(file=open(dump_file, mode="rb"), name=dump_file_name)
             utils.add_file_to_resource(resource, uploaded_file)
         else:
             delete_resource_file_only(resource, res_file)
@@ -276,7 +276,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             # create the ncdump text file
             dump_file = create_header_info_txt_file(in_file_name, nc_file_name)
             dump_file_name = nc_file_name + '_header_info.txt'
-            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            uploaded_file = UploadedFile(file=open(dump_file, 'rb'), name=dump_file_name)
             files.append(uploaded_file)
 
         else:
@@ -296,9 +296,9 @@ def netcdf_post_add_files_to_resource(sender, **kwargs):
     for f in resource.files.all():
         if f.extension == ".txt":
             if f.resource_file:
-                nc_text = f.resource_file.read()
+                nc_text = f.resource_file.read().decode("utf-8")
             else:
-                nc_text = f.fed_resource_file.read()
+                nc_text = f.fed_resource_file.read().decode("utf-8")
             break
 
     if 'title = ' not in nc_text and metadata.title.value != 'Untitled resource':
