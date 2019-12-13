@@ -28,7 +28,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(str(self))
 
     def _read_resource_metadata(self):
         super(ModelInstanceResourceMeta, self)._read_resource_metadata()
@@ -58,7 +58,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
             if (self.executed_by_name is not None) ^ (self.executed_by_uri is not None):
                 msg = "Both modelProgramName and modelProgramIdentifier must be supplied if one is supplied."
                 raise GenericResourceMeta.ResourceMetaException(msg)
-        print("\t\t{0}".format(str(self)))
+        print(("\t\t{0}".format(str(self))))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):

@@ -25,10 +25,10 @@ class Command(BaseCommand):
         try:
             resource = get_resource_by_shortkey(resource_id, or_404=False)
         except BaseResource.DoesNotExist:
-            print("resource '{}' not found".format(resource_id))
+            print(("resource '{}' not found".format(resource_id)))
             exit(1)
 
         recent = Variable.recent_users(resource,  days=days, n_users=n_users)
         for v in recent:
-            print("username={} last_access={}"
-                  .format(v.username, v.last_accessed.strftime("%Y-%m-%d %H:%M:%S")))
+            print(("username={} last_access={}"
+                  .format(v.username, v.last_accessed.strftime("%Y-%m-%d %H:%M:%S"))))

@@ -59,9 +59,9 @@ class Command(BaseCommand):
         if storage.exists(res.bag_path):
             try:
                 storage.delete(res.bag_path)
-                print("{} deleted".format(res.bag_path))
+                print(("{} deleted".format(res.bag_path)))
             except SessionException as ex:
-                print("{} delete failed: {}".format(res.bag_path, ex.stderr))
+                print(("{} delete failed: {}".format(res.bag_path, ex.stderr)))
                 raise EnvironmentError()
 
         try:
@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 res.setAVU("bag_modified", True)
                 res.setAVU('metadata_dirty', 'true')
 
-                print("Updating BaseResource short_id from {} to {}".format(res_id, new_res_id))
+                print(("Updating BaseResource short_id from {} to {}".format(res_id, new_res_id)))
                 res.short_id = new_res_id
                 res.save()
 
@@ -100,4 +100,4 @@ class Command(BaseCommand):
         print("Creating Bag")
         create_bag(res)
 
-        print("Resource id successfully update from {} to {}".format(res_id, new_res_id))
+        print(("Resource id successfully update from {} to {}".format(res_id, new_res_id)))

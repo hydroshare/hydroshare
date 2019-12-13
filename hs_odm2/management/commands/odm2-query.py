@@ -14,4 +14,4 @@ class Command(BaseCommand):
         parser.add_argument('prefix', type=str, help='Prefix of variable name to match')
 
     def handle(self, *args, **options):
-        print(list(ODM2Variable.search(options['prefix'])))
+        print((list(ODM2Variable.search(options['prefix']))))

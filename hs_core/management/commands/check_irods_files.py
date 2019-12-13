@@ -76,7 +76,7 @@ class Command(BaseCommand):
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
 
-                print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid))
+                print(("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid)))
                 if options['clean_irods']:
                     print(' (deleting unreferenced iRODs files)')
                 if options['clean_django']:

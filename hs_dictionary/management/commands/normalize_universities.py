@@ -44,28 +44,28 @@ class Command(BaseCommand):
                     secondary_match = None
 
                 if(len(match) == 0):
-                    print("Warning: unmatched organization %s" % profile.organization)
+                    print(("Warning: unmatched organization %s" % profile.organization))
 
                 new_organization = new_match
                 if(secondary_match):
                     new_organization = "%s,%s" % (new_match, secondary_match)
 
                 if (dry_run):
-                    print("[DRY RUN] Would rename %s to %s" %
-                          (profile.organization, new_organization))
+                    print(("[DRY RUN] Would rename %s to %s" %
+                          (profile.organization, new_organization)))
                 else:
                     profile.organization = new_organization
                     profile.save()
 
                 if new_match and not University.objects.filter(name=new_match).first():
                     if (dry_run):
-                        print("[DRY RUN] Would create dictionary term: %s" % new_match)
+                        print(("[DRY RUN] Would create dictionary term: %s" % new_match))
                     else:
                         UncategorizedTerm.objects.get_or_create(name=new_match)
 
                 if secondary_match and not University.objects.filter(name=secondary_match).first():
                     if (dry_run):
-                        print("[DRY RUN] Would create dictionary term: %s" % secondary_match)
+                        print(("[DRY RUN] Would create dictionary term: %s" % secondary_match))
                     else:
                         UncategorizedTerm.objects.get_or_create(name=secondary_match)
 

@@ -26,7 +26,7 @@ class Command(BaseCommand):
                         file.logical_file.remove_aggregation()
                         unmodified_generic_files_removed_counter += 1
 
-        print(">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter))
-        print(">> {} TOTAL GENERIC FILES FOUND".format(generic_files))
-        print(">> {} TOTAL UNMODIFIED GENERIC FILES REMOVED"
-              .format(unmodified_generic_files_removed_counter))
+        print((">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter)))
+        print((">> {} TOTAL GENERIC FILES FOUND".format(generic_files)))
+        print((">> {} TOTAL UNMODIFIED GENERIC FILES REMOVED"
+              .format(unmodified_generic_files_removed_counter)))

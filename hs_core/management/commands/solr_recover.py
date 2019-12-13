@@ -25,13 +25,13 @@ def repair_solr(short_id):
     try:
         res = BaseResource.objects.get(short_id=short_id)
     except BaseResource.DoesNotExist:
-        print("{} does not exist".format(short_id))
+        print(("{} does not exist".format(short_id)))
 
     # instance with proper type
     instance = res.get_content_model()
     assert instance, (res, res.content_model)
 
-    print("re-indexing {} in solr".format(short_id))
+    print(("re-indexing {} in solr".format(short_id)))
 
     # instance of BaseResource matching real instance
     baseinstance = BaseResource.objects.get(pk=instance.pk)
@@ -110,7 +110,7 @@ class Command(BaseCommand):
             if storage.exists(resource.root_path):
                 repair_solr(resource.short_id)
             else:
-                print("{} does not exist in iRODS".format(resource.short_id))
+                print(("{} does not exist in iRODS".format(resource.short_id)))
 
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.

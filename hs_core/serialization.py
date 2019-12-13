@@ -1,7 +1,7 @@
 import os
 import heapq
 import xml.sax
-import urlparse
+import urllib.parse
 import logging
 
 import rdflib
@@ -54,7 +54,7 @@ class HsDeserializationDependencyException(HsDeserializationException):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(str(self))
 
 
 def _prepare_resource_files_for_creation(file_paths):
@@ -916,7 +916,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
         def set_uri(self, uri):
             """
@@ -936,7 +936,7 @@ class GenericResourceMeta(object):
 
             if is_hs_user_uri:
                 # Parse URI
-                parsed_uri = urlparse.urlparse(uri)
+                parsed_uri = urllib.parse.urlparse(uri)
                 # Set rel_uri
                 self.rel_uri = parsed_uri.path
 
@@ -974,7 +974,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class ResourceRights(object):
 
@@ -989,7 +989,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class ResourceCoverage(object):
         pass
@@ -1007,7 +1007,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1068,7 +1068,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1139,7 +1139,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1227,7 +1227,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
         def __init__(self, uri, relationship_uri):
             self.uri = None
@@ -1320,7 +1320,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     raise xml.sax.SAXException(msg)
                 # Create new contributor
                 contributor = GenericResourceMeta.ResourceContributor()
-                if attrs.has_key('rdf:about'):
+                if 'rdf:about' in attrs:
                     contributor.set_uri(attrs.getValue('rdf:about'))
                 self.contributors.append(contributor)
                 self._get_contributor_details = True
@@ -1355,7 +1355,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
 
         elif name == 'hsterms:phone':
             if self._get_contributor_details:
-                if not attrs.has_key('rdf:resource'):
+                if 'rdf:resource' not in attrs:
                     msg = "Error: hsterms:phone within dc:contributor element has no phone number."
                     raise xml.sax.SAXException(msg)
                 phone_raw = str(attrs.getValue('rdf:resource')).split(':')

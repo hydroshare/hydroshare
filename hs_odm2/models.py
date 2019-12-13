@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 
 
@@ -26,7 +26,7 @@ class ODM2Variable(models.Model):
 
     @classmethod
     def sync(cls, uri='http://vocabulary.odm2.org/api/v1/variablename/?format:json'):
-        response = urllib2.urlopen(uri)
+        response = urllib.request.urlopen(uri)
         str = response.read()
         data = json.loads(str)
         for d in data['objects']:

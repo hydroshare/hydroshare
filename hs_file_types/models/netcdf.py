@@ -16,7 +16,7 @@ from lxml import etree
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
 import hs_file_types.nc_functions.nc_utils as nc_utils
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -171,7 +171,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    eval(input(id="metadata-dirty", type="hidden", value=self.is_dirty))
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
                                id="id-update-netcdf-file")
@@ -187,7 +187,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             wraps(VariableForm)(partial(VariableForm, allow_edit=True)),
             formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(
-            initial=self.variables.all().values(), prefix='Variable')
+            initial=list(self.variables.all().values()), prefix='Variable')
 
         for frm in variable_formset.forms:
             if len(frm.initial) > 0:
@@ -435,7 +435,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         for element in resource_metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             if k == 'title':
                                 # update title element
                                 title_element = resource.metadata.title
@@ -449,7 +449,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         for element in file_type_metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             if k == 'subject':
                                 logical_file.metadata.keywords = v
                                 logical_file.metadata.save()
@@ -700,9 +700,9 @@ def add_variable_metadata(metadata_list, extracted_metadata):
     :param extracted_metadata: a dict containing netcdf extracted metadata
     :return:
     """
-    for var_name, var_meta in extracted_metadata.items():
+    for var_name, var_meta in list(extracted_metadata.items()):
         meta_info = {}
-        for element, value in var_meta.items():
+        for element, value in list(var_meta.items()):
             if value != '':
                 meta_info[element] = value
         metadata_list.append({'variable': meta_info})
@@ -820,7 +820,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
 
         if extra_metadata_dict:
             extra_metadata = []
-            for k, v in extra_metadata_dict.items():
+            for k, v in list(extra_metadata_dict.items()):
                 extra_metadata.append("{}:{}".format(k, v))
             nc_dataset.hs_extra_metadata = ', '.join(extra_metadata)
 
@@ -855,7 +855,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         if instance.metadata.variables.all():
             dataset_variables = nc_dataset.variables
             for variable in instance.metadata.variables.all():
-                if variable.name in dataset_variables.keys():
+                if variable.name in list(dataset_variables.keys()):
                     dataset_variable = dataset_variables[variable.name]
 
                     # update units

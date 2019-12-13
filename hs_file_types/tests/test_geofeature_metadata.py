@@ -13,7 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
     OriginalCoverage
-from utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
+from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData,\
     GeoFeatureFileMetaData

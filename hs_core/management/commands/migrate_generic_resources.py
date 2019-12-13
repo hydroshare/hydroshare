@@ -16,7 +16,7 @@ class Command(BaseCommand):
         msg = "THERE ARE CURRENTLY {} GENERIC RESOURCES PRIOR TO CONVERSION.".format(
             GenericResource.objects.all().count())
         logger.info(msg)
-        print(">> {}".format(msg))
+        print((">> {}".format(msg)))
         for gen_res in GenericResource.objects.all():
             # change the resource_type
             gen_res.resource_type = to_resource_type
@@ -39,8 +39,8 @@ class Command(BaseCommand):
         msg = "{} GENERIC RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
             resource_counter)
         logger.info(msg)
-        print(">> {}".format(msg))
+        print((">> {}".format(msg)))
         msg = "THERE ARE CURRENTLY {} GENERIC RESOURCES AFTER CONVERSION.".format(
             GenericResource.objects.all().count())
         logger.info(msg)
-        print(">> {}".format(msg))
+        print((">> {}".format(msg)))

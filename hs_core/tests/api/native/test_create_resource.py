@@ -128,7 +128,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             )
 
         # test resource has 2 files
-        self.assertEquals(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
+        self.assertEqual(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
         if new_res:
             new_res.delete()
 
@@ -233,14 +233,14 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                       msg="Subject element with value of %s does not exist." % 'sub-1')
 
         # valid date should have been created
-        self.assertEquals(res.metadata.dates.filter(type='valid').count(), 1)
+        self.assertEqual(res.metadata.dates.filter(type='valid').count(), 1)
         valid_date_element = res.metadata.dates.filter(type='valid').first()
         valid_start_date = timezone.make_aware(dtime.datetime.strptime('01/20/2016', "%m/%d/%Y"),
                                                timezone.get_default_timezone())
         valid_end_date = timezone.make_aware(dtime.datetime.strptime('02/20/2016', "%m/%d/%Y"),
                                              timezone.get_default_timezone())
-        self.assertEquals(valid_date_element.start_date, valid_start_date)
-        self.assertEquals(valid_date_element.end_date, valid_end_date)
+        self.assertEqual(valid_date_element.start_date, valid_start_date)
+        self.assertEqual(valid_date_element.end_date, valid_end_date)
         if res:
             res.delete()
 
@@ -320,11 +320,11 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertNotIn(skipped_date, [dat.start_date for dat in res.metadata.dates.all()],
                          msg="Matching date value was found")
 
-        self.assertEquals(res.metadata.dates.filter(type='publisher').count(), 0, msg="Publisher date was found.")
-        self.assertEquals(res.metadata.dates.filter(type='available').count(), 0, msg="Available date was found.")
+        self.assertEqual(res.metadata.dates.filter(type='publisher').count(), 0, msg="Publisher date was found.")
+        self.assertEqual(res.metadata.dates.filter(type='available').count(), 0, msg="Available date was found.")
 
         # valid date should have been created
-        self.assertEquals(res.metadata.dates.filter(type='valid').count(), 1)
+        self.assertEqual(res.metadata.dates.filter(type='valid').count(), 1)
         valid_start_date = timezone.make_aware(dtime.datetime.strptime('01/20/2016', "%m/%d/%Y"),
                                                timezone.get_default_timezone())
         valid_end_date = timezone.make_aware(dtime.datetime.strptime('02/20/2016', "%m/%d/%Y"),
@@ -351,7 +351,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
-        self.assertEquals(res.files.all().count(), 1)
+        self.assertEqual(res.files.all().count(), 1)
         if res:
             res.delete()
 
@@ -373,7 +373,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
-        self.assertEquals(res.files.all().count(), 2)
+        self.assertEqual(res.files.all().count(), 2)
         if res:
             res.delete()
 
@@ -397,7 +397,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # get the resource by pid
         res = get_resource_by_shortkey(pid)
-        self.assertEquals(res.files.all().count(), 1)
+        self.assertEqual(res.files.all().count(), 1)
 
         # Create a resource with zipfile, un-pack
         payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
@@ -410,7 +410,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                                        unpack_file=True)
         pid = res.short_id
         res = get_resource_by_shortkey(pid)
-        self.assertEquals(res.files.all().count(), 2)
+        self.assertEqual(res.files.all().count(), 2)
         if res:
             res.delete()
 

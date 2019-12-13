@@ -20,14 +20,14 @@ class Command(BaseCommand):
 
         popular = Variable.popular_resources(days=days, n_resources=n_resources)
         for v in popular:
-            print("users={} short_id={}"
-                  .format(v.users, v.short_id))
-            print("  title={}".format(v.title))
-            print("  created={} updated={}"
+            print(("users={} short_id={}"
+                  .format(v.users, v.short_id)))
+            print(("  title={}".format(v.title)))
+            print(("  created={} updated={}"
                   .format(v.created.strftime("%Y-%m-%d %H:%M:%S"),
-                          v.last_updated.strftime("%Y-%m-%d %H:%M:%S")))
-            print("  published={} public={} discoverable={} first author={}"
+                          v.last_updated.strftime("%Y-%m-%d %H:%M:%S"))))
+            print(("  published={} public={} discoverable={} first author={}"
                   .format(v.published,
                           v.public,
                           v.discoverable,
-                          v.first_creator))
+                          v.first_creator)))

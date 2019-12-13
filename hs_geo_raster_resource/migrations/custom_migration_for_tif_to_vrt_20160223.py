@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 import os
 import shutil
@@ -32,7 +32,7 @@ def migrate_tif_file(apps, schema_editor):
                     if istorage.exists(bag_name):
                         # delete the resource bag as the old bag is not valid
                         istorage.delete(bag_name)
-                        print("Deleted bag for resource ID:" + str(res.short_id))
+                        print(("Deleted bag for resource ID:" + str(res.short_id)))
 
                     resource_modified(res, res.creator)
 

@@ -82,7 +82,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
                     var.missingValue = str(missing_val_lit)
                 self.variables.append(var)
         for v in self.variables:
-            print("\t\t{0}".format(str(v)))
+            print(("\t\t{0}".format(str(v))))
 
         # Get spatialReference
         for s, p, o in self._rmeta_graph.triples((None, hsterms.spatialReference, None)):
@@ -109,7 +109,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
                 crs_repr_type = str(crs_repr_type_lit)
             self.spatial_reference = NetcdfResourceMeta.SpatialReference(extent, crs_name, crs_repr_text,
                                                                          crs_repr_type)
-            print("\t\t{0}".format(self.spatial_reference))
+            print(("\t\t{0}".format(self.spatial_reference)))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):
@@ -162,7 +162,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class SpatialReference(object):
 
@@ -213,7 +213,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
 
 class NetcdfResourceSAXHandler(xml.sax.ContentHandler):

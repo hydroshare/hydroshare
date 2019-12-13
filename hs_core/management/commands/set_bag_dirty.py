@@ -13,9 +13,9 @@ def set_resource_dirty(rid):
         resource = BaseResource.objects.get(short_id=rid)
         resource.setAVU('metadata_dirty', 'true')
         resource.setAVU('bag_modified', 'true')
-        print("Resource with id {} was set dirty.".format(rid))
+        print(("Resource with id {} was set dirty.".format(rid)))
     except BaseResource.DoesNotExist:
-        print(">> Resource with id {} NOT FOUND in Django".format(rid))
+        print((">> Resource with id {} NOT FOUND in Django".format(rid)))
 
 
 class Command(BaseCommand):

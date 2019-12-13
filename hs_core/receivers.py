@@ -8,7 +8,7 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_core.tasks import update_web_services
 from hs_core.models import GenericResource, Party
 from django.conf import settings
-from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
+from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm

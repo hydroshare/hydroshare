@@ -1,7 +1,8 @@
 import json
 import logging
 from dateutil import parser
-from urllib2 import Request, urlopen, URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 import jsonschema
 from lxml import etree
 
@@ -16,7 +17,7 @@ from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbo
 from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class TimeSeries(object):
@@ -697,7 +698,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             p(json_res_file.full_path[33:])
             header_info = self.json_file_content
             if isinstance(header_info, str):
-                header_info = unicode(header_info, 'utf-8')
+                header_info = str(header_info, 'utf-8')
 
             textarea(header_info, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%; resize: vertical;")

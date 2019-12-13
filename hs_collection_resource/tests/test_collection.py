@@ -534,7 +534,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
 
         # this collection should contain no resources at this point
-        self.assertEquals(self.resCollection.resources.count(), 0)
+        self.assertEqual(self.resCollection.resources.count(), 0)
         # user 1 login
         self.api_client.login(username='user1', password='mypassword1')
 
@@ -546,7 +546,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
         # collection still should have no resource
-        self.assertEquals(self.resCollection.resources.count(), 0)
+        self.assertEqual(self.resCollection.resources.count(), 0)
 
         # add one collection resource to another collection resource
         # json response status should be success
@@ -556,8 +556,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         # collection should have 1 resource
-        self.assertEquals(self.resCollection.resources.count(), 1)
-        self.assertEquals(self.resCollection.resources.all()[0].resource_type.lower(),
+        self.assertEqual(self.resCollection.resources.count(), 1)
+        self.assertEqual(self.resCollection.resources.all()[0].resource_type.lower(),
                           "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):

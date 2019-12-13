@@ -71,7 +71,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         add_resource_files(res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         # resource should have 3 files
-        self.assertEquals(res.files.all().count(), 3)
+        self.assertEqual(res.files.all().count(), 3)
         self.assertEqual(81, res.size)
 
         # add each file of resource to list

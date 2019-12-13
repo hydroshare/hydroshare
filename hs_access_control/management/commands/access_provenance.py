@@ -44,8 +44,8 @@ class Command(BaseCommand):
         try:
             resource = get_resource_by_shortkey(resource_id, or_404=False)
         except BaseResource.DoesNotExist:
-            print("No such resource {}.".format(resource_id))
+            print(("No such resource {}.".format(resource_id)))
             usage()
             exit(1)
 
-        print(access_provenance(user, resource))
+        print((access_provenance(user, resource)))

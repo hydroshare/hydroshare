@@ -37,4 +37,4 @@ class Command(BaseCommand):
 
         for g in GroupAccess.groups_with_public_resources():
             # n = g.gaccess.public_resources.count()
-            print("group is {} (id={})".format(g.name, g.id))
+            print(("group is {} (id={})".format(g.name, g.id)))

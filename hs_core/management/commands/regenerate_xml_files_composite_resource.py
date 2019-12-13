@@ -42,9 +42,9 @@ class Command(BaseCommand):
                 # this is needed to generate aggregation level xml files
                 aggregation.metadata.is_dirty = True
                 aggregation.metadata.save()
-            print("> GENERATING BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id))
+            print(("> GENERATING BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id)))
             create_bag_files(resource)
-            print(">> GENERATED BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id))
+            print((">> GENERATED BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id)))
             # re-set metadata status
             for aggregation in resource.logical_files:
                 aggregation.metadata.is_dirty = metadata_status[aggregation.id]
@@ -74,5 +74,5 @@ class Command(BaseCommand):
                     print(msg)
                     continue
 
-        print(">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter))
-        print(">> BAG FILES GENERATED FOR {} COMPOSITE RESOURCES.".format(resource_counter_success))
+        print((">> {} COMPOSITE RESOURCES PROCESSED.".format(resource_counter)))
+        print((">> BAG FILES GENERATED FOR {} COMPOSITE RESOURCES.".format(resource_counter_success)))
