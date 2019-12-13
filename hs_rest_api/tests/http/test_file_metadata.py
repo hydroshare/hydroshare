@@ -21,7 +21,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "pk": "abc123",
             "pathname": "bad_path"
         }))
-        self.assertEqual(response.content,
+        self.assertEqual(str(response.content.decode()),
                          '{"detail":"No resource was found for resource id:abc123"}')
 
         # Create resource
@@ -30,7 +30,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             'title': "File Metadata Test Resource"
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         res_id = response_json.get("resource_id")
         self.resources_to_delete.append(res_id)
 
@@ -39,7 +39,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         self.assertEqual(response_json.get("results"), [])
 
         # Create new resource file
@@ -50,11 +50,11 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         txt.close()
         response = self.client.post(reverse('list_create_resource_file', kwargs={"pk": res_id}),
                                     {'file': (txt_file_name,
-                                              open(txt_file_path),
+                                              open(txt_file_path, 'rb'),
                                               'text/plain')})
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         self.assertEqual(len(response_json.get("results")), 1)
 
         # Test Empty Metadata
@@ -75,7 +75,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "title": "New Metadata Title"
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("title"), "New Metadata Title")
 
         # Update keywords
@@ -83,7 +83,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             "keywords": ["keyword1", "keyword2"]
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("keywords"), ["keyword1", "keyword2"])
 
         # Update keywords
@@ -94,7 +94,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             }
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("extra_metadata"), {'a': 'test', 'this': 'is'})
 
         # Update point spatial coverage
@@ -108,7 +108,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             },
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("spatial_coverage"), {
             'units': 'Decimal degrees',
             'east': -84.0465,
@@ -125,14 +125,14 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             }
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("temporal_coverage"), {
             "start": "2018-02-04",
             "end": "2018-02-06"
         })
 
         # check for logical_file in metadata
-        self.assertEqual(json_response.get("logical_file"), {})
+        self.assertTrue("logical_file" in json_response)
 
     def test_metadata_spatial_create_update(self):
         # Create resource
@@ -141,7 +141,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             'title': "File Metadata Test Resource"
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         res_id = response_json.get("resource_id")
         self.resources_to_delete.append(res_id)
 
@@ -150,7 +150,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         self.assertEqual(response_json.get("results"), [])
 
         # Create new resource file
@@ -161,11 +161,11 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         txt.close()
         response = self.client.post(reverse('list_create_resource_file', kwargs={"pk": res_id}),
                                     {'file': (txt_file_name,
-                                              open(txt_file_path),
+                                              open(txt_file_path, 'rb'),
                                               'text/plain')})
 
         response = self.client.get(reverse('list_create_resource_file', kwargs={"pk": res_id}))
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         self.assertEqual(len(response_json.get("results")), 1)
 
         # Test Empty Metadata
@@ -195,7 +195,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             },
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("spatial_coverage"), {
             'units': 'Decimal degrees',
             'eastlimit': -97.92170777387547,
@@ -220,7 +220,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
             },
         }, format="json")
         response = self.client.get(file_metadata_url)
-        json_response = json.loads(response.content)
+        json_response = json.loads(response.content.decode())
         self.assertEqual(json_response.get("spatial_coverage"), {
             'units': 'Decimal degrees',
             'eastlimit': -97.921707773875,

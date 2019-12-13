@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='user_type',
-            field=models.CharField(default=b'Unspecified', max_length=1024, null=True, blank=True),
+            field=models.CharField(default='Unspecified', max_length=1024, null=True, blank=True),
         ),
         migrations.AddField(
             model_name='userprofile',

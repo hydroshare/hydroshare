@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourceaccess',
             name='require_download_agreement',
-            field=models.BooleanField(default=False, help_text=b'whether to require agreement to resource rights statement for resource content downloads'),
+            field=models.BooleanField(default=False, help_text='whether to require agreement to resource rights statement for resource content downloads'),
         ),
     ]

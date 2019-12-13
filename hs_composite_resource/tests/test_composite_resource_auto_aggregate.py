@@ -105,7 +105,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, GeoRasterLogicalFile.objects.count())
 
         # test add a file that auto-aggregates
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(open_file,), user=self.user)
 
@@ -119,7 +119,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, GeoRasterLogicalFile.objects.count())
 
         # test add a file that auto-aggregates
-        open_file = open(self.test_file_path.format("small_logan.tiff"), 'r')
+        open_file = open(self.test_file_path.format("small_logan.tiff"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(open_file,), user=self.user)
 
@@ -133,7 +133,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
 
         # test add a file that auto-aggregates
-        open_file = open(self.test_file_path.format("ODM2.sqlite"), 'r')
+        open_file = open(self.test_file_path.format("ODM2.sqlite"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(open_file,), user=self.user)
 
@@ -147,7 +147,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, RefTimeseriesLogicalFile.objects.count())
         # test add a file that auto-aggregates
         open_file = open(self.test_file_path.format("multi_sites_formatted_version1.0.refts.json"),
-                         'r')
+                         'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(open_file,), user=self.user)
 
@@ -160,7 +160,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
 
         self.assertEqual(0, NetCDFLogicalFile.objects.count())
         # test add a file that auto-aggregates
-        open_file = open(self.test_file_path.format("netcdf_valid.nc"), 'r')
+        open_file = open(self.test_file_path.format("netcdf_valid.nc"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(open_file,), user=self.user)
         # because of auto aggregation, there should be 2 files
@@ -175,9 +175,9 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, GeoFeatureLogicalFile.objects.count())
 
         # test add a file that auto-aggregates
-        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'r')
-        shp_file = open(self.test_file_path.format("watersheds.shp"), 'r')
-        shx_file = open(self.test_file_path.format("watersheds.shx"), 'r')
+        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'rb')
+        shp_file = open(self.test_file_path.format("watersheds.shp"), 'rb')
+        shx_file = open(self.test_file_path.format("watersheds.shx"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(dbf_file, shp_file, shx_file), user=self.user)
 
@@ -214,9 +214,9 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, GeoFeatureLogicalFile.objects.count())
 
         # test add a file that auto-aggregates
-        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'r')
-        shp_file = open(self.test_file_path.format("watersheds.shp"), 'r')
-        shx_file = open(self.test_file_path.format("watersheds.shx"), 'r')
+        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'rb')
+        shp_file = open(self.test_file_path.format("watersheds.shp"), 'rb')
+        shx_file = open(self.test_file_path.format("watersheds.shx"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(dbf_file, shp_file, shx_file), user=self.user,
                                   full_paths={dbf_file: "folder1/watersheds.dbf",
@@ -247,9 +247,9 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, GeoFeatureLogicalFile.objects.count())
 
         # test add a file that auto-aggregates
-        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'r')
-        shp_file = open(self.test_file_path.format("watersheds.shp"), 'r')
-        shx_file = open(self.test_file_path.format("watersheds.shx"), 'r')
+        dbf_file = open(self.test_file_path.format("watersheds.dbf"), 'rb')
+        shp_file = open(self.test_file_path.format("watersheds.shp"), 'rb')
+        shx_file = open(self.test_file_path.format("watersheds.shx"), 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   folder="parentfolder",
                                   files=(dbf_file, shp_file, shx_file), user=self.user,
@@ -293,7 +293,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
             hydroshare.ResourceFile.create_folder(self.composite_resource, folder=new_folder)
         # upload the csv file to the folder (new-folder)
         csv_file_name = "ODM2_One_Site_One_Series_Test.csv"
-        csv_file = open(self.test_file_path.format(csv_file_name), 'r')
+        csv_file = open(self.test_file_path.format(csv_file_name), 'rb')
         files = [UploadedFile(file=csv_file, name=csv_file_name)]
         resource_file_add_process(resource=self.composite_resource,
                                   files=files, user=self.user, folder=new_folder)

@@ -41,8 +41,8 @@ def debug_resource(short_id):
         for res_file in resource.files.all():
             if res_file.has_logical_file:
                 print(("    {} logical file {} is [{}]".format(res_file.short_path,
-                                                              str(type(res_file.logical_file)),
-                                                              str(res_file.logical_file.id))))
+                                                               str(type(res_file.logical_file)),
+                                                               str(res_file.logical_file.id))))
 
     # context = {
     #     'shortkey': shortkey,

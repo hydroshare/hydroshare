@@ -1870,7 +1870,7 @@ class TimeSeriesMetaDataMixin(models.Model):
             log.error("Failed to update blank SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.message))
+            log.exception("Failed to update blank SQLite file. Error:{}".format(str(ex)))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):
@@ -1900,7 +1900,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
         add_to_xml_container_helper(self, container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         super(TimeSeriesMetaData, self).copy_all_elements_from(src_md, exclude_elements)

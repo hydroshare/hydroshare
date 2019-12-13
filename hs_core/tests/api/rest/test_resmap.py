@@ -38,7 +38,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # collect response from stream
-        output = ""
+        output = b""
         while True:
             try:
                 output += next(response2.streaming_content)
@@ -47,7 +47,7 @@ class TestResourceMap(ResMapTestCase):
 
         # parse as simple RDF graph
         g = Graph()
-        g.parse(data=output)
+        g.parse(data=output.decode("utf-8"))
 
         documents = g.triples(
             (None, term.URIRef('http://purl.org/spar/cito/documents'), None)
@@ -79,12 +79,12 @@ class TestResourceMap(ResMapTestCase):
 
         # Upload the new resource file
         params = {'file': (txt_file_name,
-                           open(txt_file_path),
+                           open(txt_file_path, 'rb'),
                            'text/plain')}
         url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['resource_id'], self.pid)
 
         # download the resource map and # make sure the new file appears
@@ -94,7 +94,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # collect the map from the stream
-        output = ""
+        output = b""
         while True:
             try:
                 output += next(response2.streaming_content)
@@ -103,7 +103,7 @@ class TestResourceMap(ResMapTestCase):
 
         # parse as a simple RDF file of triples
         g = Graph()
-        g.parse(data=output)
+        g.parse(data=output.decode("utf-8"))
 
         # check that the graph contains an appropriate "documents" node
         documents = g.triples(

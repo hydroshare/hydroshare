@@ -75,7 +75,7 @@ class TestCaseCommonUtilities(object):
             user_profile.create_irods_user_account = True
             user_profile.save()
         except Exception as ex:
-            self.assertRaises(SessionException(-1, ex.message, ex.message))
+            self.assertRaises(SessionException(-1, str(ex), str(ex)))
 
     def delete_irods_user_in_user_zone(self):
         """Delete irods test user in user zone."""
@@ -97,7 +97,7 @@ class TestCaseCommonUtilities(object):
             user_profile.save()
         except Exception as ex:
             # there is an error from icommand run, report the error
-            self.assertRaises(SessionException(-1, ex.message, ex.message))
+            self.assertRaises(SessionException(-1, str(ex), str(ex)))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
         """Save a list of files to iRODS user zone.
@@ -107,7 +107,7 @@ class TestCaseCommonUtilities(object):
         in iRODS user zone to save ori_file to
         :return:
         """
-        for file_name, target_name in file_name_to_target_name_dict.items():
+        for file_name, target_name in list(file_name_to_target_name_dict.items()):
             self.irods_fed_storage.saveFile(file_name, target_name)
 
     def check_file_exist(self, irods_path):
@@ -377,9 +377,9 @@ class TestCaseCommonUtilities(object):
         # testing extended metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '3031.44311523')
-        self.assertEqual(band_info.minimumValue, '1358.33459473')
+        self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+        self.assertEqual(band_info.maximumValue, '3031.443115234375')
+        self.assertEqual(band_info.minimumValue, '1358.3345947265625')
 
     def netcdf_metadata_extraction(self, expected_creators_count=1):
         """Test NetCDF metadata extraction.
@@ -429,10 +429,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resNetcdf.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
-        self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
-        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
-        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
+        self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
+        self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
+        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
+        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
 
         temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -456,7 +456,7 @@ class TestCaseCommonUtilities(object):
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-        proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+        proj_text = '+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
         self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)

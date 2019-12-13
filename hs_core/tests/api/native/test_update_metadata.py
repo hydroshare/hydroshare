@@ -96,7 +96,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(contributor.name, 'Kelvin Marshal')
         self.assertEqual(contributor.email, 'kmarshal@yahoo.com')
         self.assertEqual(contributor.organization, 'Utah State University')
-        for name, link in contributor.identifiers.items():
+        for name, link in list(contributor.identifiers.items()):
             self.assertIn(name, ['ResearchGateID', 'ORCID'])
             self.assertIn(link, ['https://orcid.org/john', 'https://www.researchgate.net/john'])
 

@@ -37,7 +37,7 @@ class CompositeResourceTestMixin(object):
         files = []
         full_paths = {}
         for file_name in file_to_upload:
-            file_obj = open(file_name, 'r')
+            file_obj = open(file_name, 'rb')
             if folder:
                 full_paths[file_obj] = os.path.join(folder, file_name)
             uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
@@ -138,9 +138,9 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     # testing extended metadata element: band information
     self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
     band_info = logical_file.metadata.bandInformations.first()
-    self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-    self.assertEqual(band_info.maximumValue, '2880.00708008')
-    self.assertEqual(band_info.minimumValue, '1870.63659668')
+    self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+    self.assertEqual(band_info.maximumValue, '2880.007080078125')
+    self.assertEqual(band_info.minimumValue, '1870.6365966796875')
 
 
 def assert_netcdf_file_type_metadata(self, title, aggr_folder):
@@ -212,10 +212,10 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -246,7 +246,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-    proj_text = '+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+    proj_text = '+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
     self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
     self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)

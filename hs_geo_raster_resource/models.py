@@ -67,7 +67,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     raise ValidationError("For coverage of type 'box' values for one or more "
                                           "bounding box limits or 'units' is missing.")
 
-            value_dict = {k: v for k, v in value_arg_dict.items()
+            value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
                                    'projection', 'projection_string', 'datum')}
 
@@ -532,4 +532,4 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
         if self.originalCoverage:
             self.originalCoverage.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()

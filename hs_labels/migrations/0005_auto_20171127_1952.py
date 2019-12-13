@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userresourceflags',
             name='kind',
-            field=models.IntegerField(default=1, editable=False, choices=[(1, b'Favorite'), (2, b'Mine'), (3, b'Open With App')]),
+            field=models.IntegerField(default=1, editable=False, choices=[(1, 'Favorite'), (2, 'Mine'), (3, 'Open With App')]),
         ),
     ]

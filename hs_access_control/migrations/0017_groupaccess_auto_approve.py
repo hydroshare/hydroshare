@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupaccess',
             name='auto_approve',
-            field=models.BooleanField(default=False, help_text=b'whether group can be auto approved', editable=False),
+            field=models.BooleanField(default=False, help_text='whether group can be auto approved', editable=False),
         ),
     ]

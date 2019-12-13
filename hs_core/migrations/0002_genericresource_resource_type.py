@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='genericresource',
             name='resource_type',
-            field=models.CharField(default=b'GenericResource', max_length=50),
+            field=models.CharField(default='GenericResource', max_length=50),
             preserve_default=True,
         ),
     ]

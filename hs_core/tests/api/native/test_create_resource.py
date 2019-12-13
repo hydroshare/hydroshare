@@ -43,8 +43,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         open(file_two, "w").close()
 
         # open files for read and upload
-        self.file_one = open(file_one, "r")
-        self.file_two = open(file_two, "r")
+        self.file_one = open(file_one, "rb")
+        self.file_two = open(file_two, "rb")
 
         # Make a text file
         self.txt_file_path = os.path.join(self.tmp_dir, 'text.txt')
@@ -339,7 +339,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             res.delete()
 
     def test_create_resource_with_file(self):
-        raster = open(self.raster_file_path)
+        raster = open(self.raster_file_path, 'rb')
         res = resource.create_resource('GenericResource',
                                        self.user,
                                        'My Test resource',
@@ -359,7 +359,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         raster = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name=self.raster_file_path,
                                          content_type='image/tiff',
                                          size=os.stat(self.raster_file_path).st_size)
-        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'r'), name=self.txt_file_path,
+        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'rb'), name=self.txt_file_path,
                                        content_type='text/plain',
                                        size=os.stat(self.txt_file_path).st_size)
         res = resource.create_resource('GenericResource',
@@ -450,4 +450,4 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         except QuotaException as ex:
             self.fail(
                 "create resource should not raise QuotaException for over quota cases "
-                " if quota is not enforced - Quota Exception: " + ex.message)
+                " if quota is not enforced - Quota Exception: " + str(ex))

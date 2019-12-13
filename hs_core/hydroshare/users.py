@@ -139,10 +139,10 @@ def update_account(user, **kwargs):
             groups = [(Group.objects.get_or_create(name=groups)
                       if isinstance(groups, str) else groups)[0]]
         else:
-            groups = zip(
+            groups = list(zip(
                 *(Group.objects.get_or_create(name=g)
                   if isinstance(g, str) else g
-                  for g in groups))[0]
+                  for g in groups)))[0]
 
     if 'password' in kwargs:
         user.set_password(kwargs['password'])
@@ -166,7 +166,7 @@ def update_account(user, **kwargs):
                 setattr(profile, k, v)
         profile.save()
     except AttributeError as e:
-        raise exceptions.ValidationError(e.message)  # ignore deprecated user profile module when we upgrade to 1.7
+        raise exceptions.ValidationError(str(e))  # ignore deprecated user profile module when we upgrade to 1.7
 
     user_update = dict()
     update_keys = [x for x in list(kwargs.keys()) if hasattr(user, str(x))]

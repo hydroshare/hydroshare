@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, textarea, input
+from dominate.tags import div, legend, form, button, p, textarea, _input
 from lxml import etree
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
@@ -171,7 +171,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    eval(input(id="metadata-dirty", type="hidden", value=self.is_dirty))
+                    _input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
                                id="id-update-netcdf-file")
@@ -271,7 +271,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             variable.add_to_xml_container(container_to_add_to)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
@@ -466,7 +466,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         file_type_success = True
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        msg = msg.format(ex.message)
+                        msg = msg.format(str(ex))
                         log.exception(msg)
 
                 if not file_type_success:
@@ -776,9 +776,11 @@ def create_header_info_txt_file(nc_temp_file, nc_file_name):
         dump_str = "".join(dump_str_list)
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write(dump_str)
+            dump_file_obj.close()
     else:
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write("")
+            dump_file_obj.close()
 
     return dump_file
 
@@ -962,7 +964,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         nc_dataset.close()
 
     except Exception as ex:
-        log.exception(ex.message)
+        log.exception(str(ex))
         if os.path.exists(temp_nc_file):
             shutil.rmtree(os.path.dirname(temp_nc_file))
         raise ex

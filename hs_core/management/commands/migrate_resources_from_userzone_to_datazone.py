@@ -70,8 +70,8 @@ class Command(BaseCommand):
                             res_file.save()
                             path_migrated = True
                             print(('fed_resource_file field does not contain absolute federation '
-                                  'path which is an exception but can work after migration. '
-                                  'file_path is {}'.format(file_path)))
+                                   'path which is an exception but can work after migration. '
+                                   'file_path is {}'.format(file_path)))
                     if path_migrated or resource.files.count() == 0:
                         # update resource federation path to point resource to data zone
                         resource.resource_federation_path = ''

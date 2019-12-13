@@ -15,5 +15,5 @@ class TestToolsResourceUtils(TestCase):
             in_file.close()
 
     def test_bad_get_image_type(self):
-        image_type = get_image_type(h=bytearray("garbage"))
+        image_type = get_image_type(h=bytearray("garbage", "UTF-8"))
         self.assertEqual(None, image_type)
