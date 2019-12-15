@@ -32,6 +32,7 @@ czo_setup = [
     ["czo_shale-hills", "CZO Shale-Hills", "SSHCZO"],
     ["czo_sierra", "CZO Sierra", "SSCZO"],
     ["czo_christina", "CZO Christina", "CRBCZO"],
+    ["czo_iml", "CZO IML", "IMLCZO"],
 ]
 
 
@@ -39,7 +40,7 @@ def set_quota_holder(resource, user):
     """ set quota holder and deal with iRODS failures """
     try:
         if resource.get_quota_holder() != user:
-            print("SET QUOTA HOLDER FOR  {} {} TO {}"
+            print("    SET QUOTA HOLDER FOR  {} {} TO {}"
                   .format(resource.short_id,
                           resource.title.encode('ascii', 'ignore'),
                           user.username))
@@ -65,6 +66,46 @@ def set_quota_holder(resource, user):
     return True
 
 
+def check_resource_prefix(user, group, resource, prefix, mapper, grantor):
+    if not resource.title.startswith(prefix):
+        print("    UNSHARING {} {}: prefix not {} (UNSHARING)"
+              .format(resource.short_id,
+                      resource.title.encode('ascii', 'ignore'),
+                      prefix))
+        # not in the user's resources
+        UserResourcePrivilege.unshare(resource=resource,
+                                      user=user,
+                                      grantor=grantor)
+        # not in the group's resources
+        GroupResourcePrivilege.unshare(resource=resource,
+                                       group=group,
+                                       grantor=grantor)
+
+        # Where does it really go?
+        new_prefix = resource.title.split(" ")[0]
+        if new_prefix in mapper:
+            new_username = mapper[new_prefix][0]
+            new_groupname = mapper[new_prefix][1]
+            new_user = User.objects.get(username=new_username)
+            new_group = Group.objects.get(name=new_groupname)
+            print("    SHARING {} {} with user={} group={}"
+                  .format(resource.short_id, resource.title.encode('ascii', 'ignore'),
+                          new_username, new_groupname))
+            UserResourcePrivilege.share(resource=resource,
+                                        user=new_user,
+                                        privilege=PrivilegeCodes.OWNER,
+                                        grantor=grantor)
+            GroupResourcePrivilege.share(resource=resource,
+                                         group=new_group,
+                                         privilege=PrivilegeCodes.VIEW,
+                                         grantor=grantor)
+        else:
+            print("    ERROR {} {} unknown prefix {}"
+                  .format(resource.short_id,
+                          resource.title.encode('ascii', 'ignore'),
+                          new_prefix))
+
+
 def check_resource_owners(user1, user2, resource, grantor):
     """ check that each resource has the proper number of owners """
 
@@ -72,7 +113,7 @@ def check_resource_owners(user1, user2, resource, grantor):
                                  u2urp__privilege=PrivilegeCodes.OWNER)
     if user1 not in owners:
         # fix it NOW
-        print("SHARING {} {} with first owner {}"
+        print("    SHARING {} {} with first owner {}"
               .format(resource.short_id,
                       resource.title.encode('ascii', 'ignore'),
                       user1.username))
@@ -85,7 +126,7 @@ def check_resource_owners(user1, user2, resource, grantor):
     if user1 != user2 and user2 not in owners:
 
         # fix it NOW
-        print("SHARING {} {} with second owner {}"
+        print("    SHARING {} {} with second owner {}"
               .format(resource.short_id,
                       resource.title.encode('ascii', 'ignore'),
                       user2.username))
@@ -95,7 +136,7 @@ def check_resource_owners(user1, user2, resource, grantor):
     for o in owners:
         if o.username != user1.username and o.username != user2.username:
             # fix it NOW
-            print("UNSHARING {} {} with owner {}"
+            print("    UNSHARING {} {} with owner {}"
                   .format(resource.short_id,
                           resource.title.encode('ascii', 'ignore'),
                           o.username))
@@ -105,10 +146,9 @@ def check_resource_owners(user1, user2, resource, grantor):
 def check_resource_group(group, resource, grantor):
     """ check that a resource is in exactly one group """
     groups = Group.objects.filter(g2grp__resource=resource)
-
     if group not in groups:
         # fix it NOW
-        print("SHARING {} {} with group {}"
+        print("    SHARING {} {} with group {}"
               .format(resource.short_id,
                       resource.title.encode('ascii', 'ignore'),
                       group.name))
@@ -120,7 +160,7 @@ def check_resource_group(group, resource, grantor):
     for g in groups:
         if g != group:
             # fix it NOW
-            print("UNSHARING {} {} with group {}"
+            print("    UNSHARING {} {} with group {}"
                   .format(resource.short_id,
                           resource.title.encode('ascii', 'ignore'),
                           g.name))
@@ -137,9 +177,9 @@ class Command(BaseCommand):
         national_group = Group.objects.get(name='CZO National')
         czo_community = Community.objects.get(name='CZO National Community')
 
-        prefixes = {}
+        czo_mapper = {}
         for czo in czo_setup:  # index by prefix
-            prefixes[czo[2]] = czo
+            czo_mapper[czo[2]] = czo
 
         # check each group in turn
         for czo in czo_setup:
@@ -151,16 +191,6 @@ class Command(BaseCommand):
             czo_user = User.objects.get(username=czo_username)
             czo_group = Group.objects.get(name=czo_groupname)
 
-            # first check that group is in the community
-            if not Community.objects.filter(c2gcp__community=czo_community,
-                                            c2gcp__group=czo_group).exists():
-                print("SHARING group {} with community {}"
-                      .format(czo_group.name, czo_community.name))
-                # fix it NOW
-                GroupCommunityPrivilege.share(group=czo_group, community=czo_community,
-                                              privilege=PrivilegeCodes.VIEW,
-                                              grantor=national_user)
-
             user_resources = set(BaseResource.objects.filter(r2urp__user=czo_user))
             print("  There are {} user resources".format(len(user_resources)))
             # for r in user_resources:
@@ -170,12 +200,22 @@ class Command(BaseCommand):
             # for r in group_resources:
             #     print("    {} {}".format(r.short_id, r.title.encode('ascii', 'ignore')))
 
+            # check that group is in the community
+            if not Community.objects.filter(c2gcp__community=czo_community,
+                                            c2gcp__group=czo_group).exists():
+                print("    SHARING group {} with community {}"
+                      .format(czo_group.name, czo_community.name))
+                # fix it NOW
+                GroupCommunityPrivilege.share(group=czo_group, community=czo_community,
+                                              privilege=PrivilegeCodes.VIEW,
+                                              grantor=national_user)
+
             # check whether all resources are owned by czo national
             for r in user_resources | group_resources:
                 if not UserResourcePrivilege.objects.filter(user=national_user,
                                                             privilege=PrivilegeCodes.OWNER,
                                                             resource=r).exists():
-                    print("SHARING  {} {} with czo national user"
+                    print("    SHARING {} {} with czo national user"
                           .format(r.short_id, r.title.encode('ascii', 'ignore')))
                     UserResourcePrivilege.share(user=national_user,
                                                 resource=r,
@@ -186,92 +226,58 @@ class Command(BaseCommand):
 
             # Now everything is owned by CZO national so we can remove other owners safely.
 
-            # Check that all resources have the appropriate prefix
-            for r in group_resources:  # or r in user_resources
-                if not r.title.startswith(czo_prefix):
-                    print("UNSHARING {} {}: prefix not {} (UNSHARING)"
-                          .format(r.short_id, r.title.encode('ascii', 'ignore'), czo_prefix))
-                    # not in the user's resources
-                    UserResourcePrivilege.unshare(resource=r,
-                                                  user=czo_user,
-                                                  grantor=national_user)
-                    # not in the group's resources
-                    GroupResourcePrivilege.unshare(resource=r,
-                                                   group=czo_group,
-                                                   grantor=national_user)
-
-                    # Where does it really go?
-                    new_prefix = r.title.split(" ")[0]
-                    if new_prefix in prefixes:
-                        new_username = prefixes[new_prefix][0]
-                        new_groupname = prefixes[new_prefix][1]
-                        new_user = User.objects.get(username=new_username)
-                        new_group = Group.objects.get(name=new_groupname)
-                        print("SHARING {} {} with user={} group={}"
-                              .format(r.short_id, r.title.encode('ascii', 'ignore'),
-                                      new_username, new_groupname))
-                        UserResourcePrivilege.share(resource=r,
-                                                    user=new_user,
-                                                    privilege=PrivilegeCodes.OWNER,
-                                                    grantor=national_user)
-                        GroupResourcePrivilege.share(resource=r,
-                                                     group=new_group,
-                                                     privilege=PrivilegeCodes.VIEW,
-                                                     grantor=national_user)
-                    else:
-                        print("{} {} unknown prefix {}"
-                              .format(r.short_id,
-                                      r.title.encode('ascii', 'ignore'),
-                                      new_prefix))
-
-            # refresh for user and group changes from above
-            user_resources = set(BaseResource.objects.filter(r2urp__user=czo_user))
-            group_resources = set(BaseResource.objects.filter(r2grp__group=czo_group))
-
             if czo_user != national_user:
+                # Check that all resources have the appropriate prefix
+                for r in user_resources | group_resources:  # or r in user_resources for non-czo
+                    check_resource_prefix(czo_user, czo_group, r, czo_prefix, czo_mapper, national_user)
+
+                # refresh for user and group changes from above
+                user_resources = set(BaseResource.objects.filter(r2urp__user=czo_user))
+                group_resources = set(BaseResource.objects.filter(r2grp__group=czo_group))
+
+                # Now every resource is filed in the appropriate group,
+                # and non-matching resources are owned by CZO National.
+
                 # group owner should own all group resources and vice versa.
+                # This will only pick up changes for resources that had the proper prefix.
+
                 if len(user_resources - group_resources) != 0:
                     print("  The following user resources are not group resources")
                     for r in (user_resources - group_resources):
-                        # Make it so NOW. Default to VIEW privilege (unused)
-                        print("   SHARING {} {} with group {}"
-                              .format(r.short_id,
-                                      r.title.encode('ascii', 'ignore'),
-                                      czo_group.name))
-                        GroupResourcePrivilege.share(group=czo_group,
-                                                     resource=r,
-                                                     privilege=PrivilegeCodes.VIEW,
-                                                     grantor=national_user)
+                        check_resource_group(czo_group, r, national_user)
+
+                    # refresh group membership
+                    group_resources = set(BaseResource.objects.filter(r2grp__group=czo_group))
 
                 if len(group_resources - user_resources) != 0:
                     print("  The following group resources are not user resources:")
                     for r in (group_resources - user_resources):
-                        # Make it so NOW.
-                        print("    SHARING {} {} with user {}"
-                              .format(r.short_id,
-                                      r.title.encode('ascii', 'ignore'),
-                                      czo_user.username))
-                        UserResourcePrivilege.share(resource=r,
-                                                    user=czo_user,
-                                                    privilege=PrivilegeCodes.OWNER,
-                                                    grantor=national_user)
+                        check_resource_owners(national_user, czo_user, r, national_user)
 
-                # pick up changes from above
-                user_resources = set(BaseResource.objects.filter(r2urp__user=czo_user))
-                group_resources = set(BaseResource.objects.filter(r2grp__group=czo_group))
-                # at this point, user_resources and group_resources are the same.
+                    # refresh ownership
+                    user_resources = set(BaseResource.objects.filter(r2urp__user=czo_user))
 
-                for r in group_resources:
-                    check_resource_owners(national_user, czo_user, r, national_user)
-                    check_resource_group(czo_group, r, national_user)
-
-            else:  # czo national user and group
+            else:
+                # czo national user and group only runs this clause
                 # no assumption that user resources and group resources are the same.
                 # * user resources are all resources.
                 # * group resources are those that come from multiple sources.
+
+                # Check that all resources have the appropriate prefix
+                for r in group_resources:  # no user_resources because that's everything
+                    check_resource_prefix(czo_user, czo_group, r, czo_prefix,
+                                          czo_mapper, national_user)
+                # pick up changes from above
+                group_resources = set(BaseResource.objects.filter(r2grp__group=czo_group))
+
                 for r in group_resources:
-                    check_resource_owners(national_user, national_user, r, national_user)
-                    check_resource_group(national_group, r, national_user)
+                    check_resource_group(czo_group, r, national_user)
+
+                # pick up changes from above
+                group_resources = set(BaseResource.objects.filter(r2grp__group=czo_group))
+
+                for r in group_resources:
+                    check_resource_owners(national_user, czo_user, r, national_user)
 
 
 def is_equal_to_as_set(l1, l2):
