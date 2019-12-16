@@ -174,7 +174,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         national_user = User.objects.get(username='czo_national')
-        national_group = Group.objects.get(name='CZO National')
         czo_community = Community.objects.get(name='CZO National Community')
 
         czo_mapper = {}
