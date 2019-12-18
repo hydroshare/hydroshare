@@ -74,4 +74,4 @@ class Command(BaseCommand):
                            r.first_creator
                            # equivalently: r.content_object.creators.filter(order=1).first()
                            )
-                   ))
+                   )
