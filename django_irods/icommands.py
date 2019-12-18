@@ -15,8 +15,8 @@ class SessionException(Exception):
                                                "Error processing IRODS request: {exitcode}. "
                                                "stderr follows:\n\n{stderr}".format(
                                                    exitcode=exitcode, stderr=stderr))
-        self.stdout = stdout.decode()
-        self.stderr = stderr.decode()
+        self.stdout = stdout
+        self.stderr = stderr
         self.exitcode = exitcode
 
 
