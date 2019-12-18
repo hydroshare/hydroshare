@@ -125,7 +125,7 @@ class AbstractFileMetaData(models.Model):
                             th("Key")
                             th("Value")
                     with tbody():
-                        for k, v in self.extra_metadata.iteritems():
+                        for k, v in self.extra_metadata.items():
                             with tr(data_key=k):
                                 td(k)
                                 td(v)
@@ -173,13 +173,13 @@ class AbstractFileMetaData(models.Model):
             legend("Keywords")
             with form(id="id-keywords-filetype", action=action, method="post",
                       enctype="multipart/form-data"):
-                input(id="id-delete-keyword-filetype-action", type="hidden",
-                      value=delete_action)
+                eval(input(id="id-delete-keyword-filetype-action", type="hidden",
+                      value=delete_action))
                 with div(cls="tags"):
                     with div(id="add-keyword-wrapper", cls="input-group"):
-                        input(id="txt-keyword-filetype", cls="form-control",
+                        eval(input(id="txt-keyword-filetype", cls="form-control",
                               placeholder="keyword",
-                              type="text", name="keywords")
+                              type="text", name="keywords"))
                         with span(cls="input-group-btn"):
                             a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
                               type="button")
@@ -224,7 +224,7 @@ class AbstractFileMetaData(models.Model):
                             th("Edit/Remove")
                     with tbody():
                         counter = 0
-                        for k, v in self.extra_metadata.iteritems():
+                        for k, v in self.extra_metadata.items():
                             counter += 1
                             with tr(data_key=k):
                                 td(k)
@@ -350,7 +350,7 @@ class AbstractFileMetaData(models.Model):
             dc_subject.text = kw
 
         # add any key/value metadata items
-        for key, value in self.extra_metadata.iteritems():
+        for key, value in self.extra_metadata.items():
             hsterms_key_value = etree.SubElement(
                 rdf_Description, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
             hsterms_key_value_rdf_Description = etree.SubElement(
@@ -490,10 +490,10 @@ class AbstractFileMetaData(models.Model):
                     with div(cls="control-group"):
                         legend('Title')
                         with div(cls="controls"):
-                            input(value=dataset_name,
+                            eval(input(value=dataset_name,
                                   cls="form-control input-sm textinput textInput",
                                   id="file_dataset_name", maxlength="250",
-                                  name="dataset_name", type="text")
+                                  name="dataset_name", type="text"))
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
@@ -523,9 +523,9 @@ class AbstractFileMetaData(models.Model):
                                     label("Key", cls="control-label requiredField",
                                           fr="file_extra_meta_name")
                                     with div(cls="controls"):
-                                        input(cls="form-control input-sm textinput textInput",
+                                        eval(input(cls="form-control input-sm textinput textInput",
                                               id="file_extra_meta_name", maxlength="100",
-                                              name="name", type="text")
+                                              name="name", type="text"))
                                 with div(cls="control-group"):
                                     label("Value", cls="control-label requiredField",
                                           fr="file_extra_meta_value")
@@ -549,7 +549,7 @@ class AbstractFileMetaData(models.Model):
         counter = 0
         root_div = div(id="edit-keyvalue-filetype-modals")
         with root_div:
-            for k, v in self.extra_metadata.iteritems():
+            for k, v in self.extra_metadata.items():
                 counter += 1
                 modal_div = div(cls="modal fade",
                                 id="edit-keyvalue-filetype-modal-{}".format(counter),
@@ -576,21 +576,21 @@ class AbstractFileMetaData(models.Model):
                                                   cls="control-label requiredField",
                                                   fr="file_extra_meta_key_original")
                                             with div(cls="controls"):
-                                                input(value=k, readonly="readonly",
+                                                eval(input(value=k, readonly="readonly",
                                                       cls="form-control input-sm textinput "
                                                           "textInput",
                                                       id="file_extra_meta_key_original",
                                                       maxlength="100",
-                                                      name="key_original", type="text")
+                                                      name="key_original", type="text"))
                                         with div(cls="control-group"):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_key")
                                             with div(cls="controls"):
-                                                input(value=k,
+                                                eval(input(value=k,
                                                       cls="form-control input-sm textinput "
                                                           "textInput",
                                                       id="file_extra_meta_key", maxlength="100",
-                                                      name="key", type="text")
+                                                      name="key", type="text"))
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -614,7 +614,7 @@ class AbstractFileMetaData(models.Model):
         counter = 0
         root_div = div(id="delete-keyvalue-filetype-modals")
         with root_div:
-            for k, v in self.extra_metadata.iteritems():
+            for k, v in self.extra_metadata.items():
                 counter += 1
                 modal_div = div(cls="modal fade",
                                 id="delete-keyvalue-filetype-modal-{}".format(counter),
@@ -640,10 +640,10 @@ class AbstractFileMetaData(models.Model):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_name")
                                             with div(cls="controls"):
-                                                input(cls="form-control input-sm textinput "
+                                                eval(input(cls="form-control input-sm textinput "
                                                           "textInput", value=k,
                                                       id="file_extra_meta_key", maxlength="100",
-                                                      name="key", type="text", readonly="readonly")
+                                                      name="key", type="text", readonly="readonly"))
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -1315,7 +1315,7 @@ class AbstractLogicalFile(models.Model):
 
         # Set properties of the aggregation
         a._dc.title = self.dataset_name
-        agg_type_url = u"{site}/terms/{aggr_type}"\
+        agg_type_url = "{site}/terms/{aggr_type}"\
             .format(site=current_site_url, aggr_type=self.get_aggregation_type_name())
         a._dcterms.type = URIRef(agg_type_url)
         a._citoterms.isDocumentedBy = metadata_url
@@ -1338,7 +1338,7 @@ class AbstractLogicalFile(models.Model):
         files = self.files.all()
         resFiles = []
         for n, f in enumerate(files):
-            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
                 file_name=f.short_path)
@@ -1354,7 +1354,7 @@ class AbstractLogicalFile(models.Model):
         # Create a description of the contained aggregations and add it to the aggregation
         child_ore_aggregations = []
         for n, child_aggr in enumerate(self.get_children()):
-            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
                 aggr_name=child_aggr.map_short_file_path + '#aggregation')
@@ -1380,7 +1380,7 @@ class AbstractLogicalFile(models.Model):
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
         # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
-        xml_element_to_replace = u'<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
+        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
 

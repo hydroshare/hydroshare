@@ -335,7 +335,7 @@ def update_user_profile(request):
                 if not profile_form.is_valid():
                     errors.update(profile_form.errors)
 
-                msg = ' '.join([err[0] for err in errors.values()])
+                msg = ' '.join([err[0] for err in list(errors.values())])
                 messages.error(request, msg)
 
     except Exception as ex:

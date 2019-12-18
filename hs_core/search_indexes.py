@@ -50,7 +50,7 @@ def normalize_name(name):
     # Pad potential initials with spaces before running recognizer
     # For any character A-Z followed by "." and another character A-Z, add a space after the first.
     # (?=[A-Z]) means to find A-Z after the match string but not match it.
-    nname = re.sub(u"(?P<thing>[A-Z]\.)(?=[A-Z])", u"\g<thing> ", sname)
+    nname = re.sub("(?P<thing>[A-Z]\.)(?=[A-Z])", "\g<thing> ", sname)
 
     try:
         # probablepeople doesn't understand utf-8 encoding. Hand it pure unicode.
@@ -75,28 +75,28 @@ def normalize_name(name):
         if not normalized:
             normalized = nameparts.suffix
         else:
-            normalized = normalized + u' ' + nameparts.suffix
+            normalized = normalized + ' ' + nameparts.suffix
 
     if normalized:
-        normalized = normalized + u','
+        normalized = normalized + ','
 
     if nameparts.title:
         if not normalized:
             normalized = nameparts.title
         else:
-            normalized = normalized + u' ' + nameparts.title
+            normalized = normalized + ' ' + nameparts.title
 
     if nameparts.first:
         if not normalized:
             normalized = nameparts.first
         else:
-            normalized = normalized + u' ' + nameparts.first
+            normalized = normalized + ' ' + nameparts.first
 
     if nameparts.middle:
         if not normalized:
             normalized = nameparts.middle
         else:
-            normalized = u' ' + normalized + u' ' + nameparts.middle
+            normalized = ' ' + normalized + ' ' + nameparts.middle
 
     return normalized.strip()
 
@@ -361,7 +361,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
-                return unicode(publisher).lstrip()
+                return str(publisher).lstrip()
             else:
                 return None
         else:
@@ -994,6 +994,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_extra(self, obj):
         """ For extra metadata, include both key and value """
         extra = []
-        for key, value in obj.extra_metadata.items():
+        for key, value in list(obj.extra_metadata.items()):
             extra.append(key + ': ' + value)
         return extra

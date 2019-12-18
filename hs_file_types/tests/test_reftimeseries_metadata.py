@@ -8,7 +8,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
-from utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
+from .utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
 
 from hs_file_types.models import RefTimeseriesLogicalFile, RefTimeseriesFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH

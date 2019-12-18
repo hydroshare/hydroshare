@@ -436,10 +436,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                 agency_url="http://www.nsf.gov")
         agency_element = self.composite_resource.metadata.funding_agencies.all().filter(
             agency_name='NSF').first()
-        self.assertEquals(agency_element.agency_name, 'NSF')
-        self.assertEquals(agency_element.award_title, 'Cyber Infrastructure')
-        self.assertEquals(agency_element.award_number, 'NSF-101-20-6789')
-        self.assertEquals(agency_element.agency_url, 'http://www.nsf.gov')
+        self.assertEqual(agency_element.agency_name, 'NSF')
+        self.assertEqual(agency_element.award_title, 'Cyber Infrastructure')
+        self.assertEqual(agency_element.award_number, 'NSF-101-20-6789')
+        self.assertEqual(agency_element.agency_url, 'http://www.nsf.gov')
         some_idf = self.composite_resource.metadata.identifiers.all().filter(
             name='someIdentifier').first()
         metadata.update_element('identifier', some_idf.id,  name='someOtherIdentifier')

@@ -42,7 +42,7 @@ class ModelOutputValidationForm(forms.Form):
 
     def clean_includes_output(self):
         data = self.cleaned_data['includes_output']
-        if data == u'False':
+        if data == 'False':
             return False
         else:
             return True

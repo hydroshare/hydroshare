@@ -191,7 +191,7 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        err_msg = err_msg.format(list(FILE_TYPE_MAP.keys()))
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -220,7 +220,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     response_data = {'status': 'error'}
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        err_msg = err_msg.format(list(FILE_TYPE_MAP.keys()))
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -255,7 +255,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     response_data = {'status': 'error'}
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        err_msg = err_msg.format(list(FILE_TYPE_MAP.keys()))
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -575,7 +575,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     def validate_key():
-        if key in logical_file.metadata.extra_metadata.keys():
+        if key in list(logical_file.metadata.extra_metadata.keys()):
             ajax_response_data = {'status': 'error',
                                   'logical_file_type': logical_file.type_name(),
                                   'message': "Update failed. Key already exists."}
@@ -593,7 +593,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
             if not is_valid:
                 return json_response
             else:
-                if key_original in logical_file.metadata.extra_metadata.keys():
+                if key_original in list(logical_file.metadata.extra_metadata.keys()):
                     del logical_file.metadata.extra_metadata[key_original]
     else:
         # user trying to add a new pair of key/value
@@ -636,7 +636,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     key = request.POST['key']
-    if key in logical_file.metadata.extra_metadata.keys():
+    if key in list(logical_file.metadata.extra_metadata.keys()):
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
@@ -1002,11 +1002,11 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
         return json_response
 
     series_ids = logical_file.metadata.series_ids_with_labels
-    if series_id not in series_ids.keys():
+    if series_id not in list(series_ids.keys()):
         # this will happen only in case of CSV file upload when data is written
         # first time to the blank sqlite file as the series ids get changed to
         # uuids
-        series_id = series_ids.keys()[0]
+        series_id = list(series_ids.keys())[0]
     try:
         if resource_mode == 'view':
             metadata = logical_file.metadata.get_html(series_id=series_id)

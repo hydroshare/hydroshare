@@ -9,7 +9,7 @@ from dominate.tags import div, form, button, hr, i
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.signals import post_add_generic_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):

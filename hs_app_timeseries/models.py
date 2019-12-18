@@ -772,7 +772,7 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
         if metadata.series_names:
             # this condition is true if csv file has been uploaded but data has not been written
             # to the blank sqlite file
-            kwargs['series_ids'] = range(len(metadata.series_names))
+            kwargs['series_ids'] = list(range(len(metadata.series_names)))
 
         return super(UTCOffSet, cls).create(**kwargs)
 
@@ -783,7 +783,7 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
         if element.metadata.series_names:
             # this condition is true if csv file has been uploaded but data has not been written
             # to the blank sqlite file
-            kwargs['series_ids'] = range(len(element.metadata.series_names))
+            kwargs['series_ids'] = list(range(len(element.metadata.series_names)))
 
         super(UTCOffSet, cls).update(element_id, **kwargs)
 
@@ -971,7 +971,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         # once metadata changes are written to the blank sqlite file as
         # part of the sync operation.
         self.refresh_from_db()
-        return self.value_counts.keys()
+        return list(self.value_counts.keys())
 
     @property
     def series_ids(self):
@@ -996,7 +996,7 @@ class TimeSeriesMetaDataMixin(models.Model):
                 series_ids[series_id] = self._get_series_label(series_id, tgt_obj)
 
         # sort the dict on series names - item[1]
-        series_ids = OrderedDict(sorted(series_ids.items(), key=lambda item: item[1].lower()))
+        series_ids = OrderedDict(sorted(list(series_ids.items()), key=lambda item: item[1].lower()))
         return series_ids
 
     @classmethod
@@ -1038,7 +1038,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         if self.series_names:
             # applies to the case of csv file upload
             # check that we have each type of metadata element for each of the series ids
-            series_ids = range(0, len(self.series_names))
+            series_ids = list(range(0, len(self.series_names)))
             series_ids = set([str(n) for n in series_ids])
         else:
             series_ids = set(TimeSeriesResult.get_series_ids(metadata_obj=self))
@@ -1073,7 +1073,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         if self.series_names:
             # applies only in the case of csv file upload
             # check that we have each type of metadata element for each of the series ids
-            series_ids = range(0, len(self.series_names))
+            series_ids = list(range(0, len(self.series_names)))
             series_ids = set([str(n) for n in series_ids])
             if self.sites and series_ids != set(Site.get_series_ids(metadata_obj=self)):
                 missing_required_elements.append('Site')
@@ -1719,16 +1719,16 @@ class TimeSeriesMetaDataMixin(models.Model):
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row (header)
-            header = csv_reader.next()
-            first_row_data = csv_reader.next()
-            second_row_data = csv_reader.next()
+            header = next(csv_reader)
+            first_row_data = next(csv_reader)
+            second_row_data = next(csv_reader)
             time_interval = (parser.parse(second_row_data[0]) -
                              parser.parse(first_row_data[0])).seconds / 60
 
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row (header) and skip
-            csv_reader.next()
+            next(csv_reader)
             value_id = 1
             data_header = header[1:]
             for col, value in enumerate(data_header):
@@ -1742,7 +1742,7 @@ class TimeSeriesMetaDataMixin(models.Model):
                 data_col_index = col + 1
                 # start at the beginning of data row
                 fl_obj.seek(0)
-                csv_reader.next()
+                next(csv_reader)
                 for date_time, data_value in self._read_csv_specified_column(
                         csv_reader, data_col_index):
                     date_time = parser.parse(date_time)

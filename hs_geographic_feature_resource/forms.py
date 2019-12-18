@@ -47,7 +47,7 @@ class OriginalCoverageForm(forms.Form):
         self.errors.clear()
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
 
 
@@ -98,7 +98,7 @@ class GeometryInformationForm(forms.Form):
         self.errors.clear()
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
 
 

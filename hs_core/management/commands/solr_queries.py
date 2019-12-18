@@ -27,11 +27,11 @@ class Command(BaseCommand):
             for result in list(sqs):
                 stored = result.get_stored_fields()
                 print("  {}: {} {} {} {}".format(
-                    unicode(stored['short_id']).encode('ascii', 'replace'),
-                    unicode(stored['title']).encode('ascii', 'replace'),
-                    unicode(stored['author']).encode('ascii', 'replace'),
-                    unicode(stored['created']).encode('ascii', 'replace'),
-                    unicode(stored['modified']).encode('ascii', 'replace')))
+                    str(stored['short_id']).encode('ascii', 'replace'),
+                    str(stored['title']).encode('ascii', 'replace'),
+                    str(stored['author']).encode('ascii', 'replace'),
+                    str(stored['created']).encode('ascii', 'replace'),
+                    str(stored['modified']).encode('ascii', 'replace')))
 
         else:
             print("no queries to try")

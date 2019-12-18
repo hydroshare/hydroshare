@@ -286,11 +286,11 @@ class TestCreateResource(HSRESTTestCase):
         # there should be 1 originalcoverage element
         self.assertEqual(resource.metadata.ori_coverage.all().count(), 1)
         ori_coverage = resource.metadata.ori_coverage.all().first()
-        self.assertEquals(ori_coverage.value, value)
-        self.assertEquals(ori_coverage.projection_string_text, '+proj=tmerc +lon_0=-111.0 '
+        self.assertEqual(ori_coverage.value, value)
+        self.assertEqual(ori_coverage.projection_string_text, '+proj=tmerc +lon_0=-111.0 '
                                                                '+lat_0=0.0 +x_0=500000.0 '
                                                                '+y_0=0.0 +k_0=0.9996')
-        self.assertEquals(ori_coverage.projection_string_type, 'Proj4 String')
+        self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
 
         # there should be 1 variable element
         self.assertEqual(resource.metadata.variables.all().count(), 1)
@@ -336,8 +336,8 @@ class TestCreateResource(HSRESTTestCase):
                          parser.parse('12/12/2010').date())
 
         # test extra metadata
-        self.assertEquals(resource.extra_metadata.get('latitude'), '40')
-        self.assertEquals(resource.extra_metadata.get('longitude'), '-110')
+        self.assertEqual(resource.extra_metadata.get('latitude'), '40')
+        self.assertEqual(resource.extra_metadata.get('longitude'), '-110')
 
         self.resources_to_delete.append(res_id)
 
@@ -358,8 +358,8 @@ class TestCreateResource(HSRESTTestCase):
         resource = get_resource_by_shortkey(res_id)
 
         # test extra metadata
-        self.assertEquals(resource.extra_metadata.get('latitude'), '40')
-        self.assertEquals(resource.extra_metadata.get('longitude'), '-110')
+        self.assertEqual(resource.extra_metadata.get('latitude'), '40')
+        self.assertEqual(resource.extra_metadata.get('longitude'), '-110')
 
         self.resources_to_delete.append(res_id)
 
@@ -489,15 +489,15 @@ class TestCreateResource(HSRESTTestCase):
 
         self.assertEqual(resource.metadata.referenceURLs.all().count(), 1)
         referenceURLs = resource.metadata.referenceURLs.all().first()
-        self.assertEquals(referenceURLs.value, ref_url)
-        self.assertEquals(referenceURLs.type, ref_type)
+        self.assertEqual(referenceURLs.value, ref_url)
+        self.assertEqual(referenceURLs.type, ref_type)
 
         self.assertEqual(resource.metadata.sites.all().count(), 1)
         sites = resource.metadata.sites.all().first()
-        self.assertEquals(sites.code, "LR_WaterLab_AA")
+        self.assertEqual(sites.code, "LR_WaterLab_AA")
 
         self.assertEqual(resource.metadata.variables.all().count(), 1)
         variables = resource.metadata.variables.all().first()
-        self.assertEquals(variables.code, "WaterTemp_EXO")
+        self.assertEqual(variables.code, "WaterTemp_EXO")
 
         self.resources_to_delete.append(res_id)

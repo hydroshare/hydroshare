@@ -204,7 +204,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
                     break
             del storage_paths[index]
 
-        self.assertEquals(0, len(storage_paths))
+        self.assertEqual(0, len(storage_paths))
 
     def test_auto_aggregate_files_add_with_different_folder(self):
         """test adding files in different folders"""
@@ -237,7 +237,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
                     break
             del storage_paths[index]
 
-        self.assertEquals(0, len(storage_paths))
+        self.assertEqual(0, len(storage_paths))
 
     def test_auto_aggregate_files_add_child_folder(self):
         """test adding files in different folders"""
@@ -272,7 +272,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
                     break
             del storage_paths[index]
 
-        self.assertEquals(0, len(storage_paths))
+        self.assertEqual(0, len(storage_paths))
 
     def test_auto_aggregate_csv_file_add_to_root(self):
         """test adding a csv file to root folder should not create a timeseries aggregation"""

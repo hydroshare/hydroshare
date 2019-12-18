@@ -86,7 +86,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
         user_access = UserAccess(user=request.user)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
-        keys = request.data.keys()
+        keys = list(request.data.keys())
 
         if "user_id" in keys and "group_id" in keys:
             return Response(
@@ -140,7 +140,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, pk):
         view_utils.authorize(request, pk,
                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
-        keys = request.query_params.keys()
+        keys = list(request.query_params.keys())
         user_access = UserAccess(user=request.user)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
 

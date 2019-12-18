@@ -220,7 +220,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
             method_code = method_obj.code if hasattr(method_obj, "code") else None
             method_id = method_obj.id if hasattr(method_obj, "id") else None
             method_description = method_obj.description if hasattr(method_obj, "description") else None
-            if type(method_description) is unicode:
+            if type(method_description) is str:
                 method_description = method_description.encode('ascii', 'ignore')
         if method_code is None:
             method_code = method_code_query

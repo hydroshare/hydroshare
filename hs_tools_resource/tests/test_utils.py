@@ -8,7 +8,7 @@ class TestToolsResourceUtils(TestCase):
         try:
             in_file = open("hs_tools_resource/tests/images/wiki_watershed_exif.jpg", "rb")
             image_type = get_image_type(h=in_file.read())
-            self.assertEquals("jpeg", image_type)
+            self.assertEqual("jpeg", image_type)
         except:
             self.fail("Failure occurred while opening or getting image type")
         finally:
@@ -16,4 +16,4 @@ class TestToolsResourceUtils(TestCase):
 
     def test_bad_get_image_type(self):
         image_type = get_image_type(h=bytearray("garbage"))
-        self.assertEquals(None, image_type)
+        self.assertEqual(None, image_type)

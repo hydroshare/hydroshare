@@ -162,7 +162,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
     class SpatialReference(object):
 
@@ -213,7 +213,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(str(self))
 
 
 class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
