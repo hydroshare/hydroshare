@@ -28,7 +28,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return str(str(self))
+        return str(self))
 
     def _read_resource_metadata(self):
         super(ModelInstanceResourceMeta, self)._read_resource_metadata()
