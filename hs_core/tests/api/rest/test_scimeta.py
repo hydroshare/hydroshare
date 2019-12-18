@@ -49,7 +49,7 @@ class TestScienceMetadata(SciMetaTestCase):
             abstract = etree.SubElement(abs_rdf_desc, "{%s}abstract" % self.NS['dcterms'])
             abstract.text = abstract_text
             # Write out to a file
-            out = etree.tostring(scimeta, pretty_print=True).decode()
+            out = etree.tostring(scimeta, encoding='UTF-8', pretty_print=True).decode()
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
             with open(sci_meta_new, 'w') as f:
                 f.writelines(out)
@@ -75,7 +75,7 @@ class TestScienceMetadata(SciMetaTestCase):
             # Make sure changing the resource ID in the resource metadata causes an error
             self.updateScimetaResourceID(scimeta, 'THISISNOTARESOURCEID')
             #    Write out to a file
-            out = etree.tostring(scimeta, pretty_print=True).decode()
+            out = etree.tostring(scimeta, encoding='UTF-8', pretty_print=True).decode()
             with open(sci_meta_new, 'w') as f:
                 f.writelines(out)
 

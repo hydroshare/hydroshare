@@ -32,7 +32,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # content = json.loads(response.content)
+        # content = json.loads(response.content.decode())
 
     def test_put_scimeta_generic_resource(self):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
@@ -1420,7 +1420,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         response = self.client.get(sysmeta_url, format='json')
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content["app_home_page_url"]["value"], "https://mywebapp.com")
         self.assertEqual(content["mailing_list_url"]["value"], "https://mywebapp.com/mailinglist")

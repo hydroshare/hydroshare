@@ -85,7 +85,7 @@ def sync_mailchimp(active_subscribed, list_id):
     # get total members
     response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
         'hs-celery', settings.MAILCHIMP_PASSWORD))
-    total_items = json.loads(response.content)["total_items"]
+    total_items = json.loads(response.content.decode())["total_items"]
     # get list of all member ids
     response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
                                                                           total_items=total_items),
@@ -93,7 +93,7 @@ def sync_mailchimp(active_subscribed, list_id):
                                                             settings.MAILCHIMP_PASSWORD))
     # clear the email list
     delete_count = 0
-    for member in json.loads(response.content)["members"]:
+    for member in json.loads(response.content.decode())["members"]:
         if member["status"] == "subscribed":
             session_response = session.delete(
                 (url + "/{id}").format(list_id=list_id, id=member["id"]),
@@ -567,7 +567,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
             try:
 
                 resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content)
+                response_content = json.loads(response.content.decode())
 
                 for key, value in response_content["resource"].items():
                     resource.extra_metadata[key] = value
@@ -577,7 +577,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     logical_files = list(resource.logical_files)
                     lf = logical_files[[i.aggregation_name for i in
                                         logical_files].index(
-                                                    url["layer_name"].encode("utf-8")
+                                                    url["layer_name"].encode()
                                                 )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()

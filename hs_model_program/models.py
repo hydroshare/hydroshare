@@ -202,7 +202,7 @@ class ModelProgramMetaData(CoreMetaData):
             model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
             model_code_repository.text = self.program.modelCodeRepository
 
-        xml_string = etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
+        xml_string = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
         return xml_string
 

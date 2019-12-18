@@ -79,7 +79,7 @@ def sites_from_soap(wsdl_url, locations='[:]'):
             response = client.service.GetSites(locations)
         elif wml_ver == 10:
             response = client.service.GetSitesXml(locations)
-        response = response.encode('utf-8')
+        response = response.encode()
         wml_sites = wmlParse(response, wml_ver)
         counter = 0
         sites_list = []
@@ -106,7 +106,7 @@ def site_info_from_soap(wsdl_url, **kwargs):
         variables_list = []
 
         response = client.service.GetSiteInfo(site)
-        response = response.encode('utf-8')
+        response = response.encode()
         wml_siteinfo = wmlParse(response, wml_ver)
         counter = 0
         for series in wml_siteinfo.sites[0].series_catalogs[0].series:
@@ -462,7 +462,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
             r = requests.get(service_url, verify=False)
             if r.status_code != 200:
                 raise Exception("Query REST endpoint failed")
-            response = r.text.encode('utf-8')
+            response = r.text.encode()
         root = etree.XML(response)
         wml_version_xml_tag = get_wml_version_from_xml_tag(root)
         if wml_version_xml_tag == 10 or wml_version_xml_tag == 11:
@@ -591,7 +591,7 @@ def save_ts_to_files(res, tempdir, ts):
 
         root_wml_1 = etree.fromstring(ts['wml_str'])
         with open(xml_1011_full_path, 'w') as xml_1_file:
-            xml_1_file.write(etree.tostring(root_wml_1,
+            xml_1_file.write(etree.tostring(root_wml_1, encoding='UTF-8',
                                             pretty_print=True).decode())
         res_file_info_array.append({"fname": xml_1011_name, "fullpath": xml_1011_full_path})
 

@@ -529,7 +529,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         if ori_cov_obj is not None:
             ori_cov_obj.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def update_element(self, element_model_name, element_id, **kwargs):
         super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)

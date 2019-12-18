@@ -35,7 +35,7 @@ def get_his_urls(request):
     try:
         r = requests.get(HIS_CENTRAL_URL)
         if r.status_code == 200:
-            response = r.text.encode('utf-8')
+            response = r.text.encode()
             root = etree.XML(response)
         else:
             raise Exception("Query HIS central error.")
@@ -165,7 +165,7 @@ def verify_rest_url(request):
             params = f.cleaned_data
             url = params['url']
             ts = requests.get(url, verify=False)
-            ts_xml = etree.XML(ts.text.encode('utf-8'))
+            ts_xml = etree.XML(ts.text.encode())
             if ts.status_code == 200 and 'timeseriesresponse' in ts_xml.tag.lower():
                 return json_or_jsonp(request, {"status": "success"})
             elif ts.status_code == 200 and 'collection' in ts_xml.tag.lower():
