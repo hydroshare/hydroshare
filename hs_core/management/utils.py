@@ -528,7 +528,7 @@ def repair_resource(resource, logger, stop_on_error=False,
         if count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
-                          resource.title)))
+                          resource.title))
 
     _, count = check_irods_files(resource,
                                  stop_on_error=False,
@@ -541,7 +541,7 @@ def repair_resource(resource, logger, stop_on_error=False,
     if count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
-                      resource.title)))
+                      resource.title))
 
 
 class CheckResource(object):
@@ -593,7 +593,7 @@ class CheckResource(object):
             print("  ... resource {} has type {} and title {}"
                   .format(self.resource.short_id,
                           self.resource.resource_type,
-                          self.resource.title)))
+                          self.resource.title))
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):

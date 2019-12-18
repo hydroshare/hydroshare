@@ -269,7 +269,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
     class Variable(object):
 
@@ -291,7 +291,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
     class Method(object):
 
@@ -313,7 +313,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
     class ProcessingLevel(object):
 
@@ -331,7 +331,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
     class TimeSeriesResult(object):
 
@@ -357,4 +357,4 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)

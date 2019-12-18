@@ -15,8 +15,8 @@ class SessionException(Exception):
                                                "Error processing IRODS request: {exitcode}. "
                                                "stderr follows:\n\n{stderr}".format(
                                                    exitcode=exitcode, stderr=stderr))
-        self.stdout = str(stdout)
-        self.stderr = str(stderr)
+        self.stdout = stdout.decode()
+        self.stderr = stderr.decode()
         self.exitcode = exitcode
 
 
@@ -162,7 +162,7 @@ class Session(object):
 
         cmdStr = os.path.join(self.icommands_path, icommand)
         argList = [cmdStr]
-        uargs = [x.encode('utf-8') for x in args]
+        uargs = [x.encode() for x in args]
         argList.extend(uargs)
 
         stdin = None

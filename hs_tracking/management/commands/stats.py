@@ -137,7 +137,7 @@ class Command(BaseCommand):
                 last_login,
                 up.user_id,
             ]
-            w.writerow([str(v).encode("utf-8") for v in values])
+            w.writerow([str(v).encode() for v in values])
 
     def resources_details(self):
         w = csv.writer(sys.stdout)
@@ -164,7 +164,7 @@ class Command(BaseCommand):
                     r.user.userprofile.user_type,
                     r.user_id
                 ]
-                w.writerow([str(v).encode("utf-8") for v in values])
+                w.writerow([str(v).encode() for v in values])
 
             except Exception as e:
                 err.error(e)
@@ -197,7 +197,7 @@ class Command(BaseCommand):
             vals = self.dict_spc_to_pipe(v.value)
 
             # encode variables as key value pairs (except for timestamp)
-            values = [str(v.timestamp).encode('utf-8'),
+            values = [str(v.timestamp).encode(),
                       'user_id=%s' % str(uid).encode(),
                       'session_id=%s' % str(v.session.id).encode(),
                       'action=%s' % str(v.name).encode(),

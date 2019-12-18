@@ -193,7 +193,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
     class BandInformation(object):
 
@@ -214,7 +214,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
     class SpatialReference(object):
 
@@ -236,7 +236,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(str(self))
+            return str(self)
 
         def __init__(self, value_str):
             kvp = value_str.split(';')

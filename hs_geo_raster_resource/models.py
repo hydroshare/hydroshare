@@ -532,4 +532,4 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
         if self.originalCoverage:
             self.originalCoverage.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print).decode()
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
