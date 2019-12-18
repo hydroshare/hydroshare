@@ -54,7 +54,7 @@ class HsDeserializationDependencyException(HsDeserializationException):
         return msg
 
     def __unicode__(self):
-        return str(self))
+        return str(self)
 
 
 def _prepare_resource_files_for_creation(file_paths):
@@ -916,7 +916,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
         def set_uri(self, uri):
             """
@@ -974,7 +974,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ResourceRights(object):
 
@@ -989,7 +989,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ResourceCoverage(object):
         pass
@@ -1007,7 +1007,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1068,7 +1068,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1139,7 +1139,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1227,7 +1227,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
         def __init__(self, uri, relationship_uri):
             self.uri = None

@@ -37,7 +37,7 @@ class ModelProgramResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return str(self))
+        return str(self)
 
     def _read_resource_metadata(self):
         super(ModelProgramResourceMeta, self)._read_resource_metadata()

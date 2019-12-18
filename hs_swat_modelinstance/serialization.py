@@ -36,7 +36,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return str(self))
+        return str(self)
 
     def _read_resource_metadata(self):
         super(SWATModelInstanceResourceMeta, self)._read_resource_metadata()
@@ -343,7 +343,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ExecutedBy(object):
 
@@ -357,7 +357,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ModelObjective(object):
 
@@ -370,7 +370,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class SimulationType(object):
 
@@ -383,7 +383,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ModelMethod(object):
 
@@ -402,7 +402,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ModelParameter(object):
 
@@ -415,7 +415,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
 
     class ModelInput(object):
 
@@ -476,4 +476,4 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return str(self))
+            return str(self)
