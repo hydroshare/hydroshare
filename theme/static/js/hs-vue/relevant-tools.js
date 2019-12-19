@@ -111,6 +111,9 @@ let relevantToolsApp = new Vue({
                     let fullURL;
                     if ($(this).attr("data-url-aggregation")) {
                         fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_AGG_KEY", path);
+                        var geoserverID = path.replace("\/", " ");
+                        geoserverID = geoserverID.replace(/\.[^/.]+$/, "");
+                        fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_GEOSERVER_KEY", geoserverID);
                         if (file.children('span.fb-file-type').text() === 'File Folder') {
                             // TODO: populate main_file value in aggregation object of structure response
                             fullURL = fullURL.replace("HS_JS_MAIN_FILE_KEY", file.attr("data-main-file"));

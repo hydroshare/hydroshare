@@ -130,7 +130,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                    '&res_id=${HS_RES_TYPE}' \
                    '&usr=${HS_USR_NAME}' \
                    '&fil=${HS_AGG_PATH}' \
-                   '&main=${HS_MAIN_FILE}'
+                   '&main=${HS_MAIN_FILE}' \
+                   '$geoserver=${HS_AGG_GEOSERVER}'
 
         post_data = {'value': good_url}
         url_params = {'element_name': "requesturlbaseaggregation",
@@ -170,7 +171,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                    '&res_id=${HS_RES_TYPE}' \
                    '&usr=${HS_USR_NAME}' \
                    '&fil=${HS_AGG_PATH}' \
-                   '&main=${HS_MAIN_FILE}'
+                   '&main=${HS_MAIN_FILE}' \
+                   '$geoserver=${HS_AGG_GEOSERVER}'
 
         post_data = {'value': good_url}
         url_params = {'element_name': "requesturlbaseaggregation",

@@ -117,6 +117,7 @@ def get_app_dict(user, resource):
     # HS_JS_AGG_KEY and HS_JS_FILE_KEY are overwritten by jquery to launch the url specific to each
     # file
     hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_AGG_KEY"
+    hs_term_dict_file["HS_AGG_GEOSERVER"] = "HS_JS_GEOSERVER_KEY"
     hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_FILE_KEY"
     hs_term_dict_file["HS_MAIN_FILE"] = "HS_JS_MAIN_FILE_KEY"
     return [resource.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file]
