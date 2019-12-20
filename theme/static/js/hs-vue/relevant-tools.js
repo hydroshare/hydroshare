@@ -111,6 +111,7 @@ let relevantToolsApp = new Vue({
                     let fullURL;
                     if ($(this).attr("data-url-aggregation")) {
                         fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_AGG_KEY", path);
+                        // geoserver key is the path with spaces for separator and the extension removed
                         var geoserverID = path.replace("\/", " ");
                         geoserverID = geoserverID.replace(/\.[^/.]+$/, "");
                         fullURL = $(this).attr("data-url-aggregation").replace("HS_JS_GEOSERVER_KEY", geoserverID);
