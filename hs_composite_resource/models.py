@@ -70,10 +70,12 @@ class CompositeResource(BaseResource):
                 return False
         return True
 
-    def remove_aggregation_from_file(self, moved_res_file):
+    def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder):
         """removes association with aggregation (fileset or model program) from this
         moved resource file
         :param  moved_res_file: an instance of a ResourceFile which has been moved to a different folder
+        :param  src_folder: folder from which the file got moved from
+        :param  tgt_folder: folder to which the file got moved into
         """
         if moved_res_file.has_logical_file and (moved_res_file.logical_file.is_fileset or
                                                 moved_res_file.logical_file.is_model_program):
@@ -91,7 +93,10 @@ class CompositeResource(BaseResource):
                             moved_res_file.save()
                             # delete any instance of ModelProgramResourceFileType associated with this moved file
                             if aggregation.is_model_program:
-                                ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                                # if the file is getting moved within a model program folder hierarchy then no need
+                                # to delete any associated ModelProgramResourceFileType object
+                                if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
+                                    ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
                 except ObjectDoesNotExist:
                     pass
 
