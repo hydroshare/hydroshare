@@ -528,7 +528,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 urls.append(service.url)
         return services
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(RefTimeseriesFileMetaData, self).get_html()

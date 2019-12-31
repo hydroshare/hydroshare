@@ -51,7 +51,7 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
             return True
         return False
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(GenericFileMetaDataMixin, self).get_html()

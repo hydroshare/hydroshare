@@ -48,7 +48,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         # with this metadata object
         return self.ori_coverage.all().first()
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(NetCDFFileMetaData, self).get_html()

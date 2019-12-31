@@ -46,7 +46,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(GeoFeatureFileMetaData, self).get_html()

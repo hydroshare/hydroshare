@@ -52,7 +52,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         elements += list(self.bandInformations.all())
         return elements
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function to generate html needed to display metadata
         in view mode"""
 
