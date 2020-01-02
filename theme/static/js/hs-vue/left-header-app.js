@@ -134,6 +134,17 @@ Vue.component('add-author-modal', {
                 vue.addAuthorError = "Select a user to add as an author";
                 return;
             }
+            else {
+                // Check if this author is already added
+                let alreadyExists = leftHeaderApp.$data.authors.map(function (author) {
+                        return author.id;
+                    }).indexOf(userId) >= 0;
+
+                if (alreadyExists) {
+                    vue.addAuthorError = "This author has already been added to this resource";
+                    return;
+                }
+            }
 
             let url = '/hsapi/_internal/get-user-or-group-data/' + userId + "/false";
 
