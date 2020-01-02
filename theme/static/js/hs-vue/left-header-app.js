@@ -135,10 +135,10 @@ Vue.component('add-author-modal', {
                 return;
             }
             else {
-                // Check if this author is already added
-                let alreadyExists = leftHeaderApp.$data.authors.map(function (author) {
-                        return author.id;
-                    }).indexOf(userId) >= 0;
+                // Check if this author is already added.
+                const alreadyExists = leftHeaderApp.$data.authors.map(function (author) {
+                        return author.profileUrl;
+                    }).indexOf("/user/" + userId + "/") >= 0;
 
                 if (alreadyExists) {
                     vue.addAuthorError = "This author has already been added to this resource";
