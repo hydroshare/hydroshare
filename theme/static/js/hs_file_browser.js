@@ -568,13 +568,13 @@ function bindFileBrowserItemEvents() {
 
     // Drop
     if (mode === "edit") {
+        var selection = $("#fb-files-container li.ui-selected");
         $(".droppable").droppable({
             drop: function (event, ui) {
                 var destination = $(event.target);
                 if (isVirtualFolder(destination)) {
                     return; // Moving files into aggregations is not allowed
                 }
-                var selection = $("#fb-files-container li.ui-selected");
                 var destName = destination.find(".fb-file-name").text();
                 var destFileType = destination.find(".fb-file-type").text();
 
@@ -585,11 +585,11 @@ function bindFileBrowserItemEvents() {
                 // Load the files to be moved
                 sourcePaths = {path: getCurrentPath().path, selected: selection};
                 paste(getCurrentPath().path.concat(destName));
-                $("#fb-files-container li.ui-selected").fadeOut();
+                selection.fadeOut();
             },
             over: function (event, ui) {
                 if (!$(event.target).hasClass("ui-selected")) {
-                    $("#fb-files-container li.ui-selected").addClass("fb-drag-cutting");
+                    selection.addClass("fb-drag-cutting");
                     let target = $(event.target);
                     if (!target.attr("data-logical-file-id")) {
                         target.addClass("fb-drag-cutting");
@@ -597,7 +597,7 @@ function bindFileBrowserItemEvents() {
                 }
             },
             out: function (event, ui) {
-                $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
+                selection.removeClass("fb-drag-cutting");
                 $(event.target).removeClass("fb-drag-cutting");
             },
             accept: 'li'
