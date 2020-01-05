@@ -271,8 +271,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                 else:
                                     release_date = ""
                                 dom_tags.input(value=release_date,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_release_date", maxlength="250",
+                                               cls="form-control input-sm dateinput",
+                                               id="file_release_date",
                                                name="release_date", type="text")
 
                             dom_tags.legend('Website')
@@ -340,9 +340,7 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
     """ One file or more than one files in a specific folder can be part of this aggregation """
 
     # attribute to store type of model program (SWAT, UEB etc)
-    # not setting the CHOICE option here to avoid  new migration as the ModelProgramType.CHOICE will be
-    # changing as we support more model program types
-    model_program_type = models.PositiveSmallIntegerField(default=ModelProgramType.UNKNOWN_PROGRAM)
+    model_program_type = models.CharField(max_length=255, default="Unknown Model Program")
 
     metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file")
 
