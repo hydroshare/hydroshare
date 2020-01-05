@@ -223,7 +223,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             for res_file in aggregation.files.all():
                 with dom_tags.div(cls="row file-row"):
                     with dom_tags.div(cls="col-md-6"):
-                        dom_tags.p(res_file.file_name)
+                        dom_tags.p(res_file.short_path)
                     with dom_tags.div(cls="col-md-6"):
                         mp_file_type_obj = self.mp_file_types.filter(res_file=res_file).first()
                         with dom_tags.select(cls="form-control"):
