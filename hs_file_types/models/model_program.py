@@ -15,38 +15,6 @@ from base import AbstractLogicalFile, FileTypeContext
 from generic import GenericFileMetaDataMixin
 
 
-class ModelProgramType(object):
-    UNKNOWN_PROGRAM = 1
-    SWAT_PROGRAM = 2
-    MODFLOW_PROGRAM = 3
-    UEB_PROGRAM = 4
-
-    CHOICES = (
-        (UNKNOWN_PROGRAM, "Unknown Model Program"),
-        (SWAT_PROGRAM, "SWAT Model Program"),
-        (MODFLOW_PROGRAM, "MODFLOW Model Program"),
-        (UEB_PROGRAM, "UEB Model Program")
-    )
-
-    @classmethod
-    def from_string(cls, model_program_name):
-        if model_program_name.lower() == "unknown model program":
-            return ModelProgramType.UNKNOWN_PROGRAM
-        if model_program_name.lower() == "swat model program":
-            return ModelProgramType.SWAT_PROGRAM
-        if model_program_name.lower() == "modflow model program":
-            return ModelProgramType.MODFLOW_PROGRAM
-        if model_program_name.lower() == "ueb model program":
-            return ModelProgramType.UEB_PROGRAM
-        return None
-
-    @classmethod
-    def from_number(cls, model_program_number):
-        model_types = dict(ModelProgramType.CHOICES)
-        model_type_name = model_types.get(model_program_number, None)
-        return model_type_name
-
-
 class ModelProgramResourceFileType(models.Model):
     RELEASE_NOTES = 1
     DOCUMENTATION = 2
@@ -164,8 +132,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         mp_program_type_div = dom_tags.div()
         with mp_program_type_div:
             dom_tags.legend("Model Program Type")
-            mp_types_dict = dict(ModelProgramType.CHOICES)
-            dom_tags.p(mp_types_dict[self.logical_file.model_program_type])
+            dom_tags.p(self.logical_file.model_program_type)
         html_string += mp_program_type_div.render()
 
         if self.version:
@@ -259,7 +226,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                         dom_tags.p(res_file.file_name)
                     with dom_tags.div(cls="col-md-6"):
                         mp_file_type_obj = self.mp_file_types.filter(res_file=res_file).first()
-                        with dom_tags.select():
+                        with dom_tags.select(cls="form-control"):
                             dom_tags.option("Select file type", value="")
                             for mp_file_type in ModelProgramResourceFileType.CHOICES:
                                 mp_file_type_name = mp_file_type[1]
@@ -283,19 +250,10 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                     with dom_tags.div(cls="form-group"):
                         with dom_tags.div(cls="control-group"):
                             with dom_tags.div(id="mp-program-type"):
-                                dom_tags.legend('Model Program Type')
+                                dom_tags.legend('Model Program Type*')
                                 dom_tags.input(type="text", name="mp_program_type",
-                                               value=self.logical_file.model_program_type, style="display: none;")
-                                with dom_tags.div(cls="controls"):
-                                    mp_types_dict = dict(ModelProgramType.CHOICES)
-                                    with dom_tags.select(style="width: 100%;"):
-                                        for mp_type_key in mp_types_dict:
-                                            if self.logical_file.model_program_type == mp_type_key:
-                                                dom_tags.option(mp_types_dict[mp_type_key], selected="selected",
-                                                                value=mp_type_key)
-                                            else:
-                                                dom_tags.option(mp_types_dict[mp_type_key], value=mp_type_key)
-
+                                               cls="form-control input-sm textinput",
+                                               value=self.logical_file.model_program_type)
                             dom_tags.legend('Version', style="padding-top: 15px;")
                             with dom_tags.div(cls="controls"):
                                 if self.version:
@@ -419,7 +377,7 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
-        return ModelProgramType.from_number(self.model_program_type)
+        return self.model_program_type
 
     @classmethod
     def get_main_file_type(cls):
