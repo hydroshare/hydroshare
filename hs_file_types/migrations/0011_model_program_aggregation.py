@@ -12,7 +12,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0045_delete_topics'),
+        ('hs_core', '0046_auto_20191104_2035'),
         ('hs_composite_resource', '0001_initial'),
         ('hs_file_types', '0010_auto_20181209_0255'),
     ]
