@@ -121,11 +121,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     has_web_ref = res_has_web_reference(content_model)
 
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
-    if settings.COMMUNITIES_ENABLED:
-        topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
-        topics = list(topics)  # force QuerySet evaluation
-    else:
-        topics = []
+    topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+    topics = list(topics)  # force QuerySet evaluation
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -325,7 +322,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,
-               'communities_enabled': settings.COMMUNITIES_ENABLED,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all())

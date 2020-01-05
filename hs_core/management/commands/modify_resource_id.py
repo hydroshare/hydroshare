@@ -67,7 +67,6 @@ class Command(BaseCommand):
         try:
             with transaction.atomic():
                 print("Deleting existing bag")
-                res.bags.all().delete()
                 res.setAVU("bag_modified", True)
                 res.setAVU('metadata_dirty', 'true')
 

@@ -1,3 +1,4 @@
+import json
 from rest_framework import status
 
 from hs_core.hydroshare import resource
@@ -1318,7 +1319,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
-    def test_put_web_app_resource_with_core_metadata(self):
+    def test_put_web_app_resource_tool_metadata(self):
         # testing bulk metadata update that includes both core metadata and resource specific
         # metadata update
 
@@ -1395,11 +1396,40 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             },
             "apphomepageurl": {
                 "value": "https://mywebapp.com"
+            },
+            "mailing_list_url": {
+                "value": "https://mywebapp.com/mailinglist"
+            },
+            "testing_protocol_url": {
+                "value": "https://mywebapp.com/testingprotocol"
+            },
+            "help_page_url": {
+                "value": "https://mywebapp.com/helppage"
+            },
+            "source_code_url": {
+                "value": "https://mywebapp.com/sourcecode"
+            },
+            "issues_page_url": {
+                "value": "https://mywebapp.com/issues"
+            },
+            "roadmap": {
+                "value": "roadmap"
             }
         }
 
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        response = self.client.get(sysmeta_url, format='json')
+        content = json.loads(response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(content["app_home_page_url"]["value"], "https://mywebapp.com")
+        self.assertEqual(content["mailing_list_url"]["value"], "https://mywebapp.com/mailinglist")
+        self.assertEqual(content["testing_protocol_url"]["value"], "https://mywebapp.com/testingprotocol")
+        self.assertEqual(content["help_page_url"]["value"], "https://mywebapp.com/helppage")
+        self.assertEqual(content["source_code_url"]["value"], "https://mywebapp.com/sourcecode")
+        self.assertEqual(content["issues_page_url"]["value"], "https://mywebapp.com/issues")
+        self.assertEqual(content["roadmap"]["value"], "roadmap")
+
         self.resource.delete()
 
     def test_put_web_app_resource_without_core_metadata(self):

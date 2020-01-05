@@ -83,7 +83,7 @@ services:
     stdin_open: true
     tty: true
   postgis:
-    image: hydroshare/hs_postgres:9.5.0
+    image: hydroshare/hs_postgres:9.4.7
     container_name: postgis
     hostname: postgis
     volumes:

@@ -1,0 +1,11 @@
+This is the output of check_czo_groups_test on a clean repository
+
+f929bda9908e4901bd1d03c5df22e5d6 unsharing BCCZO -- Snow Depth, Air Temperature -- Judd Sensors (GGL_NF_SP3-4SF_SP10_SD_Array) -- Gordon Gulch: Lower -- (2010-2018) with czo_boulder
+78f38ef5ae764652b73d7080da7a3e33 unsharing BCCZO -- Soil Temperature, Soil Moisture -- Soil Sensors (GGL_SPTran_SLTmpSLMist_Array) -- Gordon Gulch: Lower -- (2009-2019) with czo_national
+d98b4dda0027424487c1c5e275a32b3d unsharing BCCZO -- Well Water Levels -- (GGU_GW_1,2,6_Pducer_Tran) -- Gordon Gulch: Upper -- (2011-2018) with CZO Boulder
+0bda63684f37427fa849bd0411714c38 sharing BCCZO -- Soil Temperature, Soil Moisture -- at various depths (GGU_NF_SP4_SLTmpSLMist_Array) -- Gordon Gulch: Upper -- (2009-2019) with CZO National
+4ad4287c52da472295f536b0e90e282c dissociating everything but group membership from BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGU_SP_1-10_Tran) -- Gordon Gulch: Upper -- (2008-2017)
+7be74f1ae0b44976a4f59e2792bb6f9b dissociating and misfiling group membership from BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGL_SP_1-10_Tran) -- Gordon Gulch: Lower -- (2008-2017)
+0d4a3351ab33449981ead97b683069b9 dissociating and misfiling group ownership from BCCZO -- Snow Pits -- Snow Pit Stratigraphy, Density - SWE (GG_SN_Array) -- Gordon Gulch -- (2008-2017)
+
+

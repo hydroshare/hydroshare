@@ -323,7 +323,6 @@ def page_permissions_page_processor(request, page):
 
     return {
         'resource_type': cm._meta.verbose_name,
-        'bag': cm.bags.first(),
         "users_json": users_json,
         "owners": owners,
         "self_access_level": self_access_level,
@@ -1710,9 +1709,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                                           )
     file_unpack_message = models.TextField(null=True, blank=True)
 
-    # TODO: why are old versions saved?
-    bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
-                                                     'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
@@ -3140,25 +3136,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.public_path
 
 
-class Bags(models.Model):
-    """Represent data bags format as django model."""
-
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
-
-    content_object = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
-    timestamp = models.DateTimeField(default=now, db_index=True)
-
-    class Meta:
-        """Define meta properties of Bags model."""
-
-        ordering = ['-timestamp']
-
-    def get_content_model(self):
-        """Return content model of Bags' content object."""
-        return self.content_object.get_content_model()
-
-
 class PublicResourceManager(models.Manager):
     """Extend Django model Manager to allow for public resource access."""
 
@@ -3187,11 +3164,11 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
+
     # this resource_federation_path is added to record where a HydroShare resource is
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
     # federated root path in the format of /federated_zone/home/localHydroProxy
-
     # TODO: change to null=True, default=None to simplify logic elsewhere
     resource_federation_path = models.CharField(max_length=100, blank=True, default='')
 

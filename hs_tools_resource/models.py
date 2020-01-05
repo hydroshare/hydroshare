@@ -534,12 +534,12 @@ class ToolMetaData(CoreMetaData):
     _homepage_url = GenericRelation(AppHomePageUrl)
 
     approved = models.BooleanField(default=False)
-    testing_protocol_url = GenericRelation(TestingProtocolUrl)
-    help_page_url = GenericRelation(HelpPageUrl)
-    source_code_url = GenericRelation(SourceCodeUrl)
-    issues_page_url = GenericRelation(IssuesPageUrl)
-    mailing_list_url = GenericRelation(MailingListUrl)
-    roadmap = GenericRelation(Roadmap)
+    _testing_protocol_url = GenericRelation(TestingProtocolUrl)
+    _help_page_url = GenericRelation(HelpPageUrl)
+    _source_code_url = GenericRelation(SourceCodeUrl)
+    _issues_page_url = GenericRelation(IssuesPageUrl)
+    _mailing_list_url = GenericRelation(MailingListUrl)
+    _roadmap = GenericRelation(Roadmap)
     show_on_open_with_list = GenericRelation(ShowOnOpenWithList)
 
     @property
@@ -587,6 +587,30 @@ class ToolMetaData(CoreMetaData):
         return self._tool_icon.first()
 
     @property
+    def mailing_list_url(self):
+        return self._mailing_list_url.first()
+
+    @property
+    def testing_protocol_url(self):
+        return self._testing_protocol_url.first()
+
+    @property
+    def help_page_url(self):
+        return self._help_page_url.first()
+
+    @property
+    def source_code_url(self):
+        return self._source_code_url.first()
+
+    @property
+    def issues_page_url(self):
+        return self._issues_page_url.first()
+
+    @property
+    def roadmap(self):
+        return self._roadmap.first()
+
+    @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
         from serializers import ToolMetaDataSerializer
@@ -597,6 +621,11 @@ class ToolMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        # TODO The json metadata has underscores, remove those to matche the metadata elements.  This is probably an
+        # issue in the other metadata implementations as well.
+        for key, value in metadata.items():
+            if "_" in key:
+                metadata[key.replace("_", "")] = metadata.pop(key)
         keys_to_update = metadata.keys()
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
@@ -630,6 +659,30 @@ class ToolMetaData(CoreMetaData):
         if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append(
                 {"supportedsharingstatus": metadata.pop('supportedsharingstatus')})
+
+        if 'testingprotocolurl' in keys_to_update:
+            parsed_metadata.append(
+                {"testingprotocolurl": metadata.pop('testingprotocolurl')})
+
+        if 'helppageurl' in keys_to_update:
+            parsed_metadata.append(
+                {"helppageurl": metadata.pop('helppageurl')})
+
+        if 'sourcecodeurl' in keys_to_update:
+            parsed_metadata.append(
+                {"sourcecodeurl": metadata.pop('sourcecodeurl')})
+
+        if 'issuespageurl' in keys_to_update:
+            parsed_metadata.append(
+                {"issuespageurl": metadata.pop('issuespageurl')})
+
+        if 'mailinglisturl' in keys_to_update:
+            parsed_metadata.append(
+                {"mailinglisturl": metadata.pop('mailinglisturl')})
+
+        if 'roadmap' in keys_to_update:
+            parsed_metadata.append(
+                {"roadmap": metadata.pop('roadmap')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -703,12 +756,12 @@ class ToolMetaData(CoreMetaData):
         self._supported_file_extensions.all().delete()
         self._homepage_url.all().delete()
 
-        self.testing_protocol_url.all().delete()
-        self.help_page_url.all().delete()
-        self.source_code_url.all().delete()
-        self.issues_page_url.all().delete()
-        self.mailing_list_url.all().delete()
-        self.roadmap.all().delete()
+        self._testing_protocol_url.all().delete()
+        self._help_page_url.all().delete()
+        self._source_code_url.all().delete()
+        self._issues_page_url.all().delete()
+        self._mailing_list_url.all().delete()
+        self._roadmap.all().delete()
         self.show_on_open_with_list.all().delete()
 
     def update(self, metadata, user):
@@ -722,7 +775,6 @@ class ToolMetaData(CoreMetaData):
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
-
         # update resource specific metadata
 
         def validate_form(form):
@@ -815,6 +867,58 @@ class ToolMetaData(CoreMetaData):
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+                elif 'mailinglisturl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['mailinglisturl'])
+                    validate_form(validation_form)
+                    mailing_list_url = self.mailing_list_url
+                    if mailing_list_url is not None:
+                        self.update_element('mailinglisturl', mailing_list_url.id,
+                                            **dict_item['mailinglisturl'])
+                    else:
+                        self.create_element('mailinglisturl', **dict_item['mailinglisturl'])
+                elif 'testingprotocolurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['testingprotocolurl'])
+                    validate_form(validation_form)
+                    testing_protocol_url = self.testing_protocol_url
+                    if testing_protocol_url is not None:
+                        self.update_element('testingprotocolurl', testing_protocol_url.id,
+                                            **dict_item['testingprotocolurl'])
+                    else:
+                        self.create_element('testingprotocolurl', **dict_item['testingprotocolurl'])
+                elif 'helppageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['helppageurl'])
+                    validate_form(validation_form)
+                    help_page_url = self.help_page_url
+                    if help_page_url is not None:
+                        self.update_element('helppageurl', help_page_url.id,
+                                            **dict_item['helppageurl'])
+                    else:
+                        self.create_element('helppageurl', **dict_item['helppageurl'])
+                elif 'sourcecodeurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['sourcecodeurl'])
+                    validate_form(validation_form)
+                    source_code_url = self.source_code_url
+                    if source_code_url is not None:
+                        self.update_element('sourcecodeurl', source_code_url.id,
+                                            **dict_item['sourcecodeurl'])
+                    else:
+                        self.create_element('sourcecodeurl', **dict_item['sourcecodeurl'])
+                elif 'issuespageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['issuespageurl'])
+                    validate_form(validation_form)
+                    issues_page_url = self.issues_page_url
+                    if issues_page_url is not None:
+                        self.update_element('issuespageurl', issues_page_url.id,
+                                            **dict_item['issuespageurl'])
+                    else:
+                        self.create_element('issuespageurl', **dict_item['issuespageurl'])
+                elif 'roadmap' in dict_item:
+                    roadmap = self.roadmap
+                    if roadmap is not None:
+                        self.update_element('roadmap', roadmap.id,
+                                            **dict_item['roadmap'])
+                    else:
+                        self.create_element('roadmap', **dict_item['roadmap'])
 
     def __str__(self):
         return self.title.value

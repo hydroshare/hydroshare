@@ -11,11 +11,7 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="collaborate-nav">
-                        {% if communities_enabled %}
-                            <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
-                        {% else %}
-                            <a href="{% url "groups" %}" class="collaborate-nav-item">Find Groups</a>
-                        {% endif %}
+                        <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
                         <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
                     </div>
                 </div>

@@ -12,7 +12,7 @@
                         <input type="hidden" name="path" value="{{ request.path }}"/>
                         <div class="form-group">
                             <label for="id_username">iRODS Username: </label>
-                            <input id="username" class="form-control" name="username" placeholder="Username" value="" type="text" />
+                            <input id="username" class="form-control" name="username" placeholder="Username" value="{{ user.username }}" type="text" />
                         </div>
                         <div class="form-group">
                             <label for="id_password">iRODS Password:</label>
@@ -20,7 +20,7 @@
                         </div>
                         <div class="form-group">
                             <label for="id_host">Host:</label>
-                            <input id="host" class="form-control" name="host" placeholder="Host" value="" type="text" />
+                            <input id="host" class="form-control" name="host" placeholder="Host" value="users.hydroshare.org" type="text" />
                         </div>
                         <div class="form-group">
                             <label for="id_port">Port:</label>
@@ -28,7 +28,7 @@
                         </div>
                         <div class="form-group">
                             <label for="id_zone">Zone:</label>
-                            <input id="zone" class="form-control" name="zone" placeholder="Zone" value="" type="text" />
+                            <input id="zone" class="form-control" name="zone" placeholder="Zone" value="hydroshareuserZone" type="text" />
                         </div>
                     </div>
                     <div class="modal-footer">

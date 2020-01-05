@@ -324,4 +324,4 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         resource_short_id = chewies.short_id
         hydroshare.delete_resource(chewies.short_id)
         with self.assertRaises(Http404):
-            hydroshare.get_resource(resource_short_id)
+            hydroshare.get_resource_by_shortkey(resource_short_id)
