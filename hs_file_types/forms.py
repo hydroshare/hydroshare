@@ -14,7 +14,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     operating_systems = forms.CharField(required=False)
     mi_json_schema = forms.CharField(max_length=5000, required=False)
     mp_file_types = forms.CharField(max_length=255, required=False)
-    mp_program_type = forms.IntegerField()
+    mp_program_type = forms.CharField(max_length=255)
 
     def clean_version(self):
         version = self.cleaned_data['version'].strip()
