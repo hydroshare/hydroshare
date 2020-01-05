@@ -243,93 +243,96 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         with root_div:
             dom_tags.div().add(base_div)
             with dom_tags.div():
-                dom_tags.legend("General Information")
                 with dom_tags.form(action=form_action, id="filetype-generic",
                                    method="post", enctype="multipart/form-data"):
                     dom_tags.div("{% csrf_token %}")
-                    with dom_tags.div(cls="form-group"):
-                        with dom_tags.div(cls="control-group"):
-                            with dom_tags.div(id="mp-program-type"):
-                                dom_tags.legend('Model Program Type*')
-                                dom_tags.input(type="text", name="mp_program_type",
-                                               cls="form-control input-sm textinput",
-                                               value=self.logical_file.model_program_type)
-                            dom_tags.legend('Version', style="padding-top: 15px;")
-                            with dom_tags.div(cls="controls"):
-                                if self.version:
-                                    version = self.version
-                                else:
-                                    version = ""
-                                dom_tags.input(value=version,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_version", maxlength="250",
-                                               name="version", type="text")
-                            dom_tags.legend('Release Date')
-                            with dom_tags.div(cls="controls"):
-                                if self.release_date:
-                                    release_date = self.release_date.strftime('%m/%d/%Y')
-                                else:
-                                    release_date = ""
-                                dom_tags.input(value=release_date,
-                                               cls="form-control input-sm dateinput",
-                                               id="file_release_date",
-                                               name="release_date", type="text")
+                    with dom_tags.fieldset(cls="fieldset-border"):
+                        dom_tags.legend("General Information", cls="legend-border")
+                        with dom_tags.div(cls="form-group"):
+                            with dom_tags.div(cls="control-group"):
+                                with dom_tags.div(id="mp-program-type"):
+                                    dom_tags.label('Model Program Type*', fr="id_mp_program_type", cls="control-label")
+                                    dom_tags.input(type="text", id="id_mp_program_type", name="mp_program_type",
+                                                   cls="form-control input-sm textinput",
+                                                   value=self.logical_file.model_program_type)
+                                dom_tags.label('Version', cls="control-label", fr="file_version")
+                                with dom_tags.div(cls="controls"):
+                                    if self.version:
+                                        version = self.version
+                                    else:
+                                        version = ""
+                                    dom_tags.input(value=version,
+                                                   cls="form-control input-sm textinput textInput",
+                                                   id="file_version", maxlength="250",
+                                                   name="version", type="text")
+                                dom_tags.label('Release Date', fr="file_release_date", cls="control-label")
+                                with dom_tags.div(cls="controls"):
+                                    if self.release_date:
+                                        release_date = self.release_date.strftime('%m/%d/%Y')
+                                    else:
+                                        release_date = ""
+                                    dom_tags.input(value=release_date,
+                                                   cls="form-control input-sm dateinput",
+                                                   id="file_release_date",
+                                                   name="release_date", type="text")
 
-                            dom_tags.legend('Website')
-                            with dom_tags.div(cls="controls"):
-                                if self.website:
-                                    website = self.website
-                                else:
-                                    website = ""
-                                dom_tags.input(value=website,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_website", maxlength="250",
-                                               name="website", type="text")
-                            dom_tags.legend('Code Repository')
-                            with dom_tags.div(cls="controls"):
-                                if self.code_repository:
-                                    code_repo = self.code_repository
-                                else:
-                                    code_repo = ""
-                                dom_tags.input(value=code_repo,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_code_repository", maxlength="250",
-                                               name="code_repository", type="text")
-                            dom_tags.legend('Operating Systems')
-                            with dom_tags.div(cls="controls"):
-                                operating_systems = self.operating_systems_as_string
-                                dom_tags.input(value=operating_systems,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_operating_systems", maxlength="250",
-                                               name="operating_systems", type="text")
-                            dom_tags.legend('Programming Languages')
-                            with dom_tags.div(cls="controls"):
-                                programming_languages = self.programming_languages_as_string
-                                dom_tags.input(value=programming_languages,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_programming_languages", maxlength="250",
-                                               name="programming_languages", type="text")
-                            with dom_tags.div(cls="controls"):
-                                json_schema = self.logical_file.mi_schema_json
-                                if json_schema:
-                                    json_schema = json.dumps(json_schema)
-                                else:
-                                    json_schema = ''
-                                dom_tags.label("Model Instance Metadata JSON Schema", fr="file_mi_json_schema")
-                                dom_tags.textarea(json_schema,
-                                               cls="form-control input-sm textinput textInput",
-                                               id="file_mi_json_schema",
-                                               name="mi_json_schema", rows="15")
+                                dom_tags.label('Website', fr="file_website", cls="control-label")
+                                with dom_tags.div(cls="controls"):
+                                    if self.website:
+                                        website = self.website
+                                    else:
+                                        website = ""
+                                    dom_tags.input(value=website,
+                                                   cls="form-control input-sm textinput textInput",
+                                                   id="file_website", maxlength="250",
+                                                   name="website", type="text")
+                                dom_tags.label('Code Repository', fr="file_code_repository", cls="control-label")
+                                with dom_tags.div(cls="controls"):
+                                    if self.code_repository:
+                                        code_repo = self.code_repository
+                                    else:
+                                        code_repo = ""
+                                    dom_tags.input(value=code_repo,
+                                                   cls="form-control input-sm textinput textInput",
+                                                   id="file_code_repository", maxlength="250",
+                                                   name="code_repository", type="text")
+                                dom_tags.label('Operating Systems', fr="file_operating_systems", cls="control-label")
+                                with dom_tags.div(cls="controls"):
+                                    operating_systems = self.operating_systems_as_string
+                                    dom_tags.input(value=operating_systems,
+                                                   cls="form-control input-sm textinput textInput",
+                                                   id="file_operating_systems", maxlength="250",
+                                                   name="operating_systems", type="text")
+                                dom_tags.label('Programming Languages', fr="file_programming_languages",
+                                               cls="control-label")
+                                with dom_tags.div(cls="controls"):
+                                    programming_languages = self.programming_languages_as_string
+                                    dom_tags.input(value=programming_languages,
+                                                   cls="form-control input-sm textinput textInput",
+                                                   id="file_programming_languages", maxlength="250",
+                                                   name="programming_languages", type="text")
+                                with dom_tags.div(cls="controls"):
+                                    json_schema = self.logical_file.mi_schema_json
+                                    if json_schema:
+                                        json_schema = json.dumps(json_schema)
+                                    else:
+                                        json_schema = ''
+                                    dom_tags.label("Model Instance Metadata JSON Schema", fr="file_mi_json_schema",
+                                                   cls="control-label")
+                                    dom_tags.textarea(json_schema,
+                                                   cls="form-control input-sm textinput textInput",
+                                                   id="file_mi_json_schema",
+                                                   name="mi_json_schema", rows="15")
 
-                        with dom_tags.div(id="mp_content_files", cls="control-group"):
-                            with dom_tags.div(cls="controls"):
-                                dom_tags.legend('Content Files')
-                                get_html_form_mp_file_types()
+                            with dom_tags.div(id="mp_content_files", cls="control-group"):
+                                with dom_tags.div(cls="controls"):
+                                    dom_tags.legend('Content Files')
+                                    get_html_form_mp_file_types()
 
-                    with dom_tags.div(cls="row", style="margin-top:10px;"):
-                        with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
-                            dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
-                                            style="display: none;", type="button")
+                        with dom_tags.div(cls="row", style="margin-top:10px;"):
+                            with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                                dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                                                style="display: none;", type="button")
 
         template = Template(root_div.render())
         rendered_html = template.render(context)
