@@ -1723,7 +1723,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     extra_metadata = HStoreField(default={})
 
-    # this field is for specific resource types to store extra key:value pairs
+    # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
+    # "bag_checksum":value pair for published resources in order to meet the DataONE data distribution needs
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})

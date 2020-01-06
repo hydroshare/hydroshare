@@ -374,6 +374,13 @@ class IrodsStorage(Storage):
                                   "file size".format(name))
         return int(float(stdout))
 
+    def checksum(self, name):
+        stdout = self.session.run("ichksum", None, name)[0].split()
+        for a in stdout:
+            if a.startswith('sha') or a.startswith('md5'):
+                return a
+        return None
+
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
         query_params = {'url_download': url_download, "zipped": zipped, 'aggregation': aggregation}
