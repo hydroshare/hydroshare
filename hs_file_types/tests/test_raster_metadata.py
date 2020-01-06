@@ -350,30 +350,28 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_create_aggregation_with_extra_tif_with_vrt(self):
-        """Here we are testing when there is a vrt file, selecting a tif file from the same
-        location for creating aggregation will fail if there is an extra tif file
-        at the same location that is no referenced in the vrt file """
+        """Here we are testing mutliple raster aggregations in the same folder.  Two aggregations
+        are added to the composite resource in the same folder """
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
         res_file_tif = self.composite_resource.files.first()
         self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
-        # add the extra tif file
-        self.add_file_to_resource(file_to_add=self.raster_file)
         self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+        # add the extra tif file
+        lone_tif_file = self.add_file_to_resource(file_to_add=self.raster_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 4)
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file_tif.has_logical_file, False)
 
+        # test that raster aggregations may exist in the same folder next to each other
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-        # set the tif file to GeoRasterFile type should raise exception
-        with self.assertRaises(ValidationError):
-            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
-
-        # test aggregation
-        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, lone_tif_file.id)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 2)
 
         self.composite_resource.delete()
 
