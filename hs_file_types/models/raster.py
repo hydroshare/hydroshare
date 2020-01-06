@@ -529,6 +529,7 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
 
     return validation_results
 
+
 def list_tif_files(vrt_file):
     """
     lists tif files named in a vrt_file
@@ -542,6 +543,7 @@ def list_tif_files(vrt_file):
         file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
         return file_names_in_vrt
     return None
+
 
 def get_vrt_file(raster_file, res_files):
     """
