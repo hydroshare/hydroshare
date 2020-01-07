@@ -43,6 +43,15 @@ class TestBagIt(TestCase):
     def test_bag_creation_and_deletion(self):
         status = create_bag_by_irods(self.test_res.short_id)
         self.assertTrue(status)
+        # test checksum will be computed for published resource
+        self.test_res.raccess.published = True
+        self.test_res.save()
+        status = create_bag_by_irods(self.test_res.short_id)
+        self.assertTrue(status)
+        extra_data = self.test_res.extra_data
+        self.assertIn('bag_checksum', extra_data, msg='bag_checksum key is not found in extra_data')
+        self.assertIsNotNone(extra_data['bag_checksum'], msg='bag_checksum value in extra_data is None')
+
         hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
         istorage = self.test_res.get_irods_storage()
