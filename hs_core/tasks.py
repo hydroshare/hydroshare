@@ -458,7 +458,7 @@ def create_bag_by_irods(resource_id):
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
             istorage.zipup(irods_bagit_input_path, bag_path)
             if res.raccess.published:
-                # compute checksum for DataOONE distribution requirement
+                # compute checksum to meet DataONE distribution requirement
                 chksum = istorage.checksum(bag_path)
                 extra_data = res.extra_data
                 extra_data['bag_checksum'] = chksum

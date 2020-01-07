@@ -299,5 +299,14 @@ def creator_json_ld_element(crs):
 
 
 @register.filter
+def bag_checksum(res):
+    extra_data = res.extra_data
+    if 'bag_checksum' in extra_data and extra_data['bag_checksum']:
+        return extra_data['bag_checksum']
+    else:
+        return ''
+
+
+@register.filter
 def is_debug(page):
     return settings.DEBUG

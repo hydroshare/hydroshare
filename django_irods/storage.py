@@ -375,11 +375,20 @@ class IrodsStorage(Storage):
         return int(float(stdout))
 
     def checksum(self, name):
-        stdout = self.session.run("ichksum", None, name)[0].split()
-        for a in stdout:
-            if a.startswith('sha') or a.startswith('md5'):
-                return a
-        return None
+        # first force checksum (re)computation
+        self.session.run("ichksum", None, "-f", name)
+        # retrieve checksum using iquest
+        if '/' in name:
+            file_info = name.rsplit('/', 1)
+            obj_name = file_info[1]
+        else:
+            obj_name = name
+        qrystr = "SELECT DATA_CHECKSUM WHERE DATA_NAME = '{}'".format(obj_name)
+        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        if "CAT_NO_ROWS_FOUND" in stdout:
+            raise ValidationError("{} cannot be found in iRODS to retrieve "
+                                  "checksum".format(obj_name))
+        return str(stdout)
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
