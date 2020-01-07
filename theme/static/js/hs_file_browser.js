@@ -46,7 +46,7 @@ function clearSourcePaths() {
 function getFolderTemplateInstance(folder) {
     if (folder['folder_aggregation_type'] === "FileSetLogicalFile") {
         var folderIcons = getFolderIcons();
-        let iconTemplate = folderIcons.DEFAULT;
+        let iconTemplate = folderIcons.ModelProgramLogicalFile;
 
         if (folderIcons[folder['folder_aggregation_type']]) {
             iconTemplate = folderIcons[folder['folder_aggregation_type']];
