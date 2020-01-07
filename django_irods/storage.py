@@ -388,7 +388,11 @@ class IrodsStorage(Storage):
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "checksum".format(obj_name))
-        return str(stdout)
+        # remove potential '\n' from stdout
+        if stdout.endswith('\n'):
+            return stdout[:-1]
+        else:
+            return str(stdout)
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
