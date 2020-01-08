@@ -17,8 +17,6 @@ echo "HS_SERVICE_UID=`id -u`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
 echo "HS_SERVICE_GID=`id -g`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
-FQDN_OR_IP=`hostname`
-
 function blue() {
     local TEXT="$1"
     echo -n "\x1B[1;34m${TEXT}\x1B[0m"
@@ -67,7 +65,7 @@ echo -e " (1) Remove all HydroShare container: `green $REMOVE_CONTAINER`"
 echo -e " (2) Remove all HydroShare volume:    `green $REMOVE_VOLUME`"
 echo -e " (3) Remove all HydroShare image:     `green $REMOVE_IMAGE`"
 echo
-echo -ne " There are three options you can combine to make a configuration. What you see here is the default.\n\n Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
+echo -ne " There are three options you can combine to make a configuratin. What you see here is the default.\n\n Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
 echo
 
 case "$A" in
@@ -105,7 +103,7 @@ fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(nginx hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
-HYDROSHARE_VOLUMES=(hydroshare_idata_root_vol hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_iuser_root_vol hydroshare_iuser_hspx_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_hs_temp_vol)
+HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_nginx hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
@@ -152,7 +150,11 @@ fi
 ### Preparing                                                                                            
 ###############################################################################################################
 
-rm -f init-defaultworker init-hydroshare 2>/dev/null
+#grep -v CMD Dockerfile > Dockerfile-defaultworker
+#grep -v CMD Dockerfile > Dockerfile-hydroshare
+
+#cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
+#cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template    init-hydroshare
@@ -167,6 +169,12 @@ sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 sed -i $SED_EXT s/CELERY_CONCURRENCY/$CELERY_CONCURRENCY/g init-defaultworker
+
+#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
+#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
+
+#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
+#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
 
 NGINX_CONFIG_DIRECTORY=nginx/config-files
 cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
@@ -234,13 +242,6 @@ echo '##########################################################################
 echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
-
-NGINX_IP=`docker network inspect hydroshare_default | grep nginx -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
-mkdir -p tmp 2>/dev/null
-echo $NGINX_IP > tmp/nginx_ip
-
-#export HYDROSHARE_IP=`docker network inspect hydroshare_default | grep '"Name": "hydroshare"' -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
-export HYDROSHARE_IP=hydroshare
 
 docker exec hydroshare bash scripts/chown-root-items
 
@@ -359,16 +360,6 @@ echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py rebuild_index --noinput"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
-
-echo
-echo '########################################################################################################################'
-echo " Update quota data on Django"
-echo '########################################################################################################################'
-echo
-
-echo " - ./hsctl managepy update_used_storage"
-./hsctl managepy update_used_storage
-echo
 
 docker-compose -f local-dev.yml down
 
