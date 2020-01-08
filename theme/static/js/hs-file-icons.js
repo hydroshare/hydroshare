@@ -29,8 +29,9 @@ function getFolderIcons() {
         "alt='Geographic Feature Aggregation Icon'/></span>";
 
     folderIcons.ModelProgramLogicalFile =
-        "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/img/resource-icons/modelprogram48x48.png' " +
+        "<span class='fa-stack fb-stack fb-stack-mp'>" +
+        "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mp' aria-hidden='true'></i>" +
+        "<img src='/static/img/model-program-overlay.png' " +
         "alt='Model Program Aggregation Icon'/></span>";
 
     folderIcons.DEFAULT =
