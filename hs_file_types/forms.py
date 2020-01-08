@@ -53,7 +53,8 @@ class ModelProgramMetadataValidationForm(forms.Form):
                         self.add_error("mp_file_types", "Not a valid model program file type")
 
                     mp_file_types_dict[mp_file_type_lst[0]] = mp_file_type
-
+                else:
+                    mp_file_types_dict[mp_file_type_lst[0]] = None
         return mp_file_types_dict
 
     def clean_mi_json_schema(self):
@@ -94,8 +95,9 @@ class ModelProgramMetadataValidationForm(forms.Form):
             metadata.mp_file_types.all().delete()
             logical_file = metadata.logical_file
             for res_file in logical_file.files.all():
-                if res_file.file_name in mp_file_types_dict:
-                    mp_file_type = mp_file_types_dict[res_file.file_name]
-                    ModelProgramResourceFileType.objects.create(file_type=mp_file_type, res_file=res_file,
-                                                                mp_metadata=metadata)
-
+                if res_file.short_path in mp_file_types_dict:
+                    mp_file_type = mp_file_types_dict[res_file.short_path]
+                    # if mp_file_type is None it means user has removed model file type assignment for the res_file
+                    if mp_file_type is not None:
+                        ModelProgramResourceFileType.objects.create(file_type=mp_file_type, res_file=res_file,
+                                                                    mp_metadata=metadata)
