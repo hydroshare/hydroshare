@@ -98,6 +98,11 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         RDF_ROOT, container_to_add_to = super(ModelProgramFileMetaData, self)._get_xml_containers()
         for mp_file_type in self.mp_file_types.all():
             mp_file_type.add_to_xml_container(xml_container=container_to_add_to)
+
+        if self.logical_file.model_program_type:
+            model_type_name = etree.SubElement(container_to_add_to,
+                                               '{%s}modelProgramType' % CoreMetaData.NAMESPACES['hsterms'])
+            model_type_name.text = self.logical_file.model_program_type
         if self.version:
             model_version = etree.SubElement(container_to_add_to,
                                              '{%s}modelVersion' % CoreMetaData.NAMESPACES['hsterms'])
