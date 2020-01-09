@@ -91,7 +91,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     def programming_languages_as_string(self):
         return ", ".join(self.programming_languages)
 
-    # TODO: needs to test this function once there is UI for populating metadata for this aggregation
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
@@ -371,7 +370,7 @@ class ModelProgramLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_type_name():
-        return "ModelProgramLogicalFile"
+        return "ModelProgramAggregation"
 
     # used in discovery faceting to aggregate native and composite content types
     def get_discovery_content_type(self):
