@@ -1276,6 +1276,15 @@ function refreshFileBrowser(name) {
     });
 }
 
+function onUploadSuccess(file, response) {
+    // uploaded files can affect metadata in composite resource.
+    // Use the json data returned from backend to update UI
+    if (RES_TYPE === 'Composite Resource') {
+        updateResourceUI();
+    }
+    showCompletedMessage(response);
+}
+
 $(document).ready(function () {
     if (!$("#hs-file-browser").length) {
         return;
@@ -1360,18 +1369,8 @@ $(document).ready(function () {
             error: function (file, response) {
                 // console.log(response);
             },
-            success: function (file, response) {
-                // console.log(response);
-            },
-            successmultiple: function (files, response) {
-                // uploaded files can affect metadata in composite resource.
-                // Use the json data returned from backend to update UI
-                const resourceType = $("#resource-type").val();
-                if (resourceType === 'Composite Resource') {
-                    updateResourceUI();
-                }
-                showCompletedMessage(response);
-            },
+            success: onUploadSuccess,
+            successmultiple: onUploadSuccess,
             init: function () {
                 // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
