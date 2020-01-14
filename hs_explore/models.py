@@ -839,3 +839,23 @@ class UserNeighbors(models.Model):
     @staticmethod
     def clear():
         UserNeighbors.objects.all().delete()
+
+
+class LDAWord(models.Model):
+    source = models.CharField(max_length=10, choices=(('ODM2', 'ODM2'),
+                                                      ('CSDMS', 'CSDMS'),
+                                                      ('Customized', 'Customized')))
+    word_type = models.CharField(max_length=4, choices=(('go', 'go'), ('stop', 'stop')))
+    part = models.CharField(max_length=5, choices=(('name', 'name'), ('decor', 'decor')))
+    value = models.CharField(max_length=255, editable=False, null=False, blank=False)
+
+    @staticmethod
+    def add_word(s, t, p, v):
+        with transaction.atomic():
+            object, _ = LDAWord.objects.get_or_create(source=s, word_type=t, part=p, value=v)
+
+        return object
+
+    @staticmethod
+    def clear():
+        LDAWord.objects.all().delete()
