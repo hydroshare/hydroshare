@@ -457,26 +457,29 @@
         "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
         "description": "Zipped BagIt Bag containing the HydroShare Resource",
         "dateModified": "{{ cm.last_updated | date:"c" }}",
-        {% if cm.raccess.published %}
+        {% if not cm.raccess.published %}
         "identifier": [
-        {
-        {% else %}
-        "identifier": {
-        {% endif %}
-            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
-            "datacite:usesIdentifierScheme": {
-                "@id": "datacite:local-resource-identifier-scheme"
-            },
-            "propertyId": "UUID",
-            "value": "uuid:{{ cm.short_id }}"
-        }{% if cm.raccess.published %},
-        {
-            "@id":"ds-00#checksum",
-            "@type":["PropertyValue", "datacite:ResourceIdentifier"],
-            "datacite:usesIdentifierScheme": { "@id": "datacite:urn" },
-            "propertyID": "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5",
-            "value": "urn:hash:md5:{{ cm| bag_checksum }}"
-        }
+            {
+            {% else %}
+            "identifier": {
+            {% endif %}
+                "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+                "datacite:usesIdentifierScheme": {
+                    "@id": "datacite:local-resource-identifier-scheme"
+                },
+                "propertyId": "UUID",
+                "value": "uuid:{{ cm.short_id }}"
+            }{% if not cm.raccess.published %},
+            {
+                "@type": "PropertyValue",
+                "additionalType": [
+                    "http://www.wikidata.org/entity/Q185235",
+                    "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+                ],
+                "identifier": "md5:{{ cm| bag_checksum }}",
+                "propertyID": "MD5",
+                "value": "{{ cm| bag_checksum }}",
+            }
         ]
         {% endif %}
     }
