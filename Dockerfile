@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:python-3-wip
+FROM hydroshare/hs_docker_base:release-1.11.0
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 USER root
