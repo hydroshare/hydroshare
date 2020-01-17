@@ -287,8 +287,8 @@ def creator_json_ld_element(crs):
         if cr.homepage:
             urls.append(cr.homepage)
         if cr.identifiers:
-            for k, v in cr.identifiers.iteritems():
-                urls.append(v)
+            for k in cr.identifiers:
+                urls.append(cr.identifiers[k])
         if len(urls) == 1:
             cr_dict['url'] = urls[0]
         elif len(urls) > 1:
