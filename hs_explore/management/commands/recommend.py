@@ -56,20 +56,6 @@ def get_users_interacted_resources(beginning, today):
         UserInteractedResources.interact(user, res_list)
     return user_to_resources, all_usernames
 
-'''
-def get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids, all_subjects_list):
-    user_to_subs = {}
-    for res_id, subs in res_to_subs.iteritems():
-        for username, res_ids in user_to_resources.iteritems():
-            if username not in user_to_subs:
-                user_to_subs[username] = defaultdict(int)
-            user_sub_to_freq = user_to_subs[username]
-            for rid in res_ids:
-                if rid == res_id:
-                    for s in subs:
-                        user_sub_to_freq[s] += 1
-    return user_to_subs
-'''
 
 def get_user_cumulative_profiles(user_to_resources, res_to_subs):
     user_to_subs = {}
