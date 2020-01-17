@@ -56,7 +56,7 @@ def get_users_interacted_resources(beginning, today):
         UserInteractedResources.interact(user, res_list)
     return user_to_resources, all_usernames
 
-
+'''
 def get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids, all_subjects_list):
     user_to_subs = {}
     for res_id, subs in res_to_subs.iteritems():
@@ -68,6 +68,20 @@ def get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids, al
                 if rid == res_id:
                     for s in subs:
                         user_sub_to_freq[s] += 1
+    return user_to_subs
+'''
+
+def get_user_cumulative_profiles(user_to_resources, res_to_subs):
+    user_to_subs = {}
+
+    for username, res_ids in user_to_resources.iteritems():
+        user_sub_to_freq = defaultdict(int)
+        for res_id in res_ids:
+            if res_id in res_to_subs:
+                subs = res_to_subs[res_id]
+                for sub in subs:
+                    user_sub_to_freq[sub] += 1
+        user_to_subs[username] = user_sub_to_freq
     return user_to_subs
 
 
@@ -404,10 +418,10 @@ def main():
     clear_old_data()
     res_to_subs, all_subjects_list = get_resource_to_subjects()
     all_res_ids = list(res_to_subs.keys())
-    end_date = date(2019, 10, 17)
+    end_date = date(2018, 05, 31)
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
-    user_to_subs = get_user_cumulative_profiles(user_to_resources, res_to_subs, all_res_ids, all_subjects_list)
+    user_to_subs = get_user_cumulative_profiles(user_to_resources, res_to_subs)
     user_to_top5_keywords = get_user_to_top5_keywords(user_to_subs)
     active_user_set = store_user_preferences(user_to_subs)
     user_to_recommended_resources_list = recommend_resources(res_to_subs, user_to_resources,
