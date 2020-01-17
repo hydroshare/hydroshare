@@ -294,8 +294,10 @@ def creator_json_ld_element(crs):
         elif len(urls) > 1:
             cr_dict['url'] = urls
         crs_array.append(cr_dict)
-
-    return dumps(crs_array, sort_keys=True, indent=4)
+    # reformat json dumped str a bit to fix the indentation issue with the last bracket
+    default_dump = dumps(crs_array, sort_keys=True, indent=4)
+    format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
+    return format_dump
 
 
 @register.filter

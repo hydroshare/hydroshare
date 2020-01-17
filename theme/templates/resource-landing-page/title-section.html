@@ -420,6 +420,7 @@
         {% endif %}
 	},
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    {% if relations %}
     "citation": [
     {% for relation in relations %}
         {% if relation.type == "isDataFor" %}
@@ -427,6 +428,7 @@
         {% endif %}
     {% endfor %}
     ],
+    {% endif %}
     {% if fundingagencies %}
     "funder": [
     {% for agency in fundingagencies %}
@@ -456,29 +458,28 @@
         "dateModified": "{{ cm.last_updated | date:"c" }}",
         {% if cm.raccess.published %}
         "identifier": [
-            {
-            {% else %}
-            "identifier": {
-            {% endif %}
-                "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
-                "datacite:usesIdentifierScheme": {
-                    "@id": "datacite:local-resource-identifier-scheme"
-                },
-                "propertyId": "UUID",
-                "value": "uuid:{{ cm.short_id }}"
-            }{% if cm.raccess.published %},
-            {
-                "@type": "PropertyValue",
-                "additionalType": [
-                    "http://www.wikidata.org/entity/Q185235",
-                    "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
-                ],
-                "identifier": "md5:{{ cm| bag_checksum }}",
-                "propertyID": "MD5",
-                "value": "{{ cm| bag_checksum }}",
-            }
-        ]
+        {
+        {% else %}
+        "identifier": {
         {% endif %}
+            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+            "datacite:usesIdentifierScheme": {
+                "@id": "datacite:local-resource-identifier-scheme"
+            },
+            "propertyId": "UUID",
+            "value": "uuid:{{ cm.short_id }}"
+        }{% if cm.raccess.published %},
+        {
+            "@type": "PropertyValue",
+            "additionalType": [
+                "http://www.wikidata.org/entity/Q185235",
+                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+            ],
+            "identifier": "md5:{{ cm| bag_checksum }}",
+            "propertyID": "MD5",
+            "value": "{{ cm| bag_checksum }}",
+        }
+        ]{% endif %}
     }
 }
 </script>
