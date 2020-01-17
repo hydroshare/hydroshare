@@ -195,13 +195,13 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
         try:
             new_user = form.save()
         except ValidationError as e:
-            if e.message == "Email already in use.":
+            if str(e) == "Email already in use.":
                 messages.error(request, '<p>An account with this email already exists.  Log in '
                                 'or click <a href="' + reverse("mezzanine_password_reset") +
                                '" >here</a> to reset password',
                                extra_tags="html")
             else:
-                messages.error(request, e.message)
+                messages.error(request, str(e))
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
             if not new_user.is_active:
@@ -270,7 +270,7 @@ def update_user_profile(request):
         post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
         identifiers = post_data_dict.get('identifiers', {})
     except Exception as ex:
-        messages.error(request, "Update failed. {}".format(ex.message))
+        messages.error(request, "Update failed. {}".format(str(ex)))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     dict_items = request.POST['organization'].split(";")
@@ -335,11 +335,11 @@ def update_user_profile(request):
                 if not profile_form.is_valid():
                     errors.update(profile_form.errors)
 
-                msg = ' '.join([err[0] for err in errors.values()])
+                msg = ' '.join([err[0] for err in list(errors.values())])
                 messages.error(request, msg)
 
     except Exception as ex:
-        messages.error(request, ex.message)
+        messages.error(request, str(ex))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -599,7 +599,7 @@ def delete_irods_account(request):
             )
         except Exception as ex:
             return JsonResponse(
-                    {"error": ex.message},
+                    {"error": str(ex)},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -636,7 +636,7 @@ def create_irods_account(request):
             )
         except Exception as ex:
             return JsonResponse(
-                    {"error": ex.message + ' - iRODS server failed to create this iRODS account.'},
+                    {"error": str(ex) + ' - iRODS server failed to create this iRODS account.'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     else:

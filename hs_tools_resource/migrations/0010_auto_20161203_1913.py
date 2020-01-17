@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='toolicon',
             name='url',
-            field=models.CharField(default=b'', max_length=1024, blank=True),
+            field=models.CharField(default='', max_length=1024, blank=True),
         ),
         migrations.RenameField(
             model_name='toolicon',
@@ -24,12 +24,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='apphomepageurl',
             name='value',
-            field=models.CharField(default=b'', max_length=1024, blank=True),
+            field=models.CharField(default='', max_length=1024, blank=True),
         ),
         migrations.AlterField(
             model_name='requesturlbase',
             name='value',
-            field=models.CharField(default=b'', max_length=1024, blank=True),
+            field=models.CharField(default='', max_length=1024, blank=True),
         ),
         migrations.AlterField(
             model_name='supportedrestypes',

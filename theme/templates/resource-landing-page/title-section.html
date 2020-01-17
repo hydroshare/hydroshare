@@ -184,65 +184,64 @@
         <hr>
     {% else %}
         {# ======= Communities ======= #}
-        {% if communities_enabled %}
-            <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
-                <div class="modal-dialog" role="document">
-                    <div id="title-assistant" class="modal-content">
-                        <div class="modal-body">
-                            <div>
-                                <textarea id="resource-title" class="title-builder-output" v-model="title" disabled rows="3"
-                                          placeholder="start selecting items to build title">
-                                </textarea>
-                                <select id="czselect" class="cz-select" v-model="regionSelected" @change="updateTitle()">
-                                    <option disabled value="">Select Critical Zone Region</option>
-                                    <option>BCCZO</option>
-                                    <option>CCZO</option>
-                                    <option>CJCZO</option>
-                                    <option>CRBCZO</option>
-                                    <option>ERCZO</option>
-                                    <option>LCZO</option>
-                                    <option>RCCZO</option>
-                                    <option>SSCZO</option>
-                                    <option>SSHCZO</option>
-                                    <option>Cross-CZO</option>
-                                </select>
-                                <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
-                                       title-left="Available Topics" title-right="Selected Topics"
-                                       moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
-                                </mover>
-                                <a style="cursor:help" title="To add Topics make a request to CriticalZoneOrg@gmail.com"
-                                   href="mailto:CriticalZoneOrg@gmail.com?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
-                                <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
-                                       v-on:keyup="updateTitle()" size="51"
-                                       maxlength="50" placeholder="Optional Custom Text"/><br/>
-                                <input class="title-builder-input" id="title-location" v-model="location"
-                                       v-on:keyup="updateTitle()" size="51"
-                                       maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/><br/>
-                                <input type="text" size="8" maxlength="4" class="title-builder-input" id="start-year"
-                                       v-model="startYear" v-on:keyup="updateDate()" placeholder="Start Year"/>
-                                <input type="text" size="8" maxlength="7" class="title-builder-input" id="end-year"
-                                       v-model="endYear" v-on:keyup="updateEndDate()" placeholder="End Year"/>
-                                <input type="checkbox" id="end-date-ongoing" name="end-date-ongoing" v-model="yearOngoing"
-                                       true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing
-                            </div>
+        <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
+            <div class="modal-dialog" role="document">
+                <div id="title-assistant" class="modal-content">
+                    <div class="modal-body">
+                        <div>
+                            <textarea id="resource-title" class="title-builder-output" v-model="title" disabled rows="3"
+                                      placeholder="start selecting items to build title">
+                            </textarea>
+                            <select id="czselect" class="cz-select" v-model="regionSelected" @change="updateTitle()">
+                                <option disabled value="">Select Critical Zone Region</option>
+                                <option>BCCZO</option>
+                                <option>CCZO</option>
+                                <option>CJCZO</option>
+                                <option>CRBCZO</option>
+                                <option>ERCZO</option>
+                                <option>LCZO</option>
+                                <option>RCCZO</option>
+                                <option>SSCZO</option>
+                                <option>SSHCZO</option>
+                                <option>IMLCZO</option>
+                                <option>Cross-CZO</option>
+                            </select>
+                            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
+                                   title-left="Available Topics" title-right="Selected Topics"
+                                   moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
+                            </mover>
+                            <a style="cursor:help" title="To add Topics make a request to CriticalZoneOrg@gmail.com"
+                               href="mailto:CriticalZoneOrg@gmail.com?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
+                            <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
+                                   v-on:keyup="updateTitle()" size="51"
+                                   maxlength="50" placeholder="Optional Custom Text"/><br/>
+                            <input class="title-builder-input" id="title-location" v-model="location"
+                                   v-on:keyup="updateTitle()" size="51"
+                                   maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/><br/>
+                            <input type="text" size="8" maxlength="4" class="title-builder-input" id="start-year"
+                                   v-model="startYear" v-on:keyup="updateDate()" placeholder="Start Year"/>
+                            <input type="text" size="8" maxlength="7" class="title-builder-input" id="end-year"
+                                   v-model="endYear" v-on:keyup="updateEndDate()" placeholder="End Year"/>
+                            <input type="checkbox" id="end-date-ongoing" name="end-date-ongoing" v-model="yearOngoing"
+                                   true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing
                         </div>
-                        <div class="modal-footer">
-                            <span class="inline-error">{% templatetag openvariable %}
-                                    errmsg {% templatetag closevariable %}</span>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
-                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <span class="inline-error">{% templatetag openvariable %}
+                                errmsg {% templatetag closevariable %}</span>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <script type="application/javascript">
-                // contents here are required by topics.js
-                const topics_from_page = JSON.parse("{{ topics_json }}");
-            </script>
-            <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+        <script type="application/javascript">
+            // contents here are required by topics.js
+            const topics_from_page = JSON.parse("{{ topics_json }}");
+        </script>
+        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
 
-        {% endif %}
 
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title" method="post">
@@ -251,7 +250,7 @@
                 <div id="div_id_value" class="control-group">
                     <div class="controls">
                         <input class="form-control input-sm textinput textInput" id="txt-title"
-                                {% if communities_enabled and czo_user %} onfocus="titleClick()" {% endif %}
+                                {% if czo_user %} onfocus="titleClick()" {% endif %}
                                maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
                     </div>
                 </div>
@@ -292,25 +291,23 @@
     </div>
 {% endif %}
 
-{% if communities_enabled %}
-    {% block extra_js %}
-        <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
-        <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
+{% block extra_js %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
 
-        <style>
-            [v-cloak] {
-                display: none
-            }
+    <style>
+        [v-cloak] {
+            display: none
+        }
 
-            .title-builder-input {
-                margin-top: 1em;
-            }
-        </style>
-        {#        vue-mover uses Sortable.min.js#}
-        <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
-        <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
-    {% endblock %}
-{% endif %}
+        .title-builder-input {
+            margin-top: 1em;
+        }
+    </style>
+    {#        vue-mover uses Sortable.min.js#}
+    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
+    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+{% endblock %}
 
 {% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}

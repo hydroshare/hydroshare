@@ -1,7 +1,7 @@
 import os
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
-from urllib import urlencode
+from urllib.parse import urlencode
 
 from django.utils.deconstruct import deconstructible
 from django.conf import settings
@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
 from django_irods import icommands
-from icommands import Session, GLOBAL_SESSION, GLOBAL_ENVIRONMENT, SessionException, IRodsEnv
+from .icommands import Session, GLOBAL_SESSION, GLOBAL_ENVIRONMENT, SessionException, IRodsEnv
 
 
 @deconstructible

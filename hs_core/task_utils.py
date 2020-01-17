@@ -11,7 +11,7 @@ def _retrieve_task_id(res_id, job_dict):
     """
     job_name = 'hs_core.tasks.create_bag_by_irods'
     if job_dict:
-        workers = job_dict.keys()
+        workers = list(job_dict.keys())
         for worker in workers:
             for job in job_dict[worker]:
                 if 'name' in job:
