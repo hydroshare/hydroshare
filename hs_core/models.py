@@ -3487,7 +3487,7 @@ Page.get_content_model = new_get_content_model
 class CoreMetaData(models.Model):
     """Define CoreMetaData model."""
 
-    XML_HEADER = '''<?xml version="1.0"?>
+    XML_HEADER = '''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
 
@@ -4095,7 +4095,7 @@ class CoreMetaData(models.Model):
                                              '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print)
 
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py
