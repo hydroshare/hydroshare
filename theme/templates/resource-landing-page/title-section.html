@@ -366,7 +366,7 @@
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
-    {% if spatial_coverage %}
+    {% if spatial_coverage.exists %}
     "spatialCoverage": {
         "@type": "Place",
         {% if spatial_coverage.name %}
