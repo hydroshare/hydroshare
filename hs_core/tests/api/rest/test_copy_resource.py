@@ -21,7 +21,7 @@ class TestPublicCopyResourceEndpoint(HSRESTTestCase):
     def test_copy_resource(self):
         copy_url = "/hsapi/resource/%s/copy/" % self.pid
         response = self.client.post(copy_url, {}, format='json')
-        self.resources_to_delete.append(response.content)
+        self.resources_to_delete.append(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_copy_bad_resource(self):

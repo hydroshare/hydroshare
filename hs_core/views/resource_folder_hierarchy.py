@@ -56,7 +56,7 @@ def data_store_structure(request):
     try:
         store_path = _validate_path(store_path, 'store_path', check_path_empty=False)
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
     directory_in_irods = resource.get_irods_path(store_path)
@@ -73,7 +73,7 @@ def data_store_structure(request):
     # folder path relative to 'data/contents/' needed for the UI
     folder_path = store_path[len("data/contents/"):]
     for dname in store[0]:     # directories
-        d_pk = dname.decode('utf-8')
+        d_pk = dname
         d_store_path = os.path.join(store_path, d_pk)
         d_url = resource.get_url_of_path(d_store_path)
         main_file = ''
@@ -110,7 +110,6 @@ def data_store_structure(request):
 
     is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
-        fname = fname.decode('utf-8')
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
         size = store[2][index]
@@ -212,7 +211,7 @@ def data_store_folder_zip(request, res_id=None):
     try:
         input_coll_path = _validate_path(input_coll_path, 'input_coll_path')
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
@@ -286,7 +285,7 @@ def data_store_folder_unzip(request, **kwargs):
     try:
         zip_with_rel_path = _validate_path(zip_with_rel_path, 'zip_with_rel_path')
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
@@ -359,7 +358,7 @@ def data_store_add_reference(request):
     try:
         curr_path = _validate_path(curr_path, 'curr_path', check_path_empty=False)
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         res, _, _ = authorize(request, res_id,
@@ -409,7 +408,7 @@ def data_store_edit_reference_url(request):
     try:
         curr_path = _validate_path(curr_path, 'curr_path', check_path_empty=False)
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         res, _, _ = authorize(request, res_id,
@@ -455,7 +454,7 @@ def data_store_create_folder(request):
     try:
         folder_path = _validate_path(folder_path, 'folder_path')
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         create_folder(res_id, folder_path)
@@ -499,14 +498,14 @@ def data_store_remove_folder(request):
     try:
         folder_path = _validate_path(folder_path, 'folder_path')
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         remove_folder(user, res_id, folder_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as ex:
-        return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return HttpResponse(str(ex), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'status': 'success'}
     return HttpResponse(
@@ -544,7 +543,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         src_path = _validate_path(src_path, 'src_path')
         tgt_path = _validate_path(tgt_path, 'tgt_path')
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
@@ -607,7 +606,7 @@ def data_store_move_to_folder(request, pk=None):
     try:
         tgt_path = _validate_path(tgt_path, 'tgt_path', check_path_empty=False)
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
 
@@ -625,7 +624,7 @@ def data_store_move_to_folder(request, pk=None):
         try:
             src_paths[index] = _validate_path(src_path, 'src_paths')
         except ValidationError as ex:
-            return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+            return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     valid_src_paths = []
     skipped_tgt_paths = []
@@ -722,7 +721,7 @@ def data_store_rename_file_or_folder(request, pk=None):
         src_path = _validate_path(src_path, 'src_path')
         tgt_path = _validate_path(tgt_path, 'tgt_path')
     except ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     src_folder, src_base = os.path.split(src_path)
     tgt_folder, tgt_base = os.path.split(tgt_path)

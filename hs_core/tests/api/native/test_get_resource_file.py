@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import os
 from unittest import TestCase
 
@@ -30,7 +30,7 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
         )
 
         open('myfile.txt', "w").close()
-        self.file = open('myfile.txt', 'r')
+        self.file = open('myfile.txt', 'rb')
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
 

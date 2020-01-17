@@ -19,7 +19,7 @@ from osgeo import osr
 from collections import OrderedDict
 import re
 import logging
-import pycrs
+from pycrs.parse import from_unknown_wkt
 import numpy
 
 
@@ -76,7 +76,7 @@ def get_original_coverage_info(raster_dataset):
         # to log without blocking the main resource creation workflow since we allow user to
         # upload a tiff file without valid tags
         log = logging.getLogger()
-        log.exception(ex.message)
+        log.exception(str(ex))
         proj_wkt = None
 
     if proj_wkt:
@@ -114,7 +114,7 @@ def get_original_coverage_info(raster_dataset):
         # to log without blocking the main resource creation workflow since we allow user to
         # upload a tiff file without valid tags
         log = logging.getLogger()
-        log.exception(ex.message)
+        log.exception(str(ex))
         gt = None
 
     if gt and proj_wkt:  # only get the bounding box when the projection is defined
@@ -169,13 +169,13 @@ def get_wgs84_coverage_info(raster_dataset):
         # to log without blocking the main resource creation workflow since we allow user to
         # upload a tiff file without valid tags
         log = logging.getLogger()
-        log.exception(ex.message)
+        log.exception(str(ex))
         proj = None
 
     wgs84_coverage_info = OrderedDict()
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
-    if proj and (None not in original_coverage_info.values()):
+    if proj and (None not in list(original_coverage_info.values())):
 
         original_cs = osr.SpatialReference()
         # create wgs84 geographic coordinate system
@@ -190,14 +190,14 @@ def get_wgs84_coverage_info(raster_dataset):
             # USA_Contiguous_Albers_Equal_Area_Conic_USGS_version
             # then use the following workaround that uses wkt
             if transform.this is None:
-                ogc_wkt = pycrs.parser.from_unknown_wkt(proj).to_ogc_wkt()
+                ogc_wkt = from_unknown_wkt(proj).to_ogc_wkt()
                 original_cs.ImportFromWkt(ogc_wkt)
                 # create transform object
                 transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
 
         except Exception as ex:
             log = logging.getLogger()
-            log.exception(ex.message)
+            log.exception(str(ex))
 
         # get original bounding box info
         original_northlimit = original_coverage_info['northlimit']

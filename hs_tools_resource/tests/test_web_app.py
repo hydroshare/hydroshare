@@ -1,4 +1,4 @@
-from urlparse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 
 from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
@@ -479,7 +479,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, SupportedAggTypes.objects.all().count())
 
         # add a geo raster aggregation to the resource
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
         resource_file_add_process(resource=self.resComposite,
                                   files=(open_file,), user=self.user)
 
@@ -537,7 +537,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedFileExtensions.objects.all().count(), 1)
 
         # add a geo raster aggregation to the resource
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
         resource_file_add_process(resource=self.resComposite,
                                   files=(open_file,), user=self.user)
 

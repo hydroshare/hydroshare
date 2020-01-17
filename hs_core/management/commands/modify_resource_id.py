@@ -100,4 +100,4 @@ class Command(BaseCommand):
         print("Creating Bag")
         create_bag(res)
 
-        print("Resource id successfully update from {} to {}".format(res_id, new_res_id))
+        print(("Resource id successfully update from {} to {}".format(res_id, new_res_id)))

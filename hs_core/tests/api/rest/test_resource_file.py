@@ -55,7 +55,7 @@ class TestResourceFile(HSRESTTestCase):
         response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
         content_list = [os.path.basename(content['results'][0]['url']),
                         os.path.basename(content['results'][1]['url'])]
@@ -66,7 +66,7 @@ class TestResourceFile(HSRESTTestCase):
         response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 2)
         content_list = [os.path.basename(content['results'][0]['url']),
                         os.path.basename(content['results'][1]['url'])]
@@ -74,7 +74,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertIn(self.raster_file_name, content_list)
 
     def test_get_resource_file(self):
-        files = (MyTemporaryUploadedFile(file=open(self.txt_file_path, 'r'), name=self.txt_file_path))
+        files = (MyTemporaryUploadedFile(file=open(self.txt_file_path, 'rb'), name=self.txt_file_path))
         resource.add_resource_files(self.pid, files)
         file_response = self.getResourceFile(self.pid, "text.txt")
 
@@ -87,19 +87,19 @@ class TestResourceFile(HSRESTTestCase):
         txt.close()
         # Upload the new resource file
         params = {'file': (txt_file_name,
-                           open(txt_file_path),
+                           open(txt_file_path, 'rb'),
                            'text/plain')}
         url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
-        self.assertEquals(content['resource_id'], self.pid)
+        content = json.loads(response.content.decode())
+        self.assertEqual(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
         response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
         content_list = [os.path.basename(content['results'][0]['url']),
                         os.path.basename(content['results'][1]['url']),
@@ -116,7 +116,7 @@ class TestResourceFile(HSRESTTestCase):
         # Upload the new resource file
 
         params = {
-            'file': (txt_file_name, open(txt_file_path), 'text/plain'),
+            'file': (txt_file_name, open(txt_file_path, 'rb'), 'text/plain'),
             'folder': "folder/path"
         }
 
@@ -126,16 +126,16 @@ class TestResourceFile(HSRESTTestCase):
 
         url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid )
         response = self.client.get(url2, {})
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(len(content['files']), 1)
-        self.assertEqual(content['files'][0], u'text2.txt')
-        self.assertEquals(content['resource_id'], self.pid)
+        self.assertEqual(content['files'][0], 'text2.txt')
+        self.assertEqual(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
         response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
         content_list = [os.path.basename(content['results'][0]['url']),
                         os.path.basename(content['results'][1]['url']),

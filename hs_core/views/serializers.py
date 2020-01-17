@@ -58,10 +58,10 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
 
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
-            choices=zip(
+            choices=list(zip(
                 [x.__name__ for x in hydroshare.get_resource_types()],
                 [x.__name__ for x in hydroshare.get_resource_types()]
-            ), default='CompositeResource')
+            )), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
