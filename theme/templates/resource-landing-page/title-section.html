@@ -423,9 +423,7 @@
     {% if relations %}
     "citation": [
     {% for relation in relations %}
-        {% if relation.type == "isDataFor" %}
         "{{ relation.value }}"{%if not forloop.last%},{%endif%}
-        {% endif %}
     {% endfor %}
     ],
     {% endif %}
