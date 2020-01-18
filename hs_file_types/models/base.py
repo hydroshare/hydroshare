@@ -838,7 +838,8 @@ class AbstractLogicalFile(models.Model):
             raise ValueError("Must specify path of the folder to set as a "
                              "fileset aggregation type")
 
-        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile'] and file_id is None:
+        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile'] \
+                and file_id is None:
             raise ValueError("Must specify id of the file to set as an "
                              "aggregation type")
 
@@ -863,13 +864,17 @@ class AbstractLogicalFile(models.Model):
                     msg = "FileSet aggregation can't be created from the specified folder:{}"
                     msg = msg.format(path_to_check)
                     raise ValidationError(msg)
-            elif cls.__name__ == "ModelProgramLogicalFile":
-                if not resource.can_set_folder_to_mp_aggregation(path_to_check):
-                    msg = "Model Program aggregation can't be created from the specified folder:{}"
-                    msg = msg.format(path_to_check)
+            elif cls.__name__ == "ModelProgramLogicalFile" or cls.__name__ == "ModelInstanceLogicalFile":
+                if not resource.can_set_folder_to_mp_or_mi_aggregation(path_to_check):
+                    msg = "{0} aggregation can't be created from the specified folder:{1}"
+                    if cls.__name__ == "ModelProgramLogicalFile":
+                        aggr_type = "Model Program"
+                    else:
+                        aggr_type = "Model Instance"
+                    msg = msg.format(aggr_type, path_to_check)
                     raise ValidationError(msg)
 
-        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile']:
+        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile']:
             if res_file is None or not res_file.exists:
                 raise ValidationError("File not found.")
 
@@ -914,6 +919,11 @@ class AbstractLogicalFile(models.Model):
     def is_model_program(self):
         """Return True if this aggregation is a model program aggregation, otherwise False"""
         return self.get_aggregation_class_name() == 'ModelProgramLogicalFile'
+
+    @property
+    def is_model_instance(self):
+        """Return True if this aggregation is a model instance aggregation, otherwise False"""
+        return self.get_aggregation_class_name() == 'ModelInstanceLogicalFile'
 
     @staticmethod
     def get_aggregation_type_name():
@@ -980,11 +990,11 @@ class AbstractLogicalFile(models.Model):
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 
-        if self.is_model_program and self.folder:
+        if (self.is_model_program or self.is_model_instance) and self.folder:
             # this model program aggregation has ben created from a folder
             # aggregation folder path is the aggregation name
             return self.folder
-        elif self.is_model_program:
+        elif self.is_model_program or self.is_model_instance:
             # this model program aggregation has been created from a single resource file
             # the path of the resource file is the aggregation name
             single_res_file = self.files.first()
