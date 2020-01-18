@@ -973,13 +973,13 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     res_cls = resource.__class__
 
     def can_delete_logical_file(logical_file):
-        if not logical_file.is_fileset and not logical_file.is_model_program:
+        if not logical_file.is_fileset and not logical_file.is_model_program and not logical_file.is_model_instance:
             # delete logical file if any resource file that belongs to logical file
-            # gets deleted for any logical file other than fileset or modelprogram logical file
+            # gets deleted for any logical file other than fileset or modelprogram or modelinstance logical file
             return True
-        elif logical_file.is_model_program and logical_file.folder is None:
-            # this is a single file based model program aggregation and not a folder based model program
-            # aggregation - we need to delete the logical file
+        elif (logical_file.is_model_program or logical_file.is_model_instance) and logical_file.folder is None:
+            # this is a single file based model program/instance aggregation and not a folder based
+            # model program/instance aggregation - we need to delete the logical file
             return True
         return False
 
