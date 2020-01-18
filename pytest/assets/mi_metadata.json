@@ -1,0 +1,15 @@
+{
+    "firstName": "Rack",
+    "lastName": "Jackon",
+    "gender": "male",
+    "age": 24,
+    "address": {
+        "streetAddress": "126 1st Ave",
+        "city": "San Jone",
+        "state": "CA",
+        "postalCode": "394221"
+    },
+    "phoneNumbers": [
+        { "type": "home", "number": "7383627627" }
+    ]
+}
