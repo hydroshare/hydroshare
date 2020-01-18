@@ -276,7 +276,7 @@ class CompositeResource(BaseResource):
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print)
 
     def _recreate_fileset_xml_docs(self, folder):
         """Recreates xml files for all fileset aggregations that exist under the path 'folder'
