@@ -1,12 +1,9 @@
 import os
 
 from django.core.exceptions import ObjectDoesNotExist
-
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
-
-
+from hs_core.models import BaseResource, ResourceManager, ResourceFile, CoreMetaData, resource_processor
 from hs_file_types.models import GenericLogicalFile
 from hs_file_types.models import ModelProgramResourceFileType
 from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
@@ -78,17 +75,18 @@ class CompositeResource(BaseResource):
         :param  tgt_folder: folder to which the file got moved into
         """
         if moved_res_file.has_logical_file and (moved_res_file.logical_file.is_fileset or
-                                                moved_res_file.logical_file.is_model_program):
+                                                moved_res_file.logical_file.is_model_program or
+                                                moved_res_file.logical_file.is_model_instance):
             if moved_res_file.file_folder is not None:
                 try:
                     aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
                     if aggregation == moved_res_file.logical_file:
-                        if aggregation.is_fileset or (aggregation.is_model_program and
-                                                      aggregation.folder is not None):
+                        if aggregation.is_fileset or ((aggregation.is_model_program or aggregation.is_model_instance)
+                                                      and aggregation.folder is not None):
                             # remove aggregation association with the file
-                            # the removed aggregation is a fileset aggregation or a model program aggregation
-                            # based on folder (note: model program aggregation can also be created from a
-                            # single file)
+                            # the removed aggregation is a fileset aggregation or a model program or a model instance
+                            # aggregation based on folder (note: model program/instance aggregation can also be
+                            # created from a single file)
                             moved_res_file.logical_file_content_object = None
                             moved_res_file.save()
                             # delete any instance of ModelProgramResourceFileType associated with this moved file
@@ -107,7 +105,7 @@ class CompositeResource(BaseResource):
         """
         if moved_res_file.file_folder is not None and not moved_res_file.has_logical_file:
             # first check for model program aggregation
-            aggregation = self.get_mp_aggregation_in_path(moved_res_file.file_folder)
+            aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder)
             if aggregation is None:
                 # then check for fileset aggregation
                 aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder)
@@ -125,12 +123,15 @@ class CompositeResource(BaseResource):
         """
 
         aggregation_path = dir_path[len(self.file_path) + 1:]
-        # first check for model program aggregation
-        mp_aggr = self.modelprogramlogicalfile_set.filter(folder=aggregation_path).first()
-        if mp_aggr is None:
-            # no model program aggr - check for fileset aggr
+        # first check for model program/instance aggregation
+        mp_mi_aggr = self.modelprogramlogicalfile_set.filter(folder=aggregation_path).first()
+        if mp_mi_aggr is None:
+            mp_mi_aggr = self.modelinstancelogicalfile_set.filter(folder=aggregation_path).first()
+
+        if mp_mi_aggr is None:
+            # no model program or model instance aggr - check for fileset aggr
             return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
-        return mp_aggr
+        return mp_mi_aggr
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
@@ -167,8 +168,8 @@ class CompositeResource(BaseResource):
         path = os.path.dirname(dir_path)
         while '/' in path:
             aggr = self.get_folder_aggregation_object(path)
-            if aggr is not None and aggr.is_model_program:
-                # avoid creating a fileset aggregation inside a model program aggregation folder
+            if aggr is not None and (aggr.is_model_program or aggr.is_model_instance):
+                # avoid creating a fileset aggregation inside a model program/instance aggregation folder
                 return False
             path = os.path.dirname(path)
 
@@ -180,11 +181,11 @@ class CompositeResource(BaseResource):
         # if there are any files in the dir_path, we can set the folder to fileset aggregation
         return len(files_in_path) > 0
 
-    def can_set_folder_to_mp_aggregation(self, dir_path):
-        """Checks if the specified folder *dir_path* can be set to ModelProgram aggregation
+    def can_set_folder_to_mp_or_mi_aggregation(self, dir_path):
+        """Checks if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
 
         :param dir_path: Resource file directory path (full folder path starting with resource id)
-        for which the ModelProgram aggregation to be set
+        for which the ModelProgram/ModelInstance aggregation to be set
 
         :return If the specified folder is already represents an aggregation or does
         not contain any files or any of the contained files is part of an aggregation or if any of the sub-folders
@@ -196,13 +197,19 @@ class CompositeResource(BaseResource):
             return False
 
         # check that we don't have any sub folder of dir_path representing a fileset aggregation
-        # so that we can avoid nesting a fileset aggregation inside a model program aggregation
+        # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation
         if self.filesetlogicalfile_set.filter(folder__startswith=dir_path).exists():
             return False
 
         # check that we don't have any sub folder of dir_path representing a model program aggregation
-        # so that we can avoid nesting a model program aggregation inside a model program aggregation
+        # so that we can avoid nesting a model program or model instance aggregation inside a model
+        # program aggregation
         if self.modelprogramlogicalfile_set.filter(folder__startswith=dir_path).exists():
+            return False
+
+        # check that we don't have any sub folder of dir_path representing a model instance aggregation
+        # so that we can avoid nesting a model program or model instance aggregation inside a model instance aggregation
+        if self.modelinstancelogicalfile_set.filter(folder__startswith=dir_path).exists():
             return False
 
         irods_path = dir_path
@@ -223,14 +230,14 @@ class CompositeResource(BaseResource):
             path = os.path.dirname(path)
 
         if parent_aggregation is not None:
-            if parent_aggregation.is_model_program:
-                # avoid creating a model program aggregation inside a model program aggregation folder
+            if parent_aggregation.is_model_program or parent_aggregation.is_model_instance:
+                # avoid creating a model program/instance aggregation inside a model program/instance aggregation folder
                 return False
             elif parent_aggregation.is_fileset:
                 # check that all resource files under the 'dir_path' are associated with fileset only
                 files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
-                # if all the resource files are associated with fileset then can set the folder to model program
-                # aggregation
+                # if all the resource files are associated with fileset then can set the folder to model program or
+                # model instance aggregation
                 if files_in_path:
                     return all(res_file.has_logical_file and res_file.logical_file.is_fileset for
                                res_file in files_in_path)
@@ -347,6 +354,16 @@ class CompositeResource(BaseResource):
                     mp_aggr.folder = new_folder + mp_aggr.folder[len(old_folder):]
                     mp_aggr.save()
 
+        def update_model_instance_folder():
+            """Updates the folder attribute of all folder based model instance aggregation that exist under
+            'old_folder' when the folder is renamed to *new_folder*"""
+
+            mi_aggregations = self.modelinstancelogicalfile_set.filter(folder__startswith=old_folder)
+            for mi_aggr in mi_aggregations:
+                if mi_aggr.folder is not None:
+                    mi_aggr.folder = new_folder + mi_aggr.folder[len(old_folder):]
+                    mi_aggr.save()
+
         # recreate xml files for all fileset aggregations that exist under new_folder
         if new_folder.startswith(self.file_path):
             new_folder = new_folder[len(self.file_path) + 1:]
@@ -359,6 +376,12 @@ class CompositeResource(BaseResource):
         mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=new_folder)
         for mp_aggr in mp_aggregations:
             mp_aggr.create_aggregation_xml_documents()
+
+        # first update folder attribute of any model instance aggregation that exist under *old_folder*
+        update_model_instance_folder()
+        mi_aggregations = self.modelinstancelogicalfile_set.filter(folder__startswith=new_folder)
+        for mi_aggr in mi_aggregations:
+            mi_aggr.create_aggregation_xml_documents()
 
         # first update folder attribute of all filesets that exist under *old_folder*
         update_fileset_folder()
@@ -476,10 +499,10 @@ class CompositeResource(BaseResource):
         else:
             return get_fileset(path)
 
-    def get_mp_aggregation_in_path(self, path):
-        """Get the model program aggregation in the path moving up (towards the root)in the path
-        :param  path: directory path in which to search for a model program aggregation
-        :return a model program aggregation object if found, otherwise None
+    def get_model_aggregation_in_path(self, path):
+        """Get the model program or model instance aggregation in the path moving up (towards the root)in the path
+        :param  path: directory path in which to search for a model program or model instance aggregation
+        :return a model program or model instance aggregation object if found, otherwise None
         """
 
         def get_aggregation(path):
@@ -493,7 +516,7 @@ class CompositeResource(BaseResource):
             aggr = get_aggregation(path)
             if aggr is None:
                 path = os.path.dirname(path)
-            elif aggr.is_model_program:
+            elif aggr.is_model_program or aggr.is_model_instance:
                 return aggr
             else:
                 # the aggregation is some other type of aggregation - no need to search further
@@ -501,7 +524,7 @@ class CompositeResource(BaseResource):
                 return None
         else:
             aggr = get_aggregation(path)
-            if aggr is not None and aggr.is_model_program:
+            if aggr is not None and (aggr.is_model_program or aggr.is_model_instance):
                 return aggr
             return None
 
@@ -626,7 +649,7 @@ class CompositeResource(BaseResource):
                 if is_moving_file or is_moving_folder:
                     src_mp_aggr = src_aggr
                     #  find if there is any model program aggregation in the target path
-                    tgt_mp_aggr = self.get_mp_aggregation_in_path(tgt_aggr_path)
+                    tgt_mp_aggr = self.get_model_aggregation_in_path(tgt_aggr_path)
                     if tgt_mp_aggr is not None:
                         if src_mp_aggr.folder is None:
                             # file/folder being moved is part of a model aggregation - we can't move that
