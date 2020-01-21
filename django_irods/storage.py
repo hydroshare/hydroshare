@@ -372,7 +372,31 @@ class IrodsStorage(Storage):
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "file size".format(name))
-        return int(stdout)
+        return int(float(stdout))
+
+    def checksum(self, full_name):
+        """
+        Compute/Update checksum of file object and return the checksum
+        :param full_name: the data object name with full collection path in order to locate data object from current
+        working directory
+        :return: checksum of the file object
+        """
+        # first force checksum (re)computation
+        self.session.run("ichksum", None, "-f", full_name)
+        # retrieve checksum using iquest
+        # get data object name only from the full_name input parameter to be used by iquest
+        if '/' in full_name:
+            file_info = full_name.rsplit('/', 1)
+            obj_name = file_info[1]
+        else:
+            obj_name = full_name
+        qrystr = "SELECT DATA_CHECKSUM WHERE DATA_NAME = '{}'".format(obj_name)
+        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        if "CAT_NO_ROWS_FOUND" in stdout:
+            raise ValidationError("{} cannot be found in iRODS to retrieve "
+                                  "checksum".format(obj_name))
+        # remove potential '\n' from stdout
+        return stdout.rstrip('\n')
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
