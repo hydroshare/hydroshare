@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # a list of resource id's: none does nothing.
+        # a list of resource id's: if none, process all published resources
         parser.add_argument('resource_ids', nargs='*', type=str)
 
     def handle(self, *args, **options):
@@ -20,6 +20,8 @@ class Command(BaseCommand):
                 resource = get_resource_by_shortkey(rid)
                 if resource.raccess.published:
                     create_bag_by_irods(rid)
+                else:
+                    print("Resource {} is not published, hence ignored.".format(rid))
         else:
             for resource in BaseResource.objects.filter(raccess__published=True):
                 create_bag_by_irods(resource.short_id)

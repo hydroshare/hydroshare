@@ -50,8 +50,7 @@ class TestBagIt(TestCase):
         status = create_bag_by_irods(self.test_res.short_id)
         self.assertTrue(status)
         res = get_resource_by_shortkey(self.test_res.short_id)
-        extra_data = res.extra_data
-        self.assertIsNotNone(extra_data['bag_checksum'], msg='bag_checksum value in extra_data is None')
+        self.assertNotEqual(res.bag_checksum, '', msg='bag_checksum property is empty')
 
         self.test_res.raccess.published = False
         self.test_res.raccess.save()

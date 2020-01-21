@@ -252,7 +252,7 @@ def display_name_to_class(value):
 
 @register.filter
 def creator_json_ld_element(crs):
-    """ return json ld element for one creator for schema.org script embedded on resource landing page"""
+    """ return json ld element for creators for schema.org script embedded on resource landing page"""
     crs_array = []
     for cr in crs:
         cr_dict = {}
@@ -298,15 +298,6 @@ def creator_json_ld_element(crs):
     default_dump = dumps(crs_array, sort_keys=True, indent=4)
     format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
     return format_dump
-
-
-@register.filter
-def bag_checksum(res):
-    extra_data = res.extra_data
-    if 'bag_checksum' in extra_data and extra_data['bag_checksum']:
-        return extra_data['bag_checksum']
-    else:
-        return ''
 
 
 @register.filter

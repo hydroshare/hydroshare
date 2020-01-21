@@ -462,10 +462,7 @@ def create_bag_by_irods(resource_id):
             if res.raccess.published:
                 # compute checksum to meet DataONE distribution requirement
                 chksum = istorage.checksum(bag_path)
-                extra_data = res.extra_data
-                extra_data['bag_checksum'] = chksum
-                res.extra_data = extra_data
-                res.save()
+                res.bag_checksum = chksum
             istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
             return True
         except SessionException as ex:

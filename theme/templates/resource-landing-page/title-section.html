@@ -473,9 +473,9 @@
                 "http://www.wikidata.org/entity/Q185235",
                 "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
             ],
-            "identifier": "md5:{{ cm| bag_checksum }}",
+            "identifier": "md5:{{ cm.bag_checksum }}",
             "propertyID": "MD5",
-            "value": "{{ cm| bag_checksum }}"
+            "value": "{{ cm.bag_checksum }}"
         }
         ]{% endif %}
     }
