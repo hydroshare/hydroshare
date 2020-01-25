@@ -8,7 +8,8 @@ from model_program import ModelProgramLogicalFile
 
 class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
     has_model_output = models.BooleanField(default=False)
-    executed_by = models.ForeignKey(ModelProgramLogicalFile, null=True, blank=True, related_name="model_instances")
+    executed_by = models.ForeignKey(ModelProgramLogicalFile, null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name="model_instances")
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
     metadata_json = JSONField(default=dict)
