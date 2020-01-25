@@ -1,4 +1,5 @@
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from base_model_program_instance import AbstractModelLogicalFile
@@ -45,3 +46,28 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
         This must agree between Composite Types and native types).
         """
         return self.model_instance_type
+
+    def set_link_to_model_program(self, user, model_prog_aggr):
+        """Creates a link to the specified model program aggregation *model_prog_aggr* using the
+        executed_by metadata field.
+
+        :param  user: user who is associating this (self) model instance aggregation to a model program aggregation
+        :param  model_prog_aggr: an instance of ModelProgramLogicalFile to be associated with
+        :raises PermissionDenied exception if the user does not have edit permission for the resource to which this
+        model instance aggregation belongs or doesn't have view permission for the resource that contains the model
+        program aggregation.
+        """
+
+        # check if user has edit permission for the resources
+        mi_res = self.resource
+        mp_res = model_prog_aggr.resource
+        authorized = user.uaccess.can_change_resource(mi_res)
+        if not authorized:
+            raise PermissionDenied("You don't have permission to edit resource(ID:{})".format(mi_res.short_id))
+        if mi_res.short_id != mp_res.short_id:
+            authorized = user.uaccess.can_view_resource(mp_res)
+            if not authorized:
+                raise PermissionDenied("You don't have permission to view resource(ID:{})".format(mp_res.short_id))
+
+        self.metadata.executed_by = model_prog_aggr
+        self.metadata.save()
