@@ -1,17 +1,17 @@
-import os
 import json
+import os
 import uuid
 
 import pytest
-from django.contrib.auth.models import User, Group
 from django.conf import settings
+from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource
-from hs_labels.models import UserLabels
 from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile
+from hs_labels.models import UserLabels
 
 
 @pytest.fixture(scope="function")
@@ -120,6 +120,26 @@ def resource_with_metadata():
     _res.delete()
 
 
+def create_composite_resource(u_name, u_email, u_lastname, u_firstname, res_title):
+    group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+    user = hydroshare.create_account(
+        u_email,
+        username=u_name,
+        first_name=u_firstname,
+        last_name=u_lastname,
+        superuser=False,
+        groups=[group]
+    )
+    _res = hydroshare.create_resource(
+        resource_type='CompositeResource',
+        owner=user,
+        title=res_title,
+        metadata=[],
+        files=()
+    )
+    return _res, user
+
+
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
 def composite_resource():
@@ -148,9 +168,38 @@ def composite_resource():
 
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
+def composite_resource_2():
+    """composite resource for testing"""
+    _res, user = create_composite_resource(u_name='user2', u_email='user2@gmail.com', u_firstname='user2_firstname',
+                                          u_lastname='user2_lastname', res_title='Composite Resource-2 for Testing')
+    yield _res, user
+    # not deleting the resource here as the resource in some test cases needs be deleted as part of the test
+    user.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
 def composite_resource_with_mp_aggregation(composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
+    upload_folder = None
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+
+    # set file to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
+    yield res, user
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def composite_resource_2_with_mp_aggregation(composite_resource_2):
+    res, user = composite_resource_2
+    file_path = 'pytest/assets/logan.vrt'
     upload_folder = None
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
