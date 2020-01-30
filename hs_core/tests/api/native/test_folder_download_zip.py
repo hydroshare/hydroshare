@@ -37,15 +37,15 @@ class TestFolderDownloadZip(TestCase):
         test_file.write("Test text file in test1.txt")
         test_file.close()
 
-        self.test_file = open(self.n1, "r")
+        self.test_file = open(self.n1, "rb")
         add_resource_files(self.res.short_id, self.test_file, folder='foo')
 
         # copy refts file into new file to be added to the resource as an aggregation
-        reft_data_file = open('hs_core/tests/data/multi_sites_formatted_version1.0.refts.json', 'r')
-        refts_file = open('multi_sites_formatted_version1.0.refts.json', 'w')
+        reft_data_file = open('hs_core/tests/data/multi_sites_formatted_version1.0.refts.json', 'rb')
+        refts_file = open('multi_sites_formatted_version1.0.refts.json', 'wb')
         refts_file.writelines(reft_data_file.readlines())
         refts_file.close()
-        self.refts_file = open('multi_sites_formatted_version1.0.refts.json', 'r')
+        self.refts_file = open('multi_sites_formatted_version1.0.refts.json', 'rb')
 
         add_resource_files(self.res.short_id, self.refts_file)
         self.res.create_aggregation_xml_documents()

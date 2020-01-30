@@ -1,6 +1,6 @@
 import csv
-from cStringIO import StringIO
-import urlparse
+from io import StringIO
+import urllib.parse
 
 from django.views.generic import TemplateView
 from django.utils.decorators import method_decorator
@@ -30,7 +30,7 @@ class AppLaunch(TemplateView):
             try:
                 do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
             except WebAppLaunchException as ex:
-                messages.warning(request, ex.message)
+                messages.warning(request, str(ex))
                 return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
         # log app launch details if user is logged in
@@ -40,10 +40,10 @@ class AppLaunch(TemplateView):
             fields = get_std_log_fields(request, session)
 
             # parse the query and param portions of the url
-            purl = urlparse.urlparse(url)
+            purl = urllib.parse.urlparse(url)
 
             # extract the app url args so they can be logged
-            app_args = urlparse.parse_qs(purl.query)
+            app_args = urllib.parse.parse_qs(purl.query)
 
             # update the log fields with the extracted request and url params
             fields.update(querydict)
@@ -52,7 +52,7 @@ class AppLaunch(TemplateView):
             # clean up the formatting of the query and app arg dicts
             # i.e. represent lists in csv format without brackets [ ]
             # so that the log records don't need to be cleaned later.
-            fields.update(dict((k, ','.join(v)) for k, v in fields.iteritems()
+            fields.update(dict((k, ','.join(v)) for k, v in list(fields.items())
                           if type(v) == list))
 
             # format and save the log message

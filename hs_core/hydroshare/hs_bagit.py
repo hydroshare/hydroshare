@@ -10,7 +10,7 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 import bagit
-from hs_core.models import Bags, ResourceFile
+from hs_core.models import ResourceFile
 
 
 class HsBagitException(Exception):
@@ -41,11 +41,6 @@ def delete_files_and_bag(resource):
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error("cannot remove {}: {}".format(resource.bag_path, e))
-
-    # TODO: delete this whole mechanism; redundant.
-    # delete the bags table
-    for bag in resource.bags.all():
-        bag.delete()
 
 
 def create_bag_files(resource):
@@ -79,7 +74,7 @@ def create_bag_files(resource):
             shutil.rmtree(temp_path)
             os.makedirs(temp_path)
         else:
-            raise Exception(ex.message)
+            raise Exception(str(ex))
 
     # an empty visualization directory will not be put into the zipped bag file by ibun command,
     # so creating an empty visualization directory to be put into the zip file as done by the two
@@ -142,7 +137,7 @@ def create_bag_files(resource):
         # only the files that are not part of file type aggregation (logical file)
         # should be added to the resource level map xml file
         if f.logical_file is None:
-            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
                 file_name=f.short_path)
@@ -170,7 +165,7 @@ def create_bag_files(resource):
             if logical_file.has_parent:
                 # skip nested aggregations
                 continue
-            aggr_uri = u'{hs_url}/resource/{res_id}/data/contents/{map_file_path}#aggregation'
+            aggr_uri = '{hs_url}/resource/{res_id}/data/contents/{map_file_path}#aggregation'
             aggr_uri = aggr_uri.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
@@ -238,15 +233,7 @@ def create_bag(resource):
     # created when user clicks on download button
     resource.setAVU("bag_modified", True)
 
-    # delete if there exists any bags for the resource
-    resource.bags.all().delete()
-    # link the zipped bag file in IRODS via bag_url for bag downloading
-    b = Bags.objects.create(
-        content_object=resource.baseresource,
-        timestamp=resource.updated
-    )
-
-    return b
+    return
 
 
 def read_bag(bag_path):

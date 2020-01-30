@@ -23,7 +23,7 @@ from hs_core.signals import post_add_geofeature_aggregation
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, FieldInformation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 UNKNOWN_STR = "unknown"
 
@@ -157,7 +157,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             self.originalcoverage.add_to_xml_container(container_to_add_to)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
@@ -262,7 +262,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
                                                                                    res_file)
             except ValidationError as ex:
-                log.exception(ex.message)
+                log.exception(str(ex))
                 raise ex
 
             file_name = res_file.file_name
@@ -305,7 +305,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     ft_ctx.logical_file = logical_file
                     ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
-                    msg = msg.format(ex.message)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
 
             if not file_type_success:
@@ -379,7 +379,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
         else:
             msg = "Failed to parse the .shp file. Error{}"
 
-        msg = msg.format(ex.message)
+        msg = msg.format(str(ex))
         raise ValidationError(msg)
 
 
@@ -397,7 +397,7 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
     # populate resource and logical file level metadata
     target_obj = logical_file if logical_file is not None else resource
 
-    if "coverage" in metadata_dict.keys():
+    if "coverage" in list(metadata_dict.keys()):
         coverage_dict = metadata_dict["coverage"]['Coverage']
         target_obj.metadata.coverages.all().filter(type='box').delete()
         target_obj.metadata.create_element('coverage',

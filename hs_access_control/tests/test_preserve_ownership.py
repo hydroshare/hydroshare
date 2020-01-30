@@ -86,7 +86,7 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
             dog.uaccess.share_group_with_user(
                 felines, dog, PrivilegeCodes.VIEW)
         self.assertEqual(
-            cm.exception.message,
+            str(cm.exception),
             'Cannot remove sole owner of group')
 
     def test_01_remove_last_owner_of_resource(self):
@@ -101,5 +101,5 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
             dog.uaccess.share_resource_with_user(
                 scratching, dog, PrivilegeCodes.VIEW)
         self.assertEqual(
-            cm.exception.message,
+            str(cm.exception),
             'Cannot remove sole owner of resource')

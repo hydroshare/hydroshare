@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='relation',
             name='type',
-            field=models.CharField(max_length=100, choices=[(b'isHostedBy', b'Hosted By'), (b'isCopiedFrom', b'Copied From'), (b'isPartOf', b'Part Of'), (b'hasPart', b'Has Part'), (b'isExecutedBy', b'Executed By'), (b'isCreatedBy', b'Created By'), (b'isVersionOf', b'Version Of'), (b'isReplacedBy', b'Replaced By'), (b'isDataFor', b'Data For'), (b'cites', b'Cites'), (b'isDescribedBy', b'Described By')]),
+            field=models.CharField(max_length=100, choices=[('isHostedBy', 'Hosted By'), ('isCopiedFrom', 'Copied From'), ('isPartOf', 'Part Of'), ('hasPart', 'Has Part'), ('isExecutedBy', 'Executed By'), ('isCreatedBy', 'Created By'), ('isVersionOf', 'Version Of'), ('isReplacedBy', 'Replaced By'), ('isDataFor', 'Data For'), ('cites', 'Cites'), ('isDescribedBy', 'Described By')]),
         ),
         migrations.AlterUniqueTogether(
             name='relation',

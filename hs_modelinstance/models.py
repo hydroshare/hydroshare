@@ -144,7 +144,7 @@ class ModelInstanceMetaData(CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import ModelInstanceMetaDataSerializer
+        from .serializers import ModelInstanceMetaDataSerializer
         return ModelInstanceMetaDataSerializer(self)
 
     @classmethod
@@ -152,7 +152,7 @@ class ModelInstanceMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'modeloutput' in keys_to_update:
             parsed_metadata.append({"modeloutput": metadata.pop('modeloutput')})
 
@@ -170,13 +170,13 @@ class ModelInstanceMetaData(CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import ModelOutputValidationForm, ExecutedByValidationForm
+        from .forms import ModelOutputValidationForm, ExecutedByValidationForm
 
         super(ModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modeloutput': 'model_output', 'executedby': 'executed_by'}
         with transaction.atomic():
             # update/create non-repeatable element
-            for element_name in attribute_mappings.keys():
+            for element_name in list(attribute_mappings.keys()):
                 for dict_item in metadata:
                     if element_name in dict_item:
                         if element_name == 'modeloutput':
@@ -212,11 +212,11 @@ class ModelInstanceMetaData(CoreMetaData):
         executedByFields = ['modelProgramName','modelProgramIdentifier']
         self.add_metadata_element_to_xml(container,executed_by,executedByFields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(ModelInstanceMetaData, self).delete_all_elements()
         self._model_output.all().delete()
         self._executed_by.all().delete()
 
-import receivers
+from . import receivers

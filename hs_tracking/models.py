@@ -8,7 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.models import User
 
 from theme.models import UserProfile
-from utils import get_std_log_fields
+from .utils import get_std_log_fields
 from hs_core.models import BaseResource
 from hs_core.hydroshare import get_resource_by_shortkey
 
@@ -113,7 +113,7 @@ class Variable(models.Model):
     TYPES = (
         ('Integer', int),
         ('Floating Point', float),
-        ('Text', unicode),
+        ('Text', str),
         ('Flag', bool),
         ('None', lambda o: None)
     )
@@ -158,8 +158,8 @@ class Variable(models.Model):
     @classmethod
     def format_kwargs(cls, **kwargs):
         msg_items = []
-        for k, v in kwargs.iteritems():
-            msg_items.append('%s=%s' % (unicode(k).encode(), unicode(v).encode()))
+        for k, v in list(kwargs.items()):
+            msg_items.append('%s=%s' % (str(k), str(v)))
         return '|'.join(msg_items)
 
     @classmethod
@@ -184,8 +184,8 @@ class Variable(models.Model):
             return ''
         elif isinstance(value, bool):
             return 'true' if value else 'false'  # only empty strings are False
-        elif isinstance(value, (int, float, str, unicode)):
-            return unicode(value)
+        elif isinstance(value, (int, float, str)):
+            return str(value)
         else:
             raise ValueError("Unknown type (%s) for tracking variable: %r",
                              type(value).__name__, value)
@@ -196,7 +196,7 @@ class Variable(models.Model):
             return 4
         elif isinstance(value, bool):
             return 3
-        elif isinstance(value, (str, unicode)):
+        elif isinstance(value, str):
             return 2
         elif isinstance(value, float):
             return 1
