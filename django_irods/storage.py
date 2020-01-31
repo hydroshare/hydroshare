@@ -29,6 +29,18 @@ class IrodsStorage(Storage):
         # return a unique temporary path under IRODS_ROOT directory
         return os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
+    @staticmethod
+    def get_absolute_path(path):
+        """
+        Get absolute path of the input path for the HydroShare iRODS data zone, which is useful for iquest
+        :param path: input path to be converted to absolute path if needed
+        :return: absolute logical path of the input path
+        """
+        if os.path.isabs(path):
+            # iRODS federated logical path which is already absolute path
+            return path
+        return os.path.join(settings.IRODS_HOME_COLLECTION, path)
+
     def set_user_session(self, username=None, password=None, host=settings.IRODS_HOST,
                          port=settings.IRODS_PORT, def_res=None, zone=settings.IRODS_ZONE,
                          userid=0, sess_id=None):
@@ -288,7 +300,7 @@ class IrodsStorage(Storage):
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
         qrystr = "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' AND " \
-                 "COLL_NAME like '%{}'".format(path)
+                 "COLL_NAME = '{}'".format(IrodsStorage.get_absolute_path(path))
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s",
                                   qrystr)[0].split("\n")
 
@@ -310,7 +322,8 @@ class IrodsStorage(Storage):
         subdir_list = []
         # the query below returns name of all sub-collections/sub-directories
         # under the path collection/directory
-        qrystr = "select COLL_NAME where COLL_PARENT_NAME like '%{}'".format(path)
+
+        qrystr = "select COLL_NAME where COLL_PARENT_NAME = '{}'".format(IrodsStorage.get_absolute_path(path))
         stdout = self.session.run("iquest", None, "--no-page", "%s",
                                   qrystr)[0].split("\n")
         for i in range(len(stdout)):
@@ -339,7 +352,7 @@ class IrodsStorage(Storage):
 
         # check first whether the path is an iRODS collection/directory or not, and if not, need
         # to raise SessionException, and if yes, can proceed to get files and sub-dirs under it
-        qrystr = "select COLL_NAME where COLL_NAME like '%{}'".format(path)
+        qrystr = "select COLL_NAME where COLL_NAME = '{}'".format(IrodsStorage.get_absolute_path(path))
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise SessionException(-1, '', 'folder {} does not exist'.format(path))
@@ -365,7 +378,7 @@ class IrodsStorage(Storage):
         coll_name = file_info[0]
         file_name = file_info[1]
         qrystr = "select DATA_SIZE where DATA_REPL_STATUS != '0' AND " \
-                 "COLL_NAME like '%{}' AND DATA_NAME = '{}'".format(coll_name, file_name)
+                 "COLL_NAME = '{}' AND DATA_NAME = '{}'".format(IrodsStorage.get_absolute_path(coll_name), file_name)
         stdout = self.session.run("iquest", None, "%s",
                                   qrystr)[0]
 
