@@ -44,7 +44,8 @@ function clearSourcePaths() {
 }
 
 function getFolderTemplateInstance(folder) {
-    if (folder['folder_aggregation_type'] === "FileSetLogicalFile" || folder['folder_aggregation_type'] === "ModelProgramLogicalFile") {
+    if (folder['folder_aggregation_type'] === "FileSetLogicalFile" || folder['folder_aggregation_type'] === "ModelProgramLogicalFile"
+        || folder['folder_aggregation_type'] === "ModelInstanceLogicalFile") {
         var folderIcons = getFolderIcons();
         let iconTemplate = folderIcons.DEFAULT;
 
@@ -102,6 +103,9 @@ function getFileTemplateInstance(file) {
     if (file['logical_type'] === "ModelProgramLogicalFile" && !file.has_model_program_aggr_folder) {
         fileTypeExt = "MP";
     }
+    if (file['logical_type'] === "ModelInstanceLogicalFile" && !file.has_model_instance_aggr_folder) {
+        fileTypeExt = "MI";
+    }
     var iconTemplate;
     var fileIcons = getFileIcons();
 
@@ -126,7 +130,9 @@ function getFileTemplateInstance(file) {
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
-        file.is_single_file_aggregation + "' data-has-model-program-aggr-folder='" + file.has_model_program_aggr_folder +"'>" +
+        file.is_single_file_aggregation + "' data-has-model-program-aggr-folder='" +
+        file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
+        file.has_model_instance_aggr_folder +"'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + file.name + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
@@ -192,6 +198,7 @@ function updateSelectionMenuContext() {
         "setRefTimeseriesFileType",
         "setTimeseriesFileType",
         "setModelProgramFileType",
+        "setModelInstanceFileType",
         "subMenuSetContentType",
         "unzip",
         "updateRefUrl",
@@ -254,6 +261,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setRefTimeseriesFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
         uiActionStates.setModelProgramFileType.disabled = true;
+        uiActionStates.setModelInstanceFileType.disabled = true;
 
         for (let i = 0; i < selected.length; i++) {
             const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
@@ -328,15 +336,18 @@ function updateSelectionMenuContext() {
             if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
                 uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
+                uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
             }
-            else if (logicalFileTypeToSet !=="ModelProgramLogicalFile") {
+            else if (logicalFileTypeToSet !=="ModelProgramOrInstanceLogicalFile") {
                 uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
+                uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
             }
         }
         //  ------------- The item selected is a file -------------
         else {
             const logicalFileType = $(selected).find(".fb-logical-file-type").attr("data-logical-file-type").trim();
             const fileHasModelProgramAggrFolder = $(selected).attr("data-has-model-program-aggr-folder").trim();
+            const fileHasModelInstanceAggrFolder = $(selected).attr("data-has-model-instance-aggr-folder").trim();
             // Disable add metadata to folder
             uiActionStates.setFileSetFileType.disabled = true;
             uiActionStates.setFileSetFileType.fileMenu.hidden = true;
@@ -412,15 +423,16 @@ function updateSelectionMenuContext() {
             else {
                 // The selected file is part of a logical file type
                 if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"
-                    && logicalFileType !== "ModelProgramLogicalFile") {
+                    && logicalFileType !== "ModelProgramLogicalFile" && logicalFileType !== "ModelInstanceLogicalFile") {
                     // if the selected file is not part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation)
-                    // or ModelProgramLogicalFile dont't show the Remove Aggregation option
+                    // ModelInstanceLogicalFile or ModelProgramLogicalFile dont't show the Remove Aggregation option
                     uiActionStates.removeAggregation.disabled = true;
                     uiActionStates.removeAggregation.fileMenu.hidden = true;
                 }
                 else {
-                    if (logicalFileType === "ModelProgramLogicalFile" && fileHasModelProgramAggrFolder === "true") {
-                        // don't show option to remove aggregation for a file that's part of a model program aggregation
+                    if ((logicalFileType === "ModelProgramLogicalFile" && fileHasModelProgramAggrFolder === "true") ||
+                        (logicalFileType === "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === "true")) {
+                        // don't show option to remove aggregation for a file that's part of a model program/instance aggregation
                         // created based on a folder
                         uiActionStates.removeAggregation.disabled = true;
                         uiActionStates.removeAggregation.fileMenu.hidden = true;
@@ -446,6 +458,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setGeoFeatureFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
         uiActionStates.setModelProgramFileType.disabled = true;
+        uiActionStates.setModelInstanceFileType.disabled = true;
 
         if (resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
@@ -851,6 +864,13 @@ function showFileTypeMetadata(file_type_time_series, url){
                 return;
             }
         }
+        else if (logical_type === "ModelInstanceLogicalFile") {
+            if (selectedItem.attr('data-has-model-instance-aggr-folder') === 'true') {
+                $("#fileTypeMetaData").html(no_metadata_alert);
+                $("#btnSideAddMetadata").addClass("disabled");
+                return;
+            }
+        }
     }
     var resource_mode = RESOURCE_MODE;
     if (!resource_mode) {
@@ -976,10 +996,13 @@ function showFileTypeMetadata(file_type_time_series, url){
                     fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
                  });
              }
-              if (logical_type === "ModelProgramLogicalFile") {
+             if (logical_type === "ModelProgramLogicalFile") {
                   setupModelProgramFileTypeUI();
                   setupModelProgramTypeUI();
-              }
+             }
+             if (logical_type === "ModelInstanceLogicalFile") {
+                  setupModelInstanceTypeUI();
+             }
         }
     });
 }
@@ -1020,6 +1043,15 @@ function setupModelProgramTypeUI() {
      })
 }
 
+function setupModelInstanceTypeUI() {
+    var miInstanceType = $("#mi-instance-type");
+    $(miInstanceType).find("select").change(function (e) {
+        var inputElement =  $(miInstanceType).find("input");
+        var selectedOption = $(miInstanceType).find("option:selected");
+        inputElement.attr("value", $(selectedOption).val());
+        $(this).parents("form").find(".btn-form-submit").show();
+     })
+}
 function InitializeTimeSeriesFileTypeForms() {
     var tsSelect = $(".time-series-forms select");
 
@@ -1196,7 +1228,8 @@ function isVirtualFolder(item) {
     item = $(item);
     let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
     let isModelProgramFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelProgramLogicalFile";
-    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder;
+    let isModelInstanceFolder = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "ModelInstanceLogicalFile";
+    return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet && !isModelProgramFolder && !isModelInstanceFolder;
 }
 
 function startDownload(zipped) {
@@ -1246,7 +1279,8 @@ function onOpenFolder() {
     let aggregationId = parseInt(selectedFolder.attr("data-logical-file-id"));
     let logicalFileType = selectedFolder.find(".fb-logical-file-type").attr("data-logical-file-type");
 
-    if (aggregationId && logicalFileType !== "FileSetLogicalFile" && logicalFileType !== "ModelProgramLogicalFile") {
+    if (aggregationId && logicalFileType !== "FileSetLogicalFile" && logicalFileType !== "ModelProgramLogicalFile" &&
+        logicalFileType !== "ModelInstanceLogicalFile") {
         // Remove further paths from the log
         let range = pathLog.length - pathLogIndex;
         pathLog.splice(pathLogIndex + 1, range);
@@ -2138,6 +2172,10 @@ $(document).ready(function () {
         setFileType("ModelProgram");
     });
 
+    // set Model Instance file type method
+    $("#btn-set-model-instance-file-type").click(function () {
+        setFileType("ModelInstance");
+    });
     // set remove aggregation (file type) method
     $("#btnRemoveAggregation").click(function () {
         removeAggregation();
