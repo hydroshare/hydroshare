@@ -12,7 +12,8 @@ from .models import (
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile,
     FileSetLogicalFile,
-    ModelProgramLogicalFile
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile
 )
 
 from hs_file_types.models.base import AbstractLogicalFile
@@ -226,7 +227,8 @@ def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
                      'GeoFeature': GeoFeatureLogicalFile,
                      'RefTimeseries': RefTimeseriesLogicalFile,
                      'TimeSeries': TimeSeriesLogicalFile,
-                     'ModelProgram': ModelProgramLogicalFile}
+                     'ModelProgram': ModelProgramLogicalFile,
+                     'ModelInstance': ModelInstanceLogicalFile}
 
     if hs_file_type not in file_type_map:
         if fail_feedback:
