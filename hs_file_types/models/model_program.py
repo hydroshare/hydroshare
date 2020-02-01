@@ -184,8 +184,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             mi_schema_div = dom_tags.div(cls="content-block")
             with mi_schema_div:
                 dom_tags.legend("Model Instance Metadata JSON Schema")
-                json_schema = json.dumps(json_schema)
-                dom_tags.p(json_schema)
+                json_schema = json.dumps(json_schema, indent=4)
+                dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;")
             html_string += mi_schema_div.render()
 
         if self.mp_file_types.all():
@@ -316,15 +316,15 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                 with dom_tags.div(cls="controls"):
                                     json_schema = self.logical_file.mi_schema_json
                                     if json_schema:
-                                        json_schema = json.dumps(json_schema)
+                                        json_schema = json.dumps(json_schema, indent=4)
                                     else:
                                         json_schema = ''
                                     dom_tags.label("Model Instance Metadata JSON Schema", fr="file_mi_json_schema",
                                                    cls="control-label")
                                     dom_tags.textarea(json_schema,
-                                                   cls="form-control input-sm textinput textInput",
-                                                   id="file_mi_json_schema",
-                                                   name="mi_json_schema", rows="15")
+                                                      cls="form-control input-sm textinput textInput",
+                                                      id="file_mi_json_schema",
+                                                      name="mi_json_schema", rows="30")
 
                             with dom_tags.div(id="mp_content_files", cls="control-group"):
                                 with dom_tags.div(cls="controls"):
