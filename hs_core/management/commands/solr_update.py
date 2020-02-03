@@ -59,7 +59,7 @@ class Command(BaseCommand):
                     ind.update_object(r)
                 except BaseResource.DoesNotExist:
                     print("resource {} does not exist in Django".format(rid))
-                except Exception as e: 
+                except Exception as e:
                     print("resource {} generated exception {}".format(rid, str(e)))
 
         else:
@@ -95,16 +95,16 @@ class Command(BaseCommand):
                     # race condition in processing while in production
                     print("resource {} no longer found in Django.".format(r.short_id))
                     continue
-                except Exception as e: 
+                except Exception as e:
                     print("resource {} generated exception {}".format(r.short_id, str(e)))
 
                 if r.short_id not in found_in_solr:
                     print("{} {} NOT FOUND in SOLR: adding to index".format(
                             r.short_id, resource.discovery_content_type))
-                    try: 
+                    try:
                         ind.update_object(r)
                         django_refreshed += 1
-                    except Exception as e: 
+                    except Exception as e:
                         print("resource {} generated exception {}".format(r.short_id, str(e)))
 
                 # # This always returns True whether or not SOLR needs updating
@@ -115,10 +115,10 @@ class Command(BaseCommand):
                 elif options['force']:
                     print("{} {}: refreshing index (forced)".format(
                           r.short_id, resource.discovery_content_type))
-                    try: 
+                    try:
                         ind.update_object(r)
                         django_refreshed += 1
-                    except Exception as e: 
+                    except Exception as e:
                         print("resource {} generated exception {}".format(r.short_id, str(e)))
 
             print("Django contains {} discoverable resources and {} replaced resources"
