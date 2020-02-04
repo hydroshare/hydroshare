@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.tasks import create_bag_by_irods
 from hs_core.models import GenericResource
 from django_irods.storage import IrodsStorage
@@ -43,6 +44,16 @@ class TestBagIt(TestCase):
     def test_bag_creation_and_deletion(self):
         status = create_bag_by_irods(self.test_res.short_id)
         self.assertTrue(status)
+        # test checksum will be computed for published resource
+        self.test_res.raccess.published = True
+        self.test_res.raccess.save()
+        status = create_bag_by_irods(self.test_res.short_id)
+        self.assertTrue(status)
+        res = get_resource_by_shortkey(self.test_res.short_id)
+        self.assertNotEqual(res.bag_checksum, '', msg='bag_checksum property is empty')
+
+        self.test_res.raccess.published = False
+        self.test_res.raccess.save()
         hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
         istorage = self.test_res.get_irods_storage()

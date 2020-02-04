@@ -1727,7 +1727,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     extra_metadata = HStoreField(default={})
 
-    # this field is for specific resource types to store extra key:value pairs
+    # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
+    # "bag_checksum":value pair for published resources in order to meet the DataONE data distribution needs
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
@@ -3291,6 +3292,32 @@ class BaseResource(Page, AbstractResource):
         istorage = self.get_irods_storage()
         bag_url = istorage.url(bag_path)
         return bag_url
+
+    @property
+    def bag_checksum(self):
+        """
+        get checksum of resource bag. Currently only published resources have bag checksums computed and saved
+        :return: checksum if bag checksum exists; empty string '' otherwise
+        """
+        extra_data = self.extra_data
+        if 'bag_checksum' in extra_data and extra_data['bag_checksum']:
+            return extra_data['bag_checksum']
+        else:
+            return ''
+
+    @bag_checksum.setter
+    def bag_checksum(self, checksum):
+        """
+        Set bag checksum implemented as a property setter.
+        :param checksum: checksum value to be set
+        """
+        if checksum:
+            extra_data = self.extra_data
+            extra_data['bag_checksum'] = checksum
+            self.extra_data = extra_data
+            self.save()
+        else:
+            return ValidationError("checksum to set on the bag of the resource {} is empty".format(self.short_id))
 
     # URIs relative to resource
     # these are independent of federation strategy
