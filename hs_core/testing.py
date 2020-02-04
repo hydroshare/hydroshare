@@ -172,6 +172,13 @@ class TestCaseCommonUtilities(object):
         store = istorage.listdir(res_path)
         self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')
 
+        # create a temporary zips folder to make sure no duplicate folders are returned from listdir()
+        zip_res_coll_path = os.path.join('zips', '2020-02-03', res.short_id, 'data', 'contents', 'sub_test_dir')
+        istorage.session.run("imkdir", None, '-p', zip_res_coll_path)
+        store = istorage.listdir(res_path)
+        self.assertEqual(store[0].count('sub_test_dir'), 1, msg='duplicate folder: sub_test_dir occurred more '
+                                                                'than once')
+
         # rename the third file in file_name_list
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[2],
