@@ -1,6 +1,8 @@
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import PermissionDenied
 from django.db import models
+from django.template import Template
+from dominate import tags as dom_tags
 
 from base_model_program_instance import AbstractModelLogicalFile
 from generic import GenericFileMetaDataMixin
@@ -14,6 +16,58 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
     metadata_json = JSONField(default=dict)
+
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
+        """This generates html form code to add/update the following metadata attributes
+        has_model_output
+        executed_by
+        metadata_json
+
+        """
+        form_action = "/hsapi/_internal/{}/update-modelinstance-metadata/"
+        form_action = form_action.format(self.logical_file.id)
+        root_div = dom_tags.div("{% load crispy_forms_tags %}")
+        base_div, context = super(ModelInstanceFileMetaData, self).get_html_forms(render=False)
+
+        with root_div:
+            dom_tags.div().add(base_div)
+            with dom_tags.div():
+                with dom_tags.form(action=form_action, id="filetype-generic",
+                                   method="post", enctype="multipart/form-data"):
+                    dom_tags.div("{% csrf_token %}")
+                    with dom_tags.fieldset(cls="fieldset-border"):
+                        with dom_tags.div(cls="form-group"):
+                            with dom_tags.div(cls="control-group"):
+                                with dom_tags.div(id="mi-includes_output"):
+                                    dom_tags.label('Includes Output Files*', fr="id_mi_includes_output_yes",
+                                                   cls="control-label")
+                                    with dom_tags.div(cls='control-group'):
+                                        with dom_tags.div(cls="controls"):
+                                            if self.logical_file.metadata.has_model_output:
+                                                checked = 'checked'
+                                            else:
+                                                checked = ''
+                                            with dom_tags.label('Yes', fr="id_mi_includes_output_yes",
+                                                                cls="radio"):
+                                                dom_tags.input(type="radio", id="id_mi_includes_output_yes",
+                                                               name="mi_includes_output",
+                                                               cls="inline",
+                                                               checked=checked,
+                                                               value=self.logical_file.metadata.has_model_output)
+                                            with dom_tags.label('No', fr="id_mi_includes_output_no",
+                                                                cls="radio"):
+                                                dom_tags.input(type="radio", id="id_mi_includes_output_no",
+                                                               name="mi_includes_output",
+                                                               cls="inline",
+                                                               checked=checked,
+                                                               value=self.logical_file.metadata.has_model_output)
+                with dom_tags.div(cls="row", style="margin-top:10px;"):
+                    with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                        dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                                        style="display: none;", type="button")
+        template = Template(root_div.render())
+        rendered_html = template.render(context)
+        return rendered_html
 
 
 class ModelInstanceLogicalFile(AbstractModelLogicalFile):
