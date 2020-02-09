@@ -12,7 +12,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     code_repository = forms.URLField(required=False, max_length=255)
     programming_languages = forms.CharField(required=False)
     operating_systems = forms.CharField(required=False)
-    mi_json_schema = forms.CharField(max_length=5000, required=False)
+    mi_json_schema = forms.CharField(required=False)
     mp_file_types = forms.CharField(max_length=255, required=False)
     mp_program_type = forms.CharField(max_length=255)
 
