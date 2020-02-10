@@ -19,16 +19,22 @@ var TitleAssistantApp = new Vue({
         endYearParen: ''
     },
     methods: {
-        evalParenFields: function () {  // Parenthetical fields are specified by customer to be surrounded by parentheses
+        formatDateParens: function () {  // convention dates are surrounded by parens
             if (this.$data.startYear) {
                 this.$data.startYearParen = "(" + this.$data.startYear
             } else {
                 this.$data.startYearParen = ""
             }
+
             if (this.$data.endYear) {
                 this.$data.endYearParen = this.$data.endYear + ")"
             } else {
-                this.$data.endYearParen = ""
+                this.$data.endYearParen = ")"
+            }
+
+            // override for same date
+            if (this.$data.startYear === this.$data.endYear) {
+                this.$data.endYearParen = ")"
             }
         },
         itemMoved: function () {  // User has selected some topics so concat them with commas for display
@@ -43,11 +49,13 @@ var TitleAssistantApp = new Vue({
             this.updateTitle(items.join(','))
         },
         updateEndDate: function () {
-            $("#end-date-ongoing").prop("checked", false);
-            this.updateDate()
+            if (yearsAreValid(this.$data.startYear, this.$data.endYear)) {
+                $("#end-date-ongoing").prop("checked", false);
+                this.updateDate()
+            }
         },
         updateDate: function () {
-            if (isValidYear(this.$data.startYear) && isValidYear(this.$data.endYear)) {
+            if (yearsAreValid(this.$data.startYear, this.$data.endYear)) {
                 this.$data.errmsg = "";
                 this.updateTitle()
             } else {
@@ -55,29 +63,34 @@ var TitleAssistantApp = new Vue({
             }
         },
         updateTitle: function () {  // Collect all the items and show in the readonly top live title display
-            this.evalParenFields();
+            this.formatDateParens();
             let titleBuilder = '';
-            let items = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.location, this.$data.startYearParen, this.$data.endYearParen];
+            let tokens = [this.$data.regionSelected, this.$data.topics.selectedValues, this.$data.subtopic, this.$data.location, this.$data.startYearParen, this.$data.endYearParen];
 
             this.$data.errmsg = '';
-            let i = 0;
-            items.forEach(function (item) {
-                if (item) {
-                    if (String(item).includes("(") && !String(item).includes(")")) {  // more customer formatting requirements
-                        titleBuilder = titleBuilder + String(item) + '-'
-                    } else {
-                        titleBuilder = titleBuilder + String(item) + ' -- '
+            let token_idx = 0;
+            tokens.forEach(function (token) {
+                if (token) {
+                    if (String(token).includes("(")) {  // if token is the parenthesized start date
+                        titleBuilder += String(token);
+                        if (token_idx < tokens.length - 1 && tokens[tokens.length-1].trim() !== ')') {  // if end date is empty, skip delim
+                            titleBuilder += '-'  // convention single paren no spaces for dates
+                        }
+                    } else if (String(token).includes(")")) {
+                        titleBuilder += String(token);
+                        if (token_idx < tokens.length - 1) {
+                            titleBuilder += '-'  // convention single paren no spaces for dates
+                        }
+                    } else {  // all other title words delimited by a double dash
+                        titleBuilder += String(token);
+                        if (token_idx < tokens.length - 1)
+                        {
+                            titleBuilder += ' -- ' // convention double paren with spaces for other tokens
+                        }
                     }
-                    i++
                 }
+                token_idx++
             });
-            if (titleBuilder.endsWith(' -- ')) {
-                titleBuilder = titleBuilder.substring(0, titleBuilder.length - 2);
-            }
-            if (titleBuilder.endsWith('-')) {
-                titleBuilder = titleBuilder.substring(0, titleBuilder.length - 1);
-            }
-
             this.$data.title = titleBuilder.trim()
         },
         saveTitle: function () {
@@ -92,9 +105,8 @@ var TitleAssistantApp = new Vue({
         },
         valid: function () {
             let isValid = false;
-            let validYears = (isValidYear(this.$data.startYear) && isValidYear(this.$data.endYear));
-            validYears = validYears && this.$data.startYear.length === 4;
-            if (validYears && this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
+
+            if (yearsAreValid(this.$data.startYear, this.$data.endYear) && this.$data.regionSelected && this.$data.topics.selectedValues && this.$data.location && this.$data.startYearParen && this.$data.endYearParen) {
                 isValid = true
             }
 
@@ -111,12 +123,18 @@ var TitleAssistantApp = new Vue({
     }
 });
 
-function isValidYear(n) {
-    if (n.length === 0 || n === "Ongoing") {
-        return true
+function yearsAreValid(start, end) {
+    // Years are four-digit integers; end year may also be "Ongoing" or empty; start year not empty
+    let valid = !isNaN(start);
+    valid = valid && start.length === 4 && parseInt(start) >= 1800;
+    if (end) {
+        if (!isNaN(end)) {
+            return valid && end.length === 4 && parseInt(end) >= 1800 && parseInt(end) >= parseInt(start)
+        } else {
+            return valid && end === 'Ongoing'
+        }
     } else {
-        let validYear = (!isNaN(parseFloat(n)) && isFinite(n));
-        return validYear && n.length <= 4
+        return false  // end date required
     }
 }
 
