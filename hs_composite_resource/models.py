@@ -841,6 +841,12 @@ class CompositeResource(BaseResource):
 
         update_target_temporal_coverage(self)
 
+    def get_model_program_aggregations(self):
+        """Gets a list of model program aggregations in this (self) resource"""
+
+        mp_aggregations = [aggr for aggr in self.logical_files if aggr.type_name() == "ModelProgramLogicalFile"]
+        return mp_aggregations
+
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
