@@ -39,6 +39,12 @@ function getFolderIcons() {
         "<img src='/static/img/model-program-overlay.png' " +
         "alt='Model Program Aggregation Icon'/></span>";
 
+    folderIcons.ModelInstanceLogicalFile =
+        "<span class='fa-stack fb-stack fb-stack-mp'>" +
+        "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mi' aria-hidden='true'></i>" +
+        "<img src='/static/img/model-instance-overlay.png' " +
+        "alt='Model Program Aggregation Icon'/></span>";
+
     folderIcons.DEFAULT =
         "<span class='fa-stack fb-stack'>" +
         "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-aggregation' aria-hidden='true'></i>" +
