@@ -950,7 +950,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         if metadata_mode == 'view':
             metadata = logical_file.metadata.get_html()
         else:
-            metadata = logical_file.metadata.get_html_forms()
+            metadata = logical_file.metadata.get_html_forms(user=request.user)
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'message': ex.message}

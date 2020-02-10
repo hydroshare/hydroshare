@@ -24,10 +24,33 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         metadata_json
 
         """
+        from hs_file_types import utils
+
         form_action = "/hsapi/_internal/{}/update-modelinstance-metadata/"
         form_action = form_action.format(self.logical_file.id)
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
         base_div, context = super(ModelInstanceFileMetaData, self).get_html_forms(render=False)
+        user = kwargs['user']
+
+        def get_executed_by_form():
+            executed_by_div = dom_tags.div()
+            with executed_by_div:
+                dom_tags.label('Select a Model Program', fr="id_executed_by",
+                               cls="control-label")
+                with dom_tags.select(cls="form-control"):
+                    dom_tags.option("Select a model program", value="")
+                    for mp_aggr in utils.get_model_program_aggregations(user):
+                        res = mp_aggr.resource
+                        option = "{} (Resource:{})".format(mp_aggr.aggregation_name, res.title)
+                        if self.executed_by:
+                            if self.executed_by.id == mp_aggr.id:
+                                dom_tags.option(option, selected="selected",
+                                                value=mp_aggr.id)
+                            else:
+                                dom_tags.option(option, value=mp_aggr.id)
+                        else:
+                            dom_tags.option(option, value=mp_aggr.id)
+            return executed_by_div
 
         with root_div:
             dom_tags.div().add(base_div)
@@ -38,7 +61,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     with dom_tags.fieldset(cls="fieldset-border"):
                         with dom_tags.div(cls="form-group"):
                             with dom_tags.div(cls="control-group"):
-                                with dom_tags.div(id="mi-includes_output"):
+                                with dom_tags.div(id="mi_includes_output"):
                                     dom_tags.label('Includes Output Files*', fr="id_mi_includes_output_yes",
                                                    cls="control-label")
                                     with dom_tags.div(cls='control-group'):
@@ -61,6 +84,11 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                                                cls="inline",
                                                                checked=checked,
                                                                value=self.logical_file.metadata.has_model_output)
+                                with dom_tags.div(id="mi_executed_by", cls="control-group"):
+                                    with dom_tags.div(cls="controls"):
+                                        dom_tags.legend('Model program used for execution')
+                                        get_executed_by_form()
+
                 with dom_tags.div(cls="row", style="margin-top:10px;"):
                     with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
