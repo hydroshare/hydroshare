@@ -59,7 +59,7 @@ var TitleAssistantApp = new Vue({
                 this.$data.errmsg = "";
                 this.updateTitle()
             } else {
-                this.$data.errmsg = "Year entry is not valid"
+                this.$data.errmsg = "Year entry is not complete or is invalid"
             }
         },
         updateTitle: function () {  // Collect all the items and show in the readonly top live title display
