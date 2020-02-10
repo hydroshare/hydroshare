@@ -1,6 +1,4 @@
-import json
 import os
-import string
 from django.http import JsonResponse
 from rest_framework import status
 
@@ -115,7 +113,7 @@ def upload_add(request):
     extract_metadata = request.POST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     irods_fnames = request.POST.get('upload', '')
-    irods_fnames_list = string.split(irods_fnames, ',')
+    irods_fnames_list = irods_fnames.split(',')
     res_cls = resource.__class__
 
     # TODO: read resource type from resource, not from input file 
