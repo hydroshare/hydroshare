@@ -433,9 +433,14 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
                 error_info.append("A vrt file is missing.")
                 return validation_results
 
-        vrt_file = get_vrt_file(raster_file, res_files)
+        vrt_files_for_raster = get_vrt_files(raster_file, res_files)
+        if len(vrt_files_for_raster) > 1:
+            error_info.append("The raster {} is listed by more than one vrt file {}".format(raster_file,
+                                                                                            vrt_files_for_raster))
+            return validation_results
 
-        if vrt_file:
+        if len(vrt_files_for_raster) == 1:
+            vrt_file = vrt_files_for_raster[0]
             raster_resource_files.extend([vrt_file])
             create_vrt = False
             temp_dir = os.path.dirname(raster_file)
@@ -574,21 +579,22 @@ def list_tif_files(vrt_file):
     return []
 
 
-def get_vrt_file(raster_file, res_files):
+def get_vrt_files(raster_file, res_files):
     """
-    Searches for a vrt_file that lists the supplied raster_file
+    Searches for vrt_files that lists the supplied raster_file
     :param raster_file: The raster file to find the associated vrt_file of
     :param res_files: list of ResourceFiles in the the folder of raster_file
-    :return: The ResourceFile of a vrt file which lists the raster_file, None if not found
+    :return: A list of vrt ResourceFile(s) which lists the raster_file, empty List if not found.
     """
     vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
+    vrt_files_for_raster = []
     if vrt_files:
         for vrt_file in vrt_files:
             file_names_in_vrt = list_tif_files(vrt_file)
             for vrt_ref_raster_name in file_names_in_vrt:
                 if raster_file.endswith(vrt_ref_raster_name):
-                    return vrt_file
-    return None
+                    vrt_files_for_raster.append(vrt_file)
+    return vrt_files_for_raster
 
 
 def extract_metadata(temp_vrt_file_path):
