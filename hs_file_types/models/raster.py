@@ -442,6 +442,11 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
             temp_vrt_file = utils.get_file_from_irods(vrt_file, temp_dir)
             listed_tif_files = list_tif_files(vrt_file)
             tif_files = [f for f in res_files if f.file_name in listed_tif_files]
+            if len(tif_files) != len(listed_tif_files):
+                error_info.append("The vrt file {} lists {} files, only found {}".format(vrt_file,
+                                                                                         len(listed_tif_files),
+                                                                                         len(tif_files)))
+                return validation_results
         else:
             # create the .vrt file
             tif_files = [f for f in res_files if f.file_name == os.path.basename(raster_file)]
@@ -558,7 +563,7 @@ def list_tif_files(vrt_file):
     """
     lists tif files named in a vrt_file
     :param vrt_file: ResourceFile for of a vrt to list associated tif(f) files
-    :return: List of string filenames read from vrt_file, None if not found
+    :return: List of string filenames read from vrt_file, empty list if not found
     """
     temp_vrt_file = utils.get_file_from_irods(vrt_file)
     with open(temp_vrt_file, 'r') as opened_vrt_file:
@@ -566,12 +571,12 @@ def list_tif_files(vrt_file):
         root = ET.fromstring(vrt_string)
         file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
         return file_names_in_vrt
-    return None
+    return []
 
 
 def get_vrt_file(raster_file, res_files):
     """
-    Searches for a vrt_file that lists the supplied rater_file
+    Searches for a vrt_file that lists the supplied raster_file
     :param raster_file: The raster file to find the associated vrt_file of
     :param res_files: list of ResourceFiles in the the folder of raster_file
     :return: The ResourceFile of a vrt file which lists the raster_file, None if not found
