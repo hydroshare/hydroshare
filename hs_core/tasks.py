@@ -151,6 +151,8 @@ def manage_task_nightly():
                 # to pending
                 res.doi = get_resource_doi(act_doi, 'pending')
                 res.save()
+                # create bag and compute checksum for published resource to meet DataONE requirement
+                create_bag_by_irods(res.short_id)
             else:
                 # retry of metadata deposition failed again, notify admin
                 msg_lst.append("Metadata deposition with CrossRef for the published resource "
@@ -188,6 +190,8 @@ def manage_task_nightly():
                     res.doi = act_doi
                     res.save()
                     success = True
+                    # create bag and compute checksum for published resource to meet DataONE requirement
+                    create_bag_by_irods(res.short_id)
             if not success:
                 msg_lst.append("Published resource DOI {res_doi} is not yet activated with request "
                                "data deposited since {pub_date}.".format(res_doi=act_doi,
@@ -455,6 +459,10 @@ def create_bag_by_irods(resource_id):
             # gets deleted by another request when being downloaded
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
             istorage.zipup(irods_bagit_input_path, bag_path)
+            if res.raccess.published:
+                # compute checksum to meet DataONE distribution requirement
+                chksum = istorage.checksum(bag_path)
+                res.bag_checksum = chksum
             istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
             return True
         except SessionException as ex:
