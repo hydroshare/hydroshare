@@ -8,6 +8,9 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# TODO, remove once new base image is built
+RUN pip install --upgrade celery kombu
+
 USER root
 WORKDIR /hydroshare
 
