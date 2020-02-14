@@ -197,10 +197,10 @@ class Command(BaseCommand):
             vals = self.dict_spc_to_pipe(v.value)
 
             # encode variables as key value pairs (except for timestamp)
-            values = [str(v.timestamp).encode(),
-                      'user_id=%s' % str(uid).encode(),
-                      'session_id=%s' % str(v.session.id).encode(),
-                      'action=%s' % str(v.name).encode(),
+            values = [str(v.timestamp),
+                      'user_id=%s' % str(uid),
+                      'session_id=%s' % str(v.session.id),
+                      'action=%s' % str(v.name),
                       vals]
             print('|'.join(values))
 
