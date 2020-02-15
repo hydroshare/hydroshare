@@ -90,14 +90,14 @@
 	height: 32px;
 }
 
-.fb-view-grid .fb-stack-mp img {
+.fb-view-grid .fb-stack-mp img, .fb-stack-mi img {
     width: 18px;
     top: 8px;
     position: absolute;
     left: 3px;
 }
 
-.fb-view-list .fb-stack-mp img {
+.fb-view-list .fb-stack-mp img, .fb-stack-mi img {
     width: 9px;
     top: 5px;
     position: absolute;
@@ -309,4 +309,7 @@
 
 .fb-folder-mp {
     color: #3f51b5;
+}
+.fb-folder-mi {
+    color: #d3c54d;
 }

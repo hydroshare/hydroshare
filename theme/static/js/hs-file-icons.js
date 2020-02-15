@@ -36,8 +36,8 @@ function getFolderIcons() {
 
     folderIcons.ModelInstanceLogicalFile =
         "<span class='fa-stack fb-stack fb-stack-mp'>" +
-        "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mp' aria-hidden='true'></i>" +
-        "<img src='/static/img/resource-icons/modelinstance48x48.png' " +
+        "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mi' aria-hidden='true'></i>" +
+        "<img src='/static/img/model-instance-overlay.png' " +
         "alt='Model Instance Aggregation Icon'/></span>";
 
     folderIcons.DEFAULT =
