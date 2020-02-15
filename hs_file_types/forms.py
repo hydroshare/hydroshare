@@ -3,6 +3,36 @@ import jsonschema
 
 from django import forms
 from models.model_program import ModelProgramResourceFileType
+import utils
+
+
+class ModelInstanceMetadataValidationForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super(ModelInstanceMetadataValidationForm, self).__init__(*args, **kwargs)
+
+    has_model_output = forms.BooleanField(required=False)
+    executed_by = forms.IntegerField(required=False)
+
+    def clean_executed_by(self):
+        executed_by = self.cleaned_data['executed_by']
+        user_selected_mp_aggr = None
+        # if a model program has been selected then this form would have the id of that aggregation
+        if executed_by > 0:
+            user_mp_aggregations = utils.get_model_program_aggregations(self.user)
+            user_selected_mp_aggr = [mp_aggr for mp_aggr in user_mp_aggregations if mp_aggr.id == executed_by]
+            if user_selected_mp_aggr:
+                user_selected_mp_aggr = user_selected_mp_aggr[0]
+            else:
+                self.add_error("executed_by", "You don't have access to the selected model program aggregation")
+        return user_selected_mp_aggr
+
+    def update_metadata(self, metadata):
+        executed_by = self.cleaned_data['executed_by']
+
+        metadata.executed_by = executed_by
+        metadata.has_model_output = self.cleaned_data['has_model_output']
+        metadata.save()
 
 
 class ModelProgramMetadataValidationForm(forms.Form):
