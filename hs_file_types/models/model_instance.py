@@ -37,8 +37,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             with executed_by_div:
                 dom_tags.label('Select a Model Program', fr="id_executed_by",
                                cls="control-label")
-                with dom_tags.select(cls="form-control"):
-                    dom_tags.option("Select a model program", value="")
+                with dom_tags.select(cls="form-control", id="id_executed_by", name="executed_by"):
+                    dom_tags.option("Select a model program", value="0")
                     for mp_aggr in utils.get_model_program_aggregations(user):
                         res = mp_aggr.resource
                         option = "{} (Resource:{})".format(mp_aggr.aggregation_name, res.title)
@@ -55,7 +55,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         with root_div:
             dom_tags.div().add(base_div)
             with dom_tags.div():
-                with dom_tags.form(action=form_action, id="filetype-generic",
+                with dom_tags.form(action=form_action, id="filetype-model-instance",
                                    method="post", enctype="multipart/form-data"):
                     dom_tags.div("{% csrf_token %}")
                     with dom_tags.fieldset(cls="fieldset-border"):
@@ -66,33 +66,41 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                                    cls="control-label")
                                     with dom_tags.div(cls='control-group'):
                                         with dom_tags.div(cls="controls"):
-                                            if self.logical_file.metadata.has_model_output:
-                                                checked = 'checked'
-                                            else:
-                                                checked = ''
                                             with dom_tags.label('Yes', fr="id_mi_includes_output_yes",
                                                                 cls="radio"):
-                                                dom_tags.input(type="radio", id="id_mi_includes_output_yes",
-                                                               name="mi_includes_output",
-                                                               cls="inline",
-                                                               checked=checked,
-                                                               value=self.logical_file.metadata.has_model_output)
+                                                if self.logical_file.metadata.has_model_output:
+                                                    dom_tags.input(type="radio", id="id_mi_includes_output_yes",
+                                                                   name="has_model_output",
+                                                                   cls="inline",
+                                                                   checked='checked',
+                                                                   value="true")
+                                                else:
+                                                    dom_tags.input(type="radio", id="id_mi_includes_output_yes",
+                                                                   name="has_model_output",
+                                                                   cls="inline",
+                                                                   value="true")
                                             with dom_tags.label('No', fr="id_mi_includes_output_no",
                                                                 cls="radio"):
-                                                dom_tags.input(type="radio", id="id_mi_includes_output_no",
-                                                               name="mi_includes_output",
-                                                               cls="inline",
-                                                               checked=checked,
-                                                               value=self.logical_file.metadata.has_model_output)
+                                                if self.logical_file.metadata.has_model_output:
+                                                    dom_tags.input(type="radio", id="id_mi_includes_output_no",
+                                                                   name="has_model_output",
+                                                                   cls="inline",
+                                                                   value="false")
+                                                else:
+                                                    dom_tags.input(type="radio", id="id_mi_includes_output_no",
+                                                                   name="has_model_output",
+                                                                   cls="inline",
+                                                                   checked='checked',
+                                                                   value="false")
                                 with dom_tags.div(id="mi_executed_by", cls="control-group"):
                                     with dom_tags.div(cls="controls"):
                                         dom_tags.legend('Model program used for execution')
                                         get_executed_by_form()
 
-                with dom_tags.div(cls="row", style="margin-top:10px;"):
-                    with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
-                        dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
-                                        style="display: none;", type="button")
+                    with dom_tags.div(cls="row", style="margin-top:10px;"):
+                        with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                            dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                                            style="display: none;", type="button")
         template = Template(root_div.render())
         rendered_html = template.render(context)
         return rendered_html
