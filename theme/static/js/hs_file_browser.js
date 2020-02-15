@@ -1044,13 +1044,9 @@ function setupModelProgramTypeUI() {
 }
 
 function setupModelInstanceTypeUI() {
-    var miInstanceType = $("#mi-instance-type");
-    $(miInstanceType).find("select").change(function (e) {
-        var inputElement =  $(miInstanceType).find("input");
-        var selectedOption = $(miInstanceType).find("option:selected");
-        inputElement.attr("value", $(selectedOption).val());
-        $(this).parents("form").find(".btn-form-submit").show();
-     })
+    $("#filetype-model-instance").change(function () {
+        $(this).find(".btn-form-submit").show();
+    })
 }
 function InitializeTimeSeriesFileTypeForms() {
     var tsSelect = $(".time-series-forms select");
