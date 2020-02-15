@@ -22,11 +22,12 @@ from .models import GenericLogicalFile
 from .models import GeoFeatureLogicalFile
 from .models import GeoRasterLogicalFile
 from .models import ModelProgramLogicalFile
+from .models import ModelInstanceLogicalFile
 from .models import NetCDFLogicalFile
 from .models import RefTimeseriesLogicalFile
 from .models import TimeSeriesLogicalFile
 from .utils import set_logical_file_type
-from .forms import ModelProgramMetadataValidationForm
+from .forms import ModelProgramMetadataValidationForm, ModelInstanceMetadataValidationForm
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -35,7 +36,8 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
                  "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
                  "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
-                 "ModelProgramLogicalFile": ModelProgramLogicalFile
+                 "ModelProgramLogicalFile": ModelProgramLogicalFile,
+                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
                  }
 
 
@@ -900,15 +902,55 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
     metadata = logical_file.metadata
     mp_validation_form = ModelProgramMetadataValidationForm(request.POST)
     if not mp_validation_form.is_valid():
+        err_messages = []
         for fld in mp_validation_form.errors.keys():
-            # get the validation error with any one metadata field/attribute
             err_message = mp_validation_form.errors[fld][0]
-            ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                                  'element_name': fld, 'message': err_message}
-            return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+            err_messages.append({fld: err_message})
+
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': err_messages}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     mp_validation_form.update_metadata(metadata)
 
+    resource = logical_file.resource
+    resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'element_name': 'multiple-elements', 'message': "Update was successful"}
+
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
+@login_required
+def update_model_instance_metadata(request, file_type_id, **kwargs):
+    """adds/update any/all of the following metadata attributes associated metadata object
+    has_model_output
+    executed_by
+    """
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
+    metadata = logical_file.metadata
+
+    mi_validation_form = ModelInstanceMetadataValidationForm(request.POST, user=request.user)
+
+    if not mi_validation_form.is_valid():
+        err_messages = []
+        for fld in mi_validation_form.errors.keys():
+            err_message = mi_validation_form.errors[fld][0]
+            err_messages.append({fld: err_message})
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': err_messages}
+
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    mi_validation_form.update_metadata(metadata)
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
