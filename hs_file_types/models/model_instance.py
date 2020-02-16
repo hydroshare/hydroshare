@@ -41,7 +41,12 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     dom_tags.option("Select a model program", value="0")
                     for mp_aggr in utils.get_model_program_aggregations(user):
                         res = mp_aggr.resource
-                        option = "{} (Resource:{})".format(mp_aggr.aggregation_name, res.title)
+                        this_resource = self.logical_file.resource
+                        if this_resource.short_id != res.short_id:
+                            option = "{} ({}) - (Resource: {})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
+                                                                       res.title)
+                        else:
+                            option = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                         if self.executed_by:
                             if self.executed_by.id == mp_aggr.id:
                                 dom_tags.option(option, selected="selected",
@@ -94,7 +99,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                                                    value="false")
                                 with dom_tags.div(id="mi_executed_by", cls="control-group"):
                                     with dom_tags.div(cls="controls"):
-                                        dom_tags.legend('Model program used for execution')
+                                        dom_tags.legend('Model Program Used for Execution')
                                         get_executed_by_form()
 
                     with dom_tags.div(cls="row", style="margin-top:10px;"):
