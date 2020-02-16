@@ -1,7 +1,7 @@
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.template import Template
+from django.template import Template, Context
 from dominate import tags as dom_tags
 
 from base_model_program_instance import AbstractModelLogicalFile
@@ -16,6 +16,39 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
     metadata_json = JSONField(default=dict)
+
+    def get_html(self, include_extra_metadata=True, **kwargs):
+        html_string = super(ModelInstanceFileMetaData, self).get_html()
+        includes_model_outputs_div = dom_tags.div(cls="content-block")
+        with includes_model_outputs_div:
+            dom_tags.legend("Model Output")
+            display_string = "Includes model output files: {}"
+            if self.has_model_output:
+                display_string = display_string.format("Yes")
+            else:
+                display_string = display_string.format("No")
+            dom_tags.p(display_string)
+        html_string += includes_model_outputs_div.render()
+        executed_by_div = dom_tags.div(cls="content-block")
+        with executed_by_div:
+            dom_tags.legend("Executed By (Model Program)")
+            if self.executed_by:
+                mp_aggr = self.executed_by
+                resource = mp_aggr.resource
+                this_resource = self.logical_file.resource
+                if this_resource.short_id != resource.short_id:
+                    # show resource title if the model program aggregation is from a different resource
+                    display_string = "{} ({}) - (Resource: {})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
+                                                                       resource.title)
+                else:
+                    display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
+                dom_tags.p(display_string)
+            else:
+                dom_tags.p("Unspecified")
+        html_string += executed_by_div.render()
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """This generates html form code to add/update the following metadata attributes
