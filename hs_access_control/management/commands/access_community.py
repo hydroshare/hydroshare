@@ -5,6 +5,10 @@ WARNING: As these routines run in administrative mode, no access control is used
 Care must be taken to generate reasonable metadata, specifically, concerning
 who owns what. Non-sensical options are possible to create.
 This code is not a design pattern for actually interacting with communities.
+
+WARNING: This command cannot be executed via 'hsctl' because that doesn't honor
+the strings one needs to embed community names with embedded spaces.
+Please connect to the bash shell for the hydroshare container before running them.
 """
 
 from django.core.management.base import BaseCommand
@@ -16,8 +20,8 @@ from hs_access_control.management.utilities import community_from_name_or_id, \
 
 
 def usage():
-    print("Community usage:")
-    print("  community [{cname} [{request} [{options}]]]")
+    print("access_community usage:")
+    print("  access_community [{cname} [{request} [{options}]]]")
     print("Where:")
     print("  {cname} is a community name. Use '' to embed spaces.")
     print("  {request} is one of:")
