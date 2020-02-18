@@ -32,6 +32,7 @@ class ModelInstanceMetadataValidationForm(forms.Form):
 
         metadata.executed_by = executed_by
         metadata.has_model_output = self.cleaned_data['has_model_output']
+        metadata.is_dirty = True
         metadata.save()
 
 
