@@ -416,3 +416,8 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         # create an instance of ModelProgramResourceFileType
         ModelProgramResourceFileType.objects.create(file_type=mp_file_type, res_file=res_file,
                                                     mp_metadata=self.metadata)
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()

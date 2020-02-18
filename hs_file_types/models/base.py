@@ -991,11 +991,11 @@ class AbstractLogicalFile(models.Model):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 
         if (self.is_model_program or self.is_model_instance) and self.folder:
-            # this model program aggregation has ben created from a folder
+            # this model program/instance aggregation has ben created from a folder
             # aggregation folder path is the aggregation name
             return self.folder
         elif self.is_model_program or self.is_model_instance:
-            # this model program aggregation has been created from a single resource file
+            # this model program/instance aggregation has been created from a single resource file
             # the path of the resource file is the aggregation name
             single_res_file = self.files.first()
             return single_res_file.short_path
