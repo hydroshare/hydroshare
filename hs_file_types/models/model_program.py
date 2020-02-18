@@ -126,6 +126,12 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                         '{%s}modelOperatingSystem' % CoreMetaData.NAMESPACES['hsterms'])
             model_os.text = ", ".join(self.operating_systems)
 
+        json_schema = self.logical_file.mi_schema_json
+        if json_schema:
+            mi_meta_schema = etree.SubElement(container_to_add_to,
+                                              '{%s}modelInstanceMetadataSchema' % CoreMetaData.NAMESPACES['hsterms'])
+            mi_meta_schema.text = json.dumps(json_schema, indent=4)
+
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print)
 
