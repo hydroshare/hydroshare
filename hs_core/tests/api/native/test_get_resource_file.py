@@ -14,31 +14,28 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
         super(TestGetResourceFile, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
-            'jamy2@gmail.com',
-            username='jamy2',
-            first_name='Tian',
-            last_name='Gan',
+            'testuser@gmail.com',
+            username='testuser',
+            first_name='test',
+            last_name='user',
             superuser=False,
             groups=[]
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='My resource',
-            metadata=[],
+            title='Test File'
         )
 
-        open('myfile.txt', "w").close()
-        self.file = open('myfile.txt', 'rb')
-
+        test_file = open('test1.txt', 'w')
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
+        self.file = open('test1.txt', 'rb')
         hydroshare.add_resource_files(self.res.short_id, self.file)
 
     def tearDown(self):
         super(TestGetResourceFile, self).tearDown()
-        User.objects.all().delete()
-        GenericResource.objects.all().delete()
-        ResourceFile.objects.all().delete()
         self.file.close()
         os.remove(self.file.name)
 
@@ -51,3 +48,9 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
             os.path.basename(res_file_object.name),
             msg='file name did not match'
         )
+
+        # test if the last modified time for the file can be obtained
+        istorage = self.res.get_irods_storage()
+        time = istorage.get_modified_time(res_file_object.name)
+        # assert time is not None without iRODS Session Exception being raised
+        self.assertTrue(time)
