@@ -3,6 +3,8 @@ from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
+from hs_core.models import CoreMetaData
+from lxml import etree
 
 from base_model_program_instance import AbstractModelLogicalFile
 from generic import GenericFileMetaDataMixin
@@ -142,6 +144,27 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         template = Template(root_div.render())
         rendered_html = template.render(context)
         return rendered_html
+
+    def get_xml(self, pretty_print=True):
+        """Generates ORI+RDF xml for this aggregation metadata"""
+
+        # get the xml root element and the xml element to which contains all other elements
+        RDF_ROOT, container_to_add_to = super(ModelInstanceFileMetaData, self)._get_xml_containers()
+
+        if self.has_model_output:
+            includes_output = 'Yes'
+        else:
+            includes_output = 'No'
+        model_output = etree.SubElement(container_to_add_to,
+                                        '{%s}includesModelOutput' % CoreMetaData.NAMESPACES['hsterms'])
+        model_output.text = includes_output
+        if self.executed_by:
+            executed_by = etree.SubElement(container_to_add_to,
+                                           '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms'])
+            executed_by.text = self.logical_file.aggregation_path
+
+        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                               pretty_print=pretty_print)
 
 
 class ModelInstanceLogicalFile(AbstractModelLogicalFile):
