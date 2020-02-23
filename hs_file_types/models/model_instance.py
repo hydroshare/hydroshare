@@ -222,3 +222,8 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
 
         self.metadata.executed_by = model_prog_aggr
         self.metadata.save()
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
