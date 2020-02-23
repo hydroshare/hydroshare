@@ -2119,11 +2119,14 @@ $(document).ready(function () {
         var url = item.attr("data-url");
         var basePath = window.location.protocol + "//" + window.location.host;
 
-        if (item.hasClass("fb-folder") && item.attr("data-logical-file-id") &&
-            item.find(".fb-logical-file-type").attr("data-logical-file-type") !== "FileSetLogicalFile") {
-            // The selected item is a virtual folder
-            let parameters = ["zipped=true", "aggregation=true"];
-            url += "?" + parameters.join("&");
+        if (item.hasClass("fb-folder") && item.attr("data-logical-file-id")) {
+            let logical_file = item.find(".fb-logical-file-type").attr("data-logical-file-type");
+            if (logical_file !== "FileSetLogicalFile" && logical_file !== "ModelProgramLogicalFile" &&
+                logical_file !== "ModelInstanceLogicalFile"){
+                // The selected item is a virtual folder
+                let parameters = ["zipped=true", "aggregation=true"];
+                url += "?" + parameters.join("&");
+            }
         }
 
         $("#txtFileURL").val(basePath + url);
