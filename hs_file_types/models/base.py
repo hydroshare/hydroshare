@@ -1012,6 +1012,14 @@ class AbstractLogicalFile(models.Model):
         return self.folder
 
     @property
+    def aggregation_path(self):
+        """Returns the full path of the aggregation (self) that starts with resource id
+        example: 0e917683abae48988bf3fc1f9df5803f/data/contents/netcdf-aggr
+        """
+        aggr_path = os.path.join(self.resource.file_path, self.aggregation_name)
+        return aggr_path
+
+    @property
     def metadata_short_file_path(self):
         """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
         """
@@ -1343,7 +1351,7 @@ class AbstractLogicalFile(models.Model):
         current_site_url = current_site_url()
         # This is the qualified resource url.
         hs_res_url = os.path.join(current_site_url, 'resource', self.resource.file_path)
-        # this is the path to the resourcemedata file for download
+        # this is the path to the resource metadata file for download
         aggr_metadata_file_path = self.metadata_short_file_path
         metadata_url = os.path.join(hs_res_url, aggr_metadata_file_path)
         # this is the path to the aggregation resourcemap file for download
