@@ -2,10 +2,9 @@
 import os
 from unittest import TestCase
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.models import ResourceFile, GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
