@@ -13,12 +13,11 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
         super(TestGetResourceFile, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
-            'testuser@gmail.com',
-            username='testuser',
+            'get_resource_file_test_user@gmail.com',
+            username='get_res_file_test_user',
             first_name='test',
             last_name='user',
-            superuser=False,
-            groups=[]
+            superuser=False
         )
 
         self.res = hydroshare.create_resource(
