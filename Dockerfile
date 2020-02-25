@@ -14,11 +14,8 @@ RUN pip install \
   numpy==1.16.0 \
   pandas \
   sklearn \
-  implicit \
-  surprise \
   gensim \
-  nltk \
-  scipy
+  nltk 
 ### End - HydroShare Development Image Additions ###
 # inplaceedit in pip doesn't seem compatible with Django 1.11 yet...
 RUN pip install git+https://github.com/theromis/django-inplaceedit.git@e6fa12355defedf769a5f06edc8fc079a6e982ec
