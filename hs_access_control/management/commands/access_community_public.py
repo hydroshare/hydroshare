@@ -1,5 +1,10 @@
 """
 This prints a list of publicly accessible resources in a community
+These are defined as resources meeting the following criteria:
+1. discoverable, public, or published.
+2. shared with community.
+3. Owned by a member of the group with which the resource is shared.
+These are also the resources that appear on the public community landing page.
 
 """
 
@@ -8,8 +13,8 @@ from hs_access_control.management.utilities import community_from_name_or_id
 
 
 def usage():
-    print("community_public usage:")
-    print("  community_public {community-name-or-id}")
+    print("access_community_public usage:")
+    print("  access_community_public {community-name-or-id}")
     print("Where:")
     print("  {community-name-or-id} is a community name or numeric id.")
 
@@ -33,7 +38,7 @@ def access_type(thing):
 
 
 class Command(BaseCommand):
-    help = """List public resources."""
+    help = """List public resources for a community."""
 
     def add_arguments(self, parser):
 
