@@ -84,7 +84,7 @@ def resource_with_metadata():
         owner=user,
         title=title,
         metadata=metadata,
-        files=(open('assets/cea.tif'),)
+        files=(open('assets/cea.tif', 'rb'),)
     )
     yield res_uuid
     _res.delete()

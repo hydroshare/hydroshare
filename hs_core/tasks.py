@@ -1,7 +1,5 @@
 """Define celery tasks for hs_core app."""
 
-from __future__ import absolute_import
-
 import os
 import sys
 import traceback
@@ -18,6 +16,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+
 from rest_framework import status
 
 from hs_core.hydroshare import utils
@@ -86,7 +85,7 @@ def sync_mailchimp(active_subscribed, list_id):
     # get total members
     response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
         'hs-celery', settings.MAILCHIMP_PASSWORD))
-    total_items = json.loads(response.content)["total_items"]
+    total_items = json.loads(response.content.decode())["total_items"]
     # get list of all member ids
     response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
                                                                           total_items=total_items),
@@ -94,7 +93,7 @@ def sync_mailchimp(active_subscribed, list_id):
                                                             settings.MAILCHIMP_PASSWORD))
     # clear the email list
     delete_count = 0
-    for member in json.loads(response.content)["members"]:
+    for member in json.loads(response.content.decode())["members"]:
         if member["status"] == "subscribed":
             session_response = session.delete(
                 (url + "/{id}").format(list_id=list_id, id=member["id"]),
@@ -152,6 +151,8 @@ def manage_task_nightly():
                 # to pending
                 res.doi = get_resource_doi(act_doi, 'pending')
                 res.save()
+                # create bag and compute checksum for published resource to meet DataONE requirement
+                create_bag_by_irods(res.short_id)
             else:
                 # retry of metadata deposition failed again, notify admin
                 msg_lst.append("Metadata deposition with CrossRef for the published resource "
@@ -189,6 +190,8 @@ def manage_task_nightly():
                     res.doi = act_doi
                     res.save()
                     success = True
+                    # create bag and compute checksum for published resource to meet DataONE requirement
+                    create_bag_by_irods(res.short_id)
             if not success:
                 msg_lst.append("Published resource DOI {res_doi} is not yet activated with request "
                                "data deposited since {pub_date}.".format(res_doi=act_doi,
@@ -394,10 +397,11 @@ def create_bag_by_irods(resource_id):
     :return: True if bag creation operation succeeds;
              False if there is an exception raised or resource does not exist.
     """
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = utils.get_resource_by_shortkey(resource_id)
 
-    res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()
+
+    bag_path = res.bag_path
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
@@ -406,50 +410,37 @@ def create_bag_by_irods(resource_id):
             create_bag_files(res)
         except Exception as ex:
             logger.error('Failed to create bag files. Error:{}'.format(ex.message))
+            # release the lock before returning bag creation failure
             return False
 
-    bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
-    if res.resource_federation_path:
-        irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
-        is_exist = istorage.exists(irods_bagit_input_path)
-        # check to see if bagit readme.txt file exists or not
-        bagit_readme_file = '{fed_path}/{res_id}/readme.txt'.format(
-            fed_path=res.resource_federation_path,
-            res_id=resource_id)
-        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
-        bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
-        bagit_files = [
-            '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
-                                                   res_id=resource_id),
-            '{fed_path}/{res_id}/manifest-md5.txt'.format(
-                fed_path=res.resource_federation_path, res_id=resource_id),
-            '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
-                fed_path=res.resource_federation_path, res_id=resource_id),
-            '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
-                                                  res_id=resource_id)
-        ]
-    else:
-        is_exist = istorage.exists(resource_id)
-        # check to see if bagit readme.txt file exists or not
-        bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)
-        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
+    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+    # check to see if bagit readme.txt file exists or not
+    bagit_readme_file = res.get_irods_path('readme.txt')
+    is_bagit_readme_exist = istorage.exists(bagit_readme_file)
+    if irods_bagit_input_path.startswith(resource_id):
+        # resource is in data zone, need to append the full path for iRODS bagit rule execution
         irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
         irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
             def_res=settings.IRODS_DEFAULT_RESOURCE)
-        bagit_files = [
-            '{res_id}/bagit.txt'.format(res_id=resource_id),
-            '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
-            '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
-            'bags/{res_id}.zip'.format(res_id=resource_id)
-        ]
+    else:
+        # this will need to be changed with the default resource in whatever federated zone the
+        # resource is stored in when we have such use cases to support
+        bagit_input_resource = "*DESTRESC='{def_res}'".format(
+            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+
+    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+
+    bagit_files = [
+        res.get_irods_path('bagit.txt'),
+        res.get_irods_path('manifest-md5.txt'),
+        res.get_irods_path('tagmanifest-md5.txt'),
+        bag_path
+    ]
 
     # only proceed when the resource is not deleted potentially by another request
     # when being downloaded
+    is_exist = istorage.exists(irods_bagit_input_path)
     if is_exist:
         # if bagit readme.txt does not exist, add it.
         if not is_bagit_readme_exist:
@@ -467,7 +458,11 @@ def create_bag_by_irods(resource_id):
             # multiple ibun commands try to create the same zip file or the very same resource
             # gets deleted by another request when being downloaded
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-            istorage.zipup(irods_bagit_input_path, bag_full_name)
+            istorage.zipup(irods_bagit_input_path, bag_path)
+            if res.raccess.published:
+                # compute checksum to meet DataONE distribution requirement
+                chksum = istorage.checksum(bag_path)
+                res.bag_checksum = chksum
             istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
             return True
         except SessionException as ex:
@@ -580,9 +575,9 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
             try:
 
                 resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content)
+                response_content = json.loads(response.content.decode())
 
-                for key, value in response_content["resource"].iteritems():
+                for key, value in response_content["resource"].items():
                     resource.extra_metadata[key] = value
                     resource.save()
 
@@ -590,7 +585,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
                     logical_files = list(resource.logical_files)
                     lf = logical_files[[i.aggregation_name for i in
                                         logical_files].index(
-                                                    url["layer_name"].encode("utf-8")
+                                                    url["layer_name"].encode()
                                                 )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()

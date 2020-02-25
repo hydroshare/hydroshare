@@ -269,7 +269,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # this zip file has only the required 3 files (.shp, .shx and .dbf)
         files = []
         target = 'hs_geographic_feature_resource/tests/states_required_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='states_required_files.zip'))
+        files.append(UploadedFile(file=open(target, 'rb'), name='states_required_files.zip'))
 
         self.resGeoFeature = hydroshare.create_resource(
             resource_type='GeographicFeatureResource',
@@ -315,7 +315,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
 
         files = []
         target = 'hs_geographic_feature_resource/tests/states_invalid.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='states_invalid.zip'))
+        files.append(UploadedFile(file=open(target, 'rb'), name='states_invalid.zip'))
 
         self.resGeoFeature = hydroshare.create_resource(
             resource_type='GeographicFeatureResource',
@@ -342,7 +342,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
 
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_all_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='gis.osm_adminareas_v06_all_files.zip'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user)
 
@@ -362,9 +362,9 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                             42.5732416) < self.allowance)
         self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
         self.resGeoFeature.delete()
 
     def test_delete_shp_shx_dbf_file(self):
@@ -391,7 +391,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # add files first
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_all_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='gis.osm_adminareas_v06_all_files.zip'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user, )
 
@@ -407,9 +407,9 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                             42.5732416) < self.allowance)
         self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
 
         # find the .prj file and delete it
@@ -445,7 +445,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # this zip file has only the required 3 files (.shp, .shx and .dbf)
         files = []
         target = 'hs_geographic_feature_resource/tests/states_required_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='states_required_files.zip'))
+        files.append(UploadedFile(file=open(target, 'rb'), name='states_required_files.zip'))
 
         self.resGeoFeature = hydroshare.create_resource(
             resource_type='GeographicFeatureResource',
@@ -487,7 +487,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # now add the .prj file
         files = []
         target = 'hs_geographic_feature_resource/tests/states.prj'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='states.prj'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user)
 
@@ -496,9 +496,9 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.datum,
                          'North_American_Datum_1983')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
-                         'GCS_North_American_1983')
+                         'NAD83')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.eastlimit, -66.9692712587578)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.northlimit, 71.406235393967)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.southlimit, 18.921786345087)
@@ -512,7 +512,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # this zip file has only the required 3 files (.shp, .shx and .dbf)
         files = []
         target = 'hs_geographic_feature_resource/tests/states_required_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='states_required_files.zip'))
+        files.append(UploadedFile(file=open(target, 'rb'), name='states_required_files.zip'))
 
         self.resGeoFeature = hydroshare.create_resource(
             resource_type='GeographicFeatureResource',
@@ -535,7 +535,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # now add the .shp.xml file
         files = []
         target = 'hs_geographic_feature_resource/tests/states.shp.xml'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='states.shp.xml'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user)
         # check that the resource has 4 files
@@ -553,7 +553,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # this zip file has only the required 3 files (.shp, .shx and .dbf)
         files = []
         target = 'hs_geographic_feature_resource/tests/states_required_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='states_required_files.zip'))
+        files.append(UploadedFile(file=open(target, 'rb'), name='states_required_files.zip'))
 
         self.resGeoFeature = hydroshare.create_resource(
             resource_type='GeographicFeatureResource',
@@ -577,7 +577,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # now add the .shp.xml file
         files = []
         target = 'hs_geographic_feature_resource/tests/states.shp.xml'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='states.shp.xml'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user)
         # check that the resource has 4 files
@@ -686,7 +686,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # add files first
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_all_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='gis.osm_adminareas_v06_all_files.zip'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user, )
 
@@ -716,7 +716,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         # add files first
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_all_files.zip'
-        files.append(UploadedFile(file=open(target, 'r'),
+        files.append(UploadedFile(file=open(target, 'rb'),
                                   name='gis.osm_adminareas_v06_all_files.zip'))
         hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user, )
 

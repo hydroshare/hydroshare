@@ -66,16 +66,16 @@ class TestCaseCommonUtilities(object):
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
                                      pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
-            if output:
-                if 'ERROR:' in output.upper():
+            for out_str in output:
+                if 'ERROR:' in out_str.upper():
                     # irods account failed to create
-                    self.assertRaises(SessionException(-1, output, output))
+                    self.assertRaises(SessionException(-1, out_str, out_str))
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = True
             user_profile.save()
         except Exception as ex:
-            self.assertRaises(SessionException(-1, ex.message, ex.message))
+            self.assertRaises(SessionException(-1, str(ex), str(ex)))
 
     def delete_irods_user_in_user_zone(self):
         """Delete irods test user in user zone."""
@@ -87,16 +87,17 @@ class TestCaseCommonUtilities(object):
                                      pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
-                if 'ERROR:' in output.upper():
-                    # there is an error from icommand run, report the error
-                    self.assertRaises(SessionException(-1, output, output))
+                for out_str in output:
+                    if 'ERROR:' in out_str.upper():
+                        # there is an error from icommand run, report the error
+                        self.assertRaises(SessionException(-1, out_str, out_str))
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = False
             user_profile.save()
         except Exception as ex:
             # there is an error from icommand run, report the error
-            self.assertRaises(SessionException(-1, ex.message, ex.message))
+            self.assertRaises(SessionException(-1, str(ex), str(ex)))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
         """Save a list of files to iRODS user zone.
@@ -106,7 +107,7 @@ class TestCaseCommonUtilities(object):
         in iRODS user zone to save ori_file to
         :return:
         """
-        for file_name, target_name in file_name_to_target_name_dict.iteritems():
+        for file_name, target_name in list(file_name_to_target_name_dict.items()):
             self.irods_fed_storage.saveFile(file_name, target_name)
 
     def check_file_exist(self, irods_path):
@@ -170,6 +171,13 @@ class TestCaseCommonUtilities(object):
         res_path = res.file_path
         store = istorage.listdir(res_path)
         self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')
+
+        # create a temporary zips folder to make sure no duplicate folders are returned from listdir()
+        zip_res_coll_path = os.path.join('zips', '2020-02-03', res.short_id, 'data', 'contents', 'sub_test_dir')
+        istorage.session.run("imkdir", None, '-p', zip_res_coll_path)
+        store = istorage.listdir(res_path)
+        self.assertEqual(store[0].count('sub_test_dir'), 1, msg='duplicate folder: sub_test_dir occurred more '
+                                                                'than once')
 
         # rename the third file in file_name_list
         move_or_rename_file_or_folder(user, res.short_id,
@@ -340,7 +348,7 @@ class TestCaseCommonUtilities(object):
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
-        self.assertNotEquals(ori_coverage, None)
+        self.assertNotEqual(ori_coverage, None)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
         self.assertEqual(float(ori_coverage.value['eastlimit']), 461954.01909127034)
         self.assertEqual(float(ori_coverage.value['southlimit']), 4612592.446916306)
@@ -348,21 +356,21 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.value['units'], 'meter')
         self.assertEqual(ori_coverage.value['projection'], "NAD83 / UTM zone 12N")
         self.assertEqual(ori_coverage.value['datum'], "North_American_Datum_1983")
-        projection_string = u'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
-                            u'DATUM["North_American_Datum_1983",' \
-                            u'SPHEROID["GRS 1980",6378137,298.257222101,' \
-                            u'AUTHORITY["EPSG","7019"]],' \
-                            u'TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],' \
-                            u'PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],' \
-                            u'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],' \
-                            u'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
-                            u'PARAMETER["latitude_of_origin",0],' \
-                            u'PARAMETER["central_meridian",-111],' \
-                            u'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
-                            u'PARAMETER["false_northing",0],' \
-                            u'UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
-                            u'AXIS["Easting",EAST],AXIS["Northing",' \
-                            u'NORTH],AUTHORITY["EPSG","26912"]]'
+        projection_string = 'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
+                            'DATUM["North_American_Datum_1983",' \
+                            'SPHEROID["GRS 1980",6378137,298.257222101,' \
+                            'AUTHORITY["EPSG","7019"]],' \
+                            'TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],' \
+                            'PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],' \
+                            'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],' \
+                            'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
+                            'PARAMETER["latitude_of_origin",0],' \
+                            'PARAMETER["central_meridian",-111],' \
+                            'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
+                            'PARAMETER["false_northing",0],' \
+                            'UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
+                            'AXIS["Easting",EAST],AXIS["Northing",' \
+                            'NORTH],AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.value['projection_string'], projection_string)
 
         # testing extended metadata element: cell information
@@ -376,9 +384,9 @@ class TestCaseCommonUtilities(object):
         # testing extended metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '3031.44311523')
-        self.assertEqual(band_info.minimumValue, '1358.33459473')
+        self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+        self.assertEqual(band_info.maximumValue, '3031.443115234375')
+        self.assertEqual(band_info.minimumValue, '1358.3345947265625')
 
     def netcdf_metadata_extraction(self, expected_creators_count=1):
         """Test NetCDF metadata extraction.
@@ -409,7 +417,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 1)
 
         # there should be one license element:
-        self.assertNotEquals(self.resNetcdf.metadata.rights.statement, 1)
+        self.assertNotEqual(self.resNetcdf.metadata.rights.statement, 1)
 
         # there should be one relation element
         self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
@@ -428,10 +436,10 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resNetcdf.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
-        self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
-        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
-        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
+        self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
+        self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
+        self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
+        self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
 
         temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
@@ -453,9 +461,9 @@ class TestCaseCommonUtilities(object):
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
-        self.assertNotEquals(ori_coverage, None)
+        self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-        proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+        proj_text = '+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
         self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
@@ -469,7 +477,7 @@ class TestCaseCommonUtilities(object):
 
         # test time variable
         var_time = self.resNetcdf.metadata.variables.all().filter(name='time').first()
-        self.assertNotEquals(var_time, None)
+        self.assertNotEqual(var_time, None)
         self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
         self.assertEqual(var_time.type, 'Float')
         self.assertEqual(var_time.shape, 'time')
@@ -477,7 +485,7 @@ class TestCaseCommonUtilities(object):
 
         # test x variable
         var_x = self.resNetcdf.metadata.variables.all().filter(name='x').first()
-        self.assertNotEquals(var_x, None)
+        self.assertNotEqual(var_x, None)
         self.assertEqual(var_x.unit, 'Meter')
         self.assertEqual(var_x.type, 'Float')
         self.assertEqual(var_x.shape, 'x')
@@ -485,7 +493,7 @@ class TestCaseCommonUtilities(object):
 
         # test y variable
         var_y = self.resNetcdf.metadata.variables.all().filter(name='y').first()
-        self.assertNotEquals(var_y, None)
+        self.assertNotEqual(var_y, None)
         self.assertEqual(var_y.unit, 'Meter')
         self.assertEqual(var_y.type, 'Float')
         self.assertEqual(var_y.shape, 'y')
@@ -493,7 +501,7 @@ class TestCaseCommonUtilities(object):
 
         # test SWE variable
         var_swe = self.resNetcdf.metadata.variables.all().filter(name='SWE').first()
-        self.assertNotEquals(var_swe, None)
+        self.assertNotEqual(var_swe, None)
         self.assertEqual(var_swe.unit, 'm')
         self.assertEqual(var_swe.type, 'Float')
         self.assertEqual(var_swe.shape, 'y,x,time')
@@ -504,7 +512,7 @@ class TestCaseCommonUtilities(object):
         # test grid mapping variable
         var_grid = self.resNetcdf.metadata.variables.all().\
             filter(name='transverse_mercator').first()
-        self.assertNotEquals(var_grid, None)
+        self.assertNotEqual(var_grid, None)
         self.assertEqual(var_grid.unit, 'Unknown')
         self.assertEqual(var_grid.type, 'Unknown')
         self.assertEqual(var_grid.shape, 'Not defined')

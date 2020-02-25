@@ -3,15 +3,19 @@ import json
 import mimetypes
 import os
 from uuid import uuid4
+from celery.result import AsyncResult
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse, FileResponse, HttpResponseRedirect
+from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view
+from rest_framework import status
 
 from django_irods import icommands
 from hs_core.hydroshare import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.task_utils import get_resource_bag_task
+
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
@@ -59,7 +63,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
         split_path_strs.pop()
-    path = u'/'.join(split_path_strs)  # no trailing slash
+    path = '/'.join(split_path_strs)  # no trailing slash
 
     # initialize case variables
     is_bag_download = False
@@ -129,7 +133,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             irods_path = res.get_irods_path(path, prepend_short_id=False)
             irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
-        store_path = u'/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
+        store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -216,7 +220,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
         if __debug__:
-            logger.debug(u"irods_output_path is {}".format(irods_output_path))
+            logger.debug("irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
                 bag_modified = True
@@ -235,13 +239,16 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 # task parameter has to be passed in as a tuple or list, hence (res_id,) is needed
                 # Note that since we are using JSON for task parameter serialization, no complex
                 # object can be passed as parameters to a celery task
-                task = create_bag_by_irods.apply_async((res_id,), countdown=3)
-                if rest_call:
-                    return HttpResponse(json.dumps({'bag_status': 'Not ready',
-                                                    'task_id': task.task_id}),
-                                        content_type="application/json")
 
-                request.session['task_id'] = task.task_id
+                task_id = get_resource_bag_task(res_id)
+                if not task_id:
+                    task = create_bag_by_irods.apply_async((res_id,), countdown=3)
+                    task_id = task.task_id
+                if rest_call:
+                    return JsonResponse({'bag_status': 'Not ready',
+                                         'task_id': task_id})
+
+                request.session['task_id'] = task_id
                 request.session['download_path'] = request.path
                 return HttpResponseRedirect(res.get_absolute_url())
             else:
@@ -363,13 +370,15 @@ def check_task_status(request, task_id=None, *args, **kwargs):
     '''
     if not task_id:
         task_id = request.POST.get('task_id')
-    result = create_bag_by_irods.AsyncResult(task_id)
+    result = AsyncResult(task_id)
     if result.ready():
-        return HttpResponse(json.dumps({"status": result.get()}),
-                            content_type="application/json")
+        ret_value = str(result.get()).lower()
+        if ret_value == 'true':
+            return JsonResponse({"status": ret_value})
+        else:
+            return JsonResponse({"status": ret_value}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return HttpResponse(json.dumps({"status": None}),
-                            content_type="application/json")
+        return JsonResponse({"status": None})
 
 
 @swagger_auto_schema(method='get', auto_schema=None)

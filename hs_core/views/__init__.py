@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import json
 import datetime
 import pytz
@@ -131,7 +131,7 @@ def change_quota_holder(request, shortkey):
     except utils.QuotaException as ex:
         msg = 'Failed to change quota holder to {0} since {0} does not have ' \
               'enough quota to hold this new resource. The exception quota message ' \
-              'reported for {0} is: '.format(new_holder_u.username) + ex.message
+              'reported for {0} is: '.format(new_holder_u.username) + str(ex)
         ajax_response_data['message'] = msg
         return JsonResponse(ajax_response_data)
 
@@ -162,7 +162,7 @@ def update_quota_usage(request, username):
 def extract_files_with_paths(request):
     res_files = []
     full_paths = {}
-    for key in request.FILES.keys():
+    for key in list(request.FILES.keys()):
         full_path = request.POST.get(key, None)
         f = request.FILES[key]
         res_files.append(f)
@@ -200,11 +200,11 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
                                             folder=file_folder)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        msg = {'file_size_error': ex.message}
+        msg = {'file_size_error': str(ex)}
         return JsonResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        msg = {'validation_error': ex.message}
+        msg = {'validation_error': str(ex)}
         return JsonResponse(msg, status=500)
 
     try:
@@ -215,7 +215,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
                                                    auto_aggregate=auto_aggregate)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        msg = {'validation_error': ex.message}
+        msg = {'validation_error': str(ex)}
         return JsonResponse(msg, status=500)
 
     res_public_status = 'public' if resource.raccess.public else 'not public'
@@ -294,7 +294,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         res.save()
     except Error as ex:
         is_update_success = False
-        err_message = ex.message
+        err_message = str(ex)
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
@@ -394,15 +394,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                             element = res.metadata.create_element(element_name, **element_data_dict)
                             is_add_success = True
                         except ValidationError as exp:
-                            err_msg = err_msg.format(element_name, exp.message)
+                            err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
                         except Error as exp:
                             # some database error occurred
-                            err_msg = err_msg.format(element_name, exp.message)
+                            err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
                         except Exception as exp:
                             # some other error occurred
-                            err_msg = err_msg.format(element_name, exp.message)
+                            err_msg = err_msg.format(element_name, str(exp))
                             request.session['validation_error'] = err_msg
 
                     if is_add_success:
@@ -521,11 +521,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                             element_exists = response['element_exists']
 
                 except ValidationError as exp:
-                    err_msg = err_msg.format(element_name, exp.message)
+                    err_msg = err_msg.format(element_name, str(exp))
                     request.session['validation_error'] = err_msg
                 except Error as exp:
                     # some database error occurred
-                    err_msg = err_msg.format(element_name, exp.message)
+                    err_msg = err_msg.format(element_name, str(exp))
                     request.session['validation_error'] = err_msg
                 # TODO: it's brittle to embed validation logic at this level.
                 if element_name == 'title':
@@ -625,7 +625,7 @@ def delete_author(request, shortkey, element_id, *args, **kwargs):
         resource_modified(res, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'message': "Author was deleted successfully"}
     except Error as exp:
-        ajax_response_data = {'status': 'error', 'message': exp.message}
+        ajax_response_data = {'status': 'error', 'message': str(exp)}
     return JsonResponse(ajax_response_data)
 
 
@@ -651,7 +651,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             # dependent content files together when one file is deleted, we make this specific
             # ObjectDoesNotExist exception as legitimate in delete_multiple_files() without
             # raising this specific exception
-            logger.warn(ex.message)
+            logger.warn(str(ex))
             continue
     request.session['resource-mode'] = 'edit'
 
@@ -672,10 +672,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
     except ValidationError as ex:
         if request.is_ajax():
             ajax_response_data['status'] = 'error'
-            ajax_response_data['message'] = ex.message
+            ajax_response_data['message'] = str(ex)
             return JsonResponse(ajax_response_data)
         else:
-            request.session['validation_error'] = ex.message
+            request.session['validation_error'] = str(ex)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # if the deleted resource is part of any collection resource, then for each of those collection
@@ -736,12 +736,12 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
     except utils.QuotaException as ex:
         return HttpResponse(
-            json.dumps({"error": ex.message}),
+            json.dumps({"error": str(ex)}),
             content_type="application/json"
         )
     except ValidationError as ex:
         return HttpResponse(
-            json.dumps({"error": ex.message}),
+            json.dumps({"error": str(ex)}),
             content_type="application/json"
         )
 
@@ -756,7 +756,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     except Exception as ex:
         if new_resource:
             new_resource.delete()
-        request.session['resource_creation_error'] = 'Failed to copy this resource: ' + ex.message
+        request.session['resource_creation_error'] = 'Failed to copy this resource: ' + str(ex)
         return HttpResponseRedirect(res.get_absolute_url())
 
     # go to resource landing page
@@ -805,7 +805,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         res.locked_time = None
         res.save()
         request.session['resource_creation_error'] = 'Failed to create a new version of ' \
-                                                     'this resource: ' + ex.message
+                                                     'this resource: ' + str(ex)
         return HttpResponseRedirect(res.get_absolute_url())
 
     # release the lock if new version of the resource is created successfully
@@ -830,7 +830,7 @@ def publish(request, shortkey, *args, **kwargs):
     try:
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
-        request.session['validation_error'] = exp.message
+        request.session['validation_error'] = str(exp)
     else:
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -935,7 +935,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                 user.uaccess.share_resource_with_group(res, group_to_share_with, access_privilege)
         except PermissionDenied as exp:
             status = 'error'
-            err_message = exp.message
+            err_message = str(exp)
     else:
         status = 'error'
 
@@ -973,7 +973,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
 
     except PermissionDenied as exp:
         ajax_response_data['status'] = 'error'
-        ajax_response_data['message'] = exp.message
+        ajax_response_data['message'] = str(exp)
 
     return JsonResponse(ajax_response_data)
 
@@ -991,7 +991,7 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
             ajax_response_data['redirect_to'] = '/my-resources/'
     except PermissionDenied as exp:
         ajax_response_data['status'] = 'error'
-        ajax_response_data['message'] = exp.message
+        ajax_response_data['message'] = str(exp)
 
     return JsonResponse(ajax_response_data)
 
@@ -1021,7 +1021,7 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
 
     except PermissionDenied as exp:
         ajax_response_data['status'] = 'error'
-        ajax_response_data['message'] = exp.message
+        ajax_response_data['message'] = str(exp)
 
     return JsonResponse(ajax_response_data)
 
@@ -1047,7 +1047,7 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
             ajax_response_data['redirect_to'] = '/my-resources/'
     except PermissionDenied as exp:
         ajax_response_data['status'] = 'error'
-        ajax_response_data['message'] = exp.message
+        ajax_response_data['message'] = str(exp)
 
     return JsonResponse(ajax_response_data)
 
@@ -1077,13 +1077,13 @@ def save_ajax(request):
             return _get_http_response({'errors': False,
                                         'value': adaptor.render_value_edit()})
         messages = [] # The error is for another field that you are editing
-        for field_name_error, errors_field in form.errors.items():
+        for field_name_error, errors_field in list(form.errors.items()):
             for error in errors_field:
-                messages.append("%s: %s" % (field_name_error, unicode(error)))
+                messages.append("%s: %s" % (field_name_error, str(error)))
         message_i18n = ','.join(messages)
         return _get_http_response({'errors': message_i18n})
     except ValidationError as error: # The error is for a field that you are editing
-        message_i18n = ', '.join([u"%s" % m for m in error.messages])
+        message_i18n = ', '.join(["%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
 
 
@@ -1244,15 +1244,15 @@ def create_resource(request, *args, **kwargs):
                                                          requesting_user=request.user,
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
-        ajax_response_data['message'] = ex.message
+        ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
-        ajax_response_data['message'] = ex.message
+        ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
     except Exception as ex:
-        ajax_response_data['message'] = ex.message
+        ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
     try:
@@ -1268,15 +1268,15 @@ def create_resource(request, *args, **kwargs):
         ajax_response_data['message'] = ex.stderr
         return JsonResponse(ajax_response_data)
     except Exception as ex:
-        ajax_response_data['message'] = ex.message
+        ajax_response_data['message'] = str(ex)
         return JsonResponse(ajax_response_data)
 
     try:
         utils.resource_post_create_actions(request=request, resource=resource,
                                            user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
-        ajax_response_data['message'] = ex.message
+        request.session['validation_error'] = str(ex)
+        ajax_response_data['message'] = str(ex)
         ajax_response_data['status'] = 'success'
         ajax_response_data['file_upload_status'] = 'error'
         ajax_response_data['resource_url'] = resource.get_absolute_url()
@@ -1301,11 +1301,11 @@ def create_user_group(request, *args, **kwargs):
             messages.success(request, "Group creation was successful.")
             return HttpResponseRedirect(reverse('group', args=[new_group.id]))
         except IntegrityError as ex:
-            if group_form.cleaned_data['name'] in ex.message:
+            if group_form.cleaned_data['name'] in str(ex):
                 message = "Group name '{}' already exists".format(group_form.cleaned_data['name'])
                 messages.error(request, "Group creation errors: {}.".format(message))
             else:
-                messages.error(request, "Group creation errors:{}.".format(ex.message))
+                messages.error(request, "Group creation errors:{}.".format(str(ex)))
     else:
         messages.error(request, "Group creation errors:{}.".format(group_form.errors.as_json))
 
@@ -1324,11 +1324,11 @@ def update_user_group(request, group_id, *args, **kwargs):
                 group_form.update(group_to_update, request)
                 messages.success(request, "Group update was successful.")
             except IntegrityError as ex:
-                if group_form.cleaned_data['name'] in ex.message:
+                if group_form.cleaned_data['name'] in str(ex):
                     message = "Group name '{}' already exists".format(group_form.cleaned_data['name'])
                     messages.error(request, "Group update errors: {}.".format(message))
                 else:
-                    messages.error(request, "Group update errors:{}.".format(ex.message))
+                    messages.error(request, "Group update errors:{}.".format(str(ex)))
         else:
             messages.error(request, "Group update errors:{}.".format(group_form.errors.as_json))
     else:
@@ -1382,7 +1382,7 @@ def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs
                 requesting_user.uaccess.share_group_with_user(group_to_share, user_to_share_with, access_privilege)
                 messages.success(request, "User successfully added to the group")
             except PermissionDenied as ex:
-                messages.error(request, ex.message)
+                messages.error(request, str(ex))
         else:
             messages.error(request, "You don't have permission to add users to group")
     else:
@@ -1413,7 +1413,7 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
             success_msg = "User successfully removed from the group."
         messages.success(request, success_msg)
     except PermissionDenied as ex:
-        messages.error(request, ex.message)
+        messages.error(request, str(ex))
 
     if requesting_user == user_to_unshare_with:
         return HttpResponseRedirect(reverse("my_groups"))
@@ -1467,7 +1467,7 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                                               group_owner=grp_owner)
         messages.success(request, message)
     except PermissionDenied as ex:
-        messages.error(request, ex.message)
+        messages.error(request, str(ex))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -1547,7 +1547,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                     messages.success(request, message)
 
             except PermissionDenied as ex:
-                messages.error(request, ex.message)
+                messages.error(request, str(ex))
         else:
             messages.error(request, "Group is not active")
 
@@ -1660,13 +1660,13 @@ def _share_resource_with_user(request, frm, resource, requesting_user, privilege
         try:
             requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
         except PermissionDenied as exp:
-            messages.error(request, exp.message)
+            messages.error(request, str(exp))
     else:
         messages.error(request, frm.errors.as_json())
 
 
 def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource, privilege):
-    users_to_keep = User.objects.in_bulk(users_to_unshare_with).values()
+    users_to_keep = list(User.objects.in_bulk(users_to_unshare_with).values())
     owners = set(resource.raccess.owners.all())
     editors = set(resource.raccess.edit_users.all()) - owners
     viewers = set(resource.raccess.view_users.all()) - editors - owners
@@ -1691,7 +1691,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                 if requesting_user == user and not resource.raccess.public:
                     go_to_resource_listing_page = True
             except PermissionDenied as exp:
-                messages.error(request, exp.message)
+                messages.error(request, str(exp))
                 break
     return go_to_resource_listing_page
 
@@ -1717,13 +1717,13 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
         try:
             resource.set_discoverable(flag_value, user)  # checks access control
         except ValidationError as v:
-            return v.message
+            return str(v)
 
     elif flag_to_set == 'public':
         try:
             resource.set_public(flag_value, user)  # checks access control
         except ValidationError as v:
-            return v.message
+            return str(v)
     else:
         return "Unrecognized resource flag {}".format(flag_to_set)
     return None
@@ -1837,7 +1837,6 @@ class GroupView(TemplateView):
                 'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
                 'group_resources': group_resources,
                 'add_view_user_form': AddUserForm(),
-                'communities_enabled': settings.COMMUNITIES_ENABLED,
                 'profile_user': u
             }
         else:
@@ -1849,7 +1848,6 @@ class GroupView(TemplateView):
                 'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
                 'group_resources': public_group_resources,
                 'add_view_user_form': AddUserForm(),
-                'communities_enabled': settings.COMMUNITIES_ENABLED
             }
 
 

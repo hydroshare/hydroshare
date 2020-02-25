@@ -15,7 +15,7 @@ def debug_harvest():
     ind = BaseResourceIndex()
     for obj in BaseResource.objects.filter(Q(raccess__discoverable=True) |
                                            Q(raccess__public=True)).distinct():
-        print ("TESTING RESOURCE {}".format(obj.title.encode('ascii', 'replace')))
+        print(("TESTING RESOURCE {}".format(obj.title)))
         print('sample_medium')
         pprint(ind.prepare_sample_medium(obj))
         print('creator')

@@ -9,6 +9,7 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from django_irods.icommands import SessionException
+from django.db import transaction
 
 
 def set_quota_holder(resource, user):
@@ -22,13 +23,13 @@ def set_quota_holder(resource, user):
     except AttributeError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised AttributeError when setting quota holder: ' +
-              ex.message)
+        print((resource.short_id + ' raised AttributeError when setting quota holder: ' +
+              str(ex)))
     except ValueError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised ValueError when setting quota holder: ' +
-              ex.message)
+        print((resource.short_id + ' raised ValueError when setting quota holder: ' +
+              str(ex)))
 
 
 class Command(BaseCommand):
@@ -61,27 +62,29 @@ class Command(BaseCommand):
             prior = User.objects.get(username=options['owned_by'])
             for res in BaseResource.objects.filter(r2urp__user=prior,
                                                    r2urp__privilege=PrivilegeCodes.OWNER):
-                resource = get_resource_by_shortkey(res.short_id)
-                UserResourcePrivilege.share(user=user,
-                                            resource=resource,
-                                            privilege=PrivilegeCodes.OWNER,
-                                            grantor=admin)
-                print("added owner {} to {}".format(options['new_owner'], resource.short_id))
-                if options['set_quota_holder']:
-                    set_quota_holder(resource, user)
-                    print("set quota holder to {} for {}".format(options['new_owner'],
-                          resource.short_id))
+                with transaction.atomic():
+                    resource = res.get_content_model()
+                    UserResourcePrivilege.share(user=user,
+                                                resource=resource,
+                                                privilege=PrivilegeCodes.OWNER,
+                                                grantor=admin)
+                    print("added owner {} to {}".format(options['new_owner'], resource.short_id))
+                    if options['set_quota_holder']:
+                        set_quota_holder(resource, user)
+                        print("set quota holder to {} for {}".format(options['new_owner'],
+                              resource.short_id))
 
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
 
             for rid in options['resource_ids']:
-                resource = get_resource_by_shortkey(rid)
-                UserResourcePrivilege.share(user=user,
-                                            resource=resource,
-                                            privilege=PrivilegeCodes.OWNER,
-                                            grantor=admin)
-                print("added owner {} to {}".format(options['new_owner'], rid))
-                if options['set_quota_holder']:
-                    set_quota_holder(resource, user)
-                    print("set quota holder to {} for {}".format(options['new_owner'],
-                          resource.short_id))
+                resource = get_resource_by_shortkey(rid, or_404=False)
+                with transaction.atomic():
+                    UserResourcePrivilege.share(user=user,
+                                                resource=resource,
+                                                privilege=PrivilegeCodes.OWNER,
+                                                grantor=admin)
+                    print("added owner {} to {}".format(options['new_owner'], rid))
+                    if options['set_quota_holder']:
+                        set_quota_holder(resource, user)
+                        print("set quota holder to {} for {}".format(options['new_owner'],
+                              resource.short_id))

@@ -29,7 +29,7 @@ from hs_geo_raster_resource.models import CellInformation, BandInformation, Orig
 from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
 
 from hs_file_types import raster_meta_extract
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
@@ -155,7 +155,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
             formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(
-            initial=self.bandInformations.values(), prefix='BandInformation')
+            initial=list(self.bandInformations.values()), prefix='BandInformation')
 
         for frm in bandinfo_formset.forms:
             if len(frm.initial) > 0:
@@ -207,7 +207,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             bandinfo.add_to_xml_container(container_to_add_to)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
@@ -359,14 +359,14 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         for element in metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             logical_file.metadata.create_element(k, **v)
                         log.info("Geographic raster aggregation type - metadata was saved to DB")
 
                         file_type_success = True
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        msg = msg.format(ex.message)
+                        msg = msg.format(str(ex))
                         log.exception(msg)
 
                 if not file_type_success:
@@ -452,7 +452,7 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
             try:
                 temp_vrt_file = create_vrt_file(raster_file)
             except Exception as ex:
-                error_info.append(ex.message)
+                error_info.append(str(ex))
             else:
                 if os.path.isfile(temp_vrt_file):
                     new_resource_files_to_add.append(temp_vrt_file)
@@ -461,7 +461,7 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
         try:
             extract_file_paths = _explode_raster_zip_file(raster_file)
         except Exception as ex:
-            error_info.append(ex.message)
+            error_info.append(str(ex))
         else:
             if extract_file_paths:
                 new_resource_files_to_add.extend(extract_file_paths)
@@ -575,7 +575,7 @@ def extract_metadata(temp_vrt_file_path):
     metadata.append({'CellInformation': res_md_dict['cell_info']})
 
     # Save extended meta band info
-    for band_info in res_md_dict['band_info'].values():
+    for band_info in list(res_md_dict['band_info'].values()):
         metadata.append({'BandInformation': band_info})
     return metadata
 
@@ -606,7 +606,7 @@ def create_vrt_file(tif_file):
         tree.write(vrt_file_path)
 
     except Exception as ex:
-        log.exception("Failed to create/write to vrt file. Error:{}".format(ex.message))
+        log.exception("Failed to create/write to vrt file. Error:{}".format(str(ex)))
         raise Exception("Failed to create/write to vrt file")
 
     return vrt_file_path
@@ -634,7 +634,7 @@ def _explode_raster_zip_file(zip_file):
                     extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
     except Exception as ex:
-        log.exception("Failed to unzip. Error:{}".format(ex.message))
+        log.exception("Failed to unzip. Error:{}".format(str(ex)))
         raise ex
 
     return extract_file_paths

@@ -41,7 +41,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
-        self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
+        self.netcdf_file_obj = open(target_temp_netcdf_file, 'rb')
 
         self.genResource = hydroshare.create_resource(resource_type='GenericResource',
                                                       owner=self.john,
@@ -279,7 +279,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
                 break
         self.assertNotEqual(nc_dump_res_file, None)
         self.assertIn('title = "new title"',
-                      nc_dump_res_file.resource_file.read())
+                      nc_dump_res_file.resource_file.read().decode('utf-8'))
         res_metadata.refresh_from_db()
         self.assertFalse(res_metadata.is_dirty)
 

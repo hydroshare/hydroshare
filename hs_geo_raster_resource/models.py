@@ -67,7 +67,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     raise ValidationError("For coverage of type 'box' values for one or more "
                                           "bounding box limits or 'units' is missing.")
 
-            value_dict = {k: v for k, v in value_arg_dict.iteritems()
+            value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
                                    'projection', 'projection_string', 'datum')}
 
@@ -459,7 +459,7 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import GeoRasterMetaDataSerializer
+        from .serializers import GeoRasterMetaDataSerializer
         return GeoRasterMetaDataSerializer(self)
 
     @classmethod
@@ -467,7 +467,7 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
 
         if 'bandinformations' in keys_to_update:
             for bandinformation in metadata.pop('bandinformations'):
@@ -476,7 +476,7 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
-        from forms import BandInfoValidationForm
+        from .forms import BandInfoValidationForm
         # update any core metadata
         super(RasterMetaData, self).update(metadata, user)
         # update resource specific metadata
@@ -532,4 +532,4 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
         if self.originalCoverage:
             self.originalCoverage.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()

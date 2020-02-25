@@ -52,13 +52,15 @@ class Command(BaseCommand):
         ind = BaseResourceIndex()
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
+                print("updating resource {}".format(rid))
                 try:
                     r = BaseResource.objects.get(short_id=rid)
                     # if ind.should_update(r):  # always True
-                    print("updating resource {}".format(rid))
                     ind.update_object(r)
                 except BaseResource.DoesNotExist:
                     print("resource {} does not exist in Django".format(rid))
+                except Exception as e:
+                    print("resource {} generated exception {}".format(rid, str(e)))
 
         else:
 
@@ -68,70 +70,83 @@ class Command(BaseCommand):
                                               Q(raccess__public=True))
             print("Django count = {}".format(dqs.count()))
 
-            # what is in Django that isn't in SOLR:
-            found = set()
+            # what is in Django that isn't in SOLR
+            found_in_solr = set()
             for r in list(sqs):
-                found.add(r.short_id)
-                # resource = get_resource_by_shortkey(r.short_id)
-                # print("{} {} found".format(r.short_id, resource.discovery_content_type))
-            in_django = 0
+                found_in_solr.add(r.short_id)  # enable fast matching
+
+            django_indexed = 0
             django_replaced = 0
             django_refreshed = 0
-            for r in dqs:
-                resource = get_resource_by_shortkey(r.short_id)
-                repl = False
-                if hasattr(resource, 'metadata') and resource.metadata is not None:
-                    repl = resource.metadata.relations.filter(type='isReplacedBy').exists()
-                if not repl:
-                    in_django += 1
-                else:
-                    django_replaced += 1
 
-                if r.short_id not in found:
+            for r in dqs:
+                try:
+                    resource = get_resource_by_shortkey(r.short_id, or_404=False)
+                    repl = False
+                    if hasattr(resource, 'metadata') and \
+                            resource.metadata is not None and \
+                            resource.metadata.relations is not None:
+                        repl = resource.metadata.relations.filter(type='isReplacedBy').exists()
+                    if not repl:
+                        django_indexed += 1
+                    else:
+                        django_replaced += 1
+                except BaseResource.DoesNotExist:
+                    # race condition in processing while in production
+                    print("resource {} no longer found in Django.".format(r.short_id))
+                    continue
+                except Exception as e:
+                    print("resource {} generated exception {}".format(r.short_id, str(e)))
+
+                if r.short_id not in found_in_solr:
                     print("{} {} NOT FOUND in SOLR: adding to index".format(
                             r.short_id, resource.discovery_content_type))
-                    ind.update_object(r)
-                    django_refreshed += 1
+                    try:
+                        ind.update_object(r)
+                        django_refreshed += 1
+                    except Exception as e:
+                        print("resource {} generated exception {}".format(r.short_id, str(e)))
+
                 # # This always returns True whether or not SOLR needs updating
                 # # This is likely a Haystack bug.
                 # elif ind.should_update(r):
                 # update everything to be safe.
+
                 elif options['force']:
                     print("{} {}: refreshing index (forced)".format(
                           r.short_id, resource.discovery_content_type))
-                    ind.update_object(r)
-                    django_refreshed += 1
+                    try:
+                        ind.update_object(r)
+                        django_refreshed += 1
+                    except Exception as e:
+                        print("resource {} generated exception {}".format(r.short_id, str(e)))
 
-            print("{} resources in Django refreshed in SOLR".format(django_refreshed))
             print("Django contains {} discoverable resources and {} replaced resources"
-                  .format(in_django, django_replaced))
+                  .format(django_indexed, django_replaced))
+            print("{} resources in Django refreshed in SOLR".format(django_refreshed))
 
             # what is in SOLR that isn't in Django:
             sqs = SearchQuerySet().all()  # refresh for changes from above
-            found = set()
-            in_solr = 0
-            solr_deleted = 0
+            solr_indexed = 0
             solr_replaced = 0
-            for r in list(dqs):
-                found.add(r.short_id)
-                # resource = get_resource_by_shortkey(r.short_id)
-                # print("{} {} found".format(r.short_id, resource.discovery_content_type))
+            solr_deleted = 0
             for r in sqs:
-                if r.short_id not in found:
-                    resource = get_resource_by_shortkey(r.short_id)
-                    print("{} {} NOT FOUND in Django; removing from SOLR".format(
-                            r.short_id, resource.discovery_content_type))
-                    ind.remove_object(r)
-                    solr_deleted += 1
-                else:
-                    resource = get_resource_by_shortkey(r.short_id)
+                try:
+                    resource = get_resource_by_shortkey(r.short_id, or_404=False)
                     repl = False
                     if hasattr(resource, 'metadata') and resource.metadata is not None:
                         repl = resource.metadata.relations.filter(type='isReplacedBy').exists()
                     if not repl:
-                        in_solr += 1
+                        solr_indexed += 1
                     else:
                         solr_replaced += 1
-            print("{} resources not in Django removed from SOLR".format(solr_deleted))
+                except BaseResource.DoesNotExist:
+                    print("SOLR resource {} ({}) NOT FOUND in Django; removing from SOLR"
+                          .format(r.short_id, resource.discovery_content_type))
+                    ind.remove_object(r)
+                    solr_deleted += 1
+                    continue
+
             print("SOLR contains {} discoverable resources and {} replaced resources"
-                  .format(in_solr, solr_replaced))
+                  .format(solr_indexed, solr_replaced))
+            print("{} resources not in Django removed from SOLR".format(solr_deleted))

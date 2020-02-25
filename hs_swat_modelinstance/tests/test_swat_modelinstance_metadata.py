@@ -57,14 +57,14 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model SWAT Instance resource files")
         text_file.close()
-        self.text_file_obj = open(temp_text_file, 'r')
+        self.text_file_obj = open(temp_text_file, 'rb')
 
         self.file_name_2 = "MIR.csv"
         temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
         text_file = open(temp_text_file_2, 'w')
         text_file.write("Model,SWAT,Instance,resource,files")
         text_file.close()
-        self.text_file_obj_2 = open(temp_text_file_2, 'r')
+        self.text_file_obj_2 = open(temp_text_file_2, 'rb')
 
     def tearDown(self):
         super(TestSWATModelInstanceMetaData, self).tearDown()
@@ -73,10 +73,10 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
     def test_allowed_file_types(self):
         # test allowed file type is '.*'
-        self.assertEquals(self.resSWATModelInstance.get_supported_upload_file_types(), '.*')
+        self.assertEqual(self.resSWATModelInstance.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
-        self.assertEquals(self.resSWATModelInstance.files.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.files.all().count(), 0)
 
         # Upload any file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
@@ -87,11 +87,11 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                         user=self.user, extract_metadata=False)
 
         # there should one content file
-        self.assertEquals(self.resSWATModelInstance.files.all().count(), 1)
+        self.assertEqual(self.resSWATModelInstance.files.all().count(), 1)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.executed_by, None)
 
         # Upload any other file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
@@ -102,65 +102,65 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                         user=self.user, extract_metadata=True)
 
         # there should two content files
-        self.assertEquals(self.resSWATModelInstance.files.all().count(), 2)
+        self.assertEqual(self.resSWATModelInstance.files.all().count(), 2)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.executed_by, None)
 
     def test_extended_metadata_CRUD(self):
         # test the core metadata at this point
         # there should be a title element
-        self.assertEquals(self.resSWATModelInstance.metadata.title.value,
+        self.assertEqual(self.resSWATModelInstance.metadata.title.value,
                           'Test SWAT Model Instance Resource')
 
         # there should be a creator element
-        self.assertEquals(self.resSWATModelInstance.metadata.creators.count(), 1)
+        self.assertEqual(self.resSWATModelInstance.metadata.creators.count(), 1)
 
         # # there should be a type element
         self.assertNotEqual(self.resSWATModelInstance.metadata.type, None)
 
         # there should be an identifier element
-        self.assertEquals(self.resSWATModelInstance.metadata.identifiers.count(), 1)
+        self.assertEqual(self.resSWATModelInstance.metadata.identifiers.count(), 1)
 
         # there should be rights element
         self.assertNotEqual(self.resSWATModelInstance.metadata.rights, None)
 
         # there shouldn't any source element
-        self.assertEquals(self.resSWATModelInstance.metadata.sources.count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.sources.count(), 0)
 
         # there shouldn't any relation element
-        self.assertEquals(self.resSWATModelInstance.metadata.relations.count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.relations.count(), 0)
 
         # there shouldn't any abstract element
-        self.assertEquals(self.resSWATModelInstance.metadata.description, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.description, None)
 
         # there shouldn't any coverage element
-        self.assertEquals(self.resSWATModelInstance.metadata.coverages.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.coverages.all().count(), 0)
 
         # there shouldn't any format element
-        self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.formats.all().count(), 0)
 
         # there shouldn't any subject element
-        self.assertEquals(self.resSWATModelInstance.metadata.subjects.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.subjects.all().count(), 0)
 
         # there shouldn't any contributor element
-        self.assertEquals(self.resSWATModelInstance.metadata.contributors.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.contributors.all().count(), 0)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_input, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_parameter, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_method, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_objective, None)
 
         # create
         # create model_output
         self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=False)
         modeloutput_element = self.resSWATModelInstance.metadata.model_output
-        self.assertEquals(modeloutput_element.includes_output, False)
+        self.assertEqual(modeloutput_element.includes_output, False)
         # multiple ModelOutput elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
@@ -173,7 +173,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
         self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
         modeloutput_element = self.resSWATModelInstance.metadata.model_output
-        self.assertEquals(modeloutput_element.includes_output, True)
+        self.assertEqual(modeloutput_element.includes_output, True)
         # multiple ModelOutput elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
@@ -185,9 +185,9 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             model_name=self.resGenModelProgram.short_id
         )
         modelparam_element = self.resSWATModelInstance.metadata.executed_by
-        self.assertEquals(modelparam_element.model_name,
+        self.assertEqual(modelparam_element.model_name,
                           self.resGenModelProgram.metadata.title.value)
-        self.assertEquals(modelparam_element.model_program_fk, self.resGenModelProgram)
+        self.assertEqual(modelparam_element.model_program_fk, self.resGenModelProgram)
         # multiple ExecutedBy elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element(
@@ -210,8 +210,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertNotEqual(modelparam_element, None)
         v = modelparam_element.get_swat_model_objectives()
         for o in s_objs:
-            self.assertEquals(o in v, True)
-        self.assertEquals(modelparam_element.other_objectives, o_objs)
+            self.assertEqual(o in v, True)
+        self.assertEqual(modelparam_element.other_objectives, o_objs)
         # try to create a swat_model_objective with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element(
@@ -279,8 +279,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertNotEqual(modelparam_element, None)
         v = modelparam_element.get_swat_model_parameters()
         for p in s_params:
-            self.assertEquals(p in v, True)
-        self.assertEquals(modelparam_element.other_parameters, o_params)
+            self.assertEqual(p in v, True)
+        self.assertEqual(modelparam_element.other_parameters, o_params)
         # try to create another swat_model_objective
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelParameter',
@@ -351,13 +351,13 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             self.resSWATModelInstance.metadata.model_output.id,
             includes_output=False
         )
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output.includes_output, False)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output.includes_output, False)
         self.resSWATModelInstance.metadata.update_element(
             'ModelOutput',
             self.resSWATModelInstance.metadata.model_output.id,
             includes_output=True
         )
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output.includes_output, True)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output.includes_output, True)
 
         # update ExecutedBy
         self.resSWATModelInstance.metadata.update_element(
@@ -366,9 +366,9 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             model_name=self.resSwatModelProgram.short_id
         )
         modelparam_element = self.resSWATModelInstance.metadata.executed_by
-        self.assertEquals(modelparam_element.model_name,
+        self.assertEqual(modelparam_element.model_name,
                           self.resSwatModelProgram.metadata.title.value)
-        self.assertEquals(modelparam_element.model_program_fk, self.resSwatModelProgram)
+        self.assertEqual(modelparam_element.model_program_fk, self.resSwatModelProgram)
 
         # update ModelObjective
         self.resSWATModelInstance.metadata.update_element(
@@ -381,8 +381,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertNotEqual(modelparam_element, None)
         v = modelparam_element.get_swat_model_objectives()
         for o in [s_objs[2]]:
-            self.assertEquals(o in v, True)
-        self.assertEquals(modelparam_element.other_objectives, 'jelly beans')
+            self.assertEqual(o in v, True)
+        self.assertEqual(modelparam_element.other_objectives, 'jelly beans')
         # try with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element(
@@ -395,7 +395,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             self.resSWATModelInstance.metadata.model_objective.id,
             other_objectives="einstein")
         modelparam_element = self.resSWATModelInstance.metadata.model_objective
-        self.assertEquals(modelparam_element.other_objectives, 'einstein')
+        self.assertEqual(modelparam_element.other_objectives, 'einstein')
 
         # update SimulationType
         self.resSWATModelInstance.metadata.update_element(
@@ -403,7 +403,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             self.resSWATModelInstance.metadata.simulation_type.id,
             simulation_type_name='Auto-Calibration')
         modelparam_element = self.resSWATModelInstance.metadata.simulation_type
-        self.assertEquals(modelparam_element.get_simulation_type_name_display(), 'Auto-Calibration')
+        self.assertEqual(modelparam_element.get_simulation_type_name_display(), 'Auto-Calibration')
         # try with non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element(
@@ -441,8 +441,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         modelparam_element = self.resSWATModelInstance.metadata.model_parameter
         v = modelparam_element.get_swat_model_parameters()
         for p in s_params:
-            self.assertEquals(p in v, True)
-        self.assertEquals(modelparam_element.other_parameters, o_params)
+            self.assertEqual(p in v, True)
+        self.assertEqual(modelparam_element.other_parameters, o_params)
         # now update the other params
         o_params = 'square pants'
         self.resSWATModelInstance.metadata.update_element(
@@ -453,8 +453,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         modelparam_element = self.resSWATModelInstance.metadata.model_parameter
         v = modelparam_element.get_swat_model_parameters()
         for p in s_params:
-            self.assertEquals(p in v, True)
-        self.assertEquals(modelparam_element.other_parameters, o_params)
+            self.assertEqual(p in v, True)
+        self.assertEqual(modelparam_element.other_parameters, o_params)
 
         # update ModelInput
         # try to update a ModelInput with non cv terms
@@ -551,13 +551,13 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             self.resSWATModelInstance.metadata.model_objective.id)
 
         # make sure they are deleted
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_input, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_parameter, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_method, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_objective, None)
 
     def test_public_or_discoverable(self):
         self.assertFalse(self.resSWATModelInstance.has_required_content_files())
@@ -701,32 +701,32 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                           )
 
         # there should one content file
-        self.assertEquals(self.resSWATModelInstance.files.all().count(), 1)
+        self.assertEqual(self.resSWATModelInstance.files.all().count(), 1)
 
         # there should be one format element
-        self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 1)
+        self.assertEqual(self.resSWATModelInstance.metadata.formats.all().count(), 1)
 
         # file name should be the short path to the object
-        self.assertEquals(self.resSWATModelInstance.files.all()[0].short_path, self.file_name)
+        self.assertEqual(self.resSWATModelInstance.files.all()[0].short_path, self.file_name)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resSWATModelInstance.short_id, self.file_name,
                                         self.user)
 
         # there should no content file
-        self.assertEquals(self.resSWATModelInstance.files.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.files.all().count(), 0)
 
         # there should be no format element
-        self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 0)
+        self.assertEqual(self.resSWATModelInstance.metadata.formats.all().count(), 0)
 
         # test the core metadata at this point
-        self.assertNotEquals(self.resSWATModelInstance.metadata.title, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.title, None)
 
         # there should be an abstract element
-        self.assertNotEquals(self.resSWATModelInstance.metadata.description, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.description, None)
 
         # there should be one creator element
-        self.assertEquals(self.resSWATModelInstance.metadata.creators.all().count(), 1)
+        self.assertEqual(self.resSWATModelInstance.metadata.creators.all().count(), 1)
 
         # testing extended metadata elements
         self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
@@ -792,7 +792,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
         # before resource delete
         core_metadata_obj = self.resSWATModelInstance.metadata
-        self.assertEquals(CoreMetaData.objects.all().count(), 3)
+        self.assertEqual(CoreMetaData.objects.all().count(), 3)
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Contributor metadata objects
@@ -825,7 +825,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # resource specific metadata
-        self.assertEquals(SWATModelInstanceMetaData.objects.all().count(), 1)
+        self.assertEqual(SWATModelInstanceMetaData.objects.all().count(), 1)
         # there should be Model Output metadata objects
         self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be ExecutedBy metadata objects
@@ -843,8 +843,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
         # delete resource
         hydroshare.delete_resource(self.resSWATModelInstance.short_id)
-        self.assertEquals(CoreMetaData.objects.all().count(), 2)
-        self.assertEquals(SWATModelInstanceMetaData.objects.all().count(), 0)
+        self.assertEqual(CoreMetaData.objects.all().count(), 2)
+        self.assertEqual(SWATModelInstanceMetaData.objects.all().count(), 0)
 
         # there should be no Creator metadata objects
         self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
@@ -897,13 +897,13 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         # here we are testing the update() method of the SWATModelInstanceMetaData class
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_input, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_parameter, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_method, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_objective, None)
 
         # create modeloutput element using the update()
         self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': False}}],

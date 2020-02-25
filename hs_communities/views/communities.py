@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import json
 
@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 
 from hs_access_control.management.utilities import community_from_name_or_id
 from hs_access_control.models.community import Community
+from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
 from hs_communities.models import Topic
 
 
@@ -28,7 +29,7 @@ class CommunityView(TemplateView):
         grpfilter = self.request.GET.get('grp')
 
         community = community_from_name_or_id(kwargs['community_id'])
-        community_resources = community.public_resources
+        community_resources = community.public_resources.distinct()
         raw_groups = community.groups_with_public_resources()
         groups = []
 
@@ -37,10 +38,22 @@ class CommunityView(TemplateView):
             groups.append({'id': str(g.id), 'name': str(g.name), 'res_count': str(res_count)})
 
         groups = sorted(groups, key=lambda key: key['name'])
+
+        try:
+            u = User.objects.get(pk=self.request.user.id)
+            # user must own the community to get admin privilege
+            is_admin = UserCommunityPrivilege.objects.filter(user=u,
+                                                             community=community,
+                                                             privilege=PrivilegeCodes.OWNER)\
+                                                     .exists()
+        except:
+            is_admin = False
+
         return {
             'community_resources': community_resources,
             'groups': groups,
             'grpfilter': grpfilter,
+            'is_admin': is_admin
         }
 
 
