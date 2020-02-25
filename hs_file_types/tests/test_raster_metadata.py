@@ -39,9 +39,11 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.logan_tif_1_file_name = 'logan1.tif'
         self.logan_tif_2_file_name = 'logan2.tif'
         self.logan_vrt_file_name = 'logan.vrt'
+        self.logan_vrt_file_name2 = 'logan2.vrt'
         self.logan_tif_1_file = 'hs_file_types/tests/{}'.format(self.logan_tif_1_file_name)
         self.logan_tif_2_file = 'hs_file_types/tests/{}'.format(self.logan_tif_2_file_name)
         self.logan_vrt_file = 'hs_file_types/tests/{}'.format(self.logan_vrt_file_name)
+        self.logan_vrt_file2 = 'hs_file_types/tests/{}'.format(self.logan_vrt_file_name2)
 
         self.raster_file_name = 'small_logan.tif'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
@@ -291,6 +293,34 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         for res_file in self.composite_resource.files.all():
             self.assertEqual(res_file.has_logical_file, True)
+
+        self.composite_resource.delete()
+
+    def test_aggregation_validation(self):
+        """Tests when a tif file is listed by more than one vrt file, validation should block the creation of the
+          aggregation with appropriate messaging"""
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
+        self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
+        res_file_tif = self.composite_resource.files.first()
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file2)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 4)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file_tif.has_logical_file, False)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # set the tif file to GeoRasterFile type
+        with self.assertRaises(ValidationError) as validation_error:
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+        print(validation_error.exception.message)
+        self.assertTrue("is listed by more than one vrt file" in validation_error.exception.message)
+
+        # test aggregation does not exist
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
 
         self.composite_resource.delete()
 
