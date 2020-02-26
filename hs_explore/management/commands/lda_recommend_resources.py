@@ -70,7 +70,7 @@ def get_users_interacted_resources(beginning, today):
         all_usernames.add(username)
         user_to_resources_set[username].add(res)
     user_to_resources = defaultdict(list)
-    for username, res_ids_set in user_to_resources_set.iteritems():
+    for username, res_ids_set in user_to_resources_set.items():
         res_ids_list = list(res_ids_set)
         user_to_resources[username] = list(res_ids_set)
         user = user_from_id(username)
@@ -115,18 +115,16 @@ def filter_go_words(res_id, doc, resource_to_subjects, go_words, stop):
 
 def get_resource_to_go_words(resource_to_subjects, resource_to_abstract):
     resource_to_go_words = {}
-    customized_stops = []
+    stop_words = set()
     go_words = set()
     for word in LDAWord.objects.all():
         if word.word_type == 'stop':
-            customized_stops.append(word.value)
+            stop_words.add(word.value)
         else:
             go_words.add(word.value)
-    stop = set(stopwords.words('english'))
-    stop.update(customized_stops)
 
-    for res_id, res_abs in resource_to_abstract.iteritems():
-        res_go_words = filter_go_words(res_id, res_abs, resource_to_subjects, go_words, stop)
+    for res_id, res_abs in resource_to_abstract.items():
+        res_go_words = filter_go_words(res_id, res_abs, resource_to_subjects, go_words, stop_words)
         if len(res_go_words) < 3:
             continue
         resource_to_go_words[res_id] = res_go_words
@@ -144,10 +142,10 @@ def jaccard_sim(res_subs1, res_subs2):
 
 
 def store_user_preferences(user_to_go_words_freq):
-    for username, go_word_to_freq in user_to_go_words_freq.iteritems():
+    for username, go_word_to_freq in user_to_go_words_freq.items():
         user = user_from_id(username)
         prop_pref_subjects = []
-        for go_word, freq in go_word_to_freq.iteritems():
+        for go_word, freq in go_word_to_freq.items():
             prop_pref_subjects.append(('subject', go_word, freq))
         PropensityPreferences.prefer(user, 'Resource', prop_pref_subjects)
         PropensityPreferences.prefer(user, 'User', prop_pref_subjects)
@@ -155,7 +153,7 @@ def store_user_preferences(user_to_go_words_freq):
 
 
 def store_recommended_resources(user_to_recommended_resources_list, resource_to_go_words):
-    for username, recommend_resources_list in user_to_recommended_resources_list.iteritems():
+    for username, recommend_resources_list in user_to_recommended_resources_list.items():
         user = user_from_id(username)
         user_preferences = PropensityPreferences.objects.get(user=user)
         user_preferences_pairs = user_preferences.preferences.all()
@@ -188,7 +186,7 @@ def store_recommended_resources(user_to_recommended_resources_list, resource_to_
 def main():
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
-    end_date = date(2018, 05, 31)
+    end_date = date(2018, 5, 31)
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
@@ -197,7 +195,7 @@ def main():
     resource_to_go_words = get_resource_to_go_words(resource_to_subjects, resource_to_abstract)
 
     print("user interacted at least 5 resources")
-    for username, res_ids in user_to_resources.iteritems():
+    for username, res_ids in user_to_resources.items():
         abstract_list = []
         for res_id in res_ids:
             if res_id in resource_to_abstract:
@@ -207,7 +205,7 @@ def main():
 
     user_to_filtered_abstracts = {}
     user_to_go_words_freq = {}
-    for username, res_abstract_tuple_list in user_to_abstract_list.iteritems():
+    for username, res_abstract_tuple_list in user_to_abstract_list.items():
         filtered_abstracts = []
         go_words_freq = {}
         for res_id, doc in res_abstract_tuple_list:
@@ -228,7 +226,7 @@ def main():
     lda_users_recommendations = {}
     user_to_lda_cv = {}
     print("lda process")
-    for username, filtered_abstracts in user_to_filtered_abstracts.iteritems():
+    for username, filtered_abstracts in user_to_filtered_abstracts.items():
         user_to_recommend = {}
         if len(filtered_abstracts) > 5:
             dictionary = corpora.Dictionary(filtered_abstracts)
@@ -243,9 +241,9 @@ def main():
             topics_words = [(tp[0], [wd[0] for wd in tp[1]]) for tp in x]
             user_resources = user_to_resources[username]
 
-            for res_id, doc_words in resource_to_go_words.iteritems():
+            for res_id, doc_words in resource_to_go_words.items():
                 if resource_to_published[res_id]:
-		    if res_id in user_resources:
+                    if res_id in user_resources:
                         continue
                     r = get_resource_by_shortkey(res_id)
                     if len(doc_words) < 3:
@@ -270,7 +268,7 @@ def main():
 
             lda_users_recommendations[username] = user_to_recommend
     user_to_recommended_resources_list = defaultdict(list)
-    for username, user_to_recommend in lda_users_recommendations.iteritems():
+    for username, user_to_recommend in lda_users_recommendations.items():
         lda_top_10_recommendations = sorted(user_to_recommend.items(), key=itemgetter(1), reverse=True)[:10]
         for lda_res_id, lda_value in lda_top_10_recommendations:
             if lda_res_id not in resource_to_abstract or lda_res_id not in resource_to_go_words:
