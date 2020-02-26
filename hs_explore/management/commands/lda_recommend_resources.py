@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from hs_tracking.models import Variable
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
@@ -186,7 +186,9 @@ def store_recommended_resources(user_to_recommended_resources_list, resource_to_
 def main():
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
-    end_date = date(2018, 5, 31)
+    # For testing purpose, import date and uncommnet this line
+    # end_date = date(2018, 5, 31)
+    end_date =  datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
