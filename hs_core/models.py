@@ -2740,6 +2740,10 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.calculate_size()
         return self._size
 
+    @property
+    def modified_time(self):
+        return self.resource_file.storage.get_modified_time(self.resource_file.name)
+
     # TODO: write unit test
     @property
     def exists(self):

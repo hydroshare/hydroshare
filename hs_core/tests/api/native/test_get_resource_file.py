@@ -39,8 +39,9 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_file(self):
         # test if the added test file is obtained
-        res_file_object = hydroshare.get_resource_file(self.res.short_id,
-                                                       self.file.name).resource_file
+        res_file = hydroshare.get_resource_file(self.res.short_id,
+                                                       self.file.name)
+        res_file_object = res_file.resource_file
         self.assertEqual(
             self.file.name,
             os.path.basename(res_file_object.name),
@@ -48,7 +49,5 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
         )
 
         # test if the last modified time for the file can be obtained
-        istorage = self.res.get_irods_storage()
-        time = istorage.get_modified_time(res_file_object.name)
         # assert time is not None without iRODS Session Exception being raised
-        self.assertTrue(time)
+        self.assertTrue(res_file.modified_time)
