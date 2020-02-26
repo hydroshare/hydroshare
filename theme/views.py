@@ -516,7 +516,7 @@ def dashboard(request, template="pages/dashboard.html"):
     my_recommended_resources_context_list = []
     for r in my_recommended_resources_list:
         if r.state == Status.STATUS_NEW:
-	    r.shown()
+            r.shown()
         if r.rec_type == 'Propensity' and r.relevance > 0:
             recommended_resource = r.candidate_resource
             keywords = r.keywords.all()
@@ -555,7 +555,7 @@ def dashboard(request, template="pages/dashboard.html"):
         recommended_username = recommended_user.username
         recommended_user_id = recommended_user.id
         owned_by = UserResourcePrivilege.objects\
-		.filter(user=recommended_user, privilege=PrivilegeCodes.OWNER).count()
+                .filter(user=recommended_user, privilege=PrivilegeCodes.OWNER).count()
         created_since = BaseResource.objects\
                 .filter(created__gt=beginning,
                         r2urp__user=recommended_user,
@@ -563,25 +563,25 @@ def dashboard(request, template="pages/dashboard.html"):
         shared_to_others = BaseResource.objects\
                 .filter(Q(r2urp__grantor=recommended_user,
                           r2urp__start__gte=beginning) |\
-	                Q(r2grp__grantor=recommended_user,
+                        Q(r2grp__grantor=recommended_user,
                           r2grp__start__gte=beginning)).distinct().count()
 
         keywords = u.keywords.all()
         common_keywords = []
         if keywords:
-	    for k in keywords:
-		users_matched_genres.add(k.value)
+            for k in keywords:
+                users_matched_genres.add(k.value)
                 common_keywords.append(k.value)
 
         user_context = {
-	    'username': recommended_user,
-	    'user_id': recommended_user_id,
+            'username': recommended_user,
+            'user_id': recommended_user_id,
             'relevance': u.relevance,
             'owned_by': owned_by,
-	    'created_since': created_since,
+            'created_since': created_since,
             'common_keywords': common_keywords[:5]
-	}
-	my_recommended_users_context_list.append(user_context)
+        }
+        my_recommended_users_context_list.append(user_context)
 
     my_recommended_groups_context_list = []
     my_recommended_groups_list = RecommendedGroup.objects\
@@ -622,8 +622,8 @@ def dashboard(request, template="pages/dashboard.html"):
             'group_viewable': group_viewable,
             'group_editable': group_editable,
             'group_own': group_own,
-	    'common_keywords': common_keywords[:5]
-	}
+            'common_keywords': common_keywords[:5]
+        }
         my_recommended_groups_context_list.append(group_context)
 
     context = {
@@ -632,7 +632,7 @@ def dashboard(request, template="pages/dashboard.html"):
         'recommended_resources_list': my_recommended_resources_context_list,
         'resources_matched_genres': resources_matched_genres,
         'recommended_groups_list': my_recommended_groups_context_list,
-	'recommended_users_list': my_recommended_users_context_list,
+        'recommended_users_list': my_recommended_users_context_list,
         'users_matched_genres': users_matched_genres
     }
     return render(request, template, context)
