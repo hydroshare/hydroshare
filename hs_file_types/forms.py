@@ -102,7 +102,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
                 try:
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
-                    self.add_error('mi_json_schema', "Not a valid json schema.{}".format(ex.message))
+                    self.add_error('mi_json_schema', "Not a valid json schema.{}".format(str(ex)))
 
         return json_schema
 
