@@ -2,8 +2,8 @@ import json
 import jsonschema
 
 from django import forms
-from models.model_program import ModelProgramResourceFileType
-import utils
+from .models.model_program import ModelProgramResourceFileType
+from .utils import get_model_program_aggregations
 
 
 class ModelInstanceMetadataValidationForm(forms.Form):
@@ -19,7 +19,7 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         user_selected_mp_aggr = None
         # if a model program has been selected then this form would have the id of that aggregation
         if executed_by > 0:
-            user_mp_aggregations = utils.get_model_program_aggregations(self.user)
+            user_mp_aggregations = get_model_program_aggregations(self.user)
             user_selected_mp_aggr = [mp_aggr for mp_aggr in user_mp_aggregations if mp_aggr.id == executed_by]
             if user_selected_mp_aggr:
                 user_selected_mp_aggr = user_selected_mp_aggr[0]

@@ -17,17 +17,19 @@ from hs_core.hydroshare.resource import update_quota_usage
 from hs_core.hydroshare.utils import resource_modified
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
-from .models import FileSetLogicalFile
-from .models import GenericLogicalFile
-from .models import GeoFeatureLogicalFile
-from .models import GeoRasterLogicalFile
-from .models import ModelProgramLogicalFile
-from .models import ModelInstanceLogicalFile
-from .models import NetCDFLogicalFile
-from .models import RefTimeseriesLogicalFile
-from .models import TimeSeriesLogicalFile
-from .utils import set_logical_file_type
 from .forms import ModelProgramMetadataValidationForm, ModelInstanceMetadataValidationForm
+from .models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
+)
+from .utils import set_logical_file_type
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,

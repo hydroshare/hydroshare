@@ -8,8 +8,8 @@ from django.template import Template, Context
 from dominate import tags as dom_tags
 from lxml import etree
 
-from base_model_program_instance import AbstractModelLogicalFile
-from generic import GenericFileMetaDataMixin
+from .base_model_program_instance import AbstractModelLogicalFile
+from .generic import GenericFileMetaDataMixin
 from hs_core.models import ResourceFile, CoreMetaData
 
 
@@ -392,7 +392,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         try:
             jsonschema.Draft4Validator.check_schema(json_schema)
         except jsonschema.SchemaError as ex:
-            raise ValidationError("Not a valid json schema.{}".format(ex.message))
+            raise ValidationError("Not a valid json schema.{}".format(str(ex)))
         self.mi_schema_json = json_schema
         self.save()
 

@@ -6,9 +6,9 @@ from dominate import tags as dom_tags
 from hs_core.models import CoreMetaData
 from lxml import etree
 
-from base_model_program_instance import AbstractModelLogicalFile
-from generic import GenericFileMetaDataMixin
-from model_program import ModelProgramLogicalFile
+from .base_model_program_instance import AbstractModelLogicalFile
+from .generic import GenericFileMetaDataMixin
+from .model_program import ModelProgramLogicalFile
 
 
 class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
