@@ -155,7 +155,7 @@ class CreateAccountTest(TestCase):
             self.fail("Should not be able to create an account with case insensitivie matching "
                       "usernames")
         except ValidationError as v:
-            self.assertEqual("User with provided username already exists.", v.message)
+            self.assertEqual("['User with provided username already exists.']", str(v))
             pass
 
     def test_case_in_email(self):
@@ -198,7 +198,7 @@ class CreateAccountTest(TestCase):
             self.fail("Should not be able to create an account with case insensitive matching "
                       "emails")
         except ValidationError as v:
-            self.assertEqual("User with provided email already exists.", v.message)
+            self.assertEqual("['User with provided email already exists.']", str(v))
             pass
 
     @unittest.skip

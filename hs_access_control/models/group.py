@@ -399,11 +399,11 @@ class GroupAccess(models.Model):
             generics.setdefault(item.content_type.id, set()).add(item.object_id)
 
         # fetch all content types in one query
-        content_types = ContentType.objects.in_bulk(generics.keys())
+        content_types = ContentType.objects.in_bulk(list(generics.keys()))
 
         # build a map between content types and the objects that use them.
         relations = {}
-        for ct, fk_list in generics.items():
+        for ct, fk_list in list(generics.items()):
             ct_model = content_types[ct].model_class()
             relations[ct] = ct_model.objects.in_bulk(list(fk_list))
 

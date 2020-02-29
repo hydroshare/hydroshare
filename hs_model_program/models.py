@@ -112,7 +112,7 @@ class ModelProgramMetaData(CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import ModelProgramMetaDataSerializer
+        from .serializers import ModelProgramMetaDataSerializer
         return ModelProgramMetaDataSerializer(self)
 
     @property
@@ -124,7 +124,7 @@ class ModelProgramMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'mpmetadata' in keys_to_update:
             parsed_metadata.append({"mpmetadata": metadata.pop('mpmetadata')})
 
@@ -138,18 +138,18 @@ class ModelProgramMetaData(CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import ModelProgramMetadataValidationForm
+        from .forms import ModelProgramMetadataValidationForm
 
         super(ModelProgramMetaData, self).update(metadata, user)
         attribute_mappings = {'mpmetadata': 'program'}
         with transaction.atomic():
             # update/create non-repeatable element
-            for element_name in attribute_mappings.keys():
+            for element_name in list(attribute_mappings.keys()):
                 for dict_item in metadata:
                     if element_name in dict_item:
                         if 'modelReleaseDate' in dict_item[element_name]:
                             release_date = dict_item[element_name]['modelReleaseDate']
-                            if isinstance(release_date, basestring):
+                            if isinstance(release_date, str):
                                 try:
                                     release_date = parser.parse(release_date)
                                 except ValueError:
@@ -202,7 +202,7 @@ class ModelProgramMetaData(CoreMetaData):
             model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
             model_code_repository.text = self.program.modelCodeRepository
 
-        xml_string = etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        xml_string = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
         return xml_string
 
@@ -215,4 +215,4 @@ class ModelProgramMetaData(CoreMetaData):
     
 
 
-import receivers
+from . import receivers

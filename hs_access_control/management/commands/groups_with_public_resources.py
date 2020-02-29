@@ -1,5 +1,5 @@
 """
-This prints a list of publicly accessible resources in a group
+This prints a list of groups possessing public resources and thus having a product page.
 
 """
 

@@ -52,13 +52,15 @@ class Command(BaseCommand):
         ind = BaseResourceIndex()
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
+                print("updating resource {}".format(rid))
                 try:
                     r = BaseResource.objects.get(short_id=rid)
                     # if ind.should_update(r):  # always True
-                    print("updating resource {}".format(rid))
                     ind.update_object(r)
                 except BaseResource.DoesNotExist:
                     print("resource {} does not exist in Django".format(rid))
+                except Exception as e:
+                    print("resource {} generated exception {}".format(rid, str(e)))
 
         else:
 
@@ -81,7 +83,9 @@ class Command(BaseCommand):
                 try:
                     resource = get_resource_by_shortkey(r.short_id, or_404=False)
                     repl = False
-                    if hasattr(resource, 'metadata') and resource.metadata is not None:
+                    if hasattr(resource, 'metadata') and \
+                            resource.metadata is not None and \
+                            resource.metadata.relations is not None:
                         repl = resource.metadata.relations.filter(type='isReplacedBy').exists()
                     if not repl:
                         django_indexed += 1
@@ -91,12 +95,17 @@ class Command(BaseCommand):
                     # race condition in processing while in production
                     print("resource {} no longer found in Django.".format(r.short_id))
                     continue
+                except Exception as e:
+                    print("resource {} generated exception {}".format(r.short_id, str(e)))
 
                 if r.short_id not in found_in_solr:
                     print("{} {} NOT FOUND in SOLR: adding to index".format(
                             r.short_id, resource.discovery_content_type))
-                    ind.update_object(r)
-                    django_refreshed += 1
+                    try:
+                        ind.update_object(r)
+                        django_refreshed += 1
+                    except Exception as e:
+                        print("resource {} generated exception {}".format(r.short_id, str(e)))
 
                 # # This always returns True whether or not SOLR needs updating
                 # # This is likely a Haystack bug.
@@ -106,8 +115,11 @@ class Command(BaseCommand):
                 elif options['force']:
                     print("{} {}: refreshing index (forced)".format(
                           r.short_id, resource.discovery_content_type))
-                    ind.update_object(r)
-                    django_refreshed += 1
+                    try:
+                        ind.update_object(r)
+                        django_refreshed += 1
+                    except Exception as e:
+                        print("resource {} generated exception {}".format(r.short_id, str(e)))
 
             print("Django contains {} discoverable resources and {} replaced resources"
                   .format(django_indexed, django_replaced))

@@ -29,7 +29,7 @@ class TestCustomScimetaEndpoint(HSRESTTestCase):
 
         response = self.client.get(custom_metadata)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, '{"foo": "bar", "foo2": "bar2"}')
+        self.assertEqual(str(response.content.decode()), '{"foo": "bar", "foo2": "bar2"}')
 
     def test_custom_metadata_single(self):
         custom_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
@@ -41,11 +41,11 @@ class TestCustomScimetaEndpoint(HSRESTTestCase):
 
         response = self.client.get(custom_metadata)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, '{"foo": "bar"}')
+        self.assertEqual(str(response.content.decode()), '{"foo": "bar"}')
 
     def test_custom_metadata_empty(self):
         custom_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
 
         response = self.client.get(custom_metadata)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, '{}')
+        self.assertEqual(str(response.content.decode()), '{}')

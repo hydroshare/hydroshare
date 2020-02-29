@@ -21,7 +21,7 @@ class TestContentTypes(APITestCase):
     def test_content_typelist(self):
         response = self.client.get('/hsapi/resource/content_types/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         rest_content_types = set([t['content_type'] for t in content])
 
         self.assertEqual(self.content_types, rest_content_types)

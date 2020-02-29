@@ -525,7 +525,7 @@ def create_resource(
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = element.items()[0]
+                k, v = list(element.items())[0]
                 resource.metadata.create_element(k, **v)
 
             for keyword in keywords:

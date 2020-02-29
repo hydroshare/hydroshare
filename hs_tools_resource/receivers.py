@@ -13,7 +13,7 @@ from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionFor
                                     AppResourceLevelUrlValidationForm, \
                                     AppFileLevelUrlValidationForm
 
-from default_icon import default_icon_data_url
+from .default_icon import default_icon_data_url
 
 
 @receiver(pre_create_resource, sender=ToolResource)

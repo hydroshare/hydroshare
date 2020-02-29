@@ -79,7 +79,7 @@ def update_target_spatial_coverage(target):
     def set_coverage_data(res_coverage_value, lfo_coverage_element, box_limits):
         comparison_operator = {'northlimit': lt, 'southlimit': gt, 'eastlimit': lt,
                                'westlimit': gt}
-        for key in comparison_operator.keys():
+        for key in list(comparison_operator.keys()):
             if comparison_operator[key](res_coverage_value[key],
                                         lfo_coverage_element.value[box_limits[key]]):
                 res_coverage_value[key] = lfo_coverage_element.value[box_limits[key]]
@@ -212,12 +212,12 @@ def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
                 if not file_name.lower().endswith(".refts.json"):
                     if fail_feedback:
                         raise ValueError("Unsupported aggregation extension. Supported aggregation "
-                                         "extensions are: {}".format(ext_to_type.keys()))
+                                         "extensions are: {}".format(list(ext_to_type.keys())))
             hs_file_type = ext_to_type[ext]
         else:
             if fail_feedback:
                 raise ValueError("Unsupported aggregation extension. Supported aggregation "
-                                 "extensions are: {}".format(ext_to_type.keys()))
+                                 "extensions are: {}".format(list(ext_to_type.keys())))
             return None
 
     file_type_map = {"SingleFile": GenericLogicalFile,
@@ -233,7 +233,7 @@ def get_logical_file_type(res, user, file_id, hs_file_type=None, folder_path=Non
     if hs_file_type not in file_type_map:
         if fail_feedback:
             raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
-                             "}".format(file_type_map.keys()))
+                             "}".format(list(file_type_map.keys())))
         return None
     logical_file_type_class = file_type_map[hs_file_type]
     return logical_file_type_class

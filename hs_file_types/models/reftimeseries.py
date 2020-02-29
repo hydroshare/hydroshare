@@ -1,7 +1,8 @@
 import json
 import logging
 from dateutil import parser
-from urllib2 import Request, urlopen, URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 import jsonschema
 from lxml import etree
 
@@ -16,7 +17,7 @@ from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbo
 from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class TimeSeries(object):
@@ -697,7 +698,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             p(json_res_file.full_path[33:])
             header_info = self.json_file_content
             if isinstance(header_info, str):
-                header_info = unicode(header_info, 'utf-8')
+                header_info = header_info.encode()
 
             textarea(header_info, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%; resize: vertical;")
@@ -732,7 +733,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             series.add_to_xml_container(container_to_add_to)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
@@ -838,7 +839,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 json_file_content = _validate_json_file(res_file)
             except Exception as ex:
                 log.exception("failed json validation")
-                raise ValidationError(ex.message)
+                raise ValidationError(str(ex))
 
             with transaction.atomic():
                 try:
@@ -860,7 +861,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 except Exception as ex:
                     msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                           "type. Error:{}"
-                    msg = msg.format(ex.message)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)
 
@@ -958,7 +959,7 @@ def _validate_json_file(res_json_file):
         # validate json_data based on the schema
         jsonschema.Draft4Validator(TS_SCHEMA).validate(json_data)
     except jsonschema.ValidationError as ex:
-        msg = "Not a valid reference time series json file. {}".format(ex.message)
+        msg = "Not a valid reference time series json file. {}".format(str(ex))
         raise Exception(msg)
 
     _validate_json_data(json_data)

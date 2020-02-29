@@ -1,6 +1,7 @@
 import os
 
 from django.core.exceptions import ObjectDoesNotExist
+
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, CoreMetaData, resource_processor
@@ -278,7 +279,7 @@ class CompositeResource(BaseResource):
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def _recreate_fileset_xml_docs(self, folder):
         """Recreates xml files for all fileset aggregations that exist under the path 'folder'

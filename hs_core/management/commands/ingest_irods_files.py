@@ -59,8 +59,8 @@ class Command(BaseCommand):
                    r.resource_type != 'GenericResource' and \
                    r.resource_type != 'ModelInstanceResource' and \
                    r.resource_type != 'ModelProgramResource':
-                    print("resource {} has type {}: skipping".format(r.short_id,
-                                                                     r.resource_type))
+                    print(("resource {} has type {}: skipping".format(r.short_id,
+                                                                      r.resource_type)))
                 else:
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(rid, str(r.files.all().count())))

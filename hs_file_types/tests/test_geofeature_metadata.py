@@ -13,7 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
     OriginalCoverage
-from utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
+from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData,\
     GeoFeatureFileMetaData
@@ -187,9 +187,9 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                             42.5732416) < self.allowance)
         self.assertTrue(abs(logical_file.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(logical_file.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(logical_file.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
 
         # there should be file level keywords
         for key in ('Logan River', 'TauDEM'):
