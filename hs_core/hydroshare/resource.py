@@ -19,7 +19,9 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+from theme.models import UserQuota
 from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 
 
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
@@ -30,36 +32,72 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def update_quota_usage(res=None, user=None):
+def update_quota_usage(username):
     """
-    Update quota usage as follows:
-    (1) if res is not None & user is None, quota usage of the res' quota holder will be updated
-    (2) if res is None & user is not None, quota usage of the user will be updated
-    (3) if both res and user are None, nothing is updated
-    (4) if both res and user are not None, quota usage of both res' quota holder and user will be
-    updated.
-    :param res: a resource object
-    :param user: a user object
-    :return:
+    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
+    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
+    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
+    internal zone.
+    :param
+    username: the name of the user that needs to update quota usage for.
+    :return: True if quota usage update succeeds;
+             False if there is an exception raised or quota cannot be updated. See log for details.
     """
-    if not res and not user:
-        return
+    hs_internal_zone = "hydroshare"
+    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    if uq is None:
+        # the quota row does not exist in Django
+        logger.error('quota row does not exist in Django for hydroshare zone for '
+                     'user ' + username)
+        return False
 
-    from hs_core.tasks import update_quota_usage_task
+    attname = username + '-usage'
+    istorage = IrodsStorage()
+    # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
+    # collection
+    try:
+        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
+        if uqDataZoneSize is None:
+            # user may not have resources in data zone, so corresponding quota size AVU may not
+            # exist for this user
+            uqDataZoneSize = -1
+        else:
+            uqDataZoneSize = float(uqDataZoneSize)
+    except SessionException:
+        # user may not have resources in data zone, so corresponding quota size AVU may not exist
+        # for this user
+        uqDataZoneSize = -1
 
-    if user:
-        update_quota_usage_task.apply_async((user.username,), countdown=30)
+    # get quota size for the user in iRODS user zone
+    try:
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
+                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
+                                     settings.IRODS_BAGIT_PATH)
+        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
+        if uqUserZoneSize is None:
+            # user may not have resources in user zone, so corresponding quota size AVU may not
+            # exist for this user
+            uqUserZoneSize = -1
+        else:
+            uqUserZoneSize = float(uqUserZoneSize)
+    except SessionException:
+        # user may not have resources in user zone, so corresponding quota size AVU may not exist
+        # for this user
+        uqUserZoneSize = -1
 
-    if res:
-        quser = res.get_quota_holder()
-        if quser is None:
-            # no quota holder for this resource, this should not happen, but check just in case
-            logger.error('no quota holder is found for resource' + res.short_id)
-            return
-        # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
-        # services enough time to finish before reflecting the quota usage in django DB
-        update_quota_usage_task.apply_async((quser.username,), countdown=30)
-    return
+    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
+        logger.error('no quota size AVU in data zone and user zone for the user ' + username)
+        return False
+    elif uqUserZoneSize < 0:
+        used_val = uqDataZoneSize
+    elif uqDataZoneSize < 0:
+        used_val = uqUserZoneSize
+    else:
+        used_val = uqDataZoneSize + uqUserZoneSize
+
+    uq.update_used_value(used_val)
+
+    return True
 
 
 def res_has_web_reference(res):
@@ -246,7 +284,6 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         fsize = istorage.size(src_file)
         utils.validate_user_quota(user, fsize)
         istorage.copyFiles(src_file, tgt_file)
-        update_quota_usage(user=user)
     else:
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
@@ -630,9 +667,6 @@ def copy_resource(ori_res, new_res, user=None):
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
-    # need to update quota usage for new_res quota holder
-    if user:
-        update_quota_usage(user=user)
     return new_res
 
 
@@ -685,8 +719,6 @@ def create_new_version_resource(ori_res, new_res, user):
     # obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
     ori_res.raccess.save()
-    # need to update quota usage for the user
-    update_quota_usage(user=user)
     return new_res
 
 
@@ -763,8 +795,6 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
-        # some file(s) added, need to update quota usage
-        update_quota_usage(res=resource)
     return ret
 
 
@@ -867,9 +897,6 @@ def delete_resource(pk):
             obsolete_res.raccess.immutable = False
             obsolete_res.raccess.save()
 
-    # need to update quota usage when a resource is deleted
-    update_quota_usage(res=res)
-
     res.delete()
     return pk
 
@@ -899,8 +926,6 @@ def delete_resource_file_only(resource, f):
     """
     short_path = f.short_path
     f.delete()
-    # need to update quota usage when a file is deleted
-    update_quota_usage(res=resource)
     return short_path
 
 
