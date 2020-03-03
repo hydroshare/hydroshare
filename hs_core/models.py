@@ -1971,7 +1971,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
-        from hs_core.hydroshare.resource import update_quota_usage
 
         if __debug__:
             assert(isinstance(setter, User))
@@ -1994,7 +1993,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # holder will be reduced as a result of setting quota holder to a different user
                 self.removeAVU(attname, oldqu)
         self.setAVU(attname, new_holder.username)
-        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
