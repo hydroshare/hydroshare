@@ -1,7 +1,6 @@
 from hs_explore.models import LDAWord
 from django.core.management.base import BaseCommand
 from hs_odm2.models import ODM2Variable
-from nltk.corpus import stopwords
 
 
 def split_csdms():
@@ -19,7 +18,6 @@ def split_csdms():
         if len(tokens) > 1:
             measures.add(tokens[1])
         name_tokens = name.split("~")
-        idx = 0
         raw_name = name_tokens[0].replace("_", " ")
         names.add(raw_name)
         if len(name_tokens) > 1:
@@ -58,7 +56,6 @@ def fill_csdms():
             LDAWord.add_word('CSDMS', 'go', 'decor', splitted_decor)
 
 
-
 def fill_odm2():
     odm2_list = list(ODM2Variable.all())
     modified_list = []
@@ -73,19 +70,50 @@ def fill_odm2():
         if len(odm2_word) > 1:
             LDAWord.add_word('ODM2', 'go', 'name', odm2_word)
 
+
 def fill_stop_words():
-    customized_stops = ['max', 'maximum', 'minimum', 'orgin', '________', 'center', 'rapid', 'test', 'example', 'demo', 'mm', 'jupyter_hub', 'ipython', 'odm2', 'min', 'net', 'unit', 'rating', 'hydrologic', 'age', 'contact', 'log', 'change', 'count', 'run', 'pi', 'et', 'al', 'set', 'zone', 'latitude', 'longitude','region', 'matter', 'section', 'column','domain', 'height', 'depth', 'top', 'bottom', 'left', 'right', 'upper', 'lower', 'location', 'image', 'link', 'paper', 'day', 'second', 'parameter', 'solution', 'public', 'first', 'sources', 'main', 'sample', 'new', 'total', 'state', 'water', 'source', 'resource', 'available', 'year', 'area', 'model', 'rate', 'time', 'ratio', 'west', 'south', 'east', 'north']
-   
-    english_stops = ['through', 'should', "shouldn't", 'both', 'in', 'which', "needn't", 'its', "wouldn't", 'ourselves', 'at', 'than', 'she', 'yourselves', "you'll", 'it', "weren't", 'here', 'be', 'does', 'who', 'him', 'own', 'these', 'her', 'they', 'won', 'ours', "couldn't", 'further', 'a', "hasn't", 'not', 'the', 'having', 'hers', 's', 'or', 'then', 'myself', 'during', 'themselves', 'on', 'down', 'doing', 'before', 'is', 'each', 'them', 'our', 'wouldn', 'll', 'off', 'nor', "you'd", 'aren', 'had', 'yourself', 'to', 'don', 'm', 'yours', 'more', "wasn't", 'was', 'because', 'very', 'couldn', "that'll", 'your', 'have', 'over', 'where', 'until', "isn't", 'itself', "aren't", 'me', 'we', 'ain', "haven't", 'too', 'needn', "won't", 'didn', "don't", 'for', 'i', 'are', "should've", 'but', 'from', 'why', 'of', "shan't", "you're", 'all', 'himself', 'theirs', 'd', 'whom', 'while', 'again', "didn't", 'few', 'after', 'some', 'shan', 't', 'weren', 'haven', 'do', "mightn't", 'can', "you've", 'an', 'only', 'his', 'being', 'above', 'any', 'has', 'same', 'their', 'as', 'mustn', 've', 'wasn', "she's", 'no', 'such', 'under', 'so', 'doesn', 'ma', 'about', 'those', 'shouldn', 'below', 'what', "doesn't", 'he', 'hadn', 'with', 'just', 'am', 'y', 'there', 'other', 'if', 'isn', 'between', 'mightn', 'how', 'up', 'my', 'this', 'once', 'were', 'out', 'when', 'that', 'by', 'into', 'and', 'will', 'o', 'now', "it's", "hadn't", "mustn't", 'been', 'did', 're', 'herself', 'against', 'hasn', 'you', 'most']
- 
+    customized_stops = ['max', 'maximum', 'minimum', 'orgin', '________', 'center',
+                        'rapid', 'test', 'example', 'demo', 'mm', 'jupyter_hub',
+                        'ipython', 'odm2', 'min', 'net', 'unit', 'rating',
+                        'hydrologic', 'age', 'contact', 'log', 'change', 'count',
+                        'run', 'pi', 'et', 'al', 'set', 'zone', 'latitude', 'longitude',
+                        'region', 'matter', 'section', 'column', 'domain', 'height', 'depth',
+                        'top', 'bottom', 'left', 'right', 'upper', 'lower', 'location',
+                        'image', 'link', 'paper', 'day', 'second', 'parameter', 'solution',
+                        'public', 'first', 'sources', 'main', 'sample', 'new', 'total',
+                        'state', 'water', 'source', 'resource', 'available', 'year', 'area',
+                        'model', 'rate', 'time', 'ratio', 'west', 'south', 'east', 'north']
+
+    english_stops = ['through', 'should', "shouldn't", 'both', 'in', 'which', "needn't",
+                     'its', "wouldn't", 'ourselves', 'at', 'than', 'she', 'yourselves',
+                     "you'll", 'it', "weren't", 'here', 'be', 'does', 'who', 'him', 'own',
+                     'these', 'her', 'they', 'won', 'ours', "couldn't", 'further', 'a',
+                     "hasn't", 'not', 'the', 'having', 'hers', 's', 'or', 'then', 'myself',
+                     'during', 'themselves', 'on', 'down', 'doing', 'before', 'is', 'each',
+                     'them', 'our', 'wouldn', 'll', 'off', 'nor', "you'd", 'aren', 'had',
+                     'yourself', 'to', 'don', 'm', 'yours', 'more', "wasn't", 'was',
+                     'because', 'very', 'couldn', "that'll", 'your', 'have', 'over', 'where',
+                     'until', "isn't", 'itself', "aren't", 'me', 'we', 'ain', "haven't",
+                     'too', 'needn', "won't", 'didn', "don't", 'for', 'i', 'are', "should've",
+                     'but', 'from', 'why', 'of', "shan't", "you're", 'all', 'himself', 'theirs',
+                     'd', 'whom', 'while', 'again', "didn't", 'few', 'after', 'some', 'shan',
+                     't', 'weren', 'haven', 'do', "mightn't", 'can', "you've", 'an', 'only',
+                     'his', 'being', 'above', 'any', 'has', 'same', 'their', 'as', 'mustn', 've',
+                     'wasn', "she's", 'no', 'such', 'under', 'so', 'doesn', 'ma', 'about', 'those',
+                     'shouldn', 'below', 'what', "doesn't", 'he', 'hadn', 'with', 'just', 'am',
+                     'y', 'there', 'other', 'if', 'isn', 'between', 'mightn', 'how', 'up', 'my',
+                     'this', 'once', 'were', 'out', 'when', 'that', 'by', 'into', 'and', 'will',
+                     'o', 'now', "it's", "hadn't", "mustn't", 'been', 'did', 're', 'herself',
+                     'against', 'hasn', 'you', 'most']
+
     for stop_word in customized_stops:
         LDAWord.add_word('Customized', 'stop', 'name', stop_word)
     for stop_word in english_stops:
         LDAWord.add_word('English', 'stop', 'name', stop_word)
 
+
 class Command(BaseCommand):
     help = "Filling go words and stop words used in the LDA algorithm"
-
 
     def handle(self, *args, **options):
         LDAWord.clear()

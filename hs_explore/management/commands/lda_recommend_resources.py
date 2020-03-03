@@ -6,9 +6,8 @@ from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 from django.core.management.base import BaseCommand
 from hs_explore.models import ResourcePreferences, UserPreferences, OwnershipPreferences
 from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedGroup, \
-    GroupPreferences, GroupPrefToPair, PropensityPrefToPair, PropensityPreferences, \
+    GroupPreferences, PropensityPrefToPair, PropensityPreferences, \
     UserInteractedResources, UserNeighbors
-from nltk.corpus import stopwords
 import string
 import gensim
 from gensim import corpora
@@ -188,7 +187,7 @@ def main():
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
     # For testing purpose, import date and uncommnet this line
     # end_date = date(2018, 5, 31)
-    end_date =  datetime.now()
+    end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
@@ -247,7 +246,6 @@ def main():
                 if resource_to_published[res_id]:
                     if res_id in user_resources:
                         continue
-                    r = get_resource_by_shortkey(res_id)
                     if len(doc_words) < 3:
                         continue
                     doc_words_list = list(doc_words)
