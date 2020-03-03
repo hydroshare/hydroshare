@@ -40,16 +40,15 @@ def update_quota_usage(username):
     internal zone.
     :param
     username: the name of the user that needs to update quota usage for.
-    :return: True if quota usage update succeeds;
-             False if there is an exception raised or quota cannot be updated. See log for details.
+    :return: raise ValidationError if quota cannot be updated.
     """
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
         # the quota row does not exist in Django
-        logger.error('quota row does not exist in Django for hydroshare zone for '
-                     'user ' + username)
-        return False
+        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
+        logger.error(err_msg)
+        raise ValidationError(err_msg)
 
     attname = username + '-usage'
     istorage = IrodsStorage()
@@ -86,8 +85,9 @@ def update_quota_usage(username):
         uqUserZoneSize = -1
 
     if uqDataZoneSize < 0 and uqUserZoneSize < 0:
-        logger.error('no quota size AVU in data zone and user zone for the user ' + username)
-        return False
+        err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
+        logger.error(err_msg)
+        raise ValidationError(err_msg)
     elif uqUserZoneSize < 0:
         used_val = uqDataZoneSize
     elif uqDataZoneSize < 0:
@@ -96,8 +96,6 @@ def update_quota_usage(username):
         used_val = uqDataZoneSize + uqUserZoneSize
 
     uq.update_used_value(used_val)
-
-    return True
 
 
 def res_has_web_reference(res):

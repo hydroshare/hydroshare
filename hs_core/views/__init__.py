@@ -154,11 +154,12 @@ def update_quota_usage(request, username):
     except User.DoesNotExist:
         return HttpResponseBadRequest('user to update quota for is not valid')
 
-    ret_status = update_quota_usage_utility(username)
-    if ret_status:
-        return HttpResponse('quota for user ' + username + ' has been updated', status=200)
-    else:
-        return HttpResponse('quota for user ' + username + ' failed to update. Check logs for details.', status=500)
+    try:
+        update_quota_usage_utility(username)
+        return HttpResponse('quota for user {} has been updated'.format(username), status=200)
+    except ValidationError as ex:
+        err_msg = 'quota for user {} failed to update: {}'.format(username, str(ex))
+        return HttpResponse(err_msg, status=500)
 
 
 def extract_files_with_paths(request):
