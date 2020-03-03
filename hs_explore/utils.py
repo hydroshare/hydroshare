@@ -1,4 +1,3 @@
-
 class Utils(object):
     """
     Features appropriate for machine learning analysis of our databases.

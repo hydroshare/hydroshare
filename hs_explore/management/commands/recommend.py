@@ -42,7 +42,7 @@ def get_users_interacted_resources(beginning, today):
         all_usernames.add(username)
         user_to_resources_set[username].add(res)
     user_to_resources = defaultdict(list)
-    for username, res_ids_set in user_to_resources_set.iteritems():
+    for username, res_ids_set in user_to_resources_set.items():
         res_ids_list = list(res_ids_set)
         user_to_resources[username] = list(res_ids_set)
         user = user_from_id(username)
@@ -60,7 +60,7 @@ def get_users_interacted_resources(beginning, today):
 def get_user_cumulative_profiles(user_to_resources, res_to_subs):
     user_to_subs = {}
 
-    for username, res_ids in user_to_resources.iteritems():
+    for username, res_ids in user_to_resources.items():
         user_sub_to_freq = defaultdict(int)
         for res_id in res_ids:
             if res_id in res_to_subs:
@@ -73,7 +73,7 @@ def get_user_cumulative_profiles(user_to_resources, res_to_subs):
 
 def get_user_to_top5_keywords(user_to_subs):
     user_to_top5_keywords = defaultdict(list)
-    for username, user_sub_to_freq in user_to_subs.iteritems():
+    for username, user_sub_to_freq in user_to_subs.items():
         for sub in sorted(user_sub_to_freq, key=user_sub_to_freq.get, reverse=True)[:5]:
             user_to_top5_keywords[username].append(sub)
     return user_to_top5_keywords
@@ -81,11 +81,11 @@ def get_user_to_top5_keywords(user_to_subs):
 
 def store_user_preferences(user_to_subs):
     active_user_set = set()
-    for username, user_sub_to_freq in user_to_subs.iteritems():
+    for username, user_sub_to_freq in user_to_subs.items():
         user = user_from_id(username)
         prop_pref_subjects = []
         active_user_set.add(username)
-        for sub, freq in user_sub_to_freq.iteritems():
+        for sub, freq in user_sub_to_freq.items():
             prop_pref_subjects.append(('subject', sub, freq))
         PropensityPreferences.prefer(user, 'Resource', prop_pref_subjects)
         PropensityPreferences.prefer(user, 'User', prop_pref_subjects)
@@ -105,7 +105,7 @@ def get_res_sub_vec(res_subs, all_subjects_list):
 def get_user_freq_vec(sub_to_freq, all_subjects_list):
     vec_len = len(all_subjects_list)
     freq_vec = np.zeros(vec_len)
-    for sub, freq in sub_to_freq.iteritems():
+    for sub, freq in sub_to_freq.items():
         ind = all_subjects_list.index(sub)
         freq_vec[ind] = freq
     return freq_vec
@@ -114,7 +114,7 @@ def get_user_freq_vec(sub_to_freq, all_subjects_list):
 def recommend_resources(res_to_subs, user_to_resources, user_to_top5_keywords, user_to_subs, all_subjects_list):
     all_res_ids = list(res_to_subs.keys())
     user_to_recommended_resources_list = {}
-    for username, top5_keywords in user_to_top5_keywords.iteritems():
+    for username, top5_keywords in user_to_top5_keywords.items():
         if len(top5_keywords) == 0 or not top5_keywords:
             continue
         user_resources = user_to_resources[username]
@@ -148,14 +148,14 @@ def recommend_resources(res_to_subs, user_to_resources, user_to_top5_keywords, u
             if cos_sim > 0:
                 top5_filter_recommendations_sim[res_id] = cos_sim
 
-            top5_filter_sorted_list = sorted(top5_filter_recommendations_sim.iteritems(),
+            top5_filter_sorted_list = sorted(top5_filter_recommendations_sim.items(),
                                              key=lambda (k, v): (v, k), reverse=True)[:10]
         user_to_recommended_resources_list[username] = top5_filter_sorted_list
     return user_to_recommended_resources_list
 
 
 def store_recommended_resources(user_to_recommended_resources_list, res_to_subs):
-    for username, recommend_resources_list in user_to_recommended_resources_list.iteritems():
+    for username, recommend_resources_list in user_to_recommended_resources_list.items():
         user = user_from_id(username)
         user_preferences = PropensityPreferences.objects.get(user=user)
         user_preferences_pairs = user_preferences.preferences.all()
@@ -186,12 +186,12 @@ def store_recommended_resources(user_to_recommended_resources_list, res_to_subs)
 
 def cal_nn(user_to_subs, all_subjects_list):
     user_to_users = {}
-    for user1, subs1 in user_to_subs.iteritems():
+    for user1, subs1 in user_to_subs.items():
         if user1 not in user_to_users:
             user_to_users[user1] = defaultdict(float)
         user1_to_user_sim = user_to_users[user1]
         user1_freq_vec = get_user_freq_vec(user_to_subs[user1], all_subjects_list)
-        for user2, subs2 in user_to_subs.iteritems():
+        for user2, subs2 in user_to_subs.items():
             if user1 == user2:
                 continue
             if user2 in user_to_users:
@@ -206,7 +206,7 @@ def cal_nn(user_to_subs, all_subjects_list):
 
 def get_user_knn(user_to_users):
     user_to_knn = defaultdict(list)
-    for username, user_to_user_sim in user_to_users.iteritems():
+    for username, user_to_user_sim in user_to_users.items():
         for neigh in sorted(user_to_user_sim, key=user_to_user_sim.get, reverse=True)[:10]:
             user_to_knn[username].append(neigh)
 
@@ -214,7 +214,7 @@ def get_user_knn(user_to_users):
 
 
 def store_nn(user_to_knn):
-    for username, neighbors_usernames in user_to_knn.iteritems():
+    for username, neighbors_usernames in user_to_knn.items():
         neighbors = []
         try:
             user = user_from_id(username)
@@ -231,7 +231,7 @@ def store_nn(user_to_knn):
 
 def recommend_users(user_to_users, user_to_knn):
     user_to_recommended_users_list = {}
-    for username, nn in user_to_knn.iteritems():
+    for username, nn in user_to_knn.items():
         user_to_user_sim = user_to_users[username]
         user_top10_nn = {}
         for neighbor in nn:
@@ -242,7 +242,7 @@ def recommend_users(user_to_users, user_to_knn):
 
 
 def store_recommended_users(user_to_recommended_users_list):
-    for username, recommended_users_list in user_to_recommended_users_list.iteritems():
+    for username, recommended_users_list in user_to_recommended_users_list.items():
         user = user_from_id(username)
         user_preferences = PropensityPreferences.objects.get(user=user)
         user_preferences_pairs = user_preferences.preferences.all()
@@ -258,7 +258,7 @@ def store_recommended_users(user_to_recommended_users_list):
                 user_preferences_set.add(p.pair.value)
                 user_user_pref_to_weight[p.pair.value] = p.weight
 
-        for neighbor_name, sim in recommended_users_list.iteritems():
+        for neighbor_name, sim in recommended_users_list.items():
             neighbor = user_from_id(neighbor_name)
             neighbor_preferences = PropensityPreferences.objects.get(user=neighbor)
             neighbor_preferences_pairs = neighbor_preferences.preferences.all()
@@ -303,7 +303,7 @@ def get_group_to_held_resources_and_members(res_to_subs):
 
 def get_group_profiles(group_to_subjects, group_to_members, user_to_subs):
     group_to_profiles = {}
-    for group_name, members in group_to_members.iteritems():
+    for group_name, members in group_to_members.items():
         group_subjecst = group_to_subjects[group_name]
         if group_name not in group_to_profiles:
             group_to_profiles[group_name] = defaultdict(int)
@@ -312,7 +312,7 @@ def get_group_profiles(group_to_subjects, group_to_members, user_to_subs):
             if member_name not in user_to_subs:
                 continue
             member_to_sub_freq = user_to_subs[member_name]
-            for sub, freq in member_to_sub_freq.iteritems():
+            for sub, freq in member_to_sub_freq.items():
                 if sub in group_subjecst:
                     group_profile[sub] += freq
     return group_to_profiles
@@ -320,10 +320,10 @@ def get_group_profiles(group_to_subjects, group_to_members, user_to_subs):
 
 def store_group_preferences(group_to_profiles, all_subjects_list):
     active_groups_set = set()
-    for group_name, group_to_sub_freq in group_to_profiles.iteritems():
+    for group_name, group_to_sub_freq in group_to_profiles.items():
         group = Group.objects.get(name=group_name)
         group_subjects = []
-        for sub, freq in group_to_sub_freq.iteritems():
+        for sub, freq in group_to_sub_freq.items():
             group_subjects.append(('subject', sub, freq))
         GroupPreferences.prefer(group, group_subjects)
         active_groups_set.add(group_name)
@@ -332,24 +332,24 @@ def store_group_preferences(group_to_profiles, all_subjects_list):
 
 def recommend_groups(group_to_profiles, user_to_subs, group_to_members, all_subjects_list):
     user_to_recommended_groups_list = {}
-    for username, user_to_sub_freq in user_to_subs.iteritems():
+    for username, user_to_sub_freq in user_to_subs.items():
         user_vec = get_user_freq_vec(user_to_sub_freq, all_subjects_list)
         groups_to_sim = {}
-        for group_name, group_to_sub_freq in group_to_profiles.iteritems():
+        for group_name, group_to_sub_freq in group_to_profiles.items():
             if username in group_to_members[group_name]:
                 continue
             group_vec = get_user_freq_vec(group_to_sub_freq, all_subjects_list)
             cos_sim = 1 - sp.distance.cosine(user_vec, group_vec)
             if cos_sim > 0:
                 groups_to_sim[group_name] = cos_sim
-        top10_sorted_group_list = sorted(groups_to_sim.iteritems(),
+        top10_sorted_group_list = sorted(groups_to_sim.items(),
                                          key=lambda (k, v): (v, k), reverse=True)[:10]
         user_to_recommended_groups_list[username] = top10_sorted_group_list
     return user_to_recommended_groups_list
 
 
 def store_recommended_groups(user_to_recommended_groups_list, active_user_set, active_groups_set):
-    for username, recommended_groups_list in user_to_recommended_groups_list.iteritems():
+    for username, recommended_groups_list in user_to_recommended_groups_list.items():
         if username not in active_user_set:
             continue
         user = user_from_id(username)
