@@ -1,29 +1,15 @@
-from django.views.generic import TemplateView  # ListView
-import re
-from hs_tracking.models import Variable
-from hs_core.hydroshare.utils import user_from_id, group_from_id, get_resource_by_shortkey
-from django.db.models import Q
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import BaseResourceIndex
-from datetime import datetime
-import time
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import User
-from hs_core.models import BaseResource
-from django.template.loader import render_to_string
-from django.shortcuts import render_to_response, render
-from haystack.query import SearchQuerySet, SQ
+from django.shortcuts import render
+from haystack.query import SearchQuerySet
 import json
 from django.http import HttpResponse
-from django.template.response import TemplateResponse
 from hs_explore.models import RecommendedResource, RecommendedUser, \
-    RecommendedGroup, Status, KeyValuePair, ResourceRecToPair, UserRecToPair, \
-    GroupRecToPair, ResourcePreferences, ResourcePrefToPair, \
-    UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair, \
-    PropensityPrefToPair, PropensityPreferences, OwnershipPrefToPair, OwnershipPreferences, \
-     UserInteractedResources, UserNeighbors
+    RecommendedGroup, Status, GroupPreferences, GroupPrefToPair, \
+    PropensityPrefToPair, PropensityPreferences, OwnershipPrefToPair, \
+    OwnershipPreferences, UserNeighbors
 from hs_core.models import get_user
 from django.contrib.auth.decorators import login_required
-from django.core import serializers
 
 
 @login_required
@@ -39,11 +25,10 @@ def update_recs(request):
     if update_part == 'resources':
         res_list = []
         json_res_list = []
-        #RecommendedResource.clear()
         recommended_recs = RecommendedResource.objects.filter(user=target_user)
         recommended_recs.delete()
 
-        out = SearchQuerySet() 
+        out = SearchQuerySet()
         out = out.filter(recommend_to_users=target_username)
         rpp = PropensityPreferences.objects.get(user=target_user)
         rop = OwnershipPreferences.objects.get(user=target_user)
@@ -73,7 +58,6 @@ def update_recs(request):
             if p.pair.key == 'subject':
                 target_propensity_preferences_set.add(p.pair.value)
 
-
         for thing in out:
             res = get_resource_by_shortkey(thing.short_id)
 
@@ -95,39 +79,15 @@ def update_recs(request):
                 r1.relate('subject', cs, 1)
             res_list.append(r1)
         res_list.sort(key=lambda x: x.relevance, reverse=True)
-       
         for res in res_list:
             json_res = res.to_json()
             json_keywords = [json.dumps(keyword) for keyword in json_res['keywords']]
             json_res['keywords'] = json.dumps(json_keywords)
             json_res_list.append(json.dumps(json_res))
-                
-            ''' 
-            json_res = {}
-            json_res['user'] = res.user.username
-            json_res['candidate_resource_id'] = res.candidate_resource.short_id
-            json_res['candidate_resource_title'] = res.candidate_resource.title
-            json_res['relevance'] = res.relevance
-            json_res['rec_type'] = res.rec_type
-            json_res['state'] = res.state
 
-            keywords = []
-            for keyword in res.keywords.all():
-                kw = {'key': keyword.key, 'value': keyword.value}
-                keywords.append(json.dumps(kw))
-            json_res['keywords'] =json.dumps(keywords)
-
-             
-            json_res_list.append(json.dumps(json_res))
-            '''
-
-        data = json.dumps(json_res_list) 
-        #res_list = RecommendedResource.objects\
-        #    .filter(state__lte=Status.STATUS_EXPLORED, user__username=target_username)\
-        #    .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
-        #data = serializers.serialize('json', res_list)
+        data = json.dumps(json_res_list)
         return HttpResponse(data, content_type='json')
-        #return render(request, 'recommended_resources.html', {'resource_list': res_list})
+
     elif update_part == 'users':
         user_list = []
         recommended_users = RecommendedUser.filter(user=target_user)
@@ -149,7 +109,7 @@ def update_recs(request):
                 target_propensity_preferences_set.add(p.pair.value)
 
         user_neighbors = UserNeighbors.objects.get(user=target_user)
-        
+
         for neighbor in user_neighbors.neighbors.all():
             neighbor_up = PropensityPreferences.objects.get(user=neighbor)
             neighbor_pref = neighbor_up.preferences.all()
@@ -174,7 +134,7 @@ def update_recs(request):
             for cs in common_subjects:
                 r2.relate('subject', cs, 1)
             user_list.append(r2)
-        
+
         user_list.sort(key=lambda x: x.relevance, reverse=True)
         return render(request, 'recommended_users.html', {'user_list': user_list[:5]})
 
@@ -182,7 +142,7 @@ def update_recs(request):
         group_list = []
         recommended_gps = RecommendedGroup.objects.filter(user=target_user)
         recommended_gps.delete()
-        
+
         rpp = PropensityPreferences.objects.get(user=target_user)
 
         rpp.reject('Group', gk, gv)
@@ -198,7 +158,6 @@ def update_recs(request):
             if p.pair.key == 'subject':
                 target_propensity_preferences_set.add(p.pair.value)
 
-
         for gp in GroupPreferences.objects.all():
             group = gp.group
             all_gp = gp.preferences.all()
@@ -210,7 +169,8 @@ def update_recs(request):
                 if p.pair.key == 'subject':
                     gp_propensity_preferences_set.add(p.pair.value)
 
-            intersection_cardinality = len(set.intersection(*[target_propensity_preferences_set, gp_propensity_preferences_set]))
+            intersection_cardinality = len(set.intersection(*[target_propensity_preferences_set,
+                                                              gp_propensity_preferences_set]))
             union_cardinality = len(set.union(*[target_propensity_preferences_set, gp_propensity_preferences_set]))
             js = intersection_cardinality/float(union_cardinality)
             r3 = RecommendedGroup.recommend(target_user, group, round(js, 4))
@@ -250,11 +210,13 @@ def init_recs(request):
         if r.state == Status.STATUS_NEW:
             r.shown()
 
-    return render(request, 'recommendations.html', {'resource_list': resource_list, 'user_list': user_list, 'group_list': group_list})
+    return render(request, 'recommendations.html',
+                  {'resource_list': resource_list,
+                   'user_list': user_list,
+                   'group_list': group_list})
 
 
 def init_explore(request):
-    #return render_to_response('recommendations.html')
     if request.is_ajax():
         target_user = get_user(request)
         target_username = target_user.username
@@ -281,6 +243,9 @@ def init_explore(request):
             if r.state == Status.STATUS_NEW:
                 r.shown()
 
-        return render(request, 'recommendations.html', {'resource_list': resource_list, 'user_list': user_list, 'group_list': group_list})    
-    else:    
+        return render(request, 'recommendations.html',
+                      {'resource_list': resource_list,
+                       'user_list': user_list,
+                       'group_list': group_list})
+    else:
         return render(request, 'recommendations.html', {})

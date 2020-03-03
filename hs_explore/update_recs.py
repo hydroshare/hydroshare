@@ -1,25 +1,10 @@
-from django.views.generic import TemplateView  # ListView
-import re
-from hs_tracking.models import Variable
-from django.http import HttpResponse
-from hs_core.hydroshare.utils import user_from_id, group_from_id, get_resource_by_shortkey
-from django.db.models import Q
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import BaseResourceIndex
-from datetime import datetime
-import time
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import User
-from hs_core.models import BaseResource
-from django.template.loader import render_to_string
-from django.shortcuts import render_to_response, render
-from haystack.query import SearchQuerySet, SQ
-import json
-from django.http import HttpResponse
-from django.template.response import TemplateResponse
+from django.shortcuts import render
+from haystack.query import SearchQuerySet
 from hs_explore.models import RecommendedResource, RecommendedUser, \
-    RecommendedGroup, Status, KeyValuePair, ResourceRecToPair, UserRecToPair, \
-    GroupRecToPair, ResourcePreferences, ResourcePrefToPair, \
-    UserPreferences, UserPrefToPair, GroupPreferences, GroupPrefToPair
+    ResourcePreferences, ResourcePrefToPair, \
+    UserPreferences, UserPrefToPair
 from hs_core.models import get_user
 from django.contrib.auth.decorators import login_required
 
@@ -36,10 +21,9 @@ def update_recs(request):
 
     if update_part == 'resources':
         res_list = []
-        #RecommendedResource.clear()
         recommended_recs = RecommendedResource.objects.get(user=target_user)
         recommended_recs.delete()
-        out = SearchQuerySet() 
+        out = SearchQuerySet()
         out = out.filter(recommend_to_users=target_username)
         rp = ResourcePreferences.objects.get(user=target_user)
         rp.reject(gk, gv)
@@ -64,13 +48,11 @@ def update_recs(request):
             if p.pair.key == 'subject':
                 target_propensity_preferences_set.add(p.pair.value)
 
-
         for thing in out:
             res = get_resource_by_shortkey(thing.short_id)
 
             subjects = ind.prepare_subject(res)
             subjects = [sub.lower() for sub in subjects]
-            res_id = res.short_id
             intersection_cardinality = len(set.intersection(*[target_ownership_preferences_set, set(subjects)]))
             union_cardinality = len(set.union(*[target_ownership_preferences_set, set(subjects)]))
             js1 = intersection_cardinality/float(union_cardinality)
@@ -127,7 +109,6 @@ def update_recs(request):
             for cs in common_subjects:
                 r2.relate('subject', cs, 1)
             user_list.append(r2)
-        
         user_list.sort(key=lambda x: x.relevance, reverse=True)
         return render(request, 'recommended_users.html', {'user_list': user_list[:5]})
     '''

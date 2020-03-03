@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from django.db import models
-from django.db.models import F, Q, Count, Max, Subquery
+from django.db.models import F, Max
 from django.core import signing
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -286,7 +286,6 @@ class Variable(models.Model):
 
     @classmethod
     def user_resource_matrix(cls, first, last):
-    
         users = User.objects.filter(
             visitor__session__variable__timestamp__gte=first,
             visitor__session__variable__timestamp__lte=last)\
