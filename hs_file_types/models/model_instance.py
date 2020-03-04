@@ -164,7 +164,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             executed_by.text = self.logical_file.aggregation_path
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
 
 class ModelInstanceLogicalFile(AbstractModelLogicalFile):

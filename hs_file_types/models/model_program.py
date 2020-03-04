@@ -133,7 +133,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             mi_meta_schema.text = json.dumps(json_schema, indent=4)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         html_string = super(ModelProgramFileMetaData, self).get_html()
