@@ -345,7 +345,7 @@ class Features(object):
         if not isinstance(value, (tuple, list)):
             value = [value]
         for v in value:
-            if v is not None and v != "" and isinstance(v, basestring) \
+            if v is not None and v != "" and isinstance(v, str) \
                     and field is not None and field != "":
                 output = output + "{} is {}. ".format(field.encode('ascii', 'ignore'),
                                                       v.encode('ascii', 'ignore'))
