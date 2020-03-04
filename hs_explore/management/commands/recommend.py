@@ -13,6 +13,7 @@ from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedG
     UserInteractedResources, UserNeighbors
 from haystack.query import SQ
 from django.contrib.auth.models import Group, User
+from operator import itemgetter
 
 
 def get_resource_to_subjects():
@@ -149,7 +150,7 @@ def recommend_resources(res_to_subs, user_to_resources, user_to_top5_keywords, u
                 top5_filter_recommendations_sim[res_id] = cos_sim
 
             top5_filter_sorted_list = sorted(top5_filter_recommendations_sim.items(),
-                                             key=lambda (k, v): (v, k), reverse=True)[:10]
+                                             key=itemgetter(1), reverse=True)[:10]
         user_to_recommended_resources_list[username] = top5_filter_sorted_list
     return user_to_recommended_resources_list
 
@@ -343,7 +344,7 @@ def recommend_groups(group_to_profiles, user_to_subs, group_to_members, all_subj
             if cos_sim > 0:
                 groups_to_sim[group_name] = cos_sim
         top10_sorted_group_list = sorted(groups_to_sim.items(),
-                                         key=lambda (k, v): (v, k), reverse=True)[:10]
+                                         key=itemgetter(1), reverse=True)[:10]
         user_to_recommended_groups_list[username] = top10_sorted_group_list
     return user_to_recommended_groups_list
 
@@ -403,8 +404,7 @@ def clear_old_data():
 def main():
     clear_old_data()
     res_to_subs, all_subjects_list = get_resource_to_subjects()
-    all_res_ids = list(res_to_subs.keys())
-    end_date = date(2018, 05, 31)
+    end_date = date(2018, 5, 31)
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     user_to_subs = get_user_cumulative_profiles(user_to_resources, res_to_subs)
