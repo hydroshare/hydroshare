@@ -674,7 +674,7 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'keyword', 'message': "Keyword already exists"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
 @authorise_for_aggregation_edit
@@ -718,7 +718,7 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'keyword', 'message': "Keyword was not found"}
-        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
 @authorise_for_aggregation_edit
@@ -789,11 +789,11 @@ def update_refts_abstract(request, file_type_id, **kwargs):
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', 'message': "Update was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', 'message': "Data is missing for abstract"}
-
-    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
 @authorise_for_aggregation_edit(file_type='TimeSeriesLogicalFile')
