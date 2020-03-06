@@ -1,11 +1,8 @@
-
-
 import mimetypes
 import os
 import tempfile
 import logging
 import shutil
-import string
 import copy
 from uuid import uuid4
 import errno
