@@ -93,7 +93,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
-    ifnames = string.split(irods_fnames, ',')
+    ifnames = irods_fnames.split(',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
         tmpFile = irods_storage.download(ifname)
