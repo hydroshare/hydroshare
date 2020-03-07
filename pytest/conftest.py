@@ -114,7 +114,7 @@ def resource_with_metadata():
         owner=user,
         title=title,
         metadata=metadata,
-        files=(open('pytest/assets/cea.tif'),)
+        files=(open('pytest/assets/cea.tif', 'rb'),)
     )
     yield res_uuid
     _res.delete()
