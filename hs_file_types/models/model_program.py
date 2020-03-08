@@ -173,14 +173,14 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             website_div = dom_tags.div(cls="content-block")
             with website_div:
                 dom_tags.legend("Website")
-                dom_tags.p(self.website)
+                dom_tags.a(self.website, href=self.website, target="_blank")
             html_string += website_div.render()
 
         if self.code_repository:
             code_repo_div = dom_tags.div(cls="content-block")
             with code_repo_div:
                 dom_tags.legend("Code Repository")
-                dom_tags.p(self.code_repository)
+                dom_tags.a(self.code_repository, href=self.code_repository, target="_blank")
             html_string += code_repo_div.render()
 
         if self.operating_systems:
