@@ -161,7 +161,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         if self.executed_by:
             executed_by = etree.SubElement(container_to_add_to,
                                            '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms'])
-            executed_by.text = self.logical_file.aggregation_path
+            executed_by.text = self.executed_by.aggregation_path
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print).decode()
