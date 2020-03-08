@@ -102,12 +102,12 @@ class CompositeResource(BaseResource):
                     pass
 
     def add_file_to_aggregation(self, moved_res_file):
-        """adds the moved file to the aggregation (fileset or model program) into which the file has been moved
+        """adds the moved file to the aggregation (fileset or model program/instance) into which the file has been moved
         :param  moved_res_file: an instance of ResourceFile which has been moved into a folder that represents
-        either a fileset or a model program aggregation
+        a fileset or a model program or a model instance aggregation
         """
         if moved_res_file.file_folder is not None and not moved_res_file.has_logical_file:
-            # first check for model program aggregation
+            # first check for model program/instance aggregation
             aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder)
             if aggregation is None:
                 # then check for fileset aggregation
@@ -356,6 +356,11 @@ class CompositeResource(BaseResource):
                 if mp_aggr.folder is not None:
                     mp_aggr.folder = new_folder + mp_aggr.folder[len(old_folder):]
                     mp_aggr.save()
+                    # any associated model instance aggregation metadata needs to be set dirty
+                    # in order to regenerate metadata xml files for these linked model instance aggregations
+                    for mi_metadata in mp_aggr.mi_metadata_objects.all():
+                        mi_metadata.is_dirty = True
+                        mi_metadata.save()
 
         def update_model_instance_folder():
             """Updates the folder attribute of all folder based model instance aggregation that exist under
@@ -577,6 +582,14 @@ class CompositeResource(BaseResource):
                 aggregation = self.get_aggregation_by_name(new_path)
                 delete_old_xml_files()
                 aggregation.create_aggregation_xml_documents()
+                # check if the affected aggregation is a model program aggregation
+                # then any associated model instance aggregation metadata needs to be set dirty
+                # in order to regenerate metadata xml files for these linked model instance aggregations
+                if aggregation.type_name() == "ModelProgramLogicalFile":
+                    for mi_metadata in aggregation.mi_metadata_objects.all():
+                        mi_metadata.is_dirty = True
+                        mi_metadata.save()
+
             except ObjectDoesNotExist:
                 # the file path *new_path* does not represent an aggregation - no more
                 # action is needed
