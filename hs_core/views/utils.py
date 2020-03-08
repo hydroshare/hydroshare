@@ -789,8 +789,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     file_or_folder_move = src_folder != tgt_folder
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
-        # if the source file is part of a FileSet or Model Program aggregation (based on folder), we need to remove it
-        # from that aggregation in the case the file is being moved out of that aggregation
+        # if the source file is part of a FileSet or Model Program/Instance aggregation (based on folder),
+        # we need to remove it from that aggregation in the case the file is being moved out of that aggregation
         if file_or_folder_move and resource.resource_type == 'CompositeResource':
             resource.remove_aggregation_from_file(res_file_obj, src_folder, tgt_folder)
 

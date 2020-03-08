@@ -5,7 +5,8 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_access_control.models import PrivilegeCodes
-from hs_core.hydroshare import add_file_to_resource
+from hs_core.hydroshare import add_file_to_resource, ResourceFile
+from hs_core.views.utils import move_or_rename_file_or_folder
 from hs_file_types.models import ModelInstanceLogicalFile, ModelProgramLogicalFile
 
 
@@ -83,7 +84,7 @@ def test_link_model_aggregations_different_resources(composite_resource_with_mi_
 @pytest.mark.django_db(transaction=True)
 def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggregation, mock_irods):
     """Test that when we remove/delete a model program aggregation that the linked model instance aggregation does not
-    get deleted"""
+    get deleted and the metadata of the model instance aggregation is set to dirty"""
 
     res, user = composite_resource_with_mi_aggregation
     assert ModelInstanceLogicalFile.objects.count() == 1
@@ -110,13 +111,16 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
-    # remove mp_aggregation
+    assert mi_aggr.metadata.is_dirty is False
+    # remove/delete mp_aggregation
     mp_aggr.remove_aggregation()
     assert ModelProgramLogicalFile.objects.count() == 0
     assert ModelInstanceLogicalFile.objects.count() == 1
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is not related to any model program aggregation
     assert mi_aggr.metadata.executed_by is None
+    # check that mi_aggr metadata is set to dirty
+    assert mi_aggr.metadata.is_dirty is True
 
 
 @pytest.mark.django_db(transaction=True)
@@ -147,12 +151,99 @@ def test_model_instance_on_model_program_resource_delete(composite_resource_with
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
+    assert mi_aggr.metadata.is_dirty is False
     # delete mp_resource
     mp_res.delete()
     assert ModelProgramLogicalFile.objects.count() == 0
     # check that mi_aggr is not related to any model program aggregation
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     assert mi_aggr.metadata.executed_by is None
+    assert mi_aggr.metadata.is_dirty is True
+
+
+@pytest.mark.django_db(transaction=True)
+def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_aggregation, mock_irods):
+    """Test that when we rename a file that represents a model program aggregation then the inked model instance
+    aggregation metadata is set to dirty"""
+
+    res, user = composite_resource_with_mi_aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that mi_aggr is not related to any model program aggregation
+    assert mi_aggr.metadata.executed_by is None
+    # create a model program aggregation
+    file_path = 'pytest/assets/logan.vrt'
+    upload_folder = None
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set file to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    # link model instance aggregation to model program aggregation
+    mi_aggr.set_link_to_model_program(user=user, model_prog_aggr=mp_aggr)
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that mi_aggr is related to model program aggregation
+    assert mi_aggr.metadata.executed_by is not None
+    assert mi_aggr.metadata.is_dirty is False
+    # rename the model program file name
+    src_path = 'data/contents/{}'.format(res_file.file_name)
+    tgt_path = 'data/contents/{}'.format("logan_1.vrt")
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert ModelProgramLogicalFile.objects.count() == 1
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that mi_aggr metadata is set to dirty
+    assert mi_aggr.metadata.is_dirty is True
+
+
+@pytest.mark.django_db(transaction=True)
+def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_aggregation, mock_irods):
+    """Test that when we rename a folder that represents a model program aggregation then the inked model instance
+    aggregation metadata is set to dirty"""
+
+    res, user = composite_resource_with_mi_aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that mi_aggr is not related to any model program aggregation
+    assert mi_aggr.metadata.executed_by is None
+    # create a model program aggregation
+    file_path = 'pytest/assets/logan.vrt'
+    mp_folder = "mp_folder"
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(
+        res, file_to_upload, folder=mp_folder, check_target_folder=True
+    )
+
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set file to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(res, user, folder_path=mp_folder)
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    # link model instance aggregation to model program aggregation
+    mi_aggr.set_link_to_model_program(user=user, model_prog_aggr=mp_aggr)
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that mi_aggr is related to model program aggregation
+    assert mi_aggr.metadata.executed_by is not None
+    assert mi_aggr.metadata.is_dirty is False
+    # rename the model program file name
+    src_path = 'data/contents/{}'.format(mp_folder)
+    tgt_path = 'data/contents/{}'.format("{}_1".format(mp_folder))
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert ModelProgramLogicalFile.objects.count() == 1
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that mi_aggr metadata is set to dirty
+    assert mi_aggr.metadata.is_dirty is True
 
 
 @pytest.mark.django_db(transaction=True)
