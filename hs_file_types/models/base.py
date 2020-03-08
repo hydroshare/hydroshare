@@ -49,6 +49,11 @@ class AbstractFileMetaData(models.Model):
     class Meta:
         abstract = True
 
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the django model delete() here so that subclasses can do further
+        override if needed"""
+        super(AbstractFileMetaData, self).delete()
+
     @classmethod
     def get_metadata_model_classes(cls):
         return {'coverage': Coverage}
@@ -1173,6 +1178,11 @@ class AbstractLogicalFile(models.Model):
             counter += 1
         return new_folder_path
 
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the django model delete() here so that subclasses can do further
+        override if needed"""
+        super(AbstractLogicalFile, self).delete()
+
     def logical_delete(self, user, delete_res_files=True):
         """
         Deletes the logical file as well as all resource files associated with this logical file.
@@ -1206,7 +1216,8 @@ class AbstractLogicalFile(models.Model):
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
         metadata = self.metadata if self.has_metadata else None
-        super(AbstractLogicalFile, self).delete()
+        self.delete()
+
         if metadata is not None:
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object
@@ -1241,7 +1252,8 @@ class AbstractLogicalFile(models.Model):
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
         metadata = self.metadata if self.has_metadata else None
-        super(AbstractLogicalFile, self).delete()
+        self.delete()
+
         if metadata is not None:
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object

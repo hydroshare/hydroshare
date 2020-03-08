@@ -89,6 +89,18 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     def programming_languages_as_string(self):
         return ", ".join(self.programming_languages)
 
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the base model delete() method to set any associated
+        model instance aggregation metadata to dirty so that xml metadata file
+        can be regenerated for those linked model instance aggregations"""
+
+        mp_aggr = self.logical_file
+        for mi_metadata in mp_aggr.mi_metadata_objects.all():
+            mi_metadata.is_dirty = True
+            mi_metadata.save()
+
+        super(ModelProgramFileMetaData, self).delete()
+
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
@@ -367,6 +379,17 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=mp_metadata, resource=resource)
+
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the base model delete() method to set any associated
+        model instance aggregation metadata to dirty so that xml metadata file
+        can be regenerated"""
+
+        for mi_metadata in self.mi_metadata_objects.all():
+            mi_metadata.is_dirty = True
+            mi_metadata.save()
+
+        super(ModelProgramLogicalFile, self).delete()
 
     @staticmethod
     def get_aggregation_display_name():
