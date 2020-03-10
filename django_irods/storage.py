@@ -446,6 +446,6 @@ class IrodsStorage(Storage):
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS".format(name))
         # remove potential '\n' from stdout
-        timestamp = float(stdout.rstrip('\n'))
+        timestamp = float(stdout.split("\n", 1)[0])
         utc_dt = datetime.fromtimestamp(timestamp, pytz.utc)
         return utc_dt
