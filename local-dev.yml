@@ -90,7 +90,7 @@ services:
     stdin_open: true
     tty: true
   rabbitmq:
-    image: rabbitmq:3.5
+    image: rabbitmq:3.8.2
     container_name: rabbitmq
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"

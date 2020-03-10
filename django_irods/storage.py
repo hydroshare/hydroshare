@@ -1,4 +1,7 @@
 import os
+from datetime import datetime
+import pytz
+
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 from urllib.parse import urlencode
@@ -423,3 +426,26 @@ class IrodsStorage(Storage):
         if self.exists(name):
             raise ValidationError(str.format("File {} already exists.", name))
         return name
+
+    def get_modified_time(self, name):
+        """
+        Return the last modified time (as a datetime in UTC timezone) of the file specified by full_name.
+        :param name: data object (file) name with full collection path in order to locate file from current
+        working directory
+        :return: last modified time of the file in UTC timezone
+        """
+        if '/' in name:
+            file_info = name.rsplit('/', 1)
+            coll_name = IrodsStorage.get_absolute_path(file_info[0])
+            obj_name = file_info[1]
+        else:
+            coll_name = settings.IRODS_HOME_COLLECTION
+            obj_name = name
+        qrystr = "SELECT DATA_MODIFY_TIME WHERE COLL_NAME = '{}' AND DATA_NAME = '{}'".format(coll_name, obj_name)
+        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        if "CAT_NO_ROWS_FOUND" in stdout:
+            raise ValidationError("{} cannot be found in iRODS".format(name))
+        # remove potential '\n' from stdout
+        timestamp = float(stdout.rstrip('\n'))
+        utc_dt = datetime.fromtimestamp(timestamp, pytz.utc)
+        return utc_dt

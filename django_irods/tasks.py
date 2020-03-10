@@ -42,7 +42,7 @@ what each does:
 """
 
 from celery.task import Task
-from celery.task.sets import subtask
+from celery.task import subtask
 from .icommands import Session, GLOBAL_SESSION, IRodsEnv
 
 from . import models as m

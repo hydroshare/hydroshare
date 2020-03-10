@@ -18,7 +18,6 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
     ResourceFile, utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
-from hs_core.hydroshare.resource import update_quota_usage
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
@@ -239,7 +238,6 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     aggregation.logical_delete(request.user)
-    update_quota_usage(res)
     msg = "Aggregation was successfully deleted."
     response_data['status'] = 'success'
     response_data['message'] = msg

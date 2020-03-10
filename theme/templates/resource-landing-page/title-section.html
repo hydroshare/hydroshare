@@ -400,25 +400,20 @@
 		"name": "HydroShare",
     	"url": "https://www.hydroshare.org/search/"
 	},
+	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
 	"license": {
 	    "@type": "CreativeWork",
-	    "text": "{{ cm.metadata.rights.statement }}",
-	    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-        "url": "http://creativecommons.org/licenses/by/4.0/"
-        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-        "url": "http://creativecommons.org/licenses/by-sa/4.0/"
-        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-        "url": "http://creativecommons.org/licenses/by-nd/4.0/"
-        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-        "url": "http://creativecommons.org/licenses/by-nc-sa/4.0/"
-        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-        "url": "http://creativecommons.org/licenses/by-nc/4.0/"
-        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-        "url": "http://creativecommons.org/licenses/by-nc-nd/4.0/"
-        {% elif cm.metadata.rights.url %}
+	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
+        "text": "{{ cm.metadata.rights.statement }}",
+        "url": "{{ cm.metadata.rights.url }}"
+        {% elif cm.metadata.rights.statement %}
+        "text": "{{ cm.metadata.rights.statement }}",
+        "name": "Customized license"
+        {% else %}
         "url": "{{ cm.metadata.rights.url }}"
         {% endif %}
 	},
+	{% endif %}
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
     {% if relations %}
     "citation": [

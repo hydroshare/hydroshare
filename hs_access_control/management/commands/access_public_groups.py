@@ -1,5 +1,9 @@
 """
 This prints a list of publicly accessible resources in a group
+These are the resources that are:
+1. Shared with the group.
+2. Owned by some member of the group.
+This is the same list that will be displayed on the group products page.
 
 """
 
@@ -8,8 +12,8 @@ from hs_access_control.management.utilities import group_from_name_or_id
 
 
 def usage():
-    print("group_public usage:")
-    print("  group_public {group-name-or-id}")
+    print("access_public_groups usage:")
+    print("  access_public_groups {group-name-or-id}")
     print("Where:")
     print("  {group-name-or-id} is a group name or numeric id.")
 
