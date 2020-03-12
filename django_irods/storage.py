@@ -403,10 +403,13 @@ class IrodsStorage(Storage):
         # get data object name only from the full_name input parameter to be used by iquest
         if '/' in full_name:
             file_info = full_name.rsplit('/', 1)
+            coll_name = IrodsStorage.get_absolute_path(file_info[0])
             obj_name = file_info[1]
         else:
+            coll_name = settings.IRODS_HOME_COLLECTION
             obj_name = full_name
-        qrystr = "SELECT DATA_CHECKSUM WHERE DATA_NAME = '{}'".format(obj_name)
+
+        qrystr = "SELECT DATA_CHECKSUM WHERE COLL_NAME = '{}' AND DATA_NAME = '{}'".format(coll_name, obj_name)
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
