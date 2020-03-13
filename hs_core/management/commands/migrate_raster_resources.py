@@ -25,6 +25,7 @@ class Command(BaseCommand):
         for rast_res in RasterResource.objects.all():
             # check resource exists on irods
             istorage = rast_res.get_irods_storage()
+            create_raster_aggregation = False
             if not istorage.exists(rast_res.root_path):
                 err_msg = "Raster resource not found in irods (ID: {})".format(rast_res.short_id)
                 logger.error(err_msg)
