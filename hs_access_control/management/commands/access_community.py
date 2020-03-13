@@ -5,6 +5,10 @@ WARNING: As these routines run in administrative mode, no access control is used
 Care must be taken to generate reasonable metadata, specifically, concerning
 who owns what. Non-sensical options are possible to create.
 This code is not a design pattern for actually interacting with communities.
+
+WARNING: This command cannot be executed via 'hsctl' because that doesn't honor
+the strings one needs to embed community names with embedded spaces.
+Please connect to the bash shell for the hydroshare container before running them.
 """
 
 from django.core.management.base import BaseCommand
@@ -16,8 +20,8 @@ from hs_access_control.management.utilities import community_from_name_or_id, \
 
 
 def usage():
-    print("Community usage:")
-    print("  community [{cname} [{request} [{options}]]]")
+    print("access_community usage:")
+    print("  access_community [{cname} [{request} [{options}]]]")
     print("Where:")
     print("  {cname} is a community name. Use '' to embed spaces.")
     print("  {request} is one of:")
@@ -34,9 +38,6 @@ def usage():
     print("              add: add the group to the community.")
     print("              update: update community metadata for the group.")
     print("              remove: remove the group from the community.")
-    print("          Options for group metadata update include:")
-    print("              --prohibit_view: don't allow viewing of this group's resources.")
-    print("              --allow_edit: allow this group to edit other groups' resources.")
     print("      owner {oname} {request}: owner commands")
     print("      owner {oname} {request}: owner commands")
     print("          {oname}: owner name.")
@@ -53,21 +54,6 @@ class Command(BaseCommand):
 
         # a command to execute
         parser.add_argument('command', nargs='*', type=str)
-
-        # Named (optional) arguments
-        parser.add_argument(
-            '--prohibit_view',
-            action='store_true',            # True for presence, False for absence
-            dest='prohibit_view',           # value is options['prohibit_view']
-            help="prohibit viewing of group's resources by community",
-        )
-
-        parser.add_argument(
-            '--allow_edit',
-            action='store_true',            # True for presence, False for absence
-            dest='allow_edit',              # value is options['allow_edit']
-            help="allow group to edit other groups' resources in community",
-        )
 
         parser.add_argument(
             '--owner',
@@ -110,10 +96,7 @@ class Command(BaseCommand):
             usage()
             exit(1)
 
-        if options['allow_edit']:  # this is a group privilege
-            privilege = PrivilegeCodes.CHANGE
-        else:
-            privilege = PrivilegeCodes.VIEW
+        privilege = PrivilegeCodes.VIEW
 
         # not specifing a community lists active communities
         if cname is None:
@@ -142,13 +125,9 @@ class Command(BaseCommand):
                     others = "can edit community resources"
                 else:
                     others = "can view community resources"
-                if gcp.allow_view:
-                    myself = 'allows view of group resources'
-                else:
-                    myself = 'prohibits view of group resources'
                 print("     '{}' (id={}) (grantor={}):"
                       .format(gcp.group.name, gcp.group.id, gcp.grantor.username))
-                print("         {}, {}.".format(myself, others))
+                print("         {}.".format(others))
                 print("         '{}' (id={}) owners are:".format(gcp.group.name, str(gcp.group.id)))
                 for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
                                                              privilege=PrivilegeCodes.OWNER):
@@ -242,12 +221,8 @@ class Command(BaseCommand):
                         others = "can edit community resources"
                     else:
                         others = "can view community resources"
-                    if gcp.allow_view:
-                        myself = 'allows view of group resources'
-                    else:
-                        myself = 'prohibits view of group resources'
                     print("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
-                    print("         {}, {}.".format(myself, others))
+                    print("         {}.".format(others))
                 exit(0)
 
             gname = options['command'][2]
@@ -265,18 +240,12 @@ class Command(BaseCommand):
 
             if action == 'update' or action == 'add':
                 # resolve privilege of group
-                if options['allow_edit']:
-                    privilege = PrivilegeCodes.CHANGE
-                else:
-                    privilege = PrivilegeCodes.VIEW
+                privilege = PrivilegeCodes.VIEW
 
                 try:
                     print("Updating group '{}' (id={}) status in community '{}' (id={})."
                           .format(gname, str(group.id), cname, str(community.id)))
                     gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
-                    if gcp.allow_view != (not options['prohibit_view']):
-                        gcp.allow_view = not options['prohibit_view']
-                        gcp.save()
                     # pass privilege changes through the privilege system to record provenance.
                     if gcp.privilege != privilege or owner != gcp.grantor:
                         GroupCommunityPrivilege.share(group=group, community=community,
@@ -292,9 +261,6 @@ class Command(BaseCommand):
 
                     # update view status if different than default
                     gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
-                    if gcp.allow_view != (not options['prohibit_view']):
-                        gcp.allow_view = not options['prohibit_view']
-                        gcp.save()
 
             elif action == 'remove':
 

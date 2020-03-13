@@ -164,7 +164,6 @@ $(document).ready(function () {
 
         $('#submit-title-dialog .modal-title').text(title);
         $('#submit-title-dialog .modal-input-title').text(inputTitle);
-
         $('#submit-title-dialog').modal('show');
     });
 
@@ -175,12 +174,14 @@ $(document).ready(function () {
         createResource(resourceType, title);
     });
     
-    function createResource(type, title="Untitled Resource") {
+    function createResource(type, title) {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
 
         var formData = new FormData();
-
+        if (!title) {
+            title = "Untitled Resource";
+        }
         formData.append("csrfmiddlewaretoken", csrf_token);
         formData.append("title", title);
         formData.append("resource-type", type);
@@ -195,7 +196,7 @@ $(document).ready(function () {
             contentType: false,
             url: "/hsapi/_internal/create-resource/do/",
             success: function (response) {
-                if (response.status == "success") {
+                if (response.status === "success") {
                     window.location = response['resource_url'];
                 }
                 else {

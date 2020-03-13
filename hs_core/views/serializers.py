@@ -58,10 +58,10 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
 
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
-            choices=zip(
+            choices=list(zip(
                 [x.__name__ for x in hydroshare.get_resource_types()],
                 [x.__name__ for x in hydroshare.get_resource_types()]
-            ), default='CompositeResource')
+            )), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
@@ -165,6 +165,7 @@ class ResourceFileSerializer(serializers.Serializer):
     size = serializers.IntegerField(help_text='The size of the file')
     content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
     logical_file_type = serializers.CharField(max_length=255)
+    modified_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S")
 
 
 class GroupPrivilegeSerializer(serializers.Serializer):
@@ -233,7 +234,8 @@ ResourceFileItem = namedtuple('ResourceFileItem',
                                'file_name',
                                'size',
                                'content_type',
-                               'logical_file_type'])
+                               'logical_file_type',
+                               'modified_time'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):

@@ -22,8 +22,8 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
             messages.success(request, "SQLite file update was successful.")
             log.info("SQLite file update was successful for resource ID:{}.".format(res.short_id))
         except Exception as ex:
-            messages.error(request, "Failed to update SQLite file. Error:{}".format(ex.message))
-            log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
+            messages.error(request, "Failed to update SQLite file. Error:{}".format(str(ex)))
+            log.exception("Failed to update SQLite file. Error:{}".format(str(ex)))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'

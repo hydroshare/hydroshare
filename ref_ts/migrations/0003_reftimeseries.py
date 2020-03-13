@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -16,8 +16,8 @@ class Migration(migrations.Migration):
             name='RefTimeSeries',
             fields=[
                 ('baseresource_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_core.BaseResource')),
-                ('reference_type', models.CharField(default=b'', max_length=4, blank=True)),
-                ('url', models.URLField(default=b'', verbose_name=b'Web Services Url', blank=True)),
+                ('reference_type', models.CharField(default='', max_length=4, blank=True)),
+                ('url', models.URLField(default='', verbose_name='Web Services Url', blank=True)),
             ],
             options={
                 'ordering': ('_order',),

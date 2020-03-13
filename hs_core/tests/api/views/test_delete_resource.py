@@ -53,6 +53,6 @@ class TestDeleteResource(MockIRODSTestCaseMixin, ViewTestCase):
         self.add_session_to_request(request)
         response = delete_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual(response_dict['status'], 'success')
         self.assertEqual(BaseResource.objects.count(), 0)

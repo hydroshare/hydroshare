@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
@@ -17,8 +17,7 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-from hs_app_netCDF import views as nc_views
-
+import hs_communities.views.communities
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -26,7 +25,6 @@ admin.autodiscover()
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-
 urlpatterns = i18n_patterns(
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
@@ -69,12 +67,17 @@ urlpatterns = i18n_patterns(
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
+    url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
-    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),
+    url(r'^communities/$', hs_communities.views.communities.FindCommunitiesView.as_view(), name='communities'),
+    url(r'^community/(?P<community_id>[0-9]+)/$', hs_communities.views.communities.CommunityView.as_view(), name='community'),
+    url(r'^collaborate/$', hs_communities.views.communities.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-resources/$', hs_core_views.MyResourcesView.as_view(), name='my_resources'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
+    url(r'^my-communities/$', hs_communities.views.communities.MyCommunitiesView.as_view(), name='my_communities'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),

@@ -63,9 +63,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             target_temp_file = os.path.join(self.temp_dir, file)
             shutil.copy("{}{}".format(d, file), target_temp_file)
             if self.sample_nam_name == file:
-                self.sample_nam_obj = open(target_temp_file, 'r')
+                self.sample_nam_obj = open(target_temp_file, 'rb')
             elif self.sample_nam_name2 == file:
-                self.sample_nam_obj2 = open(target_temp_file, 'r')
+                self.sample_nam_obj2 = open(target_temp_file, 'rb')
             else:
                 self.file_list.append(target_temp_file)
 
@@ -74,14 +74,14 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Instance resource files")
         text_file.close()
-        self.text_file_obj = open(temp_text_file, 'r')
+        self.text_file_obj = open(temp_text_file, 'rb')
 
         self.file_name_2 = "MIR.csv"
         temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
         text_file = open(temp_text_file_2, 'w')
         text_file.write("Model,Instance,resource,files")
         text_file.close()
-        self.text_file_obj_2 = open(temp_text_file_2, 'r')
+        self.text_file_obj_2 = open(temp_text_file_2, 'rb')
 
     def tearDown(self):
         super(TestMODFLOWModelInstanceMetaData, self).tearDown()
@@ -1009,7 +1009,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # Metadata should remain after content file deletion
         for f in self.file_list:
             if 'dis' not in f and 'nam' not in f:
-                f_obj = open(f, 'r')
+                f_obj = open(f, 'rb')
                 files = [UploadedFile(file=f_obj, name=f_obj.name)]
                 utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                                     extract_metadata=False)
@@ -1077,10 +1077,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.metadata.formats.all().count(), 0)
 
         # test the core metadata at this point
-        self.assertNotEquals(self.res.metadata.title, None)
+        self.assertNotEqual(self.res.metadata.title, None)
 
         # there should be an abstract element
-        self.assertNotEquals(self.res.metadata.description, None)
+        self.assertNotEqual(self.res.metadata.description, None)
 
         # there should be one creator element
         self.assertEqual(self.res.metadata.creators.all().count(), 1)
@@ -1102,7 +1102,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         for f in self.file_list:
             # do not upload dis file to test manual metadata creation and deletion
             if 'dis' not in f and 'nam' not in f:
-                f_obj = open(f, 'r')
+                f_obj = open(f, 'rb')
                 files = [UploadedFile(file=f_obj, name=f_obj.name)]
                 utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                                     extract_metadata=False)

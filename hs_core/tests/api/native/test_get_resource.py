@@ -2,7 +2,7 @@
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from hs_core.hydroshare import resource
+from hs_core.hydroshare import resource, utils
 from hs_core.hydroshare import users
 
 # iRODS mocking has not been used here as we want to test bag creation which needs
@@ -33,5 +33,5 @@ class TestGetResource(TestCase):
         # One can't do much with a Bags object. For downloading a bag we are using resource.bag_url.
         # So it is better that we delete the get_resource() function and remove this test
         
-        res_bag = resource.get_resource(self.res.short_id)
-        self.assertTrue(res_bag is not None)
+        res = utils.get_resource_by_shortkey(self.res.short_id)
+        self.assertTrue(res is not None)

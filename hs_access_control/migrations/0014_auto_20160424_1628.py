@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 from django.conf import settings
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupaccess',
             name='picture',
-            field=models.ImageField(null=True, upload_to=b'group', blank=True),
+            field=models.ImageField(null=True, upload_to='group', blank=True),
         ),
         migrations.AddField(
             model_name='groupaccess',

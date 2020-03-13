@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='siteconfiguration',
             name='copyright',
-            field=models.TextField(default=b'&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'),
+            field=models.TextField(default='&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'),
         ),
     ]

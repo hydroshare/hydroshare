@@ -79,7 +79,7 @@ def sites_from_soap(wsdl_url, locations='[:]'):
             response = client.service.GetSites(locations)
         elif wml_ver == 10:
             response = client.service.GetSitesXml(locations)
-        response = response.encode('utf-8')
+        response = response.encode()
         wml_sites = wmlParse(response, wml_ver)
         counter = 0
         sites_list = []
@@ -91,7 +91,7 @@ def sites_from_soap(wsdl_url, locations='[:]'):
             # sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
             sites_list.append("%s. %s [network:%s]" % (str(counter), siteName, siteCode))
     except Exception as e:
-        logger.exception("sites_from_soap: %s" % (e.message))
+        logger.exception("sites_from_soap: %s" % (str(e)))
         raise e
     return sites_list
 
@@ -106,7 +106,7 @@ def site_info_from_soap(wsdl_url, **kwargs):
         variables_list = []
 
         response = client.service.GetSiteInfo(site)
-        response = response.encode('utf-8')
+        response = response.encode()
         wml_siteinfo = wmlParse(response, wml_ver)
         counter = 0
         for series in wml_siteinfo.sites[0].series_catalogs[0].series:
@@ -128,7 +128,7 @@ def site_info_from_soap(wsdl_url, **kwargs):
 
         return variables_list
     except Exception as e:
-        logger.exception("site_info_from_soap: %s" % (e.message))
+        logger.exception("site_info_from_soap: %s" % (str(e)))
         raise e
 
 def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
@@ -220,8 +220,8 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
             method_code = method_obj.code if hasattr(method_obj, "code") else None
             method_id = method_obj.id if hasattr(method_obj, "id") else None
             method_description = method_obj.description if hasattr(method_obj, "description") else None
-            if type(method_description) is unicode:
-                method_description = method_description.encode('ascii', 'ignore')
+            if type(method_description) is str:
+                method_description = method_description
         if method_code is None:
             method_code = method_code_query
 
@@ -287,7 +287,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
                 "end_date": end_date
                 }
     except Exception as e:
-        logger.exception("parse_1_0_and_1_1_owslib: %s" % (e.message))
+        logger.exception("parse_1_0_and_1_1_owslib: %s" % (str(e)))
         raise e
 
 def getAttributeValueFromElement(ele, a_name, exactmatch=False):
@@ -434,7 +434,7 @@ def parse_2_0(wml_string):
                         "end_date": end_date
                         }
     except Exception as ex:
-        logger.error(ex.message)
+        logger.error(str(ex))
         raise Exception("parse 2.0 error")
 
 def time_str_to_datetime(t):
@@ -462,7 +462,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
             r = requests.get(service_url, verify=False)
             if r.status_code != 200:
                 raise Exception("Query REST endpoint failed")
-            response = r.text.encode('utf-8')
+            response = r.text.encode()
         root = etree.XML(response)
         wml_version_xml_tag = get_wml_version_from_xml_tag(root)
         if wml_version_xml_tag == 10 or wml_version_xml_tag == 11:
@@ -475,7 +475,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
         ts["wml_version"] = wml_version_xml_tag
         return ts
     except Exception as e:
-        logger.exception("QueryHydroServerGetParsedWML: %s" % (e.message))
+        logger.exception("QueryHydroServerGetParsedWML: %s" % (str(e)))
         raise e
 
 def create_vis_2(path, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
@@ -507,7 +507,7 @@ def create_vis_2(path, data, xlabel, variable_name, units, noDataValue, predefin
         plt.savefig(vis_path, bbox_inches='tight')
         return {"fname": vis_name, "fullpath": vis_path}
     except Exception as e:
-        logger.exception("create_vis_2: %s" % (e.message))
+        logger.exception("create_vis_2: %s" % (str(e)))
         raise e
 
 def generate_resource_files(shortkey, tempdir):
@@ -591,7 +591,8 @@ def save_ts_to_files(res, tempdir, ts):
 
         root_wml_1 = etree.fromstring(ts['wml_str'])
         with open(xml_1011_full_path, 'w') as xml_1_file:
-            xml_1_file.write(etree.tostring(root_wml_1, pretty_print=True))
+            xml_1_file.write(etree.tostring(root_wml_1, encoding='UTF-8',
+                                            pretty_print=True).decode())
         res_file_info_array.append({"fname": xml_1011_name, "fullpath": xml_1011_full_path})
 
         try:
@@ -603,7 +604,7 @@ def save_ts_to_files(res, tempdir, ts):
             tree_wml_2.write(wml_2_0_full_path, pretty_print=True)
             res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
         except Exception as e:
-            logger.exception("convert to wml2 error: %s".format(e.message))
+            logger.exception("convert to wml2 error: %s".format(str(e)))
 
     elif ts["wml_version"] == 20:
         with open(wml_2_0_full_path, 'w') as xml_2_file:

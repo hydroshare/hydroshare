@@ -15,6 +15,6 @@ for file in files:
 
         eulas[key] = value
 
-print eulas.keys()
+print((list(eulas.keys())))
 
 json.dump(eulas, open('./eulas.json','w'))
