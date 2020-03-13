@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
 coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe
-# TODO: need to use pytest-cov module for reporting coverage for pytests
-py.test pytest/functional
 coverage xml
+py.test --cov-report xml --cov-append --cov=pytest/functional
