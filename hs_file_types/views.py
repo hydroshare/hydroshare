@@ -239,7 +239,6 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
     aggregation.logical_delete(request.user)
     res = aggregation.resource
-    update_quota_usage(res)
     msg = "Aggregation was successfully deleted."
     response_data['status'] = 'success'
     response_data['message'] = msg
