@@ -6,8 +6,10 @@
 """
 
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_access_control.models import PrivilegeCodes
 
 
 def has_subfolders(resource):
@@ -37,13 +39,13 @@ def measure_resource(short_id):
         status = "private"
 
     if istorage.exists(resource.file_path):
-        print("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
-                                         resource.resource_type, resource.title))
+        print(("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
+                                          resource.resource_type, resource.title)))
     else:
-        print("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
-                                                        resource.storage_type,
-                                                        resource.resource_type,
-                                                        resource.title))
+        print(("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
+                                                         resource.storage_type,
+                                                         resource.resource_type,
+                                                         resource.title)))
 
 
 class Command(BaseCommand):
@@ -81,10 +83,23 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
+            '--owned_by',
+            dest='owned_by',
+            help='limit to resources owned by specific user'
+        )
+
+        parser.add_argument(
             '--has_subfolders',
             action='store_true',  # True for presence, False for absence
             dest='has_subfolders',  # value is options['has_subfolders']
-            help='limit to resources with subfolders',
+            help='limit to resources with subfolders'
+        )
+
+        parser.add_argument(
+            '--brief',
+            action='store_true',  # True for presence, False for absence
+            dest='brief',  # value is options['brief']
+            help='create brief listing (resource id only)'
         )
 
     def measure_filtered_resource(self, resource, options):
@@ -95,13 +110,22 @@ class Command(BaseCommand):
            (options['access'] != 'private' or not resource.raccess.discoverable) and \
            (not options['has_subfolders'] or has_subfolders(resource)):
             storage = resource.get_irods_storage()
-            if storage.exists(resource.root_path):
-                measure_resource(resource.short_id)
+            if options['brief']:
+                print(resource.short_id)
             else:
-                print("{} does not exist in iRODS".format(resource.short_id))
+                if storage.exists(resource.root_path):
+                    measure_resource(resource.short_id)
+                else:
+                    print("{} does not exist in iRODS".format(resource.short_id))
 
     def handle(self, *args, **options):
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
+        if options['owned_by'] is not None:
+            owner = User.objects.get(username=options['owned_by'])
+            for r in BaseResource.objects.filter(r2urp__user=owner,
+                                                 r2urp__privilege=PrivilegeCodes.OWNER):
+                self.measure_filtered_resource(r, options)
+
+        elif len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 resource = get_resource_by_shortkey(rid)
                 self.measure_filtered_resource(resource, options)

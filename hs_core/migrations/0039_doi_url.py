@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from hs_core.models import Identifier
 from django.db import migrations
 

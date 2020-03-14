@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='baseresource',
             name='file_unpack_status',
-            field=models.CharField(blank=True, max_length=7, null=True, choices=[(b'Pending', b'Pending'), (b'Running', b'Running'), (b'Done', b'Done'), (b'Error', b'Error')]),
+            field=models.CharField(blank=True, max_length=7, null=True, choices=[('Pending', 'Pending'), ('Running', 'Running'), ('Done', 'Done'), ('Error', 'Error')]),
             preserve_default=True,
         ),
     ]

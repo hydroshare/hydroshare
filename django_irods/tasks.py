@@ -42,8 +42,8 @@ what each does:
 """
 
 from celery.task import Task
-from celery.task.sets import subtask
-from icommands import Session, GLOBAL_SESSION, IRodsEnv
+from celery.task import subtask
+from .icommands import Session, GLOBAL_SESSION, IRodsEnv
 
 from . import models as m
 from uuid import uuid4
@@ -117,9 +117,9 @@ class IRODSTask(Task):
             os.system("fusermount -uz {local_name}".format(local_name=self.collection(local_name)))
 
     def __del__(self):
-        for name in self._mounted_names.keys():
+        for name in list(self._mounted_names.keys()):
             self.unmount(name)
-        for session in self._sessions.values():
+        for session in list(self._sessions.values()):
             session.run('iexit')
             session.delete_environment()
 

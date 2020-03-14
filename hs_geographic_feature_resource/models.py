@@ -236,7 +236,7 @@ class GeographicFeatureResource(BaseResource):
                 ".mxs")
 
     def has_required_content_files(self):
-        if self.files.all().count < 3:
+        if self.files.all().count() < 3:
             return False
         file_extensions = [f.extension.lower() for f in self.files.all()]
         return all(ext in file_extensions for ext in ['.shp', '.shx', '.dbf'])
@@ -345,4 +345,4 @@ class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
         if self.originalcoverage:
             self.originalcoverage.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()

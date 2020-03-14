@@ -137,27 +137,27 @@ def update_account(user, **kwargs):
     if groups:
         if len(groups) == 1:
             groups = [(Group.objects.get_or_create(name=groups)
-                      if isinstance(groups, basestring) else groups)[0]]
+                      if isinstance(groups, str) else groups)[0]]
         else:
-            groups = zip(
+            groups = list(zip(
                 *(Group.objects.get_or_create(name=g)
-                  if isinstance(g, basestring) else g
-                  for g in groups))[0]
+                  if isinstance(g, str) else g
+                  for g in groups)))[0]
 
     if 'password' in kwargs:
         user.set_password(kwargs['password'])
 
     blacklist = {'username', 'password', 'groups'}  # handled separately or cannot change
-    for k in blacklist.intersection(kwargs.keys()):
+    for k in blacklist.intersection(list(kwargs.keys())):
         del kwargs[k]
 
     try:
         profile = get_profile(user)
         profile_update = dict()
-        update_keys = filter(lambda x: hasattr(profile, str(x)), kwargs.keys())
+        update_keys = [x for x in list(kwargs.keys()) if hasattr(profile, str(x))]
         for key in update_keys:
             profile_update[key] = kwargs[key]
-        for k, v in profile_update.items():
+        for k, v in list(profile_update.items()):
             if k == 'picture':
                 profile.picture = File(v) if not isinstance(v, UploadedFile) else v
             elif k == 'cv':
@@ -166,13 +166,13 @@ def update_account(user, **kwargs):
                 setattr(profile, k, v)
         profile.save()
     except AttributeError as e:
-        raise exceptions.ValidationError(e.message)  # ignore deprecated user profile module when we upgrade to 1.7
+        raise exceptions.ValidationError(str(e))  # ignore deprecated user profile module when we upgrade to 1.7
 
     user_update = dict()
-    update_keys = filter(lambda x: hasattr(user, str(x)), kwargs.keys())
+    update_keys = [x for x in list(kwargs.keys()) if hasattr(user, str(x))]
     for key in update_keys:
             user_update[key] = kwargs[key]
-    for k, v in user_update.items():
+    for k, v in list(user_update.items()):
         setattr(user, k, v)
     user.save()
 
@@ -202,7 +202,7 @@ def list_users(query=None, status=None, start=None, count=None):
     Exception.ServiceFailure - The service is unable to process the request
 
     """
-    query = json.loads(query) if isinstance(query, basestring) else query
+    query = json.loads(query) if isinstance(query, str) else query
 
     qs = User.objects.filter(**query)
     qs = qs.filter(active=True) if status == 'active' else qs

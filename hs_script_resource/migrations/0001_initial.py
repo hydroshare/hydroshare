@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -26,12 +26,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('scriptLanguage', models.CharField(default=b'R', help_text=b'The programming language that the script is written in', max_length=100, verbose_name=b'Programming Language', blank=True)),
-                ('languageVersion', models.CharField(help_text=b'The software version of the script', max_length=255, verbose_name=b'Programming Language Version', blank=True)),
-                ('scriptVersion', models.CharField(default=b'1.0', help_text=b'The software version or build number of the script', max_length=255, verbose_name=b'Script Version', blank=True)),
-                ('scriptDependencies', models.CharField(help_text=b'Dependencies for the script (externally-imported packages)', max_length=400, verbose_name=b'Dependencies', blank=True)),
-                ('scriptReleaseDate', models.DateTimeField(help_text=b'The date that this version of the script was released', null=True, verbose_name=b'Release Date', blank=True)),
-                ('scriptCodeRepository', models.CharField(help_text=b'A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, verbose_name=b'Script Repository', blank=True)),
+                ('scriptLanguage', models.CharField(default='R', help_text='The programming language that the script is written in', max_length=100, verbose_name='Programming Language', blank=True)),
+                ('languageVersion', models.CharField(help_text='The software version of the script', max_length=255, verbose_name='Programming Language Version', blank=True)),
+                ('scriptVersion', models.CharField(default='1.0', help_text='The software version or build number of the script', max_length=255, verbose_name='Script Version', blank=True)),
+                ('scriptDependencies', models.CharField(help_text='Dependencies for the script (externally-imported packages)', max_length=400, verbose_name='Dependencies', blank=True)),
+                ('scriptReleaseDate', models.DateTimeField(help_text='The date that this version of the script was released', null=True, verbose_name='Release Date', blank=True)),
+                ('scriptCodeRepository', models.CharField(help_text='A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, verbose_name='Script Repository', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_script_resource_scriptspecificmetadata_related', to='contenttypes.ContentType')),
             ],
             options={

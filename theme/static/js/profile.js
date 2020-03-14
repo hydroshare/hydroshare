@@ -194,10 +194,10 @@ function create_irods_account() {
             }
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+            err_info = xhr.status + ": " + xhr.responseText;
             $('#create-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-danger', err_info, 'Failure'));
+            irodsContainer.append(irods_status_info('alert-danger', xhr.responseText, 'Failure'));
         }
     });
     return false;
@@ -210,25 +210,25 @@ function delete_irods_account() {
         type: "POST",
         data: {},
         success: function(json) {
+            var irodsContainer = $("#irods-account-container");
             if(json.success) {
-                var irodsContainer = $("#irods-account-container");
                 irodsContainer.empty();
                 irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
                 irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
             }
             if(json.error) {
-                var irodsContainer = $("#irods-account-container");
                 irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
             }
             $('#delete-irods-account-dialog').modal('hide');
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+            err_info = xhr.status + ": " + xhr.responseText;
             $('#delete-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
+            irodsContainer.append(irods_status_info('alert-warning', xhr.responseText, 'Failure'));
         }
     });
+    return false;
 }
 
 function getUrlVars()
