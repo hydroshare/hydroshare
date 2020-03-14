@@ -1,11 +1,9 @@
 import os
 
 from django.core.exceptions import ObjectDoesNotExist
-
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, ResourceFile, CoreMetaData, resource_processor
-from hs_file_types.models import GenericLogicalFile
+from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 from hs_file_types.models import ModelProgramResourceFileType
 from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
@@ -84,8 +82,9 @@ class CompositeResource(BaseResource):
                 try:
                     aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
                     if aggregation == moved_res_file.logical_file:
-                        if aggregation.is_fileset or ((aggregation.is_model_program or aggregation.is_model_instance)
-                                                      and aggregation.folder is not None):
+                        if aggregation.is_fileset or ((aggregation.is_model_program or
+                                                       aggregation.is_model_instance) and
+                                                      aggregation.folder is not None):
                             # remove aggregation association with the file
                             # the removed aggregation is a fileset aggregation or a model program or a model instance
                             # aggregation based on folder (note: model program/instance aggregation can also be

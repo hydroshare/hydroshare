@@ -299,5 +299,3 @@ def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
     mi_aggr.metadata.save()
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     assert mi_aggr.metadata.metadata_json
-
-

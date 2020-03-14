@@ -4,7 +4,7 @@ import os
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
-
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
@@ -12,17 +12,11 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
-
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
-
 from hs_file_types.models import FileSetLogicalFile
-from hs_file_types.models import ModelProgramLogicalFile
-
-from drf_yasg.utils import swagger_auto_schema
-
 
 logger = logging.getLogger(__name__)
 

@@ -171,7 +171,7 @@ def composite_resource():
 def composite_resource_2():
     """composite resource for testing"""
     _res, user = create_composite_resource(u_name='user2', u_email='user2@gmail.com', u_firstname='user2_firstname',
-                                          u_lastname='user2_lastname', res_title='Composite Resource-2 for Testing')
+                                           u_lastname='user2_lastname', res_title='Composite Resource-2 for Testing')
     yield _res, user
     # not deleting the resource here as the resource in some test cases needs be deleted as part of the test
     user.delete()
