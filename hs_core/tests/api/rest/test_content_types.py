@@ -11,12 +11,14 @@ class TestContentTypes(APITestCase):
         self.client = APIClient()
 
         self.content_types = {'GenericLogicalFile',
-                               'GeoRasterLogicalFile',
-                               'NetCDFLogicalFile',
-                               'GeoFeatureLogicalFile',
-                               'RefTimeseriesLogicalFile',
-                               'TimeSeriesLogicalFile',
-                               'FileSetLogicalFile'}
+                              'GeoRasterLogicalFile',
+                              'NetCDFLogicalFile',
+                              'GeoFeatureLogicalFile',
+                              'RefTimeseriesLogicalFile',
+                              'TimeSeriesLogicalFile',
+                              'FileSetLogicalFile',
+                              'ModelProgramLogicalFile',
+                              'ModelInstanceLogicalFile'}
 
     def test_content_typelist(self):
         response = self.client.get('/hsapi/resource/content_types/', format='json')
