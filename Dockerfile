@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:celery-upgrade
+FROM hydroshare/hs_docker_base:release-1.12
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 # Set the locale. TODO - remove once we have a better alternative worked out

@@ -29,8 +29,8 @@ czo_setup = [
     ["czo_eel", "CZO Eel", "ERCZO"],
     ["czo_luquillo", "CZO Luquillo", "LCZO"],
     ["czo_reynolds", "CZO Reynolds", "RCCZO"],
-    ["czo_shale-hills", "CZO Shale-Hills", "SSHCZO"],
-    ["czo_sierra", "CZO Sierra", "SSCZO"],
+    ["czo_shale-hills", "CZO Shale Hills", "SSHCZO"],
+    ["czo_sierra", "CZO Southern Sierra", "SSCZO"],
     ["czo_christina", "CZO Christina", "CRBCZO"],
     ["czo_iml", "CZO IML", "IMLCZO"],
 ]

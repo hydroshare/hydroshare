@@ -2,13 +2,14 @@ from django.http import HttpResponse
 from django.template import loader
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_access_control.models import PrivilegeCodes
-from hs_core.management.utils import check_irods_files
 
 
 def debug_resource(request, shortkey):
     """ Debug view for resource depicts output of various integrity checking scripts """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    # importing here to avoid circular dependency
+    from hs_core.management.utils import check_irods_files
     irods_issues, irods_errors = check_irods_files(resource, log_errors=False, return_errors=True)
 
     template = loader.get_template('debug/debug_resource.html')

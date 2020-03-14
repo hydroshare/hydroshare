@@ -1,11 +1,8 @@
-
-
 import mimetypes
 import os
 import tempfile
 import logging
 import shutil
-import string
 import copy
 from uuid import uuid4
 import errno
@@ -231,7 +228,7 @@ def get_fed_zone_files(irods_fnames):
     """
     ret_file_list = []
     if isinstance(irods_fnames, str):
-        ifnames = string.split(irods_fnames, ',')
+        ifnames = irods_fnames.split(',')
     elif isinstance(irods_fnames, list):
         ifnames = irods_fnames
     else:

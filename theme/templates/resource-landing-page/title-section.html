@@ -407,7 +407,8 @@
         "text": "{{ cm.metadata.rights.statement }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement }}"
+        "text": "{{ cm.metadata.rights.statement }}",
+        "name": "Customized license"
         {% else %}
         "url": "{{ cm.metadata.rights.url }}"
         {% endif %}
