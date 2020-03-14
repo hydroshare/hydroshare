@@ -13,7 +13,6 @@ from rest_framework.response import Response
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     ResourceFile, utils
-from hs_core.hydroshare.resource import update_quota_usage
 from hs_core.hydroshare.utils import resource_modified
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
