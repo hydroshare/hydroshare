@@ -127,7 +127,7 @@ class Command(BaseCommand):
 
                     ts_aggr.metadata.value_counts = ts_metadata_obj.value_counts
                     ts_aggr.metadata.save()
-                    
+
                     # create aggregation level keywords
                     keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
                     ts_aggr.metadata.keywords = keywords
