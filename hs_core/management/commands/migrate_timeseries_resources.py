@@ -67,7 +67,7 @@ class Command(BaseCommand):
             # set CoreMetaData object for the composite resource
             core_meta_obj = CoreMetaData.objects.create()
             comp_res.content_object = core_meta_obj
-            comp_res.save()
+
             # migrate timeseries resource core metadata elements to composite resource
             migrate_core_meta_elements(ts_metadata_obj, comp_res)
 
@@ -142,6 +142,7 @@ class Command(BaseCommand):
                     msg = msg.format(comp_res.short_id)
                     logger.info(msg)
 
+            comp_res.save()
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
             try:
