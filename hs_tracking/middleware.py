@@ -1,5 +1,5 @@
 from .models import Session
-import utils
+from . import utils
 import re
 
 RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')  # parser for resource id

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import errno
 import json
@@ -8,7 +8,8 @@ import shutil
 import string
 from collections import namedtuple
 from tempfile import NamedTemporaryFile
-from urllib2 import Request, urlopen, HTTPError, URLError
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 from uuid import uuid4
 
 import paramiko
@@ -58,14 +59,14 @@ logger = logging.getLogger(__name__)
 
 
 def json_or_jsonp(r, i, code=200):
-    if not isinstance(i, basestring):
+    if not isinstance(i, str):
         i = json.dumps(i)
 
-    if 'callback' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['callback'], i=i),
+    if 'callback' in r:
+        return HttpResponse('{c}({i})'.format(c=r['callback'], i=i),
                             content_type='text/javascript')
-    elif 'jsonp' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['jsonp'], i=i),
+    elif 'jsonp' in r:
+        return HttpResponse('{c}({i})'.format(c=r['jsonp'], i=i),
                             content_type='text/javascript')
     else:
         return HttpResponse(i, content_type='application/json', status=code)
@@ -92,7 +93,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
-    ifnames = string.split(irods_fnames, ',')
+    ifnames = irods_fnames.split(',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
         tmpFile = irods_storage.download(ifname)
@@ -145,7 +146,7 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     # create URL file
     urltempfile = NamedTemporaryFile()
     urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
-    urltempfile.write(urlstring)
+    urltempfile.write(urlstring.encode())
     fileobj = File(file=urltempfile, name=ref_file_name)
 
     filelist = add_resource_files(res_id, fileobj, folder=curr_path)
@@ -197,7 +198,7 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
         set_logical_file_type(res, user, f.id, 'SingleFile', extra_data={'url': ref_url})
         hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
     except Exception as ex:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message, None
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex), None
 
     return status.HTTP_200_OK, 'success', f.id
 
@@ -249,7 +250,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
             shutil.rmtree(temp_path)
             os.makedirs(temp_path)
         else:
-            return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex)
 
     # update url file in iRODS
     urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
@@ -290,16 +291,13 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     session.get_pty()
     session.exec_command(exec_cmd)
     stdin = session.makefile('wb', -1)
-    stdout = session.makefile('rb', -1)
+    stdout = session.makefile('r', -1)
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
-    logger = logging.getLogger(__name__)
     output = stdout.readlines()
     if output:
         logger.debug(output)
-        return '.'.join(output)
-    else:
-        return ''
+    return output
 
 
 # run the update script on hyrax server via ssh session for netCDF resources on demand
@@ -451,7 +449,7 @@ def validate_metadata(metadata, resource_type):
     for element in metadata:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
-        k, v = element.items()[0]
+        k, v = list(element.items())[0]
         is_core_element = False
         model_type = None
         try:
@@ -536,7 +534,7 @@ def create_form(formclass, request):
     try:
         params = formclass(data=json.loads(request.body))
     except ValueError:
-        params = formclass(data=request.REQUEST)
+        params = formclass(data=request)
 
     return params
 

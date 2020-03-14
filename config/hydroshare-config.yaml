@@ -50,5 +50,8 @@ IRODS_DATA_URI: irods-data
 IRODS_USER_URI: irods-user
 IRODS_CACHE_URI: irods-cache
 
+# sets the concurrency of the celery worker
+CELERY_CONCURRENCY: 4
+
 ### REQUIRES BLANK LINE AFTER LAST VARIABLE DEFINITION ###
 

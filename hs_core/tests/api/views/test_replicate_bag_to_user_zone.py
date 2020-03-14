@@ -52,7 +52,7 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         response = rep_res_bag_to_irods_user_zone(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertIn('success',  response_data)
         # clean up
         hydroshare.delete_resource(self.gen_res.short_id)

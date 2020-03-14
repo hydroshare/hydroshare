@@ -5,4 +5,4 @@ class NetCDFAppConfig(AppConfig):
     name = "hs_app_netCDF"
 
     def ready(self):
-        import receivers  # noqa
+        from . import receivers  # noqa

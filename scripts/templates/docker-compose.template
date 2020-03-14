@@ -4,7 +4,7 @@ postgis:
   volumes:
     - "/var/lib/postgresql/data"
 rabbitmq:
-  image: rabbitmq:3.5
+  image: rabbitmq:3.8.2
   container_name: rabbitmq
 solr:
   image: solr:6.6
@@ -64,6 +64,8 @@ defaultworker:
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
     C_FORCE_ROOT: 1
+  ports:
+    - "5555:5555"
   volumes_from:
     - hydroshare
   volumes:

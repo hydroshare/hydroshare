@@ -74,8 +74,8 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="Date element type 'Valid' does not exist")
 
         valid_date = self.res.metadata.dates.filter(type='valid').first()
-        self.assertEquals(valid_date.start_date.date(), parser.parse('1/26/2016').date())
-        self.assertEquals(valid_date.end_date.date(), parser.parse('12/31/2016').date())
+        self.assertEqual(valid_date.start_date.date(), parser.parse('1/26/2016').date())
+        self.assertEqual(valid_date.end_date.date(), parser.parse('12/31/2016').date())
 
         # number of creators at this point should be 2 (the original creator of the resource get deleted as part of
         # this update)
@@ -93,10 +93,10 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         # number of contributors at this point should be 1
         self.assertEqual(self.res.metadata.contributors.all().count(), 1, msg='Number of contributors not equal to 1')
         contributor = self.res.metadata.contributors.first()
-        self.assertEquals(contributor.name, 'Kelvin Marshal')
-        self.assertEquals(contributor.email, 'kmarshal@yahoo.com')
-        self.assertEquals(contributor.organization, 'Utah State University')
-        for name, link in contributor.identifiers.iteritems():
+        self.assertEqual(contributor.name, 'Kelvin Marshal')
+        self.assertEqual(contributor.email, 'kmarshal@yahoo.com')
+        self.assertEqual(contributor.organization, 'Utah State University')
+        for name, link in list(contributor.identifiers.items()):
             self.assertIn(name, ['ResearchGateID', 'ORCID'])
             self.assertIn(link, ['https://orcid.org/john', 'https://www.researchgate.net/john'])
 
@@ -104,23 +104,23 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Number of coverages not equal to 2.")
 
         # there should 1 coverage element of type 'period'
-        self.assertEquals(self.res.metadata.coverages.filter(type='period').count(), 1,
+        self.assertEqual(self.res.metadata.coverages.filter(type='period').count(), 1,
                           msg="Number of coverage elements of type 'period is not equal to 1")
 
         # there should 1 coverage element of type 'point'
-        self.assertEquals(self.res.metadata.coverages.filter(type='point').count(), 1,
+        self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1,
                           msg="Number of coverage elements of type 'point' is not equal to 1")
 
         cov_period = self.res.metadata.coverages.filter(type='period').first()
-        self.assertEquals(cov_period.value['name'], 'Name for period coverage')
-        self.assertEquals(parser.parse(cov_period.value['start']).date(), parser.parse('1/1/2000').date())
-        self.assertEquals(parser.parse(cov_period.value['end']).date(), parser.parse('12/12/2012').date())
+        self.assertEqual(cov_period.value['name'], 'Name for period coverage')
+        self.assertEqual(parser.parse(cov_period.value['start']).date(), parser.parse('1/1/2000').date())
+        self.assertEqual(parser.parse(cov_period.value['end']).date(), parser.parse('12/12/2012').date())
 
         cov_point = self.res.metadata.coverages.filter(type='point').first()
-        self.assertEquals(cov_point.value['name'], 'Name for point coverage')
-        self.assertEquals(cov_point.value['east'], 56.45678)
-        self.assertEquals(cov_point.value['north'], 12.6789)
-        self.assertEquals(cov_point.value['units'], 'decimal deg')
+        self.assertEqual(cov_point.value['name'], 'Name for point coverage')
+        self.assertEqual(cov_point.value['east'], 56.45678)
+        self.assertEqual(cov_point.value['north'], 12.6789)
+        self.assertEqual(cov_point.value['units'], 'decimal deg')
 
         # there should be no format elements
         self.assertEqual(self.res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
@@ -132,14 +132,14 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # this the one we added as part of the update
         some_identifier = self.res.metadata.identifiers.filter(name='someIdentifier').first()
-        self.assertEquals(some_identifier.url, "http://some.org/002")
+        self.assertEqual(some_identifier.url, "http://some.org/002")
 
         self.assertEqual(self.res.metadata.language.code, 'fre', msg="Resource has a language that is not French.")
 
         self.assertEqual(self.res.metadata.relations.all().count(), 1,
                          msg="Number of source elements is not equal to 1")
         relation = self.res.metadata.relations.filter(type='isPartOf').first()
-        self.assertEquals(relation.value, 'http://hydroshare.org/resource/001')
+        self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
 
         self.assertEqual(self.res.metadata.rights.statement, 'This is the rights statement for this resource',
                          msg="Statement of rights did not match.")
@@ -182,12 +182,12 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="Number of coverage element of type box is not equal to 1.")
 
         cov_box = self.res.metadata.coverages.filter(type='box').first()
-        self.assertEquals(cov_box.value['name'], 'Name for box coverage')
-        self.assertEquals(cov_box.value['northlimit'], 56.45678)
-        self.assertEquals(cov_box.value['eastlimit'], 130.6789)
-        self.assertEquals(cov_box.value['southlimit'], 16.45678)
-        self.assertEquals(cov_box.value['westlimit'], 16.6789)
-        self.assertEquals(cov_box.value['units'], 'decimal deg')
+        self.assertEqual(cov_box.value['name'], 'Name for box coverage')
+        self.assertEqual(cov_box.value['northlimit'], 56.45678)
+        self.assertEqual(cov_box.value['eastlimit'], 130.6789)
+        self.assertEqual(cov_box.value['southlimit'], 16.45678)
+        self.assertEqual(cov_box.value['westlimit'], 16.6789)
+        self.assertEqual(cov_box.value['units'], 'decimal deg')
 
     def test_update_metadata_ignored_elements(self):
         # the following elements are ignored
@@ -205,22 +205,22 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.dates.all().count(), 2, msg="Number of date elements not equal to 2.")
         # test that the created date was not updated
         created_date = self.res.metadata.dates.filter(type='created').first()
-        self.assertNotEquals(created_date.start_date.date(), parser.parse('1/26/2015').date())
+        self.assertNotEqual(created_date.start_date.date(), parser.parse('1/26/2015').date())
         modified_date = self.res.metadata.dates.filter(type='modified').first()
 
         # test that the modified date was not updated
-        self.assertNotEquals(modified_date.start_date.date(), parser.parse('1/26/2015').date())
+        self.assertNotEqual(modified_date.start_date.date(), parser.parse('1/26/2015').date())
 
         # test the publisher date was not added
-        self.assertEquals(self.res.metadata.dates.filter(type='published').count(), 0)
+        self.assertEqual(self.res.metadata.dates.filter(type='published').count(), 0)
         # test the available date was not added
-        self.assertEquals(self.res.metadata.dates.filter(type='available').count(), 0)
+        self.assertEqual(self.res.metadata.dates.filter(type='available').count(), 0)
         # there should be no format elements
         self.assertEqual(self.res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
         # test the hydroShareIdentifier was not updated
-        self.assertEquals(self.res.metadata.identifiers.filter(name='hydroShareIdentifier').count(), 1)
+        self.assertEqual(self.res.metadata.identifiers.filter(name='hydroShareIdentifier').count(), 1)
         hs_identifier = self.res.metadata.identifiers.filter(name='hydroShareIdentifier').first()
-        self.assertNotEquals(hs_identifier.url, "http://hydroshare.org/001")
+        self.assertNotEqual(hs_identifier.url, "http://hydroshare.org/001")
 
 
 

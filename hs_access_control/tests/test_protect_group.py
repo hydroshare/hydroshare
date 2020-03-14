@@ -130,7 +130,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
             dog.uaccess.share_group_with_user(
                 polyamory, dog, PrivilegeCodes.CHANGE)
         self.assertEqual(
-            cm.exception.message,
+            str(cm.exception),
             'User has no privilege over group')
 
     def test_03_share_rw(self):

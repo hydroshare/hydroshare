@@ -1,0 +1,15 @@
+#add-keyword-wrapper {
+    width: 475px;
+}
+
+#cv-add-keyword-wrapper .input-group {
+    width: 100%;
+}
+
+.vbt-autcomplete-list {
+    max-height: 350px;
+    overflow-y: auto;
+    padding-top: 5px;
+    position: absolute;
+    z-index: 999
+}

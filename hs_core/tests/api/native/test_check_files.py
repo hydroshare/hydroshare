@@ -41,7 +41,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        self.test_file_1 = open(self.test_file_name1, 'r')
+        self.test_file_1 = open(self.test_file_name1, 'rb')
 
     def tearDown(self):
         super(TestResourceFileAPI, self).tearDown()

@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 from mezzanine import template
 from mezzanine.generic.models import Rating

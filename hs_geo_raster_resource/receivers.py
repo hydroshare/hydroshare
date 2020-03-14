@@ -11,8 +11,8 @@ from hs_core.hydroshare.resource import ResourceFile, \
 from hs_core.signals import pre_delete_file_from_resource, pre_metadata_element_create, \
     pre_metadata_element_update, post_create_resource, post_add_files_to_resource
 
-from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
-from models import RasterResource
+from .forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
+from .models import RasterResource
 from hs_file_types.models import raster
 
 
@@ -140,7 +140,7 @@ def _process_uploaded_file(resource, validate_files_dict):
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = element.items()[0]
+                k, v = list(element.items())[0]
                 resource.metadata.create_element(k, **v)
             log_msg = "Geo raster resource (ID:{}) - extracted metadata was saved to DB"
             log_msg = log_msg.format(resource.short_id)

@@ -42,13 +42,13 @@ let relevantToolsApp = new Vue({
             if (response) {
                 vue.tools = response['tool_list'].map(function (tool) {
                     // We need to encode special characters in Urls
-                    if (tool.hasOwnProperty('url')) {
+                    if (tool.hasOwnProperty('url') && tool.url !== null) {
                         tool.url = encodeURIComponent(tool.url);
                     }
-                    else if (tool.hasOwnProperty('url_aggregation')) {
+                    if (tool.hasOwnProperty('url_aggregation') && tool.url_aggregation !== null) {
                         tool.url_aggregation = encodeURIComponent(tool.url_aggregation);
                     }
-                    else if (tool.hasOwnProperty('url_file')) {
+                    if (tool.hasOwnProperty('url_file') && tool.url_file !== null) {
                         tool.url_file = encodeURIComponent(tool.url_file);
                     }
 
@@ -56,7 +56,7 @@ let relevantToolsApp = new Vue({
                 });
 
                 vue.openWithTools = vue.tools.filter(function(tool) {
-                    return tool.url && tool.openwithlist;
+                    return tool.url;
                 });
 
                 // Append menu items to right click menu in file browser

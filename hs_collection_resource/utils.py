@@ -108,13 +108,13 @@ def update_collection_list_csv(collection_obj):
                     w.writerow(row)
 
             # push the new csv file to irods bag
-            files = (UploadedFile(file=open(csv_full_path, 'r'), name=csv_full_name))
+            files = (UploadedFile(file=open(csv_full_path, 'rb'), name=csv_full_name))
             add_resource_files(collection_obj.short_id, files)
 
     except Exception as ex:
         logger.error("Failed to update_collection_list_csv in {}"
-                     "Error:{} ".format(short_key, ex.message))
-        raise Exception("update_collection_list_csv error: " + ex.message)
+                     "Error:{} ".format(short_key, str(ex)))
+        raise Exception("update_collection_list_csv error: " + str(ex))
     finally:
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)

@@ -125,7 +125,7 @@ class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
         response = unshare_resource_with_user(request, shortkey=self.gen_res.short_id,
                                               user_id=self.user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'success')
         self.assertEqual(response_data['redirect_to'], '/my-resources/')
         self.gen_res.raccess.refresh_from_db()
@@ -229,7 +229,7 @@ class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
         response = unshare_resource_with_user(request, shortkey=self.gen_res.short_id,
                                               user_id=self.user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'success')
         self.gen_res.raccess.refresh_from_db()
 
@@ -243,6 +243,6 @@ class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
         response = unshare_resource_with_group(request, shortkey=self.gen_res.short_id,
                                                group_id=self.test_group.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'success')
         self.gen_res.raccess.refresh_from_db()

@@ -5,6 +5,7 @@ any resource, all harvesting ceases. This has caused many bugs.
 """
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from pprint import pprint
@@ -12,8 +13,9 @@ from pprint import pprint
 
 def debug_harvest():
     ind = BaseResourceIndex()
-    for obj in BaseResource.objects.all():
-        print ("TESTING RESOURCE {}".format(obj.title.encode('ascii', 'replace')))
+    for obj in BaseResource.objects.filter(Q(raccess__discoverable=True) |
+                                           Q(raccess__public=True)).distinct():
+        print(("TESTING RESOURCE {}".format(obj.title)))
         print('sample_medium')
         pprint(ind.prepare_sample_medium(obj))
         print('creator')
@@ -124,6 +126,14 @@ def debug_harvest():
         pprint(ind.prepare_absolute_url(obj))
         print('extra')
         pprint(ind.prepare_extra(obj))
+
+        # check whether this resource was found in SOLR right now.
+        from haystack.query import SearchQuerySet
+        found_in_solr = SearchQuerySet().filter(short_id=obj.short_id).count() > 0
+        if found_in_solr:
+            print("found in solr")
+        else:
+            print("NOT FOUND in solr")
 
 
 class Command(BaseCommand):
