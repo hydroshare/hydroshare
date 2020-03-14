@@ -2,7 +2,7 @@
 
 import base64
 import os.path
-from StringIO import StringIO
+from io import StringIO
 from xml.sax import xmlreader, saxutils
 from xml.sax.expatreader import ExpatParser
 

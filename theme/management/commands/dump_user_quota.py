@@ -30,4 +30,4 @@ class Command(BaseCommand):
                     uq.unit,
                     uq.zone
                 ]
-                w.writerow([unicode(v).encode("utf-8") for v in values])
+                w.writerow([str(v).encode() for v in values])

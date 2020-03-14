@@ -45,7 +45,7 @@ class TestExplicitGroupAccess(MockIRODSTestCaseMixin, TestCase):
     def test_explicit_access(self):
         # test explict group ownership access - there should be only one owner
         # at this point
-        self.assertEquals(
+        self.assertEqual(
             self.group_test.gaccess .get_users_with_explicit_access(
                 PrivilegeCodes.OWNER).count(), 1)
         self.assertTrue(self.grp_creator_user in self.group_test.gaccess
@@ -53,14 +53,14 @@ class TestExplicitGroupAccess(MockIRODSTestCaseMixin, TestCase):
 
         # There should not be any user with explict Edit permission on
         # group_test
-        self.assertEquals(
+        self.assertEqual(
             self.group_test.gaccess .get_users_with_explicit_access(
                 PrivilegeCodes.CHANGE).count(), 0)
         # add user_A to the group with Edit permission
         self.grp_creator_user.uaccess.share_group_with_user(
             self.group_test, self.user_A, PrivilegeCodes.CHANGE)
         # There should be 1 user with explict Edit permission on group_test
-        self.assertEquals(
+        self.assertEqual(
             self.group_test.gaccess .get_users_with_explicit_access(
                 PrivilegeCodes.CHANGE).count(), 1)
         self.assertTrue(self.user_A in self.group_test.gaccess
@@ -68,14 +68,14 @@ class TestExplicitGroupAccess(MockIRODSTestCaseMixin, TestCase):
 
         # There should not be any user with explict View permission on
         # group_test
-        self.assertEquals(
+        self.assertEqual(
             self.group_test.gaccess .get_users_with_explicit_access(
                 PrivilegeCodes.VIEW).count(), 0)
         # add user_B to the group with View permission
         self.grp_creator_user.uaccess.share_group_with_user(
             self.group_test, self.user_B, PrivilegeCodes.VIEW)
         # There should be 1 user with explict View permission on group_test
-        self.assertEquals(
+        self.assertEqual(
             self.group_test.gaccess .get_users_with_explicit_access(
                 PrivilegeCodes.VIEW).count(), 1)
         self.assertTrue(
@@ -84,4 +84,4 @@ class TestExplicitGroupAccess(MockIRODSTestCaseMixin, TestCase):
 
         # There should be 3 members in the group (one owner, one editor and one
         # viewer)
-        self.assertEquals(self.group_test.gaccess.members.count(), 3)
+        self.assertEqual(self.group_test.gaccess.members.count(), 3)

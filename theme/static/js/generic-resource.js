@@ -236,7 +236,7 @@ function update_download_status(task_id, download_path) {
             task_id: task_id
         },
         success: function(data) {
-            if(data.status) {
+            if(data.status == 'true') {
                 $("#loading").html('');
                 if(download_status_timeout_id > -1)
                     clearTimeout(download_status_timeout_id);
@@ -259,8 +259,7 @@ function update_download_status(task_id, download_path) {
             if(download_status_timeout_id > -1)
                 clearTimeout(download_status_timeout_id);
             $("#btn-download-all").removeAttr('disabled');
-            console.log(errmsg);
-            alert("Resource bag cannot be generated due to download poll errors: " + errmsg);
+            $("#download-status-info").html("Resource bag cannot be generated. Check server log for details.");
         }
     });
 }
@@ -275,31 +274,7 @@ $(document).ready(function () {
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
         stop: function (event, ui) {
-            var forms = $(".authors-wrapper.sortable form");
-
-            // Set the new order value in the form items
-            for (let i = 0; i < forms.length; i++) {
-                $(forms[i]).find("input.input-order").val(i + 1);
-                $(forms[i]).find("input.input-order").attr("value", i + 1);
-            }
-
-            let $form = $(ui.item.find("form"));
-            var url = $form.attr('action');
-            var datastring = $form.serialize();
-            $("html").css("cursor", "progress");
-
-            $.ajax({
-                type: "POST",
-                url: url,
-                data: datastring,
-                success: function () {
-                    $("html").css("cursor", "initial");
-                },
-                error: function (xhr, errmsg, err) {
-                    $("html").css("cursor", "initial");
-                    console.log(errmsg, err);
-                }
-            });
+            leftHeaderApp.updateAuthorOrder($(ui.item));
         }
     });
 
@@ -357,33 +332,24 @@ $(document).ready(function () {
         metadata_update_ajax_submit(formID);
     });
 
+    $("#add-contributor-dialog .author-types > .btn").click(onAddContributorTypeChange);
+
     // Display toggle for Add Author/Contributor radio buttons
     function onAddContributorTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-user-type]").hide();
-        $("div[data-hs-user-type='" + type + "']").show();
+        const type = $(this).attr("data-contributor-type");
+        const isHydroShareUser = type === "hs-user";
+
+        // Toggle form visibility
+        $("#add-contributor-dialog div[data-contributor-type]").hide();
+        $("#add-contributor-dialog div[data-contributor-type='" + type + "']").show();
+
+        let buttons = $("#add-contributor-dialog .author-types .btn");
+        buttons.each(function() {
+            const isActive = $(this).attr("data-contributor-type") === type;
+            $(this).toggleClass("btn-primary", isActive);
+            $(this).toggleClass("btn-default", !isActive);
+        });
     }
-
-    $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
-    $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
-
-    // Display toggle for author type radio buttons ('person' or 'organization')
-    function onOrgTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-org-type]").hide();
-        $("div[data-hs-org-type='" + type + "']").show();
-    }
-
-    $("input[name='choose_org_type']").click(onOrgTypeChange);
-
-    // Display toggle for author type radio buttons ('person' or 'organization')
-    function onPersonTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-person-type]").hide();
-        $("div[data-hs-person-type='" + type + "']").show();
-    }
-
-    $("input[name='add_author_person']").click(onPersonTypeChange);
 
     $("#citation-text").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower

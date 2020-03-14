@@ -199,10 +199,10 @@ class SciMetaTestCase(HSRESTTestCase):
         response = self.client.put(url, params)
         if should_succeed:
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED,
-                             msg=str(json.loads(response.content)))
+                             msg=str(json.loads(response.content.decode())))
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                             msg=str(json.loads(response.content)))
+                             msg=str(json.loads(response.content.decode())))
 
         return response
 

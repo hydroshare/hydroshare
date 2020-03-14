@@ -9,4 +9,6 @@ userdel hydro-service \
  && chmod -R 3777 /hs_tmp /shared_tmp /tmp 
 
 celery beat -A hydroshare -s /hydroshare/celery/celerybeat-schedule &
-celery worker -A hydroshare -E -Q default
+celery worker -A hydroshare -E -Q default --concurrency=CELERY_CONCURRENCY &
+celery flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
+

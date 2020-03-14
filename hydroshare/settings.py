@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+
 #TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
@@ -304,8 +304,10 @@ INSTALLED_APPS = (
     "hs_composite_resource",
     "hs_rest_api",
     "hs_dictionary",
+    "hs_odm2",
     "security",
-    "markdown"
+    "markdown",
+    "hs_communities"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -692,6 +694,17 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 HSWS_ACTIVATED = False
 
+# Categorization in discovery of content types
+# according to file extension of otherwise unaggregated files. 
+DISCOVERY_EXTENSION_CONTENT_TYPES = { 
+    'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
+    'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
+    'Presentation': set(['ppt', 'pptx', 'odp']),
+    'Jupyter Notebook': set(['ipynb']),
+    'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
+    'Multidimensional (NetCDF)': set(['nc'])
+} 
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
@@ -723,3 +736,10 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
+
+####################
+# Allow Unicode printout to terminals
+####################
+#import codecs
+#sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+#sys.stderr = codecs.getwriter('utf8')(sys.stderr)

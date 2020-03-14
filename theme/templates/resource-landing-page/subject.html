@@ -5,17 +5,39 @@
             {% if resource_edit_mode %}
                 {% csrf_token %}
             {% endif %}
+
             <div class="tags">
                 {% if resource_edit_mode %}
-                    <div id="add-keyword-wrapper" class="input-group">
-                        <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
-                               @keyup.enter="addKeyword('{{ cm.short_id }}')"
-                               placeholder="Examples: Hydrologic_modeling, USU, land use">
-                        <span class="input-group-btn">
-                            <button @click="addKeyword('{{ cm.short_id }}')"
-                                    class="btn btn-success" type="button">Add</button>
-                        </span>
-                    </div>
+                    {% if czo_user %}
+                        <div id="cv-add-keyword-wrapper" class="input-group"
+                             @keyup.enter="addKeyword('{{ cm.short_id }}')">
+                            {#                        https://github.com/alexurquhart/vue-bootstrap-typeahead#}
+                            <vue-bootstrap-typeahead
+                                    :data="{{ odm2_terms }}"
+                                    v-model="newKeyword"
+                                    {#                                Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19#}
+                                    ref="newKeyword"
+                                    input-class="typeahead-search-input"
+                                    @hit=addKeyword('{{ cm.short_id }}')
+                                    placeholder="Examples: Hydrologic_modeling, USU, land use">
+                            </vue-bootstrap-typeahead>
+                            <span class="input-group-btn">
+                                <button @click="addKeyword('{{ cm.short_id }}')"
+                                        class="btn btn-success cv-add-button" type="button">Add</button>
+                            </span>
+                        </div>
+                    {% else %}
+                        <div id="cv-add-keyword-wrapper" class="input-group">
+                            <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
+                                   ref="newKeyword"
+                                   @keyup.enter="addKeyword('{{ cm.short_id }}')"
+                                   placeholder="Examples: Hydrologic_modeling, USU, land use">
+                            <span class="input-group-btn">
+                                <button @click="addKeyword('{{ cm.short_id }}')"
+                                        class="btn btn-success" type="button">Add</button>
+                            </span>
+                        </div>
+                    {% endif %}
                 {% endif %}
 
                 <ul id="lst-tags" class="custom-well tag-list">
@@ -39,7 +61,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-xs-12 col-sm-6">
+
+        <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
             <span class="alert alert-warning group-title" role="alert">
                 <div class="flex">
                     <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
@@ -51,5 +74,7 @@
         </div>
     </div>
 </div>
-
+{# typeahead is used in title.html #}
+<link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">
+<script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>

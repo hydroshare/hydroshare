@@ -124,6 +124,6 @@ class UpdateAccountTest(unittest.TestCase):
         self.assertEqual(user_profile.details, 'Some details about me')
         self.assertEqual(user_profile.country, 'USA')
         self.assertEqual(user_profile.state, 'UT')
-        self.assertNotEquals(user_profile.picture, None)
-        self.assertNotEquals(user_profile.cv, None)
+        self.assertNotEqual(user_profile.picture, None)
+        self.assertNotEqual(user_profile.cv, None)
         self.assertFalse(user_profile.public)
