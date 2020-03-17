@@ -737,9 +737,4 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-####################
-# Allow Unicode printout to terminals
-####################
-#import codecs
-#sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-#sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+OAUTH2_PROVIDER_APPLICATION_MODEL='hs_core.views.oauth2_view.GroupApplication'
