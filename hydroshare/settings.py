@@ -736,5 +736,3 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
-
-OAUTH2_PROVIDER_APPLICATION_MODEL='hs_core.views.oauth2_view.GroupApplication'
