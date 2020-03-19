@@ -16,6 +16,7 @@ class GroupRequiredMixin(AccessMixin):
             return redirect('group', group_id=kwargs['group_id'])
         return super().dispatch(request, *args, **kwargs)
 
+
 class GroupAuthorizationView(AuthorizationView, GroupRequiredMixin):
     """
     Extends AuthorizationView with the GroupRequiredMixin
