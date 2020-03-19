@@ -12,7 +12,7 @@ class GroupRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
-        if 1 != len(u.uaccess.my_groups.filter(id=kwargs['group_id'])):
+        if not u.uaccess.my_groups.filter(id=kwargs['group_id']).exists():
             return redirect('group', group_id=kwargs['group_id'])
         return super().dispatch(request, *args, **kwargs)
 
