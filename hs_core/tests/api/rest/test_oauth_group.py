@@ -61,4 +61,4 @@ class TestOauthGroup(TestCase):
         self.client.logout()
         self.client.login(username=self.user2.username, password='abc123')
         response = self.client.get(group_authorize, follow=True)
-        self.assertEquals(response.redirect_chain, [('/group/2', 302)])
+        self.assertEquals(response.redirect_chain, [('/group/{}'.format(self.testGroup1.pk), 302)])
