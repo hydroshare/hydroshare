@@ -1046,7 +1046,33 @@ function setupModelProgramTypeUI() {
 function setupModelInstanceTypeUI() {
     $("#filetype-model-instance").change(function () {
         $(this).find(".btn-form-submit").show();
-    })
+    });
+
+    var jsonSchema = $("#id-schema-based-form").find("#id-json-schema").val();
+    jsonSchema = JSON.parse(jsonSchema);
+    var jsonData = $("#id-schema-based-form").find("#id-metadata-json").val();
+    if(jsonData.length > 0){
+        jsonData = JSON.parse(jsonData);
+    }
+
+    var editor = new JSONEditor(document.getElementById('editor-holder'),{
+        schema: jsonSchema,
+        startval: jsonData,
+        theme: "bootstrap4",
+        no_additional_properties: true,
+        // disable_collapse: true,
+        disable_edit_json: true,
+        // TODO: array type fields still does not work in JSONEditor form
+        disable_array_add: false,
+        disable_array_delete: false,
+        // TODO: optional fields are not displayed in JSONEditor form for editing
+        display_required_only: false
+    });
+    editor.on("change", function () {
+        $("#id-schema-form-submit").show();
+        var jsonDataString = JSON.stringify(editor.getValue());
+        $("#id-schema-based-form").find("#id-metadata-json").text(jsonDataString);
+    });
 }
 function InitializeTimeSeriesFileTypeForms() {
     var tsSelect = $(".time-series-forms select");
