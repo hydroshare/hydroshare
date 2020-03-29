@@ -1,11 +1,13 @@
+import json
+
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
-from hs_core.models import CoreMetaData
 from lxml import etree
 
+from hs_core.models import CoreMetaData
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 from .model_program import ModelProgramLogicalFile
@@ -66,6 +68,30 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
         base_div, context = super(ModelInstanceFileMetaData, self).get_html_forms(render=False)
         user = kwargs['user']
+
+        def get_schema_based_form():
+            json_form_action = "/hsapi/_internal/{}/update-modelinstance-metadata-json/"
+            json_form_action = json_form_action.format(self.logical_file.id)
+            schema_div = dom_tags.div()
+            with schema_div:
+                with dom_tags.form(id="id-schema-based-form", action=json_form_action,
+                                   method="post", enctype="multipart/form-data"):
+
+                    json_schema = json.dumps(self.executed_by.mi_schema_json)
+                    json_data = "{}"
+                    if self.metadata_json:
+                        json_data = json.dumps(self.metadata_json)
+                    # TODO: the following textarea fields need to be hidden type hidden type
+                    dom_tags.textarea(json_schema, id="id-json-schema")
+                    dom_tags.textarea(json_data, id="id-metadata-json", name="metadata_json")
+
+                    dom_tags.div(id="editor-holder")
+                    with dom_tags.div(cls="row", style="margin-top:10px;"):
+                        with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                            dom_tags.button("Save changes", type="button", id="id-schema-form-submit",
+                                            cls="btn btn-primary pull-right btn-form-submit",
+                                            style="display: none;")
+            return schema_div
 
         def get_executed_by_form():
             executed_by_div = dom_tags.div()
@@ -141,6 +167,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                             dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
                                             style="display: none;", type="button")
+                if self.executed_by and self.executed_by.mi_schema_json:
+                    with dom_tags.div():
+                        get_schema_based_form()
+
         template = Template(root_div.render())
         rendered_html = template.render(context)
         return rendered_html
