@@ -97,6 +97,11 @@ urlpatterns = [
         views.update_model_instance_metadata,
         name="update_modelinstance_metadata"),
 
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/'
+        r'update-modelinstance-metadata-json/$',
+        views.update_model_instance_metadata_json,
+        name="update_modelinstance_metadata_json"),
+
     url(r'^_internal/(?P<file_type_id>[0-9]+)/update-netcdf-file/$',
         views.update_netcdf_file,
         name="update_netcdf_file"),

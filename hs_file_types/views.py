@@ -1,6 +1,6 @@
 import json
 import os
-
+import jsonschema
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -918,6 +918,46 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'multiple-elements', 'message': "Update was successful"}
 
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
+@login_required
+def update_model_instance_metadata_json(request, file_type_id, **kwargs):
+    """adds/updates the 'metadata_json' field of the associated metadata object. This metadata field stores
+    json data based on the metadata json schema of the linked model program.
+    """
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
+    metadata = logical_file.metadata
+    metadata_json_str = request.POST['metadata_json']
+    try:
+        metadata_json = json.loads(metadata_json_str)
+    except ValueError as ex:
+        msg = "Data is not in JSON format. {}".format(str(ex))
+        error_response = {"status": "error", "message": msg}
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # validate json data against metadata schema:
+    try:
+        metadata_json_schema = metadata.executed_by.mi_schema_json
+        jsonschema.Draft4Validator(metadata_json_schema).validate(metadata_json)
+    except jsonschema.ValidationError as ex:
+        msg = "JSON metadata is not valid as per the associated metadata schema {}".format(str(ex))
+        error_response = {"status": "error", "message": msg}
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+    # save json data
+    metadata.metadata_json = metadata_json
+    metadata.is_dirty = True
+    metadata.save()
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'element_name': 'metadata_json', 'message': "Update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
