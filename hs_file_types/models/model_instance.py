@@ -59,7 +59,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         has_model_output
         executed_by
         metadata_json
-
         """
         from hs_file_types import utils
 
@@ -76,21 +75,22 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             with schema_div:
                 with dom_tags.form(id="id-schema-based-form", action=json_form_action,
                                    method="post", enctype="multipart/form-data"):
-
-                    json_schema = json.dumps(self.executed_by.mi_schema_json)
-                    json_data = "{}"
-                    if self.metadata_json:
-                        json_data = json.dumps(self.metadata_json)
-                    # TODO: the following textarea fields need to be hidden type hidden type
-                    dom_tags.textarea(json_schema, id="id-json-schema")
-                    dom_tags.textarea(json_data, id="id-metadata-json", name="metadata_json")
-
-                    dom_tags.div(id="editor-holder")
-                    with dom_tags.div(cls="row", style="margin-top:10px;"):
-                        with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
-                            dom_tags.button("Save changes", type="button", id="id-schema-form-submit",
-                                            cls="btn btn-primary pull-right btn-form-submit",
-                                            style="display: none;")
+                    with dom_tags.fieldset():
+                        dom_tags.legend("Schema Based Metadata")
+                        json_schema = json.dumps(self.executed_by.mi_schema_json)
+                        json_data = "{}"
+                        if self.metadata_json:
+                            json_data = json.dumps(self.metadata_json)
+                        dom_tags.input(value=json_schema, id="id-json-schema", type="hidden")
+                        dom_tags.input(value=json_data, id="id-metadata-json", name="metadata_json", type="hidden")
+                        dom_tags.input(value="loading", id="id-json-editor-load-status", type="hidden")
+                        # front-end JS code uses 'editor-holder' to host JSONEditor form component
+                        dom_tags.div(id="editor-holder")
+                        with dom_tags.div(cls="row", style="margin-top:10px; padding-bottom: 20px;"):
+                            with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                                dom_tags.button("Save changes", type="button", id="id-schema-form-submit",
+                                                cls="btn btn-primary pull-right btn-form-submit",
+                                                style="display: none;")
             return schema_div
 
         def get_executed_by_form():
