@@ -1060,19 +1060,31 @@ function setupModelInstanceTypeUI() {
         startval: jsonData,
         theme: "bootstrap4",
         no_additional_properties: true,
-        // disable_collapse: true,
         disable_edit_json: true,
-        // TODO: array type fields still does not work in JSONEditor form
         disable_array_add: false,
         disable_array_delete: false,
-        // TODO: optional fields are not displayed in JSONEditor form for editing
-        display_required_only: false
+        // TODO: optional fields are not displayed by default in JSONEditor form for editing
+        // user needs to select any optional properties to make it available for editing
+        display_required_only: false,
+        required_by_default: true,
+        object_layout: "table"
     });
     editor.on("change", function () {
-        $("#id-schema-form-submit").show();
+        showJsonEditorSubmitButton();
+        // get all JSONEditor form data as a string
         var jsonDataString = JSON.stringify(editor.getValue());
-        $("#id-schema-based-form").find("#id-metadata-json").text(jsonDataString);
+        // set the form field with the form data
+        $("#id-schema-based-form").find("#id-metadata-json").val(jsonDataString);
     });
+}
+
+function showJsonEditorSubmitButton() {
+    var jsonEditorStatus = $("#id-schema-based-form").find("#id-json-editor-load-status").val();
+    if(jsonEditorStatus === "loaded")
+        $("#id-schema-form-submit").show();
+    else {
+        $("#id-schema-based-form").find("#id-json-editor-load-status").val("loaded");
+    }
 }
 function InitializeTimeSeriesFileTypeForms() {
     var tsSelect = $(".time-series-forms select");
