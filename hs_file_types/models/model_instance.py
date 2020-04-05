@@ -50,6 +50,11 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 dom_tags.p(display_string)
             else:
                 dom_tags.p("Unspecified")
+            if self.metadata_json:
+                dom_tags.legend("Schema Based Metadata)")
+                json_data = json.dumps(self.metadata_json, indent=4)
+                dom_tags.textarea(json_data, rows=10, cols=50, readonly="readonly", cls="form-control")
+
         html_string += executed_by_div.render()
         template = Template(html_string)
         context = Context({})

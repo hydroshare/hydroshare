@@ -203,7 +203,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             with mi_schema_div:
                 dom_tags.legend("Model Instance Metadata JSON Schema")
                 json_schema = json.dumps(json_schema, indent=4)
-                dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;")
+                dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;", cls="form-control")
             html_string += mi_schema_div.render()
 
         if self.mp_file_types.all():
