@@ -1,5 +1,6 @@
 import json
 
+import jsonschema
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import PermissionDenied
 from django.db import models
@@ -80,7 +81,11 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         json_schema = json.dumps(self.executed_by.mi_schema_json)
                         json_data = "{}"
                         if self.metadata_json:
-                            json_data = json.dumps(self.metadata_json)
+                            json_data = json.dumps(self.metadata_json, indent=4)
+                        if invalid_metadata:
+                            dom_tags.div("Existing metadata is invalid as per the schema", cls="alert alert-danger")
+                            dom_tags.textarea(json_data, rows=10, cols=50, readonly="readonly", cls="form-control")
+                            json_data = "{}"
                         dom_tags.input(value=json_schema, id="id-json-schema", type="hidden")
                         dom_tags.input(value=json_data, id="id-metadata-json", name="metadata_json", type="hidden")
                         dom_tags.input(value="loading", id="id-json-editor-load-status", type="hidden")
@@ -163,11 +168,27 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                         dom_tags.legend('Model Program Used for Execution')
                                         get_executed_by_form()
 
-                    with dom_tags.div(cls="row", style="margin-top:10px;"):
+                    with dom_tags.div(cls="row", style="margin-top:10px; padding-bottom: 20px;"):
                         with dom_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                             dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
                                             style="display: none;", type="button")
+
+                show_schema_based_form = True
+                invalid_metadata = False
                 if self.executed_by and self.executed_by.mi_schema_json:
+                    if self.metadata_json:
+                        # validate metadata against the associated schema
+                        try:
+                            jsonschema.Draft4Validator(self.executed_by.mi_schema_json).validate(self.metadata_json)
+                        except jsonschema.ValidationError:
+                            invalid_metadata = True
+                elif self.executed_by and self.metadata_json:
+                    # no metadata schema exists - so no way to validate the existing metadata
+                    invalid_metadata = True
+                else:
+                    show_schema_based_form = False
+
+                if show_schema_based_form:
                     with dom_tags.div():
                         get_schema_based_form()
 

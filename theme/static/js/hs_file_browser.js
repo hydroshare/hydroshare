@@ -1051,31 +1051,32 @@ function setupModelInstanceTypeUI() {
     var jsonSchema = $("#id-schema-based-form").find("#id-json-schema").val();
     jsonSchema = JSON.parse(jsonSchema);
     var jsonData = $("#id-schema-based-form").find("#id-metadata-json").val();
-    if(jsonData.length > 0){
-        jsonData = JSON.parse(jsonData);
-    }
+    jsonData = JSON.parse(jsonData);
 
-    var editor = new JSONEditor(document.getElementById('editor-holder'),{
-        schema: jsonSchema,
-        startval: jsonData,
-        theme: "bootstrap4",
-        no_additional_properties: true,
-        disable_edit_json: true,
-        disable_array_add: false,
-        disable_array_delete: false,
-        // TODO: optional fields are not displayed by default in JSONEditor form for editing
-        // user needs to select any optional properties to make it available for editing
-        display_required_only: false,
-        required_by_default: true,
-        object_layout: "table"
-    });
-    editor.on("change", function () {
-        showJsonEditorSubmitButton();
-        // get all JSONEditor form data as a string
-        var jsonDataString = JSON.stringify(editor.getValue());
-        // set the form field with the form data
-        $("#id-schema-based-form").find("#id-metadata-json").val(jsonDataString);
-    });
+    // if there is a metadata schema - create the metadata editing form
+    if(!jQuery.isEmptyObject(jsonSchema)) {
+        var editor = new JSONEditor(document.getElementById('editor-holder'), {
+            schema: jsonSchema,
+            startval: jsonData,
+            theme: "bootstrap4",
+            no_additional_properties: true,
+            disable_edit_json: true,
+            disable_array_add: false,
+            disable_array_delete: false,
+            // TODO: optional fields are not displayed by default in JSONEditor form for editing
+            // user needs to select any optional properties to make it available for editing
+            display_required_only: false,
+            required_by_default: true,
+            object_layout: "table"
+        });
+        editor.on("change", function () {
+            showJsonEditorSubmitButton();
+            // get all JSONEditor form data as a string
+            var jsonDataString = JSON.stringify(editor.getValue());
+            // set the form field with the form data
+            $("#id-schema-based-form").find("#id-metadata-json").val(jsonDataString);
+        });
+    }
 }
 
 function showJsonEditorSubmitButton() {
