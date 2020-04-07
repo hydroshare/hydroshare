@@ -2544,11 +2544,12 @@ def get_resource_file_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return resource.file_path + '/' + folder + '/' + filename
+        folder = folder.strip('/')
+        return os.path.join(resource.file_path, folder, filename)
 
     else:
         # use root folder
-        return resource.file_path + '/' + filename
+        return os.path.join(resource.file_path, filename)
 
 
 def path_is_allowed(path):
