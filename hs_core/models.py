@@ -2636,7 +2636,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an iRODS path in the same zone from which to copy the file.
-        :param strip_root:
 
         There are two main usages to this constructor:
 
