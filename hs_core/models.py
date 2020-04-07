@@ -2531,7 +2531,10 @@ def get_resource_file_path(resource, filename, folder=None):
 
     """
     # folder can be absolute pathname; strip qualifications off of folder if necessary
-    if folder is not None and folder.startswith(resource.root_path):
+    # cannot only test folder string to start with resource.root_path, since a relative folder path
+    # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
+    # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
+    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
     if folder == '':
@@ -2633,6 +2636,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an iRODS path in the same zone from which to copy the file.
+        :param strip_root:
 
         There are two main usages to this constructor:
 
