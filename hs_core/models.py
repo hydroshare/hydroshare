@@ -313,6 +313,12 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
+    can_copy = False
+    if cm.raccess.public:
+        can_copy = True
+    if cm.raccess.discoverable and self_access_level != None:
+        can_copy = True
+
     show_manage_access = False
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
@@ -326,6 +332,7 @@ def page_permissions_page_processor(request, page):
         "users_json": users_json,
         "owners": owners,
         "self_access_level": self_access_level,
+        "can_copy": can_copy,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
