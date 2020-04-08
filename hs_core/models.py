@@ -2531,7 +2531,10 @@ def get_resource_file_path(resource, filename, folder=None):
 
     """
     # folder can be absolute pathname; strip qualifications off of folder if necessary
-    if folder is not None and folder.startswith(resource.root_path):
+    # cannot only test folder string to start with resource.root_path, since a relative folder path
+    # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
+    # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
+    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
     if folder == '':
@@ -2544,11 +2547,13 @@ def get_resource_file_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return resource.file_path + '/' + folder + '/' + filename
+        folder = folder.strip('/')
+        return os.path.join(resource.file_path, folder, filename)
 
     else:
         # use root folder
-        return resource.file_path + '/' + filename
+        filename = filename.strip('/')
+        return os.path.join(resource.file_path, filename)
 
 
 def path_is_allowed(path):
