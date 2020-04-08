@@ -1610,7 +1610,6 @@ class UserAccess(models.Model):
             return True
         return False
 
-
     def can_share_resource_with_group(self, this_resource, this_group, this_privilege):
         """
         Check whether one can share a resource with a group.
