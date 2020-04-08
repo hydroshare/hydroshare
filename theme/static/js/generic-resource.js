@@ -535,7 +535,10 @@ $(document).ready(function () {
     // ========================================
     $(window).bind('scroll', function () {
         let toolbar = $(".custom-btn-toolbar");
-        if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
+        if (toolbar.children().length == 0){
+            toolbar.css("display", None);
+        }
+        else if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());
             toolbar.css("top", $("#hs-nav-bar").height() + 11);
             toolbar.addClass('toolbar-fixed');

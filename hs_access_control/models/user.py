@@ -1597,6 +1597,20 @@ class UserAccess(models.Model):
         """
         return self.__check_share_resource(this_resource, this_privilege, user=this_user)
 
+    def can_copy_resource(self, resource):
+        """
+        Checks whether a user has permissions to copy a resource
+        :param resource: resource to check permissions
+        :param user: user to check resource permissions for
+        :return: Boolean: True if the resource grants the necessary permissions to the user for copying
+        """
+        if resource.raccess.public:
+            return True
+        if resource.raccess.view_users.filter(id=self.user.id).exists():
+            return True
+        return False
+
+
     def can_share_resource_with_group(self, this_resource, this_group, this_privilege):
         """
         Check whether one can share a resource with a group.

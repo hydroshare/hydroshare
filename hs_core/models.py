@@ -313,11 +313,7 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
-    can_copy = False
-    if cm.raccess.public:
-        can_copy = True
-    if cm.raccess.discoverable and self_access_level != None:
-        can_copy = True
+    can_copy = request.user.uaccess.can_copy_resource(cm)
 
     show_manage_access = False
     is_owner = self_access_level == 'owner'
