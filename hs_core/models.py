@@ -2552,6 +2552,7 @@ def get_resource_file_path(resource, filename, folder=None):
 
     else:
         # use root folder
+        filename = filename.strip('/')
         return os.path.join(resource.file_path, filename)
 
 
