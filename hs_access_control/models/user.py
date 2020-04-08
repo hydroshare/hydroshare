@@ -1606,7 +1606,7 @@ class UserAccess(models.Model):
         """
         if resource.raccess.public:
             return True
-        if resource.raccess.view_users.filter(id=self.user.id).exists():
+        if self.user.uaccess.can_view_resource(resource):
             return True
         return False
 

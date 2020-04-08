@@ -325,3 +325,16 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         hydroshare.delete_resource(chewies.short_id)
         with self.assertRaises(Http404):
             hydroshare.get_resource_by_shortkey(resource_short_id)
+
+    def test_10_copy_permissions(self):
+        """Tests UserAccess can_copy_resource method with public and view permissions"""
+        # public resources may always be copied
+        self.chewies.raccess.public = True
+        self.chewies.raccess.save()
+        self.assertTrue(self.cat.uaccess.can_copy_resource(self.chewies))
+        self.assertTrue(self.dog.uaccess.can_copy_resource(self.chewies))
+
+        # users with view permissions and higher may copy a resource
+        self.assertFalse(self.cat.uaccess.can_copy_resource(self.bones))
+        self.dog.uaccess.share_resource_with_user(self.bones, self.cat, PrivilegeCodes.VIEW)
+        self.assertTrue(self.cat.uaccess.can_copy_resource(self.bones))
