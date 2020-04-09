@@ -615,10 +615,10 @@ def create_empty_resource(pk, user, action='version'):
             raise PermissionDenied('Only resource owners can create new versions')
     elif action == 'copy':
         # import here to avoid circular import
-        from hs_core.views.utils import can_user_copy_resource
+        from hs_core.views.utils import rights_allows_copy
         if not user.uaccess.can_view_resource(res):
             raise PermissionDenied('You do not have permission to view this resource')
-        allow_copy = can_user_copy_resource(res, user)
+        allow_copy = rights_allows_copy(res, user)
         if not allow_copy:
             raise PermissionDenied('The license for this resource does not permit copying')
     else:
