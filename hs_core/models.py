@@ -313,6 +313,8 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
+    permissions_allow_copy = request.user.uaccess.can_view_resource(cm)
+
     show_manage_access = False
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
@@ -326,6 +328,7 @@ def page_permissions_page_processor(request, page):
         "users_json": users_json,
         "owners": owners,
         "self_access_level": self_access_level,
+        "permissions_allow_copy": permissions_allow_copy,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
