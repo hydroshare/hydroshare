@@ -92,17 +92,81 @@ class ModelProgramMetadataValidationForm(forms.Form):
         # TODO: more validation of json schema needs to be implemented once we define the requirements of the schema
         json_schema_string = self.cleaned_data['mi_json_schema'].strip()
         json_schema = dict()
+        is_schema_valid = True
         if json_schema_string:
             try:
                 json_schema = json.loads(json_schema_string)
             except ValueError as exp:
+                is_schema_valid = False
                 self.add_error('mi_json_schema', "Not valid json data")
 
             if json_schema:
                 try:
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
+                    is_schema_valid = False
                     self.add_error('mi_json_schema', "Not a valid json schema.{}".format(str(ex)))
+
+            if is_schema_valid:
+                # custom validation - hydroshare requirements
+                # this custom validation requiring additional attributes are needed for making the jsoneditor form
+                # generation at the front-end to work
+                if 'additionalProperties' not in json_schema:
+                    is_schema_valid = False
+                    self.add_error('mi_json_schema',
+                                   "Not a valid metadata schema. Attribute 'additionalProperties' "
+                                   "is missing")
+                elif json_schema['additionalProperties']:
+                    is_schema_valid = False
+                    self.add_error('mi_json_schema',
+                                   "Not a valid metadata schema. Attribute 'additionalProperties' "
+                                   "should bet set to 'false'")
+
+                def validate_schema(schema_dict):
+                    for k, v in schema_dict.items():
+                        if isinstance(v, dict):
+                            if k not in ('properties', 'items'):
+                                # we need a title to use as label for the form field
+                                if 'title' not in v:
+                                    msg = "Not a valid metadata schema. Attribute 'title' is missing for {}".format(k)
+                                    self.add_error('mi_json_schema', msg)
+                                    break
+                                elif len(v['title'].strip()) == 0:
+                                    msg = "Not a valid metadata schema. Attribute 'title' has no value for {}".format(k)
+                                    self.add_error('mi_json_schema', msg)
+                                    break
+                                if v['type'] == 'array':
+                                    # we need format attribute set to 'table' in order for the jsoneditor to allow
+                                    # editing array type field
+                                    if 'format' not in v:
+                                        msg = "Not a valid metadata schema. Attribute 'format' is missing for {}"
+                                        msg = msg.format(k)
+                                        self.add_error('mi_json_schema', msg)
+                                        break
+                                    elif v['format'] != 'table':
+                                        msg = "Not a valid metadata schema. Attribute 'format' should be set " \
+                                              "to table for {}"
+                                        msg = msg.format(k)
+                                        self.add_error('mi_json_schema', msg)
+                                        break
+                            if 'type' in v and v['type'] == 'object':
+                                # we requiring "additionalProperties": false so that we don't allow user to add new
+                                # form fields using the jsoneditor form
+                                if 'additionalProperties' not in v:
+                                    msg = "Not a valid metadata schema. Attribute 'additionalProperties' is " \
+                                          "missing for {}"
+                                    msg = msg.format(k)
+                                    self.add_error('mi_json_schema', msg)
+                                    break
+                                elif v['additionalProperties']:
+                                    msg = "Not a valid metadata schema. Attribute 'additionalProperties' must " \
+                                          "be set to false for {}"
+                                    msg = msg.format(k)
+                                    self.add_error('mi_json_schema', msg)
+                                    break
+                            validate_schema(v)
+                if is_schema_valid:
+                    validate_schema(json_schema['properties'])
 
         return json_schema
 
