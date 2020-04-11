@@ -977,7 +977,7 @@ def update_model_instance_metadata(request, file_type_id, **kwargs):
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
     metadata = logical_file.metadata
-
+    current_executed_by = metadata.executed_by
     mi_validation_form = ModelInstanceMetadataValidationForm(request.POST, user=request.user)
 
     if not mi_validation_form.is_valid():
@@ -991,10 +991,14 @@ def update_model_instance_metadata(request, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     mi_validation_form.update_metadata(metadata)
+    new_executed_by = metadata.executed_by
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
+    refresh_metadata = current_executed_by != new_executed_by
+
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                          'element_name': 'multiple-elements', 'message': "Update was successful"}
+                          'element_name': 'multiple-elements', 'refresh_metadata': refresh_metadata,
+                          'message': "Update was successful"}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 

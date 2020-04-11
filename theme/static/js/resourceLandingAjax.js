@@ -285,6 +285,9 @@ function metadata_update_ajax_submit(form_id){
                     $(document).trigger("submit-success");
                     $("#success-alert").alert('close');
                 });
+                if(json_response.logical_file_type === "ModelInstanceLogicalFile" && json_response.refresh_metadata) {
+                    showFileTypeMetadata(false, "");
+                }
             }
             else{
                 $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
