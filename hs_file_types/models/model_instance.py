@@ -42,9 +42,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 resource = mp_aggr.resource
                 this_resource = self.logical_file.resource
                 if this_resource.short_id != resource.short_id:
-                    # show resource title if the model program aggregation is from a different resource
-                    display_string = "{} ({}) - (Resource: {})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
-                                                                       resource.title)
+                    # show resource id and title if the model program aggregation is from a different resource
+                    display_string = "{} ({}) - (Resource-{}: {})"
+                    display_string = display_string.format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
+                                                           resource.short_id, resource.title)
                 else:
                     display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                 dom_tags.p(display_string)
@@ -114,8 +115,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         res = mp_aggr.resource
                         this_resource = self.logical_file.resource
                         if this_resource.short_id != res.short_id:
-                            option = "{} ({}) - (Resource: {})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
-                                                                       res.title)
+                            # show resource id and title if the model program aggregation is from a different resource
+                            option = "{} ({}) - (Resource-{}: {})"
+                            option = option.format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
+                                                   res.short_id, res.title)
                         else:
                             option = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                         if self.executed_by:
