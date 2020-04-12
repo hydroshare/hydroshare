@@ -409,7 +409,7 @@ class AbstractFileMetaData(models.Model):
             aggr = element.metadata.logical_file
             # aggregation won't have resource files in case of coverage element being
             # created as part of copying a resource that supports logical file
-            # types - in that case no need for updating resource lever coverage
+            # types - in that case no need for updating resource level coverage
             if aggr.files.all().count() > 0:
                 resource = aggr.resource
                 resource.update_coverage()

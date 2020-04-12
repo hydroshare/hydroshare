@@ -283,3 +283,39 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
         super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+    def get_copy(self, copied_resource):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(ModelInstanceLogicalFile, self).get_copy(copied_resource)
+        copy_of_logical_file.metadata.has_model_output = self.metadata.has_model_output
+        # Note: though copying executed_by here, it will be reset by the copy_executed_by() function
+        # if the executed_by model program aggregation exists in the source resource
+        copy_of_logical_file.metadata.executed_by = self.metadata.executed_by
+        copy_of_logical_file.metadata.metadata_json = self.metadata.metadata_json
+        copy_of_logical_file.metadata.save()
+        copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.save()
+        return copy_of_logical_file
+
+    def copy_executed_by(self, tgt_logical_file):
+        """helper function to support creating copy or new version of a resource
+        :param tgt_logical_file: an instance of ModelInstanceLogicalFile which has been
+        created as part of creating a copy/new version of a resource
+        """
+
+        # if the linked model program exists in the same source resource
+        # then we have to reset the executed_by for the tgt logical file to the copy of the
+        # same model program aggregation that is now part of the copied resource
+        if self.metadata.executed_by:
+            src_executed_by = self.metadata.executed_by
+            src_resource = self.resource
+            src_mp_logical_files = src_resource.modelprogramlogicalfile_set.all()
+            if src_executed_by in src_mp_logical_files:
+                tgt_resource = tgt_logical_file.resource
+                tgt_mp_logical_files = tgt_resource.modelprogramlogicalfile_set.all()
+                for tgt_mp_logical_file in tgt_mp_logical_files:
+                    if src_executed_by.aggregation_name == tgt_mp_logical_file.aggregation_name:
+                        tgt_logical_file.metadata.executed_by = tgt_mp_logical_file
+                        tgt_logical_file.metadata.save()
+                        break

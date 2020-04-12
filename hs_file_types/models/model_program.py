@@ -444,3 +444,36 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+    def copy_mp_file_types(self, tgt_logical_file):
+        """helper function to support creating copy or new version of a resource
+        :param tgt_logical_file: an instance of ModelProgramLogicalFile which has been
+        created as part of creating a copy/new version of a resource
+        """
+        for mp_file_type in self.metadata.mp_file_types.all():
+            mp_res_file = ''
+            for res_file in tgt_logical_file.files.all():
+                if res_file.short_path == mp_file_type.res_file.short_path:
+                    mp_res_file = res_file
+                    break
+            if mp_res_file:
+                ModelProgramResourceFileType.objects.create(file_type=mp_file_type.file_type, res_file=mp_res_file,
+                                                            mp_metadata=tgt_logical_file.metadata)
+
+    def get_copy(self, copied_resource):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(ModelProgramLogicalFile, self).get_copy(copied_resource)
+        copy_of_logical_file.metadata.version = self.metadata.version
+        copy_of_logical_file.metadata.programming_languages = self.metadata.programming_languages
+        copy_of_logical_file.metadata.operating_systems = self.metadata.operating_systems
+        copy_of_logical_file.metadata.release_date = self.metadata.release_date
+        copy_of_logical_file.metadata.website = self.metadata.website
+        copy_of_logical_file.metadata.code_repository = self.metadata.code_repository
+        copy_of_logical_file.metadata.save()
+
+        copy_of_logical_file.model_program_type = self.model_program_type
+        copy_of_logical_file.mi_schema_json = self.mi_schema_json
+        copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.save()
+        return copy_of_logical_file
