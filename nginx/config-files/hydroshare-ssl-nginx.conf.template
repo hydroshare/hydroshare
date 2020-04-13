@@ -110,7 +110,10 @@ server {
         if (-f $document_root/maintenance_on.html) {
             return 503;
         }
+        try_files $uri @proxy;
+    } 
 
+    location @proxy { 
         proxy_pass http://unix:/hs_tmp/gunicorn.sock; 
     } 
 
