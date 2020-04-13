@@ -80,17 +80,13 @@ server {
         alias IRODS_CACHE_ROOT/;
     }
 
-    location / {
+    location /django_irods/download/ {
         if (-f $document_root/maintenance_on.html) {
             return 503;
         }
-        try_files $uri @proxy;
-        AUTH_BASIC;
-        AUTH_BASIC_USER_FILE;
-    }
 
-    location @proxy {
-        proxy_pass  http://unix:/hs_tmp/gunicorn.sock;
+        proxy_pass http://unix:/hs_tmp/gunicorn.sock;
+
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -109,6 +105,14 @@ server {
         proxy_connect_timeout 300s;
         proxy_read_timeout 300;
     }
+
+    location / { 
+        if (-f $document_root/maintenance_on.html) {
+            return 503;
+        }
+
+        proxy_pass http://unix:/hs_tmp/gunicorn.sock; 
+    } 
 
     error_page 503 @maintenance;
     location @maintenance {
