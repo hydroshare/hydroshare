@@ -5,24 +5,25 @@ import urllib.parse
 from django.views.generic import TemplateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.contrib import messages
 
 from . import models as hs_tracking
 from .models import Session, Variable
-from .utils import get_std_log_fields
+from .utils import get_std_log_fields, authentic_redirect_url
 from hs_tools_resource.utils import do_work_when_launching_app_as_needed, WebAppLaunchException
 
 
 class AppLaunch(TemplateView):
 
     def get(self, request, **kwargs):
-
         # get the query parameters and remove the redirect url b/c
         # we don't need to log this.
         querydict = dict(request.GET)
         url = querydict.pop('url')[0]
 
+        if not authentic_redirect_url(url):
+            return HttpResponseForbidden()
         # do work as needed when launching web app
         res_id = querydict.pop('res_id', [''])[0]
         tool_res_id = querydict.pop('tool_res_id', [''])[0]
