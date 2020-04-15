@@ -68,8 +68,8 @@ class ViewTests(TestCase):
 
     def test_get(self):
         hydroshare.resource.create_metadata_element(self.resWebApp.short_id,
-                                         'RequestUrlBase',
-                                         value='https://apps.hydroshare.org/apps/hydroshare-gis/')
+                                                    'RequestUrlBase',
+                                                    value='https://apps.hydroshare.org/apps/hydroshare-gis/')
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         # check that there are no logs for app_launch
@@ -121,8 +121,8 @@ class ViewTests(TestCase):
     def test_get_bad_redirect(self):
         """Tests for a, applaunch request which does not have a matching registered web url in a toolresource"""
         hydroshare.resource.create_metadata_element(self.resWebApp.short_id,
-                                         'RequestUrlBase',
-                                         value='https://apps.hydroshare.org/apps/hydroshare-gis/')
+                                                    'RequestUrlBase',
+                                                    value='https://apps.hydroshare.org/apps/hydroshare-gis/')
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         # check that there are no logs for app_launch
