@@ -18,8 +18,6 @@ geo $external {
   152.54.0.0/22 0;
 }
 
-limit_req_zone $binary_remote_addr zone=applaunch:10m rate=5r/s;
-
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -111,14 +109,6 @@ server {
         }
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
         proxy_set_header X-Django-Reverse-Proxy true;
-    }
-
-    location /tracking/applaunch/ {
-        if (-f $document_root/maintenance_on.html) {
-            return 503;
-        }
-        limit_req zone=applaunch burst=50;
-        proxy_pass http://unix:/hs_tmp/gunicorn.sock;
     }
 
     location / {
