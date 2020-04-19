@@ -222,6 +222,29 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                            '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms'])
             executed_by.text = self.executed_by.aggregation_path
 
+        if self.metadata_json:
+            ns_hsterms = CoreMetaData.NAMESPACES['hsterms']
+            metadata_dict = self.metadata_json
+            # since we don't allow nested objects in the schema, we are not expecting nested dict objects in metadata
+            for k, v in metadata_dict.items():
+                k_obj_element = etree.SubElement(container_to_add_to,
+                                                 '{{{ns}}}{element_name}'.format(ns=ns_hsterms, element_name=k))
+                if isinstance(v, dict):
+                    k_obj_element_desc = etree.SubElement(
+                        k_obj_element, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
+
+                    for k_sub, v_sub in v.items():
+                        field = etree.SubElement(k_obj_element_desc, "{{{ns}}}{element_name}".format(
+                            ns=ns_hsterms, element_name=k_sub))
+                        if isinstance(v_sub, list):
+                            field.text = ", ".join(v_sub)
+                        else:
+                            field.text = str(v_sub)
+                elif isinstance(v, list):
+                    k_obj_element.text = ", ".join(v)
+                else:
+                    k_obj_element.text = str(v)
+
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print).decode()
 
