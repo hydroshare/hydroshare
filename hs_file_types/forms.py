@@ -164,7 +164,21 @@ class ModelProgramMetadataValidationForm(forms.Form):
                                     msg = msg.format(k)
                                     self.add_error('mi_json_schema', msg)
                                     break
-                            validate_schema(v)
+
+                            # check for nested objects - we are not allowing nested objects to keep the form
+                            # generated from the schema by jsoneditor to not get complicated/broken
+                            nested_object_found = False
+                            for k_child, v_child in v.items():
+                                if isinstance(v_child, dict):
+                                    if 'type' in v_child and v_child['type'] == 'object':
+                                        msg = "Not a valid metadata schema. Nested objects are not allowed. " \
+                                              "Attribute '{}' contains nested object"
+                                        msg = msg.format(k_child)
+                                        self.add_error('mi_json_schema', msg)
+                                        nested_object_found = True
+                                        break
+                            if not nested_object_found:
+                                validate_schema(v)
                 if is_schema_valid:
                     validate_schema(json_schema['properties'])
 
