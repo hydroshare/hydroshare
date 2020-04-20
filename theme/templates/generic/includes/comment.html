@@ -51,8 +51,8 @@
             {% endif %}
         {% endeditable %}
         {% if not comment.is_removed %}
-            {% if comment.user == user or user.is_staff or self_access_level == 'owner' %}
-                {%  if user.is_authenticated %}
+            {%  if user.is_authenticated %}
+                {% if comment.user == user or user.is_staff or self_access_level == 'owner' %}
                     <a href="{% url 'delete_resource_comment' comment.id %}">--delete this comment--</a>
                 {% endif %}
             {% endif %}
