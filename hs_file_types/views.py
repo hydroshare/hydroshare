@@ -956,6 +956,9 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
     metadata.metadata_json = metadata_json
     metadata.is_dirty = True
     metadata.save()
+    resource = logical_file.resource
+    resource_modified(resource, request.user, overwrite_bag=False)
+
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'metadata_json', 'message': "Update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
