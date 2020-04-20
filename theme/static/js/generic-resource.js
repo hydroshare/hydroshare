@@ -150,6 +150,17 @@ function removeExtraMetaTable(table) {
     saveExtraMetadata();
 }
 
+function showRemoveCommentPopup(comment_id_str) {
+    // this is a hidden HTML element to store the row_id_str
+    $("#delete_comment_id").val(comment_id_str);
+    $('#deleteCommentDialog').modal('show');
+}
+
+function removeComment() {
+    $("#deleteCommentDialog").modal('hide');
+    window.location = "/comment/delete/" + $("#delete_comment_id").val().trim();
+}
+
 function findMaxRowID(table) {
     var max_id = -1;
     table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
@@ -527,6 +538,10 @@ $(document).ready(function () {
         deleteFileTypeExtraMetadata(formID);
     });
 
+    $("#comments").on("click", ".btn-confirm-delete-comment", function () {
+        var commentId = $(this).attr("comment-id");
+        showRemoveCommentPopup(commentId);
+    });
 
     const SPACING = 22; // 2 * 10px(from margins) + 2 * 1px (from borders)
     var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
