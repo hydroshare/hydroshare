@@ -1,5 +1,6 @@
 {% load i18n comments_tags mezzanine_tags ratings_tags hydroshare_tags %}
 {% for comment in comments_for_thread %}
+    {% if not comment.is_removed %}
     <div id="comment-{{ comment.id }}" class="comment-author">
         {% editable comment.is_public comment.is_removed %}
             {% if not comment.is_removed and comment.is_public or request.user.is_staff %}
@@ -49,7 +50,16 @@
                 </div>
             {% endif %}
         {% endeditable %}
+        {% if not comment.is_removed %}
+            {% if comment.user == user or user.is_staff or self_access_level == 'owner' %}
+                {%  if user.is_authenticated %}
+                    <a href="{% url 'delete_resource_comment' comment.id %}">--delete this comment--</a>
+                {% endif %}
+            {% endif %}
+        {% endif %}
     </div>
+    {% endif %}
+</form>
 {% endfor %}
 
 {% if no_comments %}
