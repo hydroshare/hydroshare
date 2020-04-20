@@ -233,17 +233,35 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     k_obj_element_desc = etree.SubElement(
                         k_obj_element, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
 
+                    sub_field_added = False
                     for k_sub, v_sub in v.items():
                         field = etree.SubElement(k_obj_element_desc, "{{{ns}}}{element_name}".format(
                             ns=ns_hsterms, element_name=k_sub))
                         if isinstance(v_sub, list):
-                            field.text = ", ".join(v_sub)
+                            if v_sub:
+                                field.text = ", ".join(v_sub)
                         else:
-                            field.text = str(v_sub)
-                elif isinstance(v, list):
-                    k_obj_element.text = ", ".join(v)
+                            if len(v_sub.strip()) > 0:
+                                field.text = str(v_sub)
+                        if not field.text:
+                            k_obj_element_desc.remove(field)
+                        else:
+                            sub_field_added = True
+
+                    if not sub_field_added:
+                        # remove the parent xml node since we don't have any child nodes
+                        container_to_add_to.remove(k_obj_element)
                 else:
-                    k_obj_element.text = str(v)
+                    if isinstance(v, list):
+                        if v:
+                            k_obj_element.text = ", ".join(v)
+                    else:
+                        if len(v.strip()) > 0:
+                            k_obj_element.text = str(v)
+
+                    if not k_obj_element.text:
+                        # remove xml node since there is no data for the node
+                        container_to_add_to.remove(k_obj_element)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print).decode()
