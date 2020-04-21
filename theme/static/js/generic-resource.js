@@ -151,7 +151,7 @@ function removeExtraMetaTable(table) {
 }
 
 function showRemoveCommentPopup(comment_id_str, has_children_bool) {
-    // this is a hidden HTML element to store the row_id_str
+    // this is a hidden HTML element to store the comment_id_str
     $("#delete_comment_id").val(comment_id_str);
     if(has_children_bool){
         $("#delete_comment_message").text("This will delete this comment and the threaded reply messages")

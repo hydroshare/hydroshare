@@ -570,9 +570,8 @@ def email_verify_password_reset(request, uidb36=None, token=None):
 @login_required()
 def delete_resource_comment(request, id):
     comment = get_object_or_404(Comment, id=id)
-    comment.content_object.raccess.owners.filter(pk=request.user.pk).exists()
     if comment.user.id == request.user.id or \
-            request.user.is_superuser or \
+            request.user.is_staff or \
             comment.content_object.raccess.owners.filter(pk=request.user.pk).exists():
         perform_delete(request, comment)
     else:
