@@ -15,7 +15,7 @@ from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
@@ -576,7 +576,7 @@ def delete_resource_comment(request, id):
             comment.content_object.raccess.owners.filter(pk=request.user.pk).exists():
         perform_delete(request, comment)
     else:
-        raise Http404
+        raise HttpResponseForbidden()
     return HttpResponseRedirect(comment.content_object.get_absolute_url())
 
 @login_required
