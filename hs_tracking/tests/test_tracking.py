@@ -3,14 +3,16 @@ import csv
 from io import StringIO
 
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import Client
 from django.http import HttpRequest, QueryDict, response
 from mock import patch, Mock
 
 from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
+from hs_core import hydroshare
 from hs_tracking.views import AppLaunch
 import hs_tracking.utils as utils
+from hs_tools_resource.models import RequestUrlBase
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -20,8 +22,15 @@ from pprint import pprint
 class ViewTests(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create(username='testuser',
-                                        email='testuser@example.com')
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.user = hydroshare.create_account(
+            'testuser@example.com',
+            username='testuser',
+            first_name='Shawn',
+            last_name='Crawley',
+            superuser=False,
+            groups=[self.group]
+        )
         self.user.set_password('password')
         self.user.save()
         profile = self.user.userprofile
@@ -33,6 +42,12 @@ class ViewTests(TestCase):
         profile.save()
         self.visitor = Visitor.objects.create()
         self.session = Session.objects.create(visitor=self.visitor)
+
+        self.resWebApp = hydroshare.create_resource(
+            resource_type='ToolResource',
+            owner=self.user,
+            title='Test Web App Resource',
+            keywords=['kw1', 'kw2'])
 
     def createRequest(self, user=None):
         self.request = Mock()
@@ -52,6 +67,10 @@ class ViewTests(TestCase):
         return self.request
 
     def test_get(self):
+        hydroshare.resource.create_metadata_element(self.resWebApp.short_id,
+                                                    'RequestUrlBase',
+                                                    value='https://apps.hydroshare.org/apps/hydroshare-gis/')
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         # check that there are no logs for app_launch
         app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
@@ -98,6 +117,42 @@ class ViewTests(TestCase):
         self.assertTrue(values['user_type'] == 'Unspecified')
         self.assertTrue(values['user_ip'] == '198.84.193.157')
         self.assertTrue(values['res_id'] == res_id)
+
+    def test_get_bad_redirect(self):
+        """Tests for a, applaunch request which does not have a matching registered web url in a toolresource"""
+        hydroshare.resource.create_metadata_element(self.resWebApp.short_id,
+                                                    'RequestUrlBase',
+                                                    value='https://apps.hydroshare.org/apps/hydroshare-gis/')
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        # check that there are no logs for app_launch
+        app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
+        self.assertEqual(app_lauch_cnt, 0)
+
+        # create a mock request object
+        r = self.createRequest(self.user)
+
+        # build request 'GET'
+        res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
+        res_type = 'GenericResource'
+        app_name = 'test'
+        request_url = 'https://www.youtube.com/' \
+                      '?res_id=%s&res_type=%s' % (res_id, res_type)
+
+        app_url = urllib.parse.quote(request_url)
+        href = 'url=%s;name=%s' % (app_url, app_name)
+        r.GET = QueryDict(href)
+
+        # invoke the app logging endpoint
+        app_logging = AppLaunch()
+        url_redirect = app_logging.get(r)
+
+        # validate response
+        self.assertTrue(type(url_redirect) == response.HttpResponseForbidden)
+
+        # validate logged data
+        app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
+        self.assertEqual(app_lauch_cnt, 0)
 
 
 class TrackingTests(TestCase):
