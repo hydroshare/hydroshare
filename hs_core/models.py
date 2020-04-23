@@ -313,7 +313,9 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
-    permissions_allow_copy = request.user.uaccess.can_view_resource(cm)
+    permissions_allow_copy = False
+    if request.user.is_authenticated:
+        permissions_allow_copy = request.user.uaccess.can_view_resource(cm)
 
     show_manage_access = False
     is_owner = self_access_level == 'owner'
