@@ -150,11 +150,11 @@ function removeExtraMetaTable(table) {
     saveExtraMetadata();
 }
 
-function showRemoveCommentPopup(comment_id_str, has_children_bool) {
+function showRemoveCommentPopup(comment_id_str, thread_count) {
     // this is a hidden HTML element to store the comment_id_str
     $("#delete_comment_id").val(comment_id_str);
-    if(has_children_bool){
-        $("#delete_comment_message").text("This will delete this comment and the threaded reply messages")
+    if(thread_count > 0){
+        $("#delete_comment_message").text("This will delete this comment and " + thread_count + " threaded reply messages")
     }
     else{
         $("#delete_comment_message").text("This will delete this comment")
@@ -546,8 +546,8 @@ $(document).ready(function () {
 
     $("#comments").on("click", ".btn-confirm-delete-comment", function () {
         var commentId = $(this).attr("comment-id");
-        var has_children = $(this).parent().find(".comment-author").length > 0;
-        showRemoveCommentPopup(commentId, has_children);
+        var thread_count = $(this).parent().find(".comment-author").length;
+        showRemoveCommentPopup(commentId, thread_count);
     });
 
     const SPACING = 22; // 2 * 10px(from margins) + 2 * 1px (from borders)
