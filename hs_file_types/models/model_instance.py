@@ -129,6 +129,18 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 dom_tags.option(option, value=mp_aggr.id)
                         else:
                             dom_tags.option(option, value=mp_aggr.id)
+                if self.executed_by and self.executed_by.mi_schema_json:
+                    dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                                    cls="btn btn-success btn-block",
+                                    data_toggle="collapse", data_target="#meta-schema")
+                    mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
+                                                 style="margin-top:10px; padding-bottom: 20px;")
+                    with mi_schema_div:
+                        json_schema = json.dumps(self.executed_by.mi_schema_json, indent=4)
+                        dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;",
+                                          cls="form-control")
+                elif self.executed_by:
+                    dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
             return executed_by_div
 
         with root_div:
