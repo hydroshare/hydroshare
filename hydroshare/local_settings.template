@@ -184,6 +184,9 @@ HSWS_TIMEOUT = 3
 HSWS_PUBLISH_URLS = False
 HSWS_ACTIVATED = False
 
+# HydroShare Data Services
+HS_GEOSERVER = "https://geoserver.hydroshare.org/geoserver"
+
 # Uncomment the following code if you want to suppress some warnings on a local laptop
 # TIME_ZONE = 'Etc/UTC'
 # USE_TZ = False
