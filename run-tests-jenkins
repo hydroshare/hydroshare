@@ -2,4 +2,4 @@
 
 coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe
 coverage xml
-py.test --cov-report xml --cov-append --cov=pytest/functional
+pytest
