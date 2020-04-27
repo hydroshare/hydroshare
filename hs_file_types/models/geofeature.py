@@ -3,10 +3,12 @@ import logging
 import shutil
 import zipfile
 import xmltodict
+from urllib.parse import quote
 from lxml import etree
 
 from osgeo import ogr, osr
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.utils.html import strip_tags
@@ -26,7 +28,6 @@ from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 UNKNOWN_STR = "unknown"
-
 
 class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaData):
     # the metadata element models are from the geographic feature resource type app
@@ -81,6 +82,40 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         return root_div.render()
 
+    def _getGeoServerServiceURL(self, service):
+        resId = 'fa3c985723ff45bdbf8cb18321d2df3e' 
+        return (
+            f'{settings.HS_GEOSERVER}/HS={resId}/'
+            f'{service}?request=GetCapabilities&service={service.upper()}'
+        )
+
+    def _getPreviewDataURL(self, service):
+        # We need to URI encode each part of the URL
+
+        # TODO: access resource id
+        resId = quote('fa3c985723ff45bdbf8cb18321d2df3e')
+        
+        extent = str(self.spatial_coverage.value['northlimit']) \
+        + "," + str(self.spatial_coverage.value['westlimit']) \
+        + "," + str(self.spatial_coverage.value['southlimit']) \
+        + "," + str(self.spatial_coverage.value['eastlimit'])
+        datasetName = quote(self.logical_file.dataset_name.encode("utf-8"))
+        width = 800
+        height = 600
+        
+        # TODO: Hong, figure out parse method to extract relevant substring. 
+        # i.e: for 'WGS 84 EPSG:4326' we only need 'EPSG:4326'
+        srs=quote(self.spatial_coverage.value['projection'])
+
+        return (
+            f'{settings.HS_GEOSERVER}/HS={resId}/'
+            f'{service}?service={service.upper()}'
+            f'&version=1.1.0&request=GetMap&layers={resId}:{datasetName}'
+            f'&bbox={extent}'
+            f'&width={width}&height={height}&srs={srs}'
+            f'&format=application/openlayers'
+        )
+
     def _get_data_services_html(self):
         root_div = div(cls="content-block")
         with root_div:
@@ -89,24 +124,26 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                 with tbody():
                     with tr(cls='row'):
                         with th():
-                            a('Web Mapping Service (WMS)', href='www.google.com', 
+                            a('Web Mapping Service (WMS)', href=self._getGeoServerServiceURL('wms'), 
                             target='_blank')
-                            span('www.google.com', id='link-wms', style='display: none;')
+                            span(self._getGeoServerServiceURL('wms'), 
+                            id='link-wms', style='display: none;')
                         with td():
                             with button(type='button', cls='btn btn-default clipboard-copy', 
                             data_target='link-wms', style='border-radius: 4px;'):
                                 i(cls='fa fa-clipboard')
-                                span('Copy')
+                                span('Copy Service URL')
                     with tr(cls='row'):
                         with th():
-                            a('Web Feature Service (WFS)', href='www.google.com', 
+                            a('Web Feature Service (WFS)', href=self._getGeoServerServiceURL('wfs'), 
                             target='_blank')
-                            span('www.google.com', id='link-wfs', style='display: none;')
+                            span(self._getGeoServerServiceURL('wfs'), id='link-wfs', style='display: none;')
                         with td():
                             with button(type='button', cls='btn btn-default clipboard-copy', 
                             data_target='link-wfs', style='border-radius: 4px;'):
                                 i(cls='fa fa-clipboard')
-                                span('Copy')
+                                span('Copy Service URL')
+            a('Preview Data', cls='btn btn-primary', href=self._getPreviewDataURL('wms'), target='_blank')
 
         return root_div.render()
 
