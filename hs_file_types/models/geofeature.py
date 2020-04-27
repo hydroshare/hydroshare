@@ -14,7 +14,7 @@ from django.db import models, transaction
 from django.utils.html import strip_tags
 from django.template import Template, Context
 
-from dominate.tags import legend, table, tbody, tr, th, td, div, a, button, span, i
+from dominate.tags import legend, table, tbody, tr, th, td, div, a, button, span, i, p
 
 from hs_core.models import Title, CoreMetaData
 from hs_core.hydroshare import utils
@@ -144,6 +144,10 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                                 i(cls='fa fa-clipboard')
                                 span('Copy Service URL')
             a('Preview Data', cls='btn btn-primary', href=self._getPreviewDataURL('wms'), target='_blank')
+            with p(cls='space-top'):
+                span('Please refer to ') 
+                a("HydroShare's Help documentation", href='https://help.hydroshare.org/', target='_blank')
+                span(' for examples of how to use these services')
 
         return root_div.render()
 
