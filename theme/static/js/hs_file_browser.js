@@ -864,6 +864,10 @@ function showFileTypeMetadata(file_type_time_series, url){
         $("#fileTypeMetaData").html(json_response.metadata);
         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
+        $("#fileTypeMetaData .clipboard-copy").click(function (e) {
+            const copyTarget = $(this).attr("data-target");
+            copyToClipboard(document.getElementById(copyTarget), e);
+        });
 
          $("#txt-keyword-filetype").keypress(function (e) {
              e.which = e.which || e.keyCode;

@@ -88,24 +88,26 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             with table(cls='info-table'):
                 with tbody():
                     with tr(cls='row'):
-                        th(a('Web Mapping Service(WMS)', href='www.google.com', 
-                        target='_blank', id='link-wms'))
+                        with th():
+                            a('Web Mapping Service (WMS)', href='www.google.com', 
+                            target='_blank')
+                            span('www.google.com', id='link-wms', style='display: none;')
                         with td():
                             with button(type='button', cls='btn btn-default clipboard-copy', 
                             data_target='link-wms', style='border-radius: 4px;'):
                                 i(cls='fa fa-clipboard')
                                 span('Copy')
                     with tr(cls='row'):
-                        th(a('Web Feature Service (WFS)', href='www.google.com', 
-                        target='_blank', id='link-wfs'))
+                        with th():
+                            a('Web Feature Service (WFS)', href='www.google.com', 
+                            target='_blank')
+                            span('www.google.com', id='link-wfs', style='display: none;')
                         with td():
                             with button(type='button', cls='btn btn-default clipboard-copy', 
                             data_target='link-wfs', style='border-radius: 4px;'):
                                 i(cls='fa fa-clipboard')
                                 span('Copy')
 
-                                
-        
         return root_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
