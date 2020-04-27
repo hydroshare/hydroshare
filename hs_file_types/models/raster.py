@@ -3,6 +3,7 @@ import logging
 import shutil
 import subprocess
 import zipfile
+from urllib.parse import quote
 
 import xml.etree.ElementTree as ET
 from lxml import etree
@@ -13,11 +14,12 @@ from gdalconst import GA_ReadOnly
 from functools import partial, wraps
 
 from django.db import models, transaction
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms.models import formset_factory
 from django.template import Template, Context
 
-from dominate.tags import div, legend, form, button
+from dominate.tags import div, legend, form, button, table, tbody, tr, th, td, a, span, i, p
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -69,10 +71,80 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         html_string += band_legend.render()
         for band_info in self.bandInformations:
             html_string += band_info.get_html()
+        html_string += self._get_data_services_html()
 
         template = Template(html_string)
         context = Context({})
         return template.render(context)
+
+    def _getGeoServerServiceURL(self, service):
+        resId = 'fa3c985723ff45bdbf8cb18321d2df3e' 
+        return (
+            f'{settings.HS_GEOSERVER}/HS={resId}/'
+            f'{service}?request=GetCapabilities&service={service.upper()}'
+        )
+
+    def _getPreviewDataURL(self, service):
+        # We need to URI encode each part of the URL
+
+        # TODO: access resource id
+        resId = quote('fa3c985723ff45bdbf8cb18321d2df3e')
+        
+        extent = str(self.spatial_coverage.value['westlimit']) \
+        + "," + str(self.spatial_coverage.value['southlimit']) \
+        + "," + str(self.spatial_coverage.value['eastlimit']) \
+        + "," + str(self.spatial_coverage.value['northlimit'])
+        datasetName = quote(self.logical_file.dataset_name.encode("utf-8"))
+        width = 800
+        height = 600
+        
+        # Get the last 9 characters of the string to parse the EPSG string
+        # i.e: 'WGS 84 EPSG:4326' => 'EPSG:4326'
+        srs=quote(self.spatial_coverage.value['projection'][-9:])
+
+        return (
+            f'{settings.HS_GEOSERVER}/HS={resId}/'
+            f'{service}?service={service.upper()}'
+            f'&version=1.1.0&request=GetMap&layers={resId}:{datasetName}'
+            f'&bbox={extent}'
+            f'&width={width}&height={height}&srs={srs}'
+            f'&format=application/openlayers'
+        )
+
+    def _get_data_services_html(self):
+        root_div = div(cls="content-block")
+        with root_div:
+            legend('Data Services')
+            with table(cls='info-table'):
+                with tbody():
+                    with tr(cls='row'):
+                        with th():
+                            a('Web Mapping Service (WMS)', href=self._getGeoServerServiceURL('wms'), 
+                            target='_blank')
+                            span(self._getGeoServerServiceURL('wms'), 
+                            id='link-wms', style='display: none;')
+                        with td():
+                            with button(type='button', cls='btn btn-default clipboard-copy', 
+                            data_target='link-wms', style='border-radius: 4px;'):
+                                i(cls='fa fa-clipboard')
+                                span('Copy Service URL')
+                    with tr(cls='row'):
+                        with th():
+                            a('Web Coverage Service (WCS)', href=self._getGeoServerServiceURL('wcs'), 
+                            target='_blank')
+                            span(self._getGeoServerServiceURL('wcs'), id='link-wcs', style='display: none;')
+                        with td():
+                            with button(type='button', cls='btn btn-default clipboard-copy', 
+                            data_target='link-wcs', style='border-radius: 4px;'):
+                                i(cls='fa fa-clipboard')
+                                span('Copy Service URL')
+            a('Preview Data', cls='btn btn-primary', href=self._getPreviewDataURL('wms'), target='_blank')
+            with p(cls='space-top'):
+                span('Please refer to ') 
+                a("HydroShare's Help documentation", href='https://help.hydroshare.org/', target='_blank')
+                span(' for examples of how to use these services')
+
+        return root_div.render()
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function to generate html needed for metadata editing"""
