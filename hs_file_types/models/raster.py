@@ -78,9 +78,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return template.render(context)
 
     def _getGeoServerServiceURL(self, service):
-        resId = 'fa3c985723ff45bdbf8cb18321d2df3e' 
+        resId = '46847666941c43fbbafb27922861a2e5' 
         return (
-            f'{settings.HS_GEOSERVER}/HS={resId}/'
+            f'{settings.HS_GEOSERVER}/HS-{resId}/'
             f'{service}?request=GetCapabilities&service={service.upper()}'
         )
 
@@ -88,12 +88,14 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         # We need to URI encode each part of the URL
 
         # TODO: access resource id
-        resId = quote('fa3c985723ff45bdbf8cb18321d2df3e')
+        resId = quote('bee3e6d857fd48d6be60f95997b2eb14')
         
         extent = str(self.spatial_coverage.value['westlimit']) \
         + "," + str(self.spatial_coverage.value['southlimit']) \
         + "," + str(self.spatial_coverage.value['eastlimit']) \
         + "," + str(self.spatial_coverage.value['northlimit'])
+        extent = quote(extent)
+        # TODO: prepend dataset path to dataset name
         datasetName = quote(self.logical_file.dataset_name.encode("utf-8"))
         width = 800
         height = 600
@@ -103,9 +105,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         srs=quote(self.spatial_coverage.value['projection'][-9:])
 
         return (
-            f'{settings.HS_GEOSERVER}/HS={resId}/'
+            f'{settings.HS_GEOSERVER}/HS-{resId}/'
             f'{service}?service={service.upper()}'
-            f'&version=1.1.0&request=GetMap&layers={resId}:{datasetName}'
+            f'&version=1.1.0&request=GetMap&layers=HS-{resId}:{datasetName}'
             f'&bbox={extent}'
             f'&width={width}&height={height}&srs={srs}'
             f'&format=application/openlayers'
