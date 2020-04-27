@@ -12,7 +12,7 @@ from django.db import models, transaction
 from django.utils.html import strip_tags
 from django.template import Template, Context
 
-from dominate.tags import legend, table, tbody, tr, th, td, div, a, button
+from dominate.tags import legend, table, tbody, tr, th, td, div, a, button, span, i
 
 from hs_core.models import Title, CoreMetaData
 from hs_core.hydroshare import utils
@@ -91,14 +91,20 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                         th(a('Web Mapping Service(WMS)', href='www.google.com', 
                         target='_blank', id='link-wms'))
                         with td():
-                            button('Copy', type='button', cls='btn btn-default clipboard-copy', 
-                            data_target='link-wms', style='border-radius: 4px;')
+                            with button(type='button', cls='btn btn-default clipboard-copy', 
+                            data_target='link-wms', style='border-radius: 4px;'):
+                                i(cls='fa fa-clipboard')
+                                span('Copy')
                     with tr(cls='row'):
                         th(a('Web Feature Service (WFS)', href='www.google.com', 
                         target='_blank', id='link-wfs'))
                         with td():
-                            button('Copy', type='button', cls='btn btn-default clipboard-copy', 
-                            data_target='link-wfs', style='border-radius: 4px;')
+                            with button(type='button', cls='btn btn-default clipboard-copy', 
+                            data_target='link-wfs', style='border-radius: 4px;'):
+                                i(cls='fa fa-clipboard')
+                                span('Copy')
+
+                                
         
         return root_div.render()
 
