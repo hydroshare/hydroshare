@@ -12,7 +12,7 @@ from django.db import models, transaction
 from django.utils.html import strip_tags
 from django.template import Template, Context
 
-from dominate.tags import legend, table, tbody, tr, th, div
+from dominate.tags import legend, table, tbody, tr, th, td, div, a, button
 
 from hs_core.models import Title, CoreMetaData
 from hs_core.hydroshare import utils
@@ -59,6 +59,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             html_string += self.temporal_coverage.get_html()
 
         html_string += self._get_field_informations_html()
+        html_string += self._get_data_services_html()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
@@ -78,6 +79,27 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                     for field_info in self.fieldinformations.all():
                         field_info.get_html(pretty=False)
 
+        return root_div.render()
+
+    def _get_data_services_html(self):
+        root_div = div(cls="content-block")
+        with root_div:
+            legend('Data Services')
+            with table(cls='info-table'):
+                with tbody():
+                    with tr(cls='row'):
+                        th(a('Web Mapping Service(WMS)', href='www.google.com', 
+                        target='_blank', id='link-wms'))
+                        with td():
+                            button('Copy', type='button', cls='btn btn-default clipboard-copy', 
+                            data_target='link-wms', style='border-radius: 4px;')
+                    with tr(cls='row'):
+                        th(a('Web Feature Service (WFS)', href='www.google.com', 
+                        target='_blank', id='link-wfs'))
+                        with td():
+                            button('Copy', type='button', cls='btn btn-default clipboard-copy', 
+                            data_target='link-wfs', style='border-radius: 4px;')
+        
         return root_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
