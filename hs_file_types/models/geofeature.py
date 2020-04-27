@@ -103,9 +103,9 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         width = 800
         height = 600
         
-        # TODO: Hong, figure out parse method to extract relevant substring. 
-        # i.e: for 'WGS 84 EPSG:4326' we only need 'EPSG:4326'
-        srs=quote(self.spatial_coverage.value['projection'])
+        # Get the last 9 characters of the string to parse the EPSG string
+        # i.e: 'WGS 84 EPSG:4326' => 'EPSG:4326'
+        srs=quote(self.spatial_coverage.value['projection'][-9:])
 
         return (
             f'{settings.HS_GEOSERVER}/HS={resId}/'
