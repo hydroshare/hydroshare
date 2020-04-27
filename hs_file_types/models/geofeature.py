@@ -95,10 +95,10 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         # TODO: access resource id
         resId = quote('fa3c985723ff45bdbf8cb18321d2df3e')
         
-        extent = str(self.spatial_coverage.value['northlimit']) \
-        + "," + str(self.spatial_coverage.value['westlimit']) \
+        extent = str(self.spatial_coverage.value['westlimit']) \
         + "," + str(self.spatial_coverage.value['southlimit']) \
-        + "," + str(self.spatial_coverage.value['eastlimit'])
+        + "," + str(self.spatial_coverage.value['eastlimit']) \
+        + "," + str(self.spatial_coverage.value['northlimit'])
         datasetName = quote(self.logical_file.dataset_name.encode("utf-8"))
         width = 800
         height = 600
