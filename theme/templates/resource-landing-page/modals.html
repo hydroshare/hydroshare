@@ -1573,8 +1573,8 @@
     {% endif %}
 
     {% if user.is_authenticated and rights.statement %}
-        {% if cm.raccess.public or self_access_level != 'None' %}
-            {% if allow_resource_copy %}
+        {% if permissions_allow_copy %}
+            {% if rights_allow_copy %}
                 <div class="modal fade" id="copy-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
