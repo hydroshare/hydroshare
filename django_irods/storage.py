@@ -38,7 +38,7 @@ class IrodsStorage(Storage):
         Get iquest query string that needs absolute path of the input path for the HydroShare iRODS data zone
         :param path: input path to be converted to absolute path if needed
         :param parent: indicating whether query string should be checking COLL_PARENT_NAME rather than COLL_NAME
-        :return: absolute iquest query string that has the logical path of the input path as input
+        :return: iquest query string that has the logical path of the input path as input
         """
 
         # iquest has a bug that cannot handle collection name containing single quote as reported here
