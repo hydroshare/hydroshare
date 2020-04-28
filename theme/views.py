@@ -1,5 +1,7 @@
 from json import dumps
 
+from django_comments.models import Comment
+from django_comments.views.moderation import perform_delete
 from rest_framework import status
 
 from django.contrib import messages
@@ -13,9 +15,9 @@ from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36
@@ -564,6 +566,17 @@ def email_verify_password_reset(request, uidb36=None, token=None):
     else:
         messages.error(request, _("The link you clicked is no longer valid."))
         return redirect("/")
+
+@login_required()
+def delete_resource_comment(request, id):
+    comment = get_object_or_404(Comment, id=id)
+    if comment.user.id == request.user.id or \
+            request.user.is_superuser or \
+            comment.content_object.raccess.owners.filter(pk=request.user.pk).exists():
+        perform_delete(request, comment)
+    else:
+        raise HttpResponseForbidden()
+    return HttpResponseRedirect(comment.content_object.get_absolute_url())
 
 @login_required
 def deactivate_user(request):
