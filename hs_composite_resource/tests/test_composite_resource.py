@@ -85,8 +85,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(BaseResource.objects.count(), 0)
 
-        self.create_composite_resource(self.raster_file)
-        # There should not be a GenericLogicalFile object at this point
+        self.create_composite_resource(self.raster_file)  # There should not be a GenericLogicalFile at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # there should be one resource at this point
@@ -340,7 +339,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be abstract element
         self.assertNotEqual(self.composite_resource.metadata.description, None)
         # add a file to the resource to auto create format element
-        self.raster_file_obj = open(self.raster_file, 'r')
+        self.raster_file_obj = open(self.raster_file, 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.raster_file_obj,), user=self.user,
                                   auto_aggregate=False)
@@ -436,10 +435,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                 agency_url="http://www.nsf.gov")
         agency_element = self.composite_resource.metadata.funding_agencies.all().filter(
             agency_name='NSF').first()
-        self.assertEquals(agency_element.agency_name, 'NSF')
-        self.assertEquals(agency_element.award_title, 'Cyber Infrastructure')
-        self.assertEquals(agency_element.award_number, 'NSF-101-20-6789')
-        self.assertEquals(agency_element.agency_url, 'http://www.nsf.gov')
+        self.assertEqual(agency_element.agency_name, 'NSF')
+        self.assertEqual(agency_element.award_title, 'Cyber Infrastructure')
+        self.assertEqual(agency_element.award_number, 'NSF-101-20-6789')
+        self.assertEqual(agency_element.agency_url, 'http://www.nsf.gov')
         some_idf = self.composite_resource.metadata.identifiers.all().filter(
             name='someIdentifier').first()
         metadata.update_element('identifier', some_idf.id,  name='someOtherIdentifier')
@@ -570,7 +569,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         try:
             self.composite_resource.get_metadata_xml()
         except Exception as ex:
-            self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.message))
+            self.fail("Failed to generate metadata in xml format. Error:{}".format(str(ex)))
 
     def test_resource_coverage_auto_update(self):
         # this is to test that the spatial coverage and temporal coverage

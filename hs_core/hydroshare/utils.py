@@ -1,11 +1,8 @@
-from __future__ import absolute_import
-
 import mimetypes
 import os
 import tempfile
 import logging
 import shutil
-import string
 import copy
 from uuid import uuid4
 import errno
@@ -230,8 +227,8 @@ def get_fed_zone_files(irods_fnames):
     Note: application must delete these files after use.
     """
     ret_file_list = []
-    if isinstance(irods_fnames, basestring):
-        ifnames = string.split(irods_fnames, ',')
+    if isinstance(irods_fnames, str):
+        ifnames = irods_fnames.split(',')
     elif isinstance(irods_fnames, list):
         ifnames = irods_fnames
     else:
@@ -249,7 +246,7 @@ def get_fed_zone_files(irods_fnames):
                 shutil.rmtree(tmpdir)
                 os.makedirs(tmpdir)
             else:
-                raise Exception(ex.message)
+                raise Exception(str(ex))
         irods_storage.getFile(ifname, tmpfile)
         ret_file_list.append(tmpfile)
     return ret_file_list
@@ -538,7 +535,7 @@ def current_site_url():
 def get_file_mime_type(file_name):
     # TODO: looks like the mimetypes module can't find all mime types
     # We may need to user the python magic module instead
-    file_name = u"{}".format(file_name)
+    file_name = "{}".format(file_name)
     file_format_type = mimetypes.guess_type(file_name)[0]
     if not file_format_type:
         # TODO: this is probably not the right way to get the mime type
@@ -787,7 +784,7 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
 
     # only add the resource creator as the creator for metadata if there is not already
     # creator data in the metadata object
-    metadata_keys = [element.keys()[0].lower() for element in metadata]
+    metadata_keys = [list(element.keys())[0].lower() for element in metadata]
     if 'creator' not in metadata_keys:
         creator_data = get_party_data_from_user(resource.creator)
         metadata.append({'creator': creator_data})
@@ -1004,7 +1001,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                          "{{{ns}}}{field}".format(ns=name_spaces['hsterms'],
                                                                   field=xml_element_name))
-                field.text = unicode(attr)
+                field.text = str(attr)
 
 
 class ZipContents(object):

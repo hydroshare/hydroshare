@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='relation',
             name='type',
-            field=models.CharField(max_length=100, choices=[(b'isHostedBy', b'Hosted By'), (b'isCopiedFrom', b'Copied From'), (b'isPartOf', b'Part Of'), (b'isExecutedBy', b'Executed By'), (b'isCreatedBy', b'Created By'), (b'isVersionOf', b'Version Of'), (b'isDataFor', b'Data For'), (b'cites', b'Cites')]),
+            field=models.CharField(max_length=100, choices=[('isHostedBy', 'Hosted By'), ('isCopiedFrom', 'Copied From'), ('isPartOf', 'Part Of'), ('isExecutedBy', 'Executed By'), ('isCreatedBy', 'Created By'), ('isVersionOf', 'Version Of'), ('isDataFor', 'Data For'), ('cites', 'Cites')]),
             preserve_default=True,
         ),
     ]

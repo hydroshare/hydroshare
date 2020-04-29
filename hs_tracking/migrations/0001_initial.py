@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 from django.conf import settings
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('name', models.CharField(max_length=32)),
-                ('type', models.IntegerField(choices=[(b'Integer', int), (b'Floating Point', float), (b'Text', unicode), (b'Flag', bool)])),
+                ('type', models.IntegerField(choices=[('Integer', int), ('Floating Point', float), ('Text', str), ('Flag', bool)])),
                 ('value', models.CharField(max_length=130)),
                 ('session', models.ForeignKey(to='hs_tracking.Session')),
             ],

@@ -51,6 +51,8 @@
                                     <div class="group-description"><p>{{ group.gaccess.description|linebreaks }}</p>
                                     </div>
 
+                                    <div class="spacer"></div>
+
                                     <div class="text-center group-thumbnail-footer">
                                         {% if group.gaccess.public %}
                                             <div class="users-joined height-fix">
@@ -141,7 +143,7 @@
                     {% endif %}
                 {% endfor %}
             {% else %}
-                <div class="col-sm-12"><i>No groups have been created yet.</i>
+                <div class="col-sm-12"><i>No groups are listing public resources.</i>
                 </div>
             {% endif %}
         </div>

@@ -132,7 +132,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             cat.uaccess.share_resource_with_user(
                 bones, bat, PrivilegeCodes.VIEW)
-        self.assertEqual(cm.exception.message,
+        self.assertEqual(str(cm.exception),
                          'User must own resource or have sharing privilege')
 
         # django admin still can share
@@ -324,4 +324,17 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         resource_short_id = chewies.short_id
         hydroshare.delete_resource(chewies.short_id)
         with self.assertRaises(Http404):
-            hydroshare.get_resource(resource_short_id)
+            hydroshare.get_resource_by_shortkey(resource_short_id)
+
+    def test_10_copy_permissions(self):
+        """Tests UserAccess can_view_resource method with public and view permissions"""
+        # public resources may always be copied
+        self.chewies.raccess.public = True
+        self.chewies.raccess.save()
+        self.assertTrue(self.cat.uaccess.can_view_resource(self.chewies))
+        self.assertTrue(self.dog.uaccess.can_view_resource(self.chewies))
+
+        # users with view permissions and higher may copy a resource
+        self.assertFalse(self.cat.uaccess.can_view_resource(self.bones))
+        self.dog.uaccess.share_resource_with_user(self.bones, self.cat, PrivilegeCodes.VIEW)
+        self.assertTrue(self.cat.uaccess.can_view_resource(self.bones))

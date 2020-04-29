@@ -26,7 +26,7 @@ class ToolResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(self)
 
     def _read_resource_metadata(self):
         super(ToolResourceMeta, self)._read_resource_metadata()
