@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userquota',
             name='zone',
-            field=models.CharField(default=b'hydroshare', max_length=100),
+            field=models.CharField(default='hydroshare', max_length=100),
         ),
     ]

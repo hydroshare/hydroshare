@@ -1216,7 +1216,6 @@ div.readme .readme-header h4 > span {
 }
 
 .custom-table td {
-	word-break: break-all;
 	word-wrap: break-word;
 }
 
@@ -1863,6 +1862,85 @@ a.tag:hover {
 	background-color: #333;
 }
 
+/* Media query overrides for bootstrap 3 collapse breakpoint */
+/* Extended from https://stackoverflow.com/a/36289507/3288102 */
+@media (max-width: 992px) {
+	.navbar-right .visible-xs {
+		display: block !important;
+	}
+
+	.container > .navbar-collapse {
+		margin-right: -15px;
+		margin-left: -15px;
+	}
+
+	.navbar-nav {
+		margin: 7.5px -15px;
+	}
+
+	.navbar-right.hidden-xs {
+		display: none !important;
+	}
+
+	.navbar-nav .open .dropdown-menu {
+		position: static;
+		float: none;
+		width: auto;
+		margin-top: 0;
+		background-color: transparent;
+		border: 0;
+		box-shadow: none;
+	}
+
+	.navbar > .container {
+		width: 100%;
+	}
+
+	.navbar-header {
+		float: none;
+	}
+
+	.navbar-left, .navbar-right {
+		float: none !important;
+	}
+
+	.navbar-toggle {
+		display: block;
+	}
+
+	.navbar-collapse {
+		border-top: 1px solid transparent;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.navbar-fixed-top {
+		top: 0;
+		border-width: 0 0 1px;
+	}
+
+	.navbar-collapse.collapse {
+		display: none !important;
+	}
+
+	.navbar-nav {
+		float: none !important;
+		margin-top: 7.5px;
+	}
+
+	.navbar-nav > li {
+		float: none;
+	}
+
+	.navbar-nav > li > a {
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+
+	.collapse.in {
+		display: block !important;
+	}
+}
+
 @media (max-width: 768px) {
     #sharing-status {
         border-left: 0
@@ -2032,13 +2110,6 @@ a.tag:hover {
   .bs-sidebar.affix-bottom,
   .bs-sidebar.affix {
     width: 360px;
-  }
-}
-
-@media(min-width: 767px) and (max-width: 991px){
-  /* Add extra padding to push down the text */
-  .page-tip {
-    padding: 50px 0px 15px;
   }
 }
 
@@ -3677,13 +3748,19 @@ button.no-style:focus {
 }
 
 .group-thumbnail {
-	display: block;
 	padding: 4px;
 	margin-bottom: 20px;
 	line-height: 1.42857143;
 	background-color: #fff;
 	border: 1px solid #ddd;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+div.group-thumbnails {
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .group-container {
@@ -3696,7 +3773,14 @@ button.no-style:focus {
 }
 
 .group-caption {
-    padding: 10px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.spacer {
+	flex: 1 1 auto;
 }
 
 .users-joined {
@@ -3894,9 +3978,6 @@ button.no-style:focus {
 }
 
 .group-thumbnail-footer {
-	padding-top: 10px;
-	position: absolute;
-	bottom: 14px;
 }
 
 .group-thumbnail-footer .btn-ask-to-join {

@@ -55,7 +55,7 @@ class TestDeleteAuthor(MockIRODSTestCaseMixin, ViewTestCase):
         response = add_metadata_element(request, shortkey=self.gen_res.short_id,
                                         element_name='creator')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual(response_dict['status'], 'success')
         self.assertEqual(response_dict['element_name'], 'creator')
         self.gen_res.refresh_from_db()

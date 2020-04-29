@@ -168,6 +168,7 @@ sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
+sed -i $SED_EXT s/CELERY_CONCURRENCY/$CELERY_CONCURRENCY/g init-defaultworker
 
 #sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
 #sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare

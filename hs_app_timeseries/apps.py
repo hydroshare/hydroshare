@@ -5,4 +5,4 @@ class TimeSeriesAppConfig(AppConfig):
     name = "hs_app_timeseries"
 
     def ready(self):
-        import receivers  # noqa
+        from . import receivers  # noqa

@@ -1,0 +1,32 @@
+This is the output of check_czo_groups after running check_czo_groups_test. 
+
+CHECKING user czo_national against group CZO National
+  There are 436 user resources
+  There are 13 group resources
+    UNSHARING 0bda63684f37427fa849bd0411714c38 BCCZO -- Soil Temperature, Soil Moisture -- at various depths (GGU_NF_SP4_SLTmpSLMist_Array) -- Gordon Gulch: Upper -- (2009-2019): prefix not Cross-CZO (UNSHARING)
+    SHARING 0bda63684f37427fa849bd0411714c38 BCCZO -- Soil Temperature, Soil Moisture -- at various depths (GGU_NF_SP4_SLTmpSLMist_Array) -- Gordon Gulch: Upper -- (2009-2019) with user=czo_boulder group=CZO Boulder
+CHECKING user czo_boulder against group CZO Boulder
+  There are 62 user resources
+  There are 63 group resources
+    SHARING 78f38ef5ae764652b73d7080da7a3e33 BCCZO -- Soil Temperature, Soil Moisture -- Soil Sensors (GGL_SPTran_SLTmpSLMist_Array) -- Gordon Gulch: Lower -- (2009-2019) with czo national user
+    SHARING 0bda63684f37427fa849bd0411714c38 BCCZO -- Soil Temperature, Soil Moisture -- at various depths (GGU_NF_SP4_SLTmpSLMist_Array) -- Gordon Gulch: Upper -- (2009-2019) with czo national user
+    SHARING 4ad4287c52da472295f536b0e90e282c BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGU_SP_1-10_Tran) -- Gordon Gulch: Upper -- (2008-2017) with czo national user
+  The following user resources are not group resources
+    SHARING d98b4dda0027424487c1c5e275a32b3d BCCZO -- Well Water Levels -- (GGU_GW_1,2,6_Pducer_Tran) -- Gordon Gulch: Upper -- (2011-2018) with group CZO Boulder
+  The following group resources are not user resources:
+    SHARING 4ad4287c52da472295f536b0e90e282c BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGU_SP_1-10_Tran) -- Gordon Gulch: Upper -- (2008-2017) with second owner czo_boulder
+    SHARING f929bda9908e4901bd1d03c5df22e5d6 BCCZO -- Snow Depth, Air Temperature -- Judd Sensors (GGL_NF_SP3-4SF_SP10_SD_Array) -- Gordon Gulch: Lower -- (2010-2018) with second owner czo_boulder
+CHECKING user czo_calhoun against group CZO Calhoun
+  There are 46 user resources
+  There are 46 group resources
+    SHARING 7be74f1ae0b44976a4f59e2792bb6f9b BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGL_SP_1-10_Tran) -- Gordon Gulch: Lower -- (2008-2017) with czo national user
+    SHARING 0d4a3351ab33449981ead97b683069b9 BCCZO -- Snow Pits -- Snow Pit Stratigraphy, Density - SWE (GG_SN_Array) -- Gordon Gulch -- (2008-2017) with czo national user
+    UNSHARING 7be74f1ae0b44976a4f59e2792bb6f9b BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGL_SP_1-10_Tran) -- Gordon Gulch: Lower -- (2008-2017): prefix not CCZO (UNSHARING)
+    SHARING 7be74f1ae0b44976a4f59e2792bb6f9b BCCZO -- Snow Depth -- Snow Pole Transects (manual) (GGL_SP_1-10_Tran) -- Gordon Gulch: Lower -- (2008-2017) with user=czo_boulder group=CZO Boulder
+    UNSHARING 0d4a3351ab33449981ead97b683069b9 BCCZO -- Snow Pits -- Snow Pit Stratigraphy, Density - SWE (GG_SN_Array) -- Gordon Gulch -- (2008-2017): prefix not CCZO (UNSHARING)
+    SHARING 0d4a3351ab33449981ead97b683069b9 BCCZO -- Snow Pits -- Snow Pit Stratigraphy, Density - SWE (GG_SN_Array) -- Gordon Gulch -- (2008-2017) with user=czo_boulder group=CZO Boulder
+CHECKING user czo_catalina-jemez against group CZO Catalina-Jemez
+  There are 56 user resources
+  There are 56 group resources
+... rest of output is clean ...
+... next run is clean ...

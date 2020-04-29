@@ -29,7 +29,7 @@ from hs_geo_raster_resource.models import CellInformation, BandInformation, Orig
 from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
 
 from hs_file_types import raster_meta_extract
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
@@ -155,7 +155,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
             formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(
-            initial=self.bandInformations.values(), prefix='BandInformation')
+            initial=list(self.bandInformations.values()), prefix='BandInformation')
 
         for frm in bandinfo_formset.forms:
             if len(frm.initial) > 0:
@@ -207,7 +207,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             bandinfo.add_to_xml_container(container_to_add_to)
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
+                                                               pretty_print=pretty_print).decode()
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
@@ -359,14 +359,14 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         for element in metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             logical_file.metadata.create_element(k, **v)
                         log.info("Geographic raster aggregation type - metadata was saved to DB")
 
                         file_type_success = True
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        msg = msg.format(ex.message)
+                        msg = msg.format(str(ex))
                         log.exception(msg)
 
                 if not file_type_success:
@@ -405,7 +405,6 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
 
     :return A list of error messages and a list of file paths for all files that belong to raster
     """
-
     error_info = []
     new_resource_files_to_add = []
     raster_resource_files = []
@@ -416,52 +415,62 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
                           'vrt_created': create_vrt}
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
     ext = ext.lower()
-
     if ext == '.tif' or ext == '.tiff':
         res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
                                              sub_folders=False)
-
-        # check if there is already a vrt file in that folder
-        vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
-        tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
-                     f.extension.lower() == ".tiff"]
-        if vrt_files:
-            if len(vrt_files) > 1:
-                error_info.append("More than one vrt file was found.")
-                return validation_results
-            create_vrt = False
-        elif len(tif_files) != 1:
-            # if there are more than one tif file and no vrt file, then we just use the
-            # selected tif file to create the aggregation in case of composite resource
-            if resource.resource_type == "CompositeResource":
-                tif_files = [tif_file for tif_file in tif_files if
-                             raster_file.endswith(tif_file.file_name)]
-            else:
+        if resource.resource_type == "RasterResource":
+            # check if there is already a vrt file in that folder
+            vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
+            tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
+                         f.extension.lower() == ".tiff"]
+            if vrt_files:
+                if len(vrt_files) > 1:
+                    error_info.append("More than one vrt file was found.")
+                    return validation_results
+                create_vrt = False
+            elif len(tif_files) != 1:
                 # if there are more than one tif file, there needs to be one vrt file
                 error_info.append("A vrt file is missing.")
                 return validation_results
 
-        raster_resource_files.extend(vrt_files)
-        raster_resource_files.extend(tif_files)
+        vrt_files_for_raster = get_vrt_files(raster_file, res_files)
+        if len(vrt_files_for_raster) > 1:
+            error_info.append("The raster {} is listed by more than one vrt file {}".format(raster_file,
+                                                                                            vrt_files_for_raster))
+            return validation_results
 
-        if vrt_files:
+        if len(vrt_files_for_raster) == 1:
+            vrt_file = vrt_files_for_raster[0]
+            raster_resource_files.extend([vrt_file])
+            create_vrt = False
             temp_dir = os.path.dirname(raster_file)
-            temp_vrt_file = utils.get_file_from_irods(vrt_files[0], temp_dir)
+            temp_vrt_file = utils.get_file_from_irods(vrt_file, temp_dir)
+            listed_tif_files = list_tif_files(vrt_file)
+            tif_files = [f for f in res_files if f.file_name in listed_tif_files]
+            if len(tif_files) != len(listed_tif_files):
+                error_info.append("The vrt file {} lists {} files, only found {}".format(vrt_file,
+                                                                                         len(listed_tif_files),
+                                                                                         len(tif_files)))
+                return validation_results
         else:
             # create the .vrt file
+            tif_files = [f for f in res_files if f.file_name == os.path.basename(raster_file)]
             try:
-                temp_vrt_file = create_vrt_file(raster_file)
+                vrt_file = create_vrt_file(raster_file)
+                temp_vrt_file = vrt_file
             except Exception as ex:
-                error_info.append(ex.message)
+                error_info.append(str(ex))
             else:
-                if os.path.isfile(temp_vrt_file):
-                    new_resource_files_to_add.append(temp_vrt_file)
+                if os.path.isfile(vrt_file):
+                    new_resource_files_to_add.append(vrt_file)
+
+        raster_resource_files.extend(tif_files)
 
     elif ext == '.zip':
         try:
             extract_file_paths = _explode_raster_zip_file(raster_file)
         except Exception as ex:
-            error_info.append(ex.message)
+            error_info.append(str(ex))
         else:
             if extract_file_paths:
                 new_resource_files_to_add.extend(extract_file_paths)
@@ -525,31 +534,67 @@ def raster_file_validation(raster_file, resource, raster_folder=None):
 
             file_names = [f_name for f_name in file_names if not f_name.endswith('.vrt')]
 
-            if len(file_names) > len(file_names_in_vrt):
-                msg = 'One or more additional tif files were found which are not listed in ' \
-                      'the provided {} file.'
-                msg = msg.format(os.path.basename(temp_vrt_file))
-                error_info.append(msg)
-            else:
-                for vrt_ref_raster_name in file_names_in_vrt:
-                    if vrt_ref_raster_name in file_names \
-                            or (os.path.split(vrt_ref_raster_name)[0] == '.' and
-                                os.path.split(vrt_ref_raster_name)[1] in file_names):
-                        continue
-                    elif os.path.basename(vrt_ref_raster_name) in file_names:
-                        msg = "Please specify {} as {} in the .vrt file, because it will " \
-                              "be saved in the same folder with .vrt file in HydroShare."
-                        msg = msg.format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name))
-                        error_info.append(msg)
-                        break
-                    else:
-                        msg = "The file {tif} which is listed in the {vrt} file is missing."
-                        msg = msg.format(tif=os.path.basename(vrt_ref_raster_name),
-                                         vrt=os.path.basename(temp_vrt_file))
-                        error_info.append(msg)
-                        break
+            if resource.resource_type == "RasterResource":
+                tif_files = [f for f in resource.files.all() if f.extension.lower() == ".tif" or
+                             f.extension.lower() == ".tiff"]
+                if len(tif_files) > len(file_names_in_vrt):
+                    msg = 'One or more additional tif files were found which are not listed in ' \
+                          'the provided {} file.'
+                    msg = msg.format(os.path.basename(temp_vrt_file))
+                    error_info.append(msg)
+
+            for vrt_ref_raster_name in file_names_in_vrt:
+                if vrt_ref_raster_name in file_names \
+                        or (os.path.split(vrt_ref_raster_name)[0] == '.' and
+                            os.path.split(vrt_ref_raster_name)[1] in file_names):
+                    continue
+                elif resource.resource_type == "RasterResource" and os.path.basename(vrt_ref_raster_name) in file_names:
+                    msg = "Please specify {} as {} in the .vrt file, because it will " \
+                          "be saved in the same folder with .vrt file in HydroShare."
+                    msg = msg.format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name))
+                    error_info.append(msg)
+                    break
+                else:
+                    msg = "The file {tif} which is listed in the {vrt} file is missing."
+                    msg = msg.format(tif=os.path.basename(vrt_ref_raster_name),
+                                     vrt=os.path.basename(temp_vrt_file))
+                    error_info.append(msg)
+                    break
 
     return validation_results
+
+
+def list_tif_files(vrt_file):
+    """
+    lists tif files named in a vrt_file
+    :param vrt_file: ResourceFile for of a vrt to list associated tif(f) files
+    :return: List of string filenames read from vrt_file, empty list if not found
+    """
+    temp_vrt_file = utils.get_file_from_irods(vrt_file)
+    with open(temp_vrt_file, 'r') as opened_vrt_file:
+        vrt_string = opened_vrt_file.read()
+        root = ET.fromstring(vrt_string)
+        file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
+        return file_names_in_vrt
+    return []
+
+
+def get_vrt_files(raster_file, res_files):
+    """
+    Searches for vrt_files that lists the supplied raster_file
+    :param raster_file: The raster file to find the associated vrt_file of
+    :param res_files: list of ResourceFiles in the the folder of raster_file
+    :return: A list of vrt ResourceFile(s) which lists the raster_file, empty List if not found.
+    """
+    vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
+    vrt_files_for_raster = []
+    if vrt_files:
+        for vrt_file in vrt_files:
+            file_names_in_vrt = list_tif_files(vrt_file)
+            for vrt_ref_raster_name in file_names_in_vrt:
+                if raster_file.endswith(vrt_ref_raster_name):
+                    vrt_files_for_raster.append(vrt_file)
+    return vrt_files_for_raster
 
 
 def extract_metadata(temp_vrt_file_path):
@@ -575,7 +620,7 @@ def extract_metadata(temp_vrt_file_path):
     metadata.append({'CellInformation': res_md_dict['cell_info']})
 
     # Save extended meta band info
-    for band_info in res_md_dict['band_info'].values():
+    for band_info in list(res_md_dict['band_info'].values()):
         metadata.append({'BandInformation': band_info})
     return metadata
 
@@ -606,7 +651,7 @@ def create_vrt_file(tif_file):
         tree.write(vrt_file_path)
 
     except Exception as ex:
-        log.exception("Failed to create/write to vrt file. Error:{}".format(ex.message))
+        log.exception("Failed to create/write to vrt file. Error:{}".format(str(ex)))
         raise Exception("Failed to create/write to vrt file")
 
     return vrt_file_path
@@ -634,7 +679,7 @@ def _explode_raster_zip_file(zip_file):
                     extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
     except Exception as ex:
-        log.exception("Failed to unzip. Error:{}".format(ex.message))
+        log.exception("Failed to unzip. Error:{}".format(str(ex)))
         raise ex
 
     return extract_file_paths

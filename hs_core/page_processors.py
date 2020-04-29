@@ -8,14 +8,14 @@ from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
-from forms import ExtendedMetadataForm
+from .forms import ExtendedMetadataForm
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
-    can_user_copy_resource
+    rights_allows_copy
 import json
 
 from hs_odm2.models import ODM2Variable
@@ -111,7 +111,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         # then don't show content files
         show_content_files = content_model.raccess.public
 
-    allow_copy = can_user_copy_resource(content_model, user)
+    rights_allow_copy = rights_allows_copy(content_model, user)
 
     qholder = content_model.get_quota_holder()
 
@@ -121,11 +121,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     has_web_ref = res_has_web_reference(content_model)
 
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
-    if settings.COMMUNITIES_ENABLED:
-        topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
-        topics = list(topics)  # force QuerySet evaluation
-    else:
-        topics = []
+    topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+    topics = list(topics)  # force QuerySet evaluation
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -209,7 +206,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
-                   'allow_resource_copy': allow_copy,
+                   'rights_allow_copy': rights_allow_copy,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
                    'show_web_reference_note': has_web_ref,
@@ -325,7 +322,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,
-               'communities_enabled': settings.COMMUNITIES_ENABLED,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all())

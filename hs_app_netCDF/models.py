@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, _input
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
@@ -69,7 +69,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     raise ValidationError("For original coverage meta, one or more bounding "
                                           "box limits or 'units' is missing.")
 
-            value_dict = {k: v for k, v in value_arg_dict.iteritems()
+            value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                    'westlimit', 'projection')}
 
@@ -425,7 +425,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import NetCDFMetaDataSerializer
+        from .serializers import NetCDFMetaDataSerializer
         return NetCDFMetaDataSerializer(self)
 
     @classmethod
@@ -433,7 +433,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'originalcoverage' in keys_to_update:
             parsed_metadata.append({"originalcoverage": metadata.pop('originalcoverage')})
 
@@ -452,7 +452,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import VariableValidationForm, OriginalCoverageValidationForm
+        from .forms import VariableValidationForm, OriginalCoverageValidationForm
         super(NetcdfMetaData, self).update(metadata, user)
         missing_file_msg = "Resource specific metadata can't be updated when there is no " \
                            "content files"
@@ -529,7 +529,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         if ori_cov_obj is not None:
             ori_cov_obj.add_to_xml_container(container)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def update_element(self, element_model_name, element_id, **kwargs):
         super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
@@ -578,7 +578,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
 
-                    input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
+                    _input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
                     with form(action=form_action, method="post", id="update-netcdf-file",):
                         div('{% csrf_token %}')
                         button("Update NetCDF File", type="submit", cls="btn btn-primary",
