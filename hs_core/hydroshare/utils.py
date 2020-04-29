@@ -467,7 +467,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     """
 
     if not by_user:
-        logger.warning("by_user not specified in resource_modified, last_chagned_by will not be updated")
+        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
     else:
         resource.last_changed_by = by_user
 
