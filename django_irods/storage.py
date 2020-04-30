@@ -453,8 +453,7 @@ class IrodsStorage(Storage):
         else:
             coll_name_query = "COLL_NAME = '{}'".format(settings.IRODS_HOME_COLLECTION)
             obj_name = name
-        qrystr = "SELECT DATA_MODIFY_TIME WHERE COLL_NAME = '{}' AND DATA_NAME = '{}'".format(coll_name_query,
-                                                                                              obj_name)
+        qrystr = "SELECT DATA_MODIFY_TIME WHERE {} AND DATA_NAME = '{}'".format(coll_name_query, obj_name)
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS".format(name))
