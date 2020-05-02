@@ -19,7 +19,7 @@ from django.contrib.postgres.fields import HStoreField, ArrayField
 from mezzanine.conf import settings
 
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
-    span, a, form, button, label, textarea, h4, _input, ul, li, p
+    span, a, form, button, label, textarea, h4, h3, _input, ul, li, p
 
 from lxml import etree
 
@@ -85,6 +85,9 @@ class AbstractFileMetaData(models.Model):
         """
 
         root_div = div()
+        with root_div:
+            h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+
         if self.logical_file.dataset_name:
             root_div.add(self.get_dataset_name_html())
         if self.keywords:
@@ -147,6 +150,7 @@ class AbstractFileMetaData(models.Model):
         root_div = div()
 
         with root_div:
+            h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
             if dataset_name_form:
                 self.get_dataset_name_form()
 
