@@ -4,7 +4,7 @@
   "title": "Sample Valid Metadata JSON Schema",
   "properties": {
         "properties": {
-              "IncludesModelOutPut": {
+              "IncludesOutPut": {
                 "type":  "boolean",
                 "title": "Includes model outputs?"
               }
@@ -34,8 +34,7 @@
 					"title": "Simulation Interval",
 					"enum": ["Min", "Hour", "Day"]
 				}
-            },
-            "additionalProperties": false
+            }
         },
         "modelObjective": {
             "type": "array",

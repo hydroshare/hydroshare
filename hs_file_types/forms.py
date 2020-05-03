@@ -89,7 +89,6 @@ class ModelProgramMetadataValidationForm(forms.Form):
         return mp_file_types_dict
 
     def clean_mi_json_schema(self):
-        # TODO: more validation of json schema needs to be implemented once we define the requirements of the schema
         json_schema_string = self.cleaned_data['mi_json_schema'].strip()
         json_schema = dict()
         is_schema_valid = True

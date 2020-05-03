@@ -35,7 +35,7 @@
 					"enum": ["Min", "Hour", "Day"]
 				}
             },
-            "additionalProperties": false
+            "additionalProperties": true
         },
         "modelObjective": {
             "type": "array",
@@ -55,3 +55,4 @@
      },
      "additionalProperties": false
   }
+

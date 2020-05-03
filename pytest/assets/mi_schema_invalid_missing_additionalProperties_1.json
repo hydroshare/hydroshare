@@ -32,7 +32,7 @@
 				"simulationInterval":{
 					"type": "string",
 					"title": "Simulation Interval",
-					"enum": ["Min", "Hour", "Day"]
+					 "enum": ["Min", "Hour", "Day"]
 				}
             },
             "additionalProperties": false
@@ -52,6 +52,5 @@
             "title": "Simulation Type",
             "description": "Type of simulation used."
         }
-     },
-     "additionalProperties": false
+     }
   }

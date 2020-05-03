@@ -43,7 +43,6 @@
                 "type": "string"
             },
             "title": "Model Objectives",
-            "format": "table",
             "description": "Objectives of this SWAT model instance.",
             "uniqueItems": true
         },

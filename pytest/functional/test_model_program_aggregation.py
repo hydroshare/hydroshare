@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import UploadedFile
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_file_types.models import ModelProgramLogicalFile
 from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
+from hs_file_types.forms import ModelProgramMetadataValidationForm
 
 
 @pytest.mark.django_db(transaction=True)
@@ -177,41 +178,54 @@ def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggre
 
 
 @pytest.mark.django_db(transaction=True)
-def test_set_schema_json(composite_resource_with_mp_aggregation, mock_irods):
-    """test that we can set the mi_schema_json attribute with a valid json schema"""
+def test_metadata_schema_json_valid(composite_resource_with_mp_aggregation, mock_irods):
+    """test that metadata form validation is successful when metadata schema json is a valid json schema"""
 
-    res, user = composite_resource_with_mp_aggregation
-    mp_aggr = next(res.logical_files)
-    assert isinstance(mp_aggr, ModelProgramLogicalFile)
-    # no json schema at this point
-    assert not mp_aggr.mi_schema_json
-    # set mi metadata json schema from the content of the following file
     schema_file_path = 'pytest/assets/mi_schema.json'
     with open(schema_file_path, 'r') as file_obj:
         json_schema = file_obj.read()
     assert len(json_schema) > 0
-    mp_aggr.set_mi_schema(json_schema_string=json_schema)
-    assert mp_aggr.mi_schema_json
+    form_data = {"mp_program_type": "Test Model Program", "mi_json_schema": json_schema}
+    metadata_validation_form = ModelProgramMetadataValidationForm(data=form_data)
+    assert metadata_validation_form.is_valid()
 
 
 @pytest.mark.django_db(transaction=True)
-def test_set_schema_invalid_json(composite_resource_with_mp_aggregation, mock_irods):
-    """test that we can't set the mi_schema_json attribute with a an invalid json schema"""
+@pytest.mark.parametrize('invalid_schema_file', ['mi_schema_invalid.json',
+                                                 'mi_schema_invalid_missing_title_1.json',
+                                                 'mi_schema_invalid_missing_title_2.json',
+                                                 'mi_schema_invalid_missing_additionalProperties_1.json',
+                                                 'mi_schema_invalid_missing_additionalProperties_2.json',
+                                                 'mi_schema_invalid_value_additionalProperties_1.json',
+                                                 'mi_schema_invalid_value_additionalProperties_2.json',
+                                                 'mi_schema_invalid_missing_format_1.json',
+                                                 'mi_schema_invalid_format_value_2.json'])
+def test_metadata_schema_json_invalid(invalid_schema_file, mock_irods):
+    """test that metadata form validation fails when metadata schema json is not a valid json schema which
+    includes additional hydroshare validation on top of standard json schema validation
 
-    res, user = composite_resource_with_mp_aggregation
-    mp_aggr = next(res.logical_files)
-    assert isinstance(mp_aggr, ModelProgramLogicalFile)
-    # no json schema at this point
-    assert not mp_aggr.mi_schema_json
-    # set mi metadata json schema from the content of the following file which should fail
-    schema_file_path = 'pytest/assets/mi_schema_invalid.json'
+    'mi_schema_invalid.json' - contains invalid value type for an attribute
+    'mi_schema_invalid_missing_title_1.json' - missing 'title' attribute at the top object level
+    'mi_schema_invalid_missing_title_2.json' - missing 'title' attribute at the inner object level
+    'mi_schema_invalid_missing_additionalProperties_1.json' - missing 'additionalProperties' attribute at the
+    top object level
+    'mi_schema_invalid_missing_additionalProperties_2.json' - missing 'additionalProperties' attribute at the
+    inner object level
+    'mi_schema_invalid_value_additionalProperties_1.json' - attribute 'additionalProperties' has an invalid value (true)
+    at the top object level
+    'mi_schema_invalid_value_additionalProperties_2.json' - attribute 'additionalProperties' has an invalid value (true)
+    at the inner object level
+    'mi_schema_invalid_missing_format_1.json' - 'format' attribute is missing for attribute type 'array'
+    'mi_schema_invalid_format_value_2.json' - 'format' attribute does not have value as 'table' for
+     attribute type 'array'
+    """
+
+    schema_file_path = 'pytest/assets/{}'.format(invalid_schema_file)
     with open(schema_file_path, 'r') as file_obj:
         json_schema = file_obj.read()
     assert len(json_schema) > 0
-    with pytest.raises(ValidationError):
-        mp_aggr.set_mi_schema(json_schema_string=json_schema)
-
-    assert not mp_aggr.mi_schema_json
+    metadata_validation_from = ModelProgramMetadataValidationForm(data={"mi_json_schema": json_schema})
+    assert not metadata_validation_from.is_valid()
 
 
 @pytest.mark.django_db(transaction=True)

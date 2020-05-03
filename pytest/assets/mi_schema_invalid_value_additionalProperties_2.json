@@ -32,10 +32,10 @@
 				"simulationInterval":{
 					"type": "string",
 					"title": "Simulation Interval",
-					"enum": ["Min", "Hour", "Day"]
+					 "enum": ["Min", "Hour", "Day"]
 				}
             },
-            "additionalProperties": false
+            "additionalProperties": true
         },
         "modelObjective": {
             "type": "array",

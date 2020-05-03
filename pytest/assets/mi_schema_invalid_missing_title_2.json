@@ -5,8 +5,7 @@
   "properties": {
         "properties": {
               "IncludesModelOutPut": {
-                "type":  "boolean",
-                "title": "Includes model outputs?"
+                "type":  "boolean"
               }
         },
         "modelMethod": {
