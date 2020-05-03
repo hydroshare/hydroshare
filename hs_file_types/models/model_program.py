@@ -1,6 +1,5 @@
 import json
 
-import jsonschema
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -8,9 +7,9 @@ from django.template import Template, Context
 from dominate import tags as dom_tags
 from lxml import etree
 
+from hs_core.models import ResourceFile, CoreMetaData
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
-from hs_core.models import ResourceFile, CoreMetaData
 
 
 class ModelProgramResourceFileType(models.Model):
