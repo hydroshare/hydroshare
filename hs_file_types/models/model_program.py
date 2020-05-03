@@ -406,19 +406,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """
         return self.model_program_type
 
-    def set_mi_schema(self, json_schema_string):
-        """Sets the mi_schema_json fields of the aggregation with valid json schema
-        :param  json_schema_string: a string containing json schema
-        """
-        json_schema = json.loads(json_schema_string)
-        # validate schema
-        try:
-            jsonschema.Draft4Validator.check_schema(json_schema)
-        except jsonschema.SchemaError as ex:
-            raise ValidationError("Not a valid json schema.{}".format(str(ex)))
-        self.mi_schema_json = json_schema
-        self.save()
-
     def set_res_file_as_mp_file_type(self, res_file, mp_file_type):
         """Creates an instance of ModelProgramResourceFileType using the specified resource file *res_file*
         :param  res_file: An instance of ResourceFile that is already part of this aggregation
