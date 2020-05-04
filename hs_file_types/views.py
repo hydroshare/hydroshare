@@ -936,6 +936,11 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
     metadata = logical_file.metadata
+    if metadata.executed_by is None or not metadata.executed_by.mi_schema_json:
+        msg = "No metadata schema is available for validation of metadata"
+        error_response = {"status": "error", "message": msg}
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
     metadata_json_str = request.POST['metadata_json']
     try:
         metadata_json = json.loads(metadata_json_str)
