@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 import pytest
 from django.core.files.uploadedfile import UploadedFile
 from django.core.urlresolvers import reverse
@@ -171,4 +172,3 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
     assert response.status_code == status.HTTP_200_OK
     mi_aggr.metadata.refresh_from_db()
     assert len(mi_aggr.metadata.metadata_json) > 0
-
