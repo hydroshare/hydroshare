@@ -1,10 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
-from mezzanine.pages.page_processors import processor_for
-
-from hs_core.models import BaseResource, ResourceManager, resource_processor,\
-                           CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
 
 from lxml import etree
 
@@ -54,7 +51,7 @@ class RefTSMetadata(CoreMetaData):
 
     @property
     def resource(self):
-        return RefTimeSeriesResource.objects.filter(object_id=self.id).first()
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     @classmethod
     def get_supported_element_names(cls):
@@ -77,5 +74,3 @@ class RefTSMetadata(CoreMetaData):
         self.methods.all().delete()
         self.quality_levels.all().delete()
         self.datasources.all().delete()
-
-from . import receivers

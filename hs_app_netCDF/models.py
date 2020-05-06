@@ -4,17 +4,13 @@ from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
 
-from mezzanine.pages.page_processors import processor_for
-
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, _input
 from rdflib import RDF, BNode, Literal
 from rdflib.namespace import DCTERMS
 
 from hs_core.hs_rdf import HSTERMS, rdf_terms
-from hs_core.models import BaseResource, ResourceManager
-from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
-    get_resource_files_by_extension
+from hs_core.models import BaseResource
+from hs_core.models import CoreMetaData, AbstractMetaDataElement
 
 
 # Define original spatial coverage metadata info
@@ -363,7 +359,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
 
     @property
     def resource(self):
-        return NetcdfResource.objects.filter(object_id=self.id).first()
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     @property
     def serializer(self):

@@ -18,10 +18,7 @@ from django.utils.timezone import now
 from dominate.tags import table, tbody, tr, td, th, a
 from hs_core.hs_rdf import HSTERMS, rdf_terms
 
-from mezzanine.pages.page_processors import processor_for
-
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
-    AbstractMetaDataElement, Creator
+from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement, Creator
 from hs_core.hydroshare import utils
 
 
@@ -1727,7 +1724,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
     @property
     def resource(self):
-        return TimeSeriesResource.objects.filter(object_id=self.id).first()
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         super(TimeSeriesMetaData, self).copy_all_elements_from(src_md, exclude_elements)

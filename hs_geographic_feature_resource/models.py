@@ -1,14 +1,11 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
-from mezzanine.pages.page_processors import processor_for
-
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div
 from rdflib import RDF, BNode, Literal
 
 from hs_core.hs_rdf import HSTERMS, rdf_terms
-from hs_core.models import BaseResource, ResourceManager, resource_processor, \
-    CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
 
 
 @rdf_terms(HSTERMS.spatialReference)
