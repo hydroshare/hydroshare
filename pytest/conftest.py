@@ -230,6 +230,7 @@ def composite_resource_with_mi_aggregation(composite_resource):
     ModelInstanceLogicalFile.set_file_type(res, user, res_file.id)
     yield res, user
 
+
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
 def composite_resource_with_mi_mp_aggregation(composite_resource):
