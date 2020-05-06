@@ -35,7 +35,7 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
 
         new_url_string = Template(new_url_string).substitute(merged_term_dic)
     except Exception:
-        logger.exception("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
+        logger.debug("[WebApp] '{0}' cannot be parsed by term_dict {1}, skipping.".
                          format(new_url_string, str(merged_term_dic)))
         new_url_string = None
     finally:
