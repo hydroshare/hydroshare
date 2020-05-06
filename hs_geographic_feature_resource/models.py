@@ -3,12 +3,9 @@ from lxml import etree
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
-from mezzanine.pages.page_processors import processor_for
-
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, \
-    CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
 
 from hs_core.hydroshare.utils import add_metadata_element_to_xml
 

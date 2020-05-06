@@ -17,10 +17,7 @@ from django.utils.timezone import now
 
 from dominate.tags import table, tbody, tr, td, th, a
 
-from mezzanine.pages.page_processors import processor_for
-
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
-    AbstractMetaDataElement, Creator
+from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement, Creator
 from hs_core.hydroshare import utils
 
 
@@ -1804,7 +1801,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
     @property
     def resource(self):
-        return TimeSeriesResource.objects.filter(object_id=self.id).first()
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
