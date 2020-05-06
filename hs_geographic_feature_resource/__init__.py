@@ -1,1 +1,0 @@
-default_app_config = 'hs_geographic_feature_resource.apps.GeographicFeatureResourceAppConfig'
