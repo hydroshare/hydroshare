@@ -304,63 +304,6 @@ class Variable(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
-# TODO Deprecated
-class NetcdfResource(BaseResource):
-    objects = ResourceManager("NetcdfResource")
-
-    @classmethod
-    def get_metadata_class(cls):
-        return NetcdfMetaData
-
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # only file with extension .nc is supported for uploading
-        return (".nc",)
-
-    @classmethod
-    def allow_multiple_file_upload(cls):
-        # can upload only 1 file
-        return False
-
-    @classmethod
-    def can_have_multiple_files(cls):
-        # can have only 1 file
-        return False
-
-    # add resource-specific HS terms
-    def get_hs_term_dict(self):
-        # get existing hs_term_dict from base class
-        hs_term_dict = super(NetcdfResource, self).get_hs_term_dict()
-        # add new terms for NetCDF res
-        hs_term_dict["HS_FILE_NAME"] = ""
-        for res_file in self.files.all():
-            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
-            if f_ext.lower() == '.nc':
-                hs_term_dict["HS_FILE_NAME"] = f_fullname
-                break
-        return hs_term_dict
-
-    def update_netcdf_file(self, user):
-        self.metadata.refresh_from_db()
-        if not self.metadata.is_dirty:
-            return
-
-        nc_res_file = get_resource_files_by_extension(self, ".nc")
-        txt_res_file = get_resource_files_by_extension(self, ".txt")
-
-        from hs_file_types.models.netcdf import netcdf_file_update  # avoid recursive import
-        if nc_res_file and txt_res_file:
-            netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
-
-    discovery_content_type = 'Multidimensional (NetCDF)'  # used during discovery
-
-    class Meta:
-        verbose_name = 'Multidimensional (NetCDF)'
-        proxy = True
-
-processor_for(NetcdfResource)(resource_processor)
-
-
 class NetCDFMetaDataMixin(models.Model):
     """This class must be the first class in the multi-inheritance list of classes"""
     variables = GenericRelation(Variable)

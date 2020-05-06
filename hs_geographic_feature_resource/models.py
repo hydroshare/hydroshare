@@ -196,50 +196,6 @@ class GeometryInformation(AbstractMetaDataElement):
         return geom_information_form
 
 
-# TODO Deprecated
-class GeographicFeatureResource(BaseResource):
-    objects = ResourceManager("GeographicFeatureResource")
-
-    @classmethod
-    def get_metadata_class(cls):
-        return GeographicFeatureMetaData
-
-    @classmethod
-    def get_supported_upload_file_types(cls):
-
-        # See Shapefile format:
-        # http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
-        return (".zip", ".shp", ".shx", ".dbf", ".prj",
-                ".sbx", ".sbn", ".cpg", ".xml", ".fbn",
-                ".fbx", ".ain", ".aih", ".atx", ".ixs",
-                ".mxs")
-
-    def has_required_content_files(self):
-        if self.files.all().count() < 3:
-            return False
-        file_extensions = [f.extension.lower() for f in self.files.all()]
-        return all(ext in file_extensions for ext in ['.shp', '.shx', '.dbf'])
-
-    def get_hs_term_dict(self):
-        # get existing hs_term_dict from base class
-        hs_term_dict = super(GeographicFeatureResource, self).get_hs_term_dict()
-        geometryinformation = self.metadata.geometryinformation
-        if geometryinformation is not None:
-            hs_term_dict["HS_GFR_FEATURE_COUNT"] = geometryinformation.featureCount
-        else:
-            hs_term_dict["HS_GFR_FEATURE_COUNT"] = 0
-        return hs_term_dict
-
-    discovery_content_type = 'Geographic Feature (ESRI Shapefiles)'  # used during discovery
-
-    class Meta:
-        verbose_name = 'Geographic Feature (ESRI Shapefiles)'
-        proxy = True
-
-
-processor_for(GeographicFeatureResource)(resource_processor)
-
-
 class GeographicFeatureMetaDataMixin(models.Model):
     """This class must be the first class in the multi-inheritance list of classes"""
     geometryinformations = GenericRelation(GeometryInformation)
@@ -303,4 +259,4 @@ class GeographicFeatureMetaDataMixin(models.Model):
 class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
     @property
     def resource(self):
-        return GeographicFeatureResource.objects.filter(object_id=self.id).first()
+        return BaseResource.objects.filter(object_id=self.id).first()

@@ -9,37 +9,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor,\
 from lxml import etree
 
 
-class RefTimeSeriesResource(BaseResource):
-    objects = ResourceManager("RefTimeSeriesResource")
-
-    discovery_content_type = "Reference to HIS Time Series"  # used during discovery
-
-    class Meta:
-        verbose_name = "HIS Referenced Time Series"
-        proxy = True
-
-    @classmethod
-    def get_metadata_class(cls):
-        return RefTSMetadata
-
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # no file types are supported
-        return ()
-
-    @classmethod
-    def allow_multiple_file_upload(cls):
-        # no file can be uploaded
-        return False
-
-    @classmethod
-    def can_have_multiple_files(cls):
-        # resource can't have any files
-        return False
-
-
-processor_for(RefTimeSeriesResource)(resource_processor)
-
 class ReferenceURL(AbstractMetaDataElement):
     term = 'ReferenceURL'
     value = models.CharField(max_length=500)

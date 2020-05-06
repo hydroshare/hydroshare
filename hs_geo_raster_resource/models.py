@@ -324,54 +324,6 @@ class CellInformation(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
-# TODO Deprecated
-# To create a new resource, use these two super-classes.
-class RasterResource(BaseResource):
-    objects = ResourceManager("RasterResource")
-
-    discovery_content_type = 'Geographic Raster'  # used during discovery
-
-    class Meta:
-        verbose_name = 'Geographic Raster'
-        proxy = True
-
-    @classmethod
-    def get_metadata_class(cls):
-        return RasterMetaData
-
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # only tif file type is supported
-        return (".tiff", ".tif", ".vrt", ".zip")
-
-    @classmethod
-    def allow_multiple_file_upload(cls):
-        # can upload multiple files
-        return True
-
-    @classmethod
-    def can_have_multiple_files(cls):
-        # can have only 1 file
-        return False
-
-    # add resource-specific HS terms
-    def get_hs_term_dict(self):
-        # get existing hs_term_dict from base class
-        hs_term_dict = super(RasterResource, self).get_hs_term_dict()
-        # add new terms for Raster res
-        hs_term_dict["HS_FILE_NAME"] = ""
-        for res_file in self.files.all():
-            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
-            if f_ext.lower() == '.vrt':
-                hs_term_dict["HS_FILE_NAME"] = f_fullname
-                break
-        return hs_term_dict
-
-# this would allow us to pick up additional form elements for the template
-# before the template is displayed via Mezzanine page processor
-processor_for(RasterResource)(resource_processor)
-
-
 class GeoRasterMetaDataMixin(models.Model):
     """This class must be the first class in the multi-inheritance list of classes"""
 
@@ -441,7 +393,7 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
 
     @property
     def resource(self):
-        return RasterResource.objects.filter(object_id=self.id).first()
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     @property
     def serializer(self):
