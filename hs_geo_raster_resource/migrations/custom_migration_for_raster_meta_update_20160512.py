@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified
-from hs_geo_raster_resource.models import RasterResource
+from hs_core.models import BaseResource
 from hs_file_types import raster_meta_extract
 
 def migrate_tif_file(apps, schema_editor):
@@ -27,7 +27,7 @@ def migrate_tif_file(apps, schema_editor):
     meta_update_success = []
 
     # start migration for each raster resource that has raster files
-    for res in RasterResource.objects.all():
+    for res in BaseResource.objects.all():
         if res.files.all():
             # copy all the resource files to temp dir
             try:
@@ -130,7 +130,7 @@ def undo_migrate_tif_file(apps, schema_editor):
     meta_reverse_fail = []
 
     # loop through each raster resource and change the no data value, min, max values of each band
-    for res in RasterResource.objects.all():
+    for res in BaseResource.objects.all():
         for band_obj in res.metadata.bandInformation:
             try:
                 res.metadata.update_element('bandInformation',
