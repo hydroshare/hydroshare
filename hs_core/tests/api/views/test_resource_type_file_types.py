@@ -32,18 +32,6 @@ class TestResourceTypeFileTypes(TestCase):
     def test_resource_type_supported_file_types(self):
         # here we are testing the get_supported_file_types_for_resource_type view function
 
-        # test for generic resource type
-        resp_json = self._make_request("GenericResource")
-        self.assertEqual(resp_json['file_types'], '".*"')
-
-        # test for NetcdfResource
-        resp_json = self._make_request("NetcdfResource")
-        self.assertEqual(resp_json['file_types'], '[".nc"]')
-
-        # test for TimeSeriesResource
-        resp_json = self._make_request("TimeSeriesResource")
-        self.assertEqual(resp_json['file_types'], '[".sqlite", ".csv"]')
-
         # test for CollectionResource
         resp_json = self._make_request("CollectionResource")
         self.assertEqual(resp_json['file_types'], '[]')
@@ -51,16 +39,6 @@ class TestResourceTypeFileTypes(TestCase):
         # test for CompositeResource
         resp_json = self._make_request("CompositeResource")
         self.assertEqual(resp_json['file_types'], '".*"')
-
-        # test for RasterResource
-        resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['file_types'], '[".tiff", ".tif", ".vrt", ".zip"]')
-
-        # test for GeographicFeatureResource
-        resp_json = self._make_request("GeographicFeatureResource")
-        self.assertEqual(resp_json['file_types'],
-                         '[".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", '
-                         '".xml", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs"]')
 
         # test for ModelProgramResource
         resp_json = self._make_request("ModelProgramResource")

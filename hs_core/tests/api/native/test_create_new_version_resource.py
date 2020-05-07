@@ -7,11 +7,12 @@ from django.test import TestCase
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
+from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.models import GenericResource
 from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
-from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, \
+from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, \
     BandInformation
 
 
@@ -66,7 +67,7 @@ class TestNewVersionResource(TestCase):
         self.raster_obj = open(temp_raster_file, 'rb')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
         self.res_raster = hydroshare.create_resource(
-            resource_type='RasterResource',
+            resource_type='CompositeResource',
             owner=self.owner,
             title='Test Raster Resource',
             files=files,
@@ -216,7 +217,7 @@ class TestNewVersionResource(TestCase):
                                                                 self.owner)
 
         # test the new versioned resource has the same resource type as the original resource
-        self.assertTrue(isinstance(new_res_raster, RasterResource))
+        self.assertTrue(isinstance(new_res_raster, CompositeResource))
 
         # test science metadata elements are copied from the original resource to the new versioned
         # resource

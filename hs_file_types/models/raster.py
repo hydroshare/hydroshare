@@ -416,20 +416,6 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     if ext == '.tif' or ext == '.tiff':
         res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
                                              sub_folders=False)
-        if resource.resource_type == "RasterResource":
-            # check if there is already a vrt file in that folder
-            vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
-            tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
-                         f.extension.lower() == ".tiff"]
-            if vrt_files:
-                if len(vrt_files) > 1:
-                    error_info.append("More than one vrt file was found.")
-                    return validation_results
-                create_vrt = False
-            elif len(tif_files) != 1:
-                # if there are more than one tif file, there needs to be one vrt file
-                error_info.append("A vrt file is missing.")
-                return validation_results
 
         vrt_files_for_raster = get_vrt_files(raster_file, res_files)
         if len(vrt_files_for_raster) > 1:
@@ -532,26 +518,11 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
 
             file_names = [f_name for f_name in file_names if not f_name.endswith('.vrt')]
 
-            if resource.resource_type == "RasterResource":
-                tif_files = [f for f in resource.files.all() if f.extension.lower() == ".tif" or
-                             f.extension.lower() == ".tiff"]
-                if len(tif_files) > len(file_names_in_vrt):
-                    msg = 'One or more additional tif files were found which are not listed in ' \
-                          'the provided {} file.'
-                    msg = msg.format(os.path.basename(temp_vrt_file))
-                    error_info.append(msg)
-
             for vrt_ref_raster_name in file_names_in_vrt:
                 if vrt_ref_raster_name in file_names \
                         or (os.path.split(vrt_ref_raster_name)[0] == '.' and
                             os.path.split(vrt_ref_raster_name)[1] in file_names):
                     continue
-                elif resource.resource_type == "RasterResource" and os.path.basename(vrt_ref_raster_name) in file_names:
-                    msg = "Please specify {} as {} in the .vrt file, because it will " \
-                          "be saved in the same folder with .vrt file in HydroShare."
-                    msg = msg.format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name))
-                    error_info.append(msg)
-                    break
                 else:
                     msg = "The file {tif} which is listed in the {vrt} file is missing."
                     msg = msg.format(tif=os.path.basename(vrt_ref_raster_name),
