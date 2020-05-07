@@ -19,6 +19,7 @@ from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
 import hs_communities.views.communities
+from theme.views import delete_resource_comment
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -43,6 +44,7 @@ urlpatterns = i18n_patterns(
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
+    url(r'^comment/delete/(?P<id>.*)/$', delete_resource_comment, name='delete_resource_comment'),
     url(r'^rating/$', theme.rating),
     url(r'^profile/$', theme.update_user_profile, name='update_profile'),
     url(r'^update_password/$', theme.update_user_password, name='update_password'),

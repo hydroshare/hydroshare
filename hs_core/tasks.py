@@ -254,13 +254,17 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                try:
-                    # send email for people monitoring and follow-up as needed
-                    send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
-                              [u.email, settings.DEFAULT_SUPPORT_EMAIL],
-                              html_message=msg_str)
-                except Exception as ex:
-                    logger.debug("Failed to send quota warning email: " + ex.message)
+                if settings.DEBUG:
+                    logger.info("quota warning email not sent out on debug server but logged instead: "
+                                "{}".format(msg_str))
+                else:
+                    try:
+                        # send email for people monitoring and follow-up as needed
+                        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                                  [u.email, settings.DEFAULT_SUPPORT_EMAIL],
+                                  html_message=msg_str)
+                    except Exception as ex:
+                        logger.debug("Failed to send quota warning email: " + ex.message)
             else:
                 if uq.remaining_grace_period >= 0:
                     # turn grace period off now that the user is below quota soft limit
