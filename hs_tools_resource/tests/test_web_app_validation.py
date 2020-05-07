@@ -256,8 +256,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                                         element_name="requesturlbase")
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-        self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
-        self.assertEqual(custom_key_url, RequestUrlBaseAggregation.objects.first().value)
+        self.assertEqual(1, RequestUrlBase.objects.all().count())
+        self.assertEqual(custom_key_url, RequestUrlBase.objects.first().value)
 
     def test_resource_level_keys_update(self):
         good_url = 'https://www.google.com?' \
