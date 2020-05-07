@@ -10,7 +10,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified
-from hs_geo_raster_resource.models import RasterResource
+from hs_core.models import BaseResource
 from hs_file_types.models.raster import create_vrt_file
 
 
@@ -18,7 +18,7 @@ def migrate_tif_file(apps, schema_editor):
     # create a vrt file from tif file for each of the Raster Resources
     log = logging.getLogger()
     istorage = IrodsStorage()
-    for res in RasterResource.objects.all():
+    for res in BaseResource.objects.all():
         try:
             if len(res.files.all()) == 1:
                 res_file = res.files.all().first()
@@ -51,7 +51,7 @@ def migrate_tif_file(apps, schema_editor):
 
 def undo_migrate_tif_file(apps, schema_editor):
     # delete vrt file from each of the raster resources
-    for res in RasterResource.objects.all():
+    for res in BaseResource.objects.all():
         try:
             for res_file in res.files.all():
                 file_ext = os.path.splitext(res_file.resource_file.name)[1]

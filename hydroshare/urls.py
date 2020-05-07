@@ -16,7 +16,6 @@ from hs_sitemap.views import sitemap
 from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
-from hs_app_timeseries import views as hs_ts_views
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
@@ -84,8 +83,6 @@ urlpatterns = i18n_patterns(
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^my-communities/$', hs_communities.views.communities.MyCommunitiesView.as_view(), name='my_communities'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
-    url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
-        name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps")
 )
 
@@ -103,14 +100,12 @@ urlpatterns += [
     url('', include('hs_core.resourcemap_urls')),
     url('', include('hs_core.metadata_terms_urls')),
     url('', include('hs_core.debug_urls')),
-    url('^hsapi/', include('ref_ts.urls')),
     url('^irods/', include('irods_browser_app.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
     url('^hsapi/', include('hs_collection_resource.urls')),
     url('^hsapi/', include('hs_file_types.urls')),
-    url('^hsapi/', include('hs_app_netCDF.urls')),
     url('^hsapi/', include('hs_composite_resource.urls')),
 ]
 
