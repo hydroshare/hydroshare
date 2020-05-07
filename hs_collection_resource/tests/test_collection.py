@@ -50,43 +50,43 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.resGen1 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 1'
         )
 
         self.resGen2 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 2'
         )
 
         self.resGen3 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 3'
         )
 
         self.resGen4 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 4'
         )
 
         self.resTimeSeries = create_resource(
-            resource_type='TimeSeriesResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Test Time Series Resource'
         )
 
         self.resNetCDF = create_resource(
-                    resource_type='NetcdfResource',
+                    resource_type='CompositeResource',
                     owner=self.user1,
                     title='Test NetCDF Resource'
                 )
 
         self.resGeoFeature = create_resource(
-                    resource_type='GeographicFeatureResource',
+                    resource_type='CompositeResource',
                     owner=self.user1,
                     title='Test Geographic Feature (shapefiles)'
                 )

@@ -25,14 +25,14 @@ class TestResourceList(HSRESTTestCase):
 
     def test_resource_list_by_type(self):
 
-        gen_res = resource.create_resource('GenericResource',
+        gen_res = resource.create_resource('CompositeResource',
                                            self.user,
                                            'My Test Resource')
         gen_pid = gen_res.short_id
         self.resources_to_delete.append(gen_pid)
 
         raster = open('hs_core/tests/data/cea.tif', 'rb')
-        geo_res = resource.create_resource('RasterResource',
+        geo_res = resource.create_resource('CompositeResource',
                                            self.user,
                                            'My raster resource',
                                            files=(raster,))
@@ -69,22 +69,22 @@ class TestResourceList(HSRESTTestCase):
                         .endswith(res_tail.format(res_id=app_pid)))
 
         # Filter by type (single)
-        response = self.client.get('/hsapi/resource/', {'type': 'RasterResource'}, format='json')
+        response = self.client.get('/hsapi/resource/', {'type': 'ToolResource'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
 
         self.assertEqual(content['count'], 1)
-        self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_id'], app_pid)
         self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][0]['resource_url']
-                        .endswith(res_tail.format(res_id=geo_pid)))
+                        .endswith(res_tail.format(res_id=app_pid)))
 
         # Filter by type (multiple)
-        response = self.client.get('/hsapi/resource/', {'type': ['RasterResource', 'ToolResource']},
+        response = self.client.get('/hsapi/resource/', {'type': ['CompositeResource', 'ToolResource']},
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
-        self.assertEqual(content['count'], 2)
+        self.assertEqual(content['count'], 3)
 
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
         self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
@@ -97,10 +97,10 @@ class TestResourceList(HSRESTTestCase):
                         .endswith(res_tail.format(res_id=app_pid)))
 
     def test_resource_list_by_keyword(self):
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
-        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
-        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3')
-        gen_res_four = resource.create_resource('GenericResource', self.user, 'Resource 2')
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1')
+        gen_res_two = resource.create_resource('CompositeResource', self.user, 'Resource 2')
+        gen_res_three = resource.create_resource('CompositeResource', self.user, 'Resource 3')
+        gen_res_four = resource.create_resource('CompositeResource', self.user, 'Resource 2')
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
@@ -133,7 +133,7 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_obsolete(self):
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1')
         # make a new version of gen_res_one to make gen_res_one obsolete
         new_ver_gen_res_one = resource.create_empty_resource(gen_res_one.short_id, self.user)
 
