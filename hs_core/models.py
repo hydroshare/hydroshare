@@ -690,7 +690,6 @@ class Description(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         """Create custom update method for Description model."""
         element = Description.objects.get(id=element_id)
-        resource = element.metadata.resource
 
         super(Description, cls).update(element_id, **kwargs)
 
@@ -757,7 +756,6 @@ class Title(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         """Define custom update function for Title class."""
         element = Title.objects.get(id=element_id)
-        resource = element.metadata.resource
 
         super(Title, cls).update(element_id, **kwargs)
 
