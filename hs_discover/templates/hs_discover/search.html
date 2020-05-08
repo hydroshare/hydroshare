@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block meta_title %}Discover{% endblock %}
+{% block main %}
+    <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
+    <div class="container" id="discover-main">
+        <div class="row">
+            <div class="col-xs-12">
+                <h2 class="page-title">Discover</h2>
+                <div id="discover-search">
+                    <div id="wrapper">
+                        <div id="search" class="search-field" @keyup.enter="searchClick('{{ csrf_token }}')">
+                            {#                    <input class="form-control" name="query" v-model="searchQuery"#}
+                            {#                           @keyup.enter="searchClick('{{ csrf_token }}')">#}
+                            <vue-bootstrap-typeahead
+                                {#  https://github.com/alexurquhart/vue-bootstrap-typeahead#}
+                                :data="{{ vocab }}"
+                                v-model="searchQuery"
+                                {#  Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19#}
+                                ref="searchQuery"
+                                {#                    input-class="typeahead-search-input"#}
+                                @hit="searchClick('{{ csrf_token }}')"
+                                placeholder="">
+                            </vue-bootstrap-typeahead>
+                            <span class="glyphicon glyphicon-search search-icon"></span>
+                            <span @click="clearSearch()" class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
+                        </div>
+                        <a href="{% url 'search' %}?mode=advanced">Advanced Search</a>
+                    </div>
+
+                    <div v-if="q">
+                        <resource-listing sample="{{ resources }}" itemcount="{{ initialitemcount }}"
+                                          :columns="gridColumns"
+                                          :labels="gridColumnLabels"
+                                          :filter-key="searchQuery">
+                        </resource-listing>
+                    </div>
+                </div>
+            </div>
+
+            {#            TODO consider moving to props #}
+            <script type="text/javascript">const q = '{{ q }}';</script>
+
+            <script id="resource-listing-template" type="text/x-template">
+                <div>
+                    {#        <p class="items-counter">#}
+                    {#        {{ numItems }} items#}
+                    {#        </p>#}
+                    <p v-if="filteredResources.length">Results: ${filteredResources.length}</p>
+                    <div class="table-wrapper">
+                        <table v-if="filteredResources.length" class="table-hover table-striped resource-custom-table" id="items-discovered">
+                            <thead>
+                            <tr>
+                                <th v-for="key in labels"
+                                    @click="sortBy(key)"
+                                    :class="{ active: sortKey == key }">
+                                    ${key}
+                                    <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'"></span>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="entry in filteredResources">
+                                <td>
+                                    <span>
+                                        <img v-bind:src="{{ STATIC_URL }} + 'img/resource-icons/' + resTypeDict[entry.type] + '48x48.png'"
+                                             data-toggle="tooltip" data-placement="right"
+                                             :alt="entry.type" :title="entry.type"
+                                             class="table-res-type-icon"/>
+                                    </span>
+
+                                    <img v-if="entry.availability.indexOf('published') >= 0"
+                                         src="{{ STATIC_URL }}img/published.png"
+                                         data-toggle="tooltip" data-placement="right"
+                                         alt="Published Resource" title="Published"/>
+                                    <img v-else-if="entry.availability.indexOf('public') >= 0"
+                                         src="{{ STATIC_URL }}img/public.png"
+                                         data-toggle="tooltip" data-placement="right"
+                                         alt="Public Resource" title="Public"/>
+                                    <img v-else-if="entry.availability.indexOf('discoverable') >= 0"
+                                         src="{{ STATIC_URL }}img/discoverable.png"
+                                         data-toggle="tooltip" data-placement="right"
+                                         alt="Discoverable Resource" title="Discoverable"/>
+                                    <img v-else="entry.availability.indexOf('private') >= 0"
+                                         src="{{ STATIC_URL }}img/private.png"
+                                         data-toggle="tooltip" data-placement="right"
+                                         alt="Private Resource" title="Private"/>
+
+{#                                    TODO: translate this django template logic into Vue#}
+{#                                        {% if resource.raccess.published %}#}
+{#                                            {% if "pending" in cm.doi or "failure" in cm.doi %}#}
+{#                                                <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"#}
+{#                                                     data-toggle="tooltip" data-placement="right"#}
+{#                                                     title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>#}
+{#                                            {% endif %}#}
+{#                                        {% else %}#}
+{#                                            {% if resource.raccess.shareable %}#}
+{#                                                <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"#}
+{#                                                     data-toggle="tooltip" data-placement="right" title="Shareable"/>#}
+{#                                            {% else %}#}
+{#                                                <img src="{{ STATIC_URL }}img/non-shareable.png"#}
+{#                                                     alt="Non Sharable Resource"#}
+{#                                                     data-toggle="tooltip" data-placement="right"#}
+{#                                                     title="Not Shareable"/>#}
+{#                                            {% endif %}#}
+{#                                        {% endif %}#}
+                                </td>
+                                <td>
+                                    <a :href="entry.link" data-toggle="tooltip" :title="entry.abstract" data-placement="top">${entry.name}</a>
+                                </td>
+                                <!-- temporary placeholder for link column, until header display approach is refactored -->
+                                <td>
+                                    <a :href="entry.author_link">${entry.author}</a>
+                                </td>
+
+                                <!-- temporary placeholder for link column, until header display approach is refactored -->
+                                <td>${entry.created}</td>
+                                <td>${entry.modified}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <p v-else>No results found.</p>
+                    </div>
+                </div>
+            </script>
+
+            <script type="text/javascript" src="{{ STATIC_URL }}js/search.js"></script>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/search.css"/>
+    <link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>
+{% endblock %}
