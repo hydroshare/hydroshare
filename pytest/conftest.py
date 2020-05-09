@@ -14,8 +14,9 @@ from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFi
 from hs_labels.models import UserLabels
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def mock_irods():
+    # only mock up testing iRODS operations when local iRODS container is not used
     if settings.IRODS_HOST != 'data.local.org':
         from mock import patch
 
@@ -29,14 +30,12 @@ def mock_irods():
 
         for patcher in irods_patchers:
             patcher.start()
-        print(">> irods mock setup")
     yield
 
     """Stop iRODS patchers."""
     if settings.IRODS_HOST != 'data.local.org':
         for patcher in irods_patchers:
             patcher.stop()
-        print(">> irods mock teardown")
 
 
 @pytest.mark.django_db
