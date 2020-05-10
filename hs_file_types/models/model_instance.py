@@ -253,8 +253,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             if v_sub:
                                 field.text = ", ".join(v_sub)
                         else:
+                            v_sub = str(v_sub)
                             if len(v_sub.strip()) > 0:
-                                field.text = str(v_sub)
+                                field.text = v_sub
                         if not field.text:
                             k_obj_element_desc.remove(field)
                         else:
@@ -268,8 +269,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         if v:
                             k_obj_element.text = ", ".join(v)
                     else:
+                        v = str(v)
                         if len(v.strip()) > 0:
-                            k_obj_element.text = str(v)
+                            k_obj_element.text = v
 
                     if not k_obj_element.text:
                         # remove xml node since there is no data for the node
