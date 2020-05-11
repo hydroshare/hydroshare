@@ -55,6 +55,8 @@ def authentic_redirect_url(url):
     :param url: String of a url
     :return: Boolean, True if the url exists in a web app
     """
+    if not url:
+        return False
     u = urlparse(url)
     url_base = "{}://{}".format(u.scheme, u.netloc)
     return RequestUrlBase.objects.filter(value__startswith=url_base).exists() \
