@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-from django.contrib.auth.models import User
 
 
 class Migration(migrations.Migration):
@@ -14,14 +13,11 @@ class Migration(migrations.Migration):
         ('hs_core', '0046_auto_20191104_2035'),
     ]
 
-    # get the admin id, otherwise default to 4, which is a hydroshare admin in the test db
-    default_last_changed_by_id = 4
-    if User.objects.filter(username='admin').exists():
-        default_last_changed_by_id = User.objects.get(username='admin').id
+    default_last_changed_by_id = 1
     operations = [
         migrations.AlterField(
             model_name='baseresource',
             name='last_changed_by',
-            field=models.ForeignKey(default=default_last_changed_by_id, help_text='The person who last changed the resource', on_delete=django.db.models.deletion.CASCADE, related_name='last_changed_hs_core_baseresource', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(default=1, help_text='The person who last changed the resource', on_delete=django.db.models.deletion.CASCADE, related_name='last_changed_hs_core_baseresource', to=settings.AUTH_USER_MODEL),
         )
     ]
