@@ -197,40 +197,43 @@
                                     <td>
                                         {{ res.resource_type }}
                                     </td>
-                                    <td>
-                                        {% for owner in res.raccess.owners.all %}
-                                            {% if forloop.counter0 > 0 %} · {% endif %}
+                                    {% with res.raccess as raccess %}
+                                        <td>
+                                            {% with raccess.owners.all|first as owner %}
 
-                                            {% if owner.first_name %}
-                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                                {% if owner.first_name %}
+                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                                {% else %}
+                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            {% if raccess.published %}
+                                                Published
+                                            {% elif raccess.public %}
+                                                Public
+                                            {% elif raccess.discoverable %}
+                                                Discoverable
                                             {% else %}
-                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                                Private
                                             {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                    <td>
-                                        {% if res.raccess.published %}
-                                            Published
-                                        {% elif res.raccess.public %}
-                                            Public
-                                        {% elif res.raccess.discoverable %}
-                                            Discoverable
-                                        {% else %}
-                                            Private
-                                        {% endif %}
 
-                                        {% if res.raccess.shareable %}
-                                            & Shareable
-                                        {% endif %}
-                                    </td>
-                                     <td>
-                                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                        {% else %}
-                                            {{ res|user_permission:request.user.pk }}
-                                        {% endif %}
+                                            {% if raccess.shareable %}
+                                                & Shareable
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
+                                    <td>
+                                        {% with res|user_permission:request.user.pk|lower as upermission %}
+                                            {% if upermission == "none" %}
+                                                <strong class="label-private">{{ upermission }}</strong>
+                                            {% elif upermission == "open access" %}
+                                                <strong class="label-public">{{ upermission }}</strong>
+                                            {% else %}
+                                                {{ upermission }}
+                                            {% endif %}
+                                        {% endwith %}
                                     </td>
                                     <td>
                                         <span data-res-id="{{ res.short_id }}"

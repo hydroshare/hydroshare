@@ -2,6 +2,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.db.models import Q
 from mezzanine.pages.page_processors import processor_for
 
+from hs_access_control.models import PrivilegeCodes
 from hs_core import page_processors
 from hs_core.models import BaseResource
 from hs_core.views import add_generic_context
@@ -33,10 +34,10 @@ def landing_page(request, page):
         # 2) OR, current user is a owner of it
         # 3) exclude this resource as well as resources already in the collection
         user_all_accessible_resource_list.exclude(short_id=content_model.short_id)\
-            .exclude(id__in=content_model.resources.all())\
-            .exclude(Q(raccess__shareable=False) | Q(raccess__owners__contains=user.pk))
+            .exclude(id__in=content_model.resources.values_list("id", flat=True))\
+            .exclude(Q(raccess__shareable=False) | ~Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER))
 
-        context['collection_candidate'] = user_all_accessible_resource_list.all()
+        context['collection_candidate'] = user_all_accessible_resource_list
         context['collection_res_id'] = content_model.short_id
     elif isinstance(context, HttpResponseRedirect):
         # resource view mode
