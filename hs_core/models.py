@@ -1704,7 +1704,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True,
+                                        null=False,
+                                        default=1
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
