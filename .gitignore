@@ -40,4 +40,3 @@ celerybeat.pid
 /nginx/cert*
 pg.deploy.sql
 node_modules/
-hs_discover/src/
