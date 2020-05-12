@@ -3477,25 +3477,6 @@ class BaseResource(Page, AbstractResource):
         return hs_term_dict
 
 
-# TODO Deprecated
-class GenericResource(BaseResource):
-    """Define GenericResource model."""
-
-    objects = ResourceManager('GenericResource')
-
-    @property
-    def supports_folders(self):
-        """Return True always."""
-        return True
-
-    discovery_content_type = 'Generic Resource'  # used during discovery
-
-    class Meta:
-        """Define meta properties for GenericResource model."""
-        verbose_name = 'Generic'
-        proxy = True
-
-
 old_get_content_model = Page.get_content_model
 
 

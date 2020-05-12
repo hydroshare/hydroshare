@@ -41,7 +41,8 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
+from hs_core.models import resource_processor, CoreMetaData, Subject
+from hs_composite_resource.models import CompositeResource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
@@ -243,7 +244,7 @@ def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
 
     if element_name in core_metadata_element_names:
-        sender_resource = GenericResource().__class__
+        sender_resource = CompositeResource().__class__
     else:
         sender_resource = resource.__class__
 
@@ -1173,7 +1174,7 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
-@processor_for(GenericResource)
+@processor_for(CompositeResource)
 def add_generic_context(request, page):
     user = request.user
     user_zone_account_exist = utils.get_user_zone_status_info(user)
@@ -1550,7 +1551,7 @@ def get_file(request, *args, **kwargs):
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
 
-processor_for(GenericResource)(resource_processor)
+processor_for(CompositeResource)(resource_processor)
 
 
 def get_metadata_terms_page(request, *args, **kwargs):

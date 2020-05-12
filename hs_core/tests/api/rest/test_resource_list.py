@@ -11,7 +11,7 @@ class TestResourceList(HSRESTTestCase):
 
     def test_resource_list(self):
 
-        new_res = resource.create_resource('GenericResource',
+        new_res = resource.create_resource('CompositeResource',
                                            self.user,
                                            'My Test Resource')
         pid = new_res.short_id
@@ -86,14 +86,19 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 3)
 
-        self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_id'], gen_pid)
         self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][0]['resource_url']
-                        .endswith(res_tail.format(res_id=geo_pid)))
+                        .endswith(res_tail.format(res_id=gen_pid)))
 
-        self.assertEqual(content['results'][1]['resource_id'], app_pid)
+        self.assertEqual(content['results'][1]['resource_id'], geo_pid)
         self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][1]['resource_url']
+                        .endswith(res_tail.format(res_id=geo_pid)))
+
+        self.assertEqual(content['results'][2]['resource_id'], app_pid)
+        self.assertTrue(content['results'][2]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][2]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 
     def test_resource_list_by_keyword(self):

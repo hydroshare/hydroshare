@@ -6,7 +6,8 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change
 from hs_core.tasks import update_web_services
-from hs_core.models import GenericResource, Party
+from hs_core.models import Party
+from hs_composite_resource.models import CompositeResource
 from django.conf import settings
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
@@ -14,7 +15,7 @@ from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, 
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
 
 
-@receiver(pre_metadata_element_create, sender=GenericResource)
+@receiver(pre_metadata_element_create, sender=CompositeResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     """Select proper form class based on element_name.
 
@@ -73,7 +74,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
-@receiver(pre_metadata_element_update, sender=GenericResource)
+@receiver(pre_metadata_element_update, sender=CompositeResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     """Select proper form class based on element_name.
 

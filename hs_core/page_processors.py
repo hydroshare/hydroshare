@@ -13,7 +13,8 @@ from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
-from hs_core.models import GenericResource, Relation
+from hs_core.models import Relation
+from hs_composite_resource.models import CompositeResource
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
 import json
@@ -21,7 +22,7 @@ import json
 from hs_odm2.models import ODM2Variable
 
 
-@processor_for(GenericResource)
+@processor_for(CompositeResource)
 def landing_page(request, page):
     """Return resource landing page context."""
     edit_resource = check_resource_mode(request)

@@ -40,9 +40,10 @@ from hs_core.hydroshare import add_resource_files
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations
 from hs_core.hydroshare.utils import get_file_mime_type
-from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
+from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_composite_resource.models import CompositeResource
 from hs_file_types.utils import set_logical_file_type
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
@@ -485,7 +486,7 @@ def validate_metadata(metadata, resource_type):
 
             if element_attribute_names_valid:
                 if is_core_element:
-                    element_resource_class = GenericResource().__class__
+                    element_resource_class = CompositeResource().__class__
                 else:
                     element_resource_class = resource_class
 

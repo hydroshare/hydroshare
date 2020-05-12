@@ -281,7 +281,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         supported_res_type = SupportedResTypes.objects.first()
         for res_type in supported_res_type.supported_res_types.all():
             self.assertIn(res_type.description, ['CompositeResource'])
-        self.assertEqual(supported_res_type.supported_res_types.count(), 2)
+        self.assertEqual(supported_res_type.supported_res_types.count(), 1)
         self.assertEqual(ToolVersion.objects.first().value, '2.0')
 
         # test updating SupportedSharingStatus

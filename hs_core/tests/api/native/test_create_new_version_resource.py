@@ -41,9 +41,9 @@ class TestNewVersionResource(TestCase):
             groups=[]
         )
 
-        # create a generic resource
+        # create a composite resource
         self.res_generic = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.owner,
             title='Test Generic Resource'
         )
