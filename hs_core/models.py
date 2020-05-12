@@ -1705,6 +1705,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
                                         null=False,
+                                        default=User.objects.get(username='admin').id
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
