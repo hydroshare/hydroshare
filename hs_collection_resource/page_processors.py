@@ -4,7 +4,6 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_access_control.models import PrivilegeCodes
 from hs_core import page_processors
-from hs_core.models import BaseResource
 from hs_core.views import add_generic_context
 from hs_core.views.utils import get_my_resources_list
 from .models import CollectionResource
@@ -26,7 +25,7 @@ def landing_page(request, page):
     if edit_resource:
         user = request.user
         if not user.is_authenticated():
-            return HttpResponseForbidden();
+            return HttpResponseForbidden()
         user_all_accessible_resource_list = get_my_resources_list(user)
 
         # resource is collectable if
