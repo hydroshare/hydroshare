@@ -39,3 +39,5 @@ celerybeat.pid
 .c9
 /nginx/cert*
 pg.deploy.sql
+node_modules/
+hs_discover/src/
