@@ -57,7 +57,7 @@
                                             {{ res.resource_type }}
                                         </td>
                                         <td>
-                                            {% with raccess.owners|first as owner %}
+                                            {% with raccess.owners.all|first as owner %}
                                                 {% if owner.first_name %}
                                                     <strong><a href='/user/{{ owner.pk }}/'
                                                                target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
@@ -202,7 +202,7 @@
                                     </td>
                                     {% with res.raccess as raccess %}
                                         <td>
-                                            {% with raccess.owners|first as owner %}
+                                            {% with raccess.owners.all|first as owner %}
 
                                                 {% if owner.first_name %}
                                                     <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
@@ -292,7 +292,7 @@
                                         {{ res.resource_title }}
                                     </td>
                                    <td>
-                                       {% with res.resource_owners|first as owner %}
+                                       {% with res.resource_owners.all|first as owner %}
                                             {% if owner.first_name %}
                                                 <strong><a href='/user/{{ owner.pk }}/'
                                                            target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
