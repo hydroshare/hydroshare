@@ -44,7 +44,7 @@ def landing_page(request, page):
         # sending user to login page
         return context
 
-    context['deleted_resources'] = content_model.deleted_resources.all()
+    context['deleted_resources'] = content_model.deleted_resources
     context['collection'] = collection_items_list
     context['edit_mode'] = edit_resource
 
