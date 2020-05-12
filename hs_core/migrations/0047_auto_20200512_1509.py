@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
     # get the admin id, otherwise default to 4, which is a hydroshare admin in the test db
     default_last_changed_by_id = 4
     if User.objects.filter(username='admin').exists():
-        default_last_changed_by_id = User.objects.get(username='admin')
+        default_last_changed_by_id = User.objects.get(username='admin').id
     operations = [
         migrations.AlterField(
             model_name='baseresource',
