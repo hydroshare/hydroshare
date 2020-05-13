@@ -371,6 +371,46 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no appkey '
                                               'matching')
 
+    def test_web_app_extended_metadata_custom_key(self):
+        # testing a resource can be associated with a web app tool resource via
+        # appkey name-value extended metadata matching
+        self.user.ulabels.add_open_with_app(self.resWebApp)
+        self.assertEqual(ToolResource.objects.count(), 1)
+        metadata = []
+        metadata.append({'requesturlbase': {'value': 'https://www.google.com?s=${search_string}'}})
+        metadata.append({'supportedrestypes': {
+            'supported_res_types': ['CompositeResource']}})
+        metadata.append({'supportedsharingstatus': {'sharing_status': ['Private']}})
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        self.assertEqual(self.resComposite.extra_metadata, {})
+        self.resComposite.extra_metadata = {'search_string': 'it works'}
+        self.resComposite.save()
+
+        url = '/resource/' + self.resComposite.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
+                                                 'matching')
+        tc = relevant_tools['resource_level_app_counter']
+        self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(tl['res_id'], self.resWebApp.short_id)
+        self.assertEqual(tl['agg_types'], '')
+        self.assertEqual(tl['file_extensions'], '')
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
+
+        self.resComposite.extra_metadata = {}
+        self.resComposite.save()
+        self.assertEqual(self.resComposite.extra_metadata, {})
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no web app '
+                                              'matching')
+
     def test_web_app_do_needed_work_when_being_launched(self):
         # testing a web app does needed work when being launched. Currently, the needed work when
         # launching a web app includes checking 'irods_federation_target_path' and
