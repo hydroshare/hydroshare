@@ -147,11 +147,11 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
-        self.assertEqual(good_url, RequestUrlBaseFile.objects.first().value)
+        self.assertEqual(good_url, RequestUrlBaseAggregation.objects.first().value)
 
     def test_aggregation_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${Custom_KEY}'
+                  'file_id=${HS_CUSTOM}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbaseaggregation",
