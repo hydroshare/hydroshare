@@ -20,11 +20,13 @@ class Command(BaseCommand):
                 used_value = get_quota_usage_from_irods(uq.user.username)
                 if not math.isclose(used_value, uq.used_value, abs_tol=0.1):
                     # report inconsistency
-                    report_dict = {'django:': uq.used_value,
-                                   'irods': used_value}
+                    report_dict = {
+                        'user': uq.user.username,
+                        'django:': uq.used_value,
+                        'irods': used_value}
                     quota_report_list.append(report_dict)
-                    print('quota incosistency: {} reported in django vs {} reported in iRODS'.format(
-                        uq.used_value, used_value), flush=True)
+                    print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
+                        uq.used_value, used_value, uq.user.username), flush=True)
             except ValidationError as ex:
                 print(ex, flush=True)
 
@@ -32,6 +34,7 @@ class Command(BaseCommand):
             with open(options['output_file_name_with_path'], 'w') as csvfile:
                 w = csv.writer(csvfile)
                 fields = [
+                    'User'
                     'Quota reported in Django',
                     'Quota reported in iRODS'
                 ]
@@ -39,6 +42,7 @@ class Command(BaseCommand):
 
                 for q in quota_report_list:
                     values = [
+                        q['user'],
                         q['django'],
                         q['irods']
                     ]
