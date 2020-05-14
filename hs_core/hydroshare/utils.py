@@ -466,7 +466,10 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     """
 
-    resource.last_changed_by = by_user
+    if not by_user:
+        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
+    else:
+        resource.last_changed_by = by_user
 
     resource.updated = now().isoformat()
     # seems this is the best place to sync resource title with metadata title

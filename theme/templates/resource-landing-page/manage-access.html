@@ -62,6 +62,7 @@
                     <div class="panel-heading">
                         <h3 class="panel-title">Give access</h3>
                     </div>
+
                     <div id="div-invite-people" class="panel-body">
                         <div id="invite-flag" class="btn-group space-bottom" role="group"
                              aria-label="Share with users or groups">
@@ -74,7 +75,6 @@
                                     @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
                                     data-value="groups">Groups</button>
                         </div>
-
 
                         <div class="row">
                             <div v-show="isInviteUsers" class="add-view-user-form col-xs-12">

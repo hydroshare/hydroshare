@@ -150,6 +150,23 @@ function removeExtraMetaTable(table) {
     saveExtraMetadata();
 }
 
+function showRemoveCommentPopup(comment_id_str, thread_count) {
+    // this is a hidden HTML element to store the comment_id_str
+    $("#delete_comment_id").val(comment_id_str);
+    if(thread_count > 0){
+        $("#delete_comment_message").text("This will delete this comment and " + thread_count + " threaded reply messages")
+    }
+    else{
+        $("#delete_comment_message").text("This will delete this comment")
+    }
+    $('#deleteCommentDialog').modal('show');
+}
+
+function removeComment() {
+    $("#deleteCommentDialog").modal('hide');
+    window.location = "/comment/delete/" + $("#delete_comment_id").val().trim();
+}
+
 function findMaxRowID(table) {
     var max_id = -1;
     table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
@@ -527,6 +544,11 @@ $(document).ready(function () {
         deleteFileTypeExtraMetadata(formID);
     });
 
+    $("#comments").on("click", ".btn-confirm-delete-comment", function () {
+        var commentId = $(this).attr("comment-id");
+        var thread_count = $(this).parent().find(".comment-author").length;
+        showRemoveCommentPopup(commentId, thread_count);
+    });
 
     const SPACING = 22; // 2 * 10px(from margins) + 2 * 1px (from borders)
     var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
@@ -535,7 +557,10 @@ $(document).ready(function () {
     // ========================================
     $(window).bind('scroll', function () {
         let toolbar = $(".custom-btn-toolbar");
-        if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
+        if (toolbar.children().length == 0){
+            toolbar.css("display", None);
+        }
+        else if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());
             toolbar.css("top", $("#hs-nav-bar").height() + 11);
             toolbar.addClass('toolbar-fixed');

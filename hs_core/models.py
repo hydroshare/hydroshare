@@ -313,6 +313,10 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
+    permissions_allow_copy = False
+    if request.user.is_authenticated:
+        permissions_allow_copy = request.user.uaccess.can_view_resource(cm)
+
     show_manage_access = False
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
@@ -326,6 +330,7 @@ def page_permissions_page_processor(request, page):
         "users_json": users_json,
         "owners": owners,
         "self_access_level": self_access_level,
+        "permissions_allow_copy": permissions_allow_copy,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
@@ -1699,7 +1704,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True,
+                                        null=False,
+                                        default=1
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
@@ -2531,7 +2537,10 @@ def get_resource_file_path(resource, filename, folder=None):
 
     """
     # folder can be absolute pathname; strip qualifications off of folder if necessary
-    if folder is not None and folder.startswith(resource.root_path):
+    # cannot only test folder string to start with resource.root_path, since a relative folder path
+    # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
+    # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
+    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
     if folder == '':
@@ -2544,11 +2553,13 @@ def get_resource_file_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return resource.file_path + '/' + folder + '/' + filename
+        folder = folder.strip('/')
+        return os.path.join(resource.file_path, folder, filename)
 
     else:
         # use root folder
-        return resource.file_path + '/' + filename
+        filename = filename.strip('/')
+        return os.path.join(resource.file_path, filename)
 
 
 def path_is_allowed(path):

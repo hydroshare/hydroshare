@@ -12,12 +12,14 @@ from autocomplete_light import shortcuts as autocomplete_light
 
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
+from hs_core.views.oauth2_view import GroupAuthorizationView
 from hs_sitemap.views import sitemap
 from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
 import hs_communities.views.communities
+from theme.views import delete_resource_comment
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -30,6 +32,7 @@ urlpatterns = i18n_patterns(
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    url("^o/groupauthorize/(?P<group_id>[0-9]+)/$", GroupAuthorizationView.as_view(), name="group-authorize"),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
     url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
@@ -41,6 +44,7 @@ urlpatterns = i18n_patterns(
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
+    url(r'^comment/delete/(?P<id>.*)/$', delete_resource_comment, name='delete_resource_comment'),
     url(r'^rating/$', theme.rating),
     url(r'^profile/$', theme.update_user_profile, name='update_profile'),
     url(r'^update_password/$', theme.update_user_password, name='update_password'),

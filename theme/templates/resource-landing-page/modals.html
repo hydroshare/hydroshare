@@ -1423,6 +1423,30 @@
 
 {% endif %}
 
+<div class="modal fade in" id="deleteCommentDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form enctype="multipart/form-data">
+                <input name="resource-mode" type="hidden" value="edit">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="extra_meta_title"> Delete Comment </h4>
+                </div>
+                <div class="modal-body">
+                <p id="delete_comment_message">
+                    Confirm to delete the comment and any threaded reply messages
+                </p>
+                </div>
+                <div class="modal-footer">
+                    <input id="delete_comment_id" type="hidden" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="btn-confirm-delete-comment" type="button" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="large-file-download-alert" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -1573,8 +1597,8 @@
     {% endif %}
 
     {% if user.is_authenticated and rights.statement %}
-        {% if cm.raccess.public or self_access_level != 'None' %}
-            {% if allow_resource_copy %}
+        {% if permissions_allow_copy %}
+            {% if rights_allow_copy %}
                 <div class="modal fade" id="copy-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
