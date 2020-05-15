@@ -392,8 +392,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         request.user = self.user
 
         relevant_tools = resource_level_tool_urls(self.resComposite, request)
-        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with appkey '
-                                                 'matching')
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None')
         tc = relevant_tools['resource_level_app_counter']
         self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
         tl = relevant_tools['tool_list'][0]
@@ -409,6 +408,12 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         relevant_tools = resource_level_tool_urls(self.resComposite, request)
         self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no web app '
                                               'matching')
+        # test for default custom key value specified in the web app
+        self.resWebApp.extra_metadata = {'search_string': 'it works'}
+        self.resWebApp.save()
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
+                                                 'web app key')
 
     def test_web_app_do_needed_work_when_being_launched(self):
         # testing a web app does needed work when being launched. Currently, the needed work when
