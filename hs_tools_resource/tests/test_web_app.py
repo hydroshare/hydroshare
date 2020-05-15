@@ -372,8 +372,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
                                               'matching')
 
     def test_web_app_extended_metadata_custom_key(self):
-        # testing a resource can be associated with a web app tool resource via
-        # appkey name-value extended metadata matching
+        # testing a web resource may contain custom keys
         self.user.ulabels.add_open_with_app(self.resWebApp)
         self.assertEqual(ToolResource.objects.count(), 1)
         metadata = []
