@@ -147,7 +147,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                pretty_print=pretty_print).decode()
 
     def get_html(self, include_extra_metadata=True, **kwargs):
-        html_string = super(ModelProgramFileMetaData, self).get_html()
+        html_string = super(ModelProgramFileMetaData, self).get_html(skip_coverage=True)
         mp_program_type_div = dom_tags.div()
         with mp_program_type_div:
             dom_tags.legend("Model Program Type")
@@ -232,7 +232,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         form_action = "/hsapi/_internal/{}/update-modelprogram-metadata/"
         form_action = form_action.format(self.logical_file.id)
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
-        base_div, context = super(ModelProgramFileMetaData, self).get_html_forms(render=False)
+        base_div, context = super(ModelProgramFileMetaData, self).get_html_forms(render=False, skip_coverage=True)
 
         def get_html_form_mp_file_types():
             aggregation = self.logical_file

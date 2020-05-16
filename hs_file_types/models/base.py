@@ -147,8 +147,9 @@ class AbstractFileMetaData(models.Model):
         :param  temporal_coverage: if True then form elements for editing temporal coverage are
         included
         """
-        root_div = div()
 
+        skip_coverage = kwargs.get('skip_coverage', False)
+        root_div = div()
         with root_div:
             h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
             if dataset_name_form:
@@ -157,18 +158,19 @@ class AbstractFileMetaData(models.Model):
             self.get_keywords_html_form()
 
             self.get_extra_metadata_html_form()
-            if temporal_coverage:
-                # for aggregation that contains other aggregations with temporal data,
-                # show option to update temporal coverage from contained aggregations
-                if self.logical_file.has_children_temporal_data:
-                    with self.get_temporal_coverage_html_form():
-                        with div():
-                            button("Set temporal coverage from folder contents",
-                                   type="button",
-                                   cls="btn btn-primary",
-                                   id="btn-update-aggregation-temporal-coverage")
-                else:
-                    self.get_temporal_coverage_html_form()
+            if not skip_coverage:
+                if temporal_coverage:
+                    # for aggregation that contains other aggregations with temporal data,
+                    # show option to update temporal coverage from contained aggregations
+                    if self.logical_file.has_children_temporal_data:
+                        with self.get_temporal_coverage_html_form():
+                            with div():
+                                button("Set temporal coverage from folder contents",
+                                       type="button",
+                                       cls="btn btn-primary",
+                                       id="btn-update-aggregation-temporal-coverage")
+                    else:
+                        self.get_temporal_coverage_html_form()
         return root_div
 
     def get_keywords_html_form(self):
