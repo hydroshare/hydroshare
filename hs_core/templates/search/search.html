@@ -345,9 +345,8 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-
     <script src="https://maps.googleapis.com/maps/api/js?v=3&libraries=geometry,places{% if maps_key %}&key={{ maps_key }}{% endif %}" type="text/javascript"></script>
-    <script src="https://cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
-    <script src="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/keydragzoom@1.0.0/index.min.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/gh/googlemaps/js-marker-clusterer@gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/discover.js"></script>
 {% endblock %}

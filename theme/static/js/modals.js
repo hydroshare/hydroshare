@@ -86,6 +86,8 @@ $(document).ready(function() {
     $("#btn-confirm-extended-metadata").click(addEditExtraMeta2Table);
     $("#btn-confirm-delete-extended-metadata").click(removeExtraMetaTable);
 
+    $("#btn-confirm-delete-comment").click(removeComment);
+
     $("input#user-autocomplete").addClass("form-control");
 
     $('#usage-info').on('hidden.bs.collapse', function () {
