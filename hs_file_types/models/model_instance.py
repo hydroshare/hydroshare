@@ -51,12 +51,55 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 dom_tags.p(display_string)
             else:
                 dom_tags.p("Unspecified")
-            if self.metadata_json:
-                dom_tags.legend("Schema Based Metadata)")
-                json_data = json.dumps(self.metadata_json, indent=4)
-                dom_tags.textarea(json_data, rows=10, cols=50, readonly="readonly", cls="form-control")
+
+        metadata_json_div = dom_tags.div(cls="content-block")
+        if self.metadata_json:
+            metadata_schema = {}
+            if self.executed_by and self.executed_by.mi_schema_json:
+                metadata_schema = self.executed_by.mi_schema_json
+            with metadata_json_div:
+                dom_tags.legend("Schema Based Metadata")
+                schema_properties_key = 'properties'
+                for k, v in self.metadata_json.items():
+                    if v:
+                        k_title = k
+                        if metadata_schema:
+                            root_properties_schema_node = metadata_schema[schema_properties_key]
+                            if k in root_properties_schema_node:
+                                k_title = root_properties_schema_node[k]['title']
+                        dom_tags.legend(k_title)
+                    with dom_tags.div(cls="row"):
+                        if v:
+                            if isinstance(v, dict):
+                                for child_k, child_v in v.items():
+                                    if child_v:
+                                        child_k_title = child_k
+                                        if metadata_schema:
+                                            child_properties_schema_node = root_properties_schema_node[k]
+                                            child_properties_schema_node = child_properties_schema_node[
+                                                schema_properties_key]
+                                            if child_k in child_properties_schema_node:
+                                                child_k_title = child_properties_schema_node[child_k]['title']
+                                        if isinstance(child_v, list):
+                                            value_string = ", ".join(child_v)
+                                        else:
+                                            value_string = child_v
+                                        with dom_tags.div(cls="col-md-6"):
+                                            dom_tags.p(child_k_title)
+                                        with dom_tags.div(cls="col-md-6"):
+                                            dom_tags.p(value_string)
+                            else:
+                                if isinstance(v, list):
+                                    value_string = ", ".join(v)
+                                else:
+                                    value_string = v
+                                with dom_tags.div(cls="col-md-6"):
+                                    dom_tags.p(k_title)
+                                with dom_tags.div(cls="col-md-6"):
+                                    dom_tags.p(value_string)
 
         html_string += executed_by_div.render()
+        html_string += metadata_json_div.render()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
