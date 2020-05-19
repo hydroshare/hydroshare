@@ -79,6 +79,8 @@
             <p v-else>No results found.</p>
         </div>
     </div>
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/search.css"/>
+
 </template>
 
 <script>

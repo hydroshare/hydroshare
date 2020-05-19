@@ -39,4 +39,7 @@ celerybeat.pid
 .c9
 /nginx/cert*
 pg.deploy.sql
+
+# Frontend
 node_modules/
+dist/
