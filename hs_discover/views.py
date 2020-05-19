@@ -48,9 +48,10 @@ class SearchView(TemplateView):
         if request.GET.get('mode') == 'advanced':
             return render(request, 'hs_discover/advanced_search.html')
         else:
-            return render(request, 'hs_discover/search.html', {
+            return render(request, 'hs_discover/index.html', {
                 'resources': resources,
                 'q': q,
                 'itemcount': itemcount,
-                'vocab': vocab
+                'vocab': vocab,
+                'sample_item': "Sample data from Django endpoint"
             })

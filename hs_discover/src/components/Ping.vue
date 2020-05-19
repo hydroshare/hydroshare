@@ -1,6 +1,7 @@
 <template>
     <div>
-        {{ message }}<br/>
+        <span>Template is rendering!</span>
+        {{ message }}
     </div>
 </template>
 
@@ -12,19 +13,15 @@
             }
         },
         name: "Ping",
-        props:
-            ['sample'],
-        filters: {
-            sampleFilter: function (str) {
-                }
-        },
-        methods: {
-            sampleMethod: function (key) {
-            }
-        }
+        // props:
+        //     ['sample'],
+        // filters: {
+        //     sampleFilter: function (str) {
+        //         }
+        // },
+        // methods: {
+        //     sampleMethod: function (key) {
+        //     }
+        // }
     }
 </script>
-
-<style scoped>
-
-</style>
