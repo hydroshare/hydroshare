@@ -11,7 +11,7 @@
                 message: 'Hello world',
             }
         },
-        name: "Ping", // delimiters: ['${', '}'],
+        name: "Ping",
         props:
             ['sample'],
         filters: {
