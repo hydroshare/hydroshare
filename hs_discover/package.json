@@ -4,7 +4,7 @@
   "description": "Discover",
   "main": "vue.config.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --port 8888",
     "build": "vue-cli-service build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack-defaults": "webpack-defaults"
