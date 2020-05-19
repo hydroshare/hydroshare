@@ -1,7 +1,7 @@
 {
   "name": "hs_discover",
   "version": "1.0.0",
-  "description": "",
+  "description": "Discover",
   "main": "vue.config.js",
   "scripts": {
     "serve": "vue-cli-service serve",
