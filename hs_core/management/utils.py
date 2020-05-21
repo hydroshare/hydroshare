@@ -580,14 +580,18 @@ def repair_resource(resource, logger, stop_on_error=False,
                   .format(resource.short_id, resource.resource_type,
                           resource.title))
 
-    check_irods_files(resource,
-                      stop_on_error=False,
-                      echo_errors=True,
-                      log_errors=False,
-                      return_errors=False,
-                      clean_irods=False,
-                      clean_django=True,
-                      sync_ispublic=True)
+    _, count = check_irods_files(resource,
+                                 stop_on_error=False,
+                                 echo_errors=True,
+                                 log_errors=False,
+                                 return_errors=False,
+                                 clean_irods=False,
+                                 clean_django=True,
+                                 sync_ispublic=True)
+    if count:
+        print("... affected resource {} has type {}, title '{}'"
+              .format(resource.short_id, resource.resource_type,
+                      resource.title))
 
 
 class CheckResource(object):
