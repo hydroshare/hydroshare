@@ -158,7 +158,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     msg = "check_resource: logical file metadata {} does not exist on irods" \
                         .format(lf.metadata_file_path.encode('ascii', 'replace'))
                     print(msg)
-                    if clean_irods:
+                    if clean_django:
                         create_lf_xml = True
                     if echo_errors:
                         print(msg)
@@ -172,7 +172,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     msg = "check_resource: logical file metadata {} does not exist on irods" \
                         .format(lf.map_file_path.encode('ascii', 'replace'))
                     print(msg)
-                    if clean_irods:
+                    if clean_django:
                         create_lf_xml = True
                     if echo_errors:
                         print(msg)
@@ -580,18 +580,14 @@ def repair_resource(resource, logger, stop_on_error=False,
                   .format(resource.short_id, resource.resource_type,
                           resource.title))
 
-    _, count = check_irods_files(resource,
-                                 stop_on_error=False,
-                                 echo_errors=True,
-                                 log_errors=False,
-                                 return_errors=False,
-                                 clean_irods=False,
-                                 clean_django=True,
-                                 sync_ispublic=True)
-    if count:
-        print("... affected resource {} has type {}, title '{}'"
-              .format(resource.short_id, resource.resource_type,
-                      resource.title))
+    check_irods_files(resource,
+                      stop_on_error=False,
+                      echo_errors=True,
+                      log_errors=False,
+                      return_errors=False,
+                      clean_irods=False,
+                      clean_django=True,
+                      sync_ispublic=True)
 
 
 class CheckResource(object):

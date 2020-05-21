@@ -51,7 +51,7 @@ class Command(BaseCommand):
                     msg = "resource {} not found".format(rid)
                     print(msg)
                     continue
-                _, count = repair_resource(resource,
+                _, count = repair_resource(resource, logger,
                                            echo_errors=echo_errors,
                                            log_errors=log_errors,
                                            return_errors=False)
