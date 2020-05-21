@@ -22,9 +22,8 @@ class Command(BaseCommand):
             used_value = 0.0
             try:
                 used_value = get_quota_usage_from_irods(uq.user.username)
-            except ValidationError as ex:
-                if uq.used_value > 0.0:
-                    print("No quota found for user {} in irods.  User has a used quota of {} in Django".format(uq.user.username, uq.used_value))
+            except ValidationError:
+                pass
             used_value = convert_file_size_to_unit(used_value, "gb")
             if not math.isclose(used_value, uq.used_value, abs_tol=0.1):
                 # report inconsistency
