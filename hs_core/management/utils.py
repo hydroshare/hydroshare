@@ -159,7 +159,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                         .format(lf.metadata_file_path.encode('ascii', 'replace'))
                     print(msg)
                     if clean_irods:
-                        create_lf_xml
+                        create_lf_xml = True
                     if echo_errors:
                         print(msg)
                     if log_errors:
@@ -173,7 +173,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                         .format(lf.map_file_path.encode('ascii', 'replace'))
                     print(msg)
                     if clean_irods:
-                        create_lf_xml
+                        create_lf_xml = True
                     if echo_errors:
                         print(msg)
                     if log_errors:
