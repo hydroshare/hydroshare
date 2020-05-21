@@ -153,34 +153,34 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                                 errors.append(msg)
                             if stop_on_error:
                                 raise ValidationError(msg)
-                        if not istorage.exists(f.metadata_file_path):
-                            msg = "check_resource: logical file metadata {} does not exist on irods" \
-                                .format(f.metadata_file_path.encode('ascii', 'replace'))
+                    if not istorage.exists(lf.metadata_file_path):
+                        msg = "check_resource: logical file metadata {} does not exist on irods" \
+                            .format(lf.metadata_file_path.encode('ascii', 'replace'))
+                        print(msg)
+                        if clean_irods:
+                            lf.create_aggregation_xml_documents(resmap=False)
+                        if echo_errors:
                             print(msg)
-                            if clean_django:
-                                f.create_aggregation_xml_documents(resmap=False)
-                            if echo_errors:
-                                print(msg)
-                            if log_errors:
-                                logger.error(msg)
-                            if return_errors:
-                                errors.append(msg)
-                            if stop_on_error:
-                                raise ValidationError(msg)
-                        if not istorage.exists(f.map_file_path):
-                            msg = "check_resource: logical file metadata {} does not exist on irods" \
-                                .format(f.map_file_path.encode('ascii', 'replace'))
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+                    if not istorage.exists(lf.map_file_path):
+                        msg = "check_resource: logical file metadata {} does not exist on irods" \
+                            .format(lf.map_file_path.encode('ascii', 'replace'))
+                        print(msg)
+                        if clean_irods:
+                            lf.create_aggregation_xml_documents(resmap=True)
+                        if echo_errors:
                             print(msg)
-                            if clean_django:
-                                f.create_aggregation_xml_documents(resmap=True)
-                            if echo_errors:
-                                print(msg)
-                            if log_errors:
-                                logger.error(msg)
-                            if return_errors:
-                                errors.append(msg)
-                            if stop_on_error:
-                                raise ValidationError(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
