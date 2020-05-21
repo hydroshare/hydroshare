@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 # report inconsistency
                 report_dict = {
                     'user': uq.user.username,
-                    'django:': uq.used_value,
+                    'django': uq.used_value,
                     'irods': used_value}
                 quota_report_list.append(report_dict)
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
