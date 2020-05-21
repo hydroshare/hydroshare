@@ -19,21 +19,22 @@ class Command(BaseCommand):
         quota_report_list = []
         for uq in UserQuota.objects.filter(
                 user__is_active=True).filter(user__is_superuser=False):
+            used_value = 0.0
             try:
                 used_value = get_quota_usage_from_irods(uq.user.username)
-                used_value = convert_file_size_to_unit(used_value, "gb")
-                if not math.isclose(used_value, uq.used_value, abs_tol=0.1):
-                    # report inconsistency
-                    report_dict = {
-                        'user': uq.user.username,
-                        'django:': uq.used_value,
-                        'irods': used_value}
-                    quota_report_list.append(report_dict)
-                    print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
-                        uq.used_value, used_value, uq.user.username), flush=True)
             except ValidationError as ex:
                 if uq.used_value > 0.0:
-                    print(ex, flush=True)
+                    print("No quota found for user {} in irods.  User has a used quota of {} in Django".format(uq.user.username, uq.used_value))
+            used_value = convert_file_size_to_unit(used_value, "gb")
+            if not math.isclose(used_value, uq.used_value, abs_tol=0.1):
+                # report inconsistency
+                report_dict = {
+                    'user': uq.user.username,
+                    'django:': uq.used_value,
+                    'irods': used_value}
+                quota_report_list.append(report_dict)
+                print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
+                    uq.used_value, used_value, uq.user.username), flush=True)
 
         if quota_report_list:
             with open(options['output_file_name_with_path'], 'w') as csvfile:
