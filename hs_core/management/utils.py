@@ -136,20 +136,6 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
-                if not lf.is_fileset and lf.files.all().count() == 0:
-                    msg = "check_resource: logical file {} does not have any files" \
-                        .format(f.storage_path.encode('ascii', 'replace'))
-                    print(msg)
-                    if clean_django:
-                        lf.delete()
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
                 for f in lf.files.all():
                     try:
                         f.resource_file.size
@@ -168,13 +154,12 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                             errors.append(msg)
                         if stop_on_error:
                             raise ValidationError(msg)
-                create_lf_xml = False
-                if not istorage.exists(lf.metadata_file_path):
-                    msg = "check_resource: logical file metadata {} does not exist on irods" \
-                        .format(lf.metadata_file_path.encode('ascii', 'replace'))
+                if not lf.is_fileset and lf.files.all().count() == 0:
+                    msg = "check_resource: logical file {} does not have any files" \
+                        .format(f.storage_path.encode('ascii', 'replace'))
                     print(msg)
                     if clean_django:
-                        create_lf_xml = True
+                        lf.delete()
                     if echo_errors:
                         print(msg)
                     if log_errors:
@@ -183,22 +168,38 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                         errors.append(msg)
                     if stop_on_error:
                         raise ValidationError(msg)
-                if not istorage.exists(lf.map_file_path):
-                    msg = "check_resource: logical file metadata {} does not exist on irods" \
-                        .format(lf.map_file_path.encode('ascii', 'replace'))
-                    print(msg)
-                    if clean_django:
-                        create_lf_xml = True
-                    if echo_errors:
+                else:
+                    create_lf_xml = False
+                    if not istorage.exists(lf.metadata_file_path):
+                        msg = "check_resource: logical file metadata {} does not exist on irods" \
+                            .format(lf.metadata_file_path.encode('ascii', 'replace'))
                         print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-                if create_lf_xml:
-                    lf.create_aggregation_xml_documents()
+                        if clean_django:
+                            create_lf_xml = True
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+                    if not istorage.exists(lf.map_file_path):
+                        msg = "check_resource: logical file metadata {} does not exist on irods" \
+                            .format(lf.map_file_path.encode('ascii', 'replace'))
+                        print(msg)
+                        if clean_django:
+                            create_lf_xml = True
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+                    if create_lf_xml:
+                        lf.create_aggregation_xml_documents()
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
