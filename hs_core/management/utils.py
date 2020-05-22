@@ -673,17 +673,7 @@ class CheckResource(object):
             for res_file in self.resource.files.all():
                 file_type = get_logical_file_type(res=self.resource, user=None,
                                                   file_id=res_file.pk, fail_feedback=False)
-                if not res_file.has_logical_file and file_type is not None:
-                    msg = "check_resource: file {} does not have required logical file {}"\
-                          .format(res_file.storage_path,
-                                  file_type.__name__)
-                    logical_issues.append(msg)
-                elif res_file.has_logical_file and file_type is None:
-                    msg = "check_resource: logical file for {} has type {}, not needed"\
-                          .format(res_file.storage_path,
-                                  type(res_file.logical_file).__name__)
-                    logical_issues.append(msg)
-                elif res_file.has_logical_file and file_type is not None and \
+                if res_file.has_logical_file and file_type is not None and \
                         not isinstance(res_file.logical_file, file_type):
                     msg = "check_resource: logical file for {} has type {}, should be {}"\
                           .format(res_file.storage_path,
