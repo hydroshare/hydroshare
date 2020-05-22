@@ -71,7 +71,8 @@ def check_relations(resource):
 
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
                       echo_errors=False, return_errors=False,
-                      sync_ispublic=False, clean_irods=False, clean_django=False):
+                      sync_ispublic=False, clean_irods=False, clean_django=False,
+                      sync_resource_type=False):
     """Check whether files in resource.files and on iRODS agree.
 
     :param resource: resource to check
@@ -135,6 +136,20 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
+                if not lf.is_fileset and lf.files.all().count() == 0:
+                    msg = "check_resource: logical file {} does not have any files" \
+                        .format(f.storage_path.encode('ascii', 'replace'))
+                    print(msg)
+                    if clean_django:
+                        lf.delete()
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
                 for f in lf.files.all():
                     try:
                         f.resource_file.size
@@ -239,6 +254,45 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     except SessionException as ex:
                         msg += ": (CANNOT REPAIR: {})"\
                             .format(ex.stderr)
+
+            if msg != '':
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+                if stop_on_error:
+                    raise ValidationError(msg)
+
+        django_resource_type = resource.resource_type
+        irods_resource_type = None
+        try:
+            irods_resource_type = resource.getAVU('resourceType')
+        except SessionException as ex:
+            msg = "cannot read resourceType attribute of {}: {}"\
+                .format(resource.short_id, ex.stderr)
+            ecount += 1
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            if return_errors:
+                errors.append(msg)
+            if stop_on_error:
+                raise ValidationError(msg)
+
+        if irods_resource_type != django_resource_type:
+            ecount += 1
+            msg = "check_irods_files: resource {} resourceType is {} in irods, {} in Django"\
+                .format(resource.short_id, irods_resource_type, django_resource_type)
+            if sync_resource_type:
+                try:
+                    resource.setAVU('resourceType', django_resource_type)
+                    msg += " (REPAIRED IN IRODS)"
+                except SessionException as ex:
+                    msg += ": (CANNOT REPAIR: {})"\
+                        .format(ex.stderr)
 
             if msg != '':
                 if echo_errors:
@@ -574,7 +628,8 @@ def repair_resource(resource, logger, stop_on_error=False,
                                       stop_on_error=False,
                                       echo_errors=True,
                                       log_errors=False,
-                                      return_errors=False)
+                                      return_errors=False,
+                                      sync_resource_type=True)
         if count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
@@ -587,7 +642,8 @@ def repair_resource(resource, logger, stop_on_error=False,
                                  return_errors=False,
                                  clean_irods=False,
                                  clean_django=True,
-                                 sync_ispublic=True)
+                                 sync_ispublic=True,
+                                 sync_resource_type=True)
     if count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
