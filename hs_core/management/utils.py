@@ -628,8 +628,7 @@ def repair_resource(resource, logger, stop_on_error=False,
                                       stop_on_error=False,
                                       echo_errors=True,
                                       log_errors=False,
-                                      return_errors=False,
-                                      sync_resource_type=True)
+                                      return_errors=False)
         if count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
