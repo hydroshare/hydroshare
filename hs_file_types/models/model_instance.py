@@ -18,6 +18,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
     has_model_output = models.BooleanField(default=False)
     executed_by = models.ForeignKey(ModelProgramLogicalFile, null=True, blank=True, on_delete=models.SET_NULL,
                                     related_name="mi_metadata_objects")
+
+    # url to a model program which was used to create a the model instance
+    executed_by_url = models.URLField(blank=True, null=True)
+
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
     metadata_json = JSONField(default=dict)
@@ -49,6 +53,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 else:
                     display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                 dom_tags.p(display_string)
+            elif self.executed_by_url:
+                dom_tags.a(self.executed_by_url, href=self.executed_by_url)
             else:
                 dom_tags.p("Unspecified")
 
@@ -184,6 +190,20 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                           cls="form-control")
                 elif self.executed_by:
                     dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
+
+                with dom_tags.div(cls="control-group"):
+                    dom_tags.label('Enter a URL for a Model Program', fr="id_executed_by_url",
+                                   cls="control-label")
+                    url_value = ''
+                    if self.executed_by_url:
+                        url_value = self.executed_by_url
+
+                    if self.executed_by:
+                        dom_tags.input(type="text", value=url_value, id="id_executed_by_url", name="executed_by_url",
+                                       cls="form-control input-sm textinput textInput", readonly="readonly")
+                    else:
+                        dom_tags.input(type="text", value=url_value, id="id_executed_by_url", name="executed_by_url",
+                                       cls="form-control input-sm textinput textInput")
             return executed_by_div
 
         with root_div:
@@ -272,10 +292,13 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         model_output = etree.SubElement(container_to_add_to,
                                         '{%s}includesModelOutput' % CoreMetaData.NAMESPACES['hsterms'])
         model_output.text = includes_output
-        if self.executed_by:
+        if self.executed_by or self.executed_by_url:
             executed_by = etree.SubElement(container_to_add_to,
                                            '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms'])
-            executed_by.text = self.executed_by.aggregation_path
+            if self.executed_by:
+                executed_by.text = self.executed_by.aggregation_path
+            else:
+                executed_by.text = self.executed_by_url
 
         if self.metadata_json:
             ns_hsterms = CoreMetaData.NAMESPACES['hsterms']

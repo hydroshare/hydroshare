@@ -1,5 +1,7 @@
 import json
 import jsonschema
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 
 from django import forms
 from .models.model_program import ModelProgramResourceFileType
@@ -13,6 +15,7 @@ class ModelInstanceMetadataValidationForm(forms.Form):
 
     has_model_output = forms.BooleanField(required=False)
     executed_by = forms.IntegerField(required=False)
+    executed_by_url = forms.URLField(required=False)
 
     def clean_executed_by(self):
         executed_by = self.cleaned_data['executed_by']
@@ -27,10 +30,27 @@ class ModelInstanceMetadataValidationForm(forms.Form):
                 self.add_error("executed_by", "You don't have access to the selected model program aggregation")
         return user_selected_mp_aggr
 
+    def clean_executed_by_url(self):
+        executed_by_url = self.cleaned_data['executed_by_url']
+        if executed_by_url:
+            # check that it's an active url
+            url = Request(executed_by_url)
+            try:
+                urlopen(url)
+            except (URLError, HTTPError):
+                self.add_error("executed_by_url", "Provided URL seems like a broken URL")
+        return executed_by_url
+
     def update_metadata(self, metadata):
         executed_by = self.cleaned_data['executed_by']
+        executed_by_url = self.cleaned_data['executed_by_url']
+        if executed_by:
+            metadata.executed_by = executed_by
+            metadata.executed_by_url = None
+        elif executed_by_url:
+            metadata.executed_by = None
+            metadata.executed_by_url = executed_by_url
 
-        metadata.executed_by = executed_by
         metadata.has_model_output = self.cleaned_data['has_model_output']
         metadata.is_dirty = True
         metadata.save()
