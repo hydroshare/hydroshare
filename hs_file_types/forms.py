@@ -50,6 +50,9 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         elif executed_by_url:
             metadata.executed_by = None
             metadata.executed_by_url = executed_by_url
+        else:
+            metadata.executed_by = None
+            metadata.executed_by_url = None
 
         metadata.has_model_output = self.cleaned_data['has_model_output']
         metadata.is_dirty = True
