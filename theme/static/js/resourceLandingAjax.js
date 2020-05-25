@@ -167,7 +167,11 @@ function metadata_update_ajax_submit(form_id){
 
     var resourceType = RES_TYPE;
     let $form = $('#' + form_id);
-    var datastring = $form.serialize();
+    var formData = new FormData($form.get(0));
+    if (form_id === "filetype-modelprogram") {
+        // Attach file
+        formData.append('file', $('input[type=file]')[0].files[0]);
+    }
 
     // Disable button while request is being made
     var defaultBtnText = $form.find(".btn-form-submit").text();
@@ -178,7 +182,9 @@ function metadata_update_ajax_submit(form_id){
         type: "POST",
         url: $form.attr('action'),
         dataType: 'html',
-        data: datastring,
+        data: formData,
+        contentType: false,
+        processData: false,
         success: function(result) {
             /* The div contains now the updated form */
             let json_response = JSON.parse(result);
@@ -285,7 +291,8 @@ function metadata_update_ajax_submit(form_id){
                     $(document).trigger("submit-success");
                     $("#success-alert").alert('close');
                 });
-                if(json_response.logical_file_type === "ModelInstanceLogicalFile" && json_response.refresh_metadata) {
+                if((json_response.logical_file_type === "ModelInstanceLogicalFile" ||
+                    json_response.logical_file_type === "ModelProgramLogicalFile") && json_response.refresh_metadata) {
                     showFileTypeMetadata(false, "");
                 }
             }

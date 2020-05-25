@@ -900,7 +900,7 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
     metadata = logical_file.metadata
-    mp_validation_form = ModelProgramMetadataValidationForm(request.POST)
+    mp_validation_form = ModelProgramMetadataValidationForm(request.POST, request.FILES)
     if not mp_validation_form.is_valid():
         err_messages = []
         for fld in mp_validation_form.errors.keys():
@@ -912,11 +912,13 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     mp_validation_form.update_metadata(metadata)
+    refresh_metadata = len(mp_validation_form.cleaned_data['mi_json_schema_file']) > 0
 
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                          'element_name': 'multiple-elements', 'message': "Update was successful"}
+                          'element_name': 'multiple-elements', 'refresh_metadata': refresh_metadata,
+                          'message': "Update was successful"}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 

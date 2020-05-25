@@ -932,6 +932,7 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
 
         if (RESOURCE_MODE === "Edit") {
+             $("[data-toggle=tooltip]").tooltip();
              $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
              $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
              $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
@@ -999,6 +1000,9 @@ function showFileTypeMetadata(file_type_time_series, url){
              if (logical_type === "ModelProgramLogicalFile") {
                   setupModelProgramFileTypeUI();
                   setupModelProgramTypeUI();
+                  $("#mi-json-schema-file").change(function () {
+                    $(".btn-form-submit").show();
+                })
              }
              if (logical_type === "ModelInstanceLogicalFile") {
                   setupModelInstanceTypeUI();
