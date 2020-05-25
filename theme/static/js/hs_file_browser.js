@@ -1052,10 +1052,16 @@ function setupModelInstanceTypeUI() {
         $(this).find(".btn-form-submit").show();
     });
 
-    var jsonSchema = $("#id-schema-based-form").find("#id-json-schema").val();
-    jsonSchema = JSON.parse(jsonSchema);
-    var jsonData = $("#id-schema-based-form").find("#id-metadata-json").val();
-    jsonData = JSON.parse(jsonData);
+    if($("#id-schema-based-form").length){
+        var jsonSchema = $("#id-schema-based-form").find("#id-json-schema").val();
+        jsonSchema = JSON.parse(jsonSchema);
+        var jsonData = $("#id-schema-based-form").find("#id-metadata-json").val();
+        jsonData = JSON.parse(jsonData);
+    }
+    else {
+        jsonSchema = {};
+        jsonData = {};
+    }
 
     // if there is a metadata schema - create the metadata editing form
     if(!jQuery.isEmptyObject(jsonSchema)) {
