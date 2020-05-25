@@ -336,30 +336,24 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                         json_schema = json.dumps(json_schema, indent=4)
                                     else:
                                         json_schema = ''
-                                    dom_tags.label("Model Instance Metadata JSON Schema", fr="file_mi_json_schema",
+                                    dom_tags.label("Model Instance Metadata JSON Schema", fr="mi-json-schema",
                                                    cls="control-label")
                                     dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted", data_toggle="tooltip",
                                                   data_placement="auto",
-                                                  data_original_title="Either paste the schema data or upload a "
-                                                                      "file containing the schema.")
-
-                                    dom_tags.textarea(json_schema,
-                                                      cls="form-control input-sm textinput textInput",
-                                                      id="file_mi_json_schema",
-                                                      name="mi_json_schema", rows="30")
+                                                  data_original_title="Upload a JSON file containing the schema. "
+                                                                      "Uploaded file will not be saved as part of "
+                                                                      "the resource. Schema data from the uploaded "
+                                                                      "file will be used to populate the field below.")
 
                                     # give an option to upload a json file for the metadata schema
                                     with dom_tags.div(cls="form-group"):
-                                        dom_tags.label("Upload a metadata schema JSON file for the above field:")
-                                        dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted",
-                                                      data_toggle="tooltip",
-                                                      data_placement="auto",
-                                                      data_original_title="Uploaded file will not be saved as "
-                                                                          "part of the resource. Schema data from the "
-                                                                          "uploaded file will be saved in the "
-                                                                          "above field.")
                                         dom_tags.input(type="file", accept=".json",
                                                        name='mi_json_schema_file', id='mi-json-schema-file')
+
+                                    dom_tags.textarea(json_schema,
+                                                      cls="form-control input-sm textinput textInput",
+                                                      id="mi-json-schema",
+                                                      name="mi_json_schema", rows="30", readonly="")
 
                             with dom_tags.div(id="mp_content_files", cls="control-group"):
                                 with dom_tags.div(cls="controls"):
