@@ -47,26 +47,25 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 try:
                     resource = get_resource_by_shortkey(rid)
+                    repair_resource(resource, logger,
+                                    echo_errors=echo_errors,
+                                    log_errors=log_errors,
+                                    return_errors=False)
                 except BaseResource.NotFoundException:
                     msg = "resource {} not found".format(rid)
                     print(msg)
                     continue
-                repair_resource(resource, logger,
-                                echo_errors=echo_errors,
-                                log_errors=log_errors,
-                                return_errors=False)
 
         else:  # check all resources
             print("REPAIRING ALL RESOURCES")
             for r in BaseResource.objects.all():
                 try:
                     resource = get_resource_by_shortkey(r.short_id)
+                    repair_resource(resource, logger,
+                                    echo_errors=echo_errors,
+                                    log_errors=log_errors,
+                                    return_errors=False)
                 except BaseResource.NotFoundException:
                     msg = "resource {} not found".format(r.short_id)
                     print(msg)
                     continue
-
-                repair_resource(resource, logger,
-                                echo_errors=echo_errors,
-                                log_errors=log_errors,
-                                return_errors=False)
