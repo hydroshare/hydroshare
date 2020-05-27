@@ -78,13 +78,12 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Gen 3'
         )
 
-
     def tearDown(self):
         os.remove('test1.txt')
 
     def test_collectable_shareable_resources(self):
         # owned resources are collectable
-        self.assertEquals(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
+        self.assertEqual(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
         # ensure resource not owned by user1 is public and shareable
         self.res_1_user_2.raccess.public = True
         self.res_1_user_2.raccess.shareable = True
@@ -94,8 +93,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # claim user_2's resource for user_1
         self.user1.ulabels.claim_resource(self.res_1_user_2)
         # validate the claimed resource is included with the collectable result
-        self.assertEquals(get_collectable_resources(self.user1, self.resCollection).all().count(), 3)
+        self.assertEqual(get_collectable_resources(self.user1, self.resCollection).all().count(), 3)
         # turn off sharing to validate the claimed resource no longer is included with the collectable result
         self.res_1_user_2.raccess.shareable = False
         self.res_1_user_2.raccess.save()
-        self.assertEquals(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
+        self.assertEqual(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
