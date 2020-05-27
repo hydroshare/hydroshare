@@ -1,12 +1,10 @@
 from django.http import HttpResponseRedirect, HttpResponseForbidden
-from django.db.models import Q
 from mezzanine.pages.page_processors import processor_for
 
-from hs_access_control.models import PrivilegeCodes
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from hs_core.views.utils import get_my_resources_list
 from .models import CollectionResource
+from .utils import get_collectable_resources
 
 
 @processor_for(CollectionResource)
@@ -26,17 +24,8 @@ def landing_page(request, page):
         user = request.user
         if not user.is_authenticated():
             return HttpResponseForbidden()
-        user_all_accessible_resource_list = get_my_resources_list(user)
 
-        # resource is collectable if
-        # 1) Shareable=True
-        # 2) OR, current user is a owner of it
-        # 3) exclude this resource as well as resources already in the collection
-        user_all_accessible_resource_list.exclude(short_id=content_model.short_id)\
-            .exclude(id__in=content_model.resources.values_list("id", flat=True))\
-            .exclude(Q(raccess__shareable=False) | ~Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER))
-
-        context['collection_candidate'] = user_all_accessible_resource_list
+        context['collection_candidate'] = get_collectable_resources(user, content_model)
         context['collection_res_id'] = content_model.short_id
     elif isinstance(context, HttpResponseRedirect):
         # resource view mode
