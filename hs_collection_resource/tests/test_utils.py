@@ -85,13 +85,17 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_collectable_shareable_resources(self):
         # owned resources are collectable
         self.assertEquals(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
+        # ensure resource not owned by user1 is public and shareable
         self.res_1_user_2.raccess.public = True
         self.res_1_user_2.raccess.shareable = True
         self.res_1_user_2.raccess.save()
         self.assertTrue(self.res_1_user_2.raccess.public)
         self.assertTrue(self.res_1_user_2.raccess.shareable)
+        # claim user_2's resource for user_1
         self.user1.ulabels.claim_resource(self.res_1_user_2)
+        # validate the claimed resource is included with the collectable result
         self.assertEquals(get_collectable_resources(self.user1, self.resCollection).all().count(), 3)
+        # turn off sharing to validate the claimed resource no longer is included with the collectable result
         self.res_1_user_2.raccess.shareable = False
         self.res_1_user_2.raccess.save()
         self.assertEquals(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
