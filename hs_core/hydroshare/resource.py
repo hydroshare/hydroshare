@@ -32,24 +32,13 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def update_quota_usage(username):
+def get_quota_usage_from_irods(username):
     """
-    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
-    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
-    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
-    internal zone.
-    :param
-    username: the name of the user that needs to update quota usage for.
-    :return: raise ValidationError if quota cannot be updated.
+    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    :param username: the user name to get quota usage for.
+    :return: the combined quota usage from iRODS data zone and user zone; raise ValidationError
+    if quota usage cannot be retrieved from iRODS
     """
-    hs_internal_zone = "hydroshare"
-    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
-    if uq is None:
-        # the quota row does not exist in Django
-        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
-        logger.error(err_msg)
-        raise ValidationError(err_msg)
-
     attname = username + '-usage'
     istorage = IrodsStorage()
     # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
@@ -94,7 +83,28 @@ def update_quota_usage(username):
         used_val = uqUserZoneSize
     else:
         used_val = uqDataZoneSize + uqUserZoneSize
+    return used_val
 
+
+def update_quota_usage(username):
+    """
+    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
+    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
+    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
+    internal zone.
+    :param
+    username: the name of the user that needs to update quota usage for.
+    :return: raise ValidationError if quota cannot be updated.
+    """
+    hs_internal_zone = "hydroshare"
+    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    if uq is None:
+        # the quota row does not exist in Django
+        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
+        logger.error(err_msg)
+        raise ValidationError(err_msg)
+
+    used_val = get_quota_usage_from_irods(username)
     uq.update_used_value(used_val)
 
 
