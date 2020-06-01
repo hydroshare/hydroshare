@@ -71,7 +71,7 @@ urlpatterns = i18n_patterns(
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', hs_core_views.verify),
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^ping/$', SearchView.as_view(), name='devops_demo'),
+    url(r'^discover/$', SearchView.as_view(), name='Discover'),
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),

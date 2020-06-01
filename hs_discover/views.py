@@ -25,8 +25,8 @@ class SearchView(TemplateView):
         vocab = list(set(vocab))
         vocab = sorted(vocab)
 
-        if q:
-            sqs = sqs.filter(content=q).boost('keyword', 2.0)
+        # if q:
+        #     sqs = sqs.filter(content=q).boost('keyword', 2.0)
 
         resources = []
         for result in sqs:
