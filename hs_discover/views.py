@@ -1,20 +1,37 @@
-from django.shortcuts import render
 import json
+from pprint import pprint
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
+from django.core.management.base import BaseCommand
+from hs_core.models import BaseResource
+from hs_core.search_indexes import BaseResourceIndex
+from pprint import pprint
+import json
 
-# TODO error handling, validation, analytics
+
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         from django.template.defaultfilters import date, time
         q = request.GET.get('q') if request.GET.get('q') else ""
 
-        sqs = SearchQuerySet()
+        sqs = SearchQuerySet().all()
+        # sqs = SearchQuerySet().all().filter(short_id='ff889df950204b6195aeeffbbb7a1e68')
 
         vocab = []
+
+        for result in list(sqs):
+            print("FETCHING STORED JSON")
+            stored = result.get_stored_fields()
+            js = stored['json']
+            print(js)
+            print("INTERPRETING STORED JSON")
+            foo = json.loads(js)
+            pprint(foo)
+
+        print('new debug')
         for result in sqs:
             if result.title:
                 vocab.extend(result.title.split(' '))
