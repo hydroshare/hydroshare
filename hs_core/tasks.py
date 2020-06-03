@@ -19,6 +19,7 @@ from django.core.mail import send_mail
 
 from rest_framework import status
 
+from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
@@ -551,3 +552,12 @@ def daily_odm2_sync():
     ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
     """
     ODM2Variable.sync()
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_month=1))
+def monthly_group_membership_requests_cleanup():
+    """
+    Delete expired and redeemed group membership requests
+    """
+    two_months_ago = datetime.today() - timedelta(days=60)
+    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()

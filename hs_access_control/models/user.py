@@ -117,7 +117,8 @@ class UserAccess(models.Model):
         if this_user is None:
             # check if the user already has made a request to join this_group
             if GroupMembershipRequest.objects.filter(request_from=self.user,
-                                                     group_to_join=this_group).exists():
+                                                     group_to_join=this_group,
+                                                     redeemed=False).exists():
                 raise PermissionDenied("You already have a pending request to join this group")
             else:
                 membership_request = GroupMembershipRequest.objects.create(request_from=self.user,
@@ -137,7 +138,8 @@ class UserAccess(models.Model):
                     "You need to be a group owner to send invitation to join a group")
 
             if GroupMembershipRequest.objects.filter(group_to_join=this_group,
-                                                     invitation_to=this_user).exists():
+                                                     invitation_to=this_user,
+                                                     redeemed=False).exists():
                 raise PermissionDenied(
                     "You already have a pending invitation for this user to join this group")
             else:
@@ -202,7 +204,8 @@ class UserAccess(models.Model):
             membership_grantor.share_group_with_user(this_group=this_request.group_to_join,
                                                      this_user=user_to_join_group,
                                                      this_privilege=PrivilegeCodes.VIEW)
-        this_request.delete()
+        this_request.redeemed = True
+        this_request.save()
 
     @property
     def group_membership_requests(self):
@@ -215,8 +218,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         return GroupMembershipRequest.objects.filter(Q(request_from=self.user) |
-                                                     Q(invitation_to=self.user))\
-                                     .filter(group_to_join__gaccess__active=True)
+                                                     Q(invitation_to=self.user)) \
+            .filter(group_to_join__gaccess__active=True).filter(redeemed=False)
 
     def create_group(self, title, description, auto_approve=False, purpose=None):
         """

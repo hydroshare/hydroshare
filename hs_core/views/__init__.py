@@ -1487,33 +1487,32 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     :param membership_request_id: ID of the GroupMembershipRequest object (part of the link in the email)
     """
     membership_request = GroupMembershipRequest.objects.filter(id=membership_request_id).first()
-    if membership_request is not None:
-        if membership_request.group_to_join.gaccess.active:
-            user = authenticate(uidb36=uidb36, token=token, is_active=True)
-            if user is not None:
-                user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
-                auth_login(request, user)
-                # send email to notify membership acceptance
-                _send_email_on_group_membership_acceptance(membership_request)
-                if membership_request.invitation_to is not None:
-                    message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
-                else:
-                    message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
-                                                                            membership_request.group_to_join.name)
-
-                messages.info(request, message)
-                # redirect to group profile page
-                return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
-            else:
-                messages.error(request, "The link you clicked is no longer valid. Please ask to "
-                                        "join the group again.")
-                return redirect("/")
-        else:
-            messages.error(request, "The group is no longer active.")
-            return redirect("/")
+    if membership_request is None:
+        messages.error(request, "This group membership link is not valid")
+    elif membership_request.redeemed:
+        messages.error(request, "This group membership link has previously been redeemed")
+    elif not membership_request.group_to_join.gaccess.active:
+        messages.error(request, "The group associated with this group membership link is no longer active.")
     else:
-        messages.error(request, "The link you clicked is no longer valid.")
-        return redirect("/")
+        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+        if user is None:
+            messages.error(request, "The link you clicked has expired. Please ask to "
+                                    "join the group again.")
+        else:
+            user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
+            auth_login(request, user)
+            # send email to notify membership acceptance
+            _send_email_on_group_membership_acceptance(membership_request)
+            if membership_request.invitation_to is not None:
+                message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
+            else:
+                message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
+                                                                        membership_request.group_to_join.name)
+
+            messages.info(request, message)
+            # redirect to group profile page
+            return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+    return redirect("/")
 
 
 @login_required
