@@ -2601,7 +2601,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_file_path above.
-    file_folder = models.CharField(max_length=4096, null=True)
+    file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096,
