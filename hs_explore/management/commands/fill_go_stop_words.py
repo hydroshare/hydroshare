@@ -82,7 +82,8 @@ def fill_stop_words():
                         'image', 'link', 'paper', 'day', 'second', 'parameter', 'solution',
                         'public', 'first', 'sources', 'main', 'sample', 'new', 'total',
                         'state', 'water', 'source', 'resource', 'available', 'year', 'area',
-                        'model', 'rate', 'time', 'ratio', 'west', 'south', 'east', 'north']
+                        'model', 'rate', 'time', 'ratio', 'west', 'south', 'east', 'north',
+                        'small', 'big', 'large', 'huge']
 
     english_stops = ['through', 'should', "shouldn't", 'both', 'in', 'which', "needn't",
                      'its', "wouldn't", 'ourselves', 'at', 'than', 'she', 'yourselves',

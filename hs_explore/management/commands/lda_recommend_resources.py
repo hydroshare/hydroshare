@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import timedelta, date
 from hs_tracking.models import Variable
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
@@ -11,10 +11,11 @@ from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedG
 import string
 import gensim
 from gensim import corpora
-from nltk.stem import PorterStemmer
-from gensim.models import CoherenceModel
+from nltk.stem import WordNetLemmatizer
+# from gensim.models import CoherenceModel
 from operator import itemgetter
 from hs_explore.models import LDAWord
+from haystack.query import SearchQuerySet, SQ
 
 
 def get_resource_to_subjects():
@@ -87,12 +88,12 @@ def get_users_interacted_resources(beginning, today):
 def filter_go_words(res_id, doc, resource_to_subjects, go_words, stop):
     exclude = set(string.punctuation)
     exclude.remove('_')
-    ps = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
     doc_words = set()
     doc_list = set()
 
     for w in doc.split(" "):
-        doc_list.add(ps.stem(w))
+        doc_list.add(lemmatizer.lemmatize(w))
 
     for go_word in go_words:
         if " " in go_word:
@@ -186,78 +187,121 @@ def main():
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
     # For testing purpose, import date and uncommnet this line
-    # end_date = date(2018, 5, 31)
-    end_date = datetime.now()
+    end_date = date(2018, 5, 31)
+    # end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
-    user_to_abstract_list = {}
     print("resource_to_go_words")
     resource_to_go_words = get_resource_to_go_words(resource_to_subjects, resource_to_abstract)
 
     print("user interacted at least 5 resources")
+    qualified_user_to_resources = {}
     for username, res_ids in user_to_resources.items():
-        abstract_list = []
+        qualified_resources_list = []
         for res_id in res_ids:
-            if res_id in resource_to_abstract:
-                abstract_list.append((res_id, resource_to_abstract[res_id]))
-        if len(abstract_list) >= 5:
-            user_to_abstract_list[username] = abstract_list
+            if res_id in resource_to_go_words:
+                qualified_resources_list.append(res_id)
+        if len(qualified_resources_list) >= 5:
+            qualified_user_to_resources[username] = qualified_resources_list
 
-    user_to_filtered_abstracts = {}
+    user_to_res_go_words_list = {}
+    user_to_go_words_set = {}
     user_to_go_words_freq = {}
-    for username, res_abstract_tuple_list in user_to_abstract_list.items():
-        filtered_abstracts = []
+    for username, qualified_resources_list in qualified_user_to_resources.items():
+        res_go_words_list = []
+        go_words_set = set()
         go_words_freq = {}
-        for res_id, doc in res_abstract_tuple_list:
-            if res_id not in resource_to_go_words:
-                continue
-            doc_words = resource_to_go_words[res_id]
-            filtered_abstracts.append(list(doc_words))
-            for doc_word in doc_words:
-                if doc_word not in go_words_freq:
-                    go_words_freq[doc_word] = 1
+        for res_id in qualified_resources_list:
+            res_go_words = resource_to_go_words[res_id]
+            go_words_set = go_words_set.union(res_go_words)
+            res_go_words_list.append(list(res_go_words))
+            for go_word in res_go_words:
+                if go_word not in go_words_freq:
+                    go_words_freq[go_word] = 1
                 else:
-                    go_words_freq[doc_word] += 1
-        user_to_filtered_abstracts[username] = filtered_abstracts
+                    go_words_freq[go_word] += 1
+        user_to_res_go_words_list[username] = res_go_words_list
+        user_to_go_words_set[username] = go_words_set
         user_to_go_words_freq[username] = go_words_freq
 
     print("store user preferences")
     store_user_preferences(user_to_go_words_freq)
     lda_users_recommendations = {}
-    user_to_lda_cv = {}
     print("lda process")
-    for username, filtered_abstracts in user_to_filtered_abstracts.items():
+    for username, go_words_list in user_to_res_go_words_list.items():
         user_to_recommend = {}
-        if len(filtered_abstracts) > 5:
-            dictionary = corpora.Dictionary(filtered_abstracts)
-            doc_term_matrix = [dictionary.doc2bow(doc) for doc in filtered_abstracts]
+        if len(go_words_list) >= 5:
+            dictionary = corpora.Dictionary(go_words_list)
+            corpus = [dictionary.doc2bow(doc) for doc in go_words_list]
             Lda = gensim.models.ldamodel.LdaModel
-            ldamodel = Lda(doc_term_matrix, num_topics=5, id2word=dictionary, passes=50)
+            ldamodel = Lda(corpus, num_topics=5, id2word=dictionary, passes=50)
             x = ldamodel.show_topics(num_topics=5, num_words=10, formatted=False)
-            coherence_model_lda = CoherenceModel(model=ldamodel, texts=filtered_abstracts,
-                                                 dictionary=dictionary, coherence='c_v')
-            coherence_lda = coherence_model_lda.get_coherence()
-            user_to_lda_cv[username] = coherence_lda
             topics_words = [(tp[0], [wd[0] for wd in tp[1]]) for tp in x]
+            # Find topics in which the user interests
+            user_probable_topics_set = set()
+            for c in corpus:
+                for topic, prob in ldamodel[c]:
+                    if prob - 0.2 > 0.001:
+                        user_probable_topics_set.add(topic)
             user_resources = user_to_resources[username]
 
-            for res_id, doc_words in resource_to_go_words.items():
+            # pre-filter by SOLR
+            out = SearchQuerySet()
+            out = out.exclude(short_id__in=user_resources)
+            filter_sq = None
+            user_out = out
+            user_go_words_set = user_to_go_words_set[username]
+            for go_word in user_go_words_set:
+                if filter_sq is None:
+                    filter_sq = SQ(subject__contains=go_word)
+                else:
+                    filter_sq.add(SQ(subject__contains=go_word), SQ.OR)
+
+            if filter_sq is not None:
+                user_out = out.filter(filter_sq)
+
+            # If no unselected resource contains any keyword in which the user interests,
+            # skip the user
+            if user_out.count() == 0:
+                continue
+
+            # for res_id, doc_words in resource_to_go_words.items():
+            for candidate in user_out:
+                res_id = candidate.short_id
+                if res_id not in resource_to_go_words:
+                    continue
+                res_go_words = resource_to_go_words[res_id]
                 if resource_to_published[res_id]:
-                    if res_id in user_resources:
+                    if len(res_go_words) < 3:
                         continue
-                    if len(doc_words) < 3:
-                        continue
-                    doc_words_list = list(doc_words)
-                    bow = dictionary.doc2bow(doc_words_list)
+                    res_go_words_list = list(res_go_words)
+                    bow = dictionary.doc2bow(res_go_words_list)
                     t = ldamodel.get_document_topics(bow)
                     topic_prob_dict = dict((x, y) for x, y in t)
+                    # Skip resources without any probable topics.
+                    # A dominant topic is defined as any topic with probablity over (1/#topics),
+                    # which is 0.2 in our case
+                    if max(topic_prob_dict.values()) - 0.2 < 0.001:
+                        continue
+                    res_dominant_topics = set()
+                    for topic, prob in topic_prob_dict.items():
+                        if prob - 0.2 > 0.001:
+                            res_dominant_topics.add(topic)
+                    common_topics = set.intersection(user_probable_topics_set, res_dominant_topics)
+                    # If the resource has no topics in common with the user's prbable topics set,
+                    # Skip it.
+                    if len(common_topics) == 0:
+                        continue
+
                     for topic, words in topics_words:
+                        if topic not in common_topics:
+                            continue
                         topic_words_set = set(words)
                         topic_prob = 0
                         if topic in topic_prob_dict:
                             topic_prob = topic_prob_dict[topic]
-                        jac_sim = jaccard_sim(doc_words, topic_words_set)
+                        jac_sim = jaccard_sim(res_go_words, topic_words_set)
                         if jac_sim == 0.0:
                             continue
                         scaled_jac_sim = topic_prob * jac_sim
