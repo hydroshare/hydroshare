@@ -15,7 +15,7 @@
     "axios": "^0.19.2",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.14.0",
-    "core-js": "^3.6.5",
+    "core-js": "2.6.5",
     "vue": "^2.6.11",
     "vue-router": "^3.1.6",
     "webpack": "^4.43.0"

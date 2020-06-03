@@ -22,21 +22,21 @@ class SearchView(TemplateView):
 
         vocab = []
 
-        for result in list(sqs):
-            print("FETCHING STORED JSON")
-            stored = result.get_stored_fields()
-            js = stored['json']
-            print(js)
-            print("INTERPRETING STORED JSON")
-            foo = json.loads(js)
-            pprint(foo)
-
-        print('new debug')
-        for result in sqs:
-            if result.title:
-                vocab.extend(result.title.split(' '))
-            if result.subject:
-                vocab.extend(result.subject)
+        # for result in list(sqs):
+        #     print("FETCHING STORED JSON")
+        #     stored = result.get_stored_fields()
+        #     js = stored['json']
+        #     print(js)
+        #     print("INTERPRETING STORED JSON")
+        #     foo = json.loads(js)
+        #     pprint(foo)
+        #
+        # print('new debug')
+        # for result in sqs:
+        #     if result.title:
+        #         vocab.extend(result.title.split(' '))
+        #     if result.subject:
+        #         vocab.extend(result.subject)
 
         vocab = [x for x in vocab if len(x) > 2]
         vocab = list(set(vocab))

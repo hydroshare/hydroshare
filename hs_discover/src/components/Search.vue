@@ -8,7 +8,7 @@
                 <input v-model="message" placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
-        <div v-if="q">
+<!--        <div v-if="q">-->
                         {{ sample_item }}
 
             <resource-listing :sample="sample"
@@ -24,7 +24,7 @@
 <!--                              :labels="gridColumnLabels"-->
 <!--                              :filter-key="searchQuery">-->
 <!--            </resource-listing>-->
-        </div>
+<!--        </div>-->
     </div>
 </template>
 

@@ -1,4 +1,5 @@
 <template>
+    asdf
    <div>
         <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p> // TODO redo delimiter to be django friendly
         <div class="table-wrapper">
@@ -85,25 +86,25 @@
         name: "Resources", // delimiters: ['${', '}'],
         props:
             ['sample', 'itemcount', 'columns', 'labels', 'resources', 'filterKey'],
-        // computed: {
-        //     filteredResources: function () {
-        //         let vue = this;
-        //         let sortKey = this.sortKey;
-        //         let order = this.sortOrders[sortKey] || 1;
-        //         let resources = JSON.parse(this.sample);  // TODO validation, security, error handling
-        //
-        //         if (sortKey) {
-        //             resources = resources.slice().sort(function (a, b) {
-        //                 a = a[sortKey];
-        //                 b = b[sortKey];
-        //                 return (a === b ? 0 : a > b ? 1 : -1) * order
-        //             })
-        //         }
-        //         console.log(resources);
-        //         vue.numItems = resources.length;
-        //         return resources
-        //     },
-        // },
+        computed: {
+            filteredResources: function () {
+                let vue = this;
+                let sortKey = this.sortKey;
+                let order = this.sortOrders[sortKey] || 1;
+                let resources = JSON.parse(this.sample);  // TODO validation, security, error handling
+
+                if (sortKey) {
+                    resources = resources.slice().sort(function (a, b) {
+                        a = a[sortKey];
+                        b = b[sortKey];
+                        return (a === b ? 0 : a > b ? 1 : -1) * order
+                    })
+                }
+                console.log(resources);
+                vue.numItems = resources.length;
+                return resources
+            },
+        },
         filters: {
             capitalize: function (str) {
                 if (str !== "link" && str !== "author_link") {  // TODO instead of iterating through headings, explicitly choose and display
