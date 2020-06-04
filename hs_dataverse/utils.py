@@ -14,7 +14,6 @@ false = False
 true = True
 
 
-
 # helper functions
 
 # if the given string contains a url, returns it. Otherwise, returns the
@@ -30,17 +29,16 @@ def find_url(string):
 # returns the field_name of the text of the etree value val, or the empty string if null 
 def set_field(val):
     if val == None:
-        return ''
+        return 'None'
     else:
         return val.text
 
 
 # utility functions
 
-# uploads a dataset to the specified location, using the data specified in the file resourcemetadata.xml
+# uploads a dataset to the specified dataverse location, using the data specified in the file resourcemetadata.xml
 def upload_dataset(base_url, api_token, dv):
     # parse the xml metadata file as an etree
-    print(os.getcwd())
     with open(os.path.join(sys.path[0], "hs_dataverse",  "template.json"), "r") as read_file:
         data = json.load(read_file)
 
@@ -49,13 +47,6 @@ def upload_dataset(base_url, api_token, dv):
 
     tree = ET.parse('resourcemetadata.xml')
     root = tree.getroot()
-
-    # This code prints the tree tags
-    #elemList = []
-    #for elem in tree.iter():
-    #    elemList.append(elem.tag)
-    # Just printing out the result
-    #print(elemList, '\n\n\n')
 
     # define all the relevant tags from the metadata.xml document for parsing
     title_tag = "{http://purl.org/dc/elements/1.1/}title"
@@ -104,7 +95,6 @@ def upload_dataset(base_url, api_token, dv):
           "typeName": "authorAffiliation",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "AuthorAffiliation1"
         }
     }
 
@@ -287,6 +277,10 @@ def upload_dataset(base_url, api_token, dv):
                 ".//%s[%s]/%s/%s" % (creator_tag, i + 1, description_tag, org_tag)))
             contact['datasetContactEmail']['value'] = set_field(root.find(
                 ".//%s[%s]/%s/%s" % (creator_tag, i + 1, description_tag, email_tag)))
+            if contact['datasetContactName']['value'] == 'None':
+                contact['datasetContactName']['value'] = 'Hydroshare'
+            if contact['datasetContactEmail']['value'] == 'None':
+                contact['datasetContactEmail']['value'] = 'help@cuahsi.org'
             contact_vals.append(contact)
 
     alternative_url = set_field(root.find(".//%s" % hs_identifier_tag))
@@ -301,20 +295,20 @@ def upload_dataset(base_url, api_token, dv):
     subject = ['Earth and Environmental Sciences']
 
     deposit_date_text = set_field(root.find(".//%s/%s/%s" % (date_tag, created_tag, value_tag)))
-    if (deposit_date_text != ''):
+    if (deposit_date_text != 'None'):
         [deposit_date, deposit_time] = deposit_date_text.split('T')
     else:
         depoist_date = ''
 
     last_modified_date_text = set_field(root.find(".//%s/%s/%s" % (date_tag, modified_tag, value_tag)))
-    if (last_modified_date_text != ''):
+    if (last_modified_date_text != 'None'):
         [last_modified_date, last_modified_time] = deposit_date_text.split('T')
     else:
         last_modified_date = ''
 
     # Get the start period and parse the strings into numerical date values
     period_text = set_field(root.find(".//%s/%s" % (period_tag, value_tag)))
-    if (period_text != ''):
+    if (period_text != 'None'):
         [start_period, end_period, scheme] = period_text.split()
         start_period = re.sub('start=', '', start_period)
         end_period = re.sub('end=', '', end_period)
@@ -334,19 +328,6 @@ def upload_dataset(base_url, api_token, dv):
         related_publications_vals[i]['publicationURL']['value'] = find_url(set_field(related_publication))
 
         related_resources.append(related_publication.text)
-
-    # print out the fields that were extracted (temp)
-    print('title:', title)
-    print('description:', abstract)
-    print('author_vals:', author_vals)
-    print('subject:', subject)
-    print('keyword_vals:', keyword_vals)
-    print('related_publications:', related_publications_vals)
-    print('deposit date:', deposit_date)
-    print('last modified:', last_modified_date)
-    print('period start:', start_period_date)
-    print('period end:', end_period_date)
-    print('related resources:', related_resources)
 
 
     # update the json dict with the field values
@@ -401,8 +382,35 @@ def upload_dataset(base_url, api_token, dv):
     geofields[2]['value'][0]['southLongitude']['value'] = "4"
 
 
-    # dump the json file as 'data.json'
+    #  dump the json file as 'data.json'
     with open('data.json', 'w') as outfile:
         json.dump(data, outfile, indent=2)
 
-    # TODO Replace the above with the code that uses the json to upload to dataverse, so we don't need to create a local json file and it can just stay in memory here.
+    with open('data.json', 'r') as json_file:
+        metadata = json.load(json_file)
+
+    api = Api(base_url, api_token)
+
+    query_str = '/dataverses/' + dv + '/contents'
+    params = {}
+    resp = api.get_request(query_str, params=params, auth=True)
+
+    # extracting response data in json format
+    dv_data = resp.json()
+
+    num_dv = len(dv_data[u'data'])
+    print(num_dv)
+    # print all titles
+    for i in range(0, num_dv):
+        if((dv_data[u'data'][i][u'type'] == 'dataverse')):
+            print("Dataverse: " + dv_data[u'data'][i][u'title'])
+        if((dv_data[u'data'][i][u'type'] == 'dataset')):
+            print("Dataset: " + dv_data[u'data'][i][u'identifier'])
+
+    r = api.create_dataset(dv, json.dumps(metadata))
+    
+    print('response text:', r.text)
+
+
+
+
