@@ -1,3 +1,4 @@
+from django.shortcuts import render
 import json
 from pprint import pprint
 
@@ -11,6 +12,7 @@ from pprint import pprint
 import json
 
 
+# TODO error handling, validation, analytics
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
