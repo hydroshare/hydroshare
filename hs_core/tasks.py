@@ -334,13 +334,14 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, request_username=None):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
     :param aggregation_name: The name of the aggregation to zip
     :param sf_zip: signals a single file to zip
+    :param request_username: the username of the requesting user
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
@@ -390,14 +391,13 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
 
 @shared_task
-def create_bag_by_irods(resource_id):
+def create_bag_by_irods(resource_id, request_username=None):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
 
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
-    :param
-    resource_id: the resource uuid that is used to look for the resource to create the bag for.
-
+    :param resource_id: the resource uuid that is used to look for the resource to create the bag for.
+    :param request_username: the username of the requesting user
     :return: True if bag creation operation succeeds;
              False if there is an exception raised or resource does not exist.
     """

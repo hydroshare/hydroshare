@@ -47,6 +47,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
+from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id
+
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -96,6 +98,25 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
+@login_required
+def get_tasks_by_user(request):
+    task_list = get_all_tasks(request.user.username)
+    return JsonResponse(task_list)
+
+
+@login_required
+def get_task(request, task_id):
+    task_dict = get_task_by_id(task_id)
+    return JsonResponse(task_dict)
+
+
+@login_required
+def abort_task(request, task_id):
+    task_dict = revoke_task_by_id(task_id)
+    return JsonResponse(task_dict)
+
+
+@login_required
 def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
     ajax_response_data = {'status': 'error', 'message': ''}

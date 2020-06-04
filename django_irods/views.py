@@ -175,7 +175,9 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         if use_async:
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request))
+                                                aggregation_name, is_sf_request, request.user.username))
+            task_id = task.task_id
+            request.session['task_id'] = task_id
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
 
@@ -242,7 +244,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
                 task_id = get_resource_bag_task(res_id)
                 if not task_id:
-                    task = create_bag_by_irods.apply_async((res_id,), countdown=3)
+                    task = create_bag_by_irods.apply_async((res_id, request.user.username), countdown=3)
                     task_id = task.task_id
                 if rest_call:
                     return JsonResponse({'bag_status': 'Not ready',
