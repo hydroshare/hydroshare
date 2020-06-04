@@ -1,9 +1,9 @@
-from django.shortcuts import render
 import json
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
+
 
 # TODO error handling, validation, analytics
 class SearchView(TemplateView):
