@@ -6,6 +6,7 @@ Generate metadata and bag for a resource from Django
 """
 
 import os
+from os import listdir
 import requests
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
@@ -14,6 +15,8 @@ from hs_core.tasks import create_bag_by_irods
 from django_irods.icommands import SessionException
 from django.contrib.auth.models import User
 from hs_core.hydroshare import get_party_data_from_user
+from django_irods import icommands
+from hs_dataverse.utils import upload_dataset
 
 
 def export_bag(rid, options):
@@ -31,8 +34,28 @@ def export_bag(rid, options):
             scimeta_path = os.path.join(resource.root_path, 'data',
                                         'resourcemetadata.xml')
             scimeta_exists = istorage.exists(scimeta_path)
+            
             if scimeta_exists:
                 print("resource metadata {} found".format(scimeta_path))
+                            
+                if icommands.ACTIVE_SESSION:
+                    session = icommands.ACTIVE_SESSION
+                else:
+                    raise KeyError('settings must have IRODS_GLOBAL_SESSION set')
+
+                args = ('-') # redirect to stdout
+                fd = session.run_safe('iget', None, scimeta_path, *args)
+                #read(fd) to get file contents
+                contents = ''
+                for temp in fd.stdout:
+                    contents += str(temp.decode('utf8'))
+                print('Contents:\n\n\n', contents)
+                outfile = open('resourcemetadata.xml', 'w')
+                outfile.write(contents)
+                outfile.close()
+                print(contents)
+
+                
             else:
                 print("resource metadata {} NOT FOUND".format(scimeta_path))
 
@@ -158,9 +181,18 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # server url
+        base_url = 'https://dataverse.harvard.edu'
+
+        # api-token
+        api_token = 'c57020c2-d954-48da-be47-4e06785ceba0'
+
+        # parent given here
+        dv = 'mydv'
 
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 export_bag(rid, options)
+                upload_dataset(base_url, api_token, dv)
         else:
             print("no resource id specified: aborting")
