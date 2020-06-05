@@ -763,7 +763,7 @@ def add_resource_files(pk, *files, **kwargs):
     if __debug__:
         assert(isinstance(source_names, list))
 
-    folder = kwargs.pop('folder', None)
+    folder = kwargs.pop('folder', '')
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
@@ -771,7 +771,7 @@ def add_resource_files(pk, *files, **kwargs):
         assert len(kwargs) == 0
 
     prefix_path = 'data/contents'
-    if folder is None or folder == prefix_path:
+    if folder == prefix_path:
         base_dir = ""
     elif folder.startswith(prefix_path):
         base_dir = folder[len(prefix_path) + 1:]
@@ -790,7 +790,7 @@ def add_resource_files(pk, *files, **kwargs):
             new_folders.add(os.path.join(resource.file_path, full_dir))
             ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
         else:
-            ret.append(utils.add_file_to_resource(resource, f, folder=None))
+            ret.append(utils.add_file_to_resource(resource, f, folder=''))
 
     if len(source_names) > 0:
         for ifname in source_names:
