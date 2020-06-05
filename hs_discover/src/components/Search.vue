@@ -1,18 +1,18 @@
 <template>
     <div id="discover-search">
         <div id="wrapper">
-
             <div id="search" class="search-field" @keyup.enter="searchClick('{{ csrf_token }}')">
                 <span class="glyphicon glyphicon-search search-icon"></span>
                 <span @click="clearSearch()"
                       class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
-                <input v-model="message" placeholder="Search all Public and Discoverable Resources">
+                <input v-model="searchtext"
+                       placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
-<!--        <div v-if="q">-->
-                        {{ sample_item }}
+        <div v-if="q">
+            {{ sample_item }}
 
-            <resource-listing :sample="sample"
+            <resource-listing :sample='{name: "namedata", id: "0"}'
                               :itemcount="5"
                               :columns="gridColumns"
                               :labels="gridColumnLabels"
@@ -25,7 +25,7 @@
 <!--                              :labels="gridColumnLabels"-->
 <!--                              :filter-key="searchQuery">-->
 <!--            </resource-listing>-->
-<!--        </div>-->
+        </div>
     </div>
 </template>
 
@@ -37,11 +37,49 @@ export default {
   data() {
     return {
       csrf_token: 'abc123',
-      message: '',
+      searchtext: '',
+      searchQuery: '',
+      gridColumns: ['type', 'name', 'author', 'created', 'modified'],
+      gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
+      q: '',
     };
   },
-  components: {
-    resourceListing: Resources,
+  // components: {
+  //   resourceListing: Resources,
+  // },
+  beforeMount() {
+    this.$data.searchQuery = this.searchtext;
+    this.$data.q = this.searchtext;
+  },
+  mounted() {
+    // this.$refs.searchQuery.inputValue = this.searchQuery;
+  },
+  methods: {
+    searchClick(csrfToken) {
+      window.location = `/discover/?q=${this.$data.searchtext}`;
+      console.log(csrfToken);
+      // console.log(this)
+      // let formData = new FormData();
+      // formData.append("csrfmiddlewaretoken", csrf_token);
+      // formData.append("q", this.searchQuery);
+      // $.ajax({
+      //     type: "POST",
+      //     data: formData,
+      //     processData: false,
+      //     contentType: false,
+      //     url: "/search/",
+      //     success: function (response) {
+      //         console.log("Successful post")
+      //     },
+      //     error: function (response) {
+      //         console.log(response.responseText);
+      //     }
+      // });
+    },
+    clearSearch() {
+      this.searchQuery = '';
+      // this.$refs.searchQuery.inputValue = '';
+    },
   },
 };
 </script>

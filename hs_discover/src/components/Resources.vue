@@ -69,7 +69,6 @@ export default {
       a: [],
       sortKey: '',
       resTypeDict: {
-        // TODO: Expand this dictionary with the rest of the resource types
         'Composite Resource': 'composite',
         Generic: 'generic',
         'Geopgraphic Raster': 'geographicraster',
