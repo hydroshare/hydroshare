@@ -408,9 +408,8 @@ def upload_dataset(base_url, api_token, dv):
             print("Dataset: " + dv_data[u'data'][i][u'identifier'])
 
     r = api.create_dataset(dv, json.dumps(metadata))
-    
-    print('response text:', r.text)
-
-
-
-
+   
+    # now delete the dataset, as to not fill up the datverse while testing 
+    r_dict = json.loads(r.text)
+    persistent_id = r_dict['data']['persistentId']
+    r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
