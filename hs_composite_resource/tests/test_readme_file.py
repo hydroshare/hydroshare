@@ -244,7 +244,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
              title='Test Readme File'
          )
 
-    def _add_files_to_resource(self, files_to_add, upload_folder=None):
+    def _add_files_to_resource(self, files_to_add, upload_folder=''):
         files_to_upload = []
         for fl in files_to_add:
             file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))

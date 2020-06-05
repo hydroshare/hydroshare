@@ -564,7 +564,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, None)
+            self.assertEqual(f.file_folder, '')
         self.composite_resource.delete()
 
     def test_add_update_single_file_aggregation_metadata(self):

@@ -1722,7 +1722,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
     if not is_file_type:
         # adding the blank sqlite file is necessary only in case of TimeSeriesResource
         if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
-            add_blank_sqlite_file(instance, upload_folder=None)
+            add_blank_sqlite_file(instance, upload_folder='')
         # instance.add_blank_sqlite_file(user)
 
     log = logging.getLogger()
