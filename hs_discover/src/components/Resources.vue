@@ -1,9 +1,9 @@
 <template>
-    asdf
-   <div>
-        <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p> // TODO redo delimiter to be django friendly
+    <div>
+        <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
         <div class="table-wrapper">
-            <table v-if="filteredResources.length" class="table-hover table-striped resource-custom-table" id="items-discovered">
+            <table v-if="filteredResources.length"
+                   class="table-hover table-striped resource-custom-table" id="items-discovered">
                 <thead>
                 <tr>
                     <th v-for="key in labels"
@@ -43,14 +43,15 @@
 
                     </td>
                     <td>
-                        <a :href="entry.link" data-toggle="tooltip" :title="entry.abstract" data-placement="top">{{entry.name}}</a>
+                        <a :href="entry.link" data-toggle="tooltip"
+                           :title="entry.abstract" data-placement="top">{{entry.name}}</a>
                     </td>
-                    <!-- temporary placeholder for link column, until header display approach is refactored -->
+                    <!-- placeholder for link column -->
                     <td>
-<!--                        <a :href="entry.author_link">{{entry.author}}</a>-->author
+                        <!-- <a :href="entry.author_link">{{entry.author}}</a>-->
+                        author
                     </td>
-
-                    <!-- temporary placeholder for link column, until header display approach is refactored -->
+                    <!-- temporary placeholder for link column -->
                     <td>created</td>
                     <td>modified</td>
                 </tr>
@@ -69,17 +70,17 @@
                 sortKey: '',
                 resTypeDict: {
                     // TODO: Expand this dictionary with the rest of the resource types
-                    "Composite Resource": "composite",
-                    "Generic": "generic",
-                    "Geopgraphic Raster": "geographicraster",
-                    "Model Program Resource": "modelprogram",
-                    "Collection Resource": "collection",
-                    "Web App Resource": "webapp",
-                    "Time Series": "timeseries",
-                    "Model Instance Resource": "modelinstance",
-                    "SWAT Model Instance Resource": "swat",
-                    "MODFLOW Model Instance Resource": "modflow",
-                    "Multidimensional (NetCDF)": "multidimensional"
+                    'Composite Resource': 'composite',
+                    'Generic': 'generic',
+                    'Geopgraphic Raster': 'geographicraster',
+                    'Model Program Resource': 'modelprogram',
+                    'Collection Resource': 'collection',
+                    'Web App Resource': 'webapp',
+                    'Time Series': 'timeseries',
+                    'Model Instance Resource': 'modelinstance',
+                    'SWAT Model Instance Resource': 'swat',
+                    'MODFLOW Model Instance Resource': 'modflow',
+                    'Multidimensional (NetCDF)': 'multidimensional'
                 }
             }
         },
@@ -107,21 +108,22 @@
         },
         filters: {
             capitalize: function (str) {
-                if (str !== "link" && str !== "author_link") {  // TODO instead of iterating through headings, explicitly choose and display
-                    return str.charAt(0).toUpperCase() + str.slice(1)
+                if (str !== 'link' && str !== 'author_link') {
+                    // TODO instead of iterating through headings, explicitly choose and display
+                    return str.charAt(0).toUpperCase() + str.slice(1);
                 }
-            },
+    },
             date: function (date) {
                 return date;
-            }
+            },
         },
         methods: {
             sortBy: function (key) {
                 this.sortKey = key;
                 this.sortOrders[key] = this.sortOrders[key] * -1
             },
-        }
-    }
+        },
+    };
 </script>
 
 <style scoped>
