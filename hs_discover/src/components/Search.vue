@@ -4,7 +4,8 @@
 
             <div id="search" class="search-field" @keyup.enter="searchClick('{{ csrf_token }}')">
                 <span class="glyphicon glyphicon-search search-icon"></span>
-                <span @click="clearSearch()" class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
+                <span @click="clearSearch()"
+                      class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
                 <input v-model="message" placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
@@ -29,19 +30,20 @@
 </template>
 
 <script>
-    import Resources from './Resources.vue';
-    export default {
-        name: "Search",
-        data() {
-            return {
-                csrf_token: 'abc123',
-                message: ''
-            }
-        },
-        components: {
-            resourceListing: Resources
-        }
+import Resources from './Resources.vue';
+
+export default {
+  name: 'Search',
+  data() {
+    return {
+      csrf_token: 'abc123',
+      message: '',
     };
+  },
+  components: {
+    resourceListing: Resources,
+  },
+};
 </script>
 
 <style scoped>
