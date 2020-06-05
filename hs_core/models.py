@@ -2965,7 +2965,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
-            folder = None
+            folder = ''
             base = relpath
             abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):

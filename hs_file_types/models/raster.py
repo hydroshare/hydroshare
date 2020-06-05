@@ -394,7 +394,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         self.metadata.save()
 
 
-def raster_file_validation(raster_file, resource, raster_folder=None):
+def raster_file_validation(raster_file, resource, raster_folder=''):
     """ Validates if the relevant files are valid for raster aggregation or raster resource type
 
     :param  raster_file: a temp file (extension tif or zip) retrieved from irods and stored on temp
