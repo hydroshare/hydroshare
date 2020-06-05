@@ -44,7 +44,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # test resource file is not in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -57,7 +57,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
         res_file = self.composite_resource.files.first()
         # test resource file is not in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         # test extracted ref time series file type metadata
         assert_ref_time_series_file_type_metadata(self)
@@ -69,7 +69,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
         # test resource file is not in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         self.composite_resource.delete()
 

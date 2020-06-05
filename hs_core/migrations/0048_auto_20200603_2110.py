@@ -4,6 +4,13 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+from hs_core.models import ResourceFile
+
+
+def update_file_folder_none_to_empty(apps, schema_editor):
+    for resource_file in ResourceFile.objects.filter(file_folder=None):
+        resource_file.file_folder = ''
+        resource_file.save()
 
 class Migration(migrations.Migration):
 
@@ -27,4 +34,5 @@ class Migration(migrations.Migration):
             name='file_folder',
             field=models.CharField(default='', max_length=4096),
         ),
+        migrations.RunPython(update_file_folder_none_to_empty),
     ]

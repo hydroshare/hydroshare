@@ -230,7 +230,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -602,7 +602,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         base_file_name, _ = os.path.splitext(res_file.file_name)
 
         for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, None)
+            self.assertEqual(f.file_folder, '')
         self.composite_resource.delete()
 
     def test_aggregation_folder_delete(self):
@@ -686,7 +686,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test renaming of files that are associated with aggregation raises exception
         self.assertEqual(self.composite_resource.files.count(), 1)
         base_file_name, ext = os.path.splitext(res_file.file_name)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         src_path = 'data/contents/{}'.format(res_file.file_name)
         new_file_name = 'some_sqlite.{}'.format(ext)
         self.assertNotEqual(res_file.file_name, new_file_name)
@@ -710,7 +710,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # should raise exception
         self.assertEqual(self.composite_resource.files.count(), 1)
         res_file = self.composite_resource.files.first()
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         new_folder = 'timeseries_aggr'
         ResourceFile.create_folder(self.composite_resource, new_folder)
 

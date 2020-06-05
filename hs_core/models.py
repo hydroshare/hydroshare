@@ -2330,7 +2330,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(Q(file_folder=None) | Q(file_folder=''))
+        res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
         for res_file in res_files_at_root:

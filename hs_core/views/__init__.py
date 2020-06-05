@@ -190,12 +190,11 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
     extract_metadata = request.GET.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
-    file_folder = request.POST.get('file_folder', None)
-    if file_folder is not None:
-        if file_folder == "data/contents":
-            file_folder = None
-        elif file_folder.startswith("data/contents/"):
-            file_folder = file_folder[len("data/contents/"):]
+    file_folder = request.POST.get('file_folder', '')
+    if file_folder == "data/contents":
+        file_folder = ''
+    elif file_folder.startswith("data/contents/"):
+        file_folder = file_folder[len("data/contents/"):]
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,

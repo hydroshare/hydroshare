@@ -308,7 +308,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a GeoRasterLogicalFile (aggregation) from a tif or a zip resource file """
 
         log = logging.getLogger()
@@ -326,7 +326,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             temp_file = ft_ctx.temp_file
             temp_dir = ft_ctx.temp_dir
 
-            raster_folder = folder_path if folder_path is not None else file_folder
+            raster_folder = folder_path if not folder_path else file_folder
             # validate the file
             validation_results = raster_file_validation(raster_file=temp_file, resource=resource,
                                                         raster_folder=raster_folder)
