@@ -45,7 +45,7 @@ def upload_dataset(base_url, api_token, dv):
     fields = data['datasetVersion']['metadataBlocks']['citation']['fields']
     geofields = data['datasetVersion']['metadataBlocks']['geospatial']['fields']
 
-    tree = ET.parse('resourcemetadata.xml')
+    tree = ET.parse('hs_dataverse/tempfiles/resourcemetadata.xml')
     root = tree.getroot()
 
     # define all the relevant tags from the metadata.xml document for parsing
@@ -143,7 +143,7 @@ def upload_dataset(base_url, api_token, dv):
         }
     }
 
-    producor_dict = {
+    producer_dict = {
         "producerName": {
           "typeName": "producerName",
           "multiple": false,
@@ -161,20 +161,8 @@ def upload_dataset(base_url, api_token, dv):
           "multiple": false,
           "typeClass": "primitive",
           "value": "ProducerAbbreviation1"
-        },
-        "producerURL": {
-          "typeName": "producerURL",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "http://ProducerURL1.org"
-        },
-        "producerLogoURL": {
-          "typeName": "producerLogoURL",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "http://ProducerLogoURL1.org"
         }
-      }
+    }
 
     contributor_dict = {
         "contributorType": {
@@ -306,6 +294,21 @@ def upload_dataset(base_url, api_token, dv):
     else:
         last_modified_date = ''
 
+    # Extract more fields using the owner data from ownerdata.json
+    o = dict()
+    with open('hs_dataverse/tempfiles/ownerdata.json') as f:
+        o = json.load(f)
+    print(type(o))
+    if 'username' in o:
+        producer_dict['producerAbbreviation']['value'] = o['username']
+    if 'first_name' in o and 'last_name' in o:
+        producer_dict['producerName']['value'] = o['last_name'] + ', ' + o['first_name']
+    if 'organization' in o:
+        producer_dict['producerAffiliation']['value'] = o['organization']
+
+    print(producer_dict)
+    
+
     # Get the start period and parse the strings into numerical date values
     period_text = set_field(root.find(".//%s/%s" % (period_tag, value_tag)))
     if (period_text != 'None'):
@@ -349,7 +352,7 @@ def upload_dataset(base_url, api_token, dv):
 
     fields[8]['value'] = 'notes'
 
-    fields[9]['value'] = [producor_dict]
+    fields[9]['value'] = [producer_dict]
 
     fields[10]['value'] = '1003-01-01'
 
@@ -400,7 +403,7 @@ def upload_dataset(base_url, api_token, dv):
 
     num_dv = len(dv_data[u'data'])
     print(num_dv)
-    # print all titles
+    # print all dataverse and dataset titles
     for i in range(0, num_dv):
         if((dv_data[u'data'][i][u'type'] == 'dataverse')):
             print("Dataverse: " + dv_data[u'data'][i][u'title'])
@@ -413,3 +416,4 @@ def upload_dataset(base_url, api_token, dv):
     r_dict = json.loads(r.text)
     persistent_id = r_dict['data']['persistentId']
     r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
+    print(r2.text)

@@ -7,6 +7,7 @@ Generate metadata and bag for a resource from Django
 
 import os
 from os import listdir
+import json
 import requests
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
@@ -49,8 +50,7 @@ def export_bag(rid, options):
                 contents = ''
                 for temp in fd.stdout:
                     contents += str(temp.decode('utf8'))
-                print('Contents:\n\n\n', contents)
-                outfile = open('resourcemetadata.xml', 'w')
+                outfile = open('hs_dataverse/tempfiles/resourcemetadata.xml', 'w')
                 outfile.write(contents)
                 outfile.close()
                 print(contents)
@@ -136,6 +136,19 @@ def export_bag(rid, options):
                 profile = o.userprofile
                 party = get_party_data_from_user(o)
                 print("organization: {}".format(party['organization']))
+                
+                owner_dict = {
+                        'username': format(o.username),
+                        'first_name': format(o.first_name),
+                        'last_name': format(o.last_name),
+                        'email': format(o.email),
+                        'organization': format(party['organization'])
+                }
+
+                outfile = open('hs_dataverse/tempfiles/ownerdata.json', 'w')
+                json.dump(owner_dict, outfile)
+                outfile.close()
+
         else:
             print("Resource with id {} does not exist in iRODS".format(rid))
     except BaseResource.DoesNotExist:
