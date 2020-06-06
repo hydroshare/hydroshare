@@ -124,7 +124,6 @@ def get_task_by_id(task_id):
 
     return {
         'id': task_id,
-        'name': result.name,
         'status': status,
         'payload': payload
     }
@@ -140,7 +139,6 @@ def revoke_task_by_id(task_id):
     result.revoke(terminate=True)
     return {
         'id': task_id,
-        'name': result.name,
         'status': 'Aborted',
         'payload': ''
     }
