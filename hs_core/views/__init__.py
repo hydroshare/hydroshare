@@ -101,7 +101,7 @@ def verify(request, *args, **kwargs):
 @login_required
 def get_tasks_by_user(request):
     task_list = get_all_tasks(request.user.username)
-    return JsonResponse(task_list)
+    return JsonResponse({'tasks': task_list})
 
 
 @login_required

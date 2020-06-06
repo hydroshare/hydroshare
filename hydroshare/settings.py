@@ -706,7 +706,7 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
 } 
 
 # celery task function name to user interpretable name mapping to be used for async task management user interface
-task_name_mapping = {
+TASK_NAME_MAPPING = {
     'hs_core.tasks.create_bag_by_irods': 'bag download',
     'hs_core.tasks.create_temp_zip': 'zip download'
 }

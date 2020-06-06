@@ -42,7 +42,7 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
     http://docs.celeryproject.org/en/latest/userguide/workers.html?highlight=revoke#inspecting-workers for details.
     """
     task_list = []
-    task_name_mapper = settings.task_name_mapping
+    task_name_mapper = settings.TASK_NAME_MAPPING
     if job_dict:
         workers = list(job_dict.keys())
         for worker in workers:
