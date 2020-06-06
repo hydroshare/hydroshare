@@ -172,7 +172,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
     storage_type = indexes.CharField()
-    json = indexes.CharField(use_template=True, stored=True, indexed=False)
+    # TODO re-enable after Dan and Alva engaged in SOLR configuration
+    # json = indexes.CharField(use_template=True, stored=True, indexed=False)
 
     # # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)

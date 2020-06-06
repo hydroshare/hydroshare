@@ -1,7 +1,7 @@
 <template>
     <div id="discover-search">
         <div id="wrapper">
-            <div id="search" class="search-field" @keyup.enter="searchClick('{{ csrf_token }}')">
+            <div id="search" class="search-field" @keyup.enter="searchClick()">
                 <span class="glyphicon glyphicon-search search-icon"></span>
                 <span @click="clearSearch()"
                       class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
@@ -9,55 +9,62 @@
                        placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
-        <div v-if="q">
-            {{ sample_item }}
-
-            <resource-listing :sample='{name: "namedata", id: "0"}'
-                              :itemcount="5"
-                              :columns="gridColumns"
-                              :labels="gridColumnLabels"
-                              :filter-key="searchQuery">
-            </resource-listing>
-
-<!--                        <resource-listing :sample="{{ resources }}"-->
-<!--                              :itemcount="{{ initialitemcount }}"-->
-<!--                              :columns="gridColumns"-->
-<!--                              :labels="gridColumnLabels"-->
-<!--                              :filter-key="searchQuery">-->
-<!--            </resource-listing>-->
-        </div>
+<!--        <div v-if="searchtext">-->
+        <resource-listing :resources="resources"
+                          :key="resources"
+                          :itemcount="55"
+                          :columns="gridColumns"
+                          :labels="gridColumnLabels"
+                          :filter-key="searchQuery">
+         </resource-listing>
+<!--        </div>-->
     </div>
 </template>
 
 <script>
+import axios from 'axios';
 import Resources from './Resources.vue';
 
 export default {
   name: 'Search',
   data() {
     return {
+      resources: [],
       csrf_token: 'abc123',
       searchtext: '',
       searchQuery: '',
       gridColumns: ['type', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
-      q: '',
     };
   },
-  // components: {
-  //   resourceListing: Resources,
-  // },
+  components: {
+    resourceListing: Resources,
+  },
   beforeMount() {
-    this.$data.searchQuery = this.searchtext;
-    this.$data.q = this.searchtext;
+    // this.$data.searchQuery = this.searchtext;
+    // this.$data.q = this.searchtext;
   },
   mounted() {
+    // axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
+    //   .then((response) => {
+    //     console.log(response);
+    //   })
+    //   .catch((error) => {
+    //     console.error(error);
+    //   });
     // this.$refs.searchQuery.inputValue = this.searchQuery;
   },
   methods: {
-    searchClick(csrfToken) {
-      window.location = `/discover/?q=${this.$data.searchtext}`;
-      console.log(csrfToken);
+    searchClick() {
+      axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
+        .then((response) => {
+          this.$data.resources = response.data.resources;
+          console.log(response);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+
       // console.log(this)
       // let formData = new FormData();
       // formData.append("csrfmiddlewaretoken", csrf_token);
@@ -77,7 +84,7 @@ export default {
       // });
     },
     clearSearch() {
-      this.searchQuery = '';
+      // this.searchQuery = '';
       // this.$refs.searchQuery.inputValue = '';
     },
   },
@@ -95,7 +102,7 @@ export default {
 
     #wrapper .search-field, #advanced-discover-search {
         flex-grow: 1;
-        max-width: 600px;
+        max-width: 800px;
         position: relative;
     }
 
@@ -132,7 +139,7 @@ export default {
     }
 
     .btn-clear-search {
-        position: absolute;
+        /*position: absolute;*/
         top: 10px;
         right: 8px;
     }

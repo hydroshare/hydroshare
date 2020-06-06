@@ -1,7 +1,6 @@
 from django.shortcuts import render
 import json
 from pprint import pprint
-
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
@@ -9,18 +8,28 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from pprint import pprint
+from rest_framework.response import Response
 import json
+from rest_framework.views import APIView
+from django.template.defaultfilters import date, time
 
 
-# TODO error handling, validation, analytics
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-        from django.template.defaultfilters import date, time
-        q = request.GET.get('q') if request.GET.get('q') else ""
+        return render(request, 'hs_discover/index.html', {
+        })
+
+
+class SearchAPI(APIView):
+
+    def get(self, request, *args, **kwargs):
 
         sqs = SearchQuerySet().all()
         # sqs = SearchQuerySet().all().filter(short_id='ff889df950204b6195aeeffbbb7a1e68')
+        if request.GET.get('searchtext'):
+            searchtext = request.GET.get('searchtext')
+            sqs = sqs.filter(content=searchtext).boost('keyword', 2.0)
 
         vocab = []
 
@@ -44,9 +53,6 @@ class SearchView(TemplateView):
         vocab = list(set(vocab))
         vocab = sorted(vocab)
 
-        # if q:
-        #     sqs = sqs.filter(content=q).boost('keyword', 2.0)
-
         resources = []
         for result in sqs:
             resources.append({
@@ -67,10 +73,7 @@ class SearchView(TemplateView):
         if request.GET.get('mode') == 'advanced':
             return render(request, 'hs_discover/advanced_search.html')
         else:
-            return render(request, 'hs_discover/index.html', {
+            return Response({
                 'resources': resources,
-                'q': q,
-                'itemcount': itemcount,
                 'vocab': vocab,
-                'sample_item': "Sample data from Django endpoint"
             })
