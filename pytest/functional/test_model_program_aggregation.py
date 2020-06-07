@@ -3,9 +3,11 @@ from dateutil import parser
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from rest_framework.exceptions import ValidationError as RF_ValidationError
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
-from hs_file_types.models import ModelProgramLogicalFile
+from hs_core.views.utils import move_or_rename_file_or_folder
+from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile
 from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
 from hs_file_types.forms import ModelProgramMetadataValidationForm
 
@@ -360,3 +362,43 @@ def test_set_metadata(composite_resource_with_mp_aggregation, mock_irods):
     mp_aggr.metadata.code_repository = 'https://github.com/swat'
     mp_aggr.metadata.save()
     assert mp_aggr.metadata.code_repository == 'https://github.com/swat'
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, mock_irods):
+    """ test that we can't move a single file aggregation into a folder that represents a
+    model program aggregation"""
+    
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mp_folder = 'mp_folder'
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model program/instance aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set folder to model program/instance aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=mp_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mp_folder
+    assert ModelProgramLogicalFile.objects.count() == 1
+    # create a single file aggregation
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(res, file_to_upload, check_target_folder=True)
+    # set file to generic logical file type (aggregation)
+    GenericLogicalFile.set_file_type(res, user, res_file.id)
+    assert GenericLogicalFile.objects.count() == 1
+    # moving the logan.vrt file into the mp_mi_folder should fail
+    src_path = 'data/contents/{}'.format(single_file_name)
+    tgt_path = 'data/contents/{}'.format(mp_folder)
+    with pytest.raises(RF_ValidationError):
+        move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)

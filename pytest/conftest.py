@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
-from hs_core.hydroshare import add_file_to_resource
+from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile
 from hs_labels.models import UserLabels
 
@@ -227,6 +227,25 @@ def composite_resource_with_mi_aggregation(composite_resource):
 
     # set file to model instance aggregation type
     ModelInstanceLogicalFile.set_file_type(res, user, res_file.id)
+    yield res, user
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def composite_resource_with_mi_aggregation_folder(composite_resource):
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = "mi-folder"
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=mi_folder, check_target_folder=True
+    )
+
+    # set the folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(res, user, folder_path=mi_folder)
     yield res, user
 
 
