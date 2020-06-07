@@ -876,7 +876,8 @@ class AbstractLogicalFile(models.Model):
                     msg = msg.format(path_to_check)
                     raise ValidationError(msg)
             elif cls.__name__ == "ModelProgramLogicalFile" or cls.__name__ == "ModelInstanceLogicalFile":
-                if not resource.can_set_folder_to_mp_or_mi_aggregation(path_to_check):
+                if not resource.can_set_folder_to_model_instance_aggregation(path_to_check) and \
+                        not resource.can_set_folder_to_model_program_aggregation(path_to_check):
                     msg = "{0} aggregation can't be created from the specified folder:{1}"
                     if cls.__name__ == "ModelProgramLogicalFile":
                         aggr_type = "Model Program"
@@ -889,13 +890,14 @@ class AbstractLogicalFile(models.Model):
             if res_file is None or not res_file.exists:
                 raise ValidationError("File not found.")
 
-            if res_file.has_logical_file and not res_file.logical_file.is_fileset:
-                msg = "Selected {} {} is already part of an aggregation."
-                if folder_path is None:
-                    msg = msg.format('file', res_file.file_name)
-                else:
-                    msg = msg.format('folder', folder_path)
-                raise ValidationError(msg)
+            if res_file.has_logical_file:
+                if not res_file.logical_file.is_fileset and not res_file.logical_file.is_model_instance:
+                    msg = "Selected {} {} is already part of an aggregation."
+                    if folder_path is None:
+                        msg = msg.format('file', res_file.file_name)
+                    else:
+                        msg = msg.format('folder', folder_path)
+                    raise ValidationError(msg)
 
         return res_file, folder_path
 

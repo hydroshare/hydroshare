@@ -1079,7 +1079,8 @@ def check_aggregations(resource, res_files):
 
         # check files for aggregation creation
         for res_file in res_files:
-            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+            if not res_file.has_logical_file or (res_file.logical_file.is_fileset or
+                                                 res_file.logical_file.is_model_instance):
                 # create aggregation from file 'res_file'
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       fail_feedback=False)

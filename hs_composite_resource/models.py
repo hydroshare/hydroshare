@@ -158,21 +158,29 @@ class CompositeResource(BaseResource):
         :param dir_path: Resource file directory path (full folder path starting with resource id)
         for which the FileSet aggregation to be set
 
-        :return If the specified folder is already represents an aggregation or does
-        not contain any files or if any parent folder is a model program aggregation
-        then returns False, otherwise True
+        :return
+        If the specified folder is already represents an aggregation, return False
+        if the specified folder does not contain any files, return False
+        if any of the parent folders is a model program aggregation, return False
+        if any of the parent folders is a model instance aggregation, return False
+        otherwise, return True
+
+        Note: A fileset aggregation is not allowed inside a model program or model instance aggregation. One
+        fileset aggregation can contain any other aggregation types including fileset aggregation
         """
 
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
             return False
 
+        # checking all parent folders
         path = os.path.dirname(dir_path)
         while '/' in path:
-            aggr = self.get_folder_aggregation_object(path)
-            if aggr is not None and (aggr.is_model_program or aggr.is_model_instance):
+            parent_aggr = self.get_folder_aggregation_object(path)
+            if parent_aggr is not None and (parent_aggr.is_model_program or parent_aggr.is_model_instance):
                 # avoid creating a fileset aggregation inside a model program/instance aggregation folder
                 return False
+            # go to next parent folder
             path = os.path.dirname(path)
 
         irods_path = dir_path
@@ -183,42 +191,82 @@ class CompositeResource(BaseResource):
         # if there are any files in the dir_path, we can set the folder to fileset aggregation
         return len(files_in_path) > 0
 
-    def can_set_folder_to_mp_or_mi_aggregation(self, dir_path):
-        """Checks if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
+    def can_set_folder_to_model_instance_aggregation(self, dir_path):
+        """Checks if the specified folder *dir_path* can be set to ModelInstance aggregation
 
         :param dir_path: Resource file directory path (full folder path starting with resource id)
-        for which the ModelProgram/ModelInstance aggregation to be set
+        for which the ModelInstance aggregation to be set
 
-        :return If the specified folder is already represents an aggregation or does
-        not contain any files or any of the contained files is part of an aggregation or if any of the sub-folders
-        is a fileset aggregation then returns False, otherwise True
+        :return
+        If the specified folder is already represents an aggregation, return Flase
+        if the specified folder path does not contain any files, return False
+        if any of the files in the specified folder path is part of an aggregation other than fileset, return False
+        if any of the sub-folders is a fileset aggregation, returns False
+        if any of the parent folders is a model program aggregation, return False
+        if any of the parent folders is a model instance aggregation, return False
+        otherwise, return True
+        """
+        return self._can_set_folder_to_mi_or_mp_aggregation(dir_path=dir_path, aggr_type="ModelInstance")
+
+    def can_set_folder_to_model_program_aggregation(self, dir_path):
+        """Checks if the specified folder *dir_path* can be set to ModelProgram aggregation
+
+        :param dir_path: Resource file directory path (full folder path starting with resource id)
+        for which the ModelProgram aggregation to be set
+
+        :return
+        If the specified folder is already represents an aggregation, return False
+        if the specified folder does not contain any files, return False
+        if any of the files in the specified folder path is part of an aggregation other than fileset, return False
+        if any of the sub-folders is a fileset aggregation, return False
+        if any of the sub-folders is a model program aggregation, return False
+        if any of the sub-folders is a model instance aggregation, return False
+        if any of the parent folders is a model program aggregation, return False
+        otherwise, return True
+        """
+        return self._can_set_folder_to_mi_or_mp_aggregation(dir_path=dir_path, aggr_type="ModelProgram")
+
+    def _can_set_folder_to_mi_or_mp_aggregation(self, dir_path, aggr_type):
+        """helper to check if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
+
+        :param dir_path: Resource file directory path (full folder path starting with resource id)
+        for which the aggregation of the type *aggr_type* to be set
+        :param aggr_type: a value of either ModelProgram or ModelInstance
+
+        :return True or False
+
         """
 
+        # checking target folder for any aggregation
         if self.get_folder_aggregation_object(dir_path) is not None:
             # target folder is already an aggregation
             return False
 
+        # checking sub-folders for fileset aggregation
         # check that we don't have any sub folder of dir_path representing a fileset aggregation
         # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation
         if self.filesetlogicalfile_set.filter(folder__startswith=dir_path).exists():
             return False
 
-        # check that we don't have any sub folder of dir_path representing a model program aggregation
-        # so that we can avoid nesting a model program or model instance aggregation inside a model
-        # program aggregation
-        if self.modelprogramlogicalfile_set.filter(folder__startswith=dir_path).exists():
-            return False
+        if aggr_type == "ModelProgram":
+            # checking sub-folders for model program aggregation
+            # check that we don't have any sub folder of dir_path representing a model program aggregation
+            # so that we can avoid nesting a model program aggregation inside a model
+            # program aggregation
+            if self.modelprogramlogicalfile_set.filter(folder__startswith=dir_path).exists():
+                return False
 
+        # checking sub-folders for model instance aggregation
         # check that we don't have any sub folder of dir_path representing a model instance aggregation
-        # so that we can avoid nesting a model program or model instance aggregation inside a model instance aggregation
+        # so that we can avoid nesting a model instance aggregation inside a model program aggregation
         if self.modelinstancelogicalfile_set.filter(folder__startswith=dir_path).exists():
             return False
 
+        # check the first parent folder that represents an aggregation
         irods_path = dir_path
         if self.is_federated:
             irods_path = os.path.join(self.resource_federation_path, irods_path)
 
-        files_in_path = []
         # get the parent folder path
         path = os.path.dirname(dir_path)
         parent_aggregation = None
@@ -227,34 +275,42 @@ class CompositeResource(BaseResource):
                 break
             parent_aggregation = self.get_folder_aggregation_object(path)
             if parent_aggregation is not None:
+                # this is the first parent folder that represents an aggregation
                 break
             # get the next parent folder path
             path = os.path.dirname(path)
 
         if parent_aggregation is not None:
-            if parent_aggregation.is_model_program or parent_aggregation.is_model_instance:
-                # avoid creating a model program/instance aggregation inside a model program/instance aggregation folder
-                return False
-            elif parent_aggregation.is_fileset:
-                # check that all resource files under the 'dir_path' are associated with fileset only
+            if aggr_type == "ModelProgram":
+                if parent_aggregation.is_model_program:
+                    # avoid creating a model program aggregation inside a model program aggregation folder
+                    return False
+            else:
+                if parent_aggregation.is_model_program or parent_aggregation.is_model_instance:
+                    # avoid creating a model instance aggregation inside a model program/instance aggregation folder
+                    return False
+            if parent_aggregation.is_fileset:
+                # check that all resource files under the target folder 'dir_path' are associated with fileset only
                 files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
-                # if all the resource files are associated with fileset then can set the folder to model program or
-                # model instance aggregation
+                # if all the resource files are associated with fileset then we can set the folder to model program
+                # or model instance aggregation
                 if files_in_path:
                     return all(res_file.has_logical_file and res_file.logical_file.is_fileset for
                                res_file in files_in_path)
                 return False
             return False
-
-        if not files_in_path:
+        else:
+            # none of the parent folders represents an aggregation
+            # check the files in the target path
             files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
 
-        # if none of the resource files has logical file then we can set the folder to model program aggregation
-        if files_in_path:
-            return not any(res_file.has_logical_file for res_file in files_in_path)
+            # if none of the resource files in the target path has logical file then we can set the folder
+            # to model program or model instance aggregation
+            if files_in_path:
+                return not any(res_file.has_logical_file for res_file in files_in_path)
 
-        # path has no files - can't set the folder to aggregation
-        return False
+            # path has no files - can't set the folder to aggregation
+            return False
 
     @property
     def supports_folders(self):
@@ -521,14 +577,9 @@ class CompositeResource(BaseResource):
 
         while '/' in path:
             aggr = get_aggregation(path)
-            if aggr is None:
-                path = os.path.dirname(path)
-            elif aggr.is_model_program or aggr.is_model_instance:
+            if aggr is not None and (aggr.is_model_program or aggr.is_model_instance):
                 return aggr
-            else:
-                # the aggregation is some other type of aggregation - no need to search further
-                # as model program aggregation can't contain other aggregations
-                return None
+            path = os.path.dirname(path)
         else:
             aggr = get_aggregation(path)
             if aggr is not None and (aggr.is_model_program or aggr.is_model_instance):

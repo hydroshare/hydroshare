@@ -371,6 +371,11 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
     def get_aggregation_type_name():
         return "ModelInstanceAggregation"
 
+    @property
+    def can_contain_aggregations(self):
+        """aggregation is allowed to contain other aggregations"""
+        return True
+
     # used in discovery faceting to aggregate native and composite content types
     def get_discovery_content_type(self):
         """Return a human-readable content type for discovery.

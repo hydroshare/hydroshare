@@ -89,10 +89,11 @@ def data_store_structure(request):
                 if not aggregation_object.is_fileset and not aggregation_object.is_model_program:
                     main_file = aggregation_object.get_main_file.file_name
             else:
-                # check if ModelProgram/ModelInstance aggregation type can be created from this folder
-                if resource.can_set_folder_to_mp_or_mi_aggregation(dir_path):
+                # check first if ModelProgram/ModelInstance aggregation type can be created from this folder
+                if resource.can_set_folder_to_model_instance_aggregation(dir_path) or \
+                        resource.can_set_folder_to_model_program_aggregation(dir_path):
                     folder_aggregation_type_to_set = 'ModelProgramOrInstanceLogicalFile'
-                # find if FileSet aggregation type that can be created from this folder
+                # otherwise, check if FileSet aggregation type that can be created from this folder
                 elif resource.can_set_folder_to_fileset(dir_path):
                     folder_aggregation_type_to_set = FileSetLogicalFile.__name__
                 else:
