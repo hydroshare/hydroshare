@@ -901,7 +901,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
         raise ValidationError("Resource must be a CompositeResource for validating target folder")
 
     if f:
-        if check_target_folder and not folder:
+        if check_target_folder and folder:
                 tgt_full_upload_path = os.path.join(resource.file_path, folder)
                 if not resource.can_add_files(target_full_path=tgt_full_upload_path):
                     err_msg = "File can't be added to this folder which represents an aggregation"
@@ -909,7 +909,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
-            if not folder and resource.resource_type == 'CompositeResource':
+            if folder and resource.resource_type == 'CompositeResource':
                 aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
                     # make the added file part of the fileset aggregation
@@ -1021,7 +1021,6 @@ class ZipContents(object):
     def get_files(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            file_path = None
             for name_path in self.zip_file.namelist():
                 if not self.black_list_path(name_path):
                     name = os.path.basename(name_path)

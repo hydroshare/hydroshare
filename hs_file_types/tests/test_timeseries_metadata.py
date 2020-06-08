@@ -72,7 +72,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test extracted metadata
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        assert_time_series_file_type_metadata(self, expected_file_folder=None)
+        assert_time_series_file_type_metadata(self, expected_file_folder='')
 
         self.composite_resource.delete()
 
@@ -190,7 +190,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
 
-        self._test_CSV_aggregation(expected_aggr_folder=None)
+        self._test_CSV_aggregation(expected_aggr_folder='')
 
         self.composite_resource.delete()
 
@@ -240,7 +240,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # set the CSV file to TimeSeries file type
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # aggregation folder is created from the uploaded csv file
-        self._test_CSV_aggregation(expected_aggr_folder=None, value_count_by_series='2')
+        self._test_CSV_aggregation(expected_aggr_folder='', value_count_by_series='2')
 
         self.composite_resource.delete()
 

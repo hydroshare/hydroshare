@@ -8,7 +8,7 @@ from hs_core.models import ResourceFile
 
 
 def update_file_folder_none_to_empty(apps, schema_editor):
-    for resource_file in ResourceFile.objects.filter(file_folder=None):
+    for resource_file in ResourceFile.objects.filter(file_folder=''):
         resource_file.file_folder = ''
         resource_file.save()
 

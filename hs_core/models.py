@@ -2502,7 +2502,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         unique_together = ("content_type", "object_id")
 
 
-def get_path(instance, filename, folder=None):
+def get_path(instance, filename, folder=''):
     """Get a path from a ResourceFile, filename, and folder.
 
     :param instance: instance of ResourceFile to use
@@ -2524,7 +2524,7 @@ def get_path(instance, filename, folder=None):
 
 
 # TODO: make this an instance method of BaseResource.
-def get_resource_file_path(resource, filename, folder=None):
+def get_resource_file_path(resource, filename, folder=''):
     """Determine storage path for a FileField based upon whether resource is federated.
 
     :param resource: resource containing the file.
@@ -2543,15 +2543,13 @@ def get_resource_file_path(resource, filename, folder=None):
     if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
-    if folder == '':
-        folder = None
 
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
         return filename
 
     # otherwise, it is an unqualified name.
-    if folder is not None:
+    if folder:
         # use subfolder
         folder = folder.strip('/')
         return os.path.join(resource.file_path, folder, filename)
@@ -2632,7 +2630,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None):
+    def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2893,8 +2891,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         in a single point of truth.
         """
         folder, base = os.path.split(path)
-        if folder == "":
-            folder = None
         self.file_folder = folder  # must precede call to get_path
         if self.resource.is_federated:
             self.resource_file = None
@@ -2976,7 +2972,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # classmethods do things that query or affect all files.
 
     @classmethod
-    def get(cls, resource, file, folder=None):
+    def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
             return ResourceFile.objects.get(object_id=resource.id,
@@ -3000,7 +2996,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         file_folder_to_match = folder
 
-        if folder is None:
+        if not folder:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)

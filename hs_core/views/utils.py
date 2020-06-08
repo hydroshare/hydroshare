@@ -232,7 +232,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     if curr_path != prefix_path and curr_path.startswith(prefix_path):
         curr_path = curr_path[len(prefix_path) + 1:]
     if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        folder = None
+        folder = ''
     else:
         folder = curr_path[len(prefix_path) + 1:]
 

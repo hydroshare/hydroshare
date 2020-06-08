@@ -129,7 +129,7 @@ class IrodsStorage(Storage):
         # SessionException will be raised from run() in icommands.py
         self.session.run("ibun", None, '-cDzip', '-f', out_name, in_name)
 
-    def unzip(self, zip_file_path, unzipped_folder=None):
+    def unzip(self, zip_file_path, unzipped_folder=''):
         """
         run iRODS ibun command to unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped

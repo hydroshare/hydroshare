@@ -102,7 +102,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertNotEqual(res_file.file_folder, '')
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
