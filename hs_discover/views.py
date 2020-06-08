@@ -9,6 +9,9 @@ from rest_framework.views import APIView
 
 
 class SearchView(TemplateView):
+    """
+    Static frontend content for rendering page that will make calls to the backend API
+    """
 
     def get(self, request, *args, **kwargs):
         return render(request, 'hs_discover/index.html', {
@@ -16,6 +19,9 @@ class SearchView(TemplateView):
 
 
 class SearchAPI(APIView):
+    """
+    Provide resources returned from a lookup in the haystack interface to the index
+    """
 
     def get(self, request, *args, **kwargs):
 
