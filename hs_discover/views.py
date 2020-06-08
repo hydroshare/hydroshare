@@ -1,32 +1,28 @@
 import json
 
 from django.shortcuts import render
+from django.template.defaultfilters import date, time
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
-# TODO error handling, validation, analytics
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-        from django.template.defaultfilters import date, time
-        q = request.GET.get('q') if request.GET.get('q') else ""
+        return render(request, 'hs_discover/index.html', {
+        })
 
-        sqs = SearchQuerySet()
 
-        vocab = []
-        for result in sqs:
-            if result.title:
-                vocab.extend(result.title.split(' '))
-            if result.subject:
-                vocab.extend(result.subject)
+class SearchAPI(APIView):
 
-        vocab = [x for x in vocab if len(x) > 2]
-        vocab = list(set(vocab))
-        vocab = sorted(vocab)
+    def get(self, request, *args, **kwargs):
 
-        if q:
-            sqs = sqs.filter(content=q).boost('keyword', 2.0)
+        sqs = SearchQuerySet().all()
+        if request.GET.get('searchtext'):
+            searchtext = request.GET.get('searchtext')
+            sqs = sqs.filter(content=searchtext).boost('keyword', 2.0)
 
         resources = []
         for result in sqs:
@@ -42,16 +38,8 @@ class SearchView(TemplateView):
                 "modified": date(result.modified, "M d, Y") + " at " + time(result.modified)
             })
 
-        itemcount = len(resources)
         resources = json.dumps(resources)
 
-        if request.GET.get('mode') == 'advanced':
-            return render(request, 'hs_discover/advanced_search.html')
-        else:
-            return render(request, 'hs_discover/index.html', {
-                'resources': resources,
-                'q': q,
-                'itemcount': itemcount,
-                'vocab': vocab,
-                'sample_item': "Sample data from Django endpoint"
-            })
+        return Response({
+            'resources': resources,
+        })
