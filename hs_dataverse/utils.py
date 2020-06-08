@@ -7,6 +7,8 @@ from datetime import datetime
 from pyDataverse.api import Api
 import os
 import sys
+from django.conf import settings
+import googlemaps
 
 # global variables
 
@@ -73,6 +75,9 @@ def upload_dataset(base_url, api_token, dv):
     date_tag = '{http://purl.org/dc/elements/1.1/}date'
     modified_tag = '{http://purl.org/dc/terms/}modified'
     created_tag = '{http://purl.org/dc/terms/}created'
+       
+    box_tag = '{http://purl.org/dc/terms/}box' 
+    spot_tag = '{http://purl.org/dc/terms/}point' 
 
     source_tag = '{http://purl.org/dc/elements/1.1/}source'
     description_tag = '{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description'
@@ -242,6 +247,61 @@ def upload_dataset(base_url, api_token, dv):
         }
     }
 
+
+    geo_coverage_dict = {
+            "country": {
+              "typeName": "country",
+              "multiple": false,
+              "typeClass": "controlledVocabulary",
+              "value": ""
+            },
+            "state": {
+              "typeName": "state",
+              "multiple": false,
+              "typeClass": "primitive",
+              "value": ""
+            },
+            "city": {
+              "typeName": "city",
+              "multiple": false,
+              "typeClass": "primitive",
+              "value": ""
+            },
+            "otherGeographicCoverage": {
+              "typeName": "otherGeographicCoverage",
+              "multiple": false,
+              "typeClass": "primitive",
+              "value": ""
+            }
+    }
+
+    bounding_box_dict = {
+                "westLongitude": {
+                  "typeName": "westLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": ''
+                },
+                "eastLongitude": {
+                  "typeName": "eastLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": ''
+                },
+                "northLongitude": {
+                  "typeName": "northLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": ''
+                },
+                "southLongitude": {
+                  "typeName": "southLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": ''
+                }
+    }
+
     # Using the tags, extract fields into local variables
     title = set_field(root.find(".//%s" % title_tag))
     abstract = set_field(root.find(".//%s" % abstract_tag))
@@ -294,21 +354,6 @@ def upload_dataset(base_url, api_token, dv):
     else:
         last_modified_date = ''
 
-    # Extract more fields using the owner data from ownerdata.json
-    o = dict()
-    with open('hs_dataverse/tempfiles/ownerdata.json') as f:
-        o = json.load(f)
-    print(type(o))
-    if 'username' in o:
-        producer_dict['producerAbbreviation']['value'] = o['username']
-    if 'first_name' in o and 'last_name' in o:
-        producer_dict['producerName']['value'] = o['last_name'] + ', ' + o['first_name']
-    if 'organization' in o:
-        producer_dict['producerAffiliation']['value'] = o['organization']
-
-    print(producer_dict)
-    
-
     # Get the start period and parse the strings into numerical date values
     period_text = set_field(root.find(".//%s/%s" % (period_tag, value_tag)))
     if (period_text != 'None'):
@@ -317,6 +362,7 @@ def upload_dataset(base_url, api_token, dv):
         end_period = re.sub('end=', '', end_period)
         [start_period_date, start_period_time] = start_period.split('T')
         [end_period_date, end_period_time] = end_period.split('T')
+
     else:
         start_period_date = ''
         end_period_date = ''
@@ -332,6 +378,63 @@ def upload_dataset(base_url, api_token, dv):
 
         related_resources.append(related_publication.text)
 
+
+    # use the google location services api to find the location
+    maps_api_token = getattr(settings, 'MAPS_KEY', '')
+    gmaps = googlemaps.Client(key=maps_api_token)
+
+    geo_units = []
+    bounding_box_vals = []
+    geo_coverage_vals = []
+ 
+    old_geo_coverage_dict = geo_coverage_dict
+
+    bounding_box_text = set_field(root.find('.//%s/%s' % (box_tag, value_tag)))
+    if (bounding_box_text != 'None'):
+        [northlimit, eastlimit, southlimit, westlimit, units, EPSG] = bounding_box_text.split(';')
+        northlimit = re.sub('northlimit=', '', northlimit)
+        eastlimit = re.sub('eastlimit=', '', eastlimit)
+        westlimit = re.sub('westlimit=', '', westlimit)
+        southlimit = re.sub('southlimit=', '', southlimit)
+        geo_units.append(re.sub('units=', '', units))
+        
+        for box in root.findall(".//%s" % box_tag):
+            bounding_box_vals.append(copy.deepcopy(bounding_box_dict))
+
+        for i, box in enumerate(bounding_box_vals):
+            box['westLongitude']['value'] = westlimit
+            box['eastLongitude']['value'] = eastlimit
+            box['northLongitude']['value'] = northlimit
+            box['southLongitude']['value'] = southlimit
+         
+    spot_text = set_field(root.find('.//%s/%s' % (spot_tag, value_tag)))
+    if (spot_text != 'None'):
+        [name, east, north, units, projection] = spot_text.split(';')
+        east = re.sub('east=', '', east)
+        north = re.sub('north=', '', north)
+        geo_units.append(re.sub('units=', '', units))
+        reverse_geo_code_result = gmaps.reverse_geocode((north, east))
+
+        for comp in reverse_geo_code_result[0]['address_components']:
+            if 'country' in comp['types']:
+                geo_coverage_dict['country']['value'] = comp['long_name']
+            if 'administrative_area_level_1' in comp['types']:
+                geo_coverage_dict['state']['value'] = comp['long_name']
+            if 'locality' in comp['types']:
+                geo_coverage_dict['city']['value'] = comp['long_name']
+    if (geo_coverage_dict != old_geo_coverage_dict):
+        geo_coverage_vals.append(geo_coverage_dict)
+
+    # Extract more fields using the owner data from ownerdata.json
+    o = dict()
+    with open('hs_dataverse/tempfiles/ownerdata.json') as f:
+        o = json.load(f)
+    if 'username' in o:
+        producer_dict['producerAbbreviation']['value'] = o['username']
+    if 'first_name' in o and 'last_name' in o:
+        producer_dict['producerName']['value'] = o['last_name'] + ', ' + o['first_name']
+    if 'organization' in o:
+        producer_dict['producerAffiliation']['value'] = o['organization']
 
     # update the json dict with the field values
     fields[0]['value'] = title
@@ -379,18 +482,11 @@ def upload_dataset(base_url, api_token, dv):
 
     fields[21]['value'] = related_resources
 
-    geofields[2]['value'][0]['westLongitude']['value'] = "1"
-    geofields[2]['value'][0]['eastLongitude']['value'] = "2"
-    geofields[2]['value'][0]['northLongitude']['value'] = "3"
-    geofields[2]['value'][0]['southLongitude']['value'] = "4"
-
-
-    #  dump the json file as 'data.json'
-    with open('data.json', 'w') as outfile:
-        json.dump(data, outfile, indent=2)
-
-    with open('data.json', 'r') as json_file:
-        metadata = json.load(json_file)
+    geofields[0]['value'] = geo_coverage_vals
+    geofields[1]['value'] = geo_units
+    geofields[2]['value'] = bounding_box_vals
+    
+    metadata = data
 
     api = Api(base_url, api_token)
 
@@ -411,9 +507,7 @@ def upload_dataset(base_url, api_token, dv):
             print("Dataset: " + dv_data[u'data'][i][u'identifier'])
 
     r = api.create_dataset(dv, json.dumps(metadata))
-   
     # now delete the dataset, as to not fill up the datverse while testing 
     r_dict = json.loads(r.text)
     persistent_id = r_dict['data']['persistentId']
     r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
-    print(r2.text)
