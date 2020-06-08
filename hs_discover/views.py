@@ -17,7 +17,6 @@ class SearchView(TemplateView):
         return render(request, 'hs_discover/index.html', {
         })
 
-
 class SearchAPI(APIView):
     """
     Provide resources returned from a lookup in the haystack interface to the index
