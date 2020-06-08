@@ -1,21 +1,10 @@
 import json
 
-from django.shortcuts import render
 from django.template.defaultfilters import date, time
-from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
-class SearchView(TemplateView):
-    """
-    Static frontend content for rendering page that will make calls to the backend API
-    """
-
-    def get(self, request, *args, **kwargs):
-        return render(request, 'hs_discover/index.html', {
-        })
 
 class SearchAPI(APIView):
     """
