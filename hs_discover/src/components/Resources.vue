@@ -1,12 +1,13 @@
 <template>
-    <div>resources component
+    <div>
 <!--        <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>-->
         <div class="table-wrapper">
 <!--            <table v-if="filteredResources.length"-->
+            {{resources}}
             <table
                    class="table-hover table-striped resource-custom-table" id="items-discovered">
                 <thead>
-                <tr><th>asdf
+                <tr><th>
 <!--                    <th v-for="key in labels" v-bind:key="key">-->
 <!--                        {{key}}-->
 <!--                    </th>-->
@@ -16,7 +17,7 @@
 <!--                        {{key}}-->
 <!--                        <span class="arrow" :class="sortOrders[key]>
  0 ? 'asc' : 'dsc'"></span>-->
-<!--                    </th>-->
+                    </th>
 
                 </tr>
                 </thead>
@@ -24,7 +25,7 @@
 <!--                <tr v-for="entry in filteredResources" v-bind:key="entry">-->
                     <tr>
                     <td>
-                        <span>asdf
+                        <span>
 <!--                            <img v-bind:src="blank.jpg"-->
 <!--                                 data-toggle="tooltip" data-placement="right"-->
 <!--                                 :alt="entry.type" :title="entry.type"-->
@@ -99,8 +100,6 @@ export default {
       // const { sortKey } = this;
       // const order = this.sortOrders[sortKey] || 1;
       // let resources = JSON.parse(this.sample);
-      console.log(this.sample);
-      const resources = JSON.parse(this.sample);
       // if (sortKey) {
       //   resources = resources.slice().sort((a, b) => {
       //     a = a[sortKey];
@@ -108,9 +107,9 @@ export default {
       //     return (a === b ? 0 : a > b ? 1 : -1) * order;
       //   });
       // }
-      console.log(resources);
+      console.log(this.resources);
       // vue.numItems = resources.length;
-      return resources;
+      return this.resources;
     },
   },
   // filters: {
