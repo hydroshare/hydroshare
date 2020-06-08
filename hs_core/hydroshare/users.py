@@ -338,7 +338,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(query)
 
     if published:
-        q.append(Q(doi__isnull=False))
+        q.append(Q(raccess__published=True))
 
     if author:
         authors = author.split(',')
@@ -425,21 +425,20 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if not include_obsolete:
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
+    if full_text_search:
+        desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+        title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+
+        # Full text search must match within the title or abstract
+        if desc_ids:
+            flt = flt.filter(object_id__in=desc_ids)
+        elif title_ids:
+            flt = flt.filter(object_id__in=title_ids)
+        else:
+            # No matches on title or abstract, so treat as no results of search
+            flt = flt.none()
     for q in q:
         flt = flt.filter(q)
-
-        if full_text_search:
-            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
-
-            # Full text search must match within the title or abstract
-            if desc_ids:
-                flt = flt.filter(object_id__in=desc_ids)
-            elif title_ids:
-                flt = flt.filter(object_id__in=title_ids)
-            else:
-                # No matches on title or abstract, so treat as no results of search
-                flt = flt.none()
 
     # TODO The below is legacy pagination... need to find out if anything is using it and delete
     qcnt = 0
