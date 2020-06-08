@@ -299,7 +299,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
         filter_parms['public'] = not self.request.user.is_authenticated()
         filtered_res_list = []
 
-        for r in hydroshare.get_resource_list(**filter_parms):
+        for r in self.paginate_queryset(hydroshare.get_resource_list(**filter_parms)):
             resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
