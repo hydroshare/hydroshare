@@ -424,17 +424,10 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
     if full_text_search:
-        desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+        description_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
         title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
-
         # Full text search must match within the title or abstract
-        if desc_ids:
-            flt = flt.filter(object_id__in=desc_ids)
-        elif title_ids:
-            flt = flt.filter(object_id__in=title_ids)
-        else:
-            # No matches on title or abstract, so treat as no results of search
-            flt = flt.none()
+        flt = flt.filter(object_id__in=description_ids.union(title_ids))
     for q in q:
         flt = flt.filter(q)
 
