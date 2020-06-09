@@ -10,10 +10,8 @@
                 <span class="glyphicon glyphicon-search search-icon"></span>
                 <span @click="clearSearch()"
                       class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
-                <label>
-                    <input type="search" class="form-control" v-model="searchtext"
-                           placeholder="Search all Public and Discoverable Resources">
-                </label>
+                <input type="search" class="form-control" v-model="searchtext"
+                       placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
 <!--        <div v-if="searchtext">-->
