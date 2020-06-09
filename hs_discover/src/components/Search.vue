@@ -14,15 +14,12 @@
                        placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
-<!--        <div v-if="searchtext">-->
         <resource-listing :resources="resources"
                           :key="resources"
-                          :itemcount="55"
                           :columns="gridColumns"
                           :labels="gridColumnLabels"
                           :filter-key="searchQuery">
          </resource-listing>
-<!--        </div>-->
     </div>
 </template>
 
@@ -63,8 +60,8 @@ export default {
     searchClick() {
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
-          this.$data.resources = response.data.resources;
-          console.log(response); // eslint-disable-line
+          this.$data.resources = JSON.parse(response.data.resources);
+          console.log(this.resources); // eslint-disable-line
         })
         .catch((error) => {
           console.error(error); // eslint-disable-line

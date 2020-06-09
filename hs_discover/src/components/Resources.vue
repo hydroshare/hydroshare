@@ -1,37 +1,31 @@
 <template>
-    <div>
-<!--        <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>-->
+    <div v-if="resources.length">
+        <p>Results: {{resources.length}}</p>
         <div class="table-wrapper">
-<!--            <table v-if="filteredResources.length"-->
-            {{resources}}
             <table
                    class="table-hover table-striped resource-custom-table" id="items-discovered">
                 <thead>
-                <tr><th>
-<!--                    <th v-for="key in labels" v-bind:key="key">-->
-<!--                        {{key}}-->
-<!--                    </th>-->
-<!--                    <th v-for="key in labels" v-bind:key="key"-->
-<!--                        @click="sortBy(key)"-->
-<!--                        :class="{ active: sortKey === key }">-->
-<!--                        {{key}}-->
-<!--                        <span class="arrow" :class="sortOrders[key]>
- 0 ? 'asc' : 'dsc'"></span>-->
-                    </th>
-
-                </tr>
+                    <tr>
+                        <th v-for="key in labels" v-bind:key="key">
+                            {{key}}
+                        </th>
+    <!--                    <th v-for="key in labels" v-bind:key="key"-->
+    <!--                        @click="sortBy(key)"-->
+    <!--                        :class="{ active: sortKey === key }">-->
+    <!--                        {{key}}-->
+    <!--                        <span class="arrow" :class="sortOrders[key]>
+     0 ? 'asc' : 'dsc'"></span>-->
+                    </tr>
                 </thead>
                 <tbody>
-<!--                <tr v-for="entry in filteredResources" v-bind:key="entry">-->
-                    <tr>
+                <tr v-for="entry in resources" v-bind:key="entry">
                     <td>
-                        <span>
+                        <span>[type image]
 <!--                            <img v-bind:src="blank.jpg"-->
 <!--                                 data-toggle="tooltip" data-placement="right"-->
 <!--                                 :alt="entry.type" :title="entry.type"-->
 <!--                                 class="table-res-type-icon"/>-->
                         </span>
-
 <!--                        <img v-if="entry.availability.indexOf('published') >= 0"-->
 <!--                             src="blank.jpg"-->
 <!--                             data-toggle="tooltip" data-placement="right"-->
@@ -48,24 +42,21 @@
 <!--                             src="blank.jpg"-->
 <!--                             data-toggle="tooltip" data-placement="right"-->
 <!--                             alt="Private Resource" title="Private"/>-->
-
                     </td>
                     <td>
-<!--                        <a :href="entry.link" data-toggle="tooltip"-->
-<!--                           :title="entry.abstract" data-placement="top">{{entry.name}}</a>-->
+                        <a :href="entry.link" data-toggle="tooltip"
+                           :title="entry.abstract" data-placement="top">{{entry.name}}</a>
                     </td>
                     <!-- placeholder for link column -->
                     <td>
-                        <!-- <a :href="entry.author_link">{{entry.author}}</a>-->
-                        author
+                         <a :href="entry.author_link">{{entry.author}}</a>
                     </td>
                     <!-- temporary placeholder for link column -->
-                    <td>created</td>
-                    <td>modified</td>
+                    <td>{{entry.created}}</td>
+                    <td>{{entry.modified}}</td>
                 </tr>
                 </tbody>
             </table>
-<!--            <p v-else>No results found.</p>-->
         </div>
     </div>
 </template>
@@ -93,7 +84,7 @@ export default {
   },
   name: 'Resources',
   props:
-  ['resources', 'itemcount', 'columns', 'labels', 'filterKey'],
+  ['resources', 'columns', 'labels', 'filterKey'],
   computed: {
     filteredResources() {
       // const vue = this;
@@ -107,7 +98,7 @@ export default {
       //     return (a === b ? 0 : a > b ? 1 : -1) * order;
       //   });
       // }
-      console.log(this.resources);
+      console.log(this.resources); // eslint-disable-line
       // vue.numItems = resources.length;
       return this.resources;
     },
@@ -115,7 +106,6 @@ export default {
   // filters: {
   //   capitalize(str) {
   //     if (str !== 'link' && str !== 'author_link') {
-  //       // TODO instead of iterating through headings, explicitly choose and display
   //       return str.charAt(0).toUpperCase() + str.slice(1);
   //     }
   //   },
