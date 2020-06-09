@@ -807,7 +807,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         res_file_obj.set_storage_path(tgt_name)
         # if the file is getting moved into a folder that represents a FileSet or to a folder
         # inside a fileset folder, then make the file part of that FileSet
-        if file_move and not res_file_obj.file_folder and \
+        if file_move and res_file_obj.file_folder and \
                 resource.resource_type == 'CompositeResource':
             aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
             if aggregation is not None and not res_file_obj.has_logical_file:

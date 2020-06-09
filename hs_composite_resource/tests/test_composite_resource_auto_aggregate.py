@@ -288,7 +288,7 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.create_composite_resource()
         # no timeseries aggregation prior to adding the csv file to a folder
         self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
-        if not new_folder.empty():
+        if new_folder:
             # create a folder
             hydroshare.ResourceFile.create_folder(self.composite_resource, folder=new_folder)
         # upload the csv file to the folder (new-folder)

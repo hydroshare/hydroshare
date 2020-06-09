@@ -1104,7 +1104,7 @@ class AbstractLogicalFile(models.Model):
         :return: computed new folder path
         """
         current_folder_path = 'data/contents'
-        if not file_folder:
+        if file_folder:
             current_folder_path = os.path.join(current_folder_path, file_folder)
 
         new_folder_path = os.path.join(current_folder_path, file_name)
@@ -1405,7 +1405,7 @@ class AbstractLogicalFile(models.Model):
             file_folder = self.folder
         else:
             file_folder = self.files.first().file_folder
-        if not file_folder:
+        if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
 

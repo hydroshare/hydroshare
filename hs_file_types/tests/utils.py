@@ -153,7 +153,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.files.count(), 2)
     # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
-        if not aggr_folder:
+        if aggr_folder:
             expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path,
                                                       aggr_folder, res_file.file_name)
         else:
