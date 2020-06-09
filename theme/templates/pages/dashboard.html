@@ -101,52 +101,52 @@ timestamp should go with a template tags to convert to a human readble day.
         </div>
         
         <!-- Recommended resources for the user  -->
-        {% if recommended_resources_list %}
-            <div class="container dashboard-section-container">
-                <div class="row dashboard-section-container-title-row">
-                    <span>
-                    <h3 class="home-page-block-title">Recommended Resources </h3>
-                    </span>
-                </div>
-	        <div class="row dashboard-section-container-title-row">
-		    Recommendations based on your interests in these keywords: <b>{{ resources_matched_genres|join:", " }}</b>
-	        </div>
-                <table class="table-hover table-striped resource-custom-table" id="my-recommended-resources-list"
-                       style="width: 100%;">
-                    <thead>
-                    <tr>
-                        <th style="padding-left: 10px;">Title</th>
-                        <th style="padding-left: 10px;">Common keywords</th>
-                        <th style="padding-left: 10px;">First author</th>
-                        <th style="padding-left: 10px;">Resource type</th>
-                        <th style="padding-left: 10px;">Visibility</th>
-                    </tr>
-                    </thead>
-                    {# ====================================== #}
-                    {# == Here comes the data from backend == #}
-                    {# ====================================== #}
-                    <tbody>
-                    {% for r in recommended_resources_list %}
-                        <tr class="data-row">
-                            <td>
-                                {% autoescape off %}
-                                    {% resource_link_builder r.resource_title r.resource_short_id %}
-                                {% endautoescape %}
-                            </td>
-                            <td>{{ r.common_keywords | join:", " }}</td>
-                            <td>{{ r.resource_first_creator }}</td>
-                            <td>
-                                {% autoescape off %}
-                                    {% resource_verbose_name_builder r.resource_type %}
-                                {% endautoescape %}
-                            </td>
-                            <td>{% build_privacy_status r.published r.public r.discoverable %}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+        <div class="container dashboard-section-container">
+            <div class="row dashboard-section-container-title-row">
+                <span>
+                <h3 class="home-page-block-title">Recommended Resources </h3>
+                </span>
             </div>
-        {% endif %}
+            {% if recommended_resources_list %}
+                <div class="row dashboard-section-container-title-row">
+                    Recommendations based on your interests in these keywords: <b>{{ resources_matched_genres|join:", " }}</b>
+                </div>
+            {% endif %}
+            <table class="table-hover table-striped resource-custom-table" id="my-recommended-resources-list"
+                   style="width: 100%;">
+                <thead>
+                <tr>
+                    <th style="padding-left: 10px;">Title</th>
+                    <th style="padding-left: 10px;">Common keywords</th>
+                    <th style="padding-left: 10px;">First author</th>
+                    <th style="padding-left: 10px;">Resource type</th>
+                    <th style="padding-left: 10px;">Visibility</th>
+                </tr>
+                </thead>
+                {# ====================================== #}
+                {# == Here comes the data from backend == #}
+                {# ====================================== #}
+                <tbody>
+                {% for r in recommended_resources_list %}
+                    <tr class="data-row">
+                        <td>
+                            {% autoescape off %}
+                                {% resource_link_builder r.resource_title r.resource_short_id %}
+                            {% endautoescape %}
+                        </td>
+                        <td>{{ r.common_keywords | join:", " }}</td>
+                        <td>{{ r.resource_first_creator }}</td>
+                        <td>
+                            {% autoescape off %}
+                                {% resource_verbose_name_builder r.resource_type %}
+                            {% endautoescape %}
+                        </td>
+                        <td>{% build_privacy_status r.published r.public r.discoverable %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <!-- Recommended users for the user  -->
         {% if recommended_users_list %}

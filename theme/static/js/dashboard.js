@@ -11,7 +11,7 @@ function initializeTable() {
             "width": "100px"
         },
         {
-            "targets": [ TITLE_COL],
+            "targets": [TITLE_COL],
             "width": "500px"
         },
         {
@@ -41,10 +41,54 @@ function initializeTable() {
     });
 
 }
+ 
+function initializeRecommendedResourcesTable() {
+    var TITLE_COL = 0;
+    var COMMON_KEYWORDS_COL = 1;
+    var FIRST_AUTHOR_COL = 2;
+    var RESOURCE_TYPE_COL = 3;
+    var VISIBILITY_COL = 4;
+
+    var colDefs = [
+        {
+            "targets": [TITLE_COL],
+            "width": "400px"
+        },
+        {
+            "targets": [COMMON_KEYWORDS_COL],
+            "width": "200px"
+        },
+        {
+            "targets": [FIRST_AUTHOR_COL],
+            "width": "100px"
+        },
+        {
+            "targets": [RESOURCE_TYPE_COL],
+            "width": "100px"
+        },
+        {
+            "targets": [VISIBILITY_COL],
+            "width": "50px"
+        },
+    ];
+
+    $('#my-recommended-resources-list').DataTable({
+        "paging": false,
+        "searching": false,
+        "info": false,
+        "ordering": false,
+        "lengthChange": false,
+        "columnDefs": colDefs,
+        "language": {
+            "emptyTable": "In order to get recommended resources, you need to visit more resources."
+        }
+    });
+
+}
 
 $(document).ready(function () {
     initializeTable();
-
+    initializeRecommendedResourcesTable();
     if (localStorage.openStatus === "closed") {
         $("#getStarted").addClass("collapse");
         $("#id-getting-started-toggle").html("Show Getting Started");
