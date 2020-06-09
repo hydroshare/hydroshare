@@ -1,6 +1,11 @@
 <template>
     <div id="discover-search">
-        <div id="wrapper">
+        <div class="flex">
+            <span id="solr-help-info" class="glyphicon
+            glyphicon-info-sign info-popover-glypn
+            c-pointer" data-toggle="popover"
+            data-placement="bottom" data-original-title="" title="">
+            </span>
             <div id="search" class="search-field" @keyup.enter="searchClick()">
                 <span class="glyphicon glyphicon-search search-icon"></span>
                 <span @click="clearSearch()"
@@ -59,10 +64,10 @@ export default {
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
           this.$data.resources = response.data.resources;
-          console.log(response);
+          console.log(response); // eslint-disable-line
         })
         .catch((error) => {
-          console.error(error);
+          console.error(error); // eslint-disable-line
         });
 
       // console.log(this)
