@@ -277,7 +277,7 @@ def get_public_groups():
 
 
 def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
-                      to_date=None, start=None, count=None, full_text_search=None,
+                      to_date=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
                       north=None, south=None, east=None, west=None, include_obsolete=False):
@@ -314,8 +314,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         user = User or name
         from_date = datetime object
         to_date = datetime object
-        start = int
-        count = int
         subject = list of subject
         type = list of resource type names, used for filtering
         coverage_type = geo parameter, one of box or point
@@ -325,8 +323,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         east = east coordinate
     """
 
-    if not any((author, creator, group, user, owner, from_date, to_date, start,
-                count, subject, full_text_search, public, type)):
+    if not any((author, creator, group, user, owner, from_date, to_date,
+                subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     q = []
@@ -439,24 +437,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
             flt = flt.none()
     for q in q:
         flt = flt.filter(q)
-
-    # TODO The below is legacy pagination... need to find out if anything is using it and delete
-    qcnt = 0
-    if flt:
-        qcnt = len(flt)
-
-    if start is not None and count is not None:
-        if qcnt > start:
-            if qcnt >= start + count:
-                flt = flt[start:start+count]
-            else:
-                flt = flt[start:qcnt]
-    elif start is not None:
-        if qcnt >= start:
-            flt = flt[start:qcnt]
-    elif count is not None:
-        if qcnt > count:
-            flt = flt[0:count]
 
     return flt
 
