@@ -338,7 +338,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(query)
 
     if published:
-        q.append(Q(doi__isnull=False))
+        q.append(Q(raccess__published=True))
 
     if author:
         authors = author.split(',')

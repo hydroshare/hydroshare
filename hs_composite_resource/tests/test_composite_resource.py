@@ -976,7 +976,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.generic_file)
         self.assertEqual(self.composite_resource.files.count(), 1)
         gen_res_file = self.composite_resource.files.first()
-        self.assertEqual(gen_res_file.file_folder, None)
+        self.assertEqual(gen_res_file.file_folder, '')
         # we should be able to create this new folder
         new_folder_full_path = os.path.join(self.composite_resource.file_path, "my-new-folder")
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_full_path),

@@ -78,7 +78,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             print(res_file.short_path)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # test extracted raster file type metadata
-        assert_raster_file_type_metadata(self, aggr_folder_path=None)
+        assert_raster_file_type_metadata(self, aggr_folder_path='')
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -236,7 +236,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        self._test_aggregation_from_zip_file(aggr_folder_path=None)
+        self._test_aggregation_from_zip_file(aggr_folder_path='')
 
         self.composite_resource.delete()
 
