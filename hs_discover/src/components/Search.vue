@@ -1,28 +1,14 @@
 <template>
     <div id="discover-search">
-    <div class="flex">
-        <span id="solr-help-info" class="glyphicon glyphicon-info-sign info-popover-glypn c-pointer"
-              data-toggle="popover" data-placement="bottom" data-original-title="" title="">
-        </span>
-        <div id="discover-resource-search" class="resource-search">
-            <div class="fieldWrapper">
+        <div id="wrapper">
+            <div id="search" class="search-field" @keyup.enter="searchClick()">
                 <span class="glyphicon glyphicon-search search-icon"></span>
-                <input type="search" class="form-control" v-model="searchtext"
-                       placeholder="Search All Public and Discoverable Resources">
+                <span @click="clearSearch()"
+                      class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
+                <input v-model="searchtext"
+                       placeholder="Search all Public and Discoverable Resources">
             </div>
         </div>
-    </div>
-<!--    <div id="discover-search">-->
-<!--        <div id="wrapper">-->
-<!--            <div id="search" class="search-field" @keyup.enter="searchClick()">-->
-<!--                <span class="glyphicon glyphicon-search search-icon"></span>-->
-<!--                <span @click="clearSearch()"-->
-<!--                      class="glyphicon
- glyphicon-remove-sign btn-clear-search c-pointer"></span>-->
-<!--                <input v-model="searchtext"-->
-<!--                       placeholder="Search all Public and Discoverable Resources">-->
-<!--            </div>-->
-<!--        </div>-->
 <!--        <div v-if="searchtext">-->
         <resource-listing :resources="resources"
                           :key="resources"
