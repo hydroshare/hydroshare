@@ -290,7 +290,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create refts aggregation
         RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # test rename of file is allowed
         src_path = 'data/contents/{}'.format(res_file.file_name)
         tgt_path = "data/contents/{0}_1{1}".format(base_file_name, ext)
@@ -312,7 +312,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create generic aggregation
         RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         # test moving the file to a new folder is allowed
         new_folder = 'test_folder'
