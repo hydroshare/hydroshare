@@ -17,8 +17,7 @@
         <resource-listing :resources="resources"
                           :key="resources"
                           :columns="gridColumns"
-                          :labels="gridColumnLabels"
-                          :filter-key="searchQuery">
+                          :labels="gridColumnLabels">
          </resource-listing>
     </div>
 </template>
@@ -43,18 +42,8 @@ export default {
     resourceListing: Resources,
   },
   beforeMount() {
-    // this.$data.searchQuery = this.searchtext;
-    // this.$data.q = this.searchtext;
   },
   mounted() {
-    // axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
-    //   .then((response) => {
-    //     console.log(response);
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //   });
-    // this.$refs.searchQuery.inputValue = this.searchQuery;
   },
   methods: {
     searchClick() {
@@ -86,8 +75,6 @@ export default {
       // });
     },
     clearSearch() {
-      // this.searchQuery = '';
-      // this.$refs.searchQuery.inputValue = '';
     },
   },
 };
@@ -104,7 +91,7 @@ export default {
 
     #wrapper .search-field, #advanced-discover-search {
         flex-grow: 1;
-        max-width: 800px;
+        max-width: 500px;
         position: relative;
     }
 
