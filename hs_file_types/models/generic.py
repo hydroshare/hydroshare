@@ -217,7 +217,7 @@ class GenericLogicalFile(AbstractLogicalFile):
             return None
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None, extra_data={}):
+    def set_file_type(cls, resource, user, file_id=None, folder_path='', extra_data={}):
         """
         Makes any physical file part of a generic aggregation type. The physical file must
         not already be a part of any aggregation.

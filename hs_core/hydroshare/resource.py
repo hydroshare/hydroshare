@@ -763,7 +763,7 @@ def add_resource_files(pk, *files, **kwargs):
     if __debug__:
         assert(isinstance(source_names, list))
 
-    folder = kwargs.pop('folder', None)
+    folder = kwargs.pop('folder', '')
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
@@ -771,13 +771,12 @@ def add_resource_files(pk, *files, **kwargs):
         assert len(kwargs) == 0
 
     prefix_path = 'data/contents'
-    if folder is None or folder == prefix_path:
+    if folder == prefix_path:
         base_dir = ""
     elif folder.startswith(prefix_path):
         base_dir = folder[len(prefix_path) + 1:]
     else:
         base_dir = folder
-    new_folders = set()
     for f in files:
         full_dir = base_dir
         if f in full_paths:
@@ -786,11 +785,7 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        if full_dir:
-            new_folders.add(os.path.join(resource.file_path, full_dir))
-            ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
-        else:
-            ret.append(utils.add_file_to_resource(resource, f, folder=None))
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
     if len(source_names) > 0:
         for ifname in source_names:

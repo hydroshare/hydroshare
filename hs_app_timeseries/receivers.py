@@ -158,7 +158,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
         _delete_resource_file(resource, ".sqlite")
 
         # add the blank sqlite file
-        add_blank_sqlite_file(resource, upload_folder=None)
+        add_blank_sqlite_file(resource, upload_folder='')
         resource_modified(resource, user, overwrite_bag=False)
 
         # populate CV metadata django models from the blank sqlite file
