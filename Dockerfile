@@ -13,8 +13,9 @@ RUN pip install \
   geopy \
   numpy==1.16.0 \
   pandas \
-  sklearn \
+  scikit-learn \
   gensim \
+  scipy \
   nltk 
 ### End - HydroShare Development Image Additions ###
 # inplaceedit in pip doesn't seem compatible with Django 1.11 yet...
