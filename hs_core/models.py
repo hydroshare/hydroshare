@@ -1720,7 +1720,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     file_unpack_message = models.TextField(null=True, blank=True)
 
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
+    doi = models.CharField(max_length=128, null=False, blank=True, db_index=True, default='',
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
