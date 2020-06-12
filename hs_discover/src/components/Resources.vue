@@ -33,9 +33,8 @@
                 </tbody>
             </table>
             <div v-for="(author) in authors" v-bind:key="author">
-                <input type="checkbox" :value=author v-model="authorFilter"
-                    id="name-{{author}}">
-                <label for="name-{{author}}">{{author}}</label>
+                <input type="checkbox" :value=author v-model="authorFilter" :id="name-author">
+                <label :for="name-author">{{author}}</label>
             </div>
             <br>
             <span>Would filter by author(s): {{ authorFilter }}</span>
