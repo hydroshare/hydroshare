@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:package-manager
+FROM hydroshare/hs_docker_base:develop
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
 # Set the locale. TODO - remove once we have a better alternative worked out
