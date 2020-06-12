@@ -1,8 +1,8 @@
 <template>
     <div>
-        <p v-if="resources.length">Results: {{resources.length}}</p>
+        <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
         <div class="table-wrapper">
-            <table v-if="resources.length"
+            <table v-if="filteredResources.length"
                    class="table-hover table-striped resource-custom-table" id="items-discovered">
                 <thead>
                     <tr>
@@ -11,7 +11,8 @@
                             :class="{ active: sortKey === key }">
                             {{key}}
                             <span class="arrow" :class="sortOrders[key] >
-                            0 ? 'asc' : 'dsc'"></span></th>
+                            0 ? 'asc' : 'dsc'"></span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,11 +34,10 @@
                 </tbody>
             </table>
             <div v-for="(author) in authors" v-bind:key="author">
-                <input type="checkbox" :value=author v-model="authorFilter" :id="name-author">
+                <input type="checkbox" :value=author v-model="authorFilter"
+                       :id="name-author">
                 <label :for="name-author">{{author}}</label>
             </div>
-            <br>
-            <span>Would filter by author(s): {{ authorFilter }}</span>
         </div>
     </div>
 </template>
@@ -60,20 +60,14 @@ export default {
       if (sortKey) {
         // sort by column
       }
-      // console.log(this.authors); // eslint-disable-line
-      return this.resources;
+      const res = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+      // console.log(res); // eslint-disable-line
+      return res;
     },
   },
-  // filters: {
-  //   capitalize(str) {
-  //     if (str !== 'link' && str !== 'author_link') {
-  //       return str.charAt(0).toUpperCase() + str.slice(1);
-  //     }
-  //   },
-  //   date(date) {
-  //     return date;
-  //   },
-  // },
+  mounted() {
+    this.authors.forEach(author => this.authorFilter.push(author));
+  },
   methods: {
     sortBy(key) {
       this.sortKey = key;

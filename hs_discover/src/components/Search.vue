@@ -19,7 +19,7 @@
                           :authors="authors"
                           :columns="gridColumns"
                           :labels="gridColumnLabels">
-         </resource-listing>
+        </resource-listing>
     </div>
 </template>
 
@@ -35,7 +35,6 @@ export default {
       authors: [],
       csrf_token: 'abc123',
       searchtext: '',
-      searchQuery: '',
       gridColumns: ['availability', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Availability', 'Title', 'First Author', 'Date Created', 'Last Modified'],
     };
@@ -58,24 +57,6 @@ export default {
         .catch((error) => {
           console.error(error); // eslint-disable-line
         });
-
-      // console.log(this)
-      // let formData = new FormData();
-      // formData.append("csrfmiddlewaretoken", csrf_token);
-      // formData.append("q", this.searchQuery);
-      // $.ajax({
-      //     type: "POST",
-      //     data: formData,
-      //     processData: false,
-      //     contentType: false,
-      //     url: "/search/",
-      //     success: function (response) {
-      //         console.log("Successful post")
-      //     },
-      //     error: function (response) {
-      //         console.log(response.responseText);
-      //     }
-      // });
     },
     clearSearch() {
     },
