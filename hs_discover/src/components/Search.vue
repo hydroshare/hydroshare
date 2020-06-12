@@ -7,9 +7,7 @@
             data-placement="bottom" data-original-title="" title="">
             </span>
             <div id="search" class="search-field" @keyup.enter="searchClick()">
-                <span class="glyphicon glyphicon-search search-icon"></span>
-                <span @click="clearSearch()"
-                      class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer"></span>
+<!--                <i class="glyphicon glyphicon-search search-icon"></i>-->
                 <input type="search" class="form-control" v-model="searchtext"
                        placeholder="Search all Public and Discoverable Resources">
             </div>
@@ -65,7 +63,6 @@ export default {
 </script>
 
 <style scoped>
-    /*<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/search.css"/>*/
     #wrapper {
         display: flex;
         align-items: center;
@@ -93,15 +90,6 @@ export default {
         padding-right: 25px;
     }
 
-    #items-discovered {
-        margin-top: 1em;
-    }
-
-    #advanced-search-items {
-        margin-top: 1em;
-        max-width: 600px;
-    }
-
     table tr th {
         cursor: pointer;
     }
@@ -111,9 +99,4 @@ export default {
         overflow: auto;
     }
 
-    .btn-clear-search {
-        /*position: absolute;*/
-        top: 10px;
-        right: 8px;
-    }
 </style>

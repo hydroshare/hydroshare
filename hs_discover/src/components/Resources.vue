@@ -60,9 +60,7 @@ export default {
       if (sortKey) {
         // sort by column
       }
-      const res = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-      // console.log(res); // eslint-disable-line
-      return res;
+      return this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
     },
   },
   mounted() {
