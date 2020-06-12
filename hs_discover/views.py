@@ -1,16 +1,11 @@
 import json
-from pprint import pprint
 
-from django.core.management.base import BaseCommand
 from django.shortcuts import render
 from django.template.defaultfilters import date, time
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from hs_core.models import BaseResource
-from hs_core.search_indexes import BaseResourceIndex
 
 
 class SearchView(TemplateView):
@@ -51,11 +46,14 @@ class SearchAPI(APIView):
         vocab = sorted(vocab)
 
         resources = []
+        authors = set()
+
         for result in sqs:
             resources.append({
                 "name": result.title,
                 "link": result.absolute_url,
                 "availability": result.availability,
+                "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
                 "author": result.author,
                 "author_link": result.author_url,
@@ -63,10 +61,10 @@ class SearchAPI(APIView):
                 "created": date(result.created, "M d, Y") + " at " + time(result.created),
                 "modified": date(result.modified, "M d, Y") + " at " + time(result.modified)
             })
-
-        resources = json.dumps(resources)
+            authors.add(result.author)
 
         return Response({
-            'resources': resources,
-            'vocab': vocab
+            'resources': json.dumps(resources),
+            'vocab': vocab,
+            'authors': json.dumps(list(authors))
         })
