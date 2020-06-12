@@ -63,9 +63,6 @@ export default {
       // console.log(this.authors); // eslint-disable-line
       return this.resources;
     },
-    authorfilter: {
-
-    },
   },
   // filters: {
   //   capitalize(str) {
