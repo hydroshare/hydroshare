@@ -18,13 +18,17 @@ upstream backend {
 server {
     listen          80;
     server_name     FQDN_OR_IP;
-    rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+    return 301 https://FQDN_OR_IP$request_uri;
 }
 
 server {
     listen          443 ssl;
     server_name     FQDN_OR_IP;
-    root            /system/static/; 
+    root            /system/static/;
+
+    if ($http_host != "FQDN_OR_IP") {
+        return 301 https://FQDN_OR_IP$request_uri
+    }
 
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log debug;
