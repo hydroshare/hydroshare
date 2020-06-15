@@ -696,51 +696,81 @@ class CompositeResource(BaseResource):
             src_file_dir = src_full_path
 
         if src_ext and tgt_ext:
-            is_renaming_file = True
-        elif src_ext:
-            is_moving_file = True
-        elif not istorage.exists(tgt_file_dir):
-            # renaming folder - no restriction
-            return True
+            if src_file_name != tgt_file_name:
+                is_renaming_file = True
+            else:
+                is_moving_file = True
         else:
+            tgt_base_dir = os.path.dirname(tgt_file_dir)
+            src_base_dir = os.path.dirname(src_file_dir)
+            if src_base_dir == tgt_base_dir:
+                # renaming folder - no restriction
+                return True
             is_moving_folder = True
 
         def check_target_folder(src_aggr=None):
             """checks if the target folder allows file/folder move action"""
-
             tgt_aggr_path = tgt_file_dir[len(self.file_path) + 1:]
-            # check if this move would create a nested model program/instance aggregation -
-            # nested model program/instance aggregation is not allowed
-            if src_aggr is not None and src_aggr.is_model_program:
+            # check if this move would create a nested model program aggregation -
+            # nested model program aggregation is not allowed
+            # however a model instance aggregation can contain model program aggregation
+            if src_aggr is not None and (src_aggr.is_model_program or src_aggr.is_model_instance):
                 if is_moving_file or is_moving_folder:
                     src_model_aggr = src_aggr
-                    #  find if there is any model program.instance aggregation in the target path
+                    #  find if there is any model program/instance aggregation in the target path
                     tgt_model_aggr = self.get_model_aggregation_in_path(tgt_aggr_path)
                     if tgt_model_aggr is not None:
                         if src_model_aggr.folder is None:
-                            # file/folder being moved is part of a model aggregation - we can't move that
-                            # into a folder based model program/instance aggregation as it will result in nested
-                            # model program/instance aggregations
-                            return False
+                            # moving a file based model program/model instance aggregation
+                            if tgt_model_aggr.is_model_program:
+                                # aggregation nesting is not allowed for model program aggregation
+                                return False
+                            else:
+                                # target aggregation folder is a model instance aggregation
+                                if src_aggr.is_model_instance:
+                                    # not allowed to move a model instance to another model instance
+                                    return False
+                                # can move a model program aggregation into model instance aggregation
+                                return True
 
-                        # check if the move is within the same aggregation folder hierarchy - allow the move
-                        return tgt_model_aggr.folder == src_model_aggr.folder
+                        # moving a folder based model program/instance aggregation
+                        if src_model_aggr == tgt_model_aggr:
+                            # moving within the same model/instance aggregation is allowed
+                            return True
+
+                        if tgt_model_aggr.is_model_program:
+                            # aggregation nesting is not allowed for model program aggregation
+                            return False
+                        else:
+                            # tgt model aggregation is a model instance aggregation
+                            # a model instance aggregation not allowed to contain another model instance
+                            return not src_aggr.is_model_instance
 
                     # target folder is either a normal folder or fileset folder - file or folder move is allowed
                     return True
                 return True
             try:
-                tgt_aggregation = self.get_aggregation_by_name(tgt_aggr_path)
                 if is_moving_file or is_moving_folder:
-                    if src_aggr is not None:
+                    tgt_aggregation = self.get_fileset_aggregation_in_path(tgt_aggr_path)
+                    if tgt_aggregation is None:
+                        tgt_aggregation = self.get_model_aggregation_in_path(tgt_aggr_path)
+                    if src_aggr is not None and tgt_aggregation is not None:
+                        if tgt_aggregation.is_model_instance:
+                            # model instance can contains any aggregation except fileset or model instance aggregation
+                            if src_aggr.is_fileset or src_aggr.is_model_instance:
+                                return False
                         return tgt_aggregation.can_contain_aggregations
-                    return tgt_aggregation.supports_resource_file_move
+                    elif tgt_aggregation is not None:
+                        return tgt_aggregation.supports_resource_file_move
+                    else:
+                        self.get_aggregation_by_name(tgt_aggr_path)
                 return True
             except ObjectDoesNotExist:
                 return True
 
         def check_src_aggregation(src_aggr):
             """checks if the aggregation at the source allows rename/move action"""
+
             if src_aggr is None:
                 return True
 
