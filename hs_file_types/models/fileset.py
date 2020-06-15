@@ -72,7 +72,7 @@ class FileSetLogicalFile(AbstractLogicalFile):
         return resource_files[0] if resource_files else None
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Makes all physical files that are in a folder (*folder_path*) part of a file set
         aggregation type.
         Note: parameter file_id is ignored here and a value for folder_path is required
@@ -116,8 +116,7 @@ class FileSetLogicalFile(AbstractLogicalFile):
         for res_file in res_files:
             if not res_file.has_logical_file:
                 self.add_resource_file(res_file)
-            elif res_file.logical_file.is_fileset and not \
-                    res_file.logical_file.aggregation_name.startswith(folder):
+            elif res_file.logical_file.is_fileset and not res_file.logical_file.aggregation_name.startswith(folder):
                 # resource file that is part of a fileset aggregation where the fileset aggregation
                 # is not a sub folder of *folder* needs to be made part of this new fileset
                 # aggregation

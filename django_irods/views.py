@@ -372,11 +372,15 @@ def check_task_status(request, task_id=None, *args, **kwargs):
         task_id = request.POST.get('task_id')
     result = AsyncResult(task_id)
     if result.ready():
-        ret_value = str(result.get()).lower()
-        if ret_value == 'true':
-            return JsonResponse({"status": ret_value})
-        else:
-            return JsonResponse({"status": ret_value}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            ret_value = result.get()
+            return JsonResponse({"status": 'true',
+                                 'payload': str(ret_value)})
+        # use the Broad scope Exception to catch all exception types since this view function can be used for all tasks
+        except Exception:
+            # logging exception will log the full stack trace and prepend a line with the message str input argument
+            logger.exception('An exception is raised from task {}'.format(task_id))
+            return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse({"status": None})
 
