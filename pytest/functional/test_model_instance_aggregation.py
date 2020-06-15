@@ -510,7 +510,7 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
     assert GenericLogicalFile.objects.count() == 1
     # moving the logan.vrt file into mi_folder should be successful
     src_path = 'data/contents/{}'.format(single_file_name)
-    tgt_path = 'data/contents/{}'.format(mi_folder)
+    tgt_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
 
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
 

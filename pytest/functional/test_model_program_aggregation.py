@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError as RF_ValidationError
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder
-from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile
+from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile, ModelInstanceLogicalFile
 from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
 from hs_file_types.forms import ModelProgramMetadataValidationForm
 
@@ -365,9 +365,10 @@ def test_set_metadata(composite_resource_with_mp_aggregation, mock_irods):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, mock_irods):
-    """ test that we can't move a single file aggregation into a folder that represents a
-    model program aggregation"""
+@pytest.mark.parametrize('aggr_cls', [GenericLogicalFile, ModelInstanceLogicalFile])
+def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, aggr_cls, mock_irods):
+    """ test that we can't move a generic file aggregation or a model instance aggregation which are based on a single
+    file into a folder that represents a model program aggregation"""
     
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
@@ -394,11 +395,11 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
                                   name=os.path.basename(file_path))
 
     res_file = add_file_to_resource(res, file_to_upload, check_target_folder=True)
-    # set file to generic logical file type (aggregation)
-    GenericLogicalFile.set_file_type(res, user, res_file.id)
-    assert GenericLogicalFile.objects.count() == 1
+    # set file to generic/model instance logical file type (aggregation)
+    aggr_cls.set_file_type(res, user, res_file.id)
+    assert aggr_cls.objects.count() == 1
     # moving the logan.vrt file into the mp_mi_folder should fail
     src_path = 'data/contents/{}'.format(single_file_name)
-    tgt_path = 'data/contents/{}'.format(mp_folder)
+    tgt_path = 'data/contents/{}/{}'.format(mp_folder, single_file_name)
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
