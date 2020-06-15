@@ -1138,7 +1138,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder_path = os.path.join("data", "contents", new_folder)
         create_folder(self.composite_resource.short_id, new_folder_path)
         src_path = os.path.join('data', 'contents', self.generic_file_name)
-        tgt_path = new_folder_path
+        tgt_path = os.path.join(new_folder_path, self.generic_file_name)
         # now move the file to this new folder
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
                                       src_path, tgt_path)
@@ -1207,7 +1207,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # of GeoRasterLogicalFile object
         tif_res_file = self.composite_resource.files.first()
         src_full_path = tif_res_file.storage_path
-        tgt_full_path = os.path.join(self.composite_resource.file_path, new_folder)
+        tgt_full_path = os.path.join(self.composite_resource.file_path, new_folder, tif_res_file.file_name)
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), False)
