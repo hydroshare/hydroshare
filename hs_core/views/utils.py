@@ -27,7 +27,7 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.utils.http import int_to_base36
 from mezzanine.conf import settings
-from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -44,6 +44,7 @@ from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResourc
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_file_types.utils import set_logical_file_type
+from theme.backends import without_login_date_token_generator
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -653,7 +654,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to),
+            "token": without_login_date_token_generator.make_token(email_to),
             "membership_request_id": membership_request.id
         }) + "?next=" + (next_url(request) or "/")
 
@@ -664,7 +665,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to)
+            "token": without_login_date_token_generator.make_token(email_to)
         }) + "?next=" + (next_url(request) or "/")
 
     context['action_url'] = action_url
