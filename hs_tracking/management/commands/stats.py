@@ -137,7 +137,7 @@ class Command(BaseCommand):
                 last_login,
                 up.user_id,
             ]
-            w.writerow([str(v).encode() for v in values])
+            w.writerow([str(v) for v in values])
 
     def resources_details(self):
         w = csv.writer(sys.stdout)
@@ -164,7 +164,7 @@ class Command(BaseCommand):
                     r.user.userprofile.user_type,
                     r.user_id
                 ]
-                w.writerow([str(v).encode() for v in values])
+                w.writerow([str(v) for v in values])
 
             except Exception as e:
                 err.error(e)

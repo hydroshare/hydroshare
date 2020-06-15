@@ -313,6 +313,10 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
+    permissions_allow_copy = False
+    if request.user.is_authenticated:
+        permissions_allow_copy = request.user.uaccess.can_view_resource(cm)
+
     show_manage_access = False
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
@@ -326,6 +330,7 @@ def page_permissions_page_processor(request, page):
         "users_json": users_json,
         "owners": owners,
         "self_access_level": self_access_level,
+        "permissions_allow_copy": permissions_allow_copy,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
@@ -1699,7 +1704,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True,
+                                        null=False,
+                                        default=1
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
@@ -1714,7 +1720,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     file_unpack_message = models.TextField(null=True, blank=True)
 
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
+    doi = models.CharField(max_length=128, null=False, blank=True, db_index=True, default='',
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -1971,7 +1977,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
-        from hs_core.hydroshare.resource import update_quota_usage
 
         if __debug__:
             assert(isinstance(setter, User))
@@ -1994,7 +1999,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # holder will be reduced as a result of setting quota holder to a different user
                 self.removeAVU(attname, oldqu)
         self.setAVU(attname, new_holder.username)
-        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
@@ -2326,7 +2330,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder=None)
+        res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
         for res_file in res_files_at_root:
@@ -2498,7 +2502,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         unique_together = ("content_type", "object_id")
 
 
-def get_path(instance, filename, folder=None):
+def get_path(instance, filename, folder=''):
     """Get a path from a ResourceFile, filename, and folder.
 
     :param instance: instance of ResourceFile to use
@@ -2520,7 +2524,7 @@ def get_path(instance, filename, folder=None):
 
 
 # TODO: make this an instance method of BaseResource.
-def get_resource_file_path(resource, filename, folder=None):
+def get_resource_file_path(resource, filename, folder=''):
     """Determine storage path for a FileField based upon whether resource is federated.
 
     :param resource: resource containing the file.
@@ -2533,24 +2537,27 @@ def get_resource_file_path(resource, filename, folder=None):
 
     """
     # folder can be absolute pathname; strip qualifications off of folder if necessary
-    if folder is not None and folder.startswith(resource.root_path):
+    # cannot only test folder string to start with resource.root_path, since a relative folder path
+    # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
+    # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
+    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
-    if folder == '':
-        folder = None
 
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
         return filename
 
     # otherwise, it is an unqualified name.
-    if folder is not None:
+    if folder:
         # use subfolder
-        return resource.file_path + '/' + folder + '/' + filename
+        folder = folder.strip('/')
+        return os.path.join(resource.file_path, folder, filename)
 
     else:
         # use root folder
-        return resource.file_path + '/' + filename
+        filename = filename.strip('/')
+        return os.path.join(resource.file_path, filename)
 
 
 def path_is_allowed(path):
@@ -2592,7 +2599,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_file_path above.
-    file_folder = models.CharField(max_length=4096, null=True)
+    file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096,
@@ -2623,7 +2630,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None):
+    def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2884,8 +2891,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         in a single point of truth.
         """
         folder, base = os.path.split(path)
-        if folder == "":
-            folder = None
         self.file_folder = folder  # must precede call to get_path
         if self.resource.is_federated:
             self.resource_file = None
@@ -2956,7 +2961,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
-            folder = None
+            folder = ''
             base = relpath
             abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
@@ -2967,7 +2972,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # classmethods do things that query or affect all files.
 
     @classmethod
-    def get(cls, resource, file, folder=None):
+    def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
             return ResourceFile.objects.get(object_id=resource.id,
@@ -2991,7 +2996,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         file_folder_to_match = folder
 
-        if folder is None:
+        if not folder:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)

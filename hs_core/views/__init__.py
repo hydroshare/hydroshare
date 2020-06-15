@@ -154,9 +154,12 @@ def update_quota_usage(request, username):
     except User.DoesNotExist:
         return HttpResponseBadRequest('user to update quota for is not valid')
 
-    update_quota_usage_utility(user=user)
-
-    return HttpResponse('quota for user ' + user.username + ' has been updated', status=200)
+    try:
+        update_quota_usage_utility(username)
+        return HttpResponse('quota for user {} has been updated'.format(username), status=200)
+    except ValidationError as ex:
+        err_msg = 'quota for user {} failed to update: {}'.format(username, str(ex))
+        return HttpResponse(err_msg, status=500)
 
 
 def extract_files_with_paths(request):
@@ -187,12 +190,11 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
     extract_metadata = request.GET.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
-    file_folder = request.POST.get('file_folder', None)
-    if file_folder is not None:
-        if file_folder == "data/contents":
-            file_folder = None
-        elif file_folder.startswith("data/contents/"):
-            file_folder = file_folder[len("data/contents/"):]
+    file_folder = request.POST.get('file_folder', '')
+    if file_folder == "data/contents":
+        file_folder = ''
+    elif file_folder.startswith("data/contents/"):
+        file_folder = file_folder[len("data/contents/"):]
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
@@ -1484,33 +1486,32 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     :param membership_request_id: ID of the GroupMembershipRequest object (part of the link in the email)
     """
     membership_request = GroupMembershipRequest.objects.filter(id=membership_request_id).first()
-    if membership_request is not None:
-        if membership_request.group_to_join.gaccess.active:
-            user = authenticate(uidb36=uidb36, token=token, is_active=True)
-            if user is not None:
-                user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
-                auth_login(request, user)
-                # send email to notify membership acceptance
-                _send_email_on_group_membership_acceptance(membership_request)
-                if membership_request.invitation_to is not None:
-                    message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
-                else:
-                    message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
-                                                                            membership_request.group_to_join.name)
-
-                messages.info(request, message)
-                # redirect to group profile page
-                return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
-            else:
-                messages.error(request, "The link you clicked is no longer valid. Please ask to "
-                                        "join the group again.")
-                return redirect("/")
-        else:
-            messages.error(request, "The group is no longer active.")
-            return redirect("/")
+    if membership_request is None:
+        messages.error(request, "This group membership link is not valid")
+    elif membership_request.redeemed:
+        messages.error(request, "This group membership link has previously been redeemed")
+    elif not membership_request.group_to_join.gaccess.active:
+        messages.error(request, "The group associated with this group membership link is no longer active.")
     else:
-        messages.error(request, "The link you clicked is no longer valid.")
-        return redirect("/")
+        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+        if user is None:
+            messages.error(request, "The link you clicked has expired. Please ask to "
+                                    "join the group again.")
+        else:
+            user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
+            auth_login(request, user)
+            # send email to notify membership acceptance
+            _send_email_on_group_membership_acceptance(membership_request)
+            if membership_request.invitation_to is not None:
+                message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
+            else:
+                message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
+                                                                        membership_request.group_to_join.name)
+
+            messages.info(request, message)
+            # redirect to group profile page
+            return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+    return redirect("/")
 
 
 @login_required

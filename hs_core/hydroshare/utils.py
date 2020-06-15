@@ -1,11 +1,8 @@
-
-
 import mimetypes
 import os
 import tempfile
 import logging
 import shutil
-import string
 import copy
 from uuid import uuid4
 import errno
@@ -231,7 +228,7 @@ def get_fed_zone_files(irods_fnames):
     """
     ret_file_list = []
     if isinstance(irods_fnames, str):
-        ifnames = string.split(irods_fnames, ',')
+        ifnames = irods_fnames.split(',')
     elif isinstance(irods_fnames, list):
         ifnames = irods_fnames
     else:
@@ -469,7 +466,10 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     """
 
-    resource.last_changed_by = by_user
+    if not by_user:
+        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
+    else:
+        resource.last_changed_by = by_user
 
     resource.updated = now().isoformat()
     # seems this is the best place to sync resource title with metadata title
@@ -842,7 +842,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     from .resource import add_resource_files
     if __debug__:
         assert(isinstance(source_names, list))
-    folder = kwargs.pop('folder', None)
+    folder = kwargs.pop('folder', '')
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
@@ -873,7 +873,7 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder=None, source_name='',
+def add_file_to_resource(resource, f, folder='', source_name='',
                          check_target_folder=False, add_to_aggregation=True):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
@@ -901,7 +901,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         raise ValidationError("Resource must be a CompositeResource for validating target folder")
 
     if f:
-        if check_target_folder and folder is not None:
+        if check_target_folder and folder:
                 tgt_full_upload_path = os.path.join(resource.file_path, folder)
                 if not resource.can_add_files(target_full_path=tgt_full_upload_path):
                     err_msg = "File can't be added to this folder which represents an aggregation"
@@ -909,7 +909,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
-            if folder is not None and resource.resource_type == 'CompositeResource':
+            if folder and resource.resource_type == 'CompositeResource':
                 aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
                     # make the added file part of the fileset aggregation
@@ -1021,7 +1021,6 @@ class ZipContents(object):
     def get_files(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            file_path = None
             for name_path in self.zip_file.namelist():
                 if not self.black_list_path(name_path):
                     name = os.path.basename(name_path)

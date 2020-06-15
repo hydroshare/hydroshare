@@ -93,7 +93,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
-    ifnames = string.split(irods_fnames, ',')
+    ifnames = irods_fnames.split(',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
         tmpFile = irods_storage.download(ifname)
@@ -232,7 +232,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     if curr_path != prefix_path and curr_path.startswith(prefix_path):
         curr_path = curr_path[len(prefix_path) + 1:]
     if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        folder = None
+        folder = ''
     else:
         folder = curr_path[len(prefix_path) + 1:]
 
@@ -309,9 +309,9 @@ def run_script_to_update_hyrax_input_files(shortkey):
                     exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
-def can_user_copy_resource(res, user):
+def rights_allows_copy(res, user):
     """
-    Check whether resource copy is permitted or not
+    Check whether resource copy is permitted or not by checking ownership and rights statement
     :param res: resource object to check for whether copy is allowed
     :param user: the requesting user to check for whether copy is allowed
     :return: return True if the resource can be copied; otherwise, return False
@@ -807,7 +807,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         res_file_obj.set_storage_path(tgt_name)
         # if the file is getting moved into a folder that represents a FileSet or to a folder
         # inside a fileset folder, then make the file part of that FileSet
-        if file_move and res_file_obj.file_folder is not None and \
+        if file_move and res_file_obj.file_folder and \
                 resource.resource_type == 'CompositeResource':
             aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
             if aggregation is not None and not res_file_obj.has_logical_file:
