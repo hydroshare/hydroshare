@@ -34,7 +34,7 @@ $(document).ready(function () {
                 let vue = this;
                 $.ajax({
                     type: "GET",
-                    url: '/hsapi/_internal/get_tasks_by_user',
+                    url: '/hsapi/_internal/get_tasks_by_user/',
                     success: function (response) {
                         console.log(response);
                         vue.loading = false;
