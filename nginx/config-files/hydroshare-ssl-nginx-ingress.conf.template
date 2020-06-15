@@ -27,7 +27,7 @@ server {
     root            /system/static/;
 
     if ($http_host != "FQDN_OR_IP") {
-        return 301 https://FQDN_OR_IP$request_uri
+        return 301 https://FQDN_OR_IP$request_uri;
     }
 
     access_log      /var/log/nginx/access.log combined;
