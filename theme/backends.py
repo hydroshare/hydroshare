@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils.http import base36_to_int
 from django.utils.six import text_type
 
+
 class WithoutLoggedInDateTokenGenerator(PasswordResetTokenGenerator):
     """
     Removes last_login from the hash of the PasswordResetTokenGenerator.  Allows use of generated tokens in scenarios
