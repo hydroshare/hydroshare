@@ -812,6 +812,10 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
+#notifications-dropdown a {
+	font-size: 20px;
+}
+
 .display-none {
     display: none !important;
 }

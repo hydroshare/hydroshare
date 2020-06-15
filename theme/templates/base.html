@@ -44,11 +44,14 @@
 {% compress js %}
 <script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>
 <script src="{% static "js/custom.js" %}"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
 <script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
 <script src="{% static "js/jqcsrf.js" %}"></script>
-<script src='{% static 'js/jquery-ui.js' %}'></script>
+<script src="{% static "js/jquery-ui.js" %}"></script>
 <script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
 <script src="{% static "js/bootstrap-extras.js" %}"></script>
+<script src="{% static "js/hs-vue/notifications-app.js" %}"></script>
+
 {% block extra_js %}{% endblock %}
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}
@@ -144,6 +147,23 @@
                                         <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
                                             <span class="glyphicon glyphicon-log-out"></span> Sign out
                                         </a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        <li id="notifications-dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" 
+                                role="button" aria-haspopup="true" aria-expanded="false">
+                                <span class="glyphicon glyphicon-bell"></span>
+                            </a>
+                            <ul  class="dropdown-menu arrow_box">
+                                <li class="notifications">
+                                    <div id="app-notifications">
+                                        <div v-if="loading">Loading...</div>
+                                        <div v-if="!loading">
+                                            <div v-for="n in tasks">${ n }</div>
+                                            <div v-if="!tasks.length">You don't have any notifications.</div>
+                                        </div>
                                     </div>
                                 </li>
                             </ul>
