@@ -10,8 +10,7 @@ from rest_framework.exceptions import ValidationError as RF_ValidationError
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder
-from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile, FileSetLogicalFile, \
-    GenericLogicalFile
+from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile, FileSetLogicalFile
 from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
 
 
@@ -149,7 +148,7 @@ def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
 def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_cls, mock_irods):
-    """test that we can create a model program aggregation from a folder that contains a resource file from within a
+    """test that we can create a model program/instance aggregation from a folder that contains a resource file from within a
     folder that represents a fileset aggregation"""
 
     res, user = composite_resource
@@ -178,7 +177,7 @@ def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_
     assert res.files.count() == 2
     # fileset now should have 2 resource files
     assert fs_aggregation.files.count() == 2
-    # at this point there should not be any model program aggregation
+    # at this point there should not be any model program/instance aggregation
     assert aggr_cls.objects.count() == 0
     # set folder to model program aggregation type
     aggr_cls.set_file_type(resource=res, user=user, folder_path=mp_folder_path)
@@ -523,10 +522,76 @@ def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_irods)
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize('move_type', ['file', 'folder'])
+def test_move_model_program_aggr_into_model_instance_aggr_folder(composite_resource, move_type, mock_irods):
+    """ test that we can move a file that is part of a file based model program aggregation or a
+    folder that represents a model program aggregation into a another folder that represents
+    a model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    # create a model program aggregation
+    mp_file_name = 'logan.vrt'
+    if move_type == 'file':
+        # based on a single file
+        mp_folder = None
+    else:
+        # based on a folder
+        mp_folder = 'mp_folder'
+        ResourceFile.create_folder(res, mp_folder)
+
+    file_path = 'pytest/assets/{}'.format(mp_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+
+    if move_type == 'file':
+        # set file to model program logical file type (aggregation)
+        ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
+    else:
+        # set mp_folder to model program logical file type (aggregation)
+        ModelProgramLogicalFile.set_file_type(res, user, folder_path=mp_folder)
+
+    # there should be now 1 instance of model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 1
+    assert res_file.file_folder == mp_folder
+    # move model program aggregation into model instance aggregation folder
+    if move_type == 'file':
+        # moving the logan.vrt file into the mi_folder should be successful
+        src_path = 'data/contents/{}'.format(mp_file_name)
+        tgt_path = 'data/contents/{}/{}'.format(mi_folder, mp_file_name)
+    else:
+        # moving the mp_folder into the mi_folder should be successful
+        src_path = 'data/contents/{}'.format(mp_folder)
+        tgt_path = 'data/contents/{}/{}'.format(mi_folder, mp_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+
+
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr_cls, mock_irods):
-    """ test that we can't move a file that is part of a file based model program/instance aggregation
-    into a folder that represents a model program/instance aggregation"""
+@pytest.mark.parametrize('move_type', ['file', 'folder'])
+def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr_cls, move_type, mock_irods):
+    """ test that we can't move a file that is part of a file based model program/instance aggregation or a
+    folder that represents a model program/model instance into a another folder that represents
+    a model program/instance aggregation"""
 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
@@ -539,27 +604,94 @@ def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr
     assert res.files.count() == 1
     # at this point there should not be any model program/instance aggregation
     assert aggr_cls.objects.count() == 0
-    # set folder to model program/isntance aggregation type
+    # set folder to model program/instance aggregation type
     aggr_cls.set_file_type(resource=res, user=user, folder_path=mp_mi_folder)
     res_file = res.files.first()
     assert res_file.has_logical_file
     # file has folder
     assert res_file.file_folder == mp_mi_folder
     assert aggr_cls.objects.count() == 1
-    # create a model program/instance aggregation based on a single file
+    # create a model program/instance aggregation
+    mp_mi_file_name = 'logan.vrt'
+    if move_type == 'file':
+        # based on a single file
+        folder = None
+    else:
+        folder = 'mp_mi_folder_2'
+        ResourceFile.create_folder(res, folder)
+
+    file_path = 'pytest/assets/{}'.format(mp_mi_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    res_file = add_file_to_resource(res, file_to_upload, folder=folder, check_target_folder=True)
+    if move_type == 'file':
+        # set file to model program/instance logical file type (aggregation)
+        aggr_cls.set_file_type(res, user, res_file.id)
+    else:
+        # set mp_mi_folder_2 to model program/instance logical file type (aggregation)
+        aggr_cls.set_file_type(res, user, folder_path=folder)
+
+    # there should be now 2 instances of model program/instance aggregation
+    assert aggr_cls.objects.count() == 2
+    if move_type == 'file':
+        # moving the logan.vrt file into the mp_mi_folder should fail
+        src_path = 'data/contents/{}'.format(mp_mi_file_name)
+        tgt_path = 'data/contents/{}/{}'.format(mp_mi_folder, mp_mi_file_name)
+    else:
+        # moving the mp_mi_folder_2 into the mp_mi_folder should fail
+        src_path = 'data/contents/{}'.format(folder)
+        tgt_path = 'data/contents/{}/{}'.format(mp_mi_folder, folder)
+
+    print(">> src_path:{}".format(src_path))
+    print(">> tgt_path:{}".format(tgt_path))
+    with pytest.raises(RF_ValidationError):
+        move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
+def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cls, mock_irods):
+    """ test that we can't move a folder that represents a fileset into a folder that represents a
+    model program/instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    fs_folder = 'fs_folder'
+    ResourceFile.create_folder(res, fs_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+    add_file_to_resource(res, file_to_upload, folder=fs_folder, check_target_folder=True)
+
+    FileSetLogicalFile.set_file_type(res, user, folder_path=fs_folder)
+    assert FileSetLogicalFile.objects.count() == 1
+
+    # create model program/instance aggregation from a folder
+    mp_mi_folder = 'mp_mi_folder'
+    ResourceFile.create_folder(res, mp_mi_folder)
     mp_mi_file_name = 'logan.vrt'
     file_path = 'pytest/assets/{}'.format(mp_mi_file_name)
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
-    res_file = add_file_to_resource(res, file_to_upload, check_target_folder=True)
-    # set file to model program/instance logical file type (aggregation)
-    aggr_cls.set_file_type(res, user, res_file.id)
-    # there should be now 2 instances of model program/instance aggregation
-    assert aggr_cls.objects.count() == 2
-    # moving the logan.vrt file into the mp_mi_folder should fail
-    src_path = 'data/contents/{}'.format(mp_mi_file_name)
-    tgt_path = 'data/contents/{}'.format(mp_mi_folder)
+    add_file_to_resource(res, file_to_upload, folder=mp_mi_folder, check_target_folder=True)
+    assert res.files.count() == 2
+    # at this point there should not be any model program/instance aggregation
+    assert aggr_cls.objects.count() == 0
+    # set folder to model program/instance aggregation type
+    aggr_cls.set_file_type(resource=res, user=user, folder_path=mp_mi_folder)
+    # res_file = res.files.first()
+    # assert res_file.has_logical_file
+    # file has folder
+    # assert res_file.file_folder == mp_mi_folder
+    assert aggr_cls.objects.count() == 1
+    # move fileset folder into model program/instance folder - which should fail
+    src_path = 'data/contents/{}'.format(fs_folder)
+    tgt_path = 'data/contents/{}/{}'.format(mp_mi_folder, fs_folder)
+
+
+    print(">> src_path:{}".format(src_path))
+    print(">> tgt_path:{}".format(tgt_path))
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
 
