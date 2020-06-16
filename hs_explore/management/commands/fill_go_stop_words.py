@@ -1,9 +1,21 @@
+"""
+This stores ODM2 and CSDMS keywords used for our LDA model.
+Also, this stors English and customized common hydrological 
+stop words used in our LDA model
+"""
 from hs_explore.models import LDAWord
 from django.core.management.base import BaseCommand
 from hs_odm2.models import ODM2Variable
 
 
 def split_csdms():
+    """ Split each record in csdms file and assign them to corresponding return part
+        :return names, names in csdms
+        :return splitted_names, split each name by space
+        :return decors, decorations for each name in csdms
+        :return splitted_decors, split each decor by space
+
+    """
     filename = 'csdms'
     std_names = []
     with open(filename) as f:
@@ -39,6 +51,8 @@ def split_csdms():
 
 
 def fill_csdms():
+    """ Store each part from split_csdms into LDAWord model
+    """
     csdms_raw_full_names, csdms_splitted_names, csdms_raw_decors, csdms_splitted_decors = split_csdms()
     for csdms_name in csdms_raw_full_names:
         if len(csdms_name) > 1:
@@ -57,6 +71,8 @@ def fill_csdms():
 
 
 def fill_odm2():
+    """ Store ODM2 names into LDAWord model
+    """
     odm2_list = list(ODM2Variable.all())
     modified_list = []
     for odm2 in odm2_list:
@@ -72,6 +88,8 @@ def fill_odm2():
 
 
 def fill_stop_words():
+    """ Store common English and customized stop-words into the LDAWord model
+    """
     customized_stops = ['max', 'maximum', 'minimum', 'orgin', '________', 'center',
                         'rapid', 'test', 'example', 'demo', 'mm', 'jupyter_hub',
                         'ipython', 'odm2', 'min', 'net', 'unit', 'rating',
