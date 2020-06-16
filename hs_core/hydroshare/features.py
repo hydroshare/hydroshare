@@ -3,10 +3,6 @@ from hs_access_control.models import PrivilegeCodes, GroupAccess
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from hs_tracking.models import Variable
-# from pprint import pprint
-
-# from hs_labels.models import UserResourceLabels, UserResourceFlags
-# from hs_core.hydroshare.utils import user_from_id
 import re
 
 
@@ -17,7 +13,7 @@ class Features(object):
 
     @staticmethod
     def resource_owners():
-        """ return (user, resource) tuples representing resource owners """
+        """ return (username, resource_id) tuples representing resource owners """
         records = []
         for u in User.objects.all():
             owned = BaseResource.objects.filter(r2urp__user=u,
@@ -28,7 +24,7 @@ class Features(object):
 
     @staticmethod
     def group_owners():
-        """ return (user, group) tuples representing group ownership """
+        """ return (username, group_name) tuples representing group ownership """
         records = []
         for u in User.objects.all():
             owned = Group.objects.filter(g2ugp__user=u,
@@ -39,7 +35,7 @@ class Features(object):
 
     @staticmethod
     def resource_editors():
-        """ return (user, resource) tuples representing resource editing privilege """
+        """ return (username, resource_id) tuples representing resource editing privilege """
         records = []
         for u in User.objects.all():
             editable = BaseResource.objects.filter(r2urp__user=u,
@@ -50,7 +46,7 @@ class Features(object):
 
     @staticmethod
     def group_editors():
-        """ return (user, group) tuples representing group editing privilege """
+        """ return (username, group_name) tuples representing group editing privilege """
         records = []
         for u in User.objects.all():
             editable = Group.objects.filter(g2ugp__user=u,
@@ -61,7 +57,10 @@ class Features(object):
 
     @staticmethod
     def resource_viewers(fromdate, todate):
-        """ map of users who viewed each resource, according to date of access """
+        """ map of users who viewed each resource, according to date of access
+            :param fromdata(date type), the start date of the time range
+            :param todate(date type), the end date of the time range
+        """
         expr = re.compile('/resource/([^/]+)/')  # home page of resource
         resource_visited_by_user = {}
         for v in Variable.objects.filter(name='visit',
@@ -74,8 +73,6 @@ class Features(object):
                 if m and m.group(1):
                     resource_id = m.group(1)
                     user_id = user.username
-                    # print("user={} resource={} when={}".format(user_id, resource_id,
-                    #     str(v.timestamp)))
                     if resource_id not in resource_visited_by_user:
                         resource_visited_by_user[resource_id] = set([user_id])
                     else:
@@ -84,7 +81,10 @@ class Features(object):
 
     @staticmethod
     def visited_resources(fromdate, todate):
-        """ map of users who viewed each resource, according to date of access """
+        """ map of users who viewed each resource, according to date of access
+            :param fromdata(date type), the start date of the time range
+            :param todate(date type), the end date of the time range
+        """
         expr = re.compile('/resource/([^/]+)/')  # home page of resource
         user_visiting_resource = {}
         for v in Variable.objects.filter(name='visit',
@@ -97,8 +97,6 @@ class Features(object):
                 if m and m.group(1):
                     resource_id = m.group(1)
                     user_id = user.username
-                    # print("user={} resource={} when={}".format(user_id, resource_id,
-                    #     str(v.timestamp)))
                     if user_id not in user_visiting_resource:
                         user_visiting_resource[user_id] = set([resource_id])
                     else:
@@ -107,6 +105,10 @@ class Features(object):
 
     @staticmethod
     def resource_downloads(fromdate, todate):
+        """ map of each resource to users who downloaded it, according to date of access
+            :param fromdata(date type), the start date of the time range
+            :param todate(date type), the end date of the time range
+        """
         expr = re.compile('\|resource_guid=([^|]+)\|')  # resource short id
         downloads = {}
         for v in Variable.objects.filter(timestamp__gte=fromdate, timestamp__lte=todate):
@@ -129,6 +131,10 @@ class Features(object):
 
     @staticmethod
     def user_downloads(fromdate, todate):
+        """ map of users who viewed each resource, according to date of access
+            :param fromdata(date type), the start date of the time range
+            :param todate(date type), the end date of the time range
+        """
         expr = re.compile('\|resource_guid=([^|]+)\|')  # resource short id
         downloads = {}
         for v in Variable.objects.filter(timestamp__gte=fromdate, timestamp__lte=todate):
@@ -138,7 +144,6 @@ class Features(object):
                 user_id = user.username
                 if v.name == 'download':
                     value = v.get_value()
-                    # print("user:{} value:{} action:{}".format(user_id, value, v.name))
                     m = expr.search(value)  # resource short id
                     if m and m.group(1):
                         resource_id = m.group(1)
@@ -151,6 +156,10 @@ class Features(object):
 
     @staticmethod
     def resource_apps(fromdate, todate):
+        """ map of each resources to users who launched and app on it, according to date of access
+            :param fromdata(date type), the start date of the time range
+            :param todate(date type), the end date of the time range
+        """
         expr = re.compile('\|resourceid=([^|]+)\|')  # resource short id
         apps = {}
         for v in Variable.objects.filter(timestamp__gte=fromdate, timestamp__lte=todate):
@@ -160,7 +169,6 @@ class Features(object):
                 user_id = user.username
                 if v.name == 'app_launch':
                     value = v.get_value()
-                    # print("user:{} value:{} action:{}".format(user_id, value, v.name))
                     m = expr.search(value)  # resource short id
                     if m and m.group(1):
                         resource_id = m.group(1)
@@ -173,6 +181,10 @@ class Features(object):
 
     @staticmethod
     def user_apps(fromdate, todate):
+        """ map of users who lanuched an app on each resource, according to date of access
+            :param fromdata(date type), the start date of the time range
+            :param todate(date type), the end date of the time range
+        """
         expr = re.compile('\|resourceid=([^|]+)\|')  # resource short id
         apps = {}
         for v in Variable.objects.filter(timestamp__gte=fromdate, timestamp__lte=todate):
@@ -182,7 +194,6 @@ class Features(object):
                 user_id = user.username
                 if v.name == 'app_launch':
                     value = v.get_value()
-                    # print("user:{} value:{} action:{}".format(user_id, value, v.name))
                     m = expr.search(value)  # resource short id
                     if m and m.group(1):
                         resource_id = m.group(1)
@@ -195,6 +206,7 @@ class Features(object):
 
     @staticmethod
     def user_favorites():
+        """ map each user to her favorite resources"""
         favs = {}
         for u in User.objects.filter(is_active=True):
             for r in u.ulabels.favorited_resources:
@@ -206,6 +218,7 @@ class Features(object):
 
     @staticmethod
     def user_my_resources():
+        """ map each user to her resoruces """
         mine = {}
         for u in User.objects.filter(is_active=True):
             for r in u.ulabels.my_resources:
@@ -217,6 +230,7 @@ class Features(object):
 
     @staticmethod
     def user_owned_groups():
+        """ map each user to groups that owned by the user  """
         groups = {}
         for u in User.objects.filter(is_active=True):
             for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER):
@@ -228,6 +242,7 @@ class Features(object):
 
     @staticmethod
     def user_edited_groups():
+        """ map each user to groups that editable by the user  """
         groups = {}
         for u in User.objects.filter(is_active=True):
             for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE):
@@ -239,6 +254,7 @@ class Features(object):
 
     @staticmethod
     def user_viewed_groups():
+        """ map each user to groups that viewable by the user  """
         groups = {}
         for u in User.objects.filter(is_active=True):
             for g in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW):
@@ -250,6 +266,9 @@ class Features(object):
 
     @staticmethod
     def resources_editable_via_group(g):
+        """ return the set of resource ids that editable by the given group
+            :param g, a Group object
+        """
         output = set([])
         if GroupAccess.objects.filter(group=g).exists():
             for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE):
@@ -258,6 +277,9 @@ class Features(object):
 
     @staticmethod
     def resources_viewable_via_group(g):
+        """ return the set of resource ids that viewable by the given group
+            :param g, aGroup object
+        """
         output = set([])
         if GroupAccess.objects.filter(group=g).exists():
             for r in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW):
@@ -266,6 +288,9 @@ class Features(object):
 
     @staticmethod
     def explain_group(gname):
+        """ return detail description of a given group
+            :param gname, a group's name
+        """
         g = Group.objects.get(name=gname)
         if GroupAccess.objects.filter(group=g).exists():
             return {'name': g.name,
@@ -276,6 +301,9 @@ class Features(object):
 
     @staticmethod
     def resource_features(obj):
+        """ map the given resource to its features
+            :param obj, a Resource object
+        """
         ind = BaseResourceIndex()
         output = {}
         output['sample_medium'] = ind.prepare_sample_medium(obj)
@@ -337,9 +365,12 @@ class Features(object):
 
     @staticmethod
     def render_abstract_phrase(field, value):
+        """ helper function for resource_extended_abstract
+            :param field, a specified field in a resource
+            :param value, the value for the corresponding field
+            return a formatted string to describe the value of the given field
+        """
         output = ""
-        # print("{} is".format(field))
-        # pprint(value)
         if value is None:
             value = []
         if not isinstance(value, (tuple, list)):
@@ -353,6 +384,9 @@ class Features(object):
 
     @staticmethod
     def resource_extended_abstract(obj):
+        """ return (url, a formatted string) to show values for each corresponding field
+            :param obj, a given Resource
+        """
         ind = BaseResourceIndex()
         output = ind.prepare_abstract(obj)
         if output is None:
