@@ -355,6 +355,11 @@ class AbstractMetaDataElement(models.Model):
         return self.__unicode__()
 
     @property
+    def HSTERMS(self):
+        from rdflib import Namespace
+        return Namespace("http://hydroshare.org/terms/")
+
+    @property
     def metadata(self):
         """Return content object that describes metadata."""
         return self.content_object
@@ -1312,6 +1317,25 @@ class Coverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
+
+    def add_rdf_triples(self, graph, subject):
+        from rdflib import BNode, Literal
+        from rdflib.namespace import DC, DCTERMS, RDF
+        coverage = BNode()
+        graph.add((subject, DC.coverage, coverage))
+        value = BNode()
+        DCTERMS_type = getattr(DCTERMS, self.type)
+        graph.add((coverage, DCTERMS_type, value))
+        value_dict = {}
+        for k, v in self.value.items():
+            if k in ['start', 'end']:
+                v = parser.parse(v).isoformat()
+            value_dict[k] = v
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((value, RDF.value, Literal(value_string)))
+        return graph
+
+
 
     def add_to_xml_container(self, container):
         """Update etree SubElement container with coverage values."""
@@ -3955,6 +3979,15 @@ class CoreMetaData(models.Model):
                 self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                                property_name="funding_agencies")
 
+    @property
+    def resource_uri(self):
+        return self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+
+    @property
+    def resource_URIRef(self):
+        from rdflib import URIRef
+        return URIRef(self.resource_uri)
+
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Get metadata XML rendering."""
         # importing here to avoid circular import problem
@@ -3964,8 +3997,7 @@ class CoreMetaData(models.Model):
         # create the Description element -this is not exactly a dc element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
 
-        resource_uri = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
-        rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], resource_uri)
+        rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], self.resource_uri)
 
         # get the resource object associated with this metadata container object - needed to
         # get the verbose_name

@@ -295,6 +295,52 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
+    def aggregation_subject(self):
+        from rdflib import Namespace
+        return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
+
+    def get_rdf(self, graph):
+        resource = self.logical_file.resource
+        from rdflib import Graph, URIRef, Literal, Namespace, BNode
+        from rdflib.namespace import RDF, DC, RDFS
+        HSTERMS = Namespace("http://hydroshare.org/terms/")
+        subject = self.aggregation_subject()
+        # add aggregation title
+        if self.logical_file.dataset_name:
+            graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
+
+        # add lang element
+        graph.add((subject, DC.language, Literal(resource.metadata.language.code)))
+
+        # add rights element
+        rights = BNode()
+        graph.add((subject, DC.rights, rights))
+        graph.add((rights, HSTERMS.rightsStatement, Literal(resource.metadata.rights.statement)))
+        if resource.metadata.rights.url:
+            graph.add((rights, HSTERMS.URL, Literal(resource.metadata.rights.url)))
+
+        # add keywords
+        for kw in self.keywords:
+            graph.add((subject, DC.subject, Literal(kw)))
+
+        # add any key/value metadata items
+        if len(self.extra_metadata) > 0:
+            extendedMetadata = BNode()
+            graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+            for key, value in list(self.extra_metadata.items()):
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
+
+        # add coverages
+        for coverage in self.coverages.all():
+            coverage.add_rdf_triples(graph, subject)
+
+        type_subject = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
+        RDFS1 = Namespace("http://www.w3.org/2000/01/rdf-schema#")
+        graph.add((type_subject, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        graph.add((type_subject, RDFS1.isDefinedBy, Literal(HSTERMS)))
+        return graph
+
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
@@ -306,9 +352,7 @@ class AbstractFileMetaData(models.Model):
 
         resource = self.logical_file.resource
 
-        aggregation_map_file_path = '{}#aggregation'.format(self.logical_file.map_file_path)
-        aggregation_map_uri = current_site_url() + "/resource/{}".format(aggregation_map_file_path)
-        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], aggregation_map_uri)
+        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], self.aggregation_subject.title)
 
         # add aggregation title
         if self.logical_file.dataset_name:
@@ -1408,6 +1452,24 @@ class AbstractLogicalFile(models.Model):
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
+
+    def read_metadata_file(self):
+        istorage = self.resource.get_irods_storage()
+        with istorage.open(self.metadata_file_path, mode='r') as f:
+            return f.read()
+
+    @property
+    def rdf_subject(self):
+        from rdflib import Namespace
+        # TODO this is a terrible way to build that ref out
+        return Namespace("{}/data/contents/{}#".format(self.resource.metadata.resource_uri, self.metadata_short_file_path)).aggregation
+
+    def read_metadata_as_rdf(self):
+        from rdflib import Graph
+        g = Graph()
+        return g.parse(data=self.read_metadata_file())
+
+
 
 
 class FileTypeContext(object):

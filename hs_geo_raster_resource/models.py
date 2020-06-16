@@ -108,6 +108,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    hsterms = ['spatialReference', 'box', ]
+    rdf = ['value']
+
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of the metadata element"""
 
@@ -130,6 +133,28 @@ class OriginalCoverage(AbstractMetaDataElement):
                 cov_value += '; {}={}'.format(meta_element, self.value[meta_element])
 
         rdf_coverage_value.text = cov_value
+
+    def add_rdf_triples(self, graph, subject):
+        from rdflib import BNode, Literal
+        from rdflib.namespace import DC, DCTERMS, RDF
+        original_coverage = BNode()
+        graph.add((subject, self.HSTERMS.spatialReference, original_coverage))
+        graph.add((original_coverage, RDF.type, self.HSTERMS.box))
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
+        graph.add((original_coverage, RDF.value, Literal(value_string)))
+        return graph
+
+    def parse_rdf_value(self, g, metadata_uri):
+        from rdflib import URIRef
+        # TODO metadata_uri should be passed in
+        metadata_uri = URIRef("http://localhost:8000/resource/141d4a3249ef40b3a3ae1cf857f9af85/data/contents/logan_resmap.xml#aggregation")
+        value_str = g.value(subject=g.objects(subject=metadata_uri, predicate=self.HSTERMS.spatialReference)).value
+        value_dict = {}
+        for p in value_str.split('; '):
+            k, v = p.split('=')
+            value_dict[k] = v
+        self._value = json.dumps(value_dict)
+        self.save()
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
@@ -289,6 +314,18 @@ class CellInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
+
+    def add_rdf_triples(self, graph, subject):
+        from rdflib import BNode, Literal
+        cell_information = BNode()
+        graph.add((subject, self.HSTERMS.CellInformation, cell_information))
+        graph.add((cell_information, self.HSTERMS.rows, Literal(self.rows)))
+        graph.add((cell_information, self.HSTERMS.columns, Literal(self.columns)))
+        graph.add((cell_information, self.HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
+        graph.add((cell_information, self.HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
+        graph.add((cell_information, self.HSTERMS.cellDataType, Literal(self.cellDataType)))
+
+        return graph
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""
