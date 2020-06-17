@@ -97,37 +97,45 @@ def get_users_interacted_resources(beginning, today):
     return user_to_resources, all_usernames
 
 
-def filter_keep_words(res_id, doc, resource_to_subjects, keep_words, stop):
-    """
+def filter_keep_words(res_id, abstract, resource_subjects, keep_words, stop_words):
+    """ return a given resource's keep words set
+        :param res_id, resource id
+        :param abstract, the given resource's abstract
+        :param resource_subjects, the given resource subjects set
+        :param keep_words, a set of all valid keep words
+        :param stop_words, a set of all valid stop words
     """
     exclude = set(string.punctuation)
     exclude.remove('_')
     lemmatizer = WordNetLemmatizer()
-    doc_words = set()
-    doc_list = set()
+    resource_keep_words = set()
+    abstract_token_list = set()
 
-    for w in doc.split(" "):
-        doc_list.add(lemmatizer.lemmatize(w))
+    for w in abstract.split(" "):
+        abstract_token_list.add(lemmatizer.lemmatize(w))
 
     for keep_word in keep_words:
         if " " in keep_word:
-            if keep_word in doc and keep_word not in stop:
+            if keep_word in abstract and keep_word not in stop_words:
                 bigram_name = keep_word.replace(" ", "_")
-                doc_words.add(bigram_name)
+                resource_keep_words.add(bigram_name)
         else:
-            if keep_word in doc_list and keep_word not in stop:
-                doc_words.add(keep_word)
+            if keep_word in abstract_token_list and keep_word not in stop_words:
+                resource_keep_words.add(keep_word)
 
-    if res_id in resource_to_subjects:
-        res_subjects = resource_to_subjects[res_id]
-        for sub in res_subjects:
-            if sub not in stop:
-                doc_words.add(sub)
+    if len(resource_subjects) > 0:
+        for sub in resource_subjects:
+            if sub not in stop_words:
+                resource_keep_words.add(sub)
 
-    return doc_words
+    return resource_keep_words
 
 
 def get_resource_to_keep_words(resource_to_subjects, resource_to_abstract):
+    """ map each resource to its keep words set
+        :param resource_to_subjects, a dictionary maps each resource to its subjects
+        :param resource_to_abstract, a dictionary maps each resource to its abstract
+    """
     resource_to_keep_words = {}
     stop_words = set()
     keep_words = set()
@@ -138,7 +146,10 @@ def get_resource_to_keep_words(resource_to_subjects, resource_to_abstract):
             keep_words.add(word.value)
 
     for res_id, res_abs in resource_to_abstract.items():
-        res_keep_words = filter_keep_words(res_id, res_abs, resource_to_subjects, keep_words, stop_words)
+        resource_to_subjects = set()
+        if res_id in resource_to_subjects:
+            resource_subjects = resource_to_subjects[res_id]
+        res_keep_words = filter_keep_words(res_id, res_abs, resource_subjects, keep_words, stop_words)
         if len(res_keep_words) < 3:
             continue
         resource_to_keep_words[res_id] = res_keep_words
@@ -217,7 +228,7 @@ def main():
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
     # For testing purpose, import date and uncommnet this line
-    end_date = date(2020, 6, 7)
+    end_date = date(2018, 5, 31)
     # end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
