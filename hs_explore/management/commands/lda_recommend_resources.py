@@ -1,13 +1,14 @@
+""" This generates a list of recommended resources to each qualified user, who
+    selected at least 5 qualified resources in the last 30 days. Resources with more
+    than two keywords are considered to be qualified resources.
+"""
 from collections import defaultdict
 from datetime import timedelta, date
-from hs_tracking.models import Variable
+from hs_explore import utils
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 from django.core.management.base import BaseCommand
-from hs_explore.models import ResourcePreferences, UserPreferences, OwnershipPreferences
-from hs_explore.models import RecommendedResource, RecommendedUser, RecommendedGroup, \
-    GroupPreferences, PropensityPrefToPair, PropensityPreferences, \
-    UserInteractedResources, UserNeighbors
+from hs_explore.models import RecommendedResource, PropensityPrefToPair, PropensityPreferences
 import string
 import gensim
 from gensim import corpora
@@ -18,6 +19,9 @@ from haystack.query import SearchQuerySet, SQ
 
 
 def get_resource_to_subjects():
+    """ :return resource_to_subjects, a dictionary of each resource to its subjects
+        :return all_subjects_list, all subjects extracted from available resources
+    """
     resource_ids = set()
     all_subjects = set()
     resource_to_subjects = {}
@@ -35,6 +39,8 @@ def get_resource_to_subjects():
 
 
 def get_resource_to_abstract():
+    """ return a map of each resource to its abstract
+    """
     resource_ids = set()
     resource_to_abstract = {}
     for res in BaseResource.objects.all():
@@ -50,6 +56,8 @@ def get_resource_to_abstract():
 
 
 def get_resource_to_published():
+    """ map each resource to its availability
+    """
     resource_to_published = {}
     for res in BaseResource.objects.all():
         if res.raccess.published or res.raccess.public or res.raccess.discoverable:
@@ -60,9 +68,16 @@ def get_resource_to_published():
 
 
 def get_users_interacted_resources(beginning, today):
+    """ map each user to resources selected by the user during a given
+        time period. And all active users' usernames in this time period
+        :param beginning (date type), the start date of the time period
+        :param today (date type), the end date of the time period
+        :return user_to_resources, map each user to resources selected by the user
+        :return usernames, a set of all active users' usernames
+    """
     all_usernames = set()
     user_to_resources_set = defaultdict(set)
-    triples = Variable.user_resource_matrix(beginning, today)
+    triples = utils.user_resource_matrix(beginning, today)
     for v in triples:
         username = v[0]
         res = v[1]
@@ -72,7 +87,6 @@ def get_users_interacted_resources(beginning, today):
     for username, res_ids_set in user_to_resources_set.items():
         res_ids_list = list(res_ids_set)
         user_to_resources[username] = list(res_ids_set)
-        user = user_from_id(username)
         res_list = []
         for res_id in res_ids_list:
             try:
@@ -80,11 +94,12 @@ def get_users_interacted_resources(beginning, today):
                 res_list.append(r)
             except:
                 continue
-        UserInteractedResources.interact(user, res_list)
     return user_to_resources, all_usernames
 
 
 def filter_go_words(res_id, doc, resource_to_subjects, go_words, stop):
+    """
+    """
     exclude = set(string.punctuation)
     exclude.remove('_')
     lemmatizer = WordNetLemmatizer()
@@ -130,9 +145,15 @@ def get_resource_to_go_words(resource_to_subjects, resource_to_abstract):
     return resource_to_go_words
 
 
-def jaccard_sim(res_subs1, res_subs2):
-    inter = len(res_subs1.intersection(res_subs2))
-    union = len(res_subs1.union(res_subs2))
+def jaccard_sim(keywords_set1, keywords_set2):
+    """ calculate the Jaccard similarity between two sets of keywords
+        :param keywords_set1, a set of keywords
+        :param keywords_set2, another set of keywords
+    """
+    inter = len(keywords_set1.intersection(keywords_set2))
+    union = len(keywords_set1.union(keywords_set2))
+    # if both keyword sets are empty, i.e., their union is empty
+    # return 0
     if union == 0:
         return 0
     else:
@@ -140,18 +161,26 @@ def jaccard_sim(res_subs1, res_subs2):
         return jac_sim
 
 
-def store_user_preferences(user_to_go_words_freq):
-    for username, go_word_to_freq in user_to_go_words_freq.items():
+def store_user_preferences(user_to_keep_words_freq):
+    """ store each user's preference to each keep word selected by the user
+        :param user_To_keep_words_freq, a nested dictionary. It maps each username
+        to a dictionary that maps each keep word selected by the user to its
+        selected frequency
+    """
+    for username, keep_word_to_freq in user_to_keep_words_freq.items():
         user = user_from_id(username)
         prop_pref_subjects = []
-        for go_word, freq in go_word_to_freq.items():
-            prop_pref_subjects.append(('subject', go_word, freq))
+        for keep_word, freq in keep_word_to_freq.items():
+            prop_pref_subjects.append(('subject', keep_word, freq))
         PropensityPreferences.prefer(user, 'Resource', prop_pref_subjects)
-        PropensityPreferences.prefer(user, 'User', prop_pref_subjects)
-        PropensityPreferences.prefer(user, 'Group', prop_pref_subjects)
 
 
-def store_recommended_resources(user_to_recommended_resources_list, resource_to_go_words):
+def store_recommended_resources(user_to_recommended_resources_list, resource_to_keep_words):
+    """ store the recommended results for each qualified user
+        :param user_to_recommended_resources_list, a dictionary maps each user to a list
+         of resources' ids recommended to the user.
+        :param resource_to_keep_words, a dictionary maps each resource to its keep words
+    """
     for username, recommend_resources_list in user_to_recommended_resources_list.items():
         user = user_from_id(username)
         user_preferences = PropensityPreferences.objects.get(user=user)
@@ -174,15 +203,17 @@ def store_recommended_resources(user_to_recommended_resources_list, resource_to_
                                               recommended_res,
                                               'Propensity',
                                               round(sim, 4))
-            recommended_go_words = resource_to_go_words[res_id]
+            recommended_keep_words = resource_to_keep_words[res_id]
             common_subjects = set.intersection(user_res_preferences_set,
-                                                set(recommended_go_words))
+                                                set(recommended_keep_words))
             for cs in common_subjects:
                 raw_cs = cs.replace("_", " ")
                 r.relate('subject', raw_cs, user_res_pref_to_weight[cs])
 
 
 def main():
+    """ The main function for running the LDA recommendation process
+    """
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
     # For testing purpose, import date and uncommnet this line
@@ -194,7 +225,7 @@ def main():
     print("resource_to_go_words")
     resource_to_go_words = get_resource_to_go_words(resource_to_subjects, resource_to_abstract)
 
-    print("user interacted at least 5 resources")
+    # filter qualfied users to resources selected by each of them
     qualified_user_to_resources = {}
     for username, res_ids in user_to_resources.items():
         qualified_resources_list = []
@@ -207,6 +238,7 @@ def main():
     user_to_res_go_words_list = {}
     user_to_go_words_set = {}
     user_to_go_words_freq = {}
+    # build user to keep words frequency dictionary
     for username, qualified_resources_list in qualified_user_to_resources.items():
         res_go_words_list = []
         go_words_set = set()
@@ -220,8 +252,12 @@ def main():
                     go_words_freq[go_word] = 1
                 else:
                     go_words_freq[go_word] += 1
+        # this dictionary is used for training each qualified user's LDA model
         user_to_res_go_words_list[username] = res_go_words_list
+        # this dictionary is used for doing SOLR pre-filtering
         user_to_go_words_set[username] = go_words_set
+        # this dictionary is used for storing each user's preference to each keep
+        # word selected by the user
         user_to_go_words_freq[username] = go_words_freq
 
     print("store user preferences")
@@ -322,16 +358,10 @@ def main():
 
 
 def clear_old_data():
-    ResourcePreferences.clear()
-    UserPreferences.clear()
-    GroupPreferences.clear()
+    """ clear old recommended data
+    """
     PropensityPreferences.clear()
-    OwnershipPreferences.clear()
-    UserInteractedResources.clear()
-    UserNeighbors.clear()
     RecommendedResource.clear()
-    RecommendedUser.clear()
-    RecommendedGroup.clear()
 
 
 class Command(BaseCommand):
