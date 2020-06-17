@@ -43,8 +43,7 @@ from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
 from theme.utils import get_quota_message
 from .forms import SignupForm
-from hs_explore.models import RecommendedResource, RecommendedUser, \
-    RecommendedGroup, Status, GroupPreferences, GroupPrefToPair
+from hs_explore.models import RecommendedResource, Status, RecommendedResourceTest
 from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, PrivilegeCodes
 from datetime import date, timedelta
 from django.db.models import Max
@@ -505,15 +504,13 @@ def dashboard(request, template="pages/dashboard.html"):
     my_username = request.user.username
     user = User.objects.get(username=my_username)
     my_recent = Variable.recent_resources(user, days=60, n_resources=5)
-    # today = date(2019, 10, 17)
     today = date.today()
     beginning = today - timedelta(30)
 
-    my_recommended_resources_list = RecommendedResource.objects\
+    my_recommended_resources_list = RecommendedResourceTest.objects\
         .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
         .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
-
-    resources_matched_genres = set()
+    resources_matched_keywords = set()
     # mark relevant records as shown
     my_recommended_resources_context_list = []
     for r in my_recommended_resources_list:
@@ -521,12 +518,11 @@ def dashboard(request, template="pages/dashboard.html"):
             r.shown()
         if r.rec_type == 'Propensity' and r.relevance > 0:
             recommended_resource = r.candidate_resource
-            keywords = r.keywords.all()
             common_keywords = []
-            if keywords:
-                for k in keywords:
-                    resources_matched_genres.add(k.value)
-                    common_keywords.append(k.value)
+            if len(r.keywords) > 0:
+                for k, v in list(r.keywords.items()):
+                    resources_matched_keywords.add(k)
+                    common_keywords.append(k)
             resource_context = {
                 'resource_title': recommended_resource.title,
                 'resource_short_id': recommended_resource.short_id,
@@ -539,103 +535,10 @@ def dashboard(request, template="pages/dashboard.html"):
 
             }
             my_recommended_resources_context_list.append(resource_context)
-
-    my_recommended_users_context_list = []
-    my_recommended_users_list = RecommendedUser.objects\
-        .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
-        .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
-
-    granted_to_others = 0
-    granted_to_groups = 0
-    owned_by = 0
-    created_by = 0
-    users_matched_genres = set()
-    for u in my_recommended_users_list:
-        if u.state == Status.STATUS_NEW:
-            u.shown()
-        recommended_user = u.candidate_user
-        recommended_username = recommended_user.username
-        recommended_user_id = recommended_user.id
-        owned_by = UserResourcePrivilege.objects\
-                .filter(user=recommended_user, privilege=PrivilegeCodes.OWNER).count()
-        created_since = BaseResource.objects\
-                .filter(created__gt=beginning,
-                        r2urp__user=recommended_user,
-                        r2urp__privilege=PrivilegeCodes.OWNER).count()
-        shared_to_others = BaseResource.objects\
-                .filter(Q(r2urp__grantor=recommended_user,
-                          r2urp__start__gte=beginning) |\
-                        Q(r2grp__grantor=recommended_user,
-                          r2grp__start__gte=beginning)).distinct().count()
-
-        keywords = u.keywords.all()
-        common_keywords = []
-        if keywords:
-            for k in keywords:
-                users_matched_genres.add(k.value)
-                common_keywords.append(k.value)
-
-        user_context = {
-            'username': recommended_user,
-            'user_id': recommended_user_id,
-            'relevance': u.relevance,
-            'owned_by': owned_by,
-            'created_since': created_since,
-            'common_keywords': common_keywords[:5]
-        }
-        my_recommended_users_context_list.append(user_context)
-
-    my_recommended_groups_context_list = []
-    my_recommended_groups_list = RecommendedGroup.objects\
-        .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
-        .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
-    for r in my_recommended_groups_list:
-        if r.state == Status.STATUS_NEW:
-            r.shown()
-        group = r.candidate_group
-        # group_members = User.objects.filter(u2ugp__group=group).count()
-        group_members = group.gaccess.members.count()
-        shared_with_group = BaseResource.objects\
-                                .filter(r2grp__group=group).distinct().count()
-        shared_with_group_since = BaseResource.objects\
-                                      .filter(r2grp__group=group,
-                                              r2grp__start__gte=beginning).distinct().count()
-        '''
-        shared_with_group = BaseResource.objects\
-                                .filter(r2grp__group=group, 
-                                        r2grp__start__gte=beginning).distinct().count()
-        '''
-        group_viewable = group.gaccess.view_resources.count()
-        group_editable = group.gaccess.edit_resources.count()
-        group_own = group.gaccess.owned_resources.count()
-
-        keywords = r.keywords.all()
-        common_keywords = []
-        if keywords:
-            for k in keywords:
-                common_keywords.append(k.value)
-        group_context = {
-            'group_id': group.id,
-            'group_name': group.name,
-            'relevance': r.relevance,
-            'group_members': group_members,
-            'shared_with_group': shared_with_group,
-            'shared_with_group_since': shared_with_group_since,
-            'group_viewable': group_viewable,
-            'group_editable': group_editable,
-            'group_own': group_own,
-            'common_keywords': common_keywords[:5]
-        }
-        my_recommended_groups_context_list.append(group_context)
-
     context = {
         'recent': my_recent, 
-        # 'recommended_resources_list': my_recommended_resources_list,
         'recommended_resources_list': my_recommended_resources_context_list,
-        'resources_matched_genres': resources_matched_genres,
-        'recommended_groups_list': my_recommended_groups_context_list,
-        'recommended_users_list': my_recommended_users_context_list,
-        'users_matched_genres': users_matched_genres
+        'resources_matched_keywords': resources_matched_keywords
     }
     return render(request, template, context)
 

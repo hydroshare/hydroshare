@@ -109,7 +109,7 @@ timestamp should go with a template tags to convert to a human readble day.
             </div>
             {% if recommended_resources_list %}
                 <div class="row dashboard-section-container-title-row">
-                    Recommendations based on your interests in these keywords: <b>{{ resources_matched_genres|join:", " }}</b>
+                    Recommendations based on your interests in these keywords: <b>{{ resources_matched_keywords|join:", " }}</b>
                 </div>
             {% endif %}
             <table class="table-hover table-striped resource-custom-table" id="my-recommended-resources-list"
@@ -147,92 +147,6 @@ timestamp should go with a template tags to convert to a human readble day.
                 </tbody>
             </table>
         </div>
-
-        <!-- Recommended users for the user  -->
-        {% if recommended_users_list %}
-            <div class="container dashboard-section-container">
-                <div class="row dashboard-section-container-title-row">
-                    <span>
-                    <h3 class="home-page-block-title">Recommended Users </h3>
-                    </span>
-                </div>
-	        <div class="row dashboard-section-container-title-row">
-		    Recommendations based on your interests in these keywords: <b>{{ users_matched_genres|join:", " }}</b>
-	        </div>
-                <table class="table-hover table-striped resource-custom-table" id="my-recommended-users-list"
-                       style="width: 100%;">
-                    <thead>
-                    <tr>
-                        <th style="padding-left: 10px;">Username</th>
-                        <th style="padding-left: 10px;">Common Keywords</th>
-                        <th style="padding-left: 10px;">Resources owned by the user</th>
-			<th style="padding-left: 10px;">Resources created by the user in last 30 days</th>
-                    </tr>
-                    </thead>
-                    {# ====================================== #}
-                    {# == Here comes the data from backend == #}
-                    {# ====================================== #}
-                    <tbody>
-                    {% for u in recommended_users_list %}
-                        {% if u.relevance > 0 %}
-                            <tr class="data-row">
-                                <td>
-				    <a href="/user/{{ u.user_id }}/">{{ u.username }}</a>
-                                </td>
-                                <td>{{ u.common_keywords | join:", " }}</td>
-                                <td>{{ u.owned_by }}</td>
-				<td>{{ u.created_since }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
-
-
-        <!-- Recommended groups for the user  -->
-        {% if recommended_groups_list %}
-            <div class="container dashboard-section-container">
-                <div class="row dashboard-section-container-title-row">
-                    <span>
-                    <h3 class="home-page-block-title">Recommended Groups </h3>
-                    </span>
-                </div>
-                <table class="table-hover table-striped resource-custom-table" id="my-recommended-groups-list"
-                       style="width: 100%;">
-                    <thead>
-                    <tr>
-                        <th style="padding-left: 10px;">Name</th>
-                        <th style="padding-left: 10px;">Common keywords</th>
-                        <th style="padding-left: 10px;">Number of group members</th>
-                        <th style="padding-left: 10px;">Resources shared with the group</th>
-                        <th style="padding-left: 10px;">Resources shared with the group in last 30 days</th>
-                    </tr>
-                    </thead>
-                    {# ====================================== #}
-                    {# == Here comes the data from backend == #}
-                    {# ====================================== #}
-                    <tbody>
-                    {% for g in recommended_groups_list %}
-                        {% if g.relevance > 0 %}
-                            <tr class="data-row">
-                                <td>
-                                    <a href="/group/{{ g.group_id }}/">{{ g.group_name }}</a>
-                                </td>
-                                <td>{{ g.common_keywords | join:", " }}</td>
-                                <td>{{ g.group_members }}</td>
-                                <td>{{ g.shared_with_group }}</td>
-                                <td>{{ g.shared_with_group_since }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
 
         <div class="container dashboard-section-container">
             {% trans "Featured Apps" as whole_title %}
