@@ -309,10 +309,10 @@ class AbstractFileMetaData(models.Model):
             graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add lang element
-        resource.metadata.language.add_rdf_triples(subject, graph)
+        resource.metadata.language.add_rdf_triples(graph, subject)
 
         # add rights element
-        resource.metadata.rights.add_rdf_triples(subject, graph)
+        resource.metadata.rights.add_rdf_triples(graph, subject)
 
         # add keywords
         for kw in self.keywords:
