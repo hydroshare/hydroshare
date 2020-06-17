@@ -528,7 +528,7 @@ def dashboard(request, template="pages/dashboard.html"):
             '''
             if keywords:
                 for k in keywords:
-                    resources_matched_genres.add(k.value)
+                    resources_matched_keywords.add(k.value)
                     common_keywords.append(k.value)
             resource_context = {
                 'resource_title': recommended_resource.title,
