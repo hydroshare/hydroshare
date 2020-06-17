@@ -1682,11 +1682,11 @@ class Rights(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     def add_rdf_triples(self, graph, subject):
-        rights = BNode()
-        graph.add((subject, DC.rights, rights))
-        graph.add((rights, self.HSTERMS.rightsStatement, Literal(self.rights.statement)))
+        rights_subject = BNode()
+        graph.add((subject, DC.rights, rights_subject))
+        graph.add((rights_subject, self.HSTERMS.rightsStatement, Literal(self.rights.statement)))
         if self.rights.url:
-            graph.add((rights, self.HSTERMS.URL, Literal(self.rights.url)))
+            graph.add((rights_subject, self.HSTERMS.URL, Literal(self.rights.url)))
         return graph
 
 
