@@ -43,7 +43,7 @@ from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile
 from theme.utils import get_quota_message
 from .forms import SignupForm
-from hs_explore.models import RecommendedResource, Status, RecommendedResourceTest
+from hs_explore.models import RecommendedResource, Status
 from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, PrivilegeCodes
 from datetime import date, timedelta
 from django.db.models import Max
@@ -507,7 +507,7 @@ def dashboard(request, template="pages/dashboard.html"):
     today = date.today()
     beginning = today - timedelta(30)
 
-    my_recommended_resources_list = RecommendedResourceTest.objects\
+    my_recommended_resources_list = RecommendedResource.objects\
         .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
         .order_by('-relevance')[:Status.RECOMMENDATION_LIMIT]
     resources_matched_keywords = set()
@@ -518,11 +518,18 @@ def dashboard(request, template="pages/dashboard.html"):
             r.shown()
         if r.rec_type == 'Propensity' and r.relevance > 0:
             recommended_resource = r.candidate_resource
+            keywords = r.keywords.all()
             common_keywords = []
+            '''
             if len(r.keywords) > 0:
                 for k, v in list(r.keywords.items()):
                     resources_matched_keywords.add(k)
                     common_keywords.append(k)
+            '''
+            if keywords:
+                for k in keywords:
+                    resources_matched_genres.add(k.value)
+                    common_keywords.append(k.value)
             resource_context = {
                 'resource_title': recommended_resource.title,
                 'resource_short_id': recommended_resource.short_id,
