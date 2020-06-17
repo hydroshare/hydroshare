@@ -1,6 +1,6 @@
 """
 This stores ODM2 and CSDMS keywords used for our LDA model.
-Also, this stors English and customized common hydrological 
+Also, this stors English and customized common hydrological
 stop words used in our LDA model
 """
 from hs_explore.models import LDAWord
