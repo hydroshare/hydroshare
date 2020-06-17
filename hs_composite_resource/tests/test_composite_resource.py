@@ -2025,7 +2025,24 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(new_composite_resource.files.count(), 3)
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 2)
 
-    def test_version_resource_immunity(self):
+    def test_version_resource_immunity_unpublished(self):
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        # the replaced resource should be immutable
+        self.assertTrue(self.composite_resource.raccess.immutable)
+
+        # after deleting the new versioned resource, the original resource should be editable again
+        hydroshare.resource.delete_resource(new_composite_resource.short_id)
+        self.assertFalse(self.composite_resource.raccess.immutable)
+
+    def test_version_resource_immunity_published(self):
         self.create_composite_resource()
         # add a file to the resource
         self.add_file_to_resource(file_to_add=self.generic_file)
@@ -2041,22 +2058,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # after deleting the new versioned resource, the original resource should stay immutable
         hydroshare.resource.delete_resource(new_composite_resource.short_id)
         self.assertTrue(self.composite_resource.raccess.immutable)
-
-        # restore the original resource to non-published status
-        self.composite_resource.raccess.immutable = False
-        self.composite_resource.raccess.published = False
-        self.composite_resource.raccess.save()
-        # create a new version of the composite resource
-        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
-                                                                  self.user)
-        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
-                                                                        new_composite_resource, self.user)
-        # the replaced resource should be immutable
-        self.assertTrue(self.composite_resource.raccess.immutable)
-
-        # after deleting the new versioned resource, the original resource should be editable again
-        hydroshare.resource.delete_resource(new_composite_resource.short_id)
-        self.assertFalse(self.composite_resource.raccess.immutable)
 
     def test_unzip(self):
         """Test that when a zip file gets unzipped at data/contents/ where a single file aggregation
