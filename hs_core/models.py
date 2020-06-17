@@ -1685,7 +1685,7 @@ class Rights(AbstractMetaDataElement):
         rights_subject = BNode()
         graph.add((subject, DC.rights, rights_subject))
         graph.add((rights_subject, self.HSTERMS.rightsStatement, Literal(self.statement)))
-        if self.rights.url:
+        if self.url:
             graph.add((rights_subject, self.HSTERMS.URL, Literal(self.url)))
         return graph
 
