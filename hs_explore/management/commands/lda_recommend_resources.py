@@ -146,7 +146,7 @@ def get_resource_to_keep_words(resource_to_subjects, resource_to_abstract):
             keep_words.add(word.value)
 
     for res_id, res_abs in resource_to_abstract.items():
-        resource_to_subjects = set()
+        resource_subjects = set()
         if res_id in resource_to_subjects:
             resource_subjects = resource_to_subjects[res_id]
         res_keep_words = filter_keep_words(res_id, res_abs, resource_subjects, keep_words, stop_words)
