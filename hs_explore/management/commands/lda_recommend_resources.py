@@ -97,7 +97,7 @@ def get_users_interacted_resources(beginning, today):
     return user_to_resources, all_usernames
 
 
-def filter_go_words(res_id, doc, resource_to_subjects, go_words, stop):
+def filter_keep_words(res_id, doc, resource_to_subjects, keep_words, stop):
     """
     """
     exclude = set(string.punctuation)
@@ -109,14 +109,14 @@ def filter_go_words(res_id, doc, resource_to_subjects, go_words, stop):
     for w in doc.split(" "):
         doc_list.add(lemmatizer.lemmatize(w))
 
-    for go_word in go_words:
-        if " " in go_word:
-            if go_word in doc and go_word not in stop:
-                bigram_name = go_word.replace(" ", "_")
+    for keep_word in keep_words:
+        if " " in keep_word:
+            if keep_word in doc and keep_word not in stop:
+                bigram_name = keep_word.replace(" ", "_")
                 doc_words.add(bigram_name)
         else:
-            if go_word in doc_list and go_word not in stop:
-                doc_words.add(go_word)
+            if keep_word in doc_list and keep_word not in stop:
+                doc_words.add(keep_word)
 
     if res_id in resource_to_subjects:
         res_subjects = resource_to_subjects[res_id]
@@ -127,22 +127,22 @@ def filter_go_words(res_id, doc, resource_to_subjects, go_words, stop):
     return doc_words
 
 
-def get_resource_to_go_words(resource_to_subjects, resource_to_abstract):
-    resource_to_go_words = {}
+def get_resource_to_keep_words(resource_to_subjects, resource_to_abstract):
+    resource_to_keep_words = {}
     stop_words = set()
-    go_words = set()
+    keep_words = set()
     for word in LDAWord.objects.all():
         if word.word_type == 'stop':
             stop_words.add(word.value)
         else:
-            go_words.add(word.value)
+            keep_words.add(word.value)
 
     for res_id, res_abs in resource_to_abstract.items():
-        res_go_words = filter_go_words(res_id, res_abs, resource_to_subjects, go_words, stop_words)
-        if len(res_go_words) < 3:
+        res_keep_words = filter_keep_words(res_id, res_abs, resource_to_subjects, keep_words, stop_words)
+        if len(res_keep_words) < 3:
             continue
-        resource_to_go_words[res_id] = res_go_words
-    return resource_to_go_words
+        resource_to_keep_words[res_id] = res_keep_words
+    return resource_to_keep_words
 
 
 def jaccard_sim(keywords_set1, keywords_set2):
@@ -222,53 +222,53 @@ def main():
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
-    print("resource_to_go_words")
-    resource_to_go_words = get_resource_to_go_words(resource_to_subjects, resource_to_abstract)
+    print("resource_to_keep_words")
+    resource_to_keep_words = get_resource_to_keep_words(resource_to_subjects, resource_to_abstract)
 
     # filter qualfied users to resources selected by each of them
     qualified_user_to_resources = {}
     for username, res_ids in user_to_resources.items():
         qualified_resources_list = []
         for res_id in res_ids:
-            if res_id in resource_to_go_words:
+            if res_id in resource_to_keep_words:
                 qualified_resources_list.append(res_id)
         if len(qualified_resources_list) >= 5:
             qualified_user_to_resources[username] = qualified_resources_list
 
-    user_to_res_go_words_list = {}
-    user_to_go_words_set = {}
-    user_to_go_words_freq = {}
+    user_to_res_keep_words_list = {}
+    user_to_keep_words_set = {}
+    user_to_keep_words_freq = {}
     # build user to keep words frequency dictionary
     for username, qualified_resources_list in qualified_user_to_resources.items():
-        res_go_words_list = []
-        go_words_set = set()
-        go_words_freq = {}
+        res_keep_words_list = []
+        keep_words_set = set()
+        keep_words_freq = {}
         for res_id in qualified_resources_list:
-            res_go_words = resource_to_go_words[res_id]
-            go_words_set = go_words_set.union(res_go_words)
-            res_go_words_list.append(list(res_go_words))
-            for go_word in res_go_words:
-                if go_word not in go_words_freq:
-                    go_words_freq[go_word] = 1
+            res_keep_words = resource_to_keep_words[res_id]
+            keep_words_set = keep_words_set.union(res_keep_words)
+            res_keep_words_list.append(list(res_keep_words))
+            for keep_word in res_keep_words:
+                if keep_word not in keep_words_freq:
+                    keep_words_freq[keep_word] = 1
                 else:
-                    go_words_freq[go_word] += 1
+                    keep_words_freq[keep_word] += 1
         # this dictionary is used for training each qualified user's LDA model
-        user_to_res_go_words_list[username] = res_go_words_list
+        user_to_res_keep_words_list[username] = res_keep_words_list
         # this dictionary is used for doing SOLR pre-filtering
-        user_to_go_words_set[username] = go_words_set
+        user_to_keep_words_set[username] = keep_words_set
         # this dictionary is used for storing each user's preference to each keep
         # word selected by the user
-        user_to_go_words_freq[username] = go_words_freq
+        user_to_keep_words_freq[username] = keep_words_freq
 
     print("store user preferences")
-    store_user_preferences(user_to_go_words_freq)
+    store_user_preferences(user_to_keep_words_freq)
     lda_users_recommendations = {}
     print("lda process")
-    for username, go_words_list in user_to_res_go_words_list.items():
+    for username, keep_words_list in user_to_res_keep_words_list.items():
         user_to_recommend = {}
-        if len(go_words_list) >= 5:
-            dictionary = corpora.Dictionary(go_words_list)
-            corpus = [dictionary.doc2bow(doc) for doc in go_words_list]
+        if len(keep_words_list) >= 5:
+            dictionary = corpora.Dictionary(keep_words_list)
+            corpus = [dictionary.doc2bow(doc) for doc in keep_words_list]
             Lda = gensim.models.ldamodel.LdaModel
             ldamodel = Lda(corpus, num_topics=5, id2word=dictionary, passes=50)
             x = ldamodel.show_topics(num_topics=5, num_words=10, formatted=False)
@@ -286,12 +286,12 @@ def main():
             out = out.exclude(short_id__in=user_resources)
             filter_sq = None
             user_out = out
-            user_go_words_set = user_to_go_words_set[username]
-            for go_word in user_go_words_set:
+            user_keep_words_set = user_to_keep_words_set[username]
+            for keep_word in user_keep_words_set:
                 if filter_sq is None:
-                    filter_sq = SQ(subject__contains=go_word)
+                    filter_sq = SQ(subject__contains=keep_word)
                 else:
-                    filter_sq.add(SQ(subject__contains=go_word), SQ.OR)
+                    filter_sq.add(SQ(subject__contains=keep_word), SQ.OR)
 
             if filter_sq is not None:
                 user_out = out.filter(filter_sq)
@@ -301,17 +301,17 @@ def main():
             if user_out.count() == 0:
                 continue
 
-            # for res_id, doc_words in resource_to_go_words.items():
+            # for res_id, doc_words in resource_to_keep_words.items():
             for candidate in user_out:
                 res_id = candidate.short_id
-                if res_id not in resource_to_go_words:
+                if res_id not in resource_to_keep_words:
                     continue
-                res_go_words = resource_to_go_words[res_id]
+                res_keep_words = resource_to_keep_words[res_id]
                 if resource_to_published[res_id]:
-                    if len(res_go_words) < 3:
+                    if len(res_keep_words) < 3:
                         continue
-                    res_go_words_list = list(res_go_words)
-                    bow = dictionary.doc2bow(res_go_words_list)
+                    res_keep_words_list = list(res_keep_words)
+                    bow = dictionary.doc2bow(res_keep_words_list)
                     t = ldamodel.get_document_topics(bow)
                     topic_prob_dict = dict((x, y) for x, y in t)
                     # Skip resources without any probable topics.
@@ -336,7 +336,7 @@ def main():
                         topic_prob = 0
                         if topic in topic_prob_dict:
                             topic_prob = topic_prob_dict[topic]
-                        jac_sim = jaccard_sim(res_go_words, topic_words_set)
+                        jac_sim = jaccard_sim(res_keep_words, topic_words_set)
                         if jac_sim == 0.0:
                             continue
                         scaled_jac_sim = topic_prob * jac_sim
@@ -350,11 +350,11 @@ def main():
     for username, user_to_recommend in lda_users_recommendations.items():
         lda_top_10_recommendations = sorted(user_to_recommend.items(), key=itemgetter(1), reverse=True)[:10]
         for lda_res_id, lda_value in lda_top_10_recommendations:
-            if lda_res_id not in resource_to_abstract or lda_res_id not in resource_to_go_words:
+            if lda_res_id not in resource_to_abstract or lda_res_id not in resource_to_keep_words:
                 continue
             user_to_recommended_resources_list[username].append((lda_res_id, lda_value))
     print("store recommended resources")
-    store_recommended_resources(user_to_recommended_resources_list, resource_to_go_words)
+    store_recommended_resources(user_to_recommended_resources_list, resource_to_keep_words)
 
 
 def clear_old_data():
