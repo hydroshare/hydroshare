@@ -896,9 +896,10 @@ def delete_resource(pk):
         if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
             eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
             obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable now that it becomes the latest version
-            obsolete_res.raccess.immutable = False
-            obsolete_res.raccess.save()
+            # also make this obsoleted resource editable if not published now that it becomes the latest version
+            if not obsolete_res.raccess.published:
+                obsolete_res.raccess.immutable = False
+                obsolete_res.raccess.save()
 
     res.delete()
     return pk
