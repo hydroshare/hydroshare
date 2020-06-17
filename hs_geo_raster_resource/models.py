@@ -141,7 +141,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         graph.add((subject, self.HSTERMS.spatialReference, original_coverage))
         graph.add((original_coverage, RDF.type, self.HSTERMS.box))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        graph.add((original_coverage, RDF.value, Literal(value_string)))
+        graph.add((self.HSTERMS.box, RDF.value, Literal(value_string)))
         return graph
 
     def parse_rdf_value(self, g, metadata_uri):
