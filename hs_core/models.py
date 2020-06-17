@@ -1684,9 +1684,9 @@ class Rights(AbstractMetaDataElement):
     def add_rdf_triples(self, graph, subject):
         rights_subject = BNode()
         graph.add((subject, DC.rights, rights_subject))
-        graph.add((rights_subject, self.HSTERMS.rightsStatement, Literal(self.rights.statement)))
+        graph.add((rights_subject, self.HSTERMS.rightsStatement, Literal(self.statement)))
         if self.rights.url:
-            graph.add((rights_subject, self.HSTERMS.URL, Literal(self.rights.url)))
+            graph.add((rights_subject, self.HSTERMS.URL, Literal(self.url)))
         return graph
 
 
