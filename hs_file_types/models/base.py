@@ -28,7 +28,7 @@ from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, Core
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
-from rdflib.namespace import DC
+from rdflib.namespace import DC, DCTERMS
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -303,6 +303,8 @@ class AbstractFileMetaData(models.Model):
         resource = self.logical_file.resource
         HSTERMS = Namespace("http://hydroshare.org/terms/")
         graph.bind('hsterms', HSTERMS)
+        graph.bind('dc', DC)
+        graph.bind('dcterms', DCTERMS)
         subject = self.aggregation_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
