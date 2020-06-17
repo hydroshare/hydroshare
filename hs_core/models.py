@@ -42,6 +42,8 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from rdflib import Literal, Namespace, BNode, URIRef
+from rdflib.namespace import DC, DCTERMS, RDF
 
 import unicodedata
 
@@ -354,10 +356,12 @@ class AbstractMetaDataElement(models.Model):
         """Return unicode for python 3 compatibility in templates"""
         return self.__unicode__()
 
-    @property
+    @classmethod
     def HSTERMS(self):
-        from rdflib import Namespace
         return Namespace("http://hydroshare.org/terms/")
+
+    def add_rdf_triples(self, graph, subject):
+        raise NotImplementedError()
 
     @property
     def metadata(self):
@@ -1137,6 +1141,10 @@ class Language(AbstractMetaDataElement):
         else:
             raise ValidationError('Language code is missing.')
 
+    def add_rdf_triples(self, graph, subject):
+        graph.add((subject, DC.language, Literal(self.code)))
+        return graph
+
 
 class Coverage(AbstractMetaDataElement):
     """Define Coverage custom metadata element model."""
@@ -1319,8 +1327,6 @@ class Coverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     def add_rdf_triples(self, graph, subject):
-        from rdflib import BNode, Literal
-        from rdflib.namespace import DC, DCTERMS, RDF
         coverage = BNode()
         graph.add((subject, DC.coverage, coverage))
         value = BNode()
@@ -1674,6 +1680,16 @@ class Rights(AbstractMetaDataElement):
         """Define meta properties for Rights model."""
 
         unique_together = ("content_type", "object_id")
+
+    def add_rdf_triples(self, graph, subject):
+        rights = BNode()
+        graph.add((subject, DC.rights, rights))
+        graph.add((rights, self.HSTERMS.rightsStatement, Literal(self.rights.statement)))
+        if self.rights.url:
+            graph.add((rights, self.HSTERMS.URL, Literal(self.rights.url)))
+        return graph
+
+
 
     @classmethod
     def remove(cls, element_id):
@@ -3985,7 +4001,6 @@ class CoreMetaData(models.Model):
 
     @property
     def resource_URIRef(self):
-        from rdflib import URIRef
         return URIRef(self.resource_uri)
 
     def get_xml(self, pretty_print=True, include_format_elements=True):

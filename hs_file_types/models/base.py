@@ -6,7 +6,6 @@ import random
 import logging
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-from rdflib import Namespace, URIRef
 
 from django.db import models
 from django.core.files.uploadedfile import UploadedFile
@@ -28,6 +27,8 @@ from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, 
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
+from rdflib import Literal, Namespace, BNode, URIRef, Graph
+from rdflib.namespace import DC
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -296,28 +297,22 @@ class AbstractFileMetaData(models.Model):
         return self.coverages.filter(type='period').first()
 
     def aggregation_subject(self):
-        from rdflib import Namespace
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
     def get_rdf(self, graph):
         resource = self.logical_file.resource
-        from rdflib import Graph, URIRef, Literal, Namespace, BNode
-        from rdflib.namespace import RDF, DC, RDFS
         HSTERMS = Namespace("http://hydroshare.org/terms/")
+        graph.bind('hsterms', HSTERMS)
         subject = self.aggregation_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
             graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add lang element
-        graph.add((subject, DC.language, Literal(resource.metadata.language.code)))
+        resource.metadata.language.add_rdf_triples(subject, graph)
 
         # add rights element
-        rights = BNode()
-        graph.add((subject, DC.rights, rights))
-        graph.add((rights, HSTERMS.rightsStatement, Literal(resource.metadata.rights.statement)))
-        if resource.metadata.rights.url:
-            graph.add((rights, HSTERMS.URL, Literal(resource.metadata.rights.url)))
+        resource.metadata.rights.add_rdf_triples(subject, graph)
 
         # add keywords
         for kw in self.keywords:
@@ -335,10 +330,11 @@ class AbstractFileMetaData(models.Model):
         for coverage in self.coverages.all():
             coverage.add_rdf_triples(graph, subject)
 
-        type_subject = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
+        TYPE_SUBJECT = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
         RDFS1 = Namespace("http://www.w3.org/2000/01/rdf-schema#")
-        graph.add((type_subject, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
-        graph.add((type_subject, RDFS1.isDefinedBy, Literal(HSTERMS)))
+        graph.bind('rdfs1', RDFS1)
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, Literal(HSTERMS)))
         return graph
 
     def get_xml(self, pretty_print=True):
@@ -1460,12 +1456,10 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def rdf_subject(self):
-        from rdflib import Namespace
         # TODO this is a terrible way to build that ref out
         return Namespace("{}/data/contents/{}#".format(self.resource.metadata.resource_uri, self.metadata_short_file_path)).aggregation
 
     def read_metadata_as_rdf(self):
-        from rdflib import Graph
         g = Graph()
         return g.parse(data=self.read_metadata_file())
 
