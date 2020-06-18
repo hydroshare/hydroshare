@@ -3418,7 +3418,7 @@ class BaseResource(Page, AbstractResource):
         """
         # trigger file size read for files that haven't been set yet
         for f in self.files.filter(_size__lt=0):
-            f.size()
+            f.calculate_size()
         # compute the total file size for the resource
         res_size_dict = self.files.aggregate(Sum('_size'))
         # handle case if no resource files
