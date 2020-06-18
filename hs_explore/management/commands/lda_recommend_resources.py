@@ -224,7 +224,7 @@ def main():
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
     # For testing purpose, import date and uncommnet this line
-    end_date = date(2018, 5, 31)
+    end_date = date(2020, 6, 7)
     # end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
