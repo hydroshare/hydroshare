@@ -145,11 +145,7 @@ class RecommendedResource(models.Model):
         json_obj['relevance'] = self.relevance
         json_obj['rec_type'] = self.rec_type
         json_obj['state'] = self.state
-
         keywords = []
-
-    def tearDown(self):
-        super(TestCreateRecommendedResource, self).tearDown()
         for keyword in list(self.keywords.items()):
             keywords.append(keyword.to_json())
         json_obj['keywords'] = keywords
