@@ -22,7 +22,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 
 from lxml import etree
 
-from hs_core.hydroshare.hs_rdf import RDFS1, HSTERMS
+from hs_core.hs_rdf import RDFS1, HSTERMS
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData

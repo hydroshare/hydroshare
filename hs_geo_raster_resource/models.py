@@ -10,7 +10,7 @@ from mezzanine.pages.page_processors import processor_for
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
 from rdflib import BNode, RDF, Literal, URIRef
 
-from hs_core.hydroshare.hs_rdf import HSTERMS
+from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 from hs_core.hydroshare.utils import add_metadata_element_to_xml, \

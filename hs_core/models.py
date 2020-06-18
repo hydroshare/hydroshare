@@ -6,7 +6,7 @@ import arrow
 import logging
 from uuid import uuid4
 
-from .hydroshare import HSTERMS
+from .hs_rdf import HSTERMS
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
