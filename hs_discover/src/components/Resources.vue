@@ -2,7 +2,7 @@
     <div>
         <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
         <div class="table-wrapper">
-            <h3>Author Filter</h3>
+            <h3 v-if="Object.keys(counters).length">Author Filter</h3>
             <div v-for="(author) in Object.keys(counters)" v-bind:key="author">
                 <input type="checkbox" :value=author v-model="authorFilter" :id="name-author">
                 <label :for="name-author">{{author}}&nbsp;{{counters[author]}}</label>
@@ -54,7 +54,7 @@ export default {
   },
   name: 'Resources',
   props:
-  ['resources', 'authors', 'columns', 'labels'],
+  ['resources', 'columns', 'labels'],
   computed: {
     filteredResources() {
       const { sortKey } = this;
@@ -65,11 +65,12 @@ export default {
     },
   },
   mounted() {
-    this.authors.forEach(author => this.authorFilter.push(author)); // populate checkboxes
     const authorbox = [];
     this.resources.forEach(res => authorbox.push(res.author));
     // console.log(new this.Counter(authorbox)); // eslint-disable-line
     this.counters = new this.Counter(authorbox);
+    Object.keys(this.counters).forEach(author => this.authorFilter
+      .push(author)); // populate checkboxes
   },
   methods: {
     sortBy(key) {

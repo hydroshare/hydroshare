@@ -14,7 +14,6 @@
         </div>
         <resource-listing :resources="resources"
                           :key="resources"
-                          :authors="authors"
                           :columns="gridColumns"
                           :labels="gridColumnLabels">
         </resource-listing>
@@ -30,8 +29,6 @@ export default {
   data() {
     return {
       resources: [],
-      authors: [],
-      csrf_token: 'abc123',
       searchtext: '',
       gridColumns: ['availability', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Availability', 'Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -49,8 +46,6 @@ export default {
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
           this.$data.resources = JSON.parse(response.data.resources);
-          this.$data.authors = JSON.parse(response.data.authors);
-          // console.log(this.resources); // eslint-disable-line
         })
         .catch((error) => {
           console.error(error); // eslint-disable-line

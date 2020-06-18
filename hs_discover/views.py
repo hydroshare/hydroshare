@@ -11,8 +11,7 @@ from rest_framework.views import APIView
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'hs_discover/index.html', {
-        })
+        return render(request, 'hs_discover/index.html', {})
 
 
 class SearchAPI(APIView):
@@ -24,29 +23,12 @@ class SearchAPI(APIView):
             searchtext = request.GET.get('searchtext')
             sqs = sqs.filter(content=searchtext).boost('keyword', 2.0)
 
-        # for result in list(sqs):
-        #     print("FETCHING STORED JSON")
-        #     stored = result.get_stored_fields()
-        #     js = stored['json']
-        #     print(js)
-        #     print("INTERPRETING STORED JSON")
-        #     foo = json.loads(js)
-        #     pprint(foo)
-        #
-        # print('new debug')
-        # for result in sqs:
-        #     if result.title:
-        #         vocab.extend(result.title.split(' '))
-        #     if result.subject:
-        #         vocab.extend(result.subject)
-
         vocab = []  # will be populated with autocomplete terms from resource
         vocab = [x for x in vocab if len(x) > 2]
         vocab = list(set(vocab))
         vocab = sorted(vocab)
 
         resources = []
-        authors = set()
 
         for result in sqs:
             resources.append({
@@ -61,10 +43,8 @@ class SearchAPI(APIView):
                 "created": date(result.created, "M d, Y") + " at " + time(result.created),
                 "modified": date(result.modified, "M d, Y") + " at " + time(result.modified)
             })
-            authors.add(result.author)
 
         return Response({
             'resources': json.dumps(resources),
             'vocab': vocab,
-            'authors': json.dumps(list(authors))
         })
