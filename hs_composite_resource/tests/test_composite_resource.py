@@ -2026,8 +2026,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 2)
 
     def test_version_resource_immunity_unpublished(self):
-        import logging
-        logger = logging.getLogger(__name__)
         self.create_composite_resource()
         # add a file to the resource
         self.add_file_to_resource(file_to_add=self.generic_file)
