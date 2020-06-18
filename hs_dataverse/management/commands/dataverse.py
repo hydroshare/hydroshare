@@ -18,9 +18,13 @@ from django.contrib.auth.models import User
 from hs_core.hydroshare import get_party_data_from_user
 from django_irods import icommands
 from hs_dataverse.utils import upload_dataset
+import tempfile
+from django_irods.views import download as download_bag_from_irods
+from pprint import pprint
+import shutil
 
-
-def export_bag(rid, options):
+def export_bag(rid, options): 
+    mkdir = tempfile.mkdtemp(prefix=rid, suffix='_dataverse_tempdir', dir='/tmp')
     requests.packages.urllib3.disable_warnings()
     try:
         # database handle
@@ -42,7 +46,7 @@ def export_bag(rid, options):
                 if icommands.ACTIVE_SESSION:
                     session = icommands.ACTIVE_SESSION
                 else:
-                    raise KeyError('settings must have IRODS_GLOBAL_SESSION set')
+                    raise keyerror('settings must have irods_global_session set')
 
                 args = ('-') # redirect to stdout
                 fd = session.run_safe('iget', None, scimeta_path, *args)
@@ -53,18 +57,17 @@ def export_bag(rid, options):
                 outfile = open('hs_dataverse/tempfiles/resourcemetadata.xml', 'w')
                 outfile.write(contents)
                 outfile.close()
-                print(contents)
 
                 
             else:
-                print("resource metadata {} NOT FOUND".format(scimeta_path))
+                print("resource metadata {} not found".format(scimeta_path))
 
             resmap_path = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
             resmap_exists = istorage.exists(resmap_path)
             if resmap_exists:
                 print("resource map {} found".format(resmap_path))
             else:
-                print("resource map {} NOT FOUND".format(resmap_path))
+                print("resource map {} not found".format(resmap_path))
 
             bag_exists = istorage.exists(resource.bag_path)
             if bag_exists:
@@ -97,30 +100,36 @@ def export_bag(rid, options):
                 resource.setAVU('bag_modified', 'false')
                 print("{}.bag_modified set to false".format(rid))
 
-            ### if options['password']:
-            ###     server = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
-            ###     uri = "https://{}/hsapi/resource/{}/".format(server, rid)
-            ###     print("download uri is {}".format(uri))
-            ###     r = hs_requests.get(uri, verify=False, stream=True,
-            ###                         auth=requests.auth.HTTPBasicAuth(options['login'],
-            ###                                                          options['password']))
-            ###     print("download return status is {}".format(str(r.status_code)))
-            ###     print("redirects:")
-            ###     for thing in r.history:
-            ###         print("...url: {}".format(thing.url))
-            ###     filename = 'tmp/export_bag.zip'
-            ###     with open(filename, 'wb') as fd:
-            ###         for chunk in r.iter_content(chunk_size=128):
-            ###             fd.write(chunk)
-            ### else:
-            ###     print("cannot download bag without username and password.")
+                if icommands.ACTIVE_SESSION:
+                    session = icommands.ACTIVE_SESSION
+                else:
+                    raise keyerror('settings must have irods_global_session set')
 
-            ### tmpfile = "/tmp/dataverse.zip"
-            ### try:
-            ###     istorage.getFile(resource.bag_path, tmpfile)
-            ### except SessionException as e:
-            ###     print("bag file not found: {}".format(e.message))
-            ###     exit(1)
+                dir = '/'.join([resource.root_path, 'data/contents'])
+                istorage = resource.get_irods_storage()
+                data = istorage.listdir(dir)
+                
+                #pprint(data)
+                for file in data[1]:
+                    bag_data_path = '/'.join([resource.root_path, 'data/contents', file])
+                    args = ('-') # redirect to stdout
+                    fd = session.run_safe('iget', None, bag_data_path, *args)
+                    #read(fd) to get file contents
+                    contents = ''
+                    for temp in fd.stdout:
+                        contents += str(temp.decode('utf8'))
+                    _, mkfile_path = tempfile.mkstemp(prefix=file, dir=mkdir)
+                    with open(mkfile_path, 'w') as mkfile:
+                        mkfile.write(contents)
+
+
+#                try:
+#                    istorage.getFile(resource.bag_path, mkfile)
+#                except SessionException as e:
+#                    print("bag file not found: {}".format(e.message))
+#                    exit(1)
+
+
 
             ### now we have a bag and it's in tmp/export_bag.zip
             ### work your own magic on this.
@@ -154,6 +163,7 @@ def export_bag(rid, options):
     except BaseResource.DoesNotExist:
         print("Resource with id {} NOT FOUND in Django".format(rid))
 
+    return mkdir
 
 class Command(BaseCommand):
     help = "Export a resource to DataVerse."
@@ -205,7 +215,9 @@ class Command(BaseCommand):
 
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
-                export_bag(rid, options)
-                upload_dataset(base_url, api_token, dv)
+                temp_dir = export_bag(rid, options)
+                upload_dataset(base_url, api_token, dv, temp_dir)
+                #print(os.listdir('\tmp'))
+                shutil.rmtree(temp_dir)
         else:
             print("no resource id specified: aborting")

@@ -39,7 +39,7 @@ def set_field(val):
 # utility functions
 
 # uploads a dataset to the specified dataverse location, using the data specified in the file resourcemetadata.xml
-def upload_dataset(base_url, api_token, dv):
+def upload_dataset(base_url, api_token, dv, temp_dir):
     # parse the xml metadata file as an etree
     with open(os.path.join(sys.path[0], "hs_dataverse",  "template.json"), "r") as read_file:
         data = json.load(read_file)
@@ -103,6 +103,7 @@ def upload_dataset(base_url, api_token, dv):
         }
     }
 
+    
     contact_dict = {
         "datasetContactName": {
           "typeName": "datasetContactName",
@@ -153,19 +154,31 @@ def upload_dataset(base_url, api_token, dv):
           "typeName": "producerName",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "LastProducer1, FirstProducer1"
+          "value": ""
         },
         "producerAffiliation": {
           "typeName": "producerAffiliation",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "ProducerAffiliation1"
+          "value": ""
         },
         "producerAbbreviation": {
           "typeName": "producerAbbreviation",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "ProducerAbbreviation1"
+          "value": ""
+        },
+        "producerURL": {
+          "typeName": "producerURL",
+          "multiple": false,
+          "typeClass": "primitive",
+          "value": "https://www.hydroshare.org/home/"
+        },
+        "producerLogoURL": {
+          "typeName": "producerLogoURL",
+          "multiple": false,
+          "typeClass": "primitive",
+          "value": "https://www.hydroshare.org/static/img/logo-lg.png"
         }
     }
 
@@ -204,25 +217,25 @@ def upload_dataset(base_url, api_token, dv):
           "typeName": "distributorName",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "LastDistributor1, FirstDistributor1"
+          "value": "HydroShare"
         },
         "distributorAffiliation": {
           "typeName": "distributorAffiliation",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "DistributorAffiliation1"
+          "value": "Consortium of Universities for the Advancement of Hydrological Science, Inc (CUAHSI)"
         },
         "distributorAbbreviation": {
           "typeName": "distributorAbbreviation",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "DistributorAbbreviation1"
+          "value": "HydroShare"
         },
         "distributorURL": {
           "typeName": "distributorURL",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "http://DistributorURL1.org"
+          "value": "http://www.hydroshare.org"
         },
         "distributorLogoURL": {
           "typeName": "distributorLogoURL",
@@ -409,7 +422,8 @@ def upload_dataset(base_url, api_token, dv):
          
     spot_text = set_field(root.find('.//%s/%s' % (spot_tag, value_tag)))
     if (spot_text != 'None'):
-        [name, east, north, units, projection] = spot_text.split(';')
+        print(spot_text)
+        [name, east, north, units, projection] = spot_text.split(';', 4)
         east = re.sub('east=', '', east)
         north = re.sub('north=', '', north)
         geo_units.append(re.sub('units=', '', units))
@@ -429,13 +443,20 @@ def upload_dataset(base_url, api_token, dv):
     o = dict()
     with open('hs_dataverse/tempfiles/ownerdata.json') as f:
         o = json.load(f)
+    contact = contact_dict
     if 'username' in o:
         producer_dict['producerAbbreviation']['value'] = o['username']
     if 'first_name' in o and 'last_name' in o:
         producer_dict['producerName']['value'] = o['last_name'] + ', ' + o['first_name']
+        contact['datasetContactName']['value'] =  o['last_name'] + ', ' + o['first_name']
     if 'organization' in o:
         producer_dict['producerAffiliation']['value'] = o['organization']
-
+        contact['datasetContactAffiliation']['value'] = o['organization']
+    if 'email' in o:
+        contact['datasetContactEmail']['value'] = o['email']
+        print('email found!')
+    if contact != contact_dict:
+        contact_vals.append(contact)
     # update the json dict with the field values
     fields[0]['value'] = title
 
@@ -474,7 +495,7 @@ def upload_dataset(base_url, api_token, dv):
     fields[17]['value'][0]['timePeriodCoveredStart']['value'] = start_period_date
     fields[17]['value'][0]['timePeriodCoveredEnd']['value'] = end_period_date
 
-    fields[18]['value'] = ['kind of data']
+    fields[18]['value'] = ['Composite Resource']
 
     fields[19]['value'] = [software_dict]
 
@@ -507,7 +528,15 @@ def upload_dataset(base_url, api_token, dv):
             print("Dataset: " + dv_data[u'data'][i][u'identifier'])
 
     r = api.create_dataset(dv, json.dumps(metadata))
-    # now delete the dataset, as to not fill up the datverse while testing 
+
     r_dict = json.loads(r.text)
     persistent_id = r_dict['data']['persistentId']
+   
+    #print('path:', temp_dir)
+    #print(os.listdir(temp_dir)) 
+    for file in os.listdir(temp_dir):
+        file_path = '/'.join([temp_dir, file])
+        api.upload_file(persistent_id, file_path)   
+ 
+    # now delete the dataset, as to not fill up the datverse while testing 
     r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
