@@ -205,11 +205,11 @@ def store_recommended_resources(user_to_recommended_resources_list, resource_to_
         for res_id, sim in recommend_resources_list:
             recommended_res = get_resource_by_shortkey(res_id)
             r = RecommendedResource.recommend(user,
-                                                  recommended_res,
-                                                  'Propensity',
-                                                  round(sim, 4),
-                                                  Status.STATUS_NEW,
-                                                  {})
+                                              recommended_res,
+                                              'Propensity',
+                                              round(sim, 4),
+                                              Status.STATUS_NEW,
+                                              {})
             recommended_keep_words = resource_to_keep_words[res_id]
             common_subjects = set.intersection(user_res_preferences_set,
                                                 set(recommended_keep_words))

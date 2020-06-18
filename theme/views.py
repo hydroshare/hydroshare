@@ -518,9 +518,9 @@ def dashboard(request, template="pages/dashboard.html"):
             r.shown()
         if r.rec_type == 'Propensity' and r.relevance > 0:
             recommended_resource = r.candidate_resource
-            keywords = r.keywords.all()
+            # keywords = r.keywords.all()
             common_keywords = []
-            '''
+           
             if len(r.keywords) > 0:
                 for k, v in list(r.keywords.items()):
                     resources_matched_keywords.add(k)
@@ -530,6 +530,7 @@ def dashboard(request, template="pages/dashboard.html"):
                 for k in keywords:
                     resources_matched_keywords.add(k.value)
                     common_keywords.append(k.value)
+            '''
             resource_context = {
                 'resource_title': recommended_resource.title,
                 'resource_short_id': recommended_resource.short_id,

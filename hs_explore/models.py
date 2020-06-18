@@ -27,10 +27,10 @@ class RecommendedResource(models.Model):
     user = models.ForeignKey(User, editable=False)
     candidate_resource = models.ForeignKey(BaseResource, editable=False,
                                            related_name='resource_recommendation_test')
-    relevance = models.FloatField(editable=False, default=0.0)
     rec_type = models.CharField(max_length=11, null=True,
                                 choices=(('Ownership', 'Ownership'), ('Propensity', 'Propensity'),
                                          ('Combination', 'Combination')))
+    relevance = models.FloatField(editable=False, default=0.0)
     state = models.IntegerField(choices=Status.STATUS_CHOICES,
                                 default=Status.STATUS_NEW,
                                 editable=False)
@@ -147,6 +147,9 @@ class RecommendedResource(models.Model):
         json_obj['state'] = self.state
 
         keywords = []
+
+    def tearDown(self):
+        super(TestCreateRecommendedResource, self).tearDown()
         for keyword in list(self.keywords.items()):
             keywords.append(keyword.to_json())
         json_obj['keywords'] = keywords
