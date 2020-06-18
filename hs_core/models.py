@@ -2805,7 +2805,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2815,7 +2815,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -3418,7 +3418,7 @@ class BaseResource(Page, AbstractResource):
         """
         # trigger file size read for files that haven't been set yet
         for f in self.files.filter(_size__lt=0):
-            f.calculate_size()
+            f.size()
         # compute the total file size for the resource
         res_size_dict = self.files.aggregate(Sum('_size'))
         # handle case if no resource files
