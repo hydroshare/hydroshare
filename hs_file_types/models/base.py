@@ -29,7 +29,7 @@ from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, Core
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
-from rdflib.namespace import DC, RDF
+from rdflib.namespace import DC, RDF, RDFS
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -308,8 +308,7 @@ class AbstractFileMetaData(models.Model):
             graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
-        graph.add(HSTERMS.GeographicRasterAggregation, RDF.isDefinedBy, Literal(str(HSTERMS)))
-        graph.add((subject, DC.type, HSTERMS.GeographicRasterAggregation))
+        graph.add((subject, DC.type, Literal(HSTERMS.GeographicRasterAggregation)))
 
         # add lang element
         resource.metadata.language.add_rdf_triples(graph, subject)
