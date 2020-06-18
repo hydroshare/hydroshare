@@ -2805,7 +2805,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2815,7 +2815,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
