@@ -326,6 +326,7 @@ $(document).ready(function () {
         else
             $('#download-file-btn').attr('disabled', 'disabled');
     });
+
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
     inputElementToAdd = inputElementToAdd.replace('mode_to_replace', RESOURCE_MODE.toLowerCase());

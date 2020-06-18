@@ -161,7 +161,10 @@
                                     <div id="app-notifications">
                                         <div v-if="loading">Loading...</div>
                                         <div v-if="!loading">
-                                            <div v-for="n in tasks">${ n }</div>
+                                            <div v-if="tasks.length" class="task" v-for="task in tasks">
+                                                <span>Task name: ${task.name}</span>
+                                                <span>Task status: ${task.status}</span>
+                                            </div>
                                             <div v-if="!tasks.length">You don't have any notifications.</div>
                                         </div>
                                     </div>

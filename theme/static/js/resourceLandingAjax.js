@@ -89,7 +89,6 @@ function license_agreement_ajax_submit(event) {
                     $("#hs-file-browser").attr("data-agreement", "false");
                     $("#btn-download-all").attr("href", $("#download-bag-btn").attr("href"));
                     $("#btn-download-all").removeAttr("data-toggle");
-
                 }
                 else {
                     element.closest("form").find("input[name='flag']").val("make_not_require_lic_agreement");

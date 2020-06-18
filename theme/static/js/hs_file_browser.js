@@ -2110,6 +2110,31 @@ $(document).ready(function () {
         });
     });
 
+    // Download All method
+    $("#btn-download-all, #download-bag-btn").click(function (event) {
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
+
+        if (!bagUrl) {
+            return; // If no url, it means download will be triggered from Agreement modal
+        }
+
+        $.ajax({
+            type: "GET",
+            url: bagUrl,
+            success: function (task) {
+                if (task.id) {
+                    notificationsApp.registerTask(task);
+                    notificationsApp.show();
+                }
+                else if (!task.id) {
+                    // Bag can be downloaded directly
+                    const bagUrl = task.payload;
+                    downloadBag(bagUrl);
+                }
+            }
+        });
+    });
+
     $(".selection-menu li").click(function () {
         $(".selection-menu").hide();
     });
