@@ -137,13 +137,13 @@ class OriginalCoverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     def rdf_triples(self, subject):
-        triples = ()
+        triples = []
         original_coverage = BNode()
-        triples.add((subject, HSTERMS.spatialReference, original_coverage))
+        triples.append((subject, HSTERMS.spatialReference, original_coverage))
         value = BNode()
-        triples.add((original_coverage, HSTERMS.box, value))
+        triples.append((original_coverage, HSTERMS.box, value))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        triples.add((value, RDF.value, Literal(value_string)))
+        triples.append((value, RDF.value, Literal(value_string)))
         return triples
 
     def parse_rdf_value(self, g, metadata_uri):
@@ -317,14 +317,14 @@ class CellInformation(AbstractMetaDataElement):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
     def rdf_triples(self, subject):
-        triples = ()
+        triples = []
         cell_information = BNode()
-        triples.add((subject, HSTERMS.CellInformation, cell_information))
-        triples.add((cell_information, HSTERMS.rows, Literal(self.rows)))
-        triples.add((cell_information, HSTERMS.columns, Literal(self.columns)))
-        triples.add((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
-        triples.add((cell_information, HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
-        triples.add((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
+        triples.append((subject, HSTERMS.CellInformation, cell_information))
+        triples.append((cell_information, HSTERMS.rows, Literal(self.rows)))
+        triples.append((cell_information, HSTERMS.columns, Literal(self.columns)))
+        triples.append((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
+        triples.append((cell_information, HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
+        triples.append((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
 
         return triples
 

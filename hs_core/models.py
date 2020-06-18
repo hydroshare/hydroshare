@@ -1324,19 +1324,19 @@ class Coverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     def rdf_triples(self, subject):
-        triples = ()
+        triples = []
         coverage = BNode()
-        triples.add((subject, DC.coverage, coverage))
+        triples.append((subject, DC.coverage, coverage))
         value = BNode()
         DCTERMS_type = getattr(DCTERMS, self.type)
-        triples.add((coverage, DCTERMS_type, value))
+        triples.append((coverage, DCTERMS_type, value))
         value_dict = {}
         for k, v in self.value.items():
             if k in ['start', 'end']:
                 v = parser.parse(v).isoformat()
             value_dict[k] = v
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
-        triples.add((value, RDF.value, Literal(value_string)))
+        triples.append((value, RDF.value, Literal(value_string)))
         return triples
 
 
@@ -1680,12 +1680,12 @@ class Rights(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     def rdf_triples(self, subject):
-        triples = ()
+        triples = []
         rights_subject = BNode()
-        triples.add((subject, DC.rights, rights_subject))
-        triples.add((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
+        triples.append((subject, DC.rights, rights_subject))
+        triples.append((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
         if self.url:
-            triples.add((rights_subject, HSTERMS.URL, URIRef(self.url)))
+            triples.append((rights_subject, HSTERMS.URL, URIRef(self.url)))
         return triples
 
 
