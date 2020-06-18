@@ -2,7 +2,11 @@
     <div>
         <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
         <div class="table-wrapper">
-            This will show Author counts beside checkboxes like current interface {{counters}}
+            <h3>Author Filter</h3>
+            <div v-for="(author) in Object.keys(counters)" v-bind:key="author">
+                <input type="checkbox" :value=author v-model="authorFilter" :id="name-author">
+                <label :for="name-author">{{author}}&nbsp;{{counters[author]}}</label>
+            </div>
             <table v-if="filteredResources.length"
                    class="table-hover table-striped resource-custom-table" id="items-discovered">
                 <thead>
@@ -34,11 +38,6 @@
                 </tr>
                 </tbody>
             </table>
-            <div v-for="(author) in authors" v-bind:key="author">
-                <input type="checkbox" :value=author v-model="authorFilter"
-                       :id="name-author">
-                <label :for="name-author">{{author}}</label>
-            </div>
         </div>
     </div>
 </template>
@@ -86,5 +85,24 @@ export default {
 </script>
 
 <style scoped>
+    .arrow {
+      display: inline-block;
+      vertical-align: middle;
+      width: 0;
+      height: 0;
+      margin-left: 5px;
+      opacity: 0.66;
+    }
 
+    .arrow.asc {
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 4px solid #000000;
+    }
+
+    .arrow.dsc {
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid #000000;
+    }
 </style>
