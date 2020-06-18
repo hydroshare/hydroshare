@@ -2060,7 +2060,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                                         new_composite_resource, self.user)
         # after deleting the new versioned resource, the original resource should stay immutable
         hydroshare.resource.delete_resource(new_composite_resource.short_id)
-        self.assertTrue(self.composite_resource.raccess.immutable)
+        ori_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
+        self.assertTrue(ori_res.raccess.immutable)
 
     def test_unzip(self):
         """Test that when a zip file gets unzipped at data/contents/ where a single file aggregation
