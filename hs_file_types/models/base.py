@@ -334,7 +334,7 @@ class AbstractFileMetaData(models.Model):
 
         TYPE_SUBJECT = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
-        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, HSTERMS))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return graph
 
     def get_xml(self, pretty_print=True):
