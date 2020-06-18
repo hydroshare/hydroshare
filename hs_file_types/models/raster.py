@@ -18,6 +18,7 @@ from django.forms.models import formset_factory
 from django.template import Template, Context
 
 from dominate.tags import div, legend, form, button
+from rdflib import Graph
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -194,7 +195,6 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
     def get_rdf(self):
-        from rdflib import Graph
         graph = Graph()
         graph = super(GeoRasterFileMetaData, self).get_rdf(graph)
 

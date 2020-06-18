@@ -8,7 +8,9 @@ from django.core.exceptions import ValidationError
 from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
+from rdflib import BNode, RDF, Literal, URIRef
 
+from hs_core.hydroshare.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 from hs_core.hydroshare.utils import add_metadata_element_to_xml, \
@@ -135,20 +137,17 @@ class OriginalCoverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     def add_rdf_triples(self, graph, subject):
-        from rdflib import BNode, Literal
-        from rdflib.namespace import DC, DCTERMS, RDF
         original_coverage = BNode()
-        graph.add((subject, self.HSTERMS.spatialReference, original_coverage))
-        graph.add((original_coverage, RDF.type, self.HSTERMS.box))
+        graph.add((subject, HSTERMS.spatialReference, original_coverage))
+        graph.add((original_coverage, RDF.type, HSTERMS.box))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        graph.add((self.HSTERMS.box, RDF.value, Literal(value_string)))
+        graph.add((HSTERMS.box, RDF.value, Literal(value_string)))
         return graph
 
     def parse_rdf_value(self, g, metadata_uri):
-        from rdflib import URIRef
         # TODO metadata_uri should be passed in
         metadata_uri = URIRef("http://localhost:8000/resource/141d4a3249ef40b3a3ae1cf857f9af85/data/contents/logan_resmap.xml#aggregation")
-        value_str = g.value(subject=g.objects(subject=metadata_uri, predicate=self.HSTERMS.spatialReference)).value
+        value_str = g.value(subject=g.objects(subject=metadata_uri, predicate=HSTERMS.spatialReference)).value
         value_dict = {}
         for p in value_str.split('; '):
             k, v = p.split('=')
@@ -316,14 +315,13 @@ class CellInformation(AbstractMetaDataElement):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
     def add_rdf_triples(self, graph, subject):
-        from rdflib import BNode, Literal
         cell_information = BNode()
-        graph.add((subject, self.HSTERMS.CellInformation, cell_information))
-        graph.add((cell_information, self.HSTERMS.rows, Literal(self.rows)))
-        graph.add((cell_information, self.HSTERMS.columns, Literal(self.columns)))
-        graph.add((cell_information, self.HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
-        graph.add((cell_information, self.HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
-        graph.add((cell_information, self.HSTERMS.cellDataType, Literal(self.cellDataType)))
+        graph.add((subject, HSTERMS.CellInformation, cell_information))
+        graph.add((cell_information, HSTERMS.rows, Literal(self.rows)))
+        graph.add((cell_information, HSTERMS.columns, Literal(self.columns)))
+        graph.add((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
+        graph.add((cell_information, HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
+        graph.add((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
 
         return graph
 

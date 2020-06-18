@@ -22,13 +22,14 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 
 from lxml import etree
 
+from hs_core.hydroshare.hs_rdf import RDFS1, HSTERMS
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
-from rdflib.namespace import DC, DCTERMS
+from rdflib.namespace import DC
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -301,10 +302,6 @@ class AbstractFileMetaData(models.Model):
 
     def get_rdf(self, graph):
         resource = self.logical_file.resource
-        HSTERMS = Namespace("http://hydroshare.org/terms/")
-        graph.bind('hsterms', HSTERMS)
-        graph.bind('dc', DC)
-        graph.bind('dcterms', DCTERMS)
         subject = self.aggregation_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
@@ -333,8 +330,6 @@ class AbstractFileMetaData(models.Model):
             coverage.add_rdf_triples(graph, subject)
 
         TYPE_SUBJECT = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
-        RDFS1 = Namespace("http://www.w3.org/2000/01/rdf-schema#")
-        graph.bind('rdfs1', RDFS1)
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
         graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, Literal(HSTERMS)))
         return graph

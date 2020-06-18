@@ -356,10 +356,6 @@ class AbstractMetaDataElement(models.Model):
         """Return unicode for python 3 compatibility in templates"""
         return self.__unicode__()
 
-    @property
-    def HSTERMS(self):
-        return Namespace("http://hydroshare.org/terms/")
-
     def add_rdf_triples(self, graph, subject):
         raise NotImplementedError()
 
@@ -1684,9 +1680,9 @@ class Rights(AbstractMetaDataElement):
     def add_rdf_triples(self, graph, subject):
         rights_subject = BNode()
         graph.add((subject, DC.rights, rights_subject))
-        graph.add((rights_subject, self.HSTERMS.rightsStatement, Literal(self.statement)))
+        graph.add((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
         if self.url:
-            graph.add((rights_subject, self.HSTERMS.URL, Literal(self.url)))
+            graph.add((rights_subject, HSTERMS.URL, Literal(self.url)))
         return graph
 
 
