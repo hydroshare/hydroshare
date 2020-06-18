@@ -195,16 +195,19 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    def get_rdf(self):
+    def get_rdf_graph(self):
         graph = Graph()
         graph.namespace_manager = NAMESPACE_MANAGER
-        graph = super(GeoRasterFileMetaData, self).get_rdf(graph)
+        for triple in super(GeoRasterFileMetaData, self).get_rdf():
+            graph.add(triple)
 
         subject = self.aggregation_subject()
         if self.originalCoverage:
-            self.originalCoverage.add_rdf_triples(graph, subject)
+            for triple in self.originalCoverage.rdf_triples(subject):
+                graph.add(triple)
         if self.cellInformation:
-            self.cellInformation.add_rdf_triples(graph, subject)
+            for triple in self.cellInformation.rdf_triples(subject):
+                graph.add(triple)
         return graph
 
 
@@ -212,7 +215,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
         # get the xml root element and the xml element to which contains all other elements
-        g = self.get_rdf()
+        g = self.get_rdf_graph()
         return g.serialize(format='pretty-xml').decode()
 
 

@@ -136,14 +136,15 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         rdf_coverage_value.text = cov_value
 
-    def add_rdf_triples(self, graph, subject):
+    def rdf_triples(self, subject):
+        triples = ()
         original_coverage = BNode()
-        graph.add((subject, HSTERMS.spatialReference, original_coverage))
+        triples.add((subject, HSTERMS.spatialReference, original_coverage))
         value = BNode()
-        graph.add((original_coverage, HSTERMS.box, value))
+        triples.add((original_coverage, HSTERMS.box, value))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        graph.add((value, RDF.value, Literal(value_string)))
-        return graph
+        triples.add((value, RDF.value, Literal(value_string)))
+        return triples
 
     def parse_rdf_value(self, g, metadata_uri):
         # TODO metadata_uri should be passed in
@@ -315,16 +316,17 @@ class CellInformation(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
-    def add_rdf_triples(self, graph, subject):
+    def rdf_triples(self, subject):
+        triples = ()
         cell_information = BNode()
-        graph.add((subject, HSTERMS.CellInformation, cell_information))
-        graph.add((cell_information, HSTERMS.rows, Literal(self.rows)))
-        graph.add((cell_information, HSTERMS.columns, Literal(self.columns)))
-        graph.add((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
-        graph.add((cell_information, HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
-        graph.add((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
+        triples.add((subject, HSTERMS.CellInformation, cell_information))
+        triples.add((cell_information, HSTERMS.rows, Literal(self.rows)))
+        triples.add((cell_information, HSTERMS.columns, Literal(self.columns)))
+        triples.add((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
+        triples.add((cell_information, HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
+        triples.add((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
 
-        return graph
+        return triples
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""

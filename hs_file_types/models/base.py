@@ -300,42 +300,46 @@ class AbstractFileMetaData(models.Model):
     def aggregation_subject(self):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
-    def get_rdf(self, graph):
+    def get_rdf(self):
+        triples = ()
         resource = self.logical_file.resource
         subject = self.aggregation_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
-            graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
+            triples.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
-        graph.add((subject, DC.type, HSTERMS.GeographicRasterAggregation))
+        triples.add((subject, DC.type, HSTERMS.GeographicRasterAggregation))
 
         # add lang element
-        resource.metadata.language.add_rdf_triples(graph, subject)
+        for triple in resource.metadata.language.rdf_triples(subject):
+            triples.add(triple)
 
         # add rights element
-        resource.metadata.rights.add_rdf_triples(graph, subject)
+        for triple in resource.metadata.rights.rdf_triples(subject):
+            triples.add(triple)
 
         # add keywords
         for kw in self.keywords:
-            graph.add((subject, DC.subject, Literal(kw)))
+            triples.add((subject, DC.subject, Literal(kw)))
 
         # add any key/value metadata items
         if len(self.extra_metadata) > 0:
             extendedMetadata = BNode()
-            graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+            triples.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
             for key, value in list(self.extra_metadata.items()):
-                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
-                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
+                triples.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                triples.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
         # add coverages
         for coverage in self.coverages.all():
-            coverage.add_rdf_triples(graph, subject)
+            for triple in coverage.rdf_triples(subject):
+                triples.add(triple)
 
         TYPE_SUBJECT = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
-        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
-        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
-        return graph
+        triples.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        triples.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return triples
 
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""

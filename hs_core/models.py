@@ -358,7 +358,7 @@ class AbstractMetaDataElement(models.Model):
         """Return unicode for python 3 compatibility in templates"""
         return self.__unicode__()
 
-    def add_rdf_triples(self, graph, subject):
+    def rdf_triples(self, subject):
         raise NotImplementedError()
 
     @property
@@ -1139,9 +1139,8 @@ class Language(AbstractMetaDataElement):
         else:
             raise ValidationError('Language code is missing.')
 
-    def add_rdf_triples(self, graph, subject):
-        graph.add((subject, DC.language, Literal(self.code)))
-        return graph
+    def rdf_triples(self, subject):
+        return ((subject, DC.language, Literal(self.code)))
 
 
 class Coverage(AbstractMetaDataElement):
@@ -1324,20 +1323,21 @@ class Coverage(AbstractMetaDataElement):
         """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
 
-    def add_rdf_triples(self, graph, subject):
+    def rdf_triples(self, subject):
+        triples = ()
         coverage = BNode()
-        graph.add((subject, DC.coverage, coverage))
+        triples.add((subject, DC.coverage, coverage))
         value = BNode()
         DCTERMS_type = getattr(DCTERMS, self.type)
-        graph.add((coverage, DCTERMS_type, value))
+        triples.add((coverage, DCTERMS_type, value))
         value_dict = {}
         for k, v in self.value.items():
             if k in ['start', 'end']:
                 v = parser.parse(v).isoformat()
             value_dict[k] = v
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
-        graph.add((value, RDF.value, Literal(value_string)))
-        return graph
+        triples.add((value, RDF.value, Literal(value_string)))
+        return triples
 
 
 
@@ -1679,13 +1679,14 @@ class Rights(AbstractMetaDataElement):
 
         unique_together = ("content_type", "object_id")
 
-    def add_rdf_triples(self, graph, subject):
+    def rdf_triples(self, subject):
+        triples = ()
         rights_subject = BNode()
-        graph.add((subject, DC.rights, rights_subject))
-        graph.add((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
+        triples.add((subject, DC.rights, rights_subject))
+        triples.add((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
         if self.url:
-            graph.add((rights_subject, HSTERMS.URL, URIRef(self.url)))
-        return graph
+            triples.add((rights_subject, HSTERMS.URL, URIRef(self.url)))
+        return triples
 
 
 
