@@ -1140,7 +1140,7 @@ class Language(AbstractMetaDataElement):
             raise ValidationError('Language code is missing.')
 
     def rdf_triples(self, subject):
-        return ((subject, DC.language, Literal(self.code)))
+        return [(subject, DC.language, Literal(self.code))]
 
 
 class Coverage(AbstractMetaDataElement):
