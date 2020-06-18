@@ -8,7 +8,7 @@ from hs_explore import utils
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 from django.core.management.base import BaseCommand
-from hs_explore.models import RecommendedResource, PropensityPrefToPair, PropensityPreferences
+from hs_explore.models import RecommendedResource, UserPreferences, Status
 import string
 import gensim
 from gensim import corpora
@@ -180,10 +180,10 @@ def store_user_preferences(user_to_keep_words_freq):
     """
     for username, keep_word_to_freq in user_to_keep_words_freq.items():
         user = user_from_id(username)
-        prop_pref_subjects = []
+        prop_pref_keywords = {}
         for keep_word, freq in keep_word_to_freq.items():
-            prop_pref_subjects.append(('subject', keep_word, freq))
-        PropensityPreferences.prefer(user, 'Resource', prop_pref_subjects)
+            prop_pref_keywords[keep_word] = str(freq)
+        UserPreferences.prefer(user, 'Resource', prop_pref_keywords)
 
 
 def store_recommended_resources(user_to_recommended_resources_list, resource_to_keep_words):
@@ -194,32 +194,28 @@ def store_recommended_resources(user_to_recommended_resources_list, resource_to_
     """
     for username, recommend_resources_list in user_to_recommended_resources_list.items():
         user = user_from_id(username)
-        user_preferences = PropensityPreferences.objects.get(user=user)
-        user_preferences_pairs = user_preferences.preferences.all()
-        user_resources_preferences = PropensityPrefToPair.objects.\
-                                                filter(prop_pref=user_preferences,
-                                                       pair__in=user_preferences_pairs,
-                                                       state='Seen',
-                                                       pref_for='Resource')
+        user_preferences = UserPreferences.objects.get(user=user, pref_for='Resource')
+        user_keywords_preferences = user_preferences.preferences
         user_res_preferences_set = set()
         user_res_pref_to_weight = {}
-        for p in user_resources_preferences:
-            if p.pair.key == 'subject':
-                user_res_preferences_set.add(p.pair.value)
-                user_res_pref_to_weight[p.pair.value] = p.weight
+        for keyword, frequency in list(user_keywords_preferences.items()):
+            user_res_preferences_set.add(keyword)
+            user_res_pref_to_weight[keyword] = frequency
 
         for res_id, sim in recommend_resources_list:
             recommended_res = get_resource_by_shortkey(res_id)
             r = RecommendedResource.recommend(user,
-                                              recommended_res,
-                                              'Propensity',
-                                              round(sim, 4))
+                                                  recommended_res,
+                                                  'Propensity',
+                                                  round(sim, 4),
+                                                  Status.STATUS_NEW,
+                                                  {})
             recommended_keep_words = resource_to_keep_words[res_id]
             common_subjects = set.intersection(user_res_preferences_set,
                                                 set(recommended_keep_words))
             for cs in common_subjects:
                 raw_cs = cs.replace("_", " ")
-                r.relate('subject', raw_cs, user_res_pref_to_weight[cs])
+                r.relate(raw_cs, str(user_res_pref_to_weight[cs]))
 
 
 def main():
@@ -371,7 +367,8 @@ def main():
 def clear_old_data():
     """ clear old recommended data
     """
-    PropensityPreferences.clear()
+    print("clear old data")
+    UserPreferences.clear()
     RecommendedResource.clear()
 
 

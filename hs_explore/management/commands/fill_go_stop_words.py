@@ -56,18 +56,18 @@ def fill_csdms():
     csdms_raw_full_names, csdms_splitted_names, csdms_raw_decors, csdms_splitted_decors = split_csdms()
     for csdms_name in csdms_raw_full_names:
         if len(csdms_name) > 1:
-            LDAWord.add_word('CSDMS', 'go', 'name', csdms_name)
+            LDAWord.add_word('CSDMS', 'keep', 'name', csdms_name)
     for splitted_name in csdms_splitted_names:
         if len(splitted_name) > 1:
-            LDAWord.add_word('CSDMS', 'go', 'name', splitted_name)
+            LDAWord.add_word('CSDMS', 'keep', 'name', splitted_name)
 
     for csdms_decor in csdms_raw_decors:
         if len(csdms_decor) > 1:
-            LDAWord.add_word('CSDMS', 'go', 'decor', csdms_decor)
+            LDAWord.add_word('CSDMS', 'keep', 'decor', csdms_decor)
 
     for splitted_decor in csdms_splitted_decors:
         if len(splitted_decor) > 1:
-            LDAWord.add_word('CSDMS', 'go', 'decor', splitted_decor)
+            LDAWord.add_word('CSDMS', 'keep', 'decor', splitted_decor)
 
 
 def fill_odm2():
@@ -84,7 +84,7 @@ def fill_odm2():
 
     for odm2_word in modified_list:
         if len(odm2_word) > 1:
-            LDAWord.add_word('ODM2', 'go', 'name', odm2_word)
+            LDAWord.add_word('ODM2', 'keep', 'name', odm2_word)
 
 
 def fill_stop_words():
@@ -132,11 +132,11 @@ def fill_stop_words():
 
 
 class Command(BaseCommand):
-    help = "Filling go words and stop words used in the LDA algorithm"
+    help = "Filling keep words and stop words used in the LDA algorithm"
 
     def handle(self, *args, **options):
         LDAWord.clear()
-        print("filling in go words")
+        print("filling in keep words")
         fill_csdms()
         fill_odm2()
         print("filling in stop words")
