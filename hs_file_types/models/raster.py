@@ -20,6 +20,7 @@ from django.template import Template, Context
 from dominate.tags import div, legend, form, button
 from rdflib import Graph
 
+from hs_core.hs_rdf import NAMESPACE_MANAGER
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import ResourceFile, CoreMetaData
@@ -196,6 +197,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
     def get_rdf(self):
         graph = Graph()
+        graph.namespace_manager = NAMESPACE_MANAGER
         graph = super(GeoRasterFileMetaData, self).get_rdf(graph)
 
         subject = self.aggregation_subject()
@@ -211,7 +213,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         # get the xml root element and the xml element to which contains all other elements
         g = self.get_rdf()
-        return g.serialize(format='application/rdf+xml').decode()
+        return g.serialize(format='pretty-xml').decode()
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):

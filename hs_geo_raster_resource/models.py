@@ -139,9 +139,12 @@ class OriginalCoverage(AbstractMetaDataElement):
     def add_rdf_triples(self, graph, subject):
         original_coverage = BNode()
         graph.add((subject, HSTERMS.spatialReference, original_coverage))
-        graph.add((original_coverage, RDF.type, HSTERMS.box))
+        box = BNode()
+        graph.add((original_coverage, RDF.type, box))
+        value = BNode()
+        graph.add((box, HSTERMS.box, value))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        graph.add((HSTERMS.box, RDF.value, Literal(value_string)))
+        graph.add((value, RDF.value, Literal(value_string)))
         return graph
 
     def parse_rdf_value(self, g, metadata_uri):
