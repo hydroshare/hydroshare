@@ -308,7 +308,7 @@ class AbstractFileMetaData(models.Model):
             graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
-        graph.add((subject, DC.type, Literal(HSTERMS.GeographicRasterAggregation)))
+        graph.add((subject, DC.type, HSTERMS.GeographicRasterAggregation))
 
         # add lang element
         resource.metadata.language.add_rdf_triples(graph, subject)
@@ -334,7 +334,7 @@ class AbstractFileMetaData(models.Model):
 
         TYPE_SUBJECT = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
-        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, Literal(HSTERMS)))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, HSTERMS))
         return graph
 
     def get_xml(self, pretty_print=True):
