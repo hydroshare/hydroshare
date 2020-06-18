@@ -23,6 +23,8 @@ from django_irods.views import download as download_bag_from_irods
 from pprint import pprint
 import shutil
 
+
+
 def export_bag(rid, options): 
     mkdir = tempfile.mkdtemp(prefix=rid, suffix='_dataverse_tempdir', dir='/tmp')
     requests.packages.urllib3.disable_warnings()
@@ -157,6 +159,40 @@ def export_bag(rid, options):
                 outfile = open('hs_dataverse/tempfiles/ownerdata.json', 'w')
                 json.dump(owner_dict, outfile)
                 outfile.close()
+
+            # get other metadata
+             
+            # instance with proper subclass type and access
+            res = resource.get_content_model()
+            assert res, (resource, resource.content_model)
+            print("resource is {}".format(res.short_id))
+            print("content type: {}".format(res.discovery_content_type))
+
+            # read extended metadata as key/value pairsi
+            ext_metadata = ''
+            for key, value in list(res.extra_metadata.items()):
+                print(" key={}, value={}".format(key, value))
+                ext_metadata = ext_metadata + key + ': ' + value + '\n'
+
+            # get funding agency data
+            funding_agency_names = []
+            award_numbers = []
+
+            for a in res.metadata.funding_agencies.all():
+                funding_agency_names.append(a.agency_name)
+                award_numbers.append(a.award_number) 
+
+            other_metadata_dict = {
+                    'rid': rid,
+                    'extended_metadata_notes': ext_metadata,
+                    'language': str(resource.metadata.language),
+                    'funding_agency_names': funding_agency_names,
+                    'award_numbers': award_numbers
+            }
+
+            outfile = open('hs_dataverse/tempfiles/other_metadata.json', 'w')
+            json.dump(other_metadata_dict, outfile)
+            outfile.close()
 
         else:
             print("Resource with id {} does not exist in iRODS".format(rid))

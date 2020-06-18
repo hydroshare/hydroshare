@@ -9,6 +9,7 @@ import os
 import sys
 from django.conf import settings
 import googlemaps
+from pprint import pprint
 
 # global variables
 
@@ -89,6 +90,21 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     hosted_by_tag = '{http://hydroshare.org/terms/}isHostedBy'
 
     # Define the dicts to be filled in for dataverse fields that accept multpile values
+    other_id_dict = {
+        "otherIdAgency": {
+          "typeName": "otherIdAgency",
+          "multiple": false,
+          "typeClass": "primitive",
+          "value": "HydroShare"
+        },
+        "otherIdValue": {
+          "typeName": "otherIdValue",
+          "multiple": false,
+          "typeClass": "primitive",
+          "value": ""
+        }
+    }
+
     author_dict = {
         "authorName": {
           "typeName": "authorName",
@@ -202,13 +218,13 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
           "typeName": "grantNumberAgency",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "GrantInformationGrantAgency1"
+          "value": ""
         },
         "grantNumberValue": {
           "typeName": "grantNumberValue",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "GrantInformationGrantNumber1"
+          "value": ""
         }
     }
 
@@ -250,13 +266,13 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
           "typeName": "softwareName",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "SoftwareName1"
+          "value": ""
         },
         "softwareVersion": {
           "typeName": "softwareVersion",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "SoftwareVersion1"
+          "value": ""
         }
     }
 
@@ -439,6 +455,21 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     if (geo_coverage_dict != old_geo_coverage_dict):
         geo_coverage_vals.append(geo_coverage_dict)
 
+    # Extract more fields using the extended metadata from other_metadata.json
+    e = dict()
+    with open('hs_dataverse/tempfiles/other_metadata.json') as f:
+        e = json.load(f)
+
+    other_id_dict['otherIdValue']['value'] = str(e['rid'])
+    notes_text = e['extended_metadata_notes']
+   
+    grant_vals = [] 
+    for i, grant in enumerate(e['award_numbers']):
+        grant_info = copy.deepcopy(grant_number_dict)
+        grant_info['grantNumberAgency']['value'] = e['funding_agency_names'][i]
+        grant_info['grantNumberValue']['value'] = e['award_numbers'][i]
+        grant_vals.append(grant_info)
+
     # Extract more fields using the owner data from ownerdata.json
     o = dict()
     with open('hs_dataverse/tempfiles/ownerdata.json') as f:
@@ -446,17 +477,33 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     contact = contact_dict
     if 'username' in o:
         producer_dict['producerAbbreviation']['value'] = o['username']
+    else: 
+        producer_dict['producerAbbreviation']['value'] = ''
+
     if 'first_name' in o and 'last_name' in o:
         producer_dict['producerName']['value'] = o['last_name'] + ', ' + o['first_name']
         contact['datasetContactName']['value'] =  o['last_name'] + ', ' + o['first_name']
+        depositor =  o['last_name'] + ', ' + o['first_name']
+    else: 
+        producer_dict['producerName']['value'] = ''
+        contact['datasetContactName']['value'] =  ''
+        depositor =  ''
+
     if 'organization' in o:
         producer_dict['producerAffiliation']['value'] = o['organization']
         contact['datasetContactAffiliation']['value'] = o['organization']
+    else: 
+        producer_dict['producerAffiliation']['value'] = ''
+        contact['datasetContactAffiliation']['value'] = ''
+    
     if 'email' in o:
         contact['datasetContactEmail']['value'] = o['email']
-        print('email found!')
+    else:
+        contact['datasetContactEmail']['value'] = ''
+
     if contact != contact_dict:
         contact_vals.append(contact)
+
     # update the json dict with the field values
     fields[0]['value'] = title
 
@@ -474,7 +521,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
 
     fields[7]['value'] = related_publications_vals
 
-    fields[8]['value'] = 'notes'
+    fields[8]['value'] = notes_text
 
     fields[9]['value'] = [producer_dict]
 
@@ -482,13 +529,13 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
 
     fields[11]['value'] = [contributor_dict]
 
-    fields[12]['value'] = [grant_number_dict]
+    fields[12]['value'] = grant_vals
 
     fields[13]['value'] = [distributor_dict]
 
     fields[14]['value'] = str(datetime.date(datetime.now()))  # distribution date
 
-    fields[15]['value'] = 'depositor'
+    fields[15]['value'] = depositor
 
     fields[16]['value'] = deposit_date
 
@@ -528,6 +575,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
             print("Dataset: " + dv_data[u'data'][i][u'identifier'])
 
     r = api.create_dataset(dv, json.dumps(metadata))
+    print(r)
 
     r_dict = json.loads(r.text)
     persistent_id = r_dict['data']['persistentId']
@@ -539,4 +587,5 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
         api.upload_file(persistent_id, file_path)   
  
     # now delete the dataset, as to not fill up the datverse while testing 
-    r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
+#    r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
+
