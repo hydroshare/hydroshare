@@ -509,46 +509,48 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
 
     fields[1]['value'] = alternative_url
 
-    fields[2]['value'] = author_vals
-    fields[3]['value'] = contact_vals
+    fields[2]['value'] = [other_id_dict]
 
-    fields[4]['value'][0]['dsDescriptionValue']['value'] = abstract
-    fields[4]['value'][0]['dsDescriptionDate']['value'] = last_modified_date
+    fields[3]['value'] = author_vals
+    fields[4]['value'] = contact_vals
 
-    fields[5]['value'] = subject
+    fields[5]['value'][0]['dsDescriptionValue']['value'] = abstract
+    fields[5]['value'][0]['dsDescriptionDate']['value'] = last_modified_date
 
-    fields[6]['value'] = keyword_vals
+    fields[6]['value'] = subject
 
-    fields[7]['value'] = related_publications_vals
+    fields[7]['value'] = keyword_vals
 
-    fields[8]['value'] = notes_text
+    fields[8]['value'] = related_publications_vals
 
-    fields[9]['value'] = [producer_dict]
+    fields[9]['value'] = notes_text
 
-    fields[10]['value'] = '1003-01-01'
+    fields[10]['value'] = [producer_dict]
 
-    fields[11]['value'] = [contributor_dict]
+    fields[11]['value'] = '1003-01-01'
 
-    fields[12]['value'] = grant_vals
+    fields[12]['value'] = [contributor_dict]
 
-    fields[13]['value'] = [distributor_dict]
+    fields[13]['value'] = grant_vals
 
-    fields[14]['value'] = str(datetime.date(datetime.now()))  # distribution date
+    fields[14]['value'] = [distributor_dict]
 
-    fields[15]['value'] = depositor
+    fields[15]['value'] = str(datetime.date(datetime.now()))  # distribution date
 
-    fields[16]['value'] = deposit_date
+    fields[16]['value'] = depositor
 
-    fields[17]['value'][0]['timePeriodCoveredStart']['value'] = start_period_date
-    fields[17]['value'][0]['timePeriodCoveredEnd']['value'] = end_period_date
+    fields[17]['value'] = deposit_date
 
-    fields[18]['value'] = ['Composite Resource']
+    fields[18]['value'][0]['timePeriodCoveredStart']['value'] = start_period_date
+    fields[18]['value'][0]['timePeriodCoveredEnd']['value'] = end_period_date
 
-    fields[19]['value'] = [software_dict]
+    fields[19]['value'] = ['Composite Resource']
 
-    fields[20]['value'] = ['related_papers']
+    fields[20]['value'] = [software_dict]
 
-    fields[21]['value'] = related_resources
+    fields[21]['value'] = ['related_papers']
+
+    fields[22]['value'] = related_resources
 
     geofields[0]['value'] = geo_coverage_vals
     geofields[1]['value'] = geo_units
@@ -587,5 +589,5 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
         api.upload_file(persistent_id, file_path)   
  
     # now delete the dataset, as to not fill up the datverse while testing 
-#    r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
+    r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
 

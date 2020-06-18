@@ -18,6 +18,27 @@
             "value": "http://AlternativeURL.org"
           },
           {
+            "typeName": "otherId",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "otherIdAgency": {
+                  "typeName": "otherIdAgency",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "OtherIDAgency1"
+                },
+                "otherIdValue": {
+                  "typeName": "otherIdValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "OtherIDIdentifier1"
+                }
+              }
+            ]
+          },
+          {
             "typeName": "author",
             "multiple": true,
             "typeClass": "compound",
