@@ -686,10 +686,6 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
-SWAGGER_SETTINGS = {
-    "VALIDATOR_URL": False
-}
-
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
