@@ -7,6 +7,15 @@ import copy
 
 
 class Status(object):
+    """ define the status of recommended resources and
+        the number for recommended resources made for users
+        STATUS_NEW: a new recommended resource for a user
+        STATUS_SHOWN: a recommended resource has been shown to the user
+        STATUS_EXPLORED: a recommended resource has been explored by the user
+        STATUS_APPROVED: a recommended resource has been approved to be a correct
+        recommendation by the user
+        STATUS_DISMISSED: a recommended resouce is dismissed by the user
+    """
     STATUS_NEW = 1
     STATUS_SHOWN = 2
     STATUS_EXPLORED = 3
