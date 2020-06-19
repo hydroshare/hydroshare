@@ -747,22 +747,6 @@ class AbstractLogicalFile(models.Model):
         return logical_file
 
     @classmethod
-    def _create_aggregation_folder(cls, resource, file_folder, base_file_name):
-        """
-        A helper for creating aggregation. Creates a folder for a new multi-file aggregation
-        :param  resource: an instance of CompositeResource for which aggregation being created
-        :param  file_folder: folder path of the file from which aggregation being created
-        :param  base_file_name: name of file without the extension - the file used for crating
-        aggregation
-        """
-        from hs_core.views.utils import create_folder
-
-        new_folder_path = cls.compute_file_type_folder(resource, file_folder, base_file_name)
-        create_folder(resource.short_id, new_folder_path)
-        relative_aggregation_path = new_folder_path[len('data/contents/'):]
-        return relative_aggregation_path
-
-    @classmethod
     def get_allowed_uploaded_file_types(cls):
         # any file can be part of this logical file group - subclass needs to override this
         return [".*"]
@@ -1156,35 +1140,6 @@ class AbstractLogicalFile(models.Model):
             copy_of_logical_file.metadata.create_element(element.term, **element_args)
 
         return copy_of_logical_file
-
-    @classmethod
-    def compute_file_type_folder(cls, resource, file_folder, file_name):
-        """
-        Computes the new folder path where the file type files will be stored
-        :param resource: an instance of BaseResource
-        :param file_folder: current file folder of the file which is being set to a specific file
-        type
-        :param file_name: name of the file (without extension) which is being set to a specific
-        file type
-        :return: computed new folder path
-        """
-        current_folder_path = 'data/contents'
-        if file_folder:
-            current_folder_path = os.path.join(current_folder_path, file_folder)
-
-        new_folder_path = os.path.join(current_folder_path, file_name)
-
-        # To avoid folder creation failure when there is already matching
-        # directory path, first check that the folder does not exist
-        # If folder path exists then change the folder name by adding a number
-        # to the end
-        istorage = resource.get_irods_storage()
-        counter = 0
-        while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
-            new_file_name = file_name + "_{}".format(counter)
-            new_folder_path = os.path.join(current_folder_path, new_file_name)
-            counter += 1
-        return new_folder_path
 
     def delete(self, using=None, keep_parents=False):
         """Overriding the django model delete() here so that subclasses can do further
