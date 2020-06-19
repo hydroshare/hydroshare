@@ -16,9 +16,11 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import status
 
+from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
@@ -398,8 +400,8 @@ def create_bag_by_irods(resource_id):
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
 
-    :return: True if bag creation operation succeeds;
-             False if there is an exception raised or resource does not exist.
+    :return: True if bag creation operation succeeds or
+             raise an exception if resource does not exist or any other issues that prevent bags from being created.
     """
     res = utils.get_resource_by_shortkey(resource_id)
 
@@ -410,12 +412,7 @@ def create_bag_by_irods(resource_id):
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
     if metadata_dirty is None or metadata_dirty.lower() == "true":
-        try:
-            create_bag_files(res)
-        except Exception as ex:
-            logger.error('Failed to create bag files. Error:{}'.format(ex.message))
-            # release the lock before returning bag creation failure
-            return False
+        create_bag_files(res)
 
     irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
     # check to see if bagit readme.txt file exists or not
@@ -475,11 +472,9 @@ def create_bag_by_irods(resource_id):
             for fname in bagit_files:
                 if istorage.exists(fname):
                     istorage.delete(fname)
-            logger.error(ex.stderr)
-            return False
+            raise SessionException(-1, '', ex.stderr)
     else:
-        logger.error('Resource does not exist.')
-        return False
+        raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
 @shared_task
@@ -534,9 +529,29 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
         return e
 
 
+@shared_task
+def resource_debug(resource_id):
+    """Update web services hosted by GeoServer and HydroServer.
+    """
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
+
+    resource = get_resource_by_shortkey(resource_id)
+    from hs_core.management.utils import check_irods_files
+    return check_irods_files(resource, log_errors=False, return_errors=True)
+
+
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
 def daily_odm2_sync():
     """
     ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
     """
     ODM2Variable.sync()
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_month=1))
+def monthly_group_membership_requests_cleanup():
+    """
+    Delete expired and redeemed group membership requests
+    """
+    two_months_ago = datetime.today() - timedelta(days=60)
+    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()

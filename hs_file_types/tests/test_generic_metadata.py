@@ -49,7 +49,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         # file has no folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
@@ -397,7 +397,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create generic aggregation
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # test rename of file is allowed
         src_path = 'data/contents/{}'.format(res_file.file_name)
         tgt_path = "data/contents/{0}_1{1}".format(base_file_name, ext)
@@ -419,7 +419,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create generic aggregation
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         # test moving the file to a new folder is allowed
         new_folder = 'test_folder'

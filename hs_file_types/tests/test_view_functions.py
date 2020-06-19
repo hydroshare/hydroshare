@@ -102,7 +102,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, new_folder)
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -564,7 +564,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, None)
+            self.assertEqual(f.file_folder, '')
         self.composite_resource.delete()
 
     def test_add_update_single_file_aggregation_metadata(self):
