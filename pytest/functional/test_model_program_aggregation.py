@@ -369,7 +369,7 @@ def test_set_metadata(composite_resource_with_mp_aggregation, mock_irods):
 def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, aggr_cls, mock_irods):
     """ test that we can't move a generic file aggregation or a model instance aggregation which are based on a single
     file into a folder that represents a model program aggregation"""
-    
+
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     mp_folder = 'mp_folder'

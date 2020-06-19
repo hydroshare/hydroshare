@@ -240,7 +240,7 @@ def composite_resource_with_mi_aggregation_folder(composite_resource):
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
-    res_file = add_file_to_resource(
+    add_file_to_resource(
         res, file_to_upload, folder=mi_folder, check_target_folder=True
     )
 
