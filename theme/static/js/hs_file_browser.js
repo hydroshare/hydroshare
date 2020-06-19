@@ -2126,10 +2126,10 @@ $(document).ready(function () {
                     notificationsApp.registerTask(task);
                     notificationsApp.show();
                 }
-                else if (!task.id) {
+                else {
                     // Bag can be downloaded directly
-                    const bagUrl = task.payload;
-                    downloadBag(bagUrl);
+                    $("body").append("<iframe class='temp-download-frame' id='"
+                    + task.payload + "' style='display:none;' src='" + bagUrl + "'></iframe>");
                 }
             }
         });

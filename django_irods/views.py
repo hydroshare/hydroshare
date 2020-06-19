@@ -14,7 +14,7 @@ from rest_framework import status
 from django_irods import icommands
 from hs_core.hydroshare import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.task_utils import get_resource_bag_task
+from hs_core.task_utils import get_resource_bag_task, get_task_by_id
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
@@ -246,6 +246,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 if not task_id:
                     task = create_bag_by_irods.apply_async((res_id, request.user.username), countdown=3)
                     task_id = task.task_id
+                    task_dict = get_task_by_id(task_id, 'bag download')
+                    return JsonResponse(task_dict)
+                else:
+                    task_dict = get_task_by_id(task_id, 'bag download')
+                    return JsonResponse(task_dict)
+
                 if rest_call:
                     return JsonResponse({'bag_status': 'Not ready',
                                          'task_id': task_id})
@@ -263,7 +269,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     else:
                         response.content = "<h1>" + content_msg + "</h1>"
                     return response
-
+        else:
+            # bag can be directly downloaded
+            return JsonResponse({'id': '',
+                                 'name': 'bag download',
+                                 'status': 'Completed',
+                                 'payload': res.short_id})
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
         if path.endswith("resourcemap.xml") or path.endswith('resourcemetadata.xml'):

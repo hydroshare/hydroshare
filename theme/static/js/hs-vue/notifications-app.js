@@ -52,9 +52,11 @@ $(document).ready(function () {
             },
             registerTask: function (task) {
                 let vue = this;
-                let existingTask = vue.tasks.find(function(t) {
-                    return t.id === task.id;
-                });
+                let existingTask = null;
+                if (vue.tasks.length)
+                    existingTask = vue.tasks.find(function(t) {
+                        return t.id === task.id;
+                    });
 
                 switch (task.name) {
                     case "bag download":
@@ -79,7 +81,11 @@ $(document).ready(function () {
                     existingTask = task;
                 }
                 else {
-                    vue.tasks = [task, ...vue.tasks];
+                    if (vue.tasks.length) {
+                        vue.tasks = [task, ...vue.tasks];
+                    }
+                    else
+                        vue.tasks = [task]
                 }
             }
         },

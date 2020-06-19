@@ -105,10 +105,11 @@ def get_all_tasks(username):
     return act_task_lists + res_task_lists + sched_task_lists
 
 
-def get_task_by_id(task_id):
+def get_task_by_id(task_id, name=''):
     """
     get task dict by celery task id
     :param task_id: task id
+    :param name: task name with default being empty
     :return: task dict with keys id, name, status
     """
     result = AsyncResult(task_id)
@@ -124,6 +125,7 @@ def get_task_by_id(task_id):
 
     return {
         'id': task_id,
+        'name': name,
         'status': status,
         'payload': payload
     }
