@@ -78,7 +78,7 @@ class CompositeResource(BaseResource):
         if moved_res_file.has_logical_file and (moved_res_file.logical_file.is_fileset or
                                                 moved_res_file.logical_file.is_model_program or
                                                 moved_res_file.logical_file.is_model_instance):
-            if moved_res_file.file_folder is not None:
+            if moved_res_file.file_folder:
                 try:
                     aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
                     if aggregation == moved_res_file.logical_file:
@@ -105,7 +105,7 @@ class CompositeResource(BaseResource):
         :param  moved_res_file: an instance of ResourceFile which has been moved into a folder that represents
         a fileset or a model program or a model instance aggregation
         """
-        if moved_res_file.file_folder is not None and not moved_res_file.has_logical_file:
+        if moved_res_file.file_folder and not moved_res_file.has_logical_file:
             # first check for model program/instance aggregation
             aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder)
             if aggregation is None:

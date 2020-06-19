@@ -181,7 +181,7 @@ def composite_resource_2():
 def composite_resource_with_mp_aggregation(composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/logan.vrt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -199,7 +199,7 @@ def composite_resource_with_mp_aggregation(composite_resource):
 def composite_resource_2_with_mp_aggregation(composite_resource_2):
     res, user = composite_resource_2
     file_path = 'pytest/assets/logan.vrt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -217,7 +217,7 @@ def composite_resource_2_with_mp_aggregation(composite_resource_2):
 def composite_resource_with_mi_aggregation(composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -255,7 +255,7 @@ def composite_resource_with_mi_mp_aggregation(composite_resource):
     res, user = composite_resource
     # create model instance aggregation
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -268,7 +268,7 @@ def composite_resource_with_mi_mp_aggregation(composite_resource):
 
     # create model program aggregation
     file_path = 'pytest/assets/logan.vrt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 

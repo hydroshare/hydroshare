@@ -42,7 +42,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return resource_files[0] if resource_files else None
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Makes all physical files that are in a folder (*folder_path*) part of a model program/instance
         aggregation type or a single file (*file_id*) part of this aggregation type.
         Note: parameter file_id is ignored here and a value for folder_path is required
@@ -54,7 +54,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                              post_aggr_signal=None,
                              is_temp_file=False) as ft_ctx:
 
-            if folder_path is not None:
+            if folder_path:
                 res_files = []
                 dataset_name = folder_path
                 if '/' in folder_path:
@@ -79,7 +79,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
 
-            if folder_path is not None and file_id is None:
+            if folder_path and file_id is None:
                 logical_file.folder = folder_path
                 logical_file.save()
                 # make all the files in the selected folder as part of the aggregation

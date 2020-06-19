@@ -18,7 +18,7 @@ from hs_file_types.views import set_file_type, update_model_program_metadata, up
 def test_create_model_aggregation_from_file(composite_resource, aggr_type, mock_irods):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
     res_file = add_file_to_resource(

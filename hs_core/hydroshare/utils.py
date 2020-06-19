@@ -933,7 +933,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name)
+            ret = ResourceFile.create(resource, file=None, folder=folder, source=source_name)
         except SessionException as ex:
             try:
                 ret.delete()

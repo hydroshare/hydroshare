@@ -21,7 +21,7 @@ def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods
 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -36,7 +36,7 @@ def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods
     res_file = res.files.first()
     assert res_file.has_logical_file
     # file has no folder
-    assert res_file.file_folder is None
+    assert not res_file.file_folder
     assert aggr_cls.objects.count() == 1
     mp_aggregation = aggr_cls.objects.first()
     assert mp_aggregation.files.count() == 1
@@ -191,7 +191,7 @@ def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize('aggr_folder', [None, 'mp_mi_folder'])
+@pytest.mark.parametrize('aggr_folder', ['', 'mp_mi_folder'])
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
 def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, mock_irods):
     """test that we can move a model program/instance aggregation into a folder that represents a
@@ -212,7 +212,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
     fs_aggregation = FileSetLogicalFile.objects.first()
     assert fs_aggregation.files.count() == 1
     # create model program/instance aggregation
-    if aggr_folder is not None:
+    if aggr_folder:
         ResourceFile.create_folder(res, aggr_folder)
 
     generic_file_name = 'generic_file.txt'
@@ -221,7 +221,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
                                   name=os.path.basename(file_path))
 
     res_file = add_file_to_resource(res, file_to_upload, folder=aggr_folder, check_target_folder=True)
-    if aggr_folder is None:
+    if not aggr_folder:
         # create model program/instance aggregation from file
         aggr_cls.set_file_type(res, user, res_file.id)
     else:
@@ -232,7 +232,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
     mp_mi_aggregation = aggr_cls.objects.first()
     assert mp_mi_aggregation.files.count() == 1
     # move the mp aggregation into the folder that represents fileset aggregation
-    if aggr_folder is None:
+    if not aggr_folder:
         # moving the file based model program/instance aggregation
         src_path = 'data/contents/{}'.format(generic_file_name)
         tgt_path = 'data/contents/{0}/{1}'.format(new_folder, generic_file_name)
@@ -332,7 +332,7 @@ def test_create_aggregation_from_folder_failure_1(composite_resource, aggr_cls, 
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
-    add_file_to_resource(res, file_to_upload, folder=None, check_target_folder=True)
+    add_file_to_resource(res, file_to_upload, folder='', check_target_folder=True)
     assert res.files.count() == 1
     # create model program/instance aggregation
     assert aggr_cls.objects.count() == 0
@@ -344,7 +344,7 @@ def test_create_aggregation_from_folder_failure_1(composite_resource, aggr_cls, 
     # file has no logical file
     assert not res_file.has_logical_file
     # file has no folder
-    assert res_file.file_folder is None
+    assert not res_file.file_folder
     # no model program/instance logical file object was created
     assert aggr_cls.objects.count() == 0
 
@@ -466,7 +466,7 @@ def test_delete_aggregation_res_file_1(composite_resource, aggr_cls, mock_irods)
 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -481,7 +481,7 @@ def test_delete_aggregation_res_file_1(composite_resource, aggr_cls, mock_irods)
     res_file = res.files.first()
     assert res_file.has_logical_file
     # file has no folder
-    assert res_file.file_folder is None
+    assert not res_file.file_folder
     assert aggr_cls.objects.count() == 1
     # delete resource file
     hydroshare.delete_resource_file(res.short_id, res_file.id, user)
@@ -550,7 +550,7 @@ def test_move_model_program_aggr_into_model_instance_aggr_folder(composite_resou
     mp_file_name = 'logan.vrt'
     if move_type == 'file':
         # based on a single file
-        mp_folder = None
+        mp_folder = ''
     else:
         # based on a folder
         mp_folder = 'mp_folder'
@@ -615,7 +615,7 @@ def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr
     mp_mi_file_name = 'logan.vrt'
     if move_type == 'file':
         # based on a single file
-        folder = None
+        folder = ''
     else:
         folder = 'mp_mi_folder_2'
         ResourceFile.create_folder(res, folder)
@@ -680,18 +680,14 @@ def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cl
     assert aggr_cls.objects.count() == 0
     # set folder to model program/instance aggregation type
     aggr_cls.set_file_type(resource=res, user=user, folder_path=mp_mi_folder)
-    # res_file = res.files.first()
-    # assert res_file.has_logical_file
-    # file has folder
-    # assert res_file.file_folder == mp_mi_folder
     assert aggr_cls.objects.count() == 1
+    aggr_obj = aggr_cls.objects.first()
+    # model program/instance aggr has folder
+    assert aggr_obj.folder == mp_mi_folder
     # move fileset folder into model program/instance folder - which should fail
     src_path = 'data/contents/{}'.format(fs_folder)
     tgt_path = 'data/contents/{}/{}'.format(mp_mi_folder, fs_folder)
 
-
-    print(">> src_path:{}".format(src_path))
-    print(">> tgt_path:{}".format(tgt_path))
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
 

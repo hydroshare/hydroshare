@@ -20,7 +20,7 @@ def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_irods):
 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -92,7 +92,7 @@ def test_mark_res_file_as_mp_file_type_failure_1(composite_resource, mock_irods)
 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -130,7 +130,7 @@ def test_mark_res_file_as_mp_file_type_failure_2(composite_resource, mock_irods)
     file_path = 'pytest/assets/{}'
     txt_file_path = file_path.format('generic_file.txt')
     vrt_file_path = file_path.format('logan.vrt')
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(txt_file_path, 'rb'),
                                   name=os.path.basename(txt_file_path))
 

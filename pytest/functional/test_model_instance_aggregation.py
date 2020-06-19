@@ -23,7 +23,7 @@ def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggreg
     assert mi_aggr.metadata.executed_by is None
     # create a model program aggregation
     file_path = 'pytest/assets/logan.vrt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -95,7 +95,7 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
     assert mi_aggr.metadata.executed_by is None
     # create a model program aggregation
     file_path = 'pytest/assets/logan.vrt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 
@@ -175,7 +175,7 @@ def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_agg
     assert mi_aggr.metadata.executed_by is None
     # create a model program aggregation
     file_path = 'pytest/assets/logan.vrt'
-    upload_folder = None
+    upload_folder = ''
     file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                   name=os.path.basename(file_path))
 

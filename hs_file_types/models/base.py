@@ -825,7 +825,7 @@ class AbstractLogicalFile(models.Model):
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
 
-        if file_id is not None and not folder_path:
+        if file_id is not None and folder_path:
             raise ValueError("Must specify either id of the file or path of the folder to set as an "
                              "aggregation type, but not both.")
 
@@ -838,12 +838,12 @@ class AbstractLogicalFile(models.Model):
             raise ValueError("Must specify id of the file to set as an "
                              "aggregation type")
 
+        res_file = None
         if file_id is not None:
             # user selected a file to set aggregation
             res_file = get_resource_file_by_id(resource, file_id)
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
-            res_file = None
             storage = resource.get_irods_storage()
             if folder_path.startswith("data/contents/"):
                 folder_path = folder_path[len("data/contents/"):]
