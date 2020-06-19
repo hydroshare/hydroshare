@@ -1,12 +1,12 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
-from hs_access_control.models import PrivilegeCodes, GroupAccess
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
+from hs_access_control.tests.utilities import global_reset
 from hs_core.hydroshare.features import Features
 from rest_framework import status
 import socket
@@ -98,7 +98,6 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
         self.cat.uaccess.share_group_with_user(self.cats, self.squirrel, PrivilegeCodes.CHANGE)
         self.client.login(username='dog', password='barfoo')
 
-
     def test_resource_owner(self):
         records = Features.resource_owners()
         self.assertEqual(len(records), 3)
@@ -123,10 +122,10 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
         self.assertCountEqual(test, records)
 
     def test_group_editors(self):
-        records = Features.group_editors()                           
-        self.assertEqual(len(records), 3)                               
-        test = [(self.cat.username, self.cats.name),               
-                (self.dog.username, self.dogs.name),               
+        records = Features.group_editors()
+        self.assertEqual(len(records), 3)
+        test = [(self.cat.username, self.cats.name),
+                (self.dog.username, self.dogs.name),
                 (self.squirrel.username, self.cats.name)]
         self.assertCountEqual(test, records)
 
