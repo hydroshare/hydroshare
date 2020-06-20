@@ -7,10 +7,22 @@ from django.core.urlresolvers import reverse
 from django.test import RequestFactory
 from rest_framework import status
 
-from hs_core.hydroshare import add_file_to_resource, ResourceFile
-from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile
-from hs_file_types.views import set_file_type, update_model_program_metadata, update_model_instance_metadata, \
-    update_model_instance_metadata_json
+from hs_core.hydroshare import add_file_to_resource, ResourceFile, add_resource_files
+from hs_file_types.models import (
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+    NetCDFLogicalFile,
+    GeoRasterLogicalFile,
+    TimeSeriesLogicalFile,
+    GeoFeatureLogicalFile
+)
+from hs_file_types.views import (
+    set_file_type,
+    update_model_program_metadata,
+    update_model_instance_metadata,
+    update_model_instance_metadata_json,
+    move_aggregation
+)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -172,3 +184,75 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
     assert response.status_code == status.HTTP_200_OK
     mi_aggr.metadata.refresh_from_db()
     assert len(mi_aggr.metadata.metadata_json) > 0
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize('move_aggr_cls', [NetCDFLogicalFile, GeoRasterLogicalFile, TimeSeriesLogicalFile,
+                                           GeoFeatureLogicalFile])
+def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregation_folder, move_aggr_cls, mock_irods):
+    """test that we can move any of the following aggregations into a folder that represents a
+    model instance aggregation
+    1- Netcdf aggr
+    2- GeoFeature aggr
+    3- Raster aggr
+    4- Timeseries aggr
+    """
+
+    res, user = composite_resource_with_mi_aggregation_folder
+    mi_aggr = next(res.logical_files)
+    assert isinstance(mi_aggr, ModelInstanceLogicalFile)
+    mi_folder = mi_aggr.folder
+
+    # create aggr (to be moved) at the root
+    assert move_aggr_cls.objects.count() == 0
+    if move_aggr_cls == NetCDFLogicalFile:
+        file_name = "netcdf_valid.nc"
+        expected_aggr_name = file_name
+        aggr_class_name = "NetCDFLogicalFile"
+    elif move_aggr_cls == GeoRasterLogicalFile:
+        file_name = 'small_logan.tif'
+        expected_aggr_name = 'small_logan.vrt'
+        aggr_class_name = "GeoRasterLogicalFile"
+    elif move_aggr_cls == TimeSeriesLogicalFile:
+        file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
+        expected_aggr_name = file_name
+        aggr_class_name = "TimeSeriesLogicalFile"
+    else:
+        file_name = 'states.shp'
+        expected_aggr_name = file_name
+        aggr_class_name = "GeoFeatureLogicalFile"
+
+    if move_aggr_cls in (TimeSeriesLogicalFile, GeoFeatureLogicalFile):
+        files_to_upload = []
+        for shp_file in (file_name, 'states.shx', 'states.dbf', 'states.prj'):
+            upload_file_path = 'hs_file_types/tests/data/{}'.format(shp_file)
+            file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))
+            files_to_upload.append(file_to_upload)
+    else:
+        upload_file_path = 'hs_file_types/tests/{}'.format(file_name)
+        files_to_upload = [UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))]
+
+    # aggregation is created as part of auto aggregation creation
+    add_resource_files(res.short_id, *files_to_upload, folder="")
+
+    assert move_aggr_cls.objects.count() == 1
+    move_aggr = move_aggr_cls.objects.first()
+    assert move_aggr.aggregation_name == expected_aggr_name
+
+    # move the aggr (auto created) into the folder (mi_folder) that represents model instance aggr
+    # using the 'move_aggregation' view function to do the aggregation move
+    url_params = {'resource_id': res.short_id,
+                  'file_type_id': move_aggr.id,
+                  "hs_file_type": aggr_class_name,
+                  "tgt_path": mi_folder
+                  }
+    url = reverse('move_aggregation', kwargs=url_params)
+    factory = RequestFactory()
+    request = factory.post(url)
+    request.user = user
+    response = move_aggregation(request, resource_id=res.short_id, hs_file_type=aggr_class_name,
+                                file_type_id=move_aggr.id, tgt_path=mi_folder)
+    assert response.status_code == status.HTTP_200_OK
+    assert move_aggr_cls.objects.count() == 1
+    move_aggr.refresh_from_db()
+    assert move_aggr.aggregation_name == "{}/{}".format(mi_folder, expected_aggr_name)
