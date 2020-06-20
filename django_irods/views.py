@@ -269,12 +269,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     else:
                         response.content = "<h1>" + content_msg + "</h1>"
                     return response
-        else:
-            # bag can be directly downloaded
-            return JsonResponse({'id': '',
-                                 'name': 'bag download',
-                                 'status': 'Completed',
-                                 'payload': res.short_id})
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
         if path.endswith("resourcemap.xml") or path.endswith('resourcemetadata.xml'):
@@ -374,24 +368,20 @@ def rest_download(request, path, *args, **kwargs):
 
 def check_task_status(request, task_id=None, *args, **kwargs):
     '''
-    A view function to tell the client if the asynchronous create_bag_by_irods()
-    task is done and the bag file is ready for download.
+    A view function to tell the client if the asynchronous task is done and
+    if the task is done, payload returned from the task is also returned as
+    part of the task dict.
     Args:
         request: an ajax request to check for download status
     Returns:
-        JSON response to return result from asynchronous task create_bag_by_irods
+        JSON response to return task status dict
     '''
     if not task_id:
         task_id = request.POST.get('task_id')
-    result = AsyncResult(task_id)
-    if result.ready():
-        ret_value = str(result.get()).lower()
-        if ret_value == 'true':
-            return JsonResponse({"status": ret_value})
-        else:
-            return JsonResponse({"status": ret_value}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return JsonResponse({"status": None})
+
+    task_name = request.POST.get('task_name', '')
+    task_dict = get_task_by_id(task_id, task_name)
+    return JsonResponse(task_dict)
 
 
 @swagger_auto_schema(method='get', auto_schema=None)
