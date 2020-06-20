@@ -16,6 +16,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import status
 
@@ -393,13 +394,12 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 @shared_task
 def create_bag_by_irods(resource_id, request_username=None):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
-
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
-    :param resource_id: the resource uuid that is used to look for the resource to create the bag for.
-    :param request_username: the username of the requesting user
-    :return: bag_url as payload if bag creation operation succeeds;
-             empty string if there is an exception raised or resource does not exist.
+    :param
+    resource_id: the resource uuid that is used to look for the resource to create the bag for.
+    :return: bag_url if bag creation operation succeeds or
+             raise an exception if resource does not exist or any other issues that prevent bags from being created.
     """
     res = utils.get_resource_by_shortkey(resource_id)
 
@@ -410,12 +410,7 @@ def create_bag_by_irods(resource_id, request_username=None):
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
     if metadata_dirty is None or metadata_dirty.lower() == "true":
-        try:
-            create_bag_files(res)
-        except Exception as ex:
-            logger.error('Failed to create bag files. Error:{}'.format(ex.message))
-            # release the lock before returning bag creation failure
-            return ''
+        create_bag_files(res)
 
     irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
     # check to see if bagit readme.txt file exists or not
@@ -475,11 +470,9 @@ def create_bag_by_irods(resource_id, request_username=None):
             for fname in bagit_files:
                 if istorage.exists(fname):
                     istorage.delete(fname)
-            logger.error(ex.stderr)
-            return ''
+            raise SessionException(-1, '', ex.stderr)
     else:
-        logger.error('Resource does not exist.')
-        return ''
+        raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
 @shared_task

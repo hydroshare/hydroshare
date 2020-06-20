@@ -239,55 +239,7 @@ function removeExtraMetadataFromTable(row_id) {
     removed_row.remove().draw(false);
 }
 
-function update_download_status(task_id, download_path) {
-    download_status_timeout_id=-1;
-    // disable download button to prevent it from being clicked again
-    $('#btn-download-all').attr('disabled', 'disabled');
-    $.ajax({
-        dataType: "json",
-        cache: false,
-        timeout: 60000,
-        type: "POST",
-        url: '/django_irods/check_task_status/',
-        data: {
-            task_id: task_id
-        },
-        success: function(data) {
-            if(data.status == 'true') {
-                $("#loading").html('');
-                if(download_status_timeout_id > -1)
-                    clearTimeout(download_status_timeout_id);
-                $("#btn-download-all").removeAttr('disabled');
-                $("#download-status-info").html(
-                        "If your download does not start automatically, " +
-                        "please click <a href='" + download_path + "'>here</a>.");
-                window.location.href = download_path;
-            }
-            // only check status again in 3 seconds when $("#loading") is not
-            // cleared up by success status above
-            else if($("#loading").html()) {
-                $("#loading").html($("#loading").html() + ".");
-                download_status_timeout_id = setTimeout(function () {
-                    update_download_status(task_id, download_path);
-                }, 3000);
-            }
-        },
-        error: function (xhr, errmsg, err) {
-            if(download_status_timeout_id > -1)
-                clearTimeout(download_status_timeout_id);
-            $("#btn-download-all").removeAttr('disabled');
-            $("#download-status-info").html("Resource bag cannot be generated. Check server log for details.");
-        }
-    });
-}
-
 $(document).ready(function () {
-    var task_id = $('#task_id').val();
-    var download_path = $('#download_path').val();
-    if (task_id) {
-        update_download_status(task_id, download_path);
-    }
-
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
         stop: function (event, ui) {

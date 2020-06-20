@@ -3,6 +3,10 @@ from celery.result import AsyncResult
 from celery.result import states
 from django.conf import settings
 
+import logging
+
+logger = logging.getLogger('django')
+
 
 def _retrieve_task_id(job_name, res_id, job_dict):
     """
@@ -105,19 +109,27 @@ def get_all_tasks(username):
     return act_task_lists + res_task_lists + sched_task_lists
 
 
-def get_task_by_id(task_id, name=''):
+def get_task_by_id(task_id, name='', payload=''):
     """
     get task dict by celery task id
     :param task_id: task id
     :param name: task name with default being empty
+    :param payload: task payload to use. If empty, task return result will be used as payload
     :return: task dict with keys id, name, status
     """
     result = AsyncResult(task_id)
-    payload = ''
     status = 'In progress'
     if result.ready():
-        status = 'Completed'
-        payload = str(result.get()).lower()
+        try:
+            ret_value = result.get()
+            status = 'Completed'
+            if not payload:
+                payload = ret_value
+            # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
+        except Exception:
+            # logging exception will log the full stack trace and prepend a line with the message str input argument
+            logger.exception('An exception is raised from task {}'.format(task_id))
+            status = 'Failed'
     elif result.failed():
         status = 'Failed'
     elif result.status == states.PENDING:

@@ -178,9 +178,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                                                 aggregation_name, is_sf_request, request.user.username))
             task_id = task.task_id
             request.session['task_id'] = task_id
-            delete_zip.apply_async((irods_output_path, ),
+            delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
-
             if rest_call:
                 return HttpResponse(
                     json.dumps({
@@ -189,13 +188,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                         'download_path': '/django_irods/rest_download/' + output_path}),
                     content_type="application/json")
             else:
-                # return status to the UI
-                request.session['task_id'] = task.task_id
-                # TODO: this is mistaken for a bag download in the UI!
-                # TODO: multiple asynchronous downloads don't stack!
-                request.session['download_path'] = '/django_irods/download/' + output_path
-                # redirect to resource landing page, which interprets session variables.
-                return HttpResponseRedirect(res.get_absolute_url())
+                # return status to the task notification App AJAX call
+                download_path = '/django_irods/download/' + output_path
+                task_dict = get_task_by_id(task_id, name='zip download', payload=download_path)
+                return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
@@ -246,10 +242,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 if not task_id:
                     task = create_bag_by_irods.apply_async((res_id, request.user.username), countdown=3)
                     task_id = task.task_id
-                    task_dict = get_task_by_id(task_id, 'bag download')
+                    task_dict = get_task_by_id(task_id, name='bag download', payload=res.bag_url)
                     return JsonResponse(task_dict)
                 else:
-                    task_dict = get_task_by_id(task_id, 'bag download')
+                    task_dict = get_task_by_id(task_id, name='bag download', payload=res.bag_url)
                     return JsonResponse(task_dict)
 
                 if rest_call:
@@ -366,26 +362,29 @@ def rest_download(request, path, *args, **kwargs):
     return download(request, path, rest_call=True, *args, **kwargs)
 
 
-def check_task_status(request, task_id=None, *args, **kwargs):
-    '''
-    A view function to tell the client if the asynchronous task is done and
-    if the task is done, payload returned from the task is also returned as
-    part of the task dict.
-    Args:
-        request: an ajax request to check for download status
-    Returns:
-        JSON response to return task status dict
-    '''
-    if not task_id:
-        task_id = request.POST.get('task_id')
-
-    task_name = request.POST.get('task_name', '')
-    task_dict = get_task_by_id(task_id, task_name)
-    return JsonResponse(task_dict)
-
-
 @swagger_auto_schema(method='get', auto_schema=None)
 @api_view(['GET'])
 def rest_check_task_status(request, task_id, *args, **kwargs):
-    # need to have a separate view function just for REST API call
-    return check_task_status(request, task_id, *args, **kwargs)
+    '''
+    A REST view function to tell the client if the asynchronous create_bag_by_irods()
+    task is done and the bag file is ready for download.
+    Args:
+        request: an ajax request to check for download status
+    Returns:
+        JSON response to return result from asynchronous task create_bag_by_irods
+    '''
+    if not task_id:
+        task_id = request.POST.get('task_id')
+    result = AsyncResult(task_id)
+    if result.ready():
+        try:
+            ret_value = result.get()
+            return JsonResponse({"status": 'true',
+                                 'payload': str(ret_value)})
+        # use the Broad scope Exception to catch all exception types since this view function can be used for all tasks
+        except Exception:
+            # logging exception will log the full stack trace and prepend a line with the message str input argument
+            logger.exception('An exception is raised from task {}'.format(task_id))
+            return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse({"status": None})
