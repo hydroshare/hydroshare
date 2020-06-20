@@ -9,27 +9,28 @@
 <meta name="keywords" content="{% block meta_keywords %}{% endblock %}">
 <meta name="description" content="{% block meta_description %}{% endblock %}">
 <title>{% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
-<link rel="shortcut icon" href="{% static "img/favicon.png" %}">
+<link rel="shortcut icon" href="{% static 'img/favicon.png' %}">
 
 {% ifinstalled mezzanine.blog %}
-<link rel="alternate" type="application/rss+xml" title="RSS" href="{% url "blog_post_feed" "rss" %}">
-<link rel="alternate" type="application/atom+xml" title="Atom" href="{% url "blog_post_feed" "atom" %}">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="{% url 'blog_post_feed' 'rss' %}">
+<link rel="alternate" type="application/atom+xml" title="Atom" href="{% url 'blog_post_feed' 'atom' %}">
 {% endifinstalled %}
 
-<link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}" rel="stylesheet" />
-<link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}" />
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic">
+<link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_fonts.css' %}">
+<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
+<link rel="stylesheet" type="text/css" href="{% static 'fonts/font-mfizz/font-mfizz.css' %}">
 
 {% compress css %}
-<link href="{% static "css/bootstrap.3.0.2.min.css" %}" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="{% static "css/animate.css" %}"/>
-<link rel="stylesheet" type="text/css" href="{% static "css/elements.css" %}"/>
-<link rel='stylesheet' type='text/css' href='{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}'/>
-<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_core.css" %}"/>
-<link href="{{ STATIC_URL }}css/identifiers.css" rel="stylesheet"/>
-<link href="{{ STATIC_URL }}css/academicons.min.css" rel="stylesheet"/>
-<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_extends.css" %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.3.0.2.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/animate.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}">
+<link rel='stylesheet' type='text/css' href="{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_core.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/notifications-app.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/identifiers.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/academicons.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_extends.css' %}">
 
 {% if request.user.is_staff %}
 <style>
@@ -42,15 +43,15 @@
 {% endcompress %}
 
 {% compress js %}
-<script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>
-<script src="{% static "js/custom.js" %}"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
-<script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
-<script src="{% static "js/jqcsrf.js" %}"></script>
-<script src="{% static "js/jquery-ui.js" %}"></script>
-<script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
-<script src="{% static "js/bootstrap-extras.js" %}"></script>
-<script src="{% static "js/hs-vue/notifications-app.js" %}"></script>
+<script type="text/javascript" src="{% static 'mezzanine/js/'|add:settings.JQUERY_FILENAME %}"></script>
+<script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/vue-2.6.10-dev.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/scrolltopcontrol.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jqcsrf.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap.3.0.2.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap-extras.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/notifications-app.js' %}"></script>
 
 {% block extra_js %}{% endblock %}
 {% endcompress %}
@@ -151,44 +152,7 @@
                                 </li>
                             </ul>
                         </li>
-                        <li id="notifications-dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" 
-                                role="button" aria-haspopup="true" aria-expanded="false">
-                                <span class="glyphicon glyphicon-bell"></span>
-                            </a>
-                            <ul  class="dropdown-menu arrow_box">
-                                <li class="notifications">
-                                    <div id="app-notifications">
-                                        <div v-if="loading">Loading...</div>
-                                        <div v-if="!loading">
-                                            <div v-if="tasks.length" class="task" v-for="task in tasks">
-                                                <div class="notification--content">
-                                                    <div class="notification--name">${taskMessages[task.name].title}</span>
-                                                        <div class="notification--status">
-                                                            <span v-if="task.status === 'Pending execution' || task.status === 'In progress'">
-                                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                                                            </span>
-                                                            <span v-else class="glyphicon glyphicon glyphicon-ok"></span>
-                                    
-                                                            <small v-if="task.status === 'Completed' && task.name === 'bag download'">
-                                                                Your download will start in a few seconds. If it does not start click <a
-                                                                    :href="task.payload">here</a>
-                                                                to download your files directly.
-                                                            </small>
-                                                            <small v-else>${taskMessages[task.name].status[task.status]}</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="notification--controls">
-                                                    <span class="glyphicon glyphicon glyphicon-remove text-muted"></span>
-                                                </div>
-                                            </div>
-                                            <div v-else>You don't have any notifications.</div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
+                        {% include "includes/notifications-app.html" %}
                     {% else %}
                     <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
                     <li id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>

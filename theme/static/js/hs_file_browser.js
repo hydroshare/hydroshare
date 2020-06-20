@@ -2123,18 +2123,16 @@ $(document).ready(function () {
             type: "GET",
             url: bagUrl,
             success: function (task) {
-                if (task.id) {
-                    notificationsApp.registerTask(task);
-                    notificationsApp.show();
+                if (!task.id) {
+                    task = {
+                        id: Date.now(),
+                        name: "bag download",
+                        status: "Completed",
+                        payload: bagUrl
+                    }
                 }
-                else {
-                    // Remove previous temporary download frames
-                    $(".temp-download-frame").remove();
-
-                    // Bag can be downloaded directly
-                    $("body").append("<iframe class='temp-download-frame' id='"
-                    + task.payload + "' style='display:none;' src='" + bagUrl + "'></iframe>");
-                }
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
                 $(event.currentTarget).toggleClass("disabled", false);
             }
         });

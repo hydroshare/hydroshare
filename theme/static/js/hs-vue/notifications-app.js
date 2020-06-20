@@ -1,20 +1,21 @@
 var notificationsApp;
 
-Vue.component('notification', {
-    delimiters: ['${', '}'],
-    template: '#notification',
-    props: {
-        title: { type: Object, required: true },
-        status: { type: Boolean, required: true },
-    },
-    data: function () {
-        return {}
-    },
-});
+// Vue.component('notification', {
+//     delimiters: ['${', '}'],
+//     template: '#notification',
+//     props: {
+//         title: { type: Object, required: true },
+//         status: { type: Boolean, required: true },
+//     },
+//     data: function () {
+//         return {}
+//     },
+// });
 
 $(document).ready(function () {
+    const checkDelay = 1000; // ms
+
     $('#notifications-dropdown').on('show.bs.dropdown', function () {
-        console.log("shown");
         notificationsApp.fetchTasks();
     });
 
@@ -34,6 +35,7 @@ $(document).ready(function () {
                     }
                 }
             },
+
         },
         computed: {
             someInProgress: function () {
@@ -74,7 +76,7 @@ $(document).ready(function () {
                     // check in 1s
                     setTimeout(function() {
                         vue.checkStatus();
-                    }, 1000);
+                    }, checkDelay);
                 }
                 else {
                     vue.isCheckingStatus = false;
@@ -97,7 +99,7 @@ $(document).ready(function () {
                     $.when.apply($, calls).done(function () {
                         setTimeout(function() {
                             vue.checkStatus();
-                        }, 1000);
+                        }, checkDelay);
                     });
                 }
                 else {
