@@ -812,13 +812,39 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
-#notifications-dropdown a {
+#notifications-dropdown > a {
 	font-size: 20px;
 }
 
-li.notifications .task {
+.notification--status {
 	display: flex;
-	justify-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.notification--status span.fa, .notification--status span.glyphicon {
+	margin-right: 1em;
+}
+
+li.notifications {
+	text-transform: none;
+}
+
+li.notifications .task {
+	padding: 1em;
+	border-bottom: 1px solid #DDD;
+	display: flex;
+}
+
+li.notifications .task .notification--content {
+	flex-grow: 1;
+}
+
+li.notifications .task .notification--controls {
+	margin-left: 1em;
+	display: flex;
+	align-items: center;
 }
 
 .display-none {
@@ -5109,4 +5135,3 @@ a[data-toggle="modal"] {
 .c-pointer {
 	cursor: pointer;
 }
-

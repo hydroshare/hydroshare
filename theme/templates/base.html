@@ -162,10 +162,28 @@
                                         <div v-if="loading">Loading...</div>
                                         <div v-if="!loading">
                                             <div v-if="tasks.length" class="task" v-for="task in tasks">
-                                                <span>Task name: ${task.name}</span>
-                                                <span>Task status: ${task.status}</span>
+                                                <div class="notification--content">
+                                                    <div class="notification--name">${taskMessages[task.name].title}</span>
+                                                        <div class="notification--status">
+                                                            <span v-if="task.status === 'Pending execution' || task.status === 'In progress'">
+                                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                                            </span>
+                                                            <span v-else class="glyphicon glyphicon glyphicon-ok"></span>
+                                    
+                                                            <small v-if="task.status === 'Completed' && task.name === 'bag download'">
+                                                                Your download will start in a few seconds. If it does not start click <a
+                                                                    :href="task.payload">here</a>
+                                                                to download your files directly.
+                                                            </small>
+                                                            <small v-else>${taskMessages[task.name].status[task.status]}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="notification--controls">
+                                                    <span class="glyphicon glyphicon glyphicon-remove text-muted"></span>
+                                                </div>
                                             </div>
-                                            <div v-if="!tasks.length">You don't have any notifications.</div>
+                                            <div v-else>You don't have any notifications.</div>
                                         </div>
                                     </div>
                                 </li>

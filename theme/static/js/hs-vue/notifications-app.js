@@ -24,12 +24,21 @@ $(document).ready(function () {
         data: {
             tasks: [],
             loading: true,
-            isCheckingStatus: false
+            isCheckingStatus: false,
+            taskMessages: {
+                "bag download": {
+                    title: "Download all content as Zipped BagIt Archive",
+                    status: {
+                        "Pending execution": "Pending...",
+                        "In progress": "Getting your files ready for download..."
+                    }
+                }
+            },
         },
         computed: {
             someInProgress: function () {
                 return this.tasks.find(function (task) {
-                    return task.status === "In progress";
+                    return task.status === "In progress" || task.status === "Pending execution";
                 });
             }
         },
@@ -46,17 +55,9 @@ $(document).ready(function () {
                     url: '/hsapi/_internal/get_tasks_by_user/',
                     success: function (tasks) {
                         vue.loading = false;
-                        vue.tasks = [];
 
                         for (let i = 0; i < tasks.length; i++) {
                             vue.registerTask(tasks[i]);
-                        }
-                        
-                        if (vue.someInProgress && !vue.isCheckingStatus) {
-                            // check again in 500ms
-                            setTimeout(function() {
-                                vue.checkStatus();
-                            }, 500)
                         }
                     },
                     error: function (response) {
@@ -65,29 +66,52 @@ $(document).ready(function () {
                     }
                 });
             },
-            // Checks every 500ms while there is at least one task in progress
+            scheduleCheck() {
+                let vue = this;
+                if (vue.someInProgress && !vue.isCheckingStatus) {
+                    vue.isCheckingStatus = true;
+
+                    // check in 1s
+                    setTimeout(function() {
+                        vue.checkStatus();
+                    }, 1000);
+                }
+                else {
+                    vue.isCheckingStatus = false;
+                }
+            },
+            // Checks every 1s for every task in progress
             checkStatus: function () {
                 let vue = this;
-                vue.isCheckingStatus = true;
-                $.ajax({
-                    type: "GET",
-                    url: '/hsapi/_internal/get_tasks_by_user/',
-                    success: function (tasks) {
-                        vue.tasks = [];
 
-                        for (let i = 0; i < tasks.length; i++) {
-                            vue.registerTask(tasks[i]);
-                        }
-                        
-                        if (vue.someInProgress) {
-                            // check again in 500ms
-                            setTimeout(function() {
-                                vue.checkStatus();
-                            }, 500)
-                        }
-                        else {
-                            vue.isCheckingStatus = false;
-                        }
+                if (vue.someInProgress) {
+                    const tasksInProgress = vue.tasks.filter(function (task) {
+                        return task.status === "In progress" || task.status === "Pending execution";
+                    });
+
+                    let calls = tasksInProgress.map(function (task) {
+                        return vue.checkTaskStatus(task);
+                    });
+
+                    // wait for all of task checks to finish and recall self after 1s
+                    $.when.apply($, calls).done(function () {
+                        setTimeout(function() {
+                            vue.checkStatus();
+                        }, 1000);
+                    });
+                }
+                else {
+                    vue.isCheckingStatus = false;
+                }
+            },
+            checkTaskStatus(task) {
+                let vue = this;
+                
+                return $.ajax({
+                    type: "GET",
+                    url: '/hsapi/_internal/get_task/' + task.id,
+                    success: function (task) {
+                        vue.registerTask(task);
                     },
                     error: function (response) {
                         console.log(response);
@@ -95,43 +119,59 @@ $(document).ready(function () {
                 });
             },
             downloadFile: function (url, taskId) {
+                // Remove previous temporary download frames
+                $(".temp-download-frame").remove();
+
                 $("body").append("<iframe class='temp-download-frame' id='task-"
                     + taskId + "' style='display:none;' src='" + url + "'></iframe>");
             },
             registerTask: function (task) {
                 let vue = this;
-                let existingTask = null;
+                let targetTask = null;
 
-                existingTask = vue.tasks.find(function (t) {
+                targetTask = vue.tasks.find(function (t) {
                     return t.id === task.id;
                 });
 
-                switch (task.name) {
+                if (targetTask) {
+                    // Update existing task only if values have changed to avoid Vue change detection
+                    if (task.status !== targetTask.status || task.payload !== targetTask.payload) {
+                        targetTask.status = task.status;
+                        targetTask.payload = task.payload;
+                    }
+                }
+                else {
+                    // Add new task
+                    targetTask = task;
+                    vue.tasks = [targetTask, ...vue.tasks];
+                }
+
+                switch (targetTask.name) {
                     case "bag download":
                         // Check if bag creation is finished
-                        if (task.status === "Completed" && task.payload) {
-                            const bagUrl = task.payload;
-                            vue.downloadFile(bagUrl, task.id);
+                        if (targetTask.status === "Completed" && targetTask.payload) {
+                            const bagUrl = targetTask.payload;
+                            vue.downloadFile(bagUrl, targetTask.id);
                         }
                         break;
                     case "zip download":
                         // Check if zip creation is finished
-                        if (task.status === "Completed" && task.payload) {
-                            const zipUrl = task.payload;
-                            vue.downloadFile(zipUrl, task.id);
+                        if (targetTask.status === "Completed" && targetTask.payload) {
+                            const zipUrl = targetTask.payload;
+                            vue.downloadFile(zipUrl, targetTask.id);
                         }
                         break;
                     default:
                         break;
                 }
 
-                if (existingTask) {
-                    // Update existing task
-                    existingTask = task;    
-                }
-                else {
-                    // Add new task
-                    vue.tasks = [task, ...vue.tasks];
+                switch (targetTask.status) {
+                    case "Pending execution":
+                        vue.scheduleCheck();
+                        break;
+                    case "In progress":
+                        vue.scheduleCheck();
+                        break;
                 }
             }
         },
