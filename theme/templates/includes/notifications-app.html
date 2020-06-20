@@ -7,7 +7,7 @@
             <div id="app-notifications">
                 <div class="notifications--header">
                     <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
-                    <a href="#" id="btn-notifications-clear">Clear</a>
+                    <a id="btn-notifications-clear" v-on:click="clear">Clear</a>
                 </div>
                 
                 <div v-if="loading" class="default-content">
@@ -35,7 +35,14 @@
                                 </div>
                             </div>
                             <div class="notification--controls">
-                                <span class="glyphicon glyphicon glyphicon-remove text-muted"></span>
+                                <button type="button" v-if="canBeDismissed(task)" v-on:click="dismissTask(task)" class="close" aria-label="Dismiss"
+                                    title="Dismiss">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                                
+                                <button type="button" v-if="canBeAborted(task)" class="close" title="Abort" aria-label="Abort">
+                                    <span class="glyphicon glyphicon-ban-circle"></span>
+                                </button>
                             </div>
                         </div>
                     </div>

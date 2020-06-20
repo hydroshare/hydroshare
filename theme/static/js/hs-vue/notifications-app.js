@@ -68,6 +68,30 @@ $(document).ready(function () {
                     }
                 });
             },
+            dismissTask: function (task) {
+                let vue = this;
+                if (vue.canBeDismissed(task)) {
+                    vue.tasks = vue.tasks.filter(function(t) {
+                        return t.id !== task.id;
+                    });
+                }
+            },
+            canBeDismissed: function (task) {
+                return task.status === 'Completed'
+                    || task.status === 'Failed'
+                    || task.status === 'Aborted'
+            },
+            canBeAborted: function (task) {
+                return task.status === 'In progress'
+                    || task.status === 'Pending execution'
+            },
+            clear: function (event) {
+                event.stopPropagation();
+                let vue = this;
+                vue.tasks = vue.tasks.filter(function(task) {
+                    return !vue.canBeDismissed(task);
+                });
+            },
             scheduleCheck() {
                 let vue = this;
                 if (vue.someInProgress && !vue.isCheckingStatus) {

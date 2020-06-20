@@ -41,7 +41,13 @@ li.notifications .task .notification--content {
 li.notifications .task .notification--controls {
 	margin-left: 1em;
 	display: flex;
-	align-items: center;
+    align-items: center;
+    font-size: 14px;
+}
+
+li.notifications .task .notification--controls .glyphicon,
+li.notifications .task .notification--controls .fa {
+    font-size: 14px;
 }
 
 #notifications-dropdown .notifications--header {
@@ -49,8 +55,13 @@ li.notifications .task .notification--controls {
     border-bottom: 1px solid #DDD;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 #notifications-dropdown .default-content {
     padding: 1em;
+}
+
+#btn-notifications-clear {
+    cursor: pointer;
 }
