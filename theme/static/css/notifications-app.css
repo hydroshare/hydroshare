@@ -21,7 +21,7 @@
 }
 
 .notification--status span.fa, .notification--status span.glyphicon {
-	margin-right: 1em;
+	margin-right: 6px;
 }
 
 li.notifications {
@@ -43,6 +43,10 @@ li.notifications .task .notification--controls {
 	display: flex;
     align-items: center;
     font-size: 14px;
+}
+
+li.notifications .task .notification--controls button {
+    outline: none;
 }
 
 li.notifications .task .notification--controls .glyphicon,

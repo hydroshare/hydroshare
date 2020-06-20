@@ -31,11 +31,19 @@ $(document).ready(function () {
                     title: "Download all content as Zipped BagIt Archive",
                     status: {
                         "Pending execution": "Pending...",
-                        "In progress": "Getting your files ready for download..."
+                        "In progress": "Getting your files ready for download...",
+                        "Aborted": "Aborted",
+                        "Failed": "Download failed"
                     }
                 }
             },
-
+            statusIcons: {
+                "Aborted": "glyphicon glyphicon-ban-circle",
+                "Failed": "glyphicon glyphicon-remove-sign",
+                "Completed": "glyphicon glyphicon-ok-sign",
+                "Pending execution": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
+                "In progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"
+            }
         },
         computed: {
             someInProgress: function () {
@@ -81,12 +89,26 @@ $(document).ready(function () {
                     || task.status === 'Failed'
                     || task.status === 'Aborted'
             },
+            abortTask: function(task) {
+                let vue = this;
+                if (vue.canBeAborted(task)) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/abort_task/' + task.id,
+                        success: function (task) {
+                            vue.registerTask(task);
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            },
             canBeAborted: function (task) {
                 return task.status === 'In progress'
                     || task.status === 'Pending execution'
             },
-            clear: function (event) {
-                event.stopPropagation();
+            clear: function () {
                 let vue = this;
                 vue.tasks = vue.tasks.filter(function(task) {
                     return !vue.canBeDismissed(task);
@@ -145,11 +167,42 @@ $(document).ready(function () {
                 });
             },
             downloadFile: function (url, taskId) {
+                console.log("downloading...");
                 // Remove previous temporary download frames
                 $(".temp-download-frame").remove();
 
                 $("body").append("<iframe class='temp-download-frame' id='task-"
                     + taskId + "' style='display:none;' src='" + url + "'></iframe>");
+            },
+            processTask: function (task) {
+                let vue = this;
+                switch (task.name) {
+                    case "bag download":
+                        // Check if bag creation is finished
+                        if (task.status === "Completed" && task.payload) {
+                            const bagUrl = task.payload;
+                            vue.downloadFile(bagUrl, task.id);
+                        }
+                        break;
+                    case "zip download":
+                        // Check if zip creation is finished
+                        if (task.status === "Completed" && task.payload) {
+                            const zipUrl = task.payload;
+                            vue.downloadFile(zipUrl, task.id);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                switch (task.status) {
+                    case "Pending execution":
+                        vue.scheduleCheck();
+                        break;
+                    case "In progress":
+                        vue.scheduleCheck();
+                        break;
+                }
             },
             registerTask: function (task) {
                 let vue = this;
@@ -164,40 +217,14 @@ $(document).ready(function () {
                     if (task.status !== targetTask.status || task.payload !== targetTask.payload) {
                         targetTask.status = task.status;
                         targetTask.payload = task.payload;
+                        vue.processTask(targetTask);
                     }
                 }
                 else {
                     // Add new task
                     targetTask = task;
                     vue.tasks = [targetTask, ...vue.tasks];
-                }
-
-                switch (targetTask.name) {
-                    case "bag download":
-                        // Check if bag creation is finished
-                        if (targetTask.status === "Completed" && targetTask.payload) {
-                            const bagUrl = targetTask.payload;
-                            vue.downloadFile(bagUrl, targetTask.id);
-                        }
-                        break;
-                    case "zip download":
-                        // Check if zip creation is finished
-                        if (targetTask.status === "Completed" && targetTask.payload) {
-                            const zipUrl = targetTask.payload;
-                            vue.downloadFile(zipUrl, targetTask.id);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-                switch (targetTask.status) {
-                    case "Pending execution":
-                        vue.scheduleCheck();
-                        break;
-                    case "In progress":
-                        vue.scheduleCheck();
-                        break;
+                    vue.processTask(targetTask);
                 }
             }
         },

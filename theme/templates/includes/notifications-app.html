@@ -19,11 +19,7 @@
                             <div class="notification--content">
                                 <div class="notification--name">${taskMessages[task.name].title}</span>
                                     <div class="notification--status">
-                                        <span
-                                            v-if="task.status === 'Pending execution' || task.status === 'In progress'">
-                                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                                        </span>
-                                        <span v-else class="glyphicon glyphicon glyphicon-ok"></span>
+                                        <span :class="statusIcons[task.status]"></span>
 
                                         <small v-if="task.status === 'Completed' && task.name === 'bag download'">
                                             Your download will start in a few seconds. If it does not start click <a
@@ -39,8 +35,9 @@
                                     title="Dismiss">
                                     <span aria-hidden="true">×</span>
                                 </button>
-                                
-                                <button type="button" v-if="canBeAborted(task)" class="close" title="Abort" aria-label="Abort">
+                            
+                                <button type="button" v-if="canBeAborted(task)" v-on:click="abortTask(task)" class="close" title="Abort"
+                                    aria-label="Abort">
                                     <span class="glyphicon glyphicon-ban-circle"></span>
                                 </button>
                             </div>
