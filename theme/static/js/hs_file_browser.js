@@ -2112,6 +2112,7 @@ $(document).ready(function () {
 
     // Download All method
     $("#btn-download-all, #download-bag-btn").click(function (event) {
+        $(event.currentTarget).toggleClass("disabled", true);
         const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
 
         if (!bagUrl) {
@@ -2127,10 +2128,14 @@ $(document).ready(function () {
                     notificationsApp.show();
                 }
                 else {
+                    // Remove previous temporary download frames
+                    $(".temp-download-frame").remove();
+
                     // Bag can be downloaded directly
                     $("body").append("<iframe class='temp-download-frame' id='"
                     + task.payload + "' style='display:none;' src='" + bagUrl + "'></iframe>");
                 }
+                $(event.currentTarget).toggleClass("disabled", false);
             }
         });
     });
