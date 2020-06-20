@@ -23,7 +23,15 @@ $(document).ready(function () {
         delimiters: ['${', '}'],
         data: {
             tasks: [],
-            loading: true
+            loading: true,
+            isCheckingStatus: false
+        },
+        computed: {
+            someInProgress: function () {
+                return this.tasks.find(function (task) {
+                    return task.status === "In progress";
+                });
+            }
         },
         methods: {
             // Shows the tasks dropdown
@@ -37,12 +45,52 @@ $(document).ready(function () {
                     type: "GET",
                     url: '/hsapi/_internal/get_tasks_by_user/',
                     success: function (tasks) {
-                        vue.tasks = tasks;
                         vue.loading = false;
+                        vue.tasks = [];
+
+                        for (let i = 0; i < tasks.length; i++) {
+                            vue.registerTask(tasks[i]);
+                        }
+                        
+                        if (vue.someInProgress && !vue.isCheckingStatus) {
+                            // check again in 500ms
+                            setTimeout(function() {
+                                vue.checkStatus();
+                            }, 500)
+                        }
                     },
                     error: function (response) {
                         console.log(response);
                         vue.loading = false;
+                    }
+                });
+            },
+            // Checks every 500ms while there is at least one task in progress
+            checkStatus: function () {
+                let vue = this;
+                vue.isCheckingStatus = true;
+                $.ajax({
+                    type: "GET",
+                    url: '/hsapi/_internal/get_tasks_by_user/',
+                    success: function (tasks) {
+                        vue.tasks = [];
+
+                        for (let i = 0; i < tasks.length; i++) {
+                            vue.registerTask(tasks[i]);
+                        }
+                        
+                        if (vue.someInProgress) {
+                            // check again in 500ms
+                            setTimeout(function() {
+                                vue.checkStatus();
+                            }, 500)
+                        }
+                        else {
+                            vue.isCheckingStatus = false;
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response);
                     }
                 });
             },
@@ -53,10 +101,10 @@ $(document).ready(function () {
             registerTask: function (task) {
                 let vue = this;
                 let existingTask = null;
-                if (vue.tasks.length)
-                    existingTask = vue.tasks.find(function(t) {
-                        return t.id === task.id;
-                    });
+
+                existingTask = vue.tasks.find(function (t) {
+                    return t.id === task.id;
+                });
 
                 switch (task.name) {
                     case "bag download":
@@ -76,16 +124,14 @@ $(document).ready(function () {
                     default:
                         break;
                 }
-                
+
                 if (existingTask) {
-                    existingTask = task;
+                    // Update existing task
+                    existingTask = task;    
                 }
                 else {
-                    if (vue.tasks.length) {
-                        vue.tasks = [task, ...vue.tasks];
-                    }
-                    else
-                        vue.tasks = [task]
+                    // Add new task
+                    vue.tasks = [task, ...vue.tasks];
                 }
             }
         },
