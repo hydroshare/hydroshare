@@ -335,13 +335,15 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, request_username=None):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path,
+                    request_username=None):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
     :param aggregation_name: The name of the aggregation to zip
     :param sf_zip: signals a single file to zip
+    :param download_path: download path to return as task payload
     :param request_username: the username of the requesting user
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
@@ -387,8 +389,8 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
             istorage.zipup(input_path, output_path)
     except SessionException as ex:
         logger.error(ex.stderr)
-        return False
-    return True
+        return ''
+    return download_path
 
 
 @shared_task

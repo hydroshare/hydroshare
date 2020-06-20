@@ -172,10 +172,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
-
+        download_path = '/django_irods/download/' + output_path
         if use_async:
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request, request.user.username))
+                                                aggregation_name, is_sf_request, download_path, request.user.username))
             task_id = task.task_id
             request.session['task_id'] = task_id
             delete_zip.apply_async((irods_output_path,),
@@ -189,13 +189,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     content_type="application/json")
             else:
                 # return status to the task notification App AJAX call
-                download_path = '/django_irods/download/' + output_path
                 task_dict = get_task_by_id(task_id, name='zip download', payload=download_path)
                 return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         aggregation_name, is_sf_request)
+                                         aggregation_name, is_sf_request, download_path)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
