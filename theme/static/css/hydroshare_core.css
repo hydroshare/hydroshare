@@ -816,6 +816,17 @@ li.account p{
 	font-size: 20px;
 }
 
+#notifications-dropdown .dropdown-menu {
+    width: 350px;
+    max-height: 400px;
+    height: auto;
+}
+
+#notifications-dropdown .dropdown-menu > li {
+	max-height: 398px;
+    overflow-y: auto;
+}
+
 .notification--status {
 	display: flex;
     justify-content: flex-start;
