@@ -307,7 +307,16 @@ class CompositeResource(BaseResource):
             # if none of the resource files in the target path has logical file then we can set the folder
             # to model program or model instance aggregation
             if files_in_path:
-                return not any(res_file.has_logical_file for res_file in files_in_path)
+                if aggr_type == "ModelProgram":
+                    # if none of the resource files in the target path has logical file then we can set the folder
+                    # to model program aggregation
+                    return not any(res_file.has_logical_file for res_file in files_in_path)
+                else:
+                    # if any of the files is part of a model instance aggr or fileset - folder can't be
+                    # set to model instance
+                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
+                                                                  res_file.logical_file.is_fileset) for
+                                   res_file in files_in_path)
 
             # path has no files - can't set the folder to aggregation
             return False
@@ -677,6 +686,8 @@ class CompositeResource(BaseResource):
         is_moving_file = False
         is_moving_folder = False
 
+        istorage = self.get_irods_storage()
+
         tgt_folder, tgt_file_name = os.path.split(tgt_full_path)
         _, tgt_ext = os.path.splitext(tgt_file_name)
         if tgt_ext:
@@ -698,16 +709,18 @@ class CompositeResource(BaseResource):
                 is_moving_file = True
         elif src_ext:
             is_moving_file = True
-        else:
-            tgt_base_dir = os.path.dirname(tgt_file_dir)
-            src_base_dir = os.path.dirname(src_file_dir)
+        elif not istorage.exists(tgt_file_dir):
+            src_base_dir = os.path.dirname(src_full_path)
+            tgt_base_dir = os.path.dirname(tgt_full_path)
             if src_base_dir == tgt_base_dir:
                 # renaming folder - no restriction
                 return True
             is_moving_folder = True
+        else:
+            is_moving_folder = True
 
         def check_target_folder(src_aggr=None):
-            """checks if the target folder allows file/folder move action"""
+            """checks if the target folder allows file/folder being moved into it"""
             tgt_aggr_path = tgt_file_dir[len(self.file_path) + 1:]
             # check if this move would create a nested model program aggregation -
             # nested model program aggregation is NOT allowed
@@ -732,7 +745,7 @@ class CompositeResource(BaseResource):
                                 return True
 
                         # moving a folder based model program/instance aggregation
-                        if src_model_aggr == tgt_model_aggr:
+                        if src_model_aggr.id == tgt_model_aggr.id:
                             # moving folder within the same model/instance aggregation is allowed
                             return True
 
@@ -803,6 +816,13 @@ class CompositeResource(BaseResource):
                     return check_src_aggregation(src_aggregation)
                 else:
                     # moving folder
+                    # check if any of the files in the moved folder is part of aggregation
+                    src_res_files = ResourceFile.list_folder(self, aggregation_path, sub_folders=True)
+                    for src_file in src_res_files:
+                        if src_file.has_logical_file:
+                            if not check_target_folder(src_file.logical_file):
+                                return False
+
                     return check_target_folder()
         else:
             # get source resource file object from source file path
