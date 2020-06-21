@@ -194,7 +194,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         aggregation_name, is_sf_request, download_path)
+                                         aggregation_name=aggregation_name, sf_zip=is_sf_request,
+                                         download_path=download_path)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
