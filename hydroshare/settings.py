@@ -307,7 +307,8 @@ INSTALLED_APPS = (
     "hs_odm2",
     "security",
     "markdown",
-    "hs_communities"
+    "hs_communities",
+    "hs_discover"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -684,10 +685,6 @@ SECURE_HSTS_SECONDS = 31536000
 # Cookie Stuff
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
-
-SWAGGER_SETTINGS = {
-    "VALIDATOR_URL": False
-}
 
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'

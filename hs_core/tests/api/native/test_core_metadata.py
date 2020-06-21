@@ -952,7 +952,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               url='http://resources.org/001'))
 
         # test adding an identifier with name 'DOI' when the resource does not have a DOI - should raise an exception
-        self.res.doi = None
+        self.res.doi = ''
         self.res.save()
         url_doi = "https://doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
@@ -982,7 +982,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               doi_idf.id))
 
         # test that identifier DOI can be deleted when the resource does not have a DOI.
-        self.res.doi = None
+        self.res.doi = ''
         self.res.save()
         resource.delete_metadata_element(self.res.short_id, 'identifier', doi_idf.id)
 
