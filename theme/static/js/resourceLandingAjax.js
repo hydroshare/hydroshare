@@ -822,11 +822,11 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
             remove_original_after_zip: "false"
         },
         success: function (result) {
-            // TODO: this response should be a task
-            console.log(result);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
             display_error_message('Folder Zipping Failed', xhr.responseText);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
@@ -868,7 +868,6 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 $("#txtFolderName").val("");
             }
-
         },
         error: function(xhr, errmsg, err){
             display_error_message('Folder Creation Failed', xhr.responseText);

@@ -35,6 +35,15 @@ $(document).ready(function () {
                         "Aborted": "Aborted",
                         "Failed": "Download failed"
                     }
+                },
+                "zip download": {
+                    title: "File download",
+                    status: {
+                        "Pending execution": "Pending...",
+                        "In progress": "Getting your files ready for download...",
+                        "Aborted": "Aborted",
+                        "Failed": "Download failed"
+                    }
                 }
             },
             statusIcons: {
@@ -167,7 +176,6 @@ $(document).ready(function () {
                 });
             },
             downloadFile: function (url, taskId) {
-                console.log("downloading...");
                 // Remove previous temporary download frames
                 $(".temp-download-frame").remove();
 
@@ -208,6 +216,11 @@ $(document).ready(function () {
                 let vue = this;
                 let targetTask = null;
 
+                // Minor type checking
+                if (!task.hasOwnProperty('id') || !task.hasOwnProperty('name')) {
+                    return  // Object passed is not a task
+                }
+
                 targetTask = vue.tasks.find(function (t) {
                     return t.id === task.id;
                 });
@@ -226,6 +239,11 @@ $(document).ready(function () {
                     vue.tasks = [targetTask, ...vue.tasks];
                     vue.processTask(targetTask);
                 }
+            },
+            // Used to know when a task should inform users of alternative way to download their files
+            canNotifyDownload: function (task) {
+                return task.status === 'Completed'
+                    && (task.name === 'bag download' || task.name === 'zip download')
             }
         },
         mounted: function () {

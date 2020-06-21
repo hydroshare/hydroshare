@@ -21,7 +21,7 @@
                                     <div class="notification--status">
                                         <span :class="statusIcons[task.status]"></span>
 
-                                        <small v-if="task.status === 'Completed' && task.name === 'bag download'">
+                                        <small v-if="canNotifyDownload(task)">
                                             Your download will start in a few seconds. If it does not start click <a
                                                 :href="task.payload">here</a>
                                             to download your files directly.
