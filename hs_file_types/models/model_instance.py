@@ -8,7 +8,7 @@ from django.template import Template, Context
 from dominate import tags as dom_tags
 from lxml import etree
 
-from hs_core.models import CoreMetaData
+from hs_core.models import CoreMetaData, ResourceFile
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 from .model_program import ModelProgramLogicalFile
@@ -407,6 +407,27 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
 
         self.metadata.executed_by = model_prog_aggr
         self.metadata.save()
+
+    def add_resource_files_in_folder(self, resource, folder):
+        """
+        A helper for creating aggregation. Makes all resource files in a given folder and its
+        sub folders as part of the aggregation/logical file type
+        :param  resource:  an instance of CompositeResource
+        :param  folder: folder from which all files need to be made part of this aggregation
+        """
+
+        # get all resource files that in folder *folder* and all its sub folders
+        res_files = ResourceFile.list_folder(resource=resource, folder=folder, sub_folders=True)
+
+        for res_file in res_files:
+            if not res_file.has_logical_file:
+                self.add_resource_file(res_file)
+            else:
+                logical_file = res_file.logical_file
+                if logical_file.is_fileset:
+                    res_file.logical_file_content_object= None
+                    self.add_resource_file(res_file)
+        return res_files
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
