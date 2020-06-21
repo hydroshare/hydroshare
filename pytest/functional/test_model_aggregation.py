@@ -235,7 +235,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
     if not aggr_folder:
         # moving the file based model program/instance aggregation
         src_path = 'data/contents/{}'.format(generic_file_name)
-        tgt_path = 'data/contents/{0}/{1}'.format(new_folder, generic_file_name)
+        tgt_path = 'data/contents/{}'.format(new_folder)
     else:
         # moving the folder based model program/instance aggregation
         src_path = 'data/contents/{}'.format(aggr_folder)
@@ -579,8 +579,6 @@ def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr
         src_path = 'data/contents/{}'.format(folder)
         tgt_path = 'data/contents/{}/{}'.format(mp_mi_folder, folder)
 
-    print(">> src_path:{}".format(src_path))
-    print(">> tgt_path:{}".format(tgt_path))
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
 
