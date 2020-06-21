@@ -335,7 +335,7 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path,
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path='',
                     request_username=None):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
@@ -360,36 +360,32 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         else:  # all metadata included, e.g., /data/*
             res.create_aggregation_xml_documents()
 
-    try:
-        if aggregation or sf_zip:
-            # input path points to single file aggregation
-            # ensure that foo.zip contains aggregation metadata
-            # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-            temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
-            head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-            out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-            istorage.copyFiles(input_path, out_with_folder)
-            if aggregation:
+    if aggregation or sf_zip:
+        # input path points to single file aggregation
+        # ensure that foo.zip contains aggregation metadata
+        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
+        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
+        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        istorage.copyFiles(input_path, out_with_folder)
+        if aggregation:
+            try:
+                istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+            except SessionException:
+                logger.error("cannot copy {}".format(aggregation.map_file_path))
+            try:
+                istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
+            except SessionException:
+                logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            for file in aggregation.files.all():
                 try:
-                    istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+                    istorage.copyFiles(file.storage_path, temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.map_file_path))
-                try:
-                    istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
-                except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.metadata_file_path))
-                for file in aggregation.files.all():
-                    try:
-                        istorage.copyFiles(file.storage_path, temp_folder_name)
-                    except SessionException:
-                        logger.error("cannot copy {}".format(file.storage_path))
-            istorage.zipup(temp_folder_name, output_path)
-            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
-        else:  # regular folder to zip
-            istorage.zipup(input_path, output_path)
-    except SessionException as ex:
-        logger.error(ex.stderr)
-        return ''
+                    logger.error("cannot copy {}".format(file.storage_path))
+        istorage.zipup(temp_folder_name, output_path)
+        istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+    else:  # regular folder to zip
+        istorage.zipup(input_path, output_path)
     return download_path
 
 
