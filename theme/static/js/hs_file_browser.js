@@ -338,9 +338,15 @@ function updateSelectionMenuContext() {
                 uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
                 uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
             }
-            else if (logicalFileTypeToSet !=="ModelProgramOrInstanceLogicalFile") {
-                uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
-                uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+            else {
+                if (logicalFileTypeToSet !== "ModelProgramLogicalFile" &&
+                    logicalFileTypeToSet !== "ModelProgramOrInstanceLogicalFile") {
+                    uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
+                }
+                if (logicalFileTypeToSet !=="ModelInstanceLogicalFile" &&
+                    logicalFileTypeToSet !=="ModelProgramOrInstanceLogicalFile") {
+                    uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                }
             }
         }
         //  ------------- The item selected is a file -------------
