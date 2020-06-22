@@ -425,7 +425,7 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
             else:
                 logical_file = res_file.logical_file
                 if logical_file.is_fileset:
-                    res_file.logical_file_content_object= None
+                    res_file.logical_file_content_object = None
                     self.add_resource_file(res_file)
         return res_files
 
