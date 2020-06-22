@@ -40,6 +40,7 @@ export default {
   beforeMount() {
   },
   mounted() {
+    this.searchClick();
   },
   methods: {
     searchClick() {
@@ -50,8 +51,6 @@ export default {
         .catch((error) => {
           console.error(error); // eslint-disable-line
         });
-    },
-    clearSearch() {
     },
   },
 };
