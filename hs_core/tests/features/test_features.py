@@ -12,6 +12,8 @@ from rest_framework import status
 import socket
 from django.test import Client
 from datetime import timedelta, datetime
+from hs_tracking.models import Variable, Session, Visitor
+from mock import Mock
 
 
 class TestFeatures(MockIRODSTestCaseMixin, TestCase):
@@ -23,8 +25,8 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
         self.resource_url = "/resource/{res_id}/"
         self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')  # fake use of a real browser
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.end_date = datetime.now() + timedelta(days=1)
-        self.start_date = self.end_date - timedelta(days=2)
+        self.end_date = datetime.now() + timedelta(days=2)
+        self.start_date = datetime.now() - timedelta(days=2)
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
             username='admin',
@@ -53,7 +55,6 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
             title='all about scratching posts',
             metadata=[],
         )
-        self.cat.uaccess.share_resource_with_group(self.posts, self.cats, PrivilegeCodes.VIEW)
 
         self.dog = hydroshare.create_account(
             'dog@gmail.com',
@@ -91,12 +92,28 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
             metadata=[],
         )
 
+        self.cat.uaccess.share_resource_with_group(self.posts, self.cats, PrivilegeCodes.CHANGE)
         self.dog.uaccess.share_resource_with_group(self.bones, self.dogs, PrivilegeCodes.VIEW)
-
         self.cat.uaccess.share_resource_with_user(self.posts, self.squirrel, PrivilegeCodes.CHANGE)
-
         self.cat.uaccess.share_group_with_user(self.cats, self.squirrel, PrivilegeCodes.CHANGE)
+        self.dog.uaccess.share_group_with_user(self.dogs, self.squirrel, PrivilegeCodes.VIEW)
         self.client.login(username='dog', password='barfoo')
+
+    def createRequest(self, user=None):
+        request = Mock()
+        if user is not None:
+            request.user = user
+
+        # sample request with mocked ip address
+        request.META = {
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, ' +
+                                    '127.0.0.1, 198.84.193.157, '
+            '177.139.233.139',
+            'HTTP_X_REAL_IP': '177.139.233.132',
+            'REMOTE_ADDR': '177.139.233.133',
+        }
+
+        return request
 
     def test_resource_owner(self):
         records = Features.resource_owners()
@@ -146,3 +163,147 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
         test[self.dog.username] = [self.bones.short_id]
         self.assertEqual(len(records), 1)
         self.assertCountEqual(records[self.dog.username], test[self.dog.username])
+
+    def test_resource_downloads(self):
+        visitor = Visitor.objects.get(user=self.dog)
+        session = Session.objects.get(visitor=visitor)
+        fields = {}
+        fields['filename'] = 'test_file'
+        fields['resource_size_bytes'] = self.bones.size
+        fields['resource_guid'] = self.bones.short_id
+        fields['resource_type'] = self.bones.resource_type
+        value = Variable.format_kwargs(**fields)
+        Variable.objects.create(session=session, name='download',
+                                type=Variable.encode_type(value),
+                                value=Variable.encode(value),
+                                last_resource_id=self.bones.short_id,
+                                resource=self.bones,
+                                rest=False,
+                                landing=False)
+        records = Features.resource_downloads(self.start_date, self.end_date)
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[self.bones.short_id] = [self.dog.username]
+        self.assertCountEqual(records[self.bones.short_id], test[self.bones.short_id])
+
+    def test_user_downloads(self):
+        visitor = Visitor.objects.get(user=self.dog)
+        session = Session.objects.get(visitor=visitor)
+        fields = {}
+        fields['filename'] = 'test_file'
+        fields['resource_size_bytes'] = self.bones.size
+        fields['resource_guid'] = self.bones.short_id
+        fields['resource_type'] = self.bones.resource_type
+        value = Variable.format_kwargs(**fields)
+        Variable.objects.create(session=session, name='download',
+                                type=Variable.encode_type(value),
+                                value=Variable.encode(value),
+                                last_resource_id=self.bones.short_id,
+                                resource=self.bones,
+                                rest=False,
+                                landing=False)
+        records = Features.user_downloads(self.start_date, self.end_date)
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[self.dog.username] = [self.bones.short_id]
+        self.assertCountEqual(records[self.dog.username], test[self.dog.username])
+
+    def test_resource_apps(self):
+        visitor = Visitor.objects.get(user=self.dog)
+        session = Session.objects.get(visitor=visitor)
+        fields = {}
+        fields['filename'] = 'test_file'
+        fields['resource_size_bytes'] = self.bones.size
+        fields['resource_guid'] = self.bones.short_id
+        fields['resourceid'] = self.bones.short_id
+        fields['resource_type'] = self.bones.resource_type
+        value = Variable.format_kwargs(**fields)
+        Variable.objects.create(session=session, name='app_launch',
+                                type=Variable.encode_type(value),
+                                value=Variable.encode(value),
+                                last_resource_id=self.bones.short_id,
+                                resource=self.bones,
+                                rest=False,
+                                landing=False)
+        records = Features.resource_apps(self.start_date, self.end_date)
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[self.bones.short_id] = [self.dog.username]
+        self.assertCountEqual(records[self.bones.short_id], test[self.bones.short_id])
+
+    def test_user_apps(self):
+        visitor = Visitor.objects.get(user=self.dog)
+        session = Session.objects.get(visitor=visitor)
+        fields = {}
+        fields['filename'] = 'test_file'
+        fields['resource_size_bytes'] = self.bones.size
+        fields['resource_guid'] = self.bones.short_id
+        fields['resourceid'] = self.bones.short_id
+        fields['resource_type'] = self.bones.resource_type
+        value = Variable.format_kwargs(**fields)
+        Variable.objects.create(session=session, name='app_launch',
+                                type=Variable.encode_type(value),
+                                value=Variable.encode(value),
+                                last_resource_id=self.bones.short_id,
+                                resource=self.bones,
+                                rest=False,
+                                landing=False)
+        records = Features.user_apps(self.start_date, self.end_date)
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[self.dog.username] = [self.bones.short_id]
+        self.assertCountEqual(records[self.dog.username], test[self.dog.username])
+
+    def test_user_favorites(self):
+        cat = self.cat
+        posts = self.posts
+        cat.ulabels.favorite_resource(posts)
+        records = Features.user_favorites()
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[cat.username] = [posts.short_id]
+        self.assertCountEqual(test[cat.username], records[cat.username])
+
+    def test_my_resources(self):
+        cat = self.cat
+        posts = self.posts
+        cat.ulabels.claim_resource(posts)
+        records = Features.user_my_resources()
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[cat.username] = [posts.short_id]
+        self.assertCountEqual(test[cat.username], records[cat.username])
+
+    def test_user_owned_groups(self):
+        records = Features.user_owned_groups()
+        self.assertEqual(len(records), 2)
+        test = {}
+        test[self.cat.username] = [self.cats.name]
+        test[self.dog.username] = [self.dogs.name]
+        self.assertCountEqual(test, records)
+
+    def test_user_edit_groups(self):
+        records = Features.user_edited_groups()
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[self.squirrel.username] = self.cats.name
+        self.assertCountEqual(test, records)
+
+    def test_user_viewed_groups(self):
+        records = Features.user_viewed_groups()
+        self.assertEqual(len(records), 1)
+        test = {}
+        test[self.squirrel.username] = self.dogs.name
+        self.assertCountEqual(test, records)
+
+    def test_resources_editable_via_group(self):
+        records = Features.resources_editable_via_group(self.cats)
+        self.assertEqual(len(records), 1)
+        test = [self.posts.short_id]
+        self.assertCountEqual(test, records)
+
+    def test_resources_viewable_via_group(self):
+        records = Features.resources_viewable_via_group(self.dogs)
+        self.assertEqual(len(records), 1)
+        test = [self.bones.short_id]
+        self.assertCountEqual(test, records)
