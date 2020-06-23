@@ -2125,14 +2125,6 @@ $(document).ready(function () {
             type: "GET",
             url: bagUrl,
             success: function (task) {
-                if (!task.id) {
-                    task = {
-                        id: Date.now(),
-                        name: "bag download",
-                        status: "Completed",
-                        payload: bagUrl
-                    }
-                }
                 notificationsApp.registerTask(task);
                 notificationsApp.show();
                 $(event.currentTarget).toggleClass("disabled", false);

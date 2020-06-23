@@ -265,6 +265,14 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     else:
                         response.content = "<h1>" + content_msg + "</h1>"
                     return response
+        elif request.is_ajax():
+            task_dict = {
+                'id': datetime.datetime.today().isoformat(),
+                'name': "bag download",
+                'status': "Completed",
+                'payload': res.bag_url
+            }
+            return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
         if path.endswith("resourcemap.xml") or path.endswith('resourcemetadata.xml'):
