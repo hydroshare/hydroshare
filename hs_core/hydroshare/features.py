@@ -118,7 +118,6 @@ class Features(object):
                 user_id = user.username
                 if v.name == 'download':
                     value = v.get_value()
-                    # print("user:{} value:{} action:{}".format(user_id, value, v.name))
                     m = expr.search(value)  # resource short id
                     if m and m.group(1):
                         resource_id = m.group(1)
