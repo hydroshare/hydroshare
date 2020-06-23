@@ -6,68 +6,25 @@ stop words used in our LDA model
 from hs_explore.models import LDAWord
 from django.core.management.base import BaseCommand
 from hs_odm2.models import ODM2Variable
+from hs_csdms.models import CSDMSName
 
 
-def split_csdms():
-    """ Split each record in csdms file and assign them to corresponding return part
-        :return names, names in csdms
-        :return splitted_names, split each name by space
-        :return decors, decorations for each name in csdms
-        :return splitted_decors, split each decor by space
-
+def fill_csdms_names():
+    """ Store CSDMS names into LDAWord model
     """
-    filename = 'csdms'
-    std_names = []
-    with open(filename) as f:
-        std_names = f.readlines()
-    std_names = [x.strip() for x in std_names]
-    names = set()
-    measures = set()
-    decors = set()
-    for std_name in std_names:
-        tokens = std_name.split("__")
-        name = tokens[0]
-        if len(tokens) > 1:
-            measures.add(tokens[1])
-        name_tokens = name.split("~")
-        raw_name = name_tokens[0].replace("_", " ")
-        names.add(raw_name)
-        if len(name_tokens) > 1:
-            for d in name_tokens[1:]:
-                raw_d = d.replace("_", " ")
-                decors.add(raw_d)
-
+    csdms_names = list(CSDMSName.list_all_names())
     splitted_names = set()
-    for full_name in names:
-        tokens = full_name.split(" ")
+    for csdms_name in csdms_names:
+        if len(csdms_name) <= 1:
+            continue
+        tokens = csdms_name.split(" ")
+        LDAWord.add_word('CSDMS', 'keep', 'name', csdms_name)
         splitted_names.update(tokens)
 
-    splitted_decors = set()
-    for decor in decors:
-        tokens = decor.split(" ")
-        splitted_decors.update(tokens)
-
-    return names, splitted_names, decors, splitted_decors
-
-
-def fill_csdms():
-    """ Store each part from split_csdms into LDAWord model
-    """
-    csdms_raw_full_names, csdms_splitted_names, csdms_raw_decors, csdms_splitted_decors = split_csdms()
-    for csdms_name in csdms_raw_full_names:
-        if len(csdms_name) > 1:
-            LDAWord.add_word('CSDMS', 'keep', 'name', csdms_name)
-    for splitted_name in csdms_splitted_names:
-        if len(splitted_name) > 1:
-            LDAWord.add_word('CSDMS', 'keep', 'name', splitted_name)
-
-    for csdms_decor in csdms_raw_decors:
-        if len(csdms_decor) > 1:
-            LDAWord.add_word('CSDMS', 'keep', 'decor', csdms_decor)
-
-    for splitted_decor in csdms_splitted_decors:
-        if len(splitted_decor) > 1:
-            LDAWord.add_word('CSDMS', 'keep', 'decor', splitted_decor)
+    for splitted_name in splitted_names:
+        if len(splitted_name) <= 1:
+            continue
+        LDAWord.add_word('CSDMS', 'keep', 'name', splitted_name)
 
 
 def fill_odm2():
@@ -137,7 +94,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         LDAWord.clear()
         print("filling in keep words")
-        fill_csdms()
+        fill_csdms_names()
         fill_odm2()
         print("filling in stop words")
         fill_stop_words()
