@@ -300,6 +300,24 @@ class AbstractFileMetaData(models.Model):
     def aggregation_subject(self):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
+    def ingest_rdf(self, graph):
+        # TODO, I think we just ignore title because we need to match by it
+        # for s, p, o in graph.triples((None, DC.title, None)):
+        #     title = o
+        #     break
+        # self.logical_file.dataset_name = title.value
+        # self.logical_file.save()
+        self.delete_all_elements()
+        subject = self.aggregation_subject()
+        for _, _, object in graph.triples((subject, DC.subject, None)):
+            self.create_element('subject', value=object.value)
+
+        for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
+            key = graph.value(subject=s, predicate=HSTERMS.key).value
+            value = graph.value(subject=s, predicate=HSTERMS.value).value
+            self.extra_metadata.update({key, value})
+
+
     def get_rdf(self):
         triples = []
         resource = self.logical_file.resource

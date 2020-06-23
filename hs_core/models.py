@@ -361,6 +361,9 @@ class AbstractMetaDataElement(models.Model):
     def rdf_triples(self, subject):
         raise NotImplementedError()
 
+    def ingest_rdf(self, graph):
+        raise NotImplementedError()
+
     @property
     def metadata(self):
         """Return content object that describes metadata."""
@@ -1142,6 +1145,14 @@ class Language(AbstractMetaDataElement):
     def rdf_triples(self, subject):
         return [(subject, DC.language, Literal(self.code))]
 
+    def ingest_rdf(self, graph):
+        #for s, p, o in graph.triple((None, DC.language, None)):
+        #    if s.value.endswith('#aggregation'):
+        #        self.code = o.value
+        #        self.save()
+        #    break
+        pass
+
 
 class Coverage(AbstractMetaDataElement):
     """Define Coverage custom metadata element model."""
@@ -1338,8 +1349,6 @@ class Coverage(AbstractMetaDataElement):
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
         triples.append((value, RDF.value, Literal(value_string)))
         return triples
-
-
 
     def add_to_xml_container(self, container):
         """Update etree SubElement container with coverage values."""

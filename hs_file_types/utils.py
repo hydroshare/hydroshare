@@ -226,6 +226,21 @@ def get_logical_file_type(res, file_id, hs_file_type=None, fail_feedback=True):
     return logical_file_type_class
 
 
+def get_logical_file(term):
+    file_type_map = {"SingleFile": GenericLogicalFile,
+                     "FileSet": FileSetLogicalFile,
+                     "GeographicRasterAggregation": GeoRasterLogicalFile,
+                     "NetCDF": NetCDFLogicalFile,
+                     'GeoFeature': GeoFeatureLogicalFile,
+                     'RefTimeseries': RefTimeseriesLogicalFile,
+                     'TimeSeries': TimeSeriesLogicalFile}
+
+    agg_type = term.split("/")[-1]
+    clazz = file_type_map[agg_type]
+    return clazz
+
+
+
 def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='', extra_data={},
                           fail_feedback=True):
     """ set the logical file type for a new file """

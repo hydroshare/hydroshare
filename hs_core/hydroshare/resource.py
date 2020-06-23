@@ -10,9 +10,12 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
+from rdflib import Graph, Literal
+from rdflib.namespace import DC, RDFS
 
 from rest_framework import status
 
+from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
@@ -777,7 +780,11 @@ def add_resource_files(pk, *files, **kwargs):
         base_dir = folder[len(prefix_path) + 1:]
     else:
         base_dir = folder
+    metadata_files = []
     for f in files:
+        if is_metadata_file(f):
+            metadata_files.append(f)
+            continue
         full_dir = base_dir
         if f in full_paths:
             # TODO, put this in it's own method?
@@ -787,18 +794,50 @@ def add_resource_files(pk, *files, **kwargs):
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
-    if len(source_names) > 0:
-        for ifname in source_names:
-            ret.append(utils.add_file_to_resource(resource, None,
-                                                  folder=folder,
-                                                  source_name=ifname))
+    for ifname in source_names:
+        ret.append(utils.add_file_to_resource(resource, None,
+                                              folder=folder,
+                                              source_name=ifname))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
+    for md in metadata_files:
+        ingest_metadata(resource, md)
+
     return ret
+
+def ingest_metadata(resource, md):
+    g = Graph()
+    with open(md.temporary_file_path(), mode='r') as f:
+        g = g.parse(data=f.read())
+    for s, p, o in g.triples((None, RDFS.isDefinedBy, None)):
+        agg_term = s
+        break
+
+    for s, p, o in g.triples((None, DC.title, None)):
+        subject = s
+        title = o
+        break
+
+    #agg_class = get_logical_file(agg_term)
+
+    from hs_file_types.models import GeoRasterLogicalFile
+    file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile}
+
+    print(agg_term)
+    agg_type = agg_term.split("/")[-1]
+    print(agg_type)
+    clazz = file_type_map[agg_type]
+    # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
+    lf = clazz.objects.get(resource=resource, dataset_name=title.value)
+    lf.metadata.ingest_rdf(g)
+
+
+def is_metadata_file(file):
+    return file.name.endswith('_meta.xml')
 
 
 def update_science_metadata(pk, metadata, user):
