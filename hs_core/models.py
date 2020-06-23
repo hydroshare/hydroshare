@@ -361,7 +361,8 @@ class AbstractMetaDataElement(models.Model):
     def rdf_triples(self, subject):
         raise NotImplementedError()
 
-    def ingest_rdf(self, graph, subject):
+    @classmethod
+    def ingest_rdf(cls, graph, subject):
         raise NotImplementedError()
 
     @property
@@ -1334,7 +1335,8 @@ class Coverage(AbstractMetaDataElement):
         """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
 
-    def ingest_rdf(self, graph, subject):
+    @classmethod
+    def ingest_rdf(cls, graph, subject):
         cov = graph.value(subject=subject, predicate=DC.coverage)
         coverages = []
         for _, term, o in graph.triples((cov, None, None)):
