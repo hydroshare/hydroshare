@@ -310,12 +310,14 @@ class AbstractFileMetaData(models.Model):
         self.delete_all_elements()
         subject = self.aggregation_subject()
         for _, _, object in graph.triples((subject, DC.subject, None)):
-            self.create_element('subject', value=object.value)
-
+            self.keywords.append(object.value)
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
-            key = graph.value(subject=s, predicate=HSTERMS.key).value
-            value = graph.value(subject=s, predicate=HSTERMS.value).value
-            self.extra_metadata.update({key, value})
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            self.extra_metadata[key] = value
+
+        self.coverages = Coverage.ingest_rdf(graph, subject)
+        self.save()
 
 
     def get_rdf(self):
