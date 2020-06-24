@@ -822,9 +822,13 @@ def add_resource_files(pk, *files, **kwargs):
         clazz = file_type_map[agg_type]
         # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
         lf = clazz.objects.get(resource=resource, dataset_name=title.value)
-        with transaction.atomic():
-            lf.metadata.delete_all_elements()
-            lf.metadata.ingest_metadata(graph)
+        try:
+            with transaction.atomic():
+                lf.metadata.delete_all_elements()
+                lf.metadata.ingest_metadata(graph)
+        except:
+            logger.exception("Error processing metadata file")
+            raise
 
     return ret
 

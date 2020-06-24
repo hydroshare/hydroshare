@@ -273,7 +273,7 @@ class BandInformation(AbstractMetaDataElement):
         value_dict['maximumValue'] = graph.value(band_information, HSTERMS.maximumValue).value
         value_dict['minimumValue'] = graph.value(band_information, HSTERMS.minimumValue).value
 
-        BandInformation.create(value=value_dict, content_object=content_object)
+        BandInformation.create(content_object=content_object, **value_dict)
 
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
@@ -343,7 +343,6 @@ class CellInformation(AbstractMetaDataElement):
         triples = []
         cell_information = BNode()
         triples.append((subject, HSTERMS.CellInformation, cell_information))
-        triples.append((cell_information, HSTERMS.name, Literal(self.name)))
         triples.append((cell_information, HSTERMS.rows, Literal(self.rows)))
         triples.append((cell_information, HSTERMS.columns, Literal(self.columns)))
         triples.append((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
@@ -357,14 +356,13 @@ class CellInformation(AbstractMetaDataElement):
         value_dict = {}
         subject = content_object.aggregation_subject()
         cell_information = graph.value(subject=subject, predicate=HSTERMS.CellInformation)
-        value_dict['name'] = graph.value(cell_information, HSTERMS.name).value
         value_dict['rows'] = graph.value(cell_information, HSTERMS.rows).value
         value_dict['columns'] = graph.value(cell_information, HSTERMS.columns).value
         value_dict['cellSizeXValue'] = graph.value(cell_information, HSTERMS.cellSizeXValue).value
         value_dict['cellSizeYValue'] = graph.value(cell_information, HSTERMS.cellSizeYValue).value
         value_dict['cellDataType'] = graph.value(cell_information, HSTERMS.cellDataType).value
 
-        CellInformation.create(value=value_dict, content_object=content_object)
+        CellInformation.create(content_object=content_object, **value_dict)
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""
