@@ -209,8 +209,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             for triple in self.cellInformation.rdf_triples(subject):
                 graph.add(triple)
         if self.bandInformations:
-            for triple in self.bandInformations.rdf_triples(subject):
-                graph.add(triple)
+            for band in self.bandInformations:
+                for triple in band.rdf_triples(subject):
+                    graph.add(triple)
         return graph
 
 

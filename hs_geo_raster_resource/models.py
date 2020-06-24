@@ -343,6 +343,7 @@ class CellInformation(AbstractMetaDataElement):
         triples = []
         cell_information = BNode()
         triples.append((subject, HSTERMS.CellInformation, cell_information))
+        triples.append((cell_information, HSTERMS.name, Literal(self.name)))
         triples.append((cell_information, HSTERMS.rows, Literal(self.rows)))
         triples.append((cell_information, HSTERMS.columns, Literal(self.columns)))
         triples.append((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
@@ -356,6 +357,7 @@ class CellInformation(AbstractMetaDataElement):
         value_dict = {}
         subject = content_object.aggregation_subject()
         cell_information = graph.value(subject=subject, predicate=HSTERMS.CellInformation)
+        value_dict['name'] = graph.value(cell_information, HSTERMS.name).value
         value_dict['rows'] = graph.value(cell_information, HSTERMS.rows).value
         value_dict['columns'] = graph.value(cell_information, HSTERMS.columns).value
         value_dict['cellSizeXValue'] = graph.value(cell_information, HSTERMS.cellSizeXValue).value
