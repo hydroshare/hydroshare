@@ -1336,19 +1336,19 @@ class Coverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     @classmethod
-    def ingest_rdf(cls, graph, subject):
+    def ingest_rdf(cls, graph, subject, content_object):
         cov = graph.value(subject=subject, predicate=DC.coverage)
         coverages = []
         for _, term, o in graph.triples((cov, None, None)):
             for _, _, value in graph.triples((o, RDF.value, None)):
-                type = term.value.split('/')[-1]
+                type = term.split('/')[-1]
                 value_dict = {}
                 for key_value in value.split("; "):
                     k, v = key_value.split("=")
                     if k in ['start', 'end']:
                         v = parser.parse(v).strftime("%Y/%m/%d")
                     value_dict[k] = v
-                coverages.append(Coverage.create(type=type, value=value_dict))
+                coverages.append(Coverage.create(type=type, value=value_dict, content_object=content_object))
         return coverages
 
     def rdf_triples(self, subject):

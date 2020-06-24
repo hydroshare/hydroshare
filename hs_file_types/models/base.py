@@ -316,7 +316,7 @@ class AbstractFileMetaData(models.Model):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.extra_metadata[key] = value
 
-        self.coverages = Coverage.ingest_rdf(graph, subject)
+        self.coverages = Coverage.ingest_rdf(graph, subject, self)
         self.save()
 
 
