@@ -359,11 +359,33 @@ class AbstractMetaDataElement(models.Model):
         return self.__unicode__()
 
     def rdf_triples(self, subject):
-        raise NotImplementedError()
+        """Default implementation that parses by convention"""
+        metadata_name = __class__.__name__
+        hsterm = getattr(HSTERMS, metadata_name)
+        triples = []
+        metadata_node = BNode()
+        triples.append((subject, hsterm, metadata_node))
+        for field in __class__._meta.fields:
+            if field.name in ['id', 'object_id', 'content_type']:
+                continue
+            triples.append((metadata_node, getattr(HSTERMS, field.name), Literal(getattr(self, field.name))))
+
+        return triples
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):
-        raise NotImplementedError()
+        """Default implementation that ingests by convention"""
+        metadata_name = __class__.__name__
+        hsterm = getattr(HSTERMS, metadata_name)
+        value_dict = {}
+        subject = content_object.rdf_subject()
+        metadata_node = graph.value(subject=subject, predicate=hsterm)
+        for field in __class__._meta.fields:
+            if field.name in ['id', 'object_id', 'content_type']:
+                continue
+            value_dict[field.name] = graph.value(metadata_node, getattr(HSTERMS, field.name)).value
+
+        cls.create(content_object=content_object, **value_dict)
 
     @property
     def metadata(self):
@@ -1338,7 +1360,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):
-        subject = content_object.aggregation_subject()
+        subject = content_object.rdf_subject()
         cov = graph.value(subject=subject, predicate=DC.coverage)
         for _, term, o in graph.triples((cov, None, None)):
             for _, _, value in graph.triples((o, RDF.value, None)):

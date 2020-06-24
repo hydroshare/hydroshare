@@ -297,11 +297,11 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
-    def aggregation_subject(self):
+    def rdf_subject(self):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
     def ingest_metadata(self, graph):
-        subject = self.aggregation_subject()
+        subject = self.rdf_subject()
         for _, _, object in graph.triples((subject, DC.subject, None)):
             self.keywords.append(object.value)
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
@@ -315,7 +315,7 @@ class AbstractFileMetaData(models.Model):
     def get_rdf(self):
         triples = []
         resource = self.logical_file.resource
-        subject = self.aggregation_subject()
+        subject = self.rdf_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
             triples.append((subject, DC.title, Literal(self.logical_file.dataset_name)))
@@ -364,7 +364,7 @@ class AbstractFileMetaData(models.Model):
 
         resource = self.logical_file.resource
 
-        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], self.aggregation_subject.title)
+        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], self.rdf_subject.title)
 
         # add aggregation title
         if self.logical_file.dataset_name:

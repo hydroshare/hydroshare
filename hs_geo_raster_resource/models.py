@@ -147,7 +147,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):
-        subject = content_object.aggregation_subject()
+        subject = content_object.rdf_subject()
         spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
         box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
         value_str = graph.value(subject=box_object, predicate=RDF.value).value
@@ -266,7 +266,7 @@ class BandInformation(AbstractMetaDataElement):
     @classmethod
     def ingest_rdf(cls, graph, content_object):
         value_dict = {}
-        subject = content_object.aggregation_subject()
+        subject = content_object.rdf_subject()
         band_information = graph.value(subject=subject, predicate=HSTERMS.BandInformation)
         value_dict['name'] = graph.value(band_information, HSTERMS.name).value
         value_dict['noDataValue'] = graph.value(band_information, HSTERMS.noDataValue).value
@@ -354,7 +354,7 @@ class CellInformation(AbstractMetaDataElement):
     @classmethod
     def ingest_rdf(cls, graph, content_object):
         value_dict = {}
-        subject = content_object.aggregation_subject()
+        subject = content_object.rdf_subject()
         cell_information = graph.value(subject=subject, predicate=HSTERMS.CellInformation)
         value_dict['rows'] = graph.value(cell_information, HSTERMS.rows).value
         value_dict['columns'] = graph.value(cell_information, HSTERMS.columns).value

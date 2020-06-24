@@ -201,7 +201,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         for triple in super(GeoRasterFileMetaData, self).get_rdf():
             graph.add(triple)
 
-        subject = self.aggregation_subject()
+        subject = self.rdf_subject()
         if self.originalCoverage:
             for triple in self.originalCoverage.rdf_triples(subject):
                 graph.add(triple)
