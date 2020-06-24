@@ -16,16 +16,15 @@ from pprint import pprint
 false = False
 true = True
 
-
 # helper functions
 
 # if the given string contains a url, returns it. Otherwise, returns the
 # generic hydroshare url
-def find_url(string):
+def find_url(string, alt_url):
     regex = r'(https?://[^\s]+)'
     url = re.findall(regex, string)
     if len([x[0] for x in url]) == 0:
-        return alternative_url
+        return alt_url
     else:
         return [x[0] for x in url][0]
 
@@ -116,6 +115,18 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
           "typeName": "authorAffiliation",
           "multiple": false,
           "typeClass": "primitive",
+        },
+        "authorIdentifierScheme": {
+          "typeName": "authorIdentifierScheme",
+          "multiple": false,
+          "typeClass": "controlledVocabulary",
+          "value": "ORCID"
+        },
+        "authorIdentifier": {
+          "typeName": "authorIdentifier",
+          "multiple": false,
+          "typeClass": "primitive",
+          "value": ""
         }
     }
 
@@ -155,13 +166,13 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
           "typeName": "publicationCitation",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "RelatedPublicationCitation1"
+          "value": ""
         },
         "publicationURL": {
           "typeName": "publicationURL",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "http://RelatedPublicationURL1.org"
+          "value": ""
         }
     }
 
@@ -203,13 +214,13 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
           "typeName": "contributorType",
           "multiple": false,
           "typeClass": "controlledVocabulary",
-          "value": "Data Collector"
+          "value": "Related Person"
         },
         "contributorName": {
           "typeName": "contributorName",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "LastContributor1, FirstContributor1"
+          "value": ""
         }
     }
 
@@ -257,7 +268,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
           "typeName": "distributorLogoURL",
           "multiple": false,
           "typeClass": "primitive",
-          "value": "http://DistributorLogoURL1.org"
+          "value": "https://www.hydroshare.org/static/img/logo-lg.png"
         }
     }
 
@@ -335,6 +346,8 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     title = set_field(root.find(".//%s" % title_tag))
     abstract = set_field(root.find(".//%s" % abstract_tag))
 
+    alternative_url = set_field(root.find(".//%s" % hs_identifier_tag))
+
     author_vals = []
     for creator in root.findall(".//%s" % creator_tag):
         author_vals.append(copy.deepcopy(author_dict))
@@ -345,6 +358,9 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
             ".//%s[%s]/%s/%s" % (creator_tag, i + 1, description_tag, name_tag)))
         author['authorAffiliation']['value'] = set_field(root.find(
             ".//%s[%s]/%s/%s" % (creator_tag, i + 1, description_tag, org_tag)))
+        author['authorIdentifier']['value'] = find_url(set_field(root.find(
+            ".//%s[%s]/%s" % (creator_tag, i + 1, description_tag))), alternative_url)
+
 
         if i == 0:  # use the first author as the contact person for the dataset
             contact = contact_dict
@@ -359,8 +375,6 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
             if contact['datasetContactEmail']['value'] == 'None':
                 contact['datasetContactEmail']['value'] = 'help@cuahsi.org'
             contact_vals.append(contact)
-
-    alternative_url = set_field(root.find(".//%s" % hs_identifier_tag))
 
     keyword_vals = []
     for keyword in root.findall(".//%s" % keyword_tag):
@@ -403,7 +417,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     for i, related_publication in enumerate(root.findall(".//%s/%s//*" % (relation_tag, description_tag))):
         related_publications_vals.append(copy.deepcopy(related_publications_dict))
         related_publications_vals[i]['publicationCitation']['value'] = set_field(related_publication)
-        related_publications_vals[i]['publicationURL']['value'] = find_url(set_field(related_publication))
+        related_publications_vals[i]['publicationURL']['value'] = find_url(set_field(related_publication), alternative_url)
 
         related_resources.append(related_publication.text)
 
@@ -420,15 +434,18 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
 
     bounding_box_text = set_field(root.find('.//%s/%s' % (box_tag, value_tag)))
     if (bounding_box_text != 'None'):
-        [northlimit, eastlimit, southlimit, westlimit, units, EPSG] = bounding_box_text.split(';')
+        print('bounding_box_text:', bounding_box_text)
+        [name, northlimit, eastlimit, southlimit, westlimit, units, EPSG] = bounding_box_text.split(';')
         northlimit = re.sub('northlimit=', '', northlimit)
         eastlimit = re.sub('eastlimit=', '', eastlimit)
         westlimit = re.sub('westlimit=', '', westlimit)
         southlimit = re.sub('southlimit=', '', southlimit)
+        other_geo_info = re.sub('name=', '', name)
         geo_units.append(re.sub('units=', '', units))
         
         for box in root.findall(".//%s" % box_tag):
             bounding_box_vals.append(copy.deepcopy(bounding_box_dict))
+
 
         for i, box in enumerate(bounding_box_vals):
             box['westLongitude']['value'] = westlimit
@@ -438,10 +455,11 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
          
     spot_text = set_field(root.find('.//%s/%s' % (spot_tag, value_tag)))
     if (spot_text != 'None'):
-        print(spot_text)
+        print('spot_text:', spot_text)
         [name, east, north, units, projection] = spot_text.split(';', 4)
         east = re.sub('east=', '', east)
         north = re.sub('north=', '', north)
+        other_geo_info = re.sub('name=', '', name)
         geo_units.append(re.sub('units=', '', units))
         reverse_geo_code_result = gmaps.reverse_geocode((north, east))
 
@@ -452,6 +470,8 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
                 geo_coverage_dict['state']['value'] = comp['long_name']
             if 'locality' in comp['types']:
                 geo_coverage_dict['city']['value'] = comp['long_name']
+    geo_coverage_dict['otherGeographicCoverage']['value'] = other_geo_info    
+
     if (geo_coverage_dict != old_geo_coverage_dict):
         geo_coverage_vals.append(geo_coverage_dict)
 
@@ -459,8 +479,10 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     e = dict()
     with open('hs_dataverse/tempfiles/other_metadata.json') as f:
         e = json.load(f)
-
+ 
     other_id_dict['otherIdValue']['value'] = str(e['rid'])
+    if e['published']:
+        other_id_dict['otherIdValue']['value'] = str(e['doi'])
     notes_text = e['extended_metadata_notes']
    
     grant_vals = [] 
@@ -469,6 +491,12 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
         grant_info['grantNumberAgency']['value'] = e['funding_agency_names'][i]
         grant_info['grantNumberValue']['value'] = e['award_numbers'][i]
         grant_vals.append(grant_info)
+
+    contributor_vals = []
+    for contributor in e['contributors']:
+        c_dict = copy.deepcopy(contributor_dict)
+        c_dict['contributorName']['value'] = contributor
+        contributor_vals.append(c_dict)
 
     # Extract more fields using the owner data from ownerdata.json
     o = dict()
@@ -527,30 +555,28 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
 
     fields[10]['value'] = [producer_dict]
 
-    fields[11]['value'] = '1003-01-01'
+    fields[11]['value'] = contributor_vals
 
-    fields[12]['value'] = [contributor_dict]
+    fields[12]['value'] = grant_vals
 
-    fields[13]['value'] = grant_vals
+    fields[13]['value'] = [distributor_dict]
 
-    fields[14]['value'] = [distributor_dict]
+    fields[14]['value'] = str(datetime.date(datetime.now()))  # distribution date
 
-    fields[15]['value'] = str(datetime.date(datetime.now()))  # distribution date
+    fields[15]['value'] = depositor
 
-    fields[16]['value'] = depositor
+    fields[16]['value'] = deposit_date
 
-    fields[17]['value'] = deposit_date
+    fields[17]['value'][0]['timePeriodCoveredStart']['value'] = start_period_date
+    fields[17]['value'][0]['timePeriodCoveredEnd']['value'] = end_period_date
 
-    fields[18]['value'][0]['timePeriodCoveredStart']['value'] = start_period_date
-    fields[18]['value'][0]['timePeriodCoveredEnd']['value'] = end_period_date
+    fields[18]['value'] = ['Composite Resource']
 
-    fields[19]['value'] = ['Composite Resource']
+    fields[19]['value'] = [software_dict]
 
-    fields[20]['value'] = [software_dict]
+    fields[20]['value'] = ['related_papers']
 
-    fields[21]['value'] = ['related_papers']
-
-    fields[22]['value'] = related_resources
+    fields[21]['value'] = related_resources
 
     geofields[0]['value'] = geo_coverage_vals
     geofields[1]['value'] = geo_units
@@ -586,8 +612,13 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     #print(os.listdir(temp_dir)) 
     for file in os.listdir(temp_dir):
         file_path = '/'.join([temp_dir, file])
+        os.rename(file_path, file_path[:-8]) # remove last 8 characters generated by tempfile
+        file_path = file_path[:-8]
         api.upload_file(persistent_id, file_path)   
  
     # now delete the dataset, as to not fill up the datverse while testing 
+    #sleep(5)
     r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
+
+
 

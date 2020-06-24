@@ -147,7 +147,7 @@ def export_bag(rid, options):
                 profile = o.userprofile
                 party = get_party_data_from_user(o)
                 print("organization: {}".format(party['organization']))
-                
+
                 owner_dict = {
                         'username': format(o.username),
                         'first_name': format(o.first_name),
@@ -182,12 +182,34 @@ def export_bag(rid, options):
                 funding_agency_names.append(a.agency_name)
                 award_numbers.append(a.award_number) 
 
+            # get list of contributors
+            contributors = []
+            for c in res.metadata.contributors.all():
+                contributors.append(str(c))
+
+            # if the resource is published, set the doi and update booleans in dict.
+            doi = ''
+            if res.raccess.public:
+                public = True
+            else: 
+                public = False
+            
+            if res.raccess.published:
+                published = True
+                doi = res.doi
+            else:
+                published = False 
+
             other_metadata_dict = {
-                    'rid': rid,
-                    'extended_metadata_notes': ext_metadata,
-                    'language': str(resource.metadata.language),
-                    'funding_agency_names': funding_agency_names,
-                    'award_numbers': award_numbers
+                'rid': rid,
+                'public': public,
+                'published': published,
+                'doi': doi,
+                'extended_metadata_notes': ext_metadata,
+                'language': str(resource.metadata.language),
+                'funding_agency_names': funding_agency_names,
+                'award_numbers': award_numbers,
+                'contributors': contributors
             }
 
             outfile = open('hs_dataverse/tempfiles/other_metadata.json', 'w')
@@ -253,7 +275,9 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 temp_dir = export_bag(rid, options)
                 upload_dataset(base_url, api_token, dv, temp_dir)
-                #print(os.listdir('\tmp'))
-                shutil.rmtree(temp_dir)
+                print('contents of tmpdir before rmtree:', os.listdir(temp_dir))
+                print('contents of tmp b4 rmtree:', os.listdir('/tmp'))
+                print('path:', os.getcwd())
+                shutil.rmtree(temp_dir, ignore_errors=False)
         else:
             print("no resource id specified: aborting")

@@ -360,12 +360,6 @@
             ]
           },
           {
-            "typeName": "productionDate",
-            "multiple": false,
-            "typeClass": "primitive",
-            "value": "1003-01-01"
-          },
-          {
             "typeName": "contributor",
             "multiple": true,
             "typeClass": "compound",
