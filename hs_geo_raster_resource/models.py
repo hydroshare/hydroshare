@@ -153,7 +153,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         for p in value_str.split('; '):
             k, v = p.split('=')
             value_dict[k] = v
-        OriginalCoverage.create(value=value_dict, content_object=content_object)
+        return [OriginalCoverage.create(value=value_dict, content_object=content_object)]
 
     def parse_rdf_value(self, g, metadata_uri):
         # TODO metadata_uri should be passed in
@@ -347,7 +347,7 @@ class CellInformation(AbstractMetaDataElement):
         value_dict['cellSizeYValue'] = graph.value(cell_information, HSTERMS.cellSizeYValue).value
         value_dict['cellDataType'] = graph.value(cell_information, HSTERMS.cellDataType).value
 
-        OriginalCoverage.create(value=value_dict, content_object=content_object)
+        return [OriginalCoverage.create(value=value_dict, content_object=content_object)]
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""

@@ -215,8 +215,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         super(GeoRasterFileMetaData, self).ingest_rdf(graph)
         subject = self.aggregation_subject()
 
-        OriginalCoverage.ingest_rdf(graph, subject, self)
-        CellInformation.ingest_rdf(graph, subject, self)
+        self._ori_coverage = OriginalCoverage.ingest_rdf(graph, subject, self)
+        self._cell_information = CellInformation.ingest_rdf(graph, subject, self)
         self.save()
 
 
