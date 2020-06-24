@@ -360,12 +360,12 @@ class AbstractMetaDataElement(models.Model):
 
     def rdf_triples(self, subject):
         """Default implementation that parses by convention"""
-        metadata_name = __class__.__name__
+        metadata_name = self.__class__.__name__
         hsterm = getattr(HSTERMS, metadata_name)
         triples = []
         metadata_node = BNode()
         triples.append((subject, hsterm, metadata_node))
-        for field in __class__._meta.fields:
+        for field in self.__class__._meta.fields:
             if field.name in ['id', 'object_id', 'content_type']:
                 continue
             triples.append((metadata_node, getattr(HSTERMS, field.name), Literal(getattr(self, field.name))))
@@ -375,12 +375,12 @@ class AbstractMetaDataElement(models.Model):
     @classmethod
     def ingest_rdf(cls, graph, content_object):
         """Default implementation that ingests by convention"""
-        metadata_name = __class__.__name__
+        metadata_name = cls.__name__
         hsterm = getattr(HSTERMS, metadata_name)
         value_dict = {}
         subject = content_object.rdf_subject()
         metadata_node = graph.value(subject=subject, predicate=hsterm)
-        for field in __class__._meta.fields:
+        for field in cls._meta.fields:
             if field.name in ['id', 'object_id', 'content_type']:
                 continue
             value_dict[field.name] = graph.value(metadata_node, getattr(HSTERMS, field.name)).value
