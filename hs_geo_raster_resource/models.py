@@ -146,7 +146,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         return triples
 
     @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
+    def ingest_rdf(cls, graph, content_object):
+        subject = content_object.aggregation_subject()
         spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
         box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
         value_str = graph.value(subject=box_object, predicate=RDF.value).value
@@ -154,18 +155,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         for p in value_str.split('; '):
             k, v = p.split('=')
             value_dict[k] = v
-        return [OriginalCoverage.create(value=value_dict, content_object=content_object)]
-
-    def parse_rdf_value(self, g, metadata_uri):
-        # TODO metadata_uri should be passed in
-        metadata_uri = URIRef("http://localhost:8000/resource/141d4a3249ef40b3a3ae1cf857f9af85/data/contents/logan_resmap.xml#aggregation")
-        value_str = g.value(subject=g.objects(subject=metadata_uri, predicate=HSTERMS.spatialReference)).value
-        value_dict = {}
-        for p in value_str.split('; '):
-            k, v = p.split('=')
-            value_dict[k] = v
-        self._value = json.dumps(value_dict)
-        self.save()
+        OriginalCoverage.create(value=value_dict, content_object=content_object)
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
@@ -262,6 +252,29 @@ class BandInformation(AbstractMetaDataElement):
                            'method', 'comment']
         add_metadata_element_to_xml(container, self, bandinfo_fields)
 
+    def rdf_triples(self, subject):
+        triples = []
+        band_information = BNode()
+        triples.append((subject, HSTERMS.BandInformation, band_information))
+        triples.append((band_information, HSTERMS.name, Literal(self.name)))
+        triples.append((band_information, HSTERMS.noDataValue, Literal(self.noDataValue)))
+        triples.append((band_information, HSTERMS.maximumValue, Literal(self.maximumValue)))
+        triples.append((band_information, HSTERMS.minimumValue, Literal(self.minimumValue)))
+
+        return triples
+
+    @classmethod
+    def ingest_rdf(cls, graph, content_object):
+        value_dict = {}
+        subject = content_object.aggregation_subject()
+        band_information = graph.value(subject=subject, predicate=HSTERMS.BandInformation)
+        value_dict['name'] = graph.value(band_information, HSTERMS.name).value
+        value_dict['noDataValue'] = graph.value(band_information, HSTERMS.noDataValue).value
+        value_dict['maximumValue'] = graph.value(band_information, HSTERMS.maximumValue).value
+        value_dict['minimumValue'] = graph.value(band_information, HSTERMS.minimumValue).value
+
+        BandInformation.create(value=value_dict, content_object=content_object)
+
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
@@ -339,8 +352,9 @@ class CellInformation(AbstractMetaDataElement):
         return triples
 
     @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
+    def ingest_rdf(cls, graph, content_object):
         value_dict = {}
+        subject = content_object.aggregation_subject()
         cell_information = graph.value(subject=subject, predicate=HSTERMS.CellInformation)
         value_dict['rows'] = graph.value(cell_information, HSTERMS.rows).value
         value_dict['columns'] = graph.value(cell_information, HSTERMS.columns).value
@@ -348,7 +362,7 @@ class CellInformation(AbstractMetaDataElement):
         value_dict['cellSizeYValue'] = graph.value(cell_information, HSTERMS.cellSizeYValue).value
         value_dict['cellDataType'] = graph.value(cell_information, HSTERMS.cellDataType).value
 
-        return [CellInformation.create(value=value_dict, content_object=content_object)]
+        CellInformation.create(value=value_dict, content_object=content_object)
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""

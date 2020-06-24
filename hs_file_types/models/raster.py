@@ -208,15 +208,18 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         if self.cellInformation:
             for triple in self.cellInformation.rdf_triples(subject):
                 graph.add(triple)
+        if self.bandInformations:
+            for triple in self.bandInformations.rdf_triples(subject):
+                graph.add(triple)
         return graph
 
 
-    def ingest_rdf(self, graph):
-        super(GeoRasterFileMetaData, self).ingest_rdf(graph)
-        subject = self.aggregation_subject()
+    def ingest_metadata(self, graph):
+        super(GeoRasterFileMetaData, self).ingest_metadata(graph)
 
-        self._ori_coverage = OriginalCoverage.ingest_rdf(graph, subject, self)
-        self._cell_information = CellInformation.ingest_rdf(graph, subject, self)
+        OriginalCoverage.ingest_rdf(graph, self)
+        CellInformation.ingest_rdf(graph, self)
+        BandInformation.ingest_rdf(graph, self)
         self.save()
 
 

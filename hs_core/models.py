@@ -362,7 +362,7 @@ class AbstractMetaDataElement(models.Model):
         raise NotImplementedError()
 
     @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
+    def ingest_rdf(cls, graph, content_object):
         raise NotImplementedError()
 
     @property
@@ -1146,7 +1146,8 @@ class Language(AbstractMetaDataElement):
     def rdf_triples(self, subject):
         return [(subject, DC.language, Literal(self.code))]
 
-    def ingest_rdf(self, graph):
+    @classmethod
+    def ingest_rdf(self, graph, content_object):
         #for s, p, o in graph.triple((None, DC.language, None)):
         #    if s.value.endswith('#aggregation'):
         #        self.code = o.value
@@ -1336,9 +1337,9 @@ class Coverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
+    def ingest_rdf(cls, graph, content_object):
+        subject = content_object.aggregation_subject()
         cov = graph.value(subject=subject, predicate=DC.coverage)
-        coverages = []
         for _, term, o in graph.triples((cov, None, None)):
             for _, _, value in graph.triples((o, RDF.value, None)):
                 type = term.split('/')[-1]
@@ -1348,8 +1349,7 @@ class Coverage(AbstractMetaDataElement):
                     if k in ['start', 'end']:
                         v = parser.parse(v).strftime("%Y/%m/%d")
                     value_dict[k] = v
-                coverages.append(Coverage.create(type=type, value=value_dict, content_object=content_object))
-        return coverages
+                Coverage.create(type=type, value=value_dict, content_object=content_object)
 
     def rdf_triples(self, subject):
         triples = []

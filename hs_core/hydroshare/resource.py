@@ -805,34 +805,28 @@ def add_resource_files(pk, *files, **kwargs):
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
     for md in metadata_files:
-        ingest_metadata(resource, md)
+        graph = Graph()
+        with open(md.temporary_file_path(), mode='r') as f:
+            graph = graph.parse(data=f.read())
+        agg_type = None
+        for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
+            agg_type = s.split("/")[-1]
+            break
+        title = None
+        for _, _, o in graph.triples((None, DC.title, None)):
+            title = o
+            break
+        from hs_file_types.models import GeoRasterLogicalFile
+        #TODO, other types need to be specified
+        file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile}
+        clazz = file_type_map[agg_type]
+        # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
+        lf = clazz.objects.get(resource=resource, dataset_name=title.value)
+        with transaction.atomic():
+            lf.metadata.delete_all_elements()
+            lf.metadata.ingest_metadata(graph)
 
     return ret
-
-def ingest_metadata(resource, md):
-    g = Graph()
-    with open(md.temporary_file_path(), mode='r') as f:
-        g = g.parse(data=f.read())
-    for s, p, o in g.triples((None, RDFS.isDefinedBy, None)):
-        agg_term = s
-        break
-
-    for s, p, o in g.triples((None, DC.title, None)):
-        subject = s
-        title = o
-        break
-
-    #agg_class = get_logical_file(agg_term)
-
-    from hs_file_types.models import GeoRasterLogicalFile
-    file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile}
-
-    agg_type = agg_term.split("/")[-1]
-    clazz = file_type_map[agg_type]
-    # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
-    lf = clazz.objects.get(resource=resource, dataset_name=title.value)
-    lf.metadata.delete_all_elements()
-    lf.metadata.ingest_rdf(g)
 
 
 def is_metadata_file(file):
