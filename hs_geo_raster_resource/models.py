@@ -146,6 +146,15 @@ class OriginalCoverage(AbstractMetaDataElement):
         triples.append((value, RDF.value, Literal(value_string)))
         return triples
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        value_str = graph.value(subject=graph.objects(subject=subject, predicate=HSTERMS.spatialReference)).value
+        value_dict = {}
+        for p in value_str.split('; '):
+            k, v = p.split('=')
+            value_dict[k] = v
+        OriginalCoverage.create(value=value_dict, content_object=content_object)
+
     def parse_rdf_value(self, g, metadata_uri):
         # TODO metadata_uri should be passed in
         metadata_uri = URIRef("http://localhost:8000/resource/141d4a3249ef40b3a3ae1cf857f9af85/data/contents/logan_resmap.xml#aggregation")
@@ -327,6 +336,18 @@ class CellInformation(AbstractMetaDataElement):
         triples.append((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
 
         return triples
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        value_dict = {}
+        cell_information = graph.value(subject=subject, predicate=HSTERMS.CellInformation)
+        value_dict['rows'] = graph.value(cell_information, HSTERMS.rows).value
+        value_dict['columns'] = graph.value(cell_information, HSTERMS.columns).value
+        value_dict['cellSizeXValue'] = graph.value(cell_information, HSTERMS.cellSizeXValue).value
+        value_dict['cellSizeYValue'] = graph.value(cell_information, HSTERMS.cellSizeYValue).value
+        value_dict['cellDataType'] = graph.value(cell_information, HSTERMS.cellDataType).value
+
+        OriginalCoverage.create(value=value_dict, content_object=content_object)
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""

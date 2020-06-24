@@ -307,7 +307,6 @@ class AbstractFileMetaData(models.Model):
         #     break
         # self.logical_file.dataset_name = title.value
         # self.logical_file.save()
-        self.delete_all_elements()
         subject = self.aggregation_subject()
         for _, _, object in graph.triples((subject, DC.subject, None)):
             self.keywords.append(object.value)
@@ -316,7 +315,7 @@ class AbstractFileMetaData(models.Model):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.extra_metadata[key] = value
 
-        self.coverages = Coverage.ingest_rdf(graph, subject, self)
+        Coverage.ingest_rdf(graph, subject, self)
         self.save()
 
 

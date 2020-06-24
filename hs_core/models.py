@@ -362,7 +362,7 @@ class AbstractMetaDataElement(models.Model):
         raise NotImplementedError()
 
     @classmethod
-    def ingest_rdf(cls, graph, subject):
+    def ingest_rdf(cls, graph, subject, content_object):
         raise NotImplementedError()
 
     @property
@@ -1338,7 +1338,6 @@ class Coverage(AbstractMetaDataElement):
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         cov = graph.value(subject=subject, predicate=DC.coverage)
-        coverages = []
         for _, term, o in graph.triples((cov, None, None)):
             for _, _, value in graph.triples((o, RDF.value, None)):
                 type = term.split('/')[-1]
@@ -1348,8 +1347,7 @@ class Coverage(AbstractMetaDataElement):
                     if k in ['start', 'end']:
                         v = parser.parse(v).strftime("%Y/%m/%d")
                     value_dict[k] = v
-                coverages.append(Coverage.create(type=type, value=value_dict, content_object=content_object))
-        return coverages
+                Coverage.create(type=type, value=value_dict, content_object=content_object)
 
     def rdf_triples(self, subject):
         triples = []

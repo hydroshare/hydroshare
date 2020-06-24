@@ -827,12 +827,11 @@ def ingest_metadata(resource, md):
     from hs_file_types.models import GeoRasterLogicalFile
     file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile}
 
-    print(agg_term)
     agg_type = agg_term.split("/")[-1]
-    print(agg_type)
     clazz = file_type_map[agg_type]
     # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
     lf = clazz.objects.get(resource=resource, dataset_name=title.value)
+    lf.metadata.delete_all_elements()
     lf.metadata.ingest_rdf(g)
 
 

@@ -211,6 +211,15 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return graph
 
 
+    def ingest_rdf(self, graph):
+        super(GeoRasterFileMetaData, self).ingest_rdf(graph)
+        subject = self.aggregation_subject()
+
+        OriginalCoverage.ingest_rdf(graph, subject, self)
+        CellInformation.ingest_rdf(graph, subject, self)
+        self.save()
+
+
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
