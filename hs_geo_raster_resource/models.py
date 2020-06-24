@@ -66,8 +66,7 @@ class OriginalCoverage(AbstractMetaDataElement):
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if value_item not in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for one or more "
-                                          "bounding box limits or 'units' is missing.")
+                    raise ValidationError("For coverage of type 'box' values for {} is missing. {}".format(value_item, value_arg_dict))
 
             value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
@@ -148,7 +147,9 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        value_str = graph.value(subject=graph.objects(subject=subject, predicate=HSTERMS.spatialReference)).value
+        spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
+        box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
+        value_str = graph.value(subject=box_object, predicate=RDF.value).value
         value_dict = {}
         for p in value_str.split('; '):
             k, v = p.split('=')
@@ -347,7 +348,7 @@ class CellInformation(AbstractMetaDataElement):
         value_dict['cellSizeYValue'] = graph.value(cell_information, HSTERMS.cellSizeYValue).value
         value_dict['cellDataType'] = graph.value(cell_information, HSTERMS.cellDataType).value
 
-        return [OriginalCoverage.create(value=value_dict, content_object=content_object)]
+        return [CellInformation.create(value=value_dict, content_object=content_object)]
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""
