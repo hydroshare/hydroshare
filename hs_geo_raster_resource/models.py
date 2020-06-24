@@ -252,29 +252,6 @@ class BandInformation(AbstractMetaDataElement):
                            'method', 'comment']
         add_metadata_element_to_xml(container, self, bandinfo_fields)
 
-    def rdf_triples(self, subject):
-        triples = []
-        band_information = BNode()
-        triples.append((subject, HSTERMS.BandInformation, band_information))
-        triples.append((band_information, HSTERMS.name, Literal(self.name)))
-        triples.append((band_information, HSTERMS.noDataValue, Literal(self.noDataValue)))
-        triples.append((band_information, HSTERMS.maximumValue, Literal(self.maximumValue)))
-        triples.append((band_information, HSTERMS.minimumValue, Literal(self.minimumValue)))
-
-        return triples
-
-    @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        value_dict = {}
-        subject = content_object.rdf_subject()
-        band_information = graph.value(subject=subject, predicate=HSTERMS.BandInformation)
-        value_dict['name'] = graph.value(band_information, HSTERMS.name).value
-        value_dict['noDataValue'] = graph.value(band_information, HSTERMS.noDataValue).value
-        value_dict['maximumValue'] = graph.value(band_information, HSTERMS.maximumValue).value
-        value_dict['minimumValue'] = graph.value(band_information, HSTERMS.minimumValue).value
-
-        BandInformation.create(content_object=content_object, **value_dict)
-
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
@@ -338,31 +315,6 @@ class CellInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
-
-    def rdf_triples(self, subject):
-        triples = []
-        cell_information = BNode()
-        triples.append((subject, HSTERMS.CellInformation, cell_information))
-        triples.append((cell_information, HSTERMS.rows, Literal(self.rows)))
-        triples.append((cell_information, HSTERMS.columns, Literal(self.columns)))
-        triples.append((cell_information, HSTERMS.cellSizeXValue, Literal(self.cellSizeXValue)))
-        triples.append((cell_information, HSTERMS.cellSizeYValue, Literal(self.cellSizeYValue)))
-        triples.append((cell_information, HSTERMS.cellDataType, Literal(self.cellDataType)))
-
-        return triples
-
-    @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        value_dict = {}
-        subject = content_object.rdf_subject()
-        cell_information = graph.value(subject=subject, predicate=HSTERMS.CellInformation)
-        value_dict['rows'] = graph.value(cell_information, HSTERMS.rows).value
-        value_dict['columns'] = graph.value(cell_information, HSTERMS.columns).value
-        value_dict['cellSizeXValue'] = graph.value(cell_information, HSTERMS.cellSizeXValue).value
-        value_dict['cellSizeYValue'] = graph.value(cell_information, HSTERMS.cellSizeYValue).value
-        value_dict['cellDataType'] = graph.value(cell_information, HSTERMS.cellDataType).value
-
-        CellInformation.create(content_object=content_object, **value_dict)
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of this metadata element"""
