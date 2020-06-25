@@ -309,7 +309,9 @@ class AbstractFileMetaData(models.Model):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.extra_metadata[key] = value
 
-        Coverage.ingest_rdf(graph, self)
+        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
+        for generic_relation in generic_relations:
+            generic_relation.related_model.ingest_rdf(graph, self)
         self.save()
 
     def get_rdf(self):
@@ -321,7 +323,9 @@ class AbstractFileMetaData(models.Model):
             triples.append((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
-        triples.append((subject, DC.type, HSTERMS.GeographicRasterAggregation))
+        aggregation_type = self.logical_file.get_aggregation_type_name()
+        hsterms_aggregation_type = getattr(HSTERMS, aggregation_type)
+        triples.append((subject, DC.type, hsterms_aggregation_type))
 
         # add lang element
         for triple in resource.metadata.language.rdf_triples(subject):
@@ -344,11 +348,16 @@ class AbstractFileMetaData(models.Model):
                 triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
 
         # add coverages
-        for coverage in self.coverages.all():
-            for triple in coverage.rdf_triples(subject):
-                triples.append(triple)
+        #for coverage in self.coverages.all():
+        #    for triple in coverage.rdf_triples(subject):
+        #        triples.append(triple)
+        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
+        for generic_relation in generic_relations:
+            for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
+                for triple in f.rdf_triples(subject):
+                    triples.append(triple)
 
-        TYPE_SUBJECT = Namespace("{}/terms/".format(current_site_url())).GeographicRasterAggregation
+        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), aggregation_type)
         triples.append((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
         triples.append((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return triples
@@ -356,99 +365,9 @@ class AbstractFileMetaData(models.Model):
     def get_xml(self, pretty_print=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
-        RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'],
-                                 nsmap=CoreMetaData.NAMESPACES)
-        # create the Description element
-        rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' %
-                                           CoreMetaData.NAMESPACES['rdf'])
-
-        resource = self.logical_file.resource
-
-        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], self.rdf_subject.title)
-
-        # add aggregation title
-        if self.logical_file.dataset_name:
-            dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' %
-                                            CoreMetaData.NAMESPACES['dc'])
-            dc_datatitle.text = self.logical_file.dataset_name
-
-        # add aggregation type
-        aggregation_term_uri = current_site_url() + "/terms/{}"
-        aggregation_term_uri = aggregation_term_uri.format(
-            self.logical_file.get_aggregation_type_name())
-
-        dc_type = etree.SubElement(rdf_Description, '{%s}type' % CoreMetaData.NAMESPACES['dc'])
-        dc_type.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'], aggregation_term_uri)
-
-        # add lang element
-        dc_lang = etree.SubElement(rdf_Description, '{%s}language' % CoreMetaData.NAMESPACES['dc'])
-        dc_lang.text = resource.metadata.language.code
-
-        # add rights element
-        dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % CoreMetaData.NAMESPACES['dc'])
-        dc_rights_rdf_Description = etree.SubElement(dc_rights,
-                                                     '{%s}Description' %
-                                                     CoreMetaData.NAMESPACES['rdf'])
-        hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
-                                             '{%s}rightsStatement' %
-                                             CoreMetaData.NAMESPACES['hsterms'])
-        hsterms_statement.text = resource.metadata.rights.statement
-        if resource.metadata.rights.url:
-            hsterms_url = etree.SubElement(dc_rights_rdf_Description,
-                                           '{%s}URL' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_url.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'],
-                            resource.metadata.rights.url)
-
-        # add keywords
-        for kw in self.keywords:
-            dc_subject = etree.SubElement(rdf_Description, '{%s}subject' %
-                                          CoreMetaData.NAMESPACES['dc'])
-            dc_subject.text = kw
-
-        # add any key/value metadata items
-        for key, value in list(self.extra_metadata.items()):
-            hsterms_key_value = etree.SubElement(
-                rdf_Description, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(
-                hsterms_key_value, '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
-            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
-                                           '{%s}key' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
-                                             '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_value.text = value
-
-        # add coverages
-        for coverage in self.coverages.all():
-            coverage.add_to_xml_container(rdf_Description)
-
-        # create the Description element for aggregation type
-        rdf_Description_aggr_type = etree.SubElement(RDF_ROOT, '{%s}Description' %
-                                                     CoreMetaData.NAMESPACES['rdf'])
-
-        rdf_Description_aggr_type.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'],
-                                      aggregation_term_uri)
-        rdfs_label = etree.SubElement(rdf_Description_aggr_type, '{%s}label' %
-                                      CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_label.text = self.logical_file.get_aggregation_display_name()
-
-        rdfs_isDefinedBy = etree.SubElement(rdf_Description_aggr_type, '{%s}isDefinedBy' %
-                                            CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_isDefinedBy.text = current_site_url() + "/terms"
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
-
-    def _get_xml_containers(self):
-        """Helper for the subclasses to get the xml containers element to which the sub classes
-        can then add any additional elements for metadata xml generation"""
-
-        xml_string = super(type(self), self).get_xml(pretty_print=False)
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container_to_add_to = RDF_ROOT.find('rdf:Description', namespaces=CoreMetaData.NAMESPACES)
-        return RDF_ROOT, container_to_add_to
+        # get the xml root element and the xml element to which contains all other elements
+        g = self.get_rdf_graph()
+        return g.serialize(format='pretty-xml').decode()
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)

@@ -705,36 +705,6 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         return json_file_content_div
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(RefTimeseriesFileMetaData, self)._get_xml_containers()
-        NAMESPACES = CoreMetaData.NAMESPACES
-        if self.abstract:
-            dc_description = etree.SubElement(container_to_add_to,
-                                              '{%s}description' % NAMESPACES['dc'])
-            dc_des_rdf_Desciption = etree.SubElement(dc_description,
-                                                     '{%s}Description' % NAMESPACES['rdf'])
-            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
-                                                '{%s}abstract' % NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.abstract
-        if self.file_version:
-            hsterms_file_version = etree.SubElement(container_to_add_to,
-                                                    '{%s}fileVersion' % NAMESPACES['hsterms'])
-            hsterms_file_version.text = self.file_version
-
-        if self.symbol:
-            hsterms_symbol = etree.SubElement(container_to_add_to,
-                                              '{%s}symbol' % NAMESPACES['hsterms'])
-            hsterms_symbol.text = self.symbol
-
-        for series in self.time_series_list:
-            series.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
-
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
 

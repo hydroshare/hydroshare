@@ -816,9 +816,17 @@ def add_resource_files(pk, *files, **kwargs):
         for _, _, o in graph.triples((None, DC.title, None)):
             title = o
             break
-        from hs_file_types.models import GeoRasterLogicalFile
+        from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile, FileSetLogicalFile, GeoRasterLogicalFile, NetCDFLogicalFile,\
+            GeoFeatureLogicalFile, RefTimeseriesLogicalFile, TimeSeriesLogicalFile
         #TODO, other types need to be specified
-        file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile}
+        file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile,
+                         "SingleFileAggregation": GenericLogicalFile,
+                         "FileSetAggregation": FileSetLogicalFile,
+                         "MultidimensionalAggregation": NetCDFLogicalFile,
+                         "GeographicFeatureAggregation": GeoFeatureLogicalFile,
+                         "ReferencedTimeSeriesAggregation": RefTimeseriesLogicalFile,
+                         "TimeSeriesAggregation": TimeSeriesLogicalFile,
+                         }
         clazz = file_type_map[agg_type]
         # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
         lf = clazz.objects.get(resource=resource, dataset_name=title.value)

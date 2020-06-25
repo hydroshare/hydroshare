@@ -215,23 +215,6 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return graph
 
 
-    def ingest_metadata(self, graph):
-        super(GeoRasterFileMetaData, self).ingest_metadata(graph)
-
-        OriginalCoverage.ingest_rdf(graph, self)
-        CellInformation.ingest_rdf(graph, self)
-        BandInformation.ingest_rdf(graph, self)
-        self.save()
-
-
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        g = self.get_rdf_graph()
-        return g.serialize(format='pretty-xml').decode()
-
-
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
     data_type = "GeographicRaster"
