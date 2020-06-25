@@ -424,7 +424,7 @@ class IrodsStorage(Storage):
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "checksum".format(obj_name))
         # remove potential '\n' from stdout
-        return stdout.rstrip('\n')
+        return stdout.strip('\n')
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
