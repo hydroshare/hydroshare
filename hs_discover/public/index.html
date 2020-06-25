@@ -2,39 +2,19 @@
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block meta_title %}Discover{% endblock %}
 {% block main %}
-
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly"
+      defer
+    ></script>
     <style type="text/css">
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
       #map {
         height: 100%;
       }
-
-      /* Optional: Makes the sample page fill the window. */
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
     </style>
-    <script>
-      (function(exports) {
-        "use strict";
-
-        function initMap() {
-          exports.map = new google.maps.Map(document.getElementById("discover-map"), {
-            center: {
-              lat: -34.397,
-              lng: 150.644
-            },
-            zoom: 8
-          });
-        }
-
-        exports.initMap = initMap;
-      })((this.window = this.window || {}));
-    </script>
+    <script src=/static/js/map.js></script>
     <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
     <div class="container" id="discover-main">
         <div class="row">
@@ -74,7 +54,7 @@
 
                 <div id="geocoder-panel"></div>
 
-                <div id="discover-map"></div>
+                <div id="map-div"></div>
 
                 <div id="discover-map-legend"></div>
 
@@ -85,11 +65,7 @@
             </div>
         </div>
     </div>
+    <div id="map"></div>
     <script src=/static/js/chunk-vendors.js></script>
     <script src=/static/js/app.js></script>
-<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?v=3&libraries=geometry,places&key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0" type="text/javascript"></script>
-    <script src=/static/js/map.js></script>
 {% endblock %}
