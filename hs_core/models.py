@@ -7,7 +7,6 @@ import logging
 from uuid import uuid4
 
 from .hs_rdf import HSTERMS, NAMESPACE_MANAGER, RDFS1
-from .hydroshare import current_site_url
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
@@ -4060,7 +4059,7 @@ class CoreMetaData(models.Model):
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
             key = graph.value(subject=o, predicate=HSTERMS.key).value
             value = graph.value(subject=o, predicate=HSTERMS.value).value
-            self.extra_metadata[key] = value
+            self.resource.extra_metadata[key] = value
 
         for field in self.__class__._meta.fields:
             if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
@@ -4083,14 +4082,14 @@ class CoreMetaData(models.Model):
 
     def get_rdf(self):
         triples = []
-        resource = self.logical_file.resource
+        resource = self.resource
         subject = self.rdf_subject()
 
         # add any key/value metadata items
-        if len(self.extra_metadata) > 0:
+        if len(self.resource.extra_metadata) > 0:
             extendedMetadata = BNode()
             triples.append((subject, HSTERMS.extendedMetadata, extendedMetadata))
-            for key, value in list(self.extra_metadata.items()):
+            for key, value in list(self.resource.extra_metadata.items()):
                 triples.append((extendedMetadata, HSTERMS.key, Literal(key)))
                 triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
 
@@ -4105,12 +4104,13 @@ class CoreMetaData(models.Model):
                 for triple in f.rdf_triples(subject):
                     triples.append(triple)
 
+        from .hydroshare import current_site_url
         TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource.__class__.__name__)
         triples.append((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.get_displ.verbose_name)))
         triples.append((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return triples
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
         # get the xml root element and the xml element to which contains all other elements
