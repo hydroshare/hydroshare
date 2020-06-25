@@ -781,18 +781,21 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         base_dir = folder
     metadata_files = []
+    resource_metadata_file = None
     for f in files:
-        if is_metadata_file(f):
+        if is_resource_metadata_file(f):
+            resource_metadata_file = f
+        elif is_metadata_file(f):
             metadata_files.append(f)
-            continue
-        full_dir = base_dir
-        if f in full_paths:
-            # TODO, put this in it's own method?
-            full_path = full_paths[f]
-            dir_name = os.path.dirname(full_path)
-            # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
-            full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        else:
+            full_dir = base_dir
+            if f in full_paths:
+                # TODO, put this in it's own method?
+                full_path = full_paths[f]
+                dir_name = os.path.dirname(full_path)
+                # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
+                full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
+            ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
     for ifname in source_names:
         ret.append(utils.add_file_to_resource(resource, None,
@@ -816,7 +819,7 @@ def add_resource_files(pk, *files, **kwargs):
         for _, _, o in graph.triples((None, DC.title, None)):
             title = o
             break
-        from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile, FileSetLogicalFile, GeoRasterLogicalFile, NetCDFLogicalFile,\
+        from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile, GeoRasterLogicalFile, NetCDFLogicalFile,\
             GeoFeatureLogicalFile, RefTimeseriesLogicalFile, TimeSeriesLogicalFile
         #TODO, other types need to be specified
         file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile,
@@ -837,12 +840,27 @@ def add_resource_files(pk, *files, **kwargs):
         except:
             logger.exception("Error processing metadata file")
             raise
+    if resource_metadata_file:
+        graph = Graph()
+        with open(resource_metadata_file.temporary_file_path(), mode='r') as f:
+            graph = graph.parse(data=f.read())
+        try:
+            with transaction.atomic():
+                resource.metadata.delete_all_elements()
+                resource.metadata.ingest_metadata(graph)
+        except:
+            logger.exception("Error processing resource metadata file")
+            raise
 
     return ret
 
 
 def is_metadata_file(file):
     return file.name.endswith('_meta.xml')
+
+
+def is_resource_metadata_file(file):
+    return file.name == 'resourcemetadata.xml'
 
 
 def update_science_metadata(pk, metadata, user):

@@ -308,7 +308,7 @@ class AbstractFileMetaData(models.Model):
             self.extra_metadata[key] = value
 
         for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata']:
+            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata', 'is_dirty']:
                 continue
             field_value = graph.value(subject=subject, predicate=getattr(HSTERMS, field.name))
             if field_value:
@@ -360,7 +360,7 @@ class AbstractFileMetaData(models.Model):
                 triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
 
         for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata']:
+            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata', 'is_dirty']:
                 continue
             triples.append((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
 
