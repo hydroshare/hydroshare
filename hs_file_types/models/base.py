@@ -307,6 +307,13 @@ class AbstractFileMetaData(models.Model):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.extra_metadata[key] = value
 
+        for field in self.__class__._meta.fields:
+            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata']:
+                continue
+            field_value = graph.value(subject=subject, predicate=getattr(HSTERMS, field.name))
+            if field_value:
+                setattr(self, field.name, field_value)
+
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
             generic_relation.related_model.ingest_rdf(graph, self)
@@ -351,6 +358,11 @@ class AbstractFileMetaData(models.Model):
             for key, value in list(self.extra_metadata.items()):
                 triples.append((extendedMetadata, HSTERMS.key, Literal(key)))
                 triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
+
+        for field in self.__class__._meta.fields:
+            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata']:
+                continue
+            triples.append((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
 
         # add coverages
         #for coverage in self.coverages.all():
