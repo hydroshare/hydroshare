@@ -20,16 +20,14 @@ from mezzanine.conf import settings
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, _input, ul, li, p
 
-from lxml import etree
-
-from hs_core.hs_rdf import RDFS1, HSTERMS
+from hs_core.hs_rdf import RDFS1, HSTERMS, NAMESPACE_MANAGER
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
-from rdflib.namespace import DC, RDF, RDFS
+from rdflib.namespace import DC
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
@@ -313,6 +311,13 @@ class AbstractFileMetaData(models.Model):
         for generic_relation in generic_relations:
             generic_relation.related_model.ingest_rdf(graph, self)
         self.save()
+
+    def get_rdf_graph(self):
+        graph = Graph()
+        graph.namespace_manager = NAMESPACE_MANAGER
+        for triple in self.get_rdf():
+            graph.add(triple)
+        return graph
 
     def get_rdf(self):
         triples = []

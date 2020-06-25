@@ -5,7 +5,6 @@ import subprocess
 import zipfile
 
 import xml.etree.ElementTree as ET
-from lxml import etree
 
 import gdal
 from gdalconst import GA_ReadOnly
@@ -18,9 +17,7 @@ from django.forms.models import formset_factory
 from django.template import Template, Context
 
 from dominate.tags import div, legend, form, button
-from rdflib import Graph
 
-from hs_core.hs_rdf import NAMESPACE_MANAGER
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.models import ResourceFile, CoreMetaData
@@ -194,25 +191,6 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-
-    def get_rdf_graph(self):
-        graph = Graph()
-        graph.namespace_manager = NAMESPACE_MANAGER
-        for triple in super(GeoRasterFileMetaData, self).get_rdf():
-            graph.add(triple)
-
-        subject = self.rdf_subject()
-        if self.originalCoverage:
-            for triple in self.originalCoverage.rdf_triples(subject):
-                graph.add(triple)
-        if self.cellInformation:
-            for triple in self.cellInformation.rdf_triples(subject):
-                graph.add(triple)
-        if self.bandInformations:
-            for band in self.bandInformations:
-                for triple in band.rdf_triples(subject):
-                    graph.add(triple)
-        return graph
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
