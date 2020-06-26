@@ -20,10 +20,10 @@ from mezzanine.conf import settings
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, _input, ul, li, p
 
-from hs_core.hs_rdf import RDFS1, HSTERMS, NAMESPACE_MANAGER
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
@@ -33,7 +33,7 @@ RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 
 
-class AbstractFileMetaData(models.Model):
+class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     """ base class for HydroShare file type metadata """
 
     # one temporal coverage and one spatial coverage
@@ -319,13 +319,6 @@ class AbstractFileMetaData(models.Model):
             generic_relation.related_model.ingest_rdf(graph, self)
         self.save()
 
-    def get_rdf_graph(self):
-        graph = Graph()
-        graph.namespace_manager = NAMESPACE_MANAGER
-        for triple in self.get_rdf():
-            graph.add(triple)
-        return graph
-
     def get_rdf(self):
         triples = []
         resource = self.logical_file.resource
@@ -378,13 +371,6 @@ class AbstractFileMetaData(models.Model):
         triples.append((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
         triples.append((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return triples
-
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        g = self.get_rdf_graph()
-        return g.serialize(format='pretty-xml').decode()
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -1405,11 +1391,6 @@ class AbstractLogicalFile(models.Model):
         istorage = self.resource.get_irods_storage()
         with istorage.open(self.metadata_file_path, mode='r') as f:
             return f.read()
-
-    @property
-    def rdf_subject(self):
-        # TODO this is a terrible way to build that ref out
-        return Namespace("{}/data/contents/{}#".format(self.resource.metadata.resource_uri, self.metadata_short_file_path)).aggregation
 
     def read_metadata_as_rdf(self):
         g = Graph()

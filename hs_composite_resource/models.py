@@ -137,20 +137,6 @@ class CompositeResource(BaseResource):
         """ if this resource allows associating resource file objects with logical file"""
         return True
 
-    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-
-        # get resource level core metadata as xml string
-        # for composite resource we don't want the format elements at the resource level
-        # as they are included at the aggregation map xml document
-        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=False,
-                                                                     include_format_elements=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
-
     def _recreate_fileset_xml_docs(self, folder):
         """Recreates xml files for all fileset aggregations that exist under the path 'folder'
         as well as for any parent fileset that may exist relative to path 'folder'

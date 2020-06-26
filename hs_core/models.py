@@ -6,7 +6,7 @@ import arrow
 import logging
 from uuid import uuid4
 
-from .hs_rdf import HSTERMS, NAMESPACE_MANAGER, RDFS1
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
@@ -342,10 +342,8 @@ def page_permissions_page_processor(request, page):
     }
 
 
-class AbstractMetaDataElement(models.Model):
+class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
     """Define abstract class for all metadata elements."""
-
-    term = None
 
     object_id = models.PositiveIntegerField()
     # see the following link the reason for having the related_name setting
@@ -357,35 +355,6 @@ class AbstractMetaDataElement(models.Model):
     def __str__(self):
         """Return unicode for python 3 compatibility in templates"""
         return self.__unicode__()
-
-    def rdf_triples(self, subject):
-        """Default implementation that parses by convention"""
-        metadata_name = self.__class__.__name__
-        hsterm = getattr(HSTERMS, metadata_name)
-        triples = []
-        metadata_node = BNode()
-        triples.append((subject, hsterm, metadata_node))
-        for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type']:
-                continue
-            triples.append((metadata_node, getattr(HSTERMS, field.name), Literal(getattr(self, field.name))))
-
-        return triples
-
-    @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        """Default implementation that ingests by convention"""
-        metadata_name = cls.__name__
-        hsterm = getattr(HSTERMS, metadata_name)
-        value_dict = {}
-        subject = content_object.rdf_subject()
-        metadata_node = graph.value(subject=subject, predicate=hsterm)
-        for field in cls._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type']:
-                continue
-            value_dict[field.name] = graph.value(metadata_node, getattr(HSTERMS, field.name)).value
-
-        cls.create(content_object=content_object, **value_dict)
 
     @property
     def metadata(self):
@@ -3621,7 +3590,7 @@ Page.get_content_model = new_get_content_model
 
 
 # This model has a one-to-one relation with the AbstractResource model
-class CoreMetaData(models.Model):
+class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     """Define CoreMetaData model."""
 
     XML_HEADER = '''<?xml version="1.0"?>
@@ -3711,6 +3680,9 @@ class CoreMetaData(models.Model):
         """
         from .views.resource_metadata_rest_api import CoreMetaDataSerializer
         return CoreMetaDataSerializer(self)
+
+    def rdf_subject(self):
+        return URIRef(self.type.url)
 
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):
@@ -4045,77 +4017,6 @@ class CoreMetaData(models.Model):
     @property
     def resource_uri(self):
         return self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
-
-    @property
-    def resource_URIRef(self):
-        return URIRef(self.resource_uri)
-
-    def rdf_subject(self):
-        return Namespace(self.type.url)
-
-    def ingest_metadata(self, graph):
-        subject = self.rdf_subject()
-
-        for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
-            key = graph.value(subject=o, predicate=HSTERMS.key).value
-            value = graph.value(subject=o, predicate=HSTERMS.value).value
-            self.resource.extra_metadata[key] = value
-
-        for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
-                continue
-            field_value = graph.value(subject=subject, predicate=getattr(HSTERMS, field.name))
-            if field_value:
-                setattr(self, field.name, field_value)
-
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
-        for generic_relation in generic_relations:
-            generic_relation.related_model.ingest_rdf(graph, self)
-        self.save()
-
-    def get_rdf_graph(self):
-        graph = Graph()
-        graph.namespace_manager = NAMESPACE_MANAGER
-        for triple in self.get_rdf():
-            graph.add(triple)
-        return graph
-
-    def get_rdf(self):
-        triples = []
-        resource = self.resource
-        subject = self.rdf_subject()
-
-        # add any key/value metadata items
-        if len(self.resource.extra_metadata) > 0:
-            extendedMetadata = BNode()
-            triples.append((subject, HSTERMS.extendedMetadata, extendedMetadata))
-            for key, value in list(self.resource.extra_metadata.items()):
-                triples.append((extendedMetadata, HSTERMS.key, Literal(key)))
-                triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
-
-        for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
-                continue
-            triples.append((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
-
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
-        for generic_relation in generic_relations:
-            for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
-                for triple in f.rdf_triples(subject):
-                    triples.append(triple)
-
-        from .hydroshare import current_site_url
-        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource.__class__.__name__)
-        triples.append((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.get_displ.verbose_name)))
-        triples.append((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
-        return triples
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        g = self.get_rdf_graph()
-        return g.serialize(format='pretty-xml').decode()
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
