@@ -10,7 +10,6 @@
         height: 100%;
       }
     </style>
-    <script src=/static/js/map.js></script>
     <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
     <div class="container" id="discover-main">
         <div class="row">
@@ -48,9 +47,9 @@
                     {% endfor %}
                 </form>
 
-                <div id="geocoder-panel"></div>
+                <input id="map-search" class="controls" type="text" placeholder="Search Box">
 
-                <div id="map-div"></div>
+<!--                <div id="map-div"></div>-->
 
                 <div id="discover-map-legend"></div>
 
@@ -64,7 +63,8 @@
     <div id="map"></div>
     <script src=/static/js/chunk-vendors.js></script>
     <script src=/static/js/app.js></script>
+    <script src=/static/js/map.js></script>
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"
     ></script>
 {% endblock %}

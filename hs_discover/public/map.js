@@ -1,4 +1,4 @@
-(function (exports) {
+((exports) => {
   const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
   const point = { info_link: '', lat: 42, lng: -71 };
   let service;
@@ -27,24 +27,27 @@
       zoom: mapDefaultZoom,
       mapTypeId: google.maps.MapTypeId.TERRAIN,
     });
+    // https://stackoverflow.com/questions/29869261/google-map-search-box
     const mapLegend = document.getElementById('discover-map-legend');
-    const geoCoder = document.getElementById('geocoder-panel');
+    // const geoCoder = document.getElementById('geocoder-panel');
     const resetZoomButton = document.getElementById('reset-zoom');
-    const geoCoderContent = [];
+    // const geoCoderContent = [];
     const resetButtonContent = [];
+    const searchBox = new google.maps.places.SearchBox(document.getElementById('map-search'));
+    exports.map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('map-search'));
     exports.map.controls[google.maps.ControlPosition.RIGHT_TOP].push(mapLegend);
-    exports.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geoCoder);
+    // exports.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geoCoder);
     exports.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(resetZoomButton);
     let legendTable = '<table><tbody>';
     legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
-    legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
-    legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
-    geoCoderContent.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
-    geoCoderContent.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
+    // legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
+    // legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
+    // geoCoderContent.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
+    // geoCoderContent.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
     resetButtonContent.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
     resetButtonContent.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
     mapLegend.innerHTML = legendTable;
-    geoCoder.innerHTML = geoCoderContent.join('');
+    // geoCoder.innerHTML = geoCoderContent.join('');
     resetZoomButton.innerHTML = resetButtonContent.join('');
 
     const locations = [{ lat: 39, lng: -75 }, { lat: 42, lng: -71 }];
@@ -58,12 +61,20 @@
       });
     });
 
+    // axios.get('/discoverapi/', { params: { searchtext: 'abc' } })
+    //   .then((response) => {
+    //     console.log(JSON.parse(response.data.resources));
+    //   })
+    //   .catch((error) => {
+    //     console.error(error); // eslint-disable-line
+    //   });
+
     const request = {
       query: 'Atlanta georgia',
       fields: ['name', 'geometry'],
     };
 
-    service = new google.maps.PlacesService(exports.map);
+    service = new google.maps.places.PlacesService(exports.map);
 
     service.findPlaceFromQuery(request, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK) {
@@ -144,6 +155,6 @@
   //     });
   // };
   };
-
+  console.log('routine end');
   exports.initMap = initMap; // eslint-disable-line
-}((this.window = this.window || {})));
+})(this.window = this.window || {});
