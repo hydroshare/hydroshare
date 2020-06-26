@@ -145,7 +145,7 @@ def upload_add(request):
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata, 
-                                            source_names=source_names, folder=None)
+                                            source_names=source_names, folder='')
     except hydroshare.utils.ResourceFileSizeException as ex:
         return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -156,7 +156,7 @@ def upload_add(request):
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, 
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
-                                                   source_names=source_names, folder=None)
+                                                   source_names=source_names, folder='')
 
     except (hydroshare.utils.ResourceFileValidationException, SessionException) as ex:
         if str(ex):

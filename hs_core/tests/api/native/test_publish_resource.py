@@ -44,7 +44,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             msg='The resource is frozen'
         )
 
-        self.assertIsNone(
+        self.assertFalse(
             self.res.doi,
             msg='doi is assigned'
         )
@@ -69,7 +69,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         )
 
         # test if doi is assigned
-        self.assertIsNotNone(
+        self.assertTrue(
             self.pub_res.doi,
             msg='No doi is assigned with the published resource.'
         )

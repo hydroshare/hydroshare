@@ -277,7 +277,7 @@ def get_public_groups():
 
 
 def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
-                      to_date=None, start=None, count=None, full_text_search=None,
+                      to_date=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
                       north=None, south=None, east=None, west=None, include_obsolete=False):
@@ -314,8 +314,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         user = User or name
         from_date = datetime object
         to_date = datetime object
-        start = int
-        count = int
         subject = list of subject
         type = list of resource type names, used for filtering
         coverage_type = geo parameter, one of box or point
@@ -325,8 +323,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         east = east coordinate
     """
 
-    if not any((author, creator, group, user, owner, from_date, to_date, start,
-                count, subject, full_text_search, public, type)):
+    if not any((author, creator, group, user, owner, from_date, to_date,
+                subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     q = []
@@ -338,7 +336,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(query)
 
     if published:
-        q.append(Q(doi__isnull=False))
+        q.append(Q(raccess__published=True))
 
     if author:
         authors = author.split(',')
@@ -425,39 +423,13 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if not include_obsolete:
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
+    if full_text_search:
+        description_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+        title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+        # Full text search must match within the title or abstract
+        flt = flt.filter(object_id__in=description_ids.union(title_ids))
     for q in q:
         flt = flt.filter(q)
-
-        if full_text_search:
-            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
-
-            # Full text search must match within the title or abstract
-            if desc_ids:
-                flt = flt.filter(object_id__in=desc_ids)
-            elif title_ids:
-                flt = flt.filter(object_id__in=title_ids)
-            else:
-                # No matches on title or abstract, so treat as no results of search
-                flt = flt.none()
-
-    # TODO The below is legacy pagination... need to find out if anything is using it and delete
-    qcnt = 0
-    if flt:
-        qcnt = len(flt)
-
-    if start is not None and count is not None:
-        if qcnt > start:
-            if qcnt >= start + count:
-                flt = flt[start:start+count]
-            else:
-                flt = flt[start:qcnt]
-    elif start is not None:
-        if qcnt >= start:
-            flt = flt[start:qcnt]
-    elif count is not None:
-        if qcnt > count:
-            flt = flt[0:count]
 
     return flt
 

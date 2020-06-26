@@ -299,7 +299,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
         filter_parms['public'] = not self.request.user.is_authenticated()
         filtered_res_list = []
 
-        for r in hydroshare.get_resource_list(**filter_parms):
+        for r in self.paginate_queryset(hydroshare.get_resource_list(**filter_parms)):
             resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
@@ -823,7 +823,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
-        folder = request.POST.get('folder', None)
+        folder = request.POST.get('folder', '')
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource,
                                                            files=[resource_files[0]],
