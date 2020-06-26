@@ -1,12 +1,28 @@
 (function (exports) {
-  const mapDefaultZoom = 2;
+  const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
+  const point = { info_link: '', lat: 42, lng: -71 };
+  let service;
+  let infowindow;
+
+  function createMarker(place) {
+    const marker = new google.maps.Marker({
+      map: exports.map,
+      position: place.geometry.location,
+    });
+
+    google.maps.event.addListener(marker, 'click', function() {
+      infowindow.setContent(place.name);
+      infowindow.open(map, this);
+    });
+  }
 
   const initMap = () => {
+    infowindow = new google.maps.InfoWindow();
     // eslint-disable-next-line no-param-reassign
     exports.map = new google.maps.Map(document.getElementById('map'), {
       center: {
-        lat: 0,
-        lng: 0,
+        lat: point.lat,
+        lng: point.lng,
       },
       zoom: mapDefaultZoom,
       mapTypeId: google.maps.MapTypeId.TERRAIN,
@@ -30,6 +46,48 @@
     mapLegend.innerHTML = legendTable;
     geoCoder.innerHTML = geoCoderContent.join('');
     resetZoomButton.innerHTML = resetButtonContent.join('');
+
+    const locations = [{ lat: 39, lng: -75 }, { lat: 42, lng: -71 }];
+
+    const markers = locations.map((location, i) => {
+      return new google.maps.Marker({
+        // icon: './images/pin.svg',
+        position: location,
+        zIndex: i,
+        map: exports.map,
+      });
+    });
+
+    const request = {
+      query: 'Atlanta georgia',
+      fields: ['name', 'geometry'],
+    };
+
+    service = new google.maps.PlacesService(exports.map);
+
+    service.findPlaceFromQuery(request, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        for (let i = 0; i < results.length; i++) {
+          createMarker(results[i]);
+        }
+        exports.map.setCenter(results[0].geometry.location);
+      } else {
+        console.log(status);
+      }
+    });
+
+    // Add event listeners to the markers
+    // eslint-disable-next-line array-callback-return,no-unused-vars
+    // markers.map((marker, i) => {
+    //   marker.addListener('mouseover', () => {
+    //     toggleIcon(marker, true);
+    //   });
+    //   marker.addListener('mouseout', () => {
+    //     toggleIcon(marker, false);
+    //   });
+    // });
+
+
     const setMarkers = function(jsonResults) {
       let modifiedPointsData = [];
       let modifiedBoxesData = [];
@@ -37,36 +95,54 @@
       jsonResults.forEach((x) => {
         console.log(x);
       });
+      // shade_rects.forEach(function(rect){
+      //     google.maps.event.addListener(rect,'click',function(e){
+      //         highlightOverlapping(e.latLng);
+      //         var map_resources = [];
+      //         buildMapItemsTableData(boxes_data, map_resources, e.latLng);
+      //         var map_items_table = $('#map-items').DataTable();
+      //         map_items_table.clear();
+      //         map_items_table.rows.add(map_resources);
+      //         map_items_table.draw();
+      //     });
+      // });
+    };
 
-      modifiedPointsData.forEach(function(point) {
-        createPointResourceMarker(point);
-      });
+    // Create Resource Point marker function
 
-      modifiedBoxesData.forEach(function(box) {
-        createBoxResourceMarker (box);
-      });
+    // const latlng = new google.maps.LatLng(point.lat, point.lng);
+    // const counter = 0;
+    //
+    // const marker = new google.maps.Marker({
+    //   position: latlng,
+    //   map: exports.map,
+    //   title: 'Hello World!',
+    // });
 
-      drawShadeRectangles(boxes_data);
+    // const marker = new google.maps.Marker({
+    //   map: exports.map,
+    //   icon: '//raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
+    //   position: latlng,
+    // });
 
-      shade_rects.forEach(function(rect){
-          google.maps.event.addListener(rect,'click',function(e){
-              highlightOverlapping(e.latLng);
-              var map_resources = [];
-              buildMapItemsTableData(boxes_data, map_resources, e.latLng);
-              var map_items_table = $('#map-items').DataTable();
-              map_items_table.clear();
-              map_items_table.rows.add(map_resources);
-              map_items_table.draw();
-          });
-      });
-      markerCluster = new MarkerClusterer(map, markers, {
-          styles:[{
-              height: 55,
-              width: 56,
-              url: '/static/img/m2.png'
-          }]
-      });
-  };
+    // google.maps.event.addListener(marker, 'click', function() {
+    //     var map_resources = [];
+    //     buildMapItemsTableDataforMarkers(point.resources_list, map_resources);
+    //     var map_items_table = $('#map-items').DataTable();
+    //     map_items_table.clear();
+    //     map_items_table.rows.add(map_resources);
+    //     map_items_table.draw();
+    //     info_window.setContent(info_content);
+    //     info_window.open(map, marker);
+    // });
+  //     const markerCluster = new MarkerClusterer(exports.map, markers, {
+  //         styles: [{
+  //             height: 55,
+  //             width: 56,
+  //             url: '/static/img/m2.png'
+  //         }]
+  //     });
+  // };
   };
 
   exports.initMap = initMap; // eslint-disable-line

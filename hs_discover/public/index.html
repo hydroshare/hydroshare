@@ -3,10 +3,6 @@
 {% block meta_title %}Discover{% endblock %}
 {% block main %}
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly"
-      defer
-    ></script>
     <style type="text/css">
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
@@ -68,4 +64,7 @@
     <div id="map"></div>
     <script src=/static/js/chunk-vendors.js></script>
     <script src=/static/js/app.js></script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly"
+    ></script>
 {% endblock %}
