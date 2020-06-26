@@ -3682,7 +3682,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         return CoreMetaDataSerializer(self)
 
     def rdf_subject(self):
-        return URIRef(self.type.url)
+        return URIRef("http://www.hydroshare.org/terms/CompositeResource")
 
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):

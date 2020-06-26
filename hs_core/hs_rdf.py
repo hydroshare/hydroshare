@@ -1,5 +1,4 @@
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db.models import Model
 from rdflib import Graph, BNode
 from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS
 from rdflib.term import Literal, URIRef
@@ -14,7 +13,7 @@ NAMESPACE_MANAGER.bind('dc', DC, override=False)
 NAMESPACE_MANAGER.bind('dcterms', DCTERMS, override=False)
 
 
-class RDF_MetaData_Mixin(Model):
+class RDF_MetaData_Mixin(object):
 
     def rdf_subject(self):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
@@ -86,7 +85,7 @@ class RDF_MetaData_Mixin(Model):
         abstract = True
 
 
-class RDF_Term_MixIn(Model):
+class RDF_Term_MixIn(object):
     """Provides methods for serializing a django model into and rdflib triples and deserializing from an rdflib Graph
      back to a django model.  This mixin is designed for django models that are generic relations of another django
      model which represents a group of metadata.
@@ -129,13 +128,15 @@ class RDF_Term_MixIn(Model):
         term = cls.rdf_term if cls.rdf_term else cls.get_term(cls.__name__)
         value_dict = {}
         subject = content_object.rdf_subject()
-        metadata_node = graph.value(subject=subject, predicate=term)
-        for field in cls._meta.fields:
-            if cls.ignored_fields and field.name in cls.ignored_fields:
-                continue
-            value_dict[field.name] = graph.value(metadata_node, cls.get_term(field.name)).value
-
-        cls.create(content_object=content_object, **value_dict)
+        metadata_nodes = graph.objects(subject=subject, predicate=term)
+        for metadata_node in metadata_nodes:
+            for field in cls._meta.fields:
+                if cls.ignored_fields and field.name in cls.ignored_fields:
+                    continue
+                val = graph.value(metadata_node, cls.get_term(field.name))
+                value_dict[field.name] = val.value if isinstance(val, Literal) else str(val)
+            if value_dict:
+                cls.create(content_object=content_object, **value_dict)
 
     @classmethod
     def get_term(cls, term_name, namespace=HSTERMS):

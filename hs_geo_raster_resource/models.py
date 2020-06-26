@@ -150,12 +150,14 @@ class OriginalCoverage(AbstractMetaDataElement):
         subject = content_object.rdf_subject()
         spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
         box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
-        value_str = graph.value(subject=box_object, predicate=RDF.value).value
-        value_dict = {}
-        for p in value_str.split('; '):
-            k, v = p.split('=')
-            value_dict[k] = v
-        OriginalCoverage.create(value=value_dict, content_object=content_object)
+        value_str = graph.value(subject=box_object, predicate=RDF.value)
+        if value_str:
+            value_str = value_str.value
+            value_dict = {}
+            for p in value_str.split('; '):
+                k, v = p.split('=')
+                value_dict[k] = v
+            OriginalCoverage.create(value=value_dict, content_object=content_object)
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
