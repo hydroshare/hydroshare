@@ -383,6 +383,48 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
         """
         return self.model_instance_type
 
+    def update_temporal_coverage(self):
+        """Updates temporal coverage of this model instance based on the contained temporal
+        coverages of aggregations (file type). Note: This action will overwrite any existing
+        fileset temporal coverage data.
+        """
+
+        from ..utils import update_target_temporal_coverage
+
+        update_target_temporal_coverage(self)
+
+    def update_spatial_coverage(self):
+        """Updates spatial coverage of this model instance based on the contained spatial
+        coverages of aggregations (file type). Note: This action will overwrite any existing
+        fileset spatial coverage data.
+        """
+        from ..utils import update_target_spatial_coverage
+
+        update_target_spatial_coverage(self)
+
+    def update_coverage(self):
+        """Update model instance spatial and temporal coverage based on the corresponding coverages
+        from all the contained aggregations (logical file) only if the model instance coverage is not
+        already set"""
+
+        # update fileset spatial coverage only if there is no spatial coverage already
+        if self.metadata.spatial_coverage is None:
+            self.update_spatial_coverage()
+
+        # update fileset temporal coverage only if there is no temporal coverage already
+        if self.metadata.temporal_coverage is None:
+            self.update_temporal_coverage()
+
+    def get_children(self):
+        """Return a list of aggregation that this (self) aggregation contains"""
+        child_aggregations = []
+        for aggr in self.resource.logical_files:
+            parent_aggr = aggr.get_parent()
+            if parent_aggr is not None and parent_aggr == self:
+                child_aggregations.append(aggr)
+
+        return child_aggregations
+
     def set_link_to_model_program(self, user, model_prog_aggr):
         """Creates a link to the specified model program aggregation *model_prog_aggr* using the
         executed_by metadata field.
