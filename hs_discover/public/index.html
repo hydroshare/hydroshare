@@ -31,36 +31,12 @@
         </div>
         {% include "includes/legend.html" %}
     </div>
-    <div id="map-view" class="tab-pane fade">
-        <div class="row">
-            <div class="col-xs-12">
-                <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
-                      <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
-                </span>
-                <br/>
-                <form id="covereage-search-fields" method="get" action="." class="hidden">
-                    {% for field in form %}
-                    {% if field.auto_id == "id_NElat" or field.auto_id == "id_NElng" or field.auto_id == "id_SWlat" or
-                    field.auto_id == "id_SWlng" %}
-                    {{ field }}
-                    {% endif %}
-                    {% endfor %}
-                </form>
-
-                <input id="map-search" class="controls" type="text" placeholder="Search Box">
-
-<!--                <div id="map-div"></div>-->
-
-                <div id="discover-map-legend"></div>
-
-                <div id="reset-zoom"></div>
-                <br/>
-                <table class="table-hover table-striped" id="map-items" style="width:100%; max-height:200px">
-                </table>
-            </div>
-        </div>
+    <div id="map-view">
+        <input id="map-search" class="controls" type="text" placeholder="Search Box">
+        <div id="map"></div>
+        <div id="discover-map-legend"></div>
+        <div id="reset-zoom"></div>
     </div>
-    <div id="map"></div>
     <script src=/static/js/chunk-vendors.js></script>
     <script src=/static/js/app.js></script>
     <script src=/static/js/map.js></script>
