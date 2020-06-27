@@ -1245,16 +1245,19 @@ class AbstractLogicalFile(models.Model):
         )
 
     def get_parent(self):
-        """Find the parent fileset aggregation of this aggregation
-        :return a fileset aggregation if found, otherwise None
+        """Find the parent model instance or fileset aggregation of this aggregation
+        :return a model instance or fileset aggregation if found, otherwise None
         """
-
+        parent_aggr = None
         aggr_path = self.aggregation_name
         if aggr_path and "/" in aggr_path:
             parent_aggr_path = os.path.dirname(aggr_path)
-            return self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
+            # first check for a model instance aggregation in the path
+            parent_aggr = self.resource.get_model_aggregation_in_path(parent_aggr_path)
+            if parent_aggr is None:
+                parent_aggr = self.resource.get_fileset_aggregation_in_path(parent_aggr_path)
 
-        return None
+        return parent_aggr
 
     @property
     def has_parent(self):
