@@ -588,6 +588,209 @@ def test_move_model_program_aggr_into_model_instance_aggr_folder(composite_resou
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
 
 
+@pytest.mark.django_db(transaction=True)
+def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Here we are testing fileset level spatial coverage update using the spatial data from the
+    contained (children) aggregations - two child aggregations"""
+
+    resource, user = composite_resource_with_mi_aggregation_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # model aggr should not have any spatial coverage
+    assert mi_aggr.metadata.spatial_coverage is None
+    # auto create a raster aggregation inside the model instance aggregation
+    assert GeoRasterLogicalFile.objects.count() == 0
+    # upload a raster file to the mi_aggr_path - folder that represents the model instance aggregation
+    raster_file_name = 'small_logan.tif'
+    raster_file_path = 'hs_file_types/tests/{}'.format(raster_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[raster_file_path], upload_folder=mi_aggr.folder)
+
+    # there should be three resource files ( one extra vrt file added as part of raster aggregation creation)
+    assert resource.files.all().count() == 3
+
+    # there should be one raster aggregation now
+    assert GeoRasterLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # model aggr should now have spatial coverage
+    assert mi_aggr.metadata.spatial_coverage is not None
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+
+    # auto create a netcdf aggregation inside the model instance aggregation
+    assert NetCDFLogicalFile.objects.count() == 0
+    # upload a netcdf file to the folder that represents the model instance aggregation
+    nc_file_name = "netcdf_valid.nc"
+    netcdf_file_path = "hs_file_types/tests/{}".format(nc_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[netcdf_file_path], upload_folder=mi_aggr.folder)
+    assert NetCDFLogicalFile.objects.count() == 1
+    nc_aggr = NetCDFLogicalFile.objects.first()
+    # netcdf aggr should have spatial coverage
+    assert nc_aggr.metadata.spatial_coverage is not None
+
+    # update model instance aggregation spatial coverage from the contained 2 aggregations
+    mi_aggr.update_spatial_coverage()
+    # test model instance aggregation spatial coverage data
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.50594036845686
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.8639080745171
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+
+
+@pytest.mark.django_db(transaction=True)
+def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Here we are testing model instance level spatial coverage auto update does not happen when
+    a contained aggregation spatial coverage gets created as part of that aggregation creation
+    since the  model instance aggregation has spatial coverage prior to the child aggregation
+    creation
+    """
+
+    resource, user = composite_resource_with_mi_aggregation_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # model aggr should not have any spatial coverage
+    assert mi_aggr.metadata.spatial_coverage is None
+    # create spatial coverage for model instance
+    value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+    mi_aggr.metadata.create_element('coverage', type='point', value=value_dict)
+    # model aggr should now have any spatial coverage
+    assert mi_aggr.metadata.spatial_coverage is not None
+
+    # auto create a raster aggregation inside the model instance aggregation
+    assert GeoRasterLogicalFile.objects.count() == 0
+    # upload a raster file to the mi_aggr_path - folder that represents the model instance aggregation
+    raster_file_name = 'small_logan.tif'
+    raster_file_path = 'hs_file_types/tests/{}'.format(raster_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[raster_file_path], upload_folder=mi_aggr.folder)
+
+    # there should be three resource files ( one extra vrt file added as part of raster aggregation creation)
+    assert resource.files.all().count() == 3
+
+    # there should be one raster aggregation now
+    assert GeoRasterLogicalFile.objects.count() == 1
+    gr_aggr = GeoRasterLogicalFile.objects.first()
+    # raster aggr should have spatial coverage
+    assert gr_aggr.metadata.spatial_coverage is not None
+    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
+    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
+    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
+    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    # check model instance spatial coverage has not been updated
+    assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
+    assert mi_aggr.metadata.spatial_coverage.value['north'] == value_dict['north']
+
+
+@pytest.mark.django_db(transaction=True)
+def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Here we are testing model instance level temporal coverage auto update when
+    a contained aggregation temporal coverage gets created as part of that aggregation creation
+    provided the model instance aggregation has no temporal coverage prior to the child aggregation
+    creation
+    """
+
+    resource, user = composite_resource_with_mi_aggregation_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # model aggr should not have any temporal coverage
+    assert mi_aggr.metadata.temporal_coverage is None
+    # auto create a netcdf aggregation inside the model instance aggregation
+    assert NetCDFLogicalFile.objects.count() == 0
+    # upload a netcdf file to the folder that represents the model instance aggregation
+    nc_file_name = "netcdf_valid.nc"
+    netcdf_file_path = "hs_file_types/tests/{}".format(nc_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[netcdf_file_path], upload_folder=mi_aggr.folder)
+    assert NetCDFLogicalFile.objects.count() == 1
+    nc_aggr = NetCDFLogicalFile.objects.first()
+    # netcdf aggr should have temporal coverage
+    assert nc_aggr.metadata.temporal_coverage is not None
+    # model aggr should now have temporal coverage
+    assert mi_aggr.metadata.temporal_coverage is not None
+    # temporal coverage of the model instance aggregation should match with that of the contained
+    # netcdf aggregation
+    for temp_date in ('start', 'end'):
+        assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
+               nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Here we are testing model instance level temporal coverage auto update does not happen when
+    a contained aggregation temporal coverage gets created as part of that aggregation creation
+    since the  model instance aggregation has temporal coverage prior to the child aggregation
+    creation
+    """
+
+    resource, user = composite_resource_with_mi_aggregation_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # model aggr should not have any temporal coverage
+    assert mi_aggr.metadata.temporal_coverage is None
+    # create temporal coverage for model instance
+    value_dict = {'name': 'Name for period coverage', 'start': '1/1/2018', 'end': '12/12/2018'}
+    mi_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+    # model aggr should now have temporal coverage
+    assert mi_aggr.metadata.temporal_coverage is not None
+    # auto create a netcdf aggregation inside the model instance aggregation
+    assert NetCDFLogicalFile.objects.count() == 0
+    # upload a netcdf file to the folder that represents the model instance aggregation
+    nc_file_name = "netcdf_valid.nc"
+    netcdf_file_path = "hs_file_types/tests/{}".format(nc_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[netcdf_file_path], upload_folder=mi_aggr.folder)
+    assert NetCDFLogicalFile.objects.count() == 1
+    nc_aggr = NetCDFLogicalFile.objects.first()
+    # netcdf aggr should have temporal coverage
+    assert nc_aggr.metadata.temporal_coverage is not None
+
+    # temporal coverage of the model instance aggregation should NOT match with that of the contained
+    # netcdf aggregation
+    for temp_date in ('start', 'end'):
+        assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
+               nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Here we are testing model instance level temporal coverage can be updated by user if the contained
+    aggregations have temporal coverage
+    """
+
+    resource, user = composite_resource_with_mi_aggregation_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # model aggr should not have any temporal coverage
+    assert mi_aggr.metadata.temporal_coverage is None
+    # create temporal coverage for model instance
+    value_dict = {'name': 'Name for period coverage', 'start': '1/1/2018', 'end': '12/12/2018'}
+    mi_aggr.metadata.create_element('coverage', type='period', value=value_dict)
+    # model aggr should now have temporal coverage
+    assert mi_aggr.metadata.temporal_coverage is not None
+    # auto create a netcdf aggregation inside the model instance aggregation
+    assert NetCDFLogicalFile.objects.count() == 0
+    # upload a netcdf file to the folder that represents the model instance aggregation
+    nc_file_name = "netcdf_valid.nc"
+    netcdf_file_path = "hs_file_types/tests/{}".format(nc_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[netcdf_file_path], upload_folder=mi_aggr.folder)
+    assert NetCDFLogicalFile.objects.count() == 1
+    nc_aggr = NetCDFLogicalFile.objects.first()
+    # netcdf aggr should have temporal coverage
+    assert nc_aggr.metadata.temporal_coverage is not None
+
+    # temporal coverage of the model instance aggregation should NOT match with that of the contained
+    # netcdf aggregation
+    for temp_date in ('start', 'end'):
+        assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
+               nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    # update temporal coverage for model instance from contained aggregations
+    mi_aggr.update_temporal_coverage()
+    # temporal coverage of the model instance aggregation should now match with that of the contained
+    # netcdf aggregation
+    for temp_date in ('start', 'end'):
+        assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
+               nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+
 def _add_files_to_resource(resource, files_to_add, upload_folder=None):
     files_to_upload = []
     for fl in files_to_add:
