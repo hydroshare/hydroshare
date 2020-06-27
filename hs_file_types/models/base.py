@@ -1162,6 +1162,8 @@ class AbstractLogicalFile(models.Model):
 
         from hs_core.hydroshare.resource import delete_resource_file
 
+        parent_aggr = self.get_parent()
+
         # delete associated metadata and map xml documents
         istorage = self.resource.get_irods_storage()
         if istorage.exists(self.metadata_file_path):
@@ -1186,6 +1188,11 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
+        # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
+        # aggregation so that the references to the deleted aggregation can be removed
+        if parent_aggr is not None:
+            parent_aggr.create_aggregation_xml_documents()
+
     def remove_aggregation(self):
         """Deletes the aggregation object (logical file) *self* and the associated metadata
         object. However, it doesn't delete any resource files that are part of the aggregation."""
@@ -1197,9 +1204,9 @@ class AbstractLogicalFile(models.Model):
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
 
-        # find if there is a parent fileset aggregation - files in this (self) aggregation
+        # find if there is a parent aggregation - files in this (self) aggregation
         # need to be added to parent if exists
-        parent_fs_aggr = self.get_parent()
+        parent_aggr = self.get_parent()
 
         res_files = []
         res_files.extend(self.files.all())
@@ -1223,9 +1230,14 @@ class AbstractLogicalFile(models.Model):
             metadata.delete()
 
         # make all the resource files of this (self) aggregation part of the parent aggregation
-        if parent_fs_aggr is not None:
+        if parent_aggr is not None:
             for res_file in res_files:
-                parent_fs_aggr.add_resource_file(res_file)
+                parent_aggr.add_resource_file(res_file)
+
+            # need to regenerate the xml files for the parent so that the references to this deleted aggregation
+            # can be removed from the parent xml files
+            parent_aggr.create_aggregation_xml_documents()
+
         post_remove_file_aggregation.send(
             sender=self.__class__,
             resource=self.resource,
