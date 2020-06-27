@@ -12,7 +12,7 @@
 
     google.maps.event.addListener(marker, 'click', function() {
       infowindow.setContent(place.name);
-      infowindow.open(map, this);
+      infowindow.open(exports.map, this);
     });
   }
 
@@ -97,7 +97,13 @@
     //     toggleIcon(marker, false);
     //   });
     // });
-
+    axios.get('/discoverapi/', { params: { searchtext: 'good' } })
+      .then((response) => {
+        console.log(JSON.parse(response.data.resources));
+      })
+      .catch((error) => {
+        console.error(error); // eslint-disable-line
+      });
 
     const setMarkers = function(jsonResults) {
       let modifiedPointsData = [];
