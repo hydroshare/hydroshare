@@ -55,10 +55,10 @@ def update_target_spatial_coverage(target):
     aggregations (file type). Note: This action will overwrite any existing target spatial
     coverage data.
 
-    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    :param  target: an instance of CompositeResource or FileSetLogicalFile or ModelInstanceLogicalFile
     """
 
-    if isinstance(target, FileSetLogicalFile):
+    if isinstance(target, FileSetLogicalFile) or isinstance(target, ModelInstanceLogicalFile):
         spatial_coverages = [lf.metadata.spatial_coverage for lf in target.get_children()
                              if lf.metadata.spatial_coverage is not None]
     else:
@@ -154,9 +154,9 @@ def update_target_temporal_coverage(target):
     Note: This action will overwrite any existing target temporal
     coverage data.
 
-    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    :param  target: an instance of CompositeResource or FileSetLogicalFile or ModelInstanceLogicalFile
     """
-    if isinstance(target, FileSetLogicalFile):
+    if isinstance(target, FileSetLogicalFile) or isinstance(target, ModelInstanceLogicalFile):
         temporal_coverages = [lf.metadata.temporal_coverage for lf in target.get_children()
                               if lf.metadata.temporal_coverage is not None]
     else:
