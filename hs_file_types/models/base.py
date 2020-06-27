@@ -1507,7 +1507,14 @@ class FileTypeContext(object):
             # set resource to private if logical file is missing required metadata
             self.resource.update_public_and_discoverable()
 
+            # generate xml files for this newly created aggregation
             self.logical_file.create_aggregation_xml_documents()
+            # if this newly created aggregation has a parent aggregation - we have to regenerate
+            # xml files for that parent aggregation so that it can have references to this new aggregation
+            parent_aggr = self.logical_file.get_parent()
+            if parent_aggr is not None:
+                parent_aggr.create_aggregation_xml_documents()
+
             if self.post_aggr_signal is not None:
                 self.post_aggr_signal.send(
                     sender=AbstractLogicalFile,
