@@ -412,6 +412,7 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
                                        file=sqlite_file_name, folder=mi_aggr_path)
     assert sqlite_res_file.has_logical_file
     assert TimeSeriesLogicalFile.objects.count() == 1
+    assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # the timeseries aggregation should contain 1 file
     assert TimeSeriesLogicalFile.objects.first().files.count() == 1
 
@@ -423,6 +424,7 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
     from that json file"""
 
     resource, _ = composite_resource_with_mi_aggregation_folder
+    assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     mi_aggr_path = ModelInstanceLogicalFile.objects.first().aggregation_name
     assert RefTimeseriesLogicalFile.objects.count() == 0
     # upload a ref timeseries json file to the mi_aggr_path - folder that represents the model instance aggregation
@@ -437,6 +439,7 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
                                        file=ref_timeseries_file_name, folder=mi_aggr_path)
     assert ref_ts_res_file.has_logical_file
     assert RefTimeseriesLogicalFile.objects.count() == 1
+    assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # ref timeseries aggregation should contain 1 file
     assert RefTimeseriesLogicalFile.objects.first().files.count() == 1
 
