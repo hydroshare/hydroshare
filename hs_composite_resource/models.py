@@ -345,22 +345,29 @@ class CompositeResource(BaseResource):
 
         return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
-    def _recreate_fileset_xml_docs(self, folder):
-        """Recreates xml files for all fileset aggregations that exist under the path 'folder'
-        as well as for any parent fileset that may exist relative to path 'folder'
+    def _recreate_nested_aggr_xml_docs(self, folder, nested_aggr):
+        """Recreates xml files for all fileset or model instance aggregations that exist under the path 'folder'
+        as well as for any parent fileset/model instance that may exist relative to path 'folder'
         """
+        if nested_aggr == 'fileset':
+            nested_aggr_set = self.filesetlogicalfile_set
+            aggr_in_path_func = self.get_fileset_aggregation_in_path
+        else:
+            # create xml files for all model instance aggregation that may exist under *folder*
+            nested_aggr_set = self.modelinstancelogicalfile_set
+            aggr_in_path_func = self.get_model_aggregation_in_path
 
-        filesets = self.filesetlogicalfile_set.filter(folder__startswith=folder)
-        for fs in filesets:
-            fs.create_aggregation_xml_documents()
+        nested_aggrs = nested_aggr_set.filter(folder__startswith=folder)
+        for ns_aggr in nested_aggrs:
+            ns_aggr.create_aggregation_xml_documents()
 
-        # Also need to recreate xml doc for any parent fileset that may exist relative to path
+        # Also need to recreate xml doc for any parent fileset/model instance that may exist relative to path
         # *folder*
         if '/' in folder:
             path = os.path.dirname(folder)
-            parent_fs = self.get_fileset_aggregation_in_path(path)
-            if parent_fs is not None:
-                parent_fs.create_aggregation_xml_documents()
+            parent_aggr = aggr_in_path_func(path)
+            if parent_aggr is not None:
+                parent_aggr.create_aggregation_xml_documents()
 
     def create_aggregation_xml_documents(self, path=''):
         """Creates aggregation map and metadata xml files for each of the contained aggregations
@@ -451,13 +458,11 @@ class CompositeResource(BaseResource):
 
         # first update folder attribute of any model instance aggregation that exist under *old_folder*
         update_model_instance_folder()
-        mi_aggregations = self.modelinstancelogicalfile_set.filter(folder__startswith=new_folder)
-        for mi_aggr in mi_aggregations:
-            mi_aggr.create_aggregation_xml_documents()
+        self._recreate_nested_aggr_xml_docs(folder=new_folder, nested_aggr='modelinstance')
 
         # first update folder attribute of all filesets that exist under *old_folder*
         update_fileset_folder()
-        self._recreate_fileset_xml_docs(folder=new_folder)
+        self._recreate_nested_aggr_xml_docs(folder=new_folder, nested_aggr='fileset')
 
         # create xml files for all non fileset aggregations
         if not new_folder.startswith(self.file_path):
