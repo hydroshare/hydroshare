@@ -491,8 +491,8 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
 
-    if hs_file_type not in ('GenericLogicalFile', 'FileSetLogicalFile'):
-        err_msg = "Coverage can be deleted only for single file content or file set content."
+    if hs_file_type not in ('GenericLogicalFile', 'FileSetLogicalFile', 'ModelInstanceLogicalFile'):
+        err_msg = "Coverage can be deleted only for single file content, model instance content, or file set content."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
