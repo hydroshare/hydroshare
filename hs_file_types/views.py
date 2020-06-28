@@ -49,9 +49,16 @@ def authorise_for_aggregation_edit(f=None, file_type=None):
     def real_decorator(view_func):
         def wrapper(request, *args, **kwargs):
             file_type_id = kwargs['file_type_id']
-            hs_file_type = kwargs.get('hs_file_type', file_type)
+            if file_type == 'NestedLogicalFile':
+                hs_file_type = 'FileSetLogicalFile'
+                logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+                if logical_file is None:
+                    hs_file_type = 'ModelInstanceLogicalFile'
+                    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+            else:
+                hs_file_type = kwargs.get('hs_file_type', file_type)
+                logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
 
-            logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
             if json_response is not None:
                 return json_response
 
@@ -290,12 +297,12 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type='FileSetLogicalFile')
+@authorise_for_aggregation_edit(file_type='NestedLogicalFile')
 @login_required
 def update_aggregation_coverage(request, file_type_id, coverage_type, **kwargs):
-    """Updates fileset aggregation level coverage using coverage data from the contained
+    """Updates nested (e.g., fileset, model instance) aggregation level coverage using coverage data from the contained
     aggregations
-    :param  file_type_id:   id of the fileset aggregation for which coverage needs to be updated
+    :param  file_type_id:   id of the nested aggregation for which coverage needs to be updated
     :param  coverage_type:  a value of either temporal or spatial
     """
     response_data = {'status': 'error'}
@@ -305,7 +312,7 @@ def update_aggregation_coverage(request, file_type_id, coverage_type, **kwargs):
         return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
-    fs_aggr = kwargs['logical_file']
+    ns_aggr = kwargs['logical_file']
 
     if coverage_type.lower() not in ('temporal', 'spatial'):
         err_msg = "Invalid coverage type specified."
@@ -313,22 +320,22 @@ def update_aggregation_coverage(request, file_type_id, coverage_type, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if coverage_type.lower() == 'spatial':
-        fs_aggr.update_spatial_coverage()
-        coverage_element = fs_aggr.metadata.spatial_coverage
+        ns_aggr.update_spatial_coverage()
+        coverage_element = ns_aggr.metadata.spatial_coverage
     else:
-        fs_aggr.update_temporal_coverage()
-        coverage_element = fs_aggr.metadata.temporal_coverage
+        ns_aggr.update_temporal_coverage()
+        coverage_element = ns_aggr.metadata.temporal_coverage
 
     msg = "Aggregation {} coverage was updated successfully.".format(coverage_type.lower())
     response_data['status'] = 'success'
     response_data['message'] = msg
     if coverage_type.lower() == 'spatial':
-        response_data['spatial_coverage'] = get_coverage_data_dict(fs_aggr)
+        response_data['spatial_coverage'] = get_coverage_data_dict(ns_aggr)
     else:
-        response_data['temporal_coverage'] = get_coverage_data_dict(fs_aggr, 'temporal')
+        response_data['temporal_coverage'] = get_coverage_data_dict(ns_aggr, 'temporal')
     response_data['element_id'] = coverage_element.id
-    response_data['logical_file_id'] = fs_aggr.id
-    response_data['logical_file_type'] = fs_aggr.type_name()
+    response_data['logical_file_id'] = ns_aggr.id
+    response_data['logical_file_type'] = ns_aggr.type_name()
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
