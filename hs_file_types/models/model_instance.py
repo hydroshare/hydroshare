@@ -193,6 +193,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
 
                 with dom_tags.div(cls="control-group"):
+                    dom_tags.p("OR", style="text-align: center;")
                     dom_tags.label('Enter a URL for a Model Program', fr="id_executed_by_url",
                                    cls="control-label")
                     url_value = ''
