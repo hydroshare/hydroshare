@@ -33,6 +33,57 @@ RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 
 
+class NestedLogicalFileMixin(object):
+    """a mixin for any logical file class that needs to contain other aggregations"""
+
+    @property
+    def can_contain_aggregations(self):
+        """aggregation is allowed to contain other aggregations"""
+        return True
+
+    def get_children(self):
+        """Return a list of aggregation that this (self) aggregation contains"""
+        child_aggregations = []
+        for aggr in self.resource.logical_files:
+            parent_aggr = aggr.get_parent()
+            if parent_aggr is not None and parent_aggr == self:
+                child_aggregations.append(aggr)
+
+        return child_aggregations
+
+    def update_temporal_coverage(self):
+        """Updates temporal coverage of this aggregation based on the contained temporal
+        coverages of aggregations (file type). Note: This action will overwrite any existing
+        fileset temporal coverage data.
+        """
+
+        from ..utils import update_target_temporal_coverage
+
+        update_target_temporal_coverage(self)
+
+    def update_spatial_coverage(self):
+        """Updates spatial coverage of this aggregation based on the contained spatial
+        coverages of aggregations (file type). Note: This action will overwrite any existing
+        fileset spatial coverage data.
+        """
+        from ..utils import update_target_spatial_coverage
+
+        update_target_spatial_coverage(self)
+
+    def update_coverage(self):
+        """Update this aggregation's  spatial and temporal coverage based on the corresponding coverages
+        from all the contained aggregations (logical file) only if this aggregation's coverage is not
+        already set"""
+
+        # update spatial coverage only if there is no spatial coverage already
+        if self.metadata.spatial_coverage is None:
+            self.update_spatial_coverage()
+
+        # update temporal coverage only if there is no temporal coverage already
+        if self.metadata.temporal_coverage is None:
+            self.update_temporal_coverage()
+
+
 class AbstractFileMetaData(models.Model):
     """ base class for HydroShare file type metadata """
 

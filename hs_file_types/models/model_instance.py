@@ -9,6 +9,7 @@ from dominate import tags as dom_tags
 from lxml import etree
 
 from hs_core.models import CoreMetaData, ResourceFile
+from .base import NestedLogicalFileMixin
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 from .model_program import ModelProgramLogicalFile
@@ -347,7 +348,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                                                pretty_print=pretty_print).decode()
 
 
-class ModelInstanceLogicalFile(AbstractModelLogicalFile):
+class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
 
     # attribute to store type of model instance (SWAT, UEB etc)
@@ -371,59 +372,12 @@ class ModelInstanceLogicalFile(AbstractModelLogicalFile):
     def get_aggregation_type_name():
         return "ModelInstanceAggregation"
 
-    @property
-    def can_contain_aggregations(self):
-        """aggregation is allowed to contain other aggregations"""
-        return True
-
     # used in discovery faceting to aggregate native and composite content types
     def get_discovery_content_type(self):
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
         return self.model_instance_type
-
-    def update_temporal_coverage(self):
-        """Updates temporal coverage of this model instance based on the contained temporal
-        coverages of aggregations (file type). Note: This action will overwrite any existing
-        fileset temporal coverage data.
-        """
-
-        from ..utils import update_target_temporal_coverage
-
-        update_target_temporal_coverage(self)
-
-    def update_spatial_coverage(self):
-        """Updates spatial coverage of this model instance based on the contained spatial
-        coverages of aggregations (file type). Note: This action will overwrite any existing
-        fileset spatial coverage data.
-        """
-        from ..utils import update_target_spatial_coverage
-
-        update_target_spatial_coverage(self)
-
-    def update_coverage(self):
-        """Update model instance spatial and temporal coverage based on the corresponding coverages
-        from all the contained aggregations (logical file) only if the model instance coverage is not
-        already set"""
-
-        # update fileset spatial coverage only if there is no spatial coverage already
-        if self.metadata.spatial_coverage is None:
-            self.update_spatial_coverage()
-
-        # update fileset temporal coverage only if there is no temporal coverage already
-        if self.metadata.temporal_coverage is None:
-            self.update_temporal_coverage()
-
-    def get_children(self):
-        """Return a list of aggregation that this (self) aggregation contains"""
-        child_aggregations = []
-        for aggr in self.resource.logical_files:
-            parent_aggr = aggr.get_parent()
-            if parent_aggr is not None and parent_aggr == self:
-                child_aggregations.append(aggr)
-
-        return child_aggregations
 
     def set_link_to_model_program(self, user, model_prog_aggr):
         """Creates a link to the specified model program aggregation *model_prog_aggr* using the
