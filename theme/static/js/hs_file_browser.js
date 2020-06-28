@@ -993,14 +993,14 @@ function showFileTypeMetadata(file_type_time_series, url){
                      $spatialRadioPoint.prop("checked", true);
                  }
              }
-             if (logical_type === "FileSetLogicalFile") {
+             if (logical_type === "FileSetLogicalFile" || logical_type === "ModelInstanceLogicalFile") {
                  // Submit for aggregation spatial coverage update
                  $("#btn-update-aggregation-spatial-coverage").click(function () {
-                    fileset_coverage_update_ajax_submit(logical_file_id, 'spatial');
+                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'spatial');
                  });
                  // Submit for aggregation temporal coverage update
                  $("#btn-update-aggregation-temporal-coverage").click(function () {
-                    fileset_coverage_update_ajax_submit(logical_file_id, 'temporal');
+                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'temporal');
                  });
              }
              if (logical_type === "ModelProgramLogicalFile") {

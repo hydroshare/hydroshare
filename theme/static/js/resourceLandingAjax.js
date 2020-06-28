@@ -1538,7 +1538,8 @@ function setFileTypeTemporalCoverageDeleteOption(logicalFileType) {
         }
 
         var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
-        if (logicalFileType === 'GenericLogicalFile' || logicalFileType === 'FileSetLogicalFile') {
+        if (logicalFileType === 'GenericLogicalFile' || logicalFileType === 'FileSetLogicalFile' ||
+            logicalFileType === 'ModelInstanceLogicalFile') {
             var url = $formTemporalCoverage.attr('action');
             if (url.indexOf('update-file-metadata') !== -1) {
                 url = url.replace('update-file-metadata', 'delete-file-coverage');
@@ -1583,7 +1584,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 }
 
 // updates the UI spatial coverage elements for the aggregation
-function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, elementID) {
+function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileType, logicalFileID, elementID) {
     var $id_type_div = $("#id_type_filetype");
     var $point_radio = $id_type_div.find(radioPointSelector);
     var $box_radio = $id_type_div.find(radioBoxSelector);
@@ -1592,7 +1593,7 @@ function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, elem
     var $formSpatialCoverage = $btnDeleteSpatialCoverage.closest('form');
     $btnDeleteSpatialCoverage.show();
     // set the coverage form action to update metadata url
-    var updateAction = "/hsapi/_internal/FileSetLogicalFile/" + logicalFileID + "/coverage/" + elementID + "/update-file-metadata/";
+    var updateAction = "/hsapi/_internal/" + logicalFileType + "/" + logicalFileID + "/coverage/" + elementID + "/update-file-metadata/";
     $formSpatialCoverage.attr('action', updateAction);
     var coverageDeleteURL = updateAction.replace('update-file-metadata', 'delete-file-coverage');
     // set a new click event handler for the spatial coverage delete
@@ -1628,12 +1629,12 @@ function updateAggregationSpatialCoverageUI(spatialCoverage, logicalFileID, elem
 }
 
 // updates the UI temporal coverage elements for the aggregation
-function updateAggregationTemporalCoverage(temporalCoverage, logicalFileID, coverageElementID) {
+function updateAggregationTemporalCoverage(temporalCoverage, logicalFileType, logicalFileID, coverageElementID) {
     $("#id_start_filetype").val(temporalCoverage.start);
     $("#id_end_filetype").val(temporalCoverage.end);
 
     $("#id-coverage-temporal").find("button.btn-primary").hide();
-    var updateAction = "/hsapi/_internal/FileSetLogicalFile/" + logicalFileID + "/coverage/" + coverageElementID + "/update-file-metadata/";
+    var updateAction = "/hsapi/_internal/" + logicalFileType + "/" + logicalFileID + "/coverage/" + coverageElementID + "/update-file-metadata/";
     var $btnDeleteTemporalCoverage = $("#id-btn-delete-temporal-filetype");
     if(!$btnDeleteTemporalCoverage.length) {
         // delete option doesn't exist - so add it
@@ -1641,7 +1642,7 @@ function updateAggregationTemporalCoverage(temporalCoverage, logicalFileID, cove
     }
     var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
     $formTemporalCoverage.attr('action', updateAction);
-    setFileTypeTemporalCoverageDeleteOption('FileSetLogicalFile');
+    setFileTypeTemporalCoverageDeleteOption(logicalFileType);
 
     initializeDatePickers();
 }
