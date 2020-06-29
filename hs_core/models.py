@@ -1137,7 +1137,7 @@ class Language(AbstractMetaDataElement):
             raise ValidationError('Language code is missing.')
 
     def rdf_triples(self, subject, graph):
-        graph.add((subject, DC.language, Literal(self.code))
+        graph.add((subject, DC.language, Literal(self.code)))
 
     @classmethod
     def ingest_rdf(self, graph, content_object):

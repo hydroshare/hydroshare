@@ -66,6 +66,7 @@ class RDF_MetaData_Mixin(object):
         TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource.__class__.__name__)
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource._meta.verbose_name)))
         graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return graph
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
