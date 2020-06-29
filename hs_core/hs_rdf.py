@@ -113,8 +113,8 @@ class RDF_Term_MixIn(object):
         for field in self.__class__._meta.fields:
             if self.ignored_fields and field.name in self.ignored_fields:
                 continue
-            if self.field_rdf_terms[field.name]:
-                field_term = self.field_rdf_terms[field.name]
+            if field in self.field_rdf_terms:
+                field_term = self.field_rdf_terms[field]
             else:
                 field_term = getattr(HSTERMS, field.name)
             field_value = getattr(self, field.name)
@@ -138,7 +138,7 @@ class RDF_Term_MixIn(object):
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
-                if cls.field_rdf_terms[field]:
+                if field in cls.field_rdf_terms:
                     field_term = cls.field_rdf_terms[field]
                 else:
                     field_term = getattr(HSTERMS, field.name)
