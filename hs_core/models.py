@@ -641,6 +641,8 @@ class Description(AbstractMetaDataElement):
 
     term = 'Description'
     abstract = models.TextField()
+    class_rdf_term = DC.description
+    field_rdf_terms = {abstract, "Description"}
 
     def __unicode__(self):
         """Return abstract field for unicode representation."""
