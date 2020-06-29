@@ -9,7 +9,7 @@ class CSDMSName(models.Model):
     """
     source = models.CharField(max_length=256, editable=False, null=False, blank=False,
                               help_text='The source file from CSDMS')
-    part = models.CharField(max_length=8, choices=(('name', 'name'), ('decor', 'decor'),
+    part = models.CharField(max_length=16, choices=(('name', 'name'), ('decoration', 'decoration'),
                             ('measure', 'measure')),
                             help_text='The standard names can be splitted to three parts,\
                                        name, decoration, and measurement')
@@ -39,7 +39,7 @@ class CSDMSName(models.Model):
 
         for csdms_decor in csdms_decors:
             if len(csdms_decor) > 1:
-                CSDMSName.add_word('CSDMSName', 'decor', csdms_decor)
+                CSDMSName.add_word('CSDMSName', 'decoration', csdms_decor)
 
         for csdms_measure in csdms_measures:
             if len(csdms_measure) > 1:
@@ -53,7 +53,7 @@ class CSDMSName(models.Model):
 
     @staticmethod
     def list_all_decors():
-        raw_decors = CSDMSName.objects.filter(part='decor').values_list('value').order_by('value')
+        raw_decors = CSDMSName.objects.filter(part='decoration').values_list('value').order_by('value')
         list_decors = [decor[0] for decor in raw_decors]
         return list_decors
 

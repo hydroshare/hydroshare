@@ -13,7 +13,6 @@ import socket
 from django.test import Client
 from datetime import timedelta, datetime
 from hs_tracking.models import Variable, Session, Visitor
-from mock import Mock
 
 
 class TestFeatures(MockIRODSTestCaseMixin, TestCase):
@@ -98,22 +97,6 @@ class TestFeatures(MockIRODSTestCaseMixin, TestCase):
         self.cat.uaccess.share_group_with_user(self.cats, self.squirrel, PrivilegeCodes.CHANGE)
         self.dog.uaccess.share_group_with_user(self.dogs, self.squirrel, PrivilegeCodes.VIEW)
         self.client.login(username='dog', password='barfoo')
-
-    def createRequest(self, user=None):
-        request = Mock()
-        if user is not None:
-            request.user = user
-
-        # sample request with mocked ip address
-        request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, ' +
-                                    '127.0.0.1, 198.84.193.157, '
-            '177.139.233.139',
-            'HTTP_X_REAL_IP': '177.139.233.132',
-            'REMOTE_ADDR': '177.139.233.133',
-        }
-
-        return request
 
     def test_resource_owner(self):
         records = Features.resource_owners()

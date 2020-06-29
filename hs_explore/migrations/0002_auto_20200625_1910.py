@@ -120,7 +120,7 @@ def fill_stop_words(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ('hs_explore', '0001_initial'),
-        ('hs_csdms', '0002_auto_20200625_1746'),
+        ('hs_csdms', '0002_auto_20200626_2152'),
         ('hs_odm2', '0002_auto_20190723_1644'),
     ]
 

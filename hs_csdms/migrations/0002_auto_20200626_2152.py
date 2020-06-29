@@ -23,7 +23,7 @@ def populate_csdms_names(apps, schema_editor):
         if len(csdms_decor) > 1:
             csdms_record = CSDMSName()
             csdms_record.source = 'CSDMSName'
-            csdms_record.part = 'decor'
+            csdms_record.part = 'decoration'
             csdms_record.value = csdms_decor
             csdms_record.save()
 
