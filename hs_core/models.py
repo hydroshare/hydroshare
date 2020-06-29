@@ -670,14 +670,14 @@ class Description(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         abstract_node = BNode()
         graph.add((subject, DC.description, abstract_node))
-        graph.add((abstract_node, DCTERMS.abstract, self.abstract))
+        graph.add((abstract_node, DCTERMS.abstract, Literal(self.abstract)))
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):
         subject = content_object.rdf_subject()
         description_node = graph.value(subject=subject, predicate=DC.description)
         if description_node:
-            abstract = graph.value(subject=subject, predicate=DCTERMS.abstract)
+            abstract = graph.value(subject=description_node, predicate=DCTERMS.abstract)
             cls.create(content_object=content_object, abstract=abstract)
 
 
