@@ -6,8 +6,8 @@ from hs_explore.models import RecommendedResource, UserPreferences
 from django.contrib.auth.models import Group
 from hs_access_control.tests.utilities import global_reset
 from hs_explore.utils import user_resource_matrix, get_resource_to_subjects, get_resource_to_abstract,\
-    get_resource_to_published, get_users_interacted_resources, filter_keep_words, jaccard_sim,\
-    store_user_preferences, store_recommended_resources
+    get_resource_to_published, get_users_interacted_resources, jaccard_sim, store_user_preferences,\
+    store_recommended_resources
 from datetime import datetime, timedelta
 import socket
 from django.test import Client
@@ -89,16 +89,6 @@ class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
         test_usernames = set([self.cat.username])
         self.assertCountEqual(records, test_user_to_res)
         self.assertCountEqual(usernames, test_usernames)
-
-    def test_filter_keep_words(self):
-        keep_words = set(["sample", "resource"])
-        stop_words = set(["This", "is", "a", "great"])
-        res_to_subs, subs_list = get_resource_to_subjects()
-        res_to_abs = get_resource_to_abstract()
-        res_id = self.posts.short_id
-        res_keep_words = filter_keep_words(res_id, res_to_abs[res_id], res_to_subs[res_id], keep_words, stop_words)
-        test_keep_words = set(["sample", "resource"])
-        self.assertCountEqual(res_keep_words, test_keep_words)
 
     def test_jaccard_sim(self):
         s1 = set(["cat", "dog"])
