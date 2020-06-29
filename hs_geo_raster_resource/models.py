@@ -135,15 +135,13 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         rdf_coverage_value.text = cov_value
 
-    def rdf_triples(self, subject):
-        triples = []
+    def rdf_triples(self, subject, graph):
         original_coverage = BNode()
-        triples.append((subject, HSTERMS.spatialReference, original_coverage))
+        graph.add((subject, HSTERMS.spatialReference, original_coverage))
         value = BNode()
-        triples.append((original_coverage, HSTERMS.box, value))
+        graph.add((original_coverage, HSTERMS.box, value))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        triples.append((value, RDF.value, Literal(value_string)))
-        return triples
+        graph.add((value, RDF.value, Literal(value_string)))
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):

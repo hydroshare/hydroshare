@@ -41,38 +41,31 @@ class RDF_MetaData_Mixin(object):
     def get_rdf_graph(self):
         graph = Graph()
         graph.namespace_manager = NAMESPACE_MANAGER
-        for triple in self.get_rdf():
-            graph.add(triple)
-        return graph
 
-    def get_rdf(self):
-        triples = []
         subject = self.rdf_subject()
 
         # add any key/value metadata items
         if len(self.resource.extra_metadata) > 0:
             extendedMetadata = BNode()
-            triples.append((subject, HSTERMS.extendedMetadata, extendedMetadata))
+            graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
             for key, value in list(self.resource.extra_metadata.items()):
-                triples.append((extendedMetadata, HSTERMS.key, Literal(key)))
-                triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
         for field in self.__class__._meta.fields:
             if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
                 continue
-            triples.append((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
+            graph.add((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
             for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
-                for triple in f.rdf_triples(subject):
-                    triples.append(triple)
+                f.rdf_triples(subject, graph)
 
         from .hydroshare import current_site_url
         TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource.__class__.__name__)
-        triples.append((TYPE_SUBJECT, RDFS1.label, Literal(self.resource._meta.verbose_name)))
-        triples.append((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
-        return triples
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource._meta.verbose_name)))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this aggregation metadata"""
@@ -104,12 +97,11 @@ class RDF_Term_MixIn(object):
     class_rdf_term = None
     field_rdf_terms = {}
 
-    def rdf_triples(self, subject):
+    def rdf_triples(self, subject, graph):
         """Default implementation that parses by convention."""
         term = self.class_rdf_term if self.class_rdf_term else getattr(HSTERMS, self.__class__.__name__)
-        triples = []
         metadata_node = BNode()
-        triples.append((subject, term, metadata_node))
+        graph.add((subject, term, metadata_node))
         for field in self.__class__._meta.fields:
             if self.ignored_fields and field.name in self.ignored_fields:
                 continue
@@ -123,9 +115,7 @@ class RDF_Term_MixIn(object):
                 field_value = URIRef(field_value)
             else:
                 field_value = Literal(field_value)
-            triples.append((metadata_node, field_term, field_value))
-
-        return triples
+            graph.add((metadata_node, field_term, field_value))
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):

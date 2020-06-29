@@ -1136,8 +1136,8 @@ class Language(AbstractMetaDataElement):
         else:
             raise ValidationError('Language code is missing.')
 
-    def rdf_triples(self, subject):
-        return [(subject, DC.language, Literal(self.code))]
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, DC.language, Literal(self.code))
 
     @classmethod
     def ingest_rdf(self, graph, content_object):
@@ -1344,21 +1344,19 @@ class Coverage(AbstractMetaDataElement):
                     value_dict[k] = v
                 Coverage.create(type=type, value=value_dict, content_object=content_object)
 
-    def rdf_triples(self, subject):
-        triples = []
+    def rdf_triples(self, subject, graph):
         coverage = BNode()
-        triples.append((subject, DC.coverage, coverage))
+        graph.add((subject, DC.coverage, coverage))
         value = BNode()
         DCTERMS_type = getattr(DCTERMS, self.type)
-        triples.append((coverage, DCTERMS_type, value))
+        graph.add((coverage, DCTERMS_type, value))
         value_dict = {}
         for k, v in self.value.items():
             if k in ['start', 'end']:
                 v = parser.parse(v).isoformat()
             value_dict[k] = v
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
-        triples.append((value, RDF.value, Literal(value_string)))
-        return triples
+        graph.add((value, RDF.value, Literal(value_string)))
 
     def add_to_xml_container(self, container):
         """Update etree SubElement container with coverage values."""
@@ -1698,14 +1696,12 @@ class Rights(AbstractMetaDataElement):
 
         unique_together = ("content_type", "object_id")
 
-    def rdf_triples(self, subject):
-        triples = []
+    def rdf_triples(self, subject, graph):
         rights_subject = BNode()
-        triples.append((subject, DC.rights, rights_subject))
-        triples.append((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
+        graph.add((subject, DC.rights, rights_subject))
+        graph.add((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
         if self.url:
-            triples.append((rights_subject, HSTERMS.URL, URIRef(self.url)))
-        return triples
+            graph.add((rights_subject, HSTERMS.URL, URIRef(self.url)))
 
 
 
