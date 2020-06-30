@@ -240,7 +240,6 @@ class HydroPrettyXMLSerializer(Serializer):
                 type = None
 
             element = type or RDF.Description
-            writer.push(element)
 
             if isinstance(subject, BNode):
                 def subj_as_obj_more_than(ceil):
@@ -248,14 +247,15 @@ class HydroPrettyXMLSerializer(Serializer):
                     # more_than(store.triples((None, None, subject)), ceil)
 
             else:
+                writer.push(element)
                 writer.attribute(RDF.about, self.relativize(subject))
 
             if (subject, None, None) in store:
                 for predicate, object in store.predicate_objects(subject):
                     if not (predicate == RDF.type and object == type):
                         self.predicate(predicate, object, depth + 1)
-
-            writer.pop(element)
+            if not isinstance(subject, BNode):
+                writer.pop(element)
 
         elif subject in self.forceRDFAbout:
             writer.push(RDF.Description)
