@@ -346,9 +346,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
         # add any key/value metadata items
         if len(self.extra_metadata) > 0:
-            extendedMetadata = BNode()
-            graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
             for key, value in list(self.extra_metadata.items()):
+                extendedMetadata = BNode()
+                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
