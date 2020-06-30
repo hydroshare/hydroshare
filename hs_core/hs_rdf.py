@@ -3,9 +3,11 @@ from rdflib import Graph, BNode
 from rdflib.collection import Collection
 from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS, RDF, RDFS
 from rdflib.plugin import register
-from rdflib.plugins.serializers.rdfxml import PrettyXMLSerializer, XMLLANG, OWL_NS
+from rdflib.plugins.serializers.rdfxml import PrettyXMLSerializer, XMLLANG, OWL_NS, XMLBASE
+from rdflib.plugins.serializers.xmlwriter import XMLWriter
 from rdflib.serializer import Serializer
 from rdflib.term import Literal, URIRef
+from rdflib.py3compat import b
 from rdflib.util import first
 
 HSTERMS = Namespace("http://hydroshare.org/terms/")
@@ -155,8 +157,69 @@ def rdf_terms(class_term, **field_terms):
     return decorator
 
 
-class HydroPrettyXMLSerializer(PrettyXMLSerializer):
+class HydroPrettyXMLSerializer(Serializer):
     """Same as PrettyXMLSerializer but with stripped out node ids"""
+
+    def __init__(self, store, max_depth=3):
+        super(PrettyXMLSerializer, self).__init__(store)
+        self.forceRDFAbout = set()
+
+    def serialize(self, stream, base=None, encoding=None, **args):
+        self.__serialized = {}
+        store = self.store
+        self.base = base
+        self.max_depth = args.get("max_depth", 3)
+        assert self.max_depth > 0, "max_depth must be greater than 0"
+
+        self.nm = nm = store.namespace_manager
+        self.writer = writer = XMLWriter(stream, nm, encoding)
+        namespaces = {}
+
+        possible = set(store.predicates()).union(
+            store.objects(None, RDF.type))
+
+        for predicate in possible:
+            prefix, namespace, local = nm.compute_qname(predicate)
+            namespaces[prefix] = namespace
+
+        namespaces["rdf"] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
+        writer.push(RDF.RDF)
+
+        if "xml_base" in args:
+            writer.attribute(XMLBASE, args["xml_base"])
+
+        writer.namespaces(iter(list(namespaces.items())))
+
+        # Write out subjects that can not be inline
+        for subject in store.subjects():
+            if (None, None, subject) in store:
+                if (subject, None, subject) in store:
+                    self.subject(subject, 1)
+            else:
+                self.subject(subject, 1)
+
+        # write out anything that has not yet been reached
+        # write out BNodes last (to ensure they can be inlined where possible)
+        bnodes = set()
+
+        for subject in store.subjects():
+            if isinstance(subject, BNode):
+                bnodes.add(subject)
+                continue
+            self.subject(subject, 1)
+
+        # now serialize only those BNodes that have not been serialized yet
+        for bnode in bnodes:
+            if bnode not in self.__serialized:
+                self.subject(subject, 1)
+
+        writer.pop(RDF.RDF)
+        stream.write(b("\n"))
+
+        # Set to None so that the memory can get garbage collected.
+        self.__serialized = None
+
     def subject(self, subject, depth=1):
         store = self.store
         writer = self.writer
@@ -271,4 +334,4 @@ class HydroPrettyXMLSerializer(PrettyXMLSerializer):
 
 register(
     'hydro-xml', Serializer,
-    'rdflib.plugins.serializers.rdfxml', 'HydroPrettyXMLSerializer')
+    'hs_core.hs_rdf', 'HydroPrettyXMLSerializer')
