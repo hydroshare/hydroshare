@@ -721,7 +721,6 @@ class Type(AbstractMetaDataElement):
         raise ValidationError("Type element of a resource can't be deleted.")
 
 
-@rdf_terms(DC.date, type=RDF.type, start_date=RDF.value)
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
@@ -749,6 +748,24 @@ class Date(AbstractMetaDataElement):
         """Define meta properties for Date class."""
 
         unique_together = ("type", "content_type", "object_id")
+
+    def rdf_triples(self, subject, graph):
+        date_node = BNode()
+        graph.add((subject, DC.date, date_node))
+        type_node = BNode()
+        graph.add((date_node, RDF.type, getattr(DC, self.type)))
+        graph.add((type_node, RDF.value, Literal(parser.parse(self.start_date).isoformat())))
+
+    @classmethod
+    def ingest_rdf(self, graph, content_object):
+        subject = content_object.rdf_subject()
+        for _, _, date_node in graph.triples((subject, DC.date, None)):
+            type = graph.value(subject=date_node, predicate=RDF.type)
+            value = graph.value(subject=date_node, predicate=RDF.value)
+            if type and value:
+                type = type.split('#')[-1]
+                start_date = parser.parse(str(value))
+                Date.create(type=type, start_date=start_date, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):
