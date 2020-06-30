@@ -161,7 +161,7 @@ class HydroPrettyXMLSerializer(Serializer):
     """Same as PrettyXMLSerializer but with stripped out node ids"""
 
     def __init__(self, store, max_depth=3):
-        super(PrettyXMLSerializer, self).__init__(store)
+        super(HydroPrettyXMLSerializer, self).__init__(store)
         self.forceRDFAbout = set()
 
     def serialize(self, stream, base=None, encoding=None, **args):
