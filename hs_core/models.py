@@ -623,7 +623,7 @@ class Contributor(Party):
 
     term = 'Contributor'
 
-
+@rdf_terms(DC.creator, order=HSTERMS.creatorOrder)
 class Creator(Party):
     """Extend Party model with the term of 'Creator' and a proper ordering."""
 
@@ -721,6 +721,7 @@ class Type(AbstractMetaDataElement):
         raise ValidationError("Type element of a resource can't be deleted.")
 
 
+@rdf_terms(DC.date, type=RDF.type, start_date=RDF.value)
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
@@ -867,6 +868,24 @@ class Relation(AbstractMetaDataElement):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
+    def rdf_triples(self, subject, graph):
+        relation_node = BNode()
+        graph.add((subject, DC.relation, relation_node))
+        graph.add((relation_node, getattr(HSTERMS, self.type), self.value))
+
+    @classmethod
+    def ingest_rdf(self, graph, content_object):
+        subject = content_object.rdf_subject()
+        for _, _, relation_node in graph.triples((subject, DC.relation, None)):
+            for _, p, o in graph.value((relation_node, None, None)):
+                type_term = p
+                value = o
+                break
+            if type_term:
+                type = type_term.split('/')[-1]
+                value = str(value)
+                Relation.create(type=type, value=value, content_object=content_object)
+
     @classmethod
     def create(cls, **kwargs):
         """Define custom create method for Relation class."""
@@ -954,6 +973,26 @@ class Identifier(AbstractMetaDataElement):
         """Return {name} {url} for unicode representation."""
         return "{name} {url}".format(name=self.name, url=self.url)
 
+    def rdf_triples(self, subject, graph):
+        identifier_node = BNode()
+        graph.add((subject, DC.identifier, identifier_node))
+        if self.name.lower() == 'doi':
+            graph.add((identifier_node, HSTERMS.doi, self.url))
+        else:
+            graph.add((identifier_node, HSTERMS.hydroShareIdentifier, self.url))
+
+    @classmethod
+    def ingest_rdf(self, graph, content_object):
+        subject = content_object.rdf_subject()
+        for _, _, identifier_node in graph.triples((subject, DC.identifier, None)):
+            url = graph.value(subject=identifier_node, predicate=HSTERMS.doi)
+            name = 'doi'
+            if not url:
+                name = 'hydroShareIdentifier'
+                url = graph.value(subject=identifier_node, predicate=HSTERMS.hydroShareIdentifier)
+            if url:
+                Identifier.create(url=url, name=name, content_object=content_object)
+
     @classmethod
     def create(cls, **kwargs):
         """Define custom create method for Identifier model."""
@@ -1031,6 +1070,7 @@ class Identifier(AbstractMetaDataElement):
         idf.delete()
 
 
+@rdf_terms(DC.publisher, name=HSTERMS.publisherName, url=HSTERMS.publisherURL)
 class Publisher(AbstractMetaDataElement):
     """Define Publisher custom metadata model."""
 
@@ -1585,6 +1625,8 @@ class Format(AbstractMetaDataElement):
         return self.value
 
 
+@rdf_terms(HSTERMS.awardInfo, agency_name=HSTERMS.fundingAgencyName, award_title=HSTERMS.awardTitle,
+           award_number=HSTERMS.awardNumber, agency_url=RDF.about)
 class FundingAgency(AbstractMetaDataElement):
     """Define FundingAgency custom metadata element mode."""
 

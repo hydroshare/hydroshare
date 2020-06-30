@@ -138,7 +138,8 @@ class RDF_Term_MixIn(object):
 
 def rdf_terms(class_term, **field_terms):
     def decorator(obj):
-        obj.rdf_term = class_term
+        if class_term:
+            obj.rdf_term = class_term
         for k, v in field_terms.items():
             if not hasattr(obj, k):
                 raise Exception("field {} not found".format(k))
