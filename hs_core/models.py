@@ -6,7 +6,7 @@ import arrow
 import logging
 from uuid import uuid4
 
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
@@ -635,14 +635,12 @@ class Creator(Party):
 
         ordering = ['order']
 
-
+@rdf_terms(DC.description, abstract=DCTERMS.abstract)
 class Description(AbstractMetaDataElement):
     """Define Description metadata element model."""
 
     term = 'Description'
     abstract = models.TextField()
-    class_rdf_term = DC.description
-    field_rdf_terms = {abstract: DCTERMS.abstract}
 
     def __unicode__(self):
         """Return abstract field for unicode representation."""
@@ -1141,12 +1139,10 @@ class Language(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(self, graph, content_object):
-        #for s, p, o in graph.triple((None, DC.language, None)):
-        #    if s.value.endswith('#aggregation'):
-        #        self.code = o.value
-        #        self.save()
-        #    break
-        pass
+        subject = content_object.rdf_subject()
+        code = graph.value(subject=subject, predicate=DC.language)
+        if code:
+            Language.create(code=code, content_object=content_object)
 
 
 class Coverage(AbstractMetaDataElement):
@@ -1674,6 +1670,7 @@ class Source(AbstractMetaDataElement):
         return self.derived_from
 
 
+@rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
 class Rights(AbstractMetaDataElement):
     """Define Rights custom metadata element model."""
 
@@ -1695,15 +1692,6 @@ class Rights(AbstractMetaDataElement):
         """Define meta properties for Rights model."""
 
         unique_together = ("content_type", "object_id")
-
-    def rdf_triples(self, subject, graph):
-        rights_subject = BNode()
-        graph.add((subject, DC.rights, rights_subject))
-        graph.add((rights_subject, HSTERMS.rightsStatement, Literal(self.statement)))
-        if self.url:
-            graph.add((rights_subject, HSTERMS.URL, URIRef(self.url)))
-
-
 
     @classmethod
     def remove(cls, element_id):

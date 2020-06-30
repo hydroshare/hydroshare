@@ -75,9 +75,6 @@ class RDF_MetaData_Mixin(object):
         g = self.get_rdf_graph()
         return g.serialize(format='pretty-xml').decode()
 
-    class Meta:
-        abstract = True
-
 
 class RDF_Term_MixIn(object):
     """Provides methods for serializing a django model into and rdflib triples and deserializing from an rdflib Graph
@@ -95,20 +92,17 @@ class RDF_Term_MixIn(object):
      """
 
     ignored_fields = ['id', 'object_id', 'content_type']
-    class_rdf_term = None
-    field_rdf_terms = {}
 
     def rdf_triples(self, subject, graph):
         """Default implementation that parses by convention."""
-        term = self.class_rdf_term if self.class_rdf_term else getattr(HSTERMS, self.__class__.__name__)
+        term = self.rdf_term if self.rdf_term else getattr(HSTERMS, self.__class__.__name__)
         metadata_node = BNode()
         graph.add((subject, term, metadata_node))
         for field in self.__class__._meta.fields:
             if self.ignored_fields and field.name in self.ignored_fields:
                 continue
-            if field in self.field_rdf_terms:
-                field_term = self.field_rdf_terms[field]
-            else:
+            field_term = getattr(field, 'rdf_term')
+            if not field_term:
                 field_term = getattr(HSTERMS, field.name)
             field_value = getattr(self, field.name)
             # urls should be a URIRef term, all others should be a Literal term
@@ -121,7 +115,7 @@ class RDF_Term_MixIn(object):
     @classmethod
     def ingest_rdf(cls, graph, content_object):
         """Default implementation that ingests by convention"""
-        term = cls.class_rdf_term if cls.class_rdf_term else getattr(HSTERMS, cls.__name__)
+        term = cls.rdf_term if cls.rdf_term else getattr(HSTERMS, cls.__name__)
         value_dict = {}
         subject = content_object.rdf_subject()
         metadata_nodes = graph.objects(subject=subject, predicate=term)
@@ -129,14 +123,22 @@ class RDF_Term_MixIn(object):
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
-                if field in cls.field_rdf_terms:
-                    field_term = cls.field_rdf_terms[field]
-                else:
+                field_term = getattr(field, 'rdf_term')
+                if not field_term:
                     field_term = getattr(HSTERMS, field.name)
                 val = graph.value(metadata_node, field_term)
                 value_dict[field.name] = val.value if isinstance(val, Literal) else str(val)
             if value_dict:
                 cls.create(content_object=content_object, **value_dict)
 
-    class Meta:
-        abstract = True
+
+def rdf_terms(class_term, **field_terms):
+    def decorator(obj):
+        obj.rdf_term = class_term
+        for k, v in field_terms.items():
+            field = getattr(obj, k)
+            if not field:
+                raise Exception("field {} not found".format(k))
+            field.rdf_term = v
+        return obj
+    return decorator
