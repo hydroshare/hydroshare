@@ -641,6 +641,8 @@ class Description(AbstractMetaDataElement):
 
     term = 'Description'
     abstract = models.TextField()
+    class_rdf_term = DC.description
+    field_rdf_terms = {abstract: DCTERMS.abstract}
 
     def __unicode__(self):
         """Return abstract field for unicode representation."""
@@ -666,19 +668,6 @@ class Description(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Create custom remove method for Description model."""
         raise ValidationError("Description element of a resource can't be deleted.")
-
-    def rdf_triples(self, subject, graph):
-        abstract_node = BNode()
-        graph.add((subject, DC.description, abstract_node))
-        graph.add((abstract_node, DCTERMS.abstract, self.abstract))
-
-    @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        subject = content_object.rdf_subject()
-        description_node = graph.value(subject=subject, predicate=DC.description)
-        if description_node:
-            abstract = graph.value(subject=subject, predicate=DCTERMS.abstract)
-            cls.create(content_object=content_object, abstract=abstract)
 
 
 class Title(AbstractMetaDataElement):
@@ -1151,11 +1140,13 @@ class Language(AbstractMetaDataElement):
         graph.add((subject, DC.language, Literal(self.code)))
 
     @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        subject = content_object.rdf_subject()
-        code = graph.value(subject=subject, predicate=DC.language)
-        if code:
-            cls.create(content_object=content_object, code=code)
+    def ingest_rdf(self, graph, content_object):
+        #for s, p, o in graph.triple((None, DC.language, None)):
+        #    if s.value.endswith('#aggregation'):
+        #        self.code = o.value
+        #        self.save()
+        #    break
+        pass
 
 
 class Coverage(AbstractMetaDataElement):
