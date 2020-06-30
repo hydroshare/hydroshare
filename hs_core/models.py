@@ -871,7 +871,7 @@ class Relation(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
         graph.add((subject, DC.relation, relation_node))
-        graph.add((relation_node, getattr(HSTERMS, self.type), self.value))
+        graph.add((relation_node, getattr(HSTERMS, self.type), URIRef(self.value)))
 
     @classmethod
     def ingest_rdf(self, graph, content_object):
@@ -977,9 +977,9 @@ class Identifier(AbstractMetaDataElement):
         identifier_node = BNode()
         graph.add((subject, DC.identifier, identifier_node))
         if self.name.lower() == 'doi':
-            graph.add((identifier_node, HSTERMS.doi, self.url))
+            graph.add((identifier_node, HSTERMS.doi, URIRef(self.url)))
         else:
-            graph.add((identifier_node, HSTERMS.hydroShareIdentifier, self.url))
+            graph.add((identifier_node, HSTERMS.hydroShareIdentifier, URIRef(self.url)))
 
     @classmethod
     def ingest_rdf(self, graph, content_object):
