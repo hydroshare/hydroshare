@@ -754,7 +754,7 @@ class Date(AbstractMetaDataElement):
         graph.add((subject, DC.date, date_node))
         type_node = BNode()
         graph.add((date_node, RDF.type, getattr(DC, self.type)))
-        graph.add((type_node, RDF.value, Literal(parser.parse(self.start_date).isoformat())))
+        graph.add((type_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
     def ingest_rdf(self, graph, content_object):

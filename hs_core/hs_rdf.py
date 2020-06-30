@@ -112,7 +112,8 @@ class RDF_Term_MixIn(object):
                 field_value = URIRef(field_value)
             else:
                 field_value = Literal(field_value)
-            graph.add((metadata_node, field_term, field_value))
+            if field_value:
+                graph.add((metadata_node, field_term, field_value))
 
     @classmethod
     def ingest_rdf(cls, graph, content_object):
