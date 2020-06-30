@@ -108,11 +108,11 @@ class RDF_Term_MixIn(object):
                 field_term = getattr(HSTERMS, field.name)
             field_value = getattr(self, field.name)
             # urls should be a URIRef term, all others should be a Literal term
-            if isinstance(field_value, str) and field_value.startswith('http'):
-                field_value = URIRef(field_value)
-            else:
-                field_value = Literal(field_value)
             if field_value:
+                if isinstance(field_value, str) and field_value.startswith('http'):
+                    field_value = URIRef(field_value)
+                else:
+                    field_value = Literal(field_value)
                 graph.add((metadata_node, field_term, field_value))
 
     @classmethod
