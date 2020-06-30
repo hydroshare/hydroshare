@@ -1,7 +1,12 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from rdflib import Graph, BNode
-from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS
+from rdflib.collection import Collection
+from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS, RDF, RDFS
+from rdflib.plugin import register
+from rdflib.plugins.serializers.rdfxml import PrettyXMLSerializer, XMLLANG, OWL_NS
+from rdflib.serializer import Serializer
 from rdflib.term import Literal, URIRef
+from rdflib.util import first
 
 HSTERMS = Namespace("http://hydroshare.org/terms/")
 RDFS1 = Namespace("http://www.w3.org/2000/01/rdf-schema#")
@@ -73,7 +78,7 @@ class RDF_MetaData_Mixin(object):
 
         # get the xml root element and the xml element to which contains all other elements
         g = self.get_rdf_graph()
-        return g.serialize(format='pretty-xml').decode()
+        return g.serialize(format='hydro-xml').decode()
 
 
 class RDF_Term_MixIn(object):
@@ -148,3 +153,122 @@ def rdf_terms(class_term, **field_terms):
             setattr(obj, k + '_rdf_term', v)
         return obj
     return decorator
+
+
+class HydroPrettyXMLSerializer(PrettyXMLSerializer):
+    """Same as PrettyXMLSerializer but with stripped out node ids"""
+    def subject(self, subject, depth=1):
+        store = self.store
+        writer = self.writer
+
+        if subject in self.forceRDFAbout:
+            writer.push(RDF.Description)
+            writer.attribute(RDF.about, self.relativize(subject))
+            writer.pop(RDF.Description)
+            self.forceRDFAbout.remove(subject)
+
+        elif not subject in self.__serialized:
+            self.__serialized[subject] = 1
+            type = first(store.objects(subject, RDF.type))
+
+            try:
+                self.nm.qname(type)
+            except:
+                type = None
+
+            element = type or RDF.Description
+            writer.push(element)
+
+            if isinstance(subject, BNode):
+                def subj_as_obj_more_than(ceil):
+                    return True
+                    # more_than(store.triples((None, None, subject)), ceil)
+
+            else:
+                writer.attribute(RDF.about, self.relativize(subject))
+
+            if (subject, None, None) in store:
+                for predicate, object in store.predicate_objects(subject):
+                    if not (predicate == RDF.type and object == type):
+                        self.predicate(predicate, object, depth + 1)
+
+            writer.pop(element)
+
+        elif subject in self.forceRDFAbout:
+            writer.push(RDF.Description)
+            writer.attribute(RDF.about, self.relativize(subject))
+            writer.pop(RDF.Description)
+            self.forceRDFAbout.remove(subject)
+
+    def predicate(self, predicate, object, depth=1):
+        writer = self.writer
+        store = self.store
+        writer.push(predicate)
+
+        if isinstance(object, Literal):
+            if object.language:
+                writer.attribute(XMLLANG, object.language)
+
+            if object.datatype:
+                writer.attribute(RDF.datatype, object.datatype)
+
+            writer.text(object)
+
+        elif object in self.__serialized or not (object, None, None) in store:
+
+            if isinstance(object, BNode):
+                pass
+            else:
+                writer.attribute(RDF.resource, self.relativize(object))
+
+        else:
+            if first(store.objects(object, RDF.first)):  # may not have type
+                                                         # RDF.List
+
+                self.__serialized[object] = 1
+
+                # Warn that any assertions on object other than
+                # RDF.first and RDF.rest are ignored... including RDF.List
+                import warnings
+                warnings.warn(
+                    "Assertions on %s other than RDF.first " % repr(object) +
+                    "and RDF.rest are ignored ... including RDF.List",
+                    UserWarning, stacklevel=2)
+                writer.attribute(RDF.parseType, "Collection")
+
+                col = Collection(store, object)
+
+                for item in col:
+
+                    if isinstance(item, URIRef):
+                        self.forceRDFAbout.add(item)
+                    self.subject(item)
+
+                    if not isinstance(item, URIRef):
+                        self.__serialized[item] = 1
+            else:
+                if first(store.triples_choices(
+                    (object, RDF.type, [OWL_NS.Class, RDFS.Class]))) \
+                        and isinstance(object, URIRef):
+                    writer.attribute(RDF.resource, self.relativize(object))
+
+                elif depth <= self.max_depth:
+                    self.subject(object, depth + 1)
+
+                elif isinstance(object, BNode):
+
+                    if not object in self.__serialized \
+                            and (object, None, None) in store \
+                            and len(list(store.subjects(object=object))) == 1:
+                        # inline blank nodes if they haven't been serialized yet
+                        # and are only referenced once (regardless of depth)
+                        self.subject(object, depth + 1)
+
+                else:
+                    writer.attribute(RDF.resource, self.relativize(object))
+
+        writer.pop(predicate)
+
+register(
+    'hydro-xml', Serializer,
+    'rdflib.plugins.serializers.rdfxml', 'HydroPrettyXMLSerializer')
