@@ -20,7 +20,7 @@ from mezzanine.conf import settings
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, _input, ul, li, p
 
-from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin, NAMESPACE_MANAGER
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
@@ -319,58 +319,53 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             generic_relation.related_model.ingest_rdf(graph, self)
         self.save()
 
-    def get_rdf(self):
-        triples = []
+    def get_rdf_graph(self):
+        graph = Graph()
+        graph.namespace_manager = NAMESPACE_MANAGER
+
         resource = self.logical_file.resource
         subject = self.rdf_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
-            triples.append((subject, DC.title, Literal(self.logical_file.dataset_name)))
+            graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
         aggregation_type = self.logical_file.get_aggregation_type_name()
         hsterms_aggregation_type = getattr(HSTERMS, aggregation_type)
-        triples.append((subject, DC.type, hsterms_aggregation_type))
+        graph.add((subject, DC.type, hsterms_aggregation_type))
 
         # add lang element
-        for triple in resource.metadata.language.rdf_triples(subject):
-            triples.append(triple)
+        resource.metadata.language.rdf_triples(subject, graph)
 
         # add rights element
-        for triple in resource.metadata.rights.rdf_triples(subject):
-            triples.append(triple)
+        resource.metadata.rights.rdf_triples(subject, graph)
 
         # add keywords
         for kw in self.keywords:
-            triples.append((subject, DC.subject, Literal(kw)))
+            graph.add((subject, DC.subject, Literal(kw)))
 
         # add any key/value metadata items
         if len(self.extra_metadata) > 0:
             extendedMetadata = BNode()
-            triples.append((subject, HSTERMS.extendedMetadata, extendedMetadata))
+            graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
             for key, value in list(self.extra_metadata.items()):
-                triples.append((extendedMetadata, HSTERMS.key, Literal(key)))
-                triples.append((extendedMetadata, HSTERMS.value, Literal(value)))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
         for field in self.__class__._meta.fields:
             if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata', 'is_dirty']:
                 continue
-            triples.append((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
+            graph.add((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
 
-        # add coverages
-        #for coverage in self.coverages.all():
-        #    for triple in coverage.rdf_triples(subject):
-        #        triples.append(triple)
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
             for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
-                for triple in f.rdf_triples(subject):
-                    triples.append(triple)
+                f.rdf_triples(subject, graph)
 
         TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), aggregation_type)
-        triples.append((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
-        triples.append((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
-        return triples
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return graph
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)
