@@ -24,6 +24,29 @@
                 </div>
             </div>
 
+            <div id="faceting-subject">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#subject">
+                                &nbsp; Filter by subject
+                                <span class="glyphicon glyphicon-minus pull-left">
+                                </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="subject" class="facet-list panel-collapse collapse in">
+                        <ul class="list-group" id="list-group-subject">
+                            <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects)" v-bind:key="subject">
+                                <span class="badge">{{countSubjects[subject]}}</span>
+                                <label class="checkbox noselect" :for="name-subject">{{subject}}
+                                <input type="checkbox" class="faceted-selections" :value=subject v-model="subjectFilter" :id="name-subject">
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
     <div>
         <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
         <div class="table-wrapper">
@@ -90,9 +113,9 @@ export default {
       if (sortKey) {
         // do nothing
       }
-      let res = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-      // res = res.filter(element => this.subjectFilter.indexOf(element.subject) > -1);
-      return res;
+      const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+      const resSubjects = resAuthors.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+      return resSubjects;
     },
   },
   mounted() {
@@ -101,6 +124,7 @@ export default {
     this.countAuthors = new this.Counter(authorbox);
     Object.keys(this.countAuthors).forEach(author => this.authorFilter
       .push(author)); // populate checkboxes
+
     const subjectbox = [];
     this.resources.forEach(res => subjectbox.push(res.subject));
     this.countSubjects = new this.Counter(subjectbox);

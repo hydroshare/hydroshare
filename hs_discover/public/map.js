@@ -112,7 +112,6 @@
   };
 
   const initMap = () => {
-    console.log('map init')
     infowindow = new google.maps.InfoWindow();
     // eslint-disable-next-line no-param-reassign
     exports.map = new google.maps.Map(document.getElementById('map'), {
