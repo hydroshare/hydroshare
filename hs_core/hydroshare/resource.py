@@ -15,7 +15,6 @@ from rdflib.namespace import DC, RDFS
 
 from rest_framework import status
 
-from hs_file_types.utils import get_logical_file
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
@@ -820,6 +819,7 @@ def add_resource_files(pk, *files, **kwargs):
             subject = s.split('/resource/', 1)[1].split("#")[0]
             break
 
+        from hs_file_types.utils import get_logical_file
         logical_file_class = get_logical_file(agg_type_name)
         lf = None
         for logical_file in logical_file_class.objects.filter(resource=resource):
