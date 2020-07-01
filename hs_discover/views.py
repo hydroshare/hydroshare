@@ -106,7 +106,9 @@ class SearchAPI(APIView):
                 "type": result.resource_type_exact,
                 "author": result.author,
                 "author_link": result.author_url,
+                "owner": result.owner[0],
                 "abstract": result.abstract,
+                "subject": result.subject,
                 "created": date(result.created, "M d, Y") + " at " + time(result.created),
                 "modified": date(result.modified, "M d, Y") + " at " + time(result.modified)
             })

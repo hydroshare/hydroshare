@@ -1,12 +1,37 @@
 <template>
+      <div id="filter-items">
+            <div id="faceting-creator">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#creator">
+                                &nbsp; Filter by author
+                                <span class="glyphicon glyphicon-minus pull-left">
+                                </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="creator" class="facet-list panel-collapse collapse in">
+                        <ul class="list-group" id="list-group-creator">
+                            <li class="list-group-item" v-for="(author) in Object.keys(countAuthors)" v-bind:key="author">
+                                <span class="badge">{{countAuthors[author]}}</span>
+                                <label class="checkbox noselect" :for="name-author">{{author}}
+                                <input type="checkbox" class="faceted-selections" :value=author v-model="authorFilter" :id="name-author">
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
     <div>
         <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
         <div class="table-wrapper">
-            <h3 v-if="Object.keys(counters).length">Author Filter</h3>
-            <div v-for="(author) in Object.keys(counters)" v-bind:key="author">
-                <input type="checkbox" :value=author v-model="authorFilter" :id="name-author">
-                <label :for="name-author">{{author}}&nbsp;{{counters[author]}}</label>
-            </div>
+<!--            <h3 v-if="Object.keys(countAuthors).length">Author Filter</h3>-->
+<!--            <div v-for="(author) in Object.keys(countAuthors)" v-bind:key="author">-->
+<!--                <input type="checkbox" :value=author v-model="authorFilter" :id="name-author">-->
+<!--                <label :for="name-author">{{author}}&nbsp;{{countAuthors[author]}}</label>-->
+<!--            </div>-->
             <table v-if="filteredResources.length"
                    class="table-hover table-striped resource-custom-table" id="items-discovered">
                 <thead>
@@ -40,14 +65,18 @@
             </table>
         </div>
     </div>
+
+      </div>
 </template>
 
 <script>
 export default {
   data() {
     return {
-      counters: {},
+      countAuthors: {},
       authorFilter: [],
+      countSubjects: {},
+      subjectFilter: [],
       sortKey: '',
       sortOrders: { Type: -1, Title: 1, 'First Author': -1 },
     };
@@ -61,16 +90,22 @@ export default {
       if (sortKey) {
         // do nothing
       }
-      return this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+      let res = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+      // res = res.filter(element => this.subjectFilter.indexOf(element.subject) > -1);
+      return res;
     },
   },
   mounted() {
     const authorbox = [];
     this.resources.forEach(res => authorbox.push(res.author));
-    // console.log(new this.Counter(authorbox)); // eslint-disable-line
-    this.counters = new this.Counter(authorbox);
-    Object.keys(this.counters).forEach(author => this.authorFilter
+    this.countAuthors = new this.Counter(authorbox);
+    Object.keys(this.countAuthors).forEach(author => this.authorFilter
       .push(author)); // populate checkboxes
+    const subjectbox = [];
+    this.resources.forEach(res => subjectbox.push(res.subject));
+    this.countSubjects = new this.Counter(subjectbox);
+    Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
+      .push(subject)); // populate checkboxes
   },
   methods: {
     sortBy(key) {

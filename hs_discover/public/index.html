@@ -1,47 +1,214 @@
-{% extends "base.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-{% block meta_title %}Discover{% endblock %}
-{% block main %}
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <style type="text/css">
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 100%;
-      }
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <title>Discover | CUAHSI HydroShare</title>
+    <link rel="shortcut icon" href="/static/img/favicon.png">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/feeds/rss/">
+    <link rel="alternate" type="application/atom+xml" title="Atom" href="/blog/feeds/atom/">
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_fonts.css" rel="stylesheet"/>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/fonts/font-mfizz/font-mfizz.css"/>
+
+    <link href="/static/css/bootstrap.3.0.2.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/css/animate.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/elements.css"/>
+    <link rel='stylesheet' type='text/css' href='/static/css/jquery-ui/smoothness/jquery-ui.css'/>
+    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_core.css"/>
+    <link href="/static/css/identifiers.css" rel="stylesheet"/>
+    <link href="/static/css/academicons.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_extends.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/autocomplete_light/style.css"/>
+<!--    <script type="text/javascript">-->
+<!--        var csrf_token = "gcpMpuUKvjbgQ6YNPy77BX74KcfWnnTABvTGEh2mpvvAOVZKvZvKqMjy0UMyQJDX";-->
+<!--    </script>-->
+
+    <link rel="stylesheet" type="text/css" href="/static/css/inplaceedit_structure.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/inplaceedit_style.css"/>
+    <style>
+        .showcase {
+            zoom: 0.6;
+        }
     </style>
-    <input type="hidden" id="static-url" value="{{ STATIC_URL }}">
-    <div class="container" id="discover-main">
+
+    <script type="text/javascript">
+        window.heap = window.heap || [], heap.load = function (e, t) {
+            window.heap.appid = e, window.heap.config = t = t || {};
+            var r = t.forceSSL || "https:" === document.location.protocol, a = document.createElement("script");
+            a.type = "text/javascript", a.async = !0, a.src = (r ? "https:" : "http:") + "//cdn.heapanalytics.com/js/heap-" + e + ".js";
+            var n = document.getElementsByTagName("script")[0];
+            n.parentNode.insertBefore(a, n);
+            for (var o = function (e) {
+                return function () {
+                    heap.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+                }
+            }, p = ["addEventProperties", "addUserProperties", "clearEventProperties", "identify", "resetIdentity", "removeEventProperty", "setEventProperties", "track", "unsetEventProperty"], c = 0; c < p.length; c++) heap[p[c]] = o(p[c])
+        };
+        heap.load("1320547260");
+    </script>
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(
+                o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(
+                a, m)
+        })(window, document, 'script', 'https://www.google-analytics.com/analytics.js'
+            , 'ga');
+        ga('create', 'UA-74322358-2', 'auto');
+        ga('send', 'pageview');
+    </script>
+</head>
+
+<body id="body">
+
+<div id="hs-nav-bar" class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/landingPage">
+                <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="CUAHSI HydroShare"/>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav navbar-right hidden-xs">
+                <!-- <li id="signup-menu"><a href="/accounts/signup/">Sign Up</a></li> -->
+                <li id="signin-menu"><a href="/accounts/login/"><span class="glyphicon glyphicon-log-in"></span> Sign In</a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <li id="dropdown-menu-home"><a href="/home/">Home</a></li>
+                <li id="dropdown-menu-my-resources"><a href="/my-resources/">My Resources</a></li>
+                <li class="active" id="dropdown-menu-search"><a href="/search/">Discover</a></li>
+                <li id="dropdown-menu-collaborate"><a href="/collaborate/">Collaborate</a></li>
+                <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-"><a
+                        href="https://www.hydroshare.org/apps/">Apps</a></li>
+                <li class="" id="dropdown-menu-https:--help.hydroshare.org"><a
+                        href="http://help.hydroshare.org">Help</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right"><!-- Profile links for extra small screens -->
+                <li class="visible-xs"><a href="/accounts/login/"><span class="glyphicon glyphicon-log-in"></span> Sign
+                    In</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div id="map">map</div>
+<style type="text/css">
+  /* Always set the map height explicitly to define the size of the div
+   * element that contains the map. */
+  #map {
+    height: 100%;
+  }
+</style>
+<div id="map-view">
+    <input id="map-search" class="controls" type="text" placeholder="Search Box">
+    <div id="discover-map-legend"></div>
+    <div id="reset-zoom"></div>
+</div>
+<div id="app"></div>
+<script src=/static/js/chunk-vendors.js></script>
+<script src=/static/js/app.js></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src=/static/js/map.js></script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"
+></script>
+<!-- Foooter
+    ================== -->
+<footer>
+    <div class="container">
         <div class="row">
-            <div class="col-xs-12">
-                <h2 class="page-title">Discover
-                    <small class="text-muted"><i>Public resources shared with the community.</i></small>
-                </h2>
-                <div id="app"></div>
+            <!-- Contact Us
+                =================  -->
+            <div class="col-md-4 col-sm-4">
+
+                <div class="headline">
+                    <h3>Contact us</h3>
+                </div>
+                <div class="content">
+                    <p class="p1"><a href="mailto:help@cuahsi.org">Email Support</a></p>
+                    <p class="p1">Visit <a href="https://www.cuahsi.org" target="_blank">cuahsi.org</a></p>
+                </div>
+
+            </div>
+            <!-- Social icons
+                ===================== -->
+            <div class="col-md-4 col-sm-4">
+                <div class="headline"><h3>Follow</h3></div>
+                <div class="content social">
+                    <ul>
+                        <li>
+                            <a href="http://twitter.com/cuahsi" target="_blank"><i class="fa fa-twitter"></i></a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/pages/CUAHSI-Consortium-of-Universities-for-the-Advancement-of-Hydrologic-Science-Inc/179921902590"
+                               target="_blank"><i class="fa fa-facebook"></i></a>
+                        </li>
+                        <li>
+                            <a href="http://youtube.hydroshare.org/" target="_blank"><i class="fa fa-youtube"></i></a>
+                        </li>
+                        <li>
+                            <a href="http://github.com/hydroshare" target="_blank"><i class="fa fa-github"></i></a>
+                        </li>
+                        <li>
+                            <a href="https://www.linkedin.com/company/2632114" target="_blank"><i
+                                    class="fa fa-linkedin"></i></a>
+                        </li>
+                    </ul>
+
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+            <!-- Subscribe
+                =============== -->
+            <div class="col-md-4 col-sm-4">
+
+                <div class="headline"><h3>Open Source</h3></div>
+                <div class="content">
+                    <p class="p1">HydroShare is Open Source. Find us on <a href="https://github.com/hydroshare/"
+                                                                           target="_blank"><strong>Github</strong></a>.
+                    </p>
+                    <p class="p1">Report a bug <strong><a
+                            href="https://github.com/hydroshare/hydroshare/issues?state=open"
+                            target="_blank">here</a></strong></p>
+                    <p class="p1">This is HydroShare Version<b>&nbsp;1.34</b></p>
+                </div>
+
             </div>
         </div>
-        <br>
-        <div class="alert alert-info">
-            <strong>
-                <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
-            </strong>
-            <p class="space-top">Private resources owned by you or shared with you by colleagues are
-                searchable from
-                <strong><a href="/my-resources">My Resources</a></strong></p>
+    </div>
+    <!-- Legal
+        ============= -->
+    <div class="legal">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>&copy 2020 CUAHSI. This material is based upon work supported by the National Science Foundation
+                        (NSF) under awards 1148453, 1148090, 1664018, 1664061, 1338606, and 1664119. Any opinions,
+                        findings, conclusions, or recommendations expressed in this material are those of the authors
+                        and do not necessarily reflect the views of the NSF. | <a href="/terms-of-use">Terms Of Use</a>
+                        | <a href="/privacy">Statement of Privacy</a> | <a href="/sitemap/">Site Map</a></p>
+                </div>
+            </div>
         </div>
-        {% include "includes/legend.html" %}
     </div>
-    <div id="map-view">
-        <input id="map-search" class="controls" type="text" placeholder="Search Box">
-        <div id="map"></div>
-        <div id="discover-map-legend"></div>
-        <div id="reset-zoom"></div>
-    </div>
-    <script src=/static/js/chunk-vendors.js></script>
-    <script src=/static/js/app.js></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src=/static/js/map.js></script>
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"
-    ></script>
-{% endblock %}
+</footer>
+</body>
+</html>
