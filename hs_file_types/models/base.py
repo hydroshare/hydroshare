@@ -300,6 +300,10 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
 
     def ingest_metadata(self, graph):
         subject = self.rdf_subject()
+        title = graph.value(subject=subject, predicate=DC.title)
+        if title:
+            self.logical_file.dataset_name = title
+            self.logical_file.save()
         for _, _, object in graph.triples((subject, DC.subject, None)):
             self.keywords.append(object.value)
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):

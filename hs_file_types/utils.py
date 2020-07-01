@@ -251,23 +251,34 @@ def ingest_logical_file_metadata(metadata_file, resource):
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
+    if not agg_type_name:
+        raise Exception("Could not derive aggregation type from {}".format(metadata_file))
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
+    if not subject:
+        raise Exception("Could not derive aggregation path from {}".format(metadata_file))
 
     from hs_file_types.utils import get_logical_file
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, str(subject))
     if not lf:
         # see if the files exist and create it
-        aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
+        if logical_file_class is FileSetLogicalFile:
+            aggregation_main_file_with_path = subject.rsplit('/', 1)[0]
+        else:
+            aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
         file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
         res_file = get_resource_file(resource.short_id, file_path)
-        if not res_file.has_logical_file or res_file.logical_file.is_fileset:
-            set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                  logical_file_type_class=logical_file_class, fail_feedback=True)
-        lf = get_logical_file_by_map_file_path(resource, logical_file_class, str(subject))
+        if res_file:
+            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+                res_file.refresh_from_db()
+            lf = res_file.logical_file
+        else:
+            raise Exception("Could not find file {} for aggregation {}".format(file_path, metadata_file))
         if not lf:
             raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file))
 

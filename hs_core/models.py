@@ -893,7 +893,7 @@ class Relation(AbstractMetaDataElement):
     def ingest_rdf(self, graph, content_object):
         subject = content_object.rdf_subject()
         for _, _, relation_node in graph.triples((subject, DC.relation, None)):
-            for _, p, o in graph.value((relation_node, None, None)):
+            for _, p, o in graph.triples((relation_node, None, None)):
                 type_term = p
                 value = o
                 break
