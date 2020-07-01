@@ -15,7 +15,7 @@ from rdflib.namespace import DC, RDFS
 
 from rest_framework import status
 
-from hs_core.hs_rdf import HSTERMS
+from hs_file_types.utils import get_logical_file
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
@@ -811,35 +811,31 @@ def add_resource_files(pk, *files, **kwargs):
         graph = Graph()
         with open(md.temporary_file_path(), mode='r') as f:
             graph = graph.parse(data=f.read())
-        agg_type = None
+        agg_type_name = None
         for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
-            agg_type = s.split("/")[-1]
+            agg_type_name = s.split("/")[-1]
             break
-        title = None
-        for _, _, o in graph.triples((None, DC.title, None)):
-            title = o
+        subject = None
+        for s, _, _ in graph.triples((None, DC.title, None)):
+            subject = s.split('/resource/', 1)[1].split("#")[0]
             break
-        from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile, GeoRasterLogicalFile, NetCDFLogicalFile,\
-            GeoFeatureLogicalFile, RefTimeseriesLogicalFile, TimeSeriesLogicalFile
-        #TODO, other types need to be specified
-        file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile,
-                         "SingleFileAggregation": GenericLogicalFile,
-                         "FileSetAggregation": FileSetLogicalFile,
-                         "MultidimensionalAggregation": NetCDFLogicalFile,
-                         "GeographicFeatureAggregation": GeoFeatureLogicalFile,
-                         "ReferencedTimeSeriesAggregation": RefTimeseriesLogicalFile,
-                         "TimeSeriesAggregation": TimeSeriesLogicalFile,
-                         }
-        clazz = file_type_map[agg_type]
-        # TODO, while unlikely, a resource could have a aggregation with the same dataset_name... maybe we could constraint this
-        lf = clazz.objects.get(resource=resource, dataset_name=title.value)
-        try:
-            with transaction.atomic():
-                lf.metadata.delete_all_elements()
-                lf.metadata.ingest_metadata(graph)
-        except:
-            logger.exception("Error processing metadata file")
-            raise
+
+        logical_file_class = get_logical_file(agg_type_name)
+        lf = None
+        for logical_file in logical_file_class.objects.filter(resource=resource):
+            if logical_file.map_file_path in str(subject):
+                lf = logical_file
+                break
+        if lf:
+            try:
+                with transaction.atomic():
+                    lf.metadata.delete_all_elements()
+                    lf.metadata.ingest_metadata(graph)
+            except:
+                logger.exception("Error processing metadata file")
+                raise
+        else:
+            raise Exception("Could not find aggregation at {} in resource {}".format(subject, resource.short_id))
     if resource_metadata_file:
         graph = Graph()
         with open(resource_metadata_file.temporary_file_path(), mode='r') as f:

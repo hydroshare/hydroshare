@@ -226,18 +226,16 @@ def get_logical_file_type(res, file_id, hs_file_type=None, fail_feedback=True):
     return logical_file_type_class
 
 
-def get_logical_file(term):
-    file_type_map = {"SingleFile": GenericLogicalFile,
-                     "FileSet": FileSetLogicalFile,
-                     "GeographicRasterAggregation": GeoRasterLogicalFile,
-                     "NetCDF": NetCDFLogicalFile,
-                     'GeoFeature': GeoFeatureLogicalFile,
-                     'RefTimeseries': RefTimeseriesLogicalFile,
-                     'TimeSeries': TimeSeriesLogicalFile}
-
-    agg_type = term.split("/")[-1]
-    clazz = file_type_map[agg_type]
-    return clazz
+def get_logical_file(agg_type_name):
+    file_type_map = {"GeographicRasterAggregation": GeoRasterLogicalFile,
+                     "SingleFileAggregation": GenericLogicalFile,
+                     "FileSetAggregation": FileSetLogicalFile,
+                     "MultidimensionalAggregation": NetCDFLogicalFile,
+                     "GeographicFeatureAggregation": GeoFeatureLogicalFile,
+                     "ReferencedTimeSeriesAggregation": RefTimeseriesLogicalFile,
+                     "TimeSeriesAggregation": TimeSeriesLogicalFile,
+                     }
+    return file_type_map[agg_type_name]
 
 
 
