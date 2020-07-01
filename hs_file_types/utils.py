@@ -2,6 +2,11 @@ import json
 import os
 from dateutil import parser
 from operator import lt, gt
+
+from django.db import transaction
+from rdflib import RDFS, Graph
+from rdflib.namespace import DC
+
 from hs_core.hydroshare import utils
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
@@ -236,6 +241,34 @@ def get_logical_file(agg_type_name):
                      "TimeSeriesAggregation": TimeSeriesLogicalFile,
                      }
     return file_type_map[agg_type_name]
+
+
+def ingest_logical_file_metadata(metadata_file, resource):
+    graph = Graph()
+    with open(metadata_file.temporary_file_path(), mode='r') as f:
+        graph = graph.parse(data=f.read())
+    agg_type_name = None
+    for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
+        agg_type_name = s.split("/")[-1]
+        break
+    subject = None
+    for s, _, _ in graph.triples((None, DC.title, None)):
+        subject = s.split('/resource/', 1)[1].split("#")[0]
+        break
+
+    from hs_file_types.utils import get_logical_file
+    logical_file_class = get_logical_file(agg_type_name)
+    lf = None
+    for logical_file in logical_file_class.objects.filter(resource=resource):
+        if logical_file.map_file_path in str(subject):
+            lf = logical_file
+            break
+    if lf:
+        with transaction.atomic():
+            lf.metadata.delete_all_elements()
+            lf.metadata.ingest_metadata(graph)
+    else:
+        raise Exception("Could not find aggregation at {} in resource {}".format(subject, resource.short_id))
 
 
 
