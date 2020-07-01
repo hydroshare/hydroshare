@@ -7,7 +7,7 @@ from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC
 
-from hs_core.hydroshare import utils
+from hs_core.hydroshare import utils, get_resource_file
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
@@ -258,24 +258,36 @@ def ingest_logical_file_metadata(metadata_file, resource):
 
     from hs_file_types.utils import get_logical_file
     logical_file_class = get_logical_file(agg_type_name)
-    lf = None
-    for logical_file in logical_file_class.objects.filter(resource=resource):
-        if logical_file.map_file_path in str(subject):
-            lf = logical_file
-            break
-    if lf:
-        with transaction.atomic():
-            lf.metadata.delete_all_elements()
-            lf.metadata.ingest_metadata(graph)
-    else:
-        raise Exception("Could not find aggregation at {} in resource {}".format(subject, resource.short_id))
+    lf = get_logical_file_by_map_file_path(resource, logical_file_class, str(subject))
+    if not lf:
+        # see if the files exist and create it
+        aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
+        file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
+        res_file = get_resource_file(resource.short_id, file_path)
+        if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+            set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                  logical_file_type_class=logical_file_class, fail_feedback=True)
+        lf = get_logical_file_by_map_file_path(resource, logical_file_class, str(subject))
+        if not lf:
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file))
 
+    with transaction.atomic():
+        lf.metadata.delete_all_elements()
+        lf.metadata.ingest_metadata(graph)
+
+
+def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
+    for logical_file in logical_file_class.objects.filter(resource=resource):
+        if logical_file.map_file_path in str(map_file_path):
+            return logical_file
+    return None
 
 
 def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='', extra_data={},
-                          fail_feedback=True):
+                          fail_feedback=True, logical_file_type_class=None):
     """ set the logical file type for a new file """
-    logical_file_type_class = get_logical_file_type(res, file_id, hs_file_type, fail_feedback)
+    if not logical_file_type_class:
+        logical_file_type_class = get_logical_file_type(res, file_id, hs_file_type, fail_feedback)
 
     try:
         # Some aggregations use the folder name for the aggregation name
