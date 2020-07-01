@@ -4386,6 +4386,20 @@ class CoreMetaData(models.Model):
                 self.create_element(element_model_name=element_name, **element[element_name])
 
 
+class TaskNotification(models.Model):
+    TASK_STATUS_CHOICES = (
+        ('pending', 'Pending execution'),
+        ('progress', 'In progress'),
+        ('failed', 'Failed'),
+        ('aborted', 'Aborted'),
+        ('completed', 'Completed')
+    )
+    task_id = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=1000, blank=True)
+    payload = models.CharField(max_length=1000, blank=True)
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='pending')
+
+
 def resource_processor(request, page):
     """Return mezzanine page processor for resource page."""
     extra = page_permissions_page_processor(request, page)

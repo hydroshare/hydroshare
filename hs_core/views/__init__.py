@@ -47,7 +47,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
-from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id
+from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id, dismiss_task_by_id
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -113,6 +113,12 @@ def get_task(request, task_id):
 @login_required
 def abort_task(request, task_id):
     task_dict = revoke_task_by_id(task_id)
+    return JsonResponse(task_dict)
+
+
+@login_required
+def dismiss_task(request, task_id):
+    task_dict = dismiss_task_by_id(task_id)
     return JsonResponse(task_dict)
 
 

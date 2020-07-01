@@ -72,9 +72,9 @@ $(document).ready(function () {
                 $.ajax({
                     type: "GET",
                     url: '/hsapi/_internal/get_tasks_by_user/',
-                    success: function (tasks) {
+                    success: function (ret_data) {
                         vue.loading = false;
-
+                        tasks = ret_data['tasks']
                         for (let i = 0; i < tasks.length; i++) {
                             vue.registerTask(tasks[i]);
                         }
@@ -88,8 +88,17 @@ $(document).ready(function () {
             dismissTask: function (task) {
                 let vue = this;
                 if (vue.canBeDismissed(task)) {
-                    vue.tasks = vue.tasks.filter(function(t) {
-                        return t.id !== task.id;
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/dismiss_task/' + task.id,
+                        success: function (task) {
+                            vue.tasks = vue.tasks.filter(function(t) {
+                                return t.id !== task.id;
+                            });
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
                     });
                 }
             },

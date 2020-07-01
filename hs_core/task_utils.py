@@ -2,6 +2,9 @@ from celery.task.control import inspect
 from celery.result import AsyncResult
 from celery.result import states
 from django.conf import settings
+from django.db import transaction
+
+from hs_core.models import TaskNotification
 
 import logging
 
@@ -46,38 +49,59 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
     http://docs.celeryproject.org/en/latest/userguide/workers.html?highlight=revoke#inspecting-workers for details.
     """
     task_list = []
+    task_ids = set()
     task_name_mapper = settings.TASK_NAME_MAPPING
     if job_dict:
         workers = list(job_dict.keys())
         for worker in workers:
             for job in job_dict[worker]:
-                status = "In progress" if queue_type == 'active' else "Pending execution"
+                status = "progress" if queue_type == 'active' else "pending"
                 payload = ''
                 if 'args' in job and username in job['args']:
                     task_id = job['id']
                     if queue_type == 'active':
                         result = AsyncResult(task_id)
                         if result.ready():
-                            status = 'Completed'
+                            status = 'completed'
                             payload = str(result.get()).lower()
+                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
+                                                     payload=payload)
                         elif result.failed():
                             status = 'Failed'
+                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']])
                     task_list.append({
                         'id': task_id,
                         'name': task_name_mapper[job['name']],
-                        'status': status,
+                        'status': dict(TaskNotification.TASK_STATUS_CHOICES)[status],
                         'payload': payload
                     })
+                    task_ids.add(job['id'])
                 elif 'request' in job:
                     scheduled_job = job['request']
                     if 'args' in scheduled_job and username in scheduled_job['args']:
                         task_list.append({
                             'id': scheduled_job['id'],
                             'name': task_name_mapper[scheduled_job['name']],
-                            'status': 'Pending execution',
+                            'status': dict(TaskNotification.TASK_STATUS_CHOICES)['pending'],
                             'payload': payload
                         })
-    return task_list
+                        task_ids.add(scheduled_job['id'])
+    return task_list, task_ids
+
+
+def create_task_notification(task_id, status='pending', name='', payload=''):
+    with transaction.atomic():
+        obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
+                                                              defaults={'name': name,
+                                                                        'payload': payload,
+                                                                        'status': status})
+        if not created:
+            if name:
+                obj.name = name
+            if payload:
+                obj.payload = payload
+            obj.status = status
+            obj.save()
 
 
 def get_resource_bag_task(res_id):
@@ -102,11 +126,21 @@ def get_all_tasks(username):
     :return: list of tasks where each task is a dict with id, name, and status keys
     """
     i = inspect()
-    act_task_lists = _retrieve_user_tasks(username, i.active(), 'active')
-    res_task_lists = _retrieve_user_tasks(username, i.reserved(), 'reserved')
-    sched_task_lists = _retrieve_user_tasks(username, i.scheduled(), 'scheduled')
-
-    return act_task_lists + res_task_lists + sched_task_lists
+    act_task_list, act_task_ids = _retrieve_user_tasks(username, i.active(), 'active')
+    res_task_list, res_task_ids = _retrieve_user_tasks(username, i.reserved(), 'reserved')
+    sched_task_list, sched_task_ids = _retrieve_user_tasks(username, i.scheduled(), 'scheduled')
+    task_list = act_task_list + res_task_list + sched_task_list
+    task_ids = act_task_ids.union(res_task_ids).union(sched_task_ids)
+    task_notif_list = []
+    for obj in TaskNotification.objects.all():
+        task_notif_list.append({
+            'id': obj.task_id,
+            'name': obj.name,
+            'status': dict(TaskNotification.TASK_STATUS_CHOICES)[obj.status],
+            'payload': obj.payload
+        })
+    task_list.extend(item for item in task_notif_list if item['id'] not in task_ids)
+    return task_list
 
 
 def get_task_by_id(task_id, name='', payload=''):
@@ -118,22 +152,27 @@ def get_task_by_id(task_id, name='', payload=''):
     :return: task dict with keys id, name, status
     """
     result = AsyncResult(task_id)
-    status = 'In progress'
+    status = dict(TaskNotification.TASK_STATUS_CHOICES)['progress']
     if result.ready():
         try:
             ret_value = result.get()
-            status = 'Completed'
+            status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
             if not payload:
                 payload = ret_value
-            # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
+            with transaction.atomic():
+                TaskNotification.objects.get_or_create(task_id=task_id,
+                                                       defaults={'name': name,
+                                                                 'payload': payload,
+                                                                 'status': status})
+        # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
         except Exception:
             # logging exception will log the full stack trace and prepend a line with the message str input argument
             logger.exception('An exception is raised from task {}'.format(task_id))
             status = 'Failed'
     elif result.failed():
-        status = 'Failed'
+        status = dict(TaskNotification.TASK_STATUS_CHOICES)['failed']
     elif result.status == states.PENDING:
-        status = 'Pending execution'
+        status = dict(TaskNotification.TASK_STATUS_CHOICES)['pending']
 
     return {
         'id': task_id,
@@ -153,6 +192,25 @@ def revoke_task_by_id(task_id):
     result.revoke(terminate=True)
     return {
         'id': task_id,
-        'status': 'Aborted',
+        'status': dict(TaskNotification.TASK_STATUS_CHOICES)['aborted'],
         'payload': ''
     }
+
+
+def dismiss_task_by_id(task_id):
+    """
+    dismiss a celery task from TaskNotificatoin model by task id
+    :param task_id: task id
+    :return: dismissed task dict
+    """
+    task_dict = {}
+    filter_task = TaskNotification.objects.filter(task_id=task_id).first()
+    if filter_task:
+        task_dict = {
+            'id': task_id,
+            'name': filter_task.name,
+            'status': filter_task.status,
+            'payload': filter_task.payload
+        }
+        TaskNotification.objects.filter(task_id=task_id).delete()
+    return task_dict
