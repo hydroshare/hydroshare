@@ -52,33 +52,33 @@
         <table cellpadding='20'>
             <tr>
                 <td>
-                    <form id="date-search-fields" method="get" action=".">
-                        <h4 class="text-muted">Temporal Coverage</h4>
-                        <table>
-                            <tr>
-                                <td>
-                                    <div class="fieldWrapper">
-                                        <span class="glyphicon glyphicon-calendar text-muted"></span> <label
-                                            for="id_start_date">From Date:</label> <input type="text"
-                                                                                          name="start_date"
-                                                                                          id="id_start_date"/>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="fieldWrapper">
-                                        <span class="glyphicon glyphicon-calendar text-muted"></span> <label
-                                            for="id_end_date">To Date:</label> <input type="text"
-                                                                                      name="end_date"
-                                                                                      id="id_end_date"/>
-                                    </div>
-                                </td>
-                                <td>
-                                    <a id="clear-dates-options" data-toggle="tooltip" title="Clear Dates"
-                                       class="glyphicon glyphicon-remove-circle icon-remove"></a>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
+<!--                    <form id="date-search-fields" method="get" action=".">-->
+<!--                        <h4 class="text-muted">Temporal Coverage</h4>-->
+<!--                        <table>-->
+<!--                            <tr>-->
+<!--                                <td>-->
+<!--                                    <div class="fieldWrapper">-->
+<!--                                        <span class="glyphicon glyphicon-calendar text-muted"></span> <label-->
+<!--                                            for="id_start_date">From Date:</label> <input type="text"-->
+<!--                                                                                          name="start_date"-->
+<!--                                                                                          id="id_start_date"/>-->
+<!--                                    </div>-->
+<!--                                </td>-->
+<!--                                <td>-->
+<!--                                    <div class="fieldWrapper">-->
+<!--                                        <span class="glyphicon glyphicon-calendar text-muted"></span> <label-->
+<!--                                            for="id_end_date">To Date:</label> <input type="text"-->
+<!--                                                                                      name="end_date"-->
+<!--                                                                                      id="id_end_date"/>-->
+<!--                                    </div>-->
+<!--                                </td>-->
+<!--                                <td>-->
+<!--                                    <a id="clear-dates-options" data-toggle="tooltip" title="Clear Dates"-->
+<!--                                       class="glyphicon glyphicon-remove-circle icon-remove"></a>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+<!--                        </table>-->
+<!--                    </form>-->
                 </td>
                 <td>
                     &nbsp;

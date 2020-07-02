@@ -29,6 +29,33 @@
                     </div>
                 </div>
             </div>
+            <!-- filter by owner -->
+            <div id="faceting-owner">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#owner">
+                                &nbsp; Filter by owner
+                                <span class="glyphicon glyphicon-minus pull-left">
+                            </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="owner" class="facet-list panel-collapse collapse in">
+                        <ul class="list-group" id="list-group-owner">
+                            <li class="list-group-item" v-for="(owner) in Object.keys(countOwners)"
+                                v-bind:key="owner">
+                                <span class="badge">{{countOwners[owner]}}</span>
+                                <label class="checkbox noselect" :for="name-owner">{{owner}}
+                                    <input type="checkbox" class="faceted-selections" :value=owner
+                                           v-model="ownerFilter"
+                                           :id="name-owner">
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <!-- filter by subject -->
             <div id="faceting-subject">
                 <div class="panel panel-default">
@@ -54,7 +81,6 @@
                             </li>
                         </ul>
                     </div>
-
 
                     <div id="faceting-contributor">
                         <div class="panel panel-default">
@@ -85,56 +111,6 @@
                                                    id="contributor-Los Angeles County Arboretum and Botanic Garden"
                                                    value="contributor,Los Angeles County Arboretum and Botanic Garden">Los
                                             Angeles County Arboretum and Botanic Garden</label>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="faceting-owner">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" href="#owner">
-                                        &nbsp; Filter by owner
-                                        <span class="glyphicon glyphicon-minus pull-left">
-                                        </span>
-                                    </a>
-                                </h4>
-                            </div>
-
-                            <div id="owner" class="facet-list panel-collapse collapse in">
-                                <ul class="list-group" id="list-group-owner">
-                                    <li class="list-group-item" rel="owner,CZO National">
-                                        <span class="badge">491</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections" id="owner-CZO National"
-                                                   value="owner,CZO National">CZO National</label>
-                                    </li>
-                                    <li class="list-group-item" rel="owner,Christopher, Adrian">
-                                        <span class="badge">483</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="owner-Christopher, Adrian" value="owner,Christopher, Adrian">Christopher,
-                                            Adrian</label>
-                                    </li>
-                                    <li class="list-group-item" rel="owner,Sheeley, Jason">
-                                        <span class="badge">483</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections" id="owner-Sheeley, Jason"
-                                                   value="owner,Sheeley, Jason">Sheeley, Jason</label>
-                                    </li>
-                                    <li class="list-group-item" rel="owner,Gish, Brian">
-                                        <span class="badge">304</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections" id="owner-Gish, Brian"
-                                                   value="owner,Gish, Brian">Gish, Brian</label>
-                                    </li>
-                                    <li class="list-group-item" rel="owner,Pomeroy, Christine">
-                                        <span class="badge">7</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="owner-Pomeroy, Christine" value="owner,Pomeroy, Christine">Pomeroy,
-                                            Christine</label>
                                     </li>
                                 </ul>
                             </div>
@@ -307,6 +283,8 @@ export default {
       authorFilter: [],
       countSubjects: {},
       subjectFilter: [],
+      countOwners: {},
+      ownerFilter: [],
       sortDir: 1,
       sortingBy: 'Last Modified',
       // sortStyling: 'fa fa-fw fa-sort-asc',
@@ -319,17 +297,23 @@ export default {
     filteredResources() {
       // Filters should be most restrictive when two conflicting states are selected
       const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-      const resSubjects = resAuthors.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+      const resOwners = resAuthors.filter(res => res.owner.filter(val => this.ownerFilter.includes(val)).length > 0);
+      const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
       return resSubjects.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
     },
   },
   mounted() {
-    // eslint-disable-next-line no-return-assign
     const authorbox = [];
     this.resources.forEach(res => authorbox.push(res.author));
     this.countAuthors = new this.Counter(authorbox);
     Object.keys(this.countAuthors).forEach(author => this.authorFilter
       .push(author));
+
+    const ownerbox = [];
+    this.resources.forEach(res => ownerbox.push(res.owner));
+    this.countOwners = new this.Counter(ownerbox);
+    Object.keys(this.countOwners).forEach(owner => this.ownerFilter
+      .push(owner));
 
     const subjectbox = [];
     this.resources.forEach(res => subjectbox.push(res.subject));
@@ -357,13 +341,4 @@ export default {
 </script>
 
 <style scoped>
-  /*#resources-main {*/
-  /*  width: 800px;*/
-  /*}*/
-  /*#filter-items {*/
-  /*  float: left;*/
-  /*}*/
-  /*#resource-rows {*/
-  /*  float: right;*/
-  /*}*/
 </style>
