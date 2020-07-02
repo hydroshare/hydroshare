@@ -12,7 +12,7 @@
 
                 </div>
             </div>
-            <div class="col-sm-9 col-xs-12" id="items">
+            <div class="col-xs-12" id="items">
                     <div id="discover-search">
         <div>
             <h2 class="page-title">Discover

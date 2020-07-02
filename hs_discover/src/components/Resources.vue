@@ -1,5 +1,5 @@
 <template>
-    <div id="resources-main">
+    <div id="resources-main" class="row">
         <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-items">
             <!-- filter by creator -->
@@ -263,7 +263,7 @@
                 </div>
             </div>
             </div></div>
-        <div id="resource-rows">
+        <div id="resource-rows" class="col-sm-9 col-xs-12">
             <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
             <div class="table-wrapper">
                 <table v-if="filteredResources.length"
