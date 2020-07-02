@@ -99,7 +99,7 @@ class SearchAPI(APIView):
 
         for result in sqs:
             resources.append({
-                "name": result.title,
+                "title": result.title,
                 "link": result.absolute_url,
                 "availability": result.availability,
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),

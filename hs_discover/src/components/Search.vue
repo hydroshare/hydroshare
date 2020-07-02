@@ -217,8 +217,6 @@
 <!--                            </div>-->
 <!--                        </div>-->
 <!--                    </div>-->
-
-
                 </div>
             </div>
             <div class="col-sm-9 col-xs-12" id="items">
