@@ -70,13 +70,13 @@
                     </div>
                     <div id="subject" class="facet-list panel-collapse collapse in">
                         <ul class="list-group" id="list-group-subject">
-                            <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects)"
+                            <li class="list-group-item" v-for="(subject) in enumMulti(countSubjects)"
                                 v-bind:key="subject">
                                 <span class="badge">{{countSubjects[subject]}}</span>
                                 <label class="checkbox noselect" :for="name-subject">{{subject}}
                                     <input type="checkbox" class="faceted-selections" :value=subject
-                                           v-model="subjectFilter"
-                                           :id="name-subject">
+                                         v-model="subjectFilter"
+                                         :id="name-subject">
                                 </label>
                             </li>
                         </ul>
@@ -335,6 +335,16 @@ export default {
     Counter(array) {
       // eslint-disable-next-line no-return-assign
       array.forEach(val => this[val] = (this[val] || 0) + 1);
+    },
+    enumMulti(a) {
+      let c = [];
+      if (a) {
+        c = Object.keys(a);
+      }
+      // console.log(c);
+      const b = [];
+      c.forEach(x => b.push(x.split(',')));
+      return [].concat.apply([], b);
     },
   },
 };
