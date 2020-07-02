@@ -266,14 +266,21 @@ def ingest_logical_file_metadata(metadata_file, resource):
     if not lf:
         # see if the files exist and create it
         if logical_file_class is FileSetLogicalFile:
-            aggregation_main_file_with_path = subject.rsplit('/', 1)[0]
+            file_path = subject.rsplit('/', 1)[0]
+            file_path = file_path.split('data/contents/', 1)[1]
+            res_file = resource.files.get(file_folder=file_path)
+            FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
+            res_file.refresh_from_db()
         else:
             aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
-        file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
-        res_file = get_resource_file(resource.short_id, file_path)
+            file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
+            res_file = get_resource_file(resource.short_id, file_path)
         if res_file:
             if not res_file.has_logical_file or res_file.logical_file.is_fileset:
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                folder_path = ''
+                if logical_file_class is FileSetLogicalFile:
+                    folder_path = file_path
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk, folder_path=folder_path,
                                       logical_file_type_class=logical_file_class, fail_feedback=True)
                 res_file.refresh_from_db()
             lf = res_file.logical_file
