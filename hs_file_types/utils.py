@@ -278,9 +278,15 @@ def ingest_logical_file_metadata(metadata_file, resource):
             if logical_file_class is GenericLogicalFile:
                 # single file logical files have a potential name clash, so we have to guess what the file is
                 # the name clash is a larger problem than just here and we should work to resolve it
-                file_name = aggregation_main_file_with_path + "."
+                if '/' in file_path:
+                    parts = file_path.rsplit('/', 1)
+                    file_path = parts[0]
+                    file_name = parts[1] + "."
+                else:
+                    file_name = file_path
+                    file_path = ''
                 for file in resource.files.filter(file_folder=file_path):
-                    if str(file).startswith(file_name):
+                    if file.file_name.startswith(file_name):
                         res_file = file
                         break
             else:

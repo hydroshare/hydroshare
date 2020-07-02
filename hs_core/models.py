@@ -1385,16 +1385,17 @@ class Coverage(AbstractMetaDataElement):
     def ingest_rdf(cls, graph, content_object):
         subject = content_object.rdf_subject()
         cov = graph.value(subject=subject, predicate=DC.coverage)
-        for _, term, o in graph.triples((cov, None, None)):
-            for _, _, value in graph.triples((o, RDF.value, None)):
-                type = term.split('/')[-1]
-                value_dict = {}
-                for key_value in value.split("; "):
-                    k, v = key_value.split("=")
-                    if k in ['start', 'end']:
-                        v = parser.parse(v).strftime("%Y/%m/%d")
-                    value_dict[k] = v
-                Coverage.create(type=type, value=value_dict, content_object=content_object)
+        if cov:
+            for _, term, o in graph.triples((cov, None, None)):
+                for _, _, value in graph.triples((o, RDF.value, None)):
+                    type = term.split('/')[-1]
+                    value_dict = {}
+                    for key_value in value.split("; "):
+                        k, v = key_value.split("=")
+                        if k in ['start', 'end']:
+                            v = parser.parse(v).strftime("%Y/%m/%d")
+                        value_dict[k] = v
+                    Coverage.create(type=type, value=value_dict, content_object=content_object)
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()
