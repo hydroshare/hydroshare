@@ -265,24 +265,31 @@ def ingest_logical_file_metadata(metadata_file, resource):
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, str(subject))
     if not lf:
         # see if the files exist and create it
+        res_file = None
         if logical_file_class is FileSetLogicalFile:
             file_path = subject.rsplit('/', 1)[0]
             file_path = file_path.split('data/contents/', 1)[1]
             res_file = resource.files.get(file_folder=file_path)
-            FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
-            res_file.refresh_from_db()
+            if res_file:
+                FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
         else:
             aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
             file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
-            res_file = get_resource_file(resource.short_id, file_path)
-        if res_file:
-            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
-                folder_path = ''
-                if logical_file_class is FileSetLogicalFile:
-                    folder_path = file_path
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk, folder_path=folder_path,
+            if logical_file_class is GenericLogicalFile:
+                # single file logical files have a potential name clash, so we have to guess what the file is
+                # the name clash is a larger problem than just here and we should work to resolve it
+                file_name = aggregation_main_file_with_path + "."
+                for file in resource.files.filter(file_folder=file_path):
+                    if str(file).startswith(file_name):
+                        res_file = file
+                        break
+            else:
+                res_file = get_resource_file(resource.short_id, file_path)
+            if res_file:
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       logical_file_type_class=logical_file_class, fail_feedback=True)
-                res_file.refresh_from_db()
+        if res_file:
+            res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
             raise Exception("Could not find file {} for aggregation {}".format(file_path, metadata_file))
