@@ -82,159 +82,159 @@
                         </ul>
                     </div>
 
-                    <div id="faceting-contributor">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" href="#contributor">
-                                        &nbsp; Filter by contributor
-                                        <span class="glyphicon glyphicon-minus pull-left">
-                                        </span>
-                                    </a>
-                                </h4>
-                            </div>
+<!--                    <div id="faceting-contributor">-->
+<!--                        <div class="panel panel-default">-->
+<!--                            <div class="panel-heading">-->
+<!--                                <h4 class="panel-title">-->
+<!--                                    <a data-toggle="collapse" href="#contributor">-->
+<!--                                        &nbsp; Filter by contributor-->
+<!--                                        <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                                        </span>-->
+<!--                                    </a>-->
+<!--                                </h4>-->
+<!--                            </div>-->
 
-                            <div id="contributor" class="facet-list panel-collapse collapse in">
-                                <ul class="list-group" id="list-group-contributor">
-                                    <li class="list-group-item" rel="contributor,Eiriksson, Dave">
-                                        <span class="badge">65</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="contributor-Eiriksson, Dave" value="contributor,Eiriksson, Dave">Eiriksson,
-                                            Dave</label>
-                                    </li>
-                                    <li class="list-group-item"
-                                        rel="contributor,Los Angeles County Arboretum and Botanic Garden">
-                                        <span class="badge">2</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="contributor-Los Angeles County Arboretum and Botanic Garden"
-                                                   value="contributor,Los Angeles County Arboretum and Botanic Garden">Los
-                                            Angeles County Arboretum and Botanic Garden</label>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+<!--                            <div id="contributor" class="facet-list panel-collapse collapse in">-->
+<!--                                <ul class="list-group" id="list-group-contributor">-->
+<!--                                    <li class="list-group-item" rel="contributor,Eiriksson, Dave">-->
+<!--                                        <span class="badge">65</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="contributor-Eiriksson, Dave" value="contributor,Eiriksson, Dave">Eiriksson,-->
+<!--                                            Dave</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item"-->
+<!--                                        rel="contributor,Los Angeles County Arboretum and Botanic Garden">-->
+<!--                                        <span class="badge">2</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="contributor-Los Angeles County Arboretum and Botanic Garden"-->
+<!--                                                   value="contributor,Los Angeles County Arboretum and Botanic Garden">Los-->
+<!--                                            Angeles County Arboretum and Botanic Garden</label>-->
+<!--                                    </li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
 
-                    <div id="faceting-content_type">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" href="#content_type">
-                                        &nbsp; Filter by content type
-                                        <span class="glyphicon glyphicon-minus pull-left">
-                                        </span>
-                                    </a>
-                                </h4>
-                            </div>
+<!--                    <div id="faceting-content_type">-->
+<!--                        <div class="panel panel-default">-->
+<!--                            <div class="panel-heading">-->
+<!--                                <h4 class="panel-title">-->
+<!--                                    <a data-toggle="collapse" href="#content_type">-->
+<!--                                        &nbsp; Filter by content type-->
+<!--                                        <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                                        </span>-->
+<!--                                    </a>-->
+<!--                                </h4>-->
+<!--                            </div>-->
 
-                            <div id="content_type" class="facet-list panel-collapse collapse in">
-                                <ul class="list-group" id="list-group-content_type">
-                                    <li class="list-group-item" rel="content_type,Composite">
-                                        <span class="badge">3911</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Composite" value="content_type,Composite">Composite</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Generic Data">
-                                        <span class="badge">2238</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Generic Data" value="content_type,Generic Data">Generic
-                                            Data</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Geographic Feature (ESRI Shapefiles)">
-                                        <span class="badge">1132</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Geographic Feature (ESRI Shapefiles)"
-                                                   value="content_type,Geographic Feature (ESRI Shapefiles)">Geographic
-                                            Feature (ESRI Shapefiles)</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Spreadsheet">
-                                        <span class="badge">1053</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Spreadsheet" value="content_type,Spreadsheet">Spreadsheet</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Document">
-                                        <span class="badge">672</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections" id="content_type-Document"
-                                                   value="content_type,Document">Document</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Jupyter Notebook">
-                                        <span class="badge">313</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Jupyter Notebook"
-                                                   value="content_type,Jupyter Notebook">Jupyter Notebook</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Image">
-                                        <span class="badge">288</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections" id="content_type-Image"
-                                                   value="content_type,Image">Image</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Presentation">
-                                        <span class="badge">233</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Presentation" value="content_type,Presentation">Presentation</label>
-                                    </li>
-                                    <li class="list-group-item" rel="content_type,Reference to Time Series">
-                                        <span class="badge">4</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="content_type-Reference to Time Series"
-                                                   value="content_type,Reference to Time Series">Reference to Time
-                                            Series</label>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div id="faceting-availability">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" href="#availability">
-                                        &nbsp; Filter by availability
-                                        <span class="glyphicon glyphicon-minus pull-left">
-                                        </span>
-                                    </a>
-                                </h4>
-                            </div>
-
-                            <div id="availability" class="facet-list panel-collapse collapse in">
-                                <ul class="list-group" id="list-group-availability">
-                                    <li class="list-group-item" rel="availability,public">
-                                        <span class="badge">3320</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections" id="availability-public"
-                                                   value="availability,public">public</label>
-                                    </li>
-                                    <li class="list-group-item" rel="availability,discoverable">
-                                        <span class="badge">682</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="availability-discoverable" value="availability,discoverable">discoverable</label>
-                                    </li>
+<!--                            <div id="content_type" class="facet-list panel-collapse collapse in">-->
+<!--                                <ul class="list-group" id="list-group-content_type">-->
+<!--                                    <li class="list-group-item" rel="content_type,Composite">-->
+<!--                                        <span class="badge">3911</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Composite" value="content_type,Composite">Composite</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Generic Data">-->
+<!--                                        <span class="badge">2238</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Generic Data" value="content_type,Generic Data">Generic-->
+<!--                                            Data</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Geographic Feature (ESRI Shapefiles)">-->
+<!--                                        <span class="badge">1132</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Geographic Feature (ESRI Shapefiles)"-->
+<!--                                                   value="content_type,Geographic Feature (ESRI Shapefiles)">Geographic-->
+<!--                                            Feature (ESRI Shapefiles)</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Spreadsheet">-->
+<!--                                        <span class="badge">1053</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Spreadsheet" value="content_type,Spreadsheet">Spreadsheet</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Document">-->
+<!--                                        <span class="badge">672</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections" id="content_type-Document"-->
+<!--                                                   value="content_type,Document">Document</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Jupyter Notebook">-->
+<!--                                        <span class="badge">313</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Jupyter Notebook"-->
+<!--                                                   value="content_type,Jupyter Notebook">Jupyter Notebook</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Image">-->
+<!--                                        <span class="badge">288</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections" id="content_type-Image"-->
+<!--                                                   value="content_type,Image">Image</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Presentation">-->
+<!--                                        <span class="badge">233</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Presentation" value="content_type,Presentation">Presentation</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="content_type,Reference to Time Series">-->
+<!--                                        <span class="badge">4</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="content_type-Reference to Time Series"-->
+<!--                                                   value="content_type,Reference to Time Series">Reference to Time-->
+<!--                                            Series</label>-->
+<!--                                    </li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
 
 
-                                    <li class="list-group-item" rel="availability,published">
-                                        <span class="badge">377</span>
-                                        <label class="checkbox noselect">
-                                            <input type="checkbox" class="faceted-selections"
-                                                   id="availability-published" value="availability,published">published</label>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+<!--                    <div id="faceting-availability">-->
+<!--                        <div class="panel panel-default">-->
+<!--                            <div class="panel-heading">-->
+<!--                                <h4 class="panel-title">-->
+<!--                                    <a data-toggle="collapse" href="#availability">-->
+<!--                                        &nbsp; Filter by availability-->
+<!--                                        <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                                        </span>-->
+<!--                                    </a>-->
+<!--                                </h4>-->
+<!--                            </div>-->
+
+<!--                            <div id="availability" class="facet-list panel-collapse collapse in">-->
+<!--                                <ul class="list-group" id="list-group-availability">-->
+<!--                                    <li class="list-group-item" rel="availability,public">-->
+<!--                                        <span class="badge">3320</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections" id="availability-public"-->
+<!--                                                   value="availability,public">public</label>-->
+<!--                                    </li>-->
+<!--                                    <li class="list-group-item" rel="availability,discoverable">-->
+<!--                                        <span class="badge">682</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="availability-discoverable" value="availability,discoverable">discoverable</label>-->
+<!--                                    </li>-->
+
+
+<!--                                    <li class="list-group-item" rel="availability,published">-->
+<!--                                        <span class="badge">377</span>-->
+<!--                                        <label class="checkbox noselect">-->
+<!--                                            <input type="checkbox" class="faceted-selections"-->
+<!--                                                   id="availability-published" value="availability,published">published</label>-->
+<!--                                    </li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
 
                 </div>
             </div>
