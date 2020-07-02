@@ -272,7 +272,7 @@
                     <tr>
                         <th v-for="key in labels" v-bind:key="key"
                             @click="sortBy(key)">
-                            <i :class="sortStyling"></i>{{key}}
+                            <i :class="sortStyling(key)"></i>{{key}}
                         </th>
                     </tr>
                     </thead>
@@ -307,8 +307,9 @@ export default {
       authorFilter: [],
       countSubjects: {},
       subjectFilter: [],
-      sortingBy: {},
-      sortStyling: 'fa fa-fw fa-sort-asc',
+      sortDir: 1,
+      sortingBy: 'Last Modified',
+      // sortStyling: 'fa fa-fw fa-sort-asc',
     };
   },
   name: 'Resources',
@@ -319,33 +320,33 @@ export default {
       // Filters should be most restrictive when two conflicting states are selected
       const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
       const resSubjects = resAuthors.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-      const sortDir = Object.keys(this.sortingBy).includes('asc') ? -1 : 1;
-      return resSubjects.sort((a, b) => ((a.Title > b.Title) ? sortDir : -1 * sortDir));
+      return resSubjects.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
     },
   },
   mounted() {
     // eslint-disable-next-line no-return-assign
-    this.labels.forEach(x => this.sortingBy[x] = x === 'Title' ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort');
     const authorbox = [];
     this.resources.forEach(res => authorbox.push(res.author));
     this.countAuthors = new this.Counter(authorbox);
     Object.keys(this.countAuthors).forEach(author => this.authorFilter
-      .push(author)); // populate checkboxes
+      .push(author));
 
     const subjectbox = [];
     this.resources.forEach(res => subjectbox.push(res.subject));
     this.countSubjects = new this.Counter(subjectbox);
     Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
-      .push(subject)); // populate checkboxes
+      .push(subject));
   },
   methods: {
     sortBy(key) {
-      const sortDir = Object.values(this.sortingBy).includes('fa fa-fw fa-sort-asc') ? 'fa fa-fw fa-sort-desc' : 'fa fa-fw fa-sort-asc';
-      console.log(key);
-      console.log(sortDir);
-      this.sortStyling = sortDir;
-      // eslint-disable-next-line no-return-assign
-      this.labels.forEach(x => this.sortingBy[x] = x === key ? sortDir : 'fa fa-fw fa-sort');
+      this.sortDir = key === this.sortingBy ? this.sortDir * -1 : this.sortDir;
+      this.sortingBy = key;
+    },
+    sortStyling(key) {
+      if (key === this.sortingBy) {
+        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
+      }
+      return 'fa fa-fw fa-sort';
     },
     Counter(array) {
       // eslint-disable-next-line no-return-assign
