@@ -1,5 +1,5 @@
 <template>
-    <div id="main">
+    <div id="resources-main">
         <div id="filter-items">
             <!-- filter by creator -->
             <div id="faceting-creator">
@@ -56,7 +56,7 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div id="resource-rows">
             <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
             <div class="table-wrapper">
                 <table v-if="filteredResources.length"
@@ -149,6 +149,9 @@ export default {
 </script>
 
 <style scoped>
+  #resources-main {
+    width: 800px;
+  }
   #filter-items {
     float: left;
   }
