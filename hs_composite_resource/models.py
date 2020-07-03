@@ -390,6 +390,43 @@ class CompositeResource(BaseResource):
             if parent_aggr is not None:
                 parent_aggr.create_aggregation_xml_documents()
 
+    def create_model_program_meta_json_schema_files(self, path=''):
+        """ Creates metadata json schema file for any model program aggregations in the resource that has
+        metadata schema
+        :param  path: (optional) file or folder path for which metadata schema files need to be created for
+        all associated model program aggregations of that path
+        """
+
+        if not path:
+            # create metadata schema json file far all model program aggregations of this resource
+            for aggregation in self.modelprogramlogicalfile_set.exclude(mi_schema_json={}):
+                aggregation.create_metadata_schema_json_file()
+
+        else:
+            # first check if the path is a folder path or file path
+            _, ext = os.path.splitext(path)
+            is_path_a_folder = ext == ''
+            try:
+                if is_path_a_folder:
+                    # need to create json files for all model program aggregations that exist under path
+                    if path.startswith(self.file_path):
+                        folder = path[len(self.file_path) + 1:]
+                    else:
+                        folder = path
+                    mp_aggrs = self.modelprogramlogicalfile_set.filter(folder__startswith=folder).exclude(
+                        mi_schema_json={})
+                    for mp_aggr in mp_aggrs:
+                        mp_aggr.create_metadata_schema_json_file()
+                else:
+                    # path is a file path
+                    aggregation = self.get_aggregation_by_name(path)
+                    # need to create json file only for this model program aggregation
+                    if aggregation.is_model_program:
+                        aggregation.create_metadata_schema_json_file()
+            except ObjectDoesNotExist:
+                # path representing a file path is not an aggregation - nothing to do
+                pass
+
     def create_aggregation_xml_documents(self, path=''):
         """Creates aggregation map and metadata xml files for each of the contained aggregations
 
