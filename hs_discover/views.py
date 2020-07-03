@@ -52,6 +52,26 @@ class SearchAPI(APIView):
             geo_sq.add(SQ(north__gte=float(SWlat)), SQ.AND)
 
     def get(self, request, *args, **kwargs):
+        """
+
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+                "title":
+                "link":
+                "availability":
+                "availabilityurl":
+                "type":
+                "author": single value, pass a string to REST client
+                "contributor": single value, pass a string to REST client
+                "author_link":
+                "owner": single value, pass a string to REST client
+                "abstract":
+                "subject":
+                "created":
+                "modified":
+        """
         sqs = SearchQuerySet().all()
 
         if request.GET.get('searchtext'):
@@ -90,10 +110,10 @@ class SearchAPI(APIView):
         if coverage_type:
             sqs = sqs.filter(coverage_types__in=[coverage_type])
 
-        vocab = []  # will be populated with autocomplete terms from resource
-        vocab = [x for x in vocab if len(x) > 2]
-        vocab = list(set(vocab))
-        vocab = sorted(vocab)
+        # vocab = []  # will be populated with autocomplete terms from resource
+        # vocab = [x for x in vocab if len(x) > 2]
+        # vocab = list(set(vocab))
+        # vocab = sorted(vocab)
 
         resources = []
 
@@ -105,9 +125,9 @@ class SearchAPI(APIView):
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
                 "author": result.author,
-                "contributor": result.creator,
+                "contributor": result.creator[0],
                 "author_link": result.author_url,
-                "owner": result.owner,
+                "owner": result.owner[0],
                 "abstract": result.abstract,
                 "subject": result.subject,
                 "created": date(result.created, "M d, Y") + " at " + time(result.created),
@@ -116,5 +136,5 @@ class SearchAPI(APIView):
 
         return Response({
             'resources': json.dumps(resources),
-            'vocab': vocab,
+            # 'vocab': vocab,
         })

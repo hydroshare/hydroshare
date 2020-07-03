@@ -291,9 +291,9 @@ export default {
     filteredResources() {
       // Filters should be most restrictive when two conflicting states are selected
       const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-      const resOwners = resAuthors.filter(res => res.owner.filter(val => this.ownerFilter.includes(val)).length > 0);
+      const resOwners = resAuthors.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
       const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-      const resContributors = resSubjects.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+      const resContributors = this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
       return resSubjects.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
     },
   },
