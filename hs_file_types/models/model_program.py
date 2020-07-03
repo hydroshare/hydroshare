@@ -1,4 +1,9 @@
 import json
+import logging
+import os
+import random
+import shutil
+from uuid import uuid4
 
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
@@ -7,7 +12,9 @@ from django.template import Template, Context
 from dominate import tags as dom_tags
 from lxml import etree
 
+from hydroshare import settings
 from hs_core.models import ResourceFile, CoreMetaData
+from .base import SCHEMA_JSON_FILE_ENDSWITH
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 
@@ -442,6 +449,66 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+    def create_metadata_schema_json_file(self):
+        """Creates aggregation metadata schema json file """
+
+        if not self.mi_schema_json:
+            return
+
+        log = logging.getLogger()
+
+        # create a temp dir where the json file will be temporarily saved before copying to iRODS
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
+        istorage = self.resource.get_irods_storage()
+
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
+        os.makedirs(tmpdir)
+
+        # create json schema file for the aggregation
+        json_from_file_name = os.path.join(tmpdir, 'schema.json')
+        try:
+            with open(json_from_file_name, 'w') as out:
+                json_schema = json.dumps(self.mi_schema_json, indent=4)
+                out.write(json_schema)
+            to_file_name = self.schema_file_path
+            istorage.saveFile(json_from_file_name, to_file_name, True)
+            log.debug("Model program aggregation metadata json schema file:{} created".format(to_file_name))
+
+        except Exception as ex:
+            log.error("Failed to create model program aggregation metadata schema json file. Error:{}".format(str(ex)))
+            raise ex
+        finally:
+            shutil.rmtree(tmpdir)
+
+    @property
+    def schema_short_file_path(self):
+        """File path of the aggregation metadata schema file relative to {resource_id}/data/contents/
+        """
+
+        json_file_name = self.aggregation_name
+        if "/" in json_file_name:
+            json_file_name = os.path.basename(json_file_name)
+
+        json_file_name, _ = os.path.splitext(json_file_name)
+
+        json_file_name += SCHEMA_JSON_FILE_ENDSWITH
+
+        if self.folder:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
+        if file_folder:
+            json_file_name = os.path.join(file_folder, json_file_name)
+
+        return json_file_name
+
+    @property
+    def schema_file_path(self):
+        """Full path of the aggregation metadata schema json file starting with {resource_id}/data/contents/
+        """
+        return os.path.join(self.resource.file_path, self.schema_short_file_path)
 
     def copy_mp_file_types(self, tgt_logical_file):
         """helper function to support creating copy or new version of a resource

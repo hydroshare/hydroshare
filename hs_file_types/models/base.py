@@ -31,6 +31,7 @@ from hs_core.signals import post_remove_file_aggregation
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
+SCHEMA_JSON_FILE_ENDSWITH = "_schema.json"
 
 
 class NestedLogicalFileMixin(object):
