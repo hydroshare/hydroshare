@@ -293,8 +293,8 @@ export default {
       const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
       const resOwners = resAuthors.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
       const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-      const resContributors = this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-      return resSubjects.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
+      const resContributors = resSubjects.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+      return resContributors.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
     },
   },
   mounted() {
