@@ -103,7 +103,7 @@ def test_create_aggregation_from_file_3(composite_resource, aggr_cls, mock_irods
     assert FileSetLogicalFile.objects.count() == 1
     fs_aggregation = FileSetLogicalFile.objects.first()
     assert fs_aggregation.files.count() == 1
-    # set the res file to model program aggregation
+    # set the res file to model program/instance aggregation
     aggr_cls.set_file_type(res, user, file_id=res_file.id)
     assert aggr_cls.objects.count() == 1
     mp__or_mi_aggregation = aggr_cls.objects.first()
