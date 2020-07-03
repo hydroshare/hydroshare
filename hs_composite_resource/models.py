@@ -66,6 +66,27 @@ class CompositeResource(BaseResource):
             # url file cannot be published
             if 'url' in lf.extra_data:
                 return False
+            # check for model instance linked to model program
+            if lf.is_model_instance:
+                mi_aggr = lf
+                mp_aggr = mi_aggr.metadata.executed_by
+                if mp_aggr is not None:
+                    if mp_aggr.resource.short_id != mi_aggr.resource.short_id:
+                        # model instance aggregation and model program aggregations are not in the same resource
+                        # the other resource containing the linked model program must have been published
+                        # before this resource can be published
+                        if not mp_aggr.resource.raccess.published:
+                            return False
+                    else:
+                        # model program aggregation and the linked model instance aggregations are in the same resource
+                        continue
+                model_program_url = mi_aggr.metadata.executed_by_url
+                if model_program_url:
+                    # external linked model program url must be a DOI url for this resource to be published
+                    if not model_program_url.startswith("https://doi.org") and \
+                            not model_program_url.startswith("http://doi.org"):
+                        return False
+
         return True
 
     def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder):
