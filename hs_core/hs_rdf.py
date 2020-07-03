@@ -28,6 +28,7 @@ class RDF_MetaData_Mixin(object):
     def ingest_metadata(self, graph):
         subject = self.rdf_subject()
 
+        self.resource.extra_metadata = {}
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
             key = graph.value(subject=o, predicate=HSTERMS.key).value
             value = graph.value(subject=o, predicate=HSTERMS.value).value
@@ -36,6 +37,7 @@ class RDF_MetaData_Mixin(object):
         for field in self.__class__._meta.fields:
             if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
                 continue
+            setattr(self, field.name, None)
             field_value = graph.value(subject=subject, predicate=getattr(HSTERMS, field.name))
             if field_value:
                 setattr(self, field.name, field_value)
