@@ -70,7 +70,7 @@
                     </div>
                     <div id="subject" class="facet-list panel-collapse collapse in">
                         <ul class="list-group" id="list-group-subject">
-                            <li class="list-group-item" v-for="(subject) in enumMulti(countSubjects)"
+                            <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects)"
                                 v-bind:key="subject">
                                 <span class="badge">{{countSubjects[subject]}}</span>
                                 <label class="checkbox noselect" :for="name-subject">{{subject}}
@@ -316,10 +316,13 @@ export default {
     Object.keys(this.countContributors).forEach(contributor => this.contributorFilter
       .push(contributor));
 
-    const subjectbox = [];
-    this.resources.forEach(res => subjectbox.push(res.subject));
+    let subjectbox = [];
+    // res.subject is python list js array
+    this.resources.forEach((res) => {
+      subjectbox = subjectbox.concat(this.enumMulti(res.subject));
+    });
     this.countSubjects = new this.Counter(subjectbox);
-    this.enumMulti(this.countSubjects).forEach(subject => this.subjectFilter
+    Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
       .push(subject));
   },
   methods: {
@@ -340,11 +343,13 @@ export default {
     enumMulti(a) {
       let c = [];
       if (a) {
-        c = Object.keys(a);
+        c = Object.values(a);
       }
-      const b = [];
-      c.forEach(x => b.push(x.split(',')));
-      return [].concat.apply([], b);
+      // const b = [];
+      // c.forEach(x => b.push(x.split(',')));
+      // const ret = [].concat.apply([], b);
+      // console.log(ret)
+      return c;
     },
   },
 };
