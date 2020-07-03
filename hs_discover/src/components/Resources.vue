@@ -21,8 +21,8 @@
                                 <span class="badge">{{countAuthors[author]}}</span>
                                 <label class="checkbox noselect" :for="name-author">{{author}}
                                     <input type="checkbox" class="faceted-selections" :value=author
-                                           v-model="authorFilter"
-                                           :id="name-author">
+                                         v-model="authorFilter"
+                                         :id="name-author">
                                 </label>
                             </li>
                         </ul>
@@ -48,8 +48,8 @@
                                 <span class="badge">{{countOwners[owner]}}</span>
                                 <label class="checkbox noselect" :for="name-owner">{{owner}}
                                     <input type="checkbox" class="faceted-selections" :value=owner
-                                           v-model="ownerFilter"
-                                           :id="name-owner">
+                                         v-model="ownerFilter"
+                                         :id="name-owner">
                                 </label>
                             </li>
                         </ul>
@@ -81,41 +81,36 @@
                             </li>
                         </ul>
                     </div>
+                </div>
+            </div>
+            <!-- filter by contributor -->
+            <div id="faceting-contributor">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#contributor">
+                                &nbsp; Filter by contributor
+                                <span class="glyphicon glyphicon-minus pull-left">
+                            </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="contributor" class="facet-list panel-collapse collapse in">
+                        <ul class="list-group" id="list-group-contributor">
+                            <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors)"
+                                v-bind:key="contributor">
+                                <span class="badge">{{countContributors[contributor]}}</span>
+                                <label class="checkbox noselect" :for="name-contributor">{{contributor}}
+                                    <input type="checkbox" class="faceted-selections" :value=contributor
+                                         v-model="contributorFilter"
+                                         :id="name-contributor">
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
-<!--                    <div id="faceting-contributor">-->
-<!--                        <div class="panel panel-default">-->
-<!--                            <div class="panel-heading">-->
-<!--                                <h4 class="panel-title">-->
-<!--                                    <a data-toggle="collapse" href="#contributor">-->
-<!--                                        &nbsp; Filter by contributor-->
-<!--                                        <span class="glyphicon glyphicon-minus pull-left">-->
-<!--                                        </span>-->
-<!--                                    </a>-->
-<!--                                </h4>-->
-<!--                            </div>-->
-
-<!--                            <div id="contributor" class="facet-list panel-collapse collapse in">-->
-<!--                                <ul class="list-group" id="list-group-contributor">-->
-<!--                                    <li class="list-group-item" rel="contributor,Eiriksson, Dave">-->
-<!--                                        <span class="badge">65</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="contributor-Eiriksson, Dave" value="contributor,Eiriksson, Dave">Eiriksson,-->
-<!--                                            Dave</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item"-->
-<!--                                        rel="contributor,Los Angeles County Arboretum and Botanic Garden">-->
-<!--                                        <span class="badge">2</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="contributor-Los Angeles County Arboretum and Botanic Garden"-->
-<!--                                                   value="contributor,Los Angeles County Arboretum and Botanic Garden">Los-->
-<!--                                            Angeles County Arboretum and Botanic Garden</label>-->
-<!--                                    </li>-->
-<!--                                </ul>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
 
 <!--                    <div id="faceting-content_type">-->
 <!--                        <div class="panel panel-default">-->
@@ -235,10 +230,8 @@
 <!--                            </div>-->
 <!--                        </div>-->
 <!--                    </div>-->
-
-                </div>
             </div>
-            </div></div>
+        </div>
         <div id="resource-rows" class="col-sm-9 col-xs-12">
             <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
             <div class="table-wrapper">
@@ -285,9 +278,10 @@ export default {
       subjectFilter: [],
       countOwners: {},
       ownerFilter: [],
+      countContributors: {},
+      contributorFilter: [],
       sortDir: 1,
       sortingBy: 'Last Modified',
-      // sortStyling: 'fa fa-fw fa-sort-asc',
     };
   },
   name: 'Resources',
@@ -299,6 +293,7 @@ export default {
       const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
       const resOwners = resAuthors.filter(res => res.owner.filter(val => this.ownerFilter.includes(val)).length > 0);
       const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+      const resContributors = resSubjects.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
       return resSubjects.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
     },
   },
@@ -315,10 +310,16 @@ export default {
     Object.keys(this.countOwners).forEach(owner => this.ownerFilter
       .push(owner));
 
+    const contributorbox = [];
+    this.resources.forEach(res => contributorbox.push(res.contributor));
+    this.countContributors = new this.Counter(contributorbox);
+    Object.keys(this.countContributors).forEach(contributor => this.contributorFilter
+      .push(contributor));
+
     const subjectbox = [];
     this.resources.forEach(res => subjectbox.push(res.subject));
     this.countSubjects = new this.Counter(subjectbox);
-    Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
+    this.enumMulti(this.countSubjects).forEach(subject => this.subjectFilter
       .push(subject));
   },
   methods: {
@@ -341,7 +342,6 @@ export default {
       if (a) {
         c = Object.keys(a);
       }
-      // console.log(c);
       const b = [];
       c.forEach(x => b.push(x.split(',')));
       return [].concat.apply([], b);
