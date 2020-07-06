@@ -167,7 +167,7 @@
             </div>
         </div>
         <div id="resource-rows" class="col-sm-9 col-xs-12">
-            <p v-if="filteredResources.length">Results: {{filteredResources.length}}</p>
+            <p>Results: {{filteredResources.length}}</p>
             <div class="table-wrapper">
                 <table v-if="filteredResources.length"
                        class="table-hover table-striped resource-custom-table" id="items-discovered">
@@ -224,7 +224,7 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       sortDir: 1, // 1 asc -1 desc
-      sortingBy: 'Last Modified',
+      sortingBy: 'modified',
       resIconName: {
         'Composite Resource': '/static/img/resource-icons/composite48x48.png',
         Generic: '/static/img/resource-icons/generic48x48.png',
@@ -237,6 +237,16 @@ export default {
         'SWAT Model Instance Resource': '/static/img/resource-icons/swat48x48.png',
         'MODFLOW Model Instance Resource': '/static/img/resource-icons/modflow48x48.png',
         'Multidimensional (NetCDF)': '/static/img/resource-icons/multidimensional48x48.png',
+      },
+      sortMap: {
+        'First Author': 'author',
+        Owner: 'owner',
+        Creator: 'Contributor',
+        Title: 'title',
+        Subject: 'subject',
+        Availability: 'availability',
+        'Date Created': 'created',
+        'Date Modified': 'modified',
       },
     };
   },
@@ -252,7 +262,7 @@ export default {
       const resAvailabilities = resSubjects.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
       const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
       const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
-      return resTypes.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
+      return resTypes.sort((a, b) => ((a[this.sortingBy] > b[this.sortingBy]) ? -1 * this.sortDir : this.sortDir));
     },
   },
   mounted() {
@@ -294,8 +304,8 @@ export default {
       return new this.Counter(box);
     },
     sortBy(key) {
-      this.sortDir = key === this.sortingBy ? this.sortDir * -1 : this.sortDir;
-      this.sortingBy = key;
+      this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
+      this.sortingBy = this.sortMap[key];
     },
     sortStyling(key) {
       if (key === this.sortingBy) {
