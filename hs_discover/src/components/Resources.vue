@@ -184,6 +184,9 @@
                         <td>
                             <img :src="entry.availabilityurl" data-toggle="tooltip"
                                  :title="entry.availability" :alt="entry.availability" :key="entry">
+                            <img v-if="entry.shareable" src="/static/img/shareable.png" alt="Sharable Resource"
+                                data-toggle="tooltip" data-placement="right" title=""
+                                data-original-title="Shareable">
                         </td>
                         <td>
                             <a :href="entry.link" data-toggle="tooltip"

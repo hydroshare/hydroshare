@@ -132,6 +132,7 @@ class SearchAPI(APIView):
                 "subject": result.subject,
                 "created": date(result.created, "M d, Y") + " at " + time(result.created),
                 "modified": date(result.modified, "M d, Y") + " at " + time(result.modified),
+                "shareable": True
             })
 
         return Response({
