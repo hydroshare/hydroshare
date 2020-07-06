@@ -319,6 +319,15 @@ class CompositeResource(BaseResource):
                     return all(res_file.has_logical_file and res_file.logical_file.is_fileset for
                                res_file in files_in_path)
                 return False
+            elif parent_aggregation.is_model_instance:
+                # check that all resource files under the target folder 'dir_path' are associated with model
+                # instance only
+                files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
+                if files_in_path and aggr_type == 'ModelProgram':
+                    # if all the resource files are associated with model instance then we can set the
+                    # folder to model program aggregation
+                    return all(res_file.has_logical_file and res_file.logical_file.is_model_instance for
+                               res_file in files_in_path)
             return False
         else:
             # none of the parent folders represents an aggregation

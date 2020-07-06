@@ -911,15 +911,15 @@ class AbstractLogicalFile(models.Model):
                     msg = "FileSet aggregation can't be created from the specified folder:{}"
                     msg = msg.format(path_to_check)
                     raise ValidationError(msg)
-            elif cls.__name__ == "ModelProgramLogicalFile" or cls.__name__ == "ModelInstanceLogicalFile":
-                if not resource.can_set_folder_to_model_instance_aggregation(path_to_check) and \
-                        not resource.can_set_folder_to_model_program_aggregation(path_to_check):
-                    msg = "{0} aggregation can't be created from the specified folder:{1}"
-                    if cls.__name__ == "ModelProgramLogicalFile":
-                        aggr_type = "Model Program"
-                    else:
-                        aggr_type = "Model Instance"
-                    msg = msg.format(aggr_type, path_to_check)
+            elif cls.__name__ == "ModelInstanceLogicalFile":
+                if not resource.can_set_folder_to_model_instance_aggregation(path_to_check):
+                    msg = "Model instance aggregation can't be created from the specified folder:{}"
+                    msg = msg.format(path_to_check)
+                    raise ValidationError(msg)
+            elif cls.__name__ == "ModelProgramLogicalFile":
+                if not resource.can_set_folder_to_model_program_aggregation(path_to_check):
+                    msg = "Model program aggregation can't be created from the specified folder:{}"
+                    msg = msg.format(path_to_check)
                     raise ValidationError(msg)
 
         if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile']:
