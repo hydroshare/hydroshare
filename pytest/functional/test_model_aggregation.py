@@ -115,7 +115,7 @@ def test_create_aggregation_from_file_3(composite_resource, aggr_cls, mock_irods
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
 def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods):
-    """test that we can create a model program aggregation from a folder that contains a resource file"""
+    """test that we can create a model program/instance aggregation from a folder that contains a resource file"""
 
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'

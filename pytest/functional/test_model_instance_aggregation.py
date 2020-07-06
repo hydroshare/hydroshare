@@ -445,6 +445,25 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
 
 
 @pytest.mark.django_db(transaction=True)
+def test_create_mp_aggregation_within_mi_aggregation(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Test that one can create a model program aggregation from folder that exists inside a folder that
+    represents a model instance aggregation"""
+
+    resource, user = composite_resource_with_mi_aggregation_folder
+    mi_aggr_path = ModelInstanceLogicalFile.objects.first().aggregation_name
+    file_path = 'pytest/assets/logan.vrt'
+    mp_folder = 'mp_folder'
+    mp_folder_path = os.path.join(mi_aggr_path, mp_folder)
+    ResourceFile.create_folder(resource, mp_folder)
+    _add_files_to_resource(resource=resource, files_to_add=[file_path], upload_folder=mp_folder_path)
+    # create model program aggregation from folder 'mp-folder'
+    assert ModelProgramLogicalFile.objects.count() == 0
+    ModelProgramLogicalFile.set_file_type(resource, user, folder_path=mp_folder_path)
+
+    assert ModelProgramLogicalFile.objects.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
 def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_aggregation_folder, mock_irods):
     """Test that one can't create a fileset aggregation inside a folder that represents a model instance aggregation"""
 
