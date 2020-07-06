@@ -60,9 +60,9 @@ class SearchAPI(APIView):
         :return:
                 "title":
                 "link":
-                "availability":
+                "availability": list value, js will parse JSON as Array
                 "availabilityurl":
-                "type":
+                "type": single value, pass a string to REST client
                 "author": single value, pass a string to REST client
                 "contributor": single value, pass a string to REST client
                 "author_link":

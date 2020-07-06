@@ -7,7 +7,7 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#creator">
+                            <a data-toggle="collapse">
                                 &nbsp; Filter by author
                                 <span class="glyphicon glyphicon-minus pull-left">
                             </span>
@@ -34,7 +34,7 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#owner">
+                            <a data-toggle="collapse">
                                 &nbsp; Filter by owner
                                 <span class="glyphicon glyphicon-minus pull-left">
                             </span>
@@ -61,7 +61,7 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#subject">
+                            <a data-toggle="collapse">
                                 &nbsp; Filter by subject
                                 <span class="glyphicon glyphicon-minus pull-left">
                             </span>
@@ -88,7 +88,7 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#contributor">
+                            <a data-toggle="collapse">
                                 &nbsp; Filter by contributor
                                 <span class="glyphicon glyphicon-minus pull-left">
                             </span>
@@ -111,151 +111,59 @@
                 </div>
             </div>
             <!-- filter by type -->
-<!--            <div id="faceting-type">-->
-<!--                <div class="panel panel-default">-->
-<!--                    <div class="panel-heading">-->
-<!--                        <h4 class="panel-title">-->
-<!--                            <a data-toggle="collapse" href="#type">-->
-<!--                                &nbsp; Filter by content type-->
-<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
-<!--                            </span>-->
-<!--                            </a>-->
-<!--                        </h4>-->
-<!--                    </div>-->
-<!--                    <div id="type" class="facet-list panel-collapse collapse in">-->
-<!--                        <ul class="list-group" id="list-group-type">-->
-<!--                            <li class="list-group-item" v-for="(type) in Object.keys(countTypes)"-->
-<!--                                v-bind:key="type">-->
-<!--                                <span class="badge">{{countTypes[type]}}</span>-->
-<!--                                <label class="checkbox noselect" :for="type">{{type}}-->
-<!--                                    <input type="checkbox" class="faceted-selections" :value=type-->
-<!--                                         v-model="typeFilter"-->
-<!--                                         :id="name-type">-->
-<!--                                </label>-->
-<!--                            </li>-->
-<!--                        </ul>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-
-<!--                    <div id="faceting-content_type">-->
-<!--                        <div class="panel panel-default">-->
-<!--                            <div class="panel-heading">-->
-<!--                                <h4 class="panel-title">-->
-<!--                                    <a data-toggle="collapse" href="#content_type">-->
-<!--                                        &nbsp; Filter by content type-->
-<!--                                        <span class="glyphicon glyphicon-minus pull-left">-->
-<!--                                        </span>-->
-<!--                                    </a>-->
-<!--                                </h4>-->
-<!--                            </div>-->
-
-<!--                            <div id="content_type" class="facet-list panel-collapse collapse in">-->
-<!--                                <ul class="list-group" id="list-group-content_type">-->
-<!--                                    <li class="list-group-item" rel="content_type,Composite">-->
-<!--                                        <span class="badge">3911</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Composite" value="content_type,Composite">Composite</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Generic Data">-->
-<!--                                        <span class="badge">2238</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Generic Data" value="content_type,Generic Data">Generic-->
-<!--                                            Data</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Geographic Feature (ESRI Shapefiles)">-->
-<!--                                        <span class="badge">1132</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Geographic Feature (ESRI Shapefiles)"-->
-<!--                                                   value="content_type,Geographic Feature (ESRI Shapefiles)">Geographic-->
-<!--                                            Feature (ESRI Shapefiles)</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Spreadsheet">-->
-<!--                                        <span class="badge">1053</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Spreadsheet" value="content_type,Spreadsheet">Spreadsheet</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Document">-->
-<!--                                        <span class="badge">672</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections" id="content_type-Document"-->
-<!--                                                   value="content_type,Document">Document</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Jupyter Notebook">-->
-<!--                                        <span class="badge">313</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Jupyter Notebook"-->
-<!--                                                   value="content_type,Jupyter Notebook">Jupyter Notebook</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Image">-->
-<!--                                        <span class="badge">288</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections" id="content_type-Image"-->
-<!--                                                   value="content_type,Image">Image</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Presentation">-->
-<!--                                        <span class="badge">233</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Presentation" value="content_type,Presentation">Presentation</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="content_type,Reference to Time Series">-->
-<!--                                        <span class="badge">4</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="content_type-Reference to Time Series"-->
-<!--                                                   value="content_type,Reference to Time Series">Reference to Time-->
-<!--                                            Series</label>-->
-<!--                                    </li>-->
-<!--                                </ul>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-
-
-<!--                    <div id="faceting-availability">-->
-<!--                        <div class="panel panel-default">-->
-<!--                            <div class="panel-heading">-->
-<!--                                <h4 class="panel-title">-->
-<!--                                    <a data-toggle="collapse" href="#availability">-->
-<!--                                        &nbsp; Filter by availability-->
-<!--                                        <span class="glyphicon glyphicon-minus pull-left">-->
-<!--                                        </span>-->
-<!--                                    </a>-->
-<!--                                </h4>-->
-<!--                            </div>-->
-
-<!--                            <div id="availability" class="facet-list panel-collapse collapse in">-->
-<!--                                <ul class="list-group" id="list-group-availability">-->
-<!--                                    <li class="list-group-item" rel="availability,public">-->
-<!--                                        <span class="badge">3320</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections" id="availability-public"-->
-<!--                                                   value="availability,public">public</label>-->
-<!--                                    </li>-->
-<!--                                    <li class="list-group-item" rel="availability,discoverable">-->
-<!--                                        <span class="badge">682</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="availability-discoverable" value="availability,discoverable">discoverable</label>-->
-<!--                                    </li>-->
-
-
-<!--                                    <li class="list-group-item" rel="availability,published">-->
-<!--                                        <span class="badge">377</span>-->
-<!--                                        <label class="checkbox noselect">-->
-<!--                                            <input type="checkbox" class="faceted-selections"-->
-<!--                                                   id="availability-published" value="availability,published">published</label>-->
-<!--                                    </li>-->
-<!--                                </ul>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
+            <div id="faceting-type">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse">
+                                &nbsp; Filter by type
+                                <span class="glyphicon glyphicon-minus pull-left">
+                            </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="type" class="facet-list panel-collapse collapse in">
+                        <ul class="list-group" id="list-group-type">
+                            <li class="list-group-item" v-for="(type) in Object.keys(countTypes)"
+                                v-bind:key="type">
+                                <span class="badge">{{countTypes[type]}}</span>
+                                <label class="checkbox noselect" :for="name-type">{{type}}
+                                    <input type="checkbox" class="faceted-selections" :value=type
+                                         v-model="typeFilter"
+                                         :id="name-type">
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- filter by availability -->
+            <div id="faceting-availability">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse">
+                                &nbsp; Filter by availability
+                                <span class="glyphicon glyphicon-minus pull-left">
+                            </span>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="availability" class="facet-list panel-collapse collapse in">
+                        <ul class="list-group" id="list-group-availability">
+                            <li class="list-group-item" v-for="(availability) in Object.keys(countAvailabilities)"
+                                v-bind:key="availability">
+                                <span class="badge">{{countAvailabilities[availability]}}</span>
+                                <label class="checkbox noselect" :for="name-availability">{{availability}}
+                                    <input type="checkbox" class="faceted-selections" :value=availability
+                                         v-model="availabilityFilter"
+                                         :id="name-availability">
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             </div>
         </div>
         <div id="resource-rows" class="col-sm-9 col-xs-12">
@@ -306,7 +214,11 @@ export default {
       ownerFilter: [],
       countContributors: {},
       contributorFilter: [],
-      sortDir: 1,
+      countTypes: {},
+      typeFilter: [],
+      countAvailabilities: {},
+      availabilityFilter: [],
+      sortDir: 1, // 1 asc -1 desc
       sortingBy: 'Last Modified',
     };
   },
@@ -319,8 +231,10 @@ export default {
       const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
       const resOwners = resAuthors.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
       const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-      const resContributors = resSubjects.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-      return resContributors.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
+      const resAvailabilities = resSubjects.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
+      const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+      const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
+      return resTypes.sort((a, b) => ((a.Title > b.Title) ? this.sortDir : -1 * this.sortDir));
     },
   },
   mounted() {
@@ -330,6 +244,8 @@ export default {
     Object.keys(this.countOwners).forEach(item => this.ownerFilter.push(item));
     this.countContributors = this.filterBuilder(this.resources, 'contributor');
     Object.keys(this.countContributors).forEach(item => this.contributorFilter.push(item));
+    this.countTypes = this.filterBuilder(this.resources, 'type');
+    Object.keys(this.countTypes).forEach(item => this.typeFilter.push(item));
 
     let subjectbox = [];
     // res.subject is python list js array
@@ -339,6 +255,15 @@ export default {
     this.countSubjects = new this.Counter(subjectbox);
     Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
       .push(subject));
+
+    let availabilitybox = [];
+    // res.availability is python list js array
+    this.resources.forEach((res) => {
+      availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
+    });
+    this.countAvailabilities = new this.Counter(availabilitybox);
+    Object.keys(this.countAvailabilities).forEach(availability => this.availabilityFilter
+      .push(availability));
   },
   methods: {
     filterBuilder(resources, thing) {
@@ -372,7 +297,6 @@ export default {
       // const b = [];
       // c.forEach(x => b.push(x.split(',')));
       // const ret = [].concat.apply([], b);
-      // console.log(ret)
       return c;
     },
   },
