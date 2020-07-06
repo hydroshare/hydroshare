@@ -182,6 +182,8 @@
                     <tbody>
                     <tr v-for="entry in filteredResources" v-bind:key="entry">
                         <td>
+                            <img :src="resIconName[entry.type]" data-toggle="tooltip"
+                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip"
                                  :title="entry.availability" :alt="entry.availability" :key="entry">
                             <img v-if="entry.shareable" src="/static/img/shareable.png" alt="Sharable Resource"
@@ -223,6 +225,19 @@ export default {
       availabilityFilter: [],
       sortDir: 1, // 1 asc -1 desc
       sortingBy: 'Last Modified',
+      resIconName: {
+        'Composite Resource': '/static/img/resource-icons/composite48x48.png',
+        Generic: '/static/img/resource-icons/generic48x48.png',
+        'Geopgraphic Raster': '/static/img/resource-icons/geographicraster48x48.png',
+        'Model Program Resource': '/static/img/resource-icons/modelprogram48x48.png',
+        'Collection Resource': '/static/img/resource-icons/collection48x48.png',
+        'Web App Resource': '/static/img/resource-icons/webapp48x48.png',
+        'Time Series': '/static/img/resource-icons/timeseries48x48.png',
+        'Model Instance Resource': '/static/img/resource-icons/modelinstance48x48.png',
+        'SWAT Model Instance Resource': '/static/img/resource-icons/swat48x48.png',
+        'MODFLOW Model Instance Resource': '/static/img/resource-icons/modflow48x48.png',
+        'Multidimensional (NetCDF)': '/static/img/resource-icons/multidimensional48x48.png',
+      },
     };
   },
   name: 'Resources',
