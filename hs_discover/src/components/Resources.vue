@@ -2,7 +2,7 @@
     <div id="resources-main" class="row">
         <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-items">
-            <!-- filter by creator -->
+            <!-- filter by author -->
             <div id="faceting-creator">
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -110,7 +110,33 @@
                     </div>
                 </div>
             </div>
-
+            <!-- filter by type -->
+<!--            <div id="faceting-type">-->
+<!--                <div class="panel panel-default">-->
+<!--                    <div class="panel-heading">-->
+<!--                        <h4 class="panel-title">-->
+<!--                            <a data-toggle="collapse" href="#type">-->
+<!--                                &nbsp; Filter by content type-->
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
+<!--                        </h4>-->
+<!--                    </div>-->
+<!--                    <div id="type" class="facet-list panel-collapse collapse in">-->
+<!--                        <ul class="list-group" id="list-group-type">-->
+<!--                            <li class="list-group-item" v-for="(type) in Object.keys(countTypes)"-->
+<!--                                v-bind:key="type">-->
+<!--                                <span class="badge">{{countTypes[type]}}</span>-->
+<!--                                <label class="checkbox noselect" :for="type">{{type}}-->
+<!--                                    <input type="checkbox" class="faceted-selections" :value=type-->
+<!--                                         v-model="typeFilter"-->
+<!--                                         :id="name-type">-->
+<!--                                </label>-->
+<!--                            </li>-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
 <!--                    <div id="faceting-content_type">-->
 <!--                        <div class="panel panel-default">-->
@@ -298,23 +324,12 @@ export default {
     },
   },
   mounted() {
-    const authorbox = [];
-    this.resources.forEach(res => authorbox.push(res.author));
-    this.countAuthors = new this.Counter(authorbox);
-    Object.keys(this.countAuthors).forEach(author => this.authorFilter
-      .push(author));
-
-    const ownerbox = [];
-    this.resources.forEach(res => ownerbox.push(res.owner));
-    this.countOwners = new this.Counter(ownerbox);
-    Object.keys(this.countOwners).forEach(owner => this.ownerFilter
-      .push(owner));
-
-    const contributorbox = [];
-    this.resources.forEach(res => contributorbox.push(res.contributor));
-    this.countContributors = new this.Counter(contributorbox);
-    Object.keys(this.countContributors).forEach(contributor => this.contributorFilter
-      .push(contributor));
+    this.countAuthors = this.filterBuilder(this.resources, 'author');
+    Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
+    this.countOwners = this.filterBuilder(this.resources, 'owner');
+    Object.keys(this.countOwners).forEach(item => this.ownerFilter.push(item));
+    this.countContributors = this.filterBuilder(this.resources, 'contributor');
+    Object.keys(this.countContributors).forEach(item => this.contributorFilter.push(item));
 
     let subjectbox = [];
     // res.subject is python list js array
@@ -326,6 +341,15 @@ export default {
       .push(subject));
   },
   methods: {
+    filterBuilder(resources, thing) {
+      const box = [];
+      try {
+        resources.forEach(res => box.push(res[thing]));
+      } catch (err) {
+        console.log(`Type ${thing} not found when building filter: ${err}`);
+      }
+      return new this.Counter(box);
+    },
     sortBy(key) {
       this.sortDir = key === this.sortingBy ? this.sortDir * -1 : this.sortDir;
       this.sortingBy = key;

@@ -131,7 +131,7 @@ class SearchAPI(APIView):
                 "abstract": result.abstract,
                 "subject": result.subject,
                 "created": date(result.created, "M d, Y") + " at " + time(result.created),
-                "modified": date(result.modified, "M d, Y") + " at " + time(result.modified)
+                "modified": date(result.modified, "M d, Y") + " at " + time(result.modified),
             })
 
         return Response({
