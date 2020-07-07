@@ -7,11 +7,11 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse">
+<!--                            <a data-toggle="collapse">-->
                                 &nbsp; Filter by author
-                                <span class="glyphicon glyphicon-minus pull-left">
-                            </span>
-                            </a>
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
                         </h4>
                     </div>
                     <div id="creator" class="facet-list panel-collapse collapse in">
@@ -34,11 +34,11 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse">
+<!--                            <a data-toggle="collapse">-->
                                 &nbsp; Filter by owner
-                                <span class="glyphicon glyphicon-minus pull-left">
-                            </span>
-                            </a>
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
                         </h4>
                     </div>
                     <div id="owner" class="facet-list panel-collapse collapse in">
@@ -61,11 +61,11 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse">
+<!--                            <a data-toggle="collapse">-->
                                 &nbsp; Filter by subject
-                                <span class="glyphicon glyphicon-minus pull-left">
-                            </span>
-                            </a>
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
                         </h4>
                     </div>
                     <div id="subject" class="facet-list panel-collapse collapse in">
@@ -88,11 +88,11 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse">
+<!--                            <a data-toggle="collapse">-->
                                 &nbsp; Filter by contributor
-                                <span class="glyphicon glyphicon-minus pull-left">
-                            </span>
-                            </a>
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
                         </h4>
                     </div>
                     <div id="contributor" class="facet-list panel-collapse collapse in">
@@ -115,11 +115,11 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse">
+<!--                            <a data-toggle="collapse">-->
                                 &nbsp; Filter by type
-                                <span class="glyphicon glyphicon-minus pull-left">
-                            </span>
-                            </a>
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
                         </h4>
                     </div>
                     <div id="type" class="facet-list panel-collapse collapse in">
@@ -142,11 +142,11 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse">
+<!--                            <a data-toggle="collapse">-->
                                 &nbsp; Filter by availability
-                                <span class="glyphicon glyphicon-minus pull-left">
-                            </span>
-                            </a>
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
                         </h4>
                     </div>
                     <div id="availability" class="facet-list panel-collapse collapse in">

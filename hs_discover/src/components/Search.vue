@@ -15,9 +15,9 @@
 <!--                  data-placement="bottom" data-original-title="" title="">-->
 <!--            </span>-->
             <div id="search" @keyup.enter="searchClick()">
-                <!--                <i class="glyphicon glyphicon-search search-icon"></i>-->
                 <input type="search" class="form-control" v-model="searchtext"
                        placeholder="Search all Public and Discoverable Resources">
+<!--                <i class="fa fa-search" aria-hidden="true"></i>-->
             </div>
         </div>
         <table cellpadding='20'>
