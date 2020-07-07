@@ -3728,7 +3728,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def rdf_subject(self):
         from .hydroshare import current_site_url
-        return URIRef("{}/resource/{}#".format(current_site_url(), self.short_id))
+        return URIRef("{}/resource/{}".format(current_site_url(), self.resource.short_id))
 
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):
