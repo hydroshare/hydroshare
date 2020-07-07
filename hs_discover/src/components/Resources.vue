@@ -197,8 +197,8 @@
                         <td>
                             <a :href="entry.author_link">{{entry.author}}</a>
                         </td>
-                        <td>{{entry.created}}</td>
-                        <td>{{entry.modified}}</td>
+                        <td>{{new Date(entry.created).toDateString()}}</td>
+                        <td>{{new Date(entry.modified).toDateString()}}</td>
                     </tr>
                     </tbody>
                 </table>
