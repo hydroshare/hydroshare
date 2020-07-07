@@ -53,8 +53,8 @@ export default {
     return {
       resources: [],
       searchtext: '',
-      gridColumns: ['availability', 'name', 'author', 'created', 'modified'],
-      gridColumnLabels: ['Availability', 'Title', 'First Author', 'Date Created', 'Last Modified'],
+      gridColumns: ['type', 'name', 'author', 'created', 'modified'],
+      gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
     };
   },
   components: {

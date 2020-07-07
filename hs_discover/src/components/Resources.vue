@@ -241,10 +241,10 @@ export default {
       sortMap: {
         'First Author': 'author',
         Owner: 'owner',
-        Creator: 'Contributor',
+        Creator: 'contributor',
         Title: 'title',
+        Type: 'type',
         Subject: 'subject',
-        Availability: 'availability',
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
@@ -307,14 +307,16 @@ export default {
       return new this.Counter(box);
     },
     sortBy(key) {
-      this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
-      this.sortingBy = this.sortMap[key];
+      if (this.sortMap[key] !== 'type') {
+        this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
+        this.sortingBy = this.sortMap[key];
+      }
     },
     sortStyling(key) {
       if (this.sortMap[key] === this.sortingBy) {
         return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
       }
-      return 'fa fa-fw fa-sort';
+      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
     },
     Counter(array) {
       // eslint-disable-next-line no-return-assign

@@ -131,8 +131,10 @@ class SearchAPI(APIView):
                 "owner": result.owner[0],
                 "abstract": result.abstract,
                 "subject": result.subject,
-                "created": date(result.created, "M d, Y") + " at " + time(result.created),
-                "modified": date(result.modified, "M d, Y") + " at " + time(result.modified),
+                # "created": date(result.created, "M d, Y") + " at " + time(result.created),
+                # "modified": date(result.modified, "M d, Y") + " at " + time(result.modified),
+                "created": result.created.isoformat(),
+                "modified": result.created.isoformat(),
                 "shareable": True
             })
 
