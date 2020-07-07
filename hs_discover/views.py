@@ -118,6 +118,7 @@ class SearchAPI(APIView):
         resources = []
 
         for result in sqs:
+            print(date(result.created))
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,

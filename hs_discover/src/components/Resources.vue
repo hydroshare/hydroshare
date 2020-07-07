@@ -246,7 +246,7 @@ export default {
         Subject: 'subject',
         Availability: 'availability',
         'Date Created': 'created',
-        'Date Modified': 'modified',
+        'Last Modified': 'modified',
       },
     };
   },
@@ -262,7 +262,10 @@ export default {
       const resAvailabilities = resSubjects.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
       const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
       const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
-      return resTypes.sort((a, b) => ((a[this.sortingBy] > b[this.sortingBy]) ? -1 * this.sortDir : this.sortDir));
+      if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
+          return resTypes.sort((a, b) => ((a[this.sortingBy] > b[this.sortingBy]) ? this.sortDir : -1 * this.sortDir));
+      }
+      return resTypes.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
     },
   },
   mounted() {
@@ -308,7 +311,7 @@ export default {
       this.sortingBy = this.sortMap[key];
     },
     sortStyling(key) {
-      if (key === this.sortingBy) {
+      if (this.sortMap[key] === this.sortingBy) {
         return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
       }
       return 'fa fa-fw fa-sort';
