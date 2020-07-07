@@ -33,6 +33,7 @@ class RDF_MetaData_Mixin(object):
             key = graph.value(subject=o, predicate=HSTERMS.key).value
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.resource.extra_metadata[key] = value
+        self.resource.save()
 
         for field in self.__class__._meta.fields:
             if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
