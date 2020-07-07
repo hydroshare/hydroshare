@@ -7,6 +7,7 @@ import logging
 from uuid import uuid4
 
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms
+from .hydroshare import current_site_url
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
@@ -3727,7 +3728,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         return CoreMetaDataSerializer(self)
 
     def rdf_subject(self):
-        return URIRef("http://www.hydroshare.org/terms/CompositeResource")
+        return URIRef("{}/resource/{}#".format(current_site_url(), self.short_id))
 
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):

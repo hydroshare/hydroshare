@@ -72,8 +72,8 @@ class RDF_MetaData_Mixin(object):
                 f.rdf_triples(subject, graph)
 
         from .hydroshare import current_site_url
-        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource.__class__.__name__)
-        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource._meta.verbose_name)))
+        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource_type)
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
         graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return graph
 
