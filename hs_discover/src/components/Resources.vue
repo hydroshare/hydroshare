@@ -211,6 +211,7 @@
 export default {
   data() {
     return {
+      resloaded: false,
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
@@ -255,20 +256,25 @@ export default {
   ['resources', 'columns', 'labels'],
   computed: {
     filteredResources() {
-      // Filters should be most restrictive when two conflicting states are selected
-      const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-      const resOwners = resAuthors.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
-      const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-      const resAvailabilities = resSubjects.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
-      const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-      const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
-      if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
+      if (this.resloaded) {
+        console.log(`filtered resources with length ${this.resources.length}`);
+        // Filters should be most restrictive when two conflicting states are selected
+        const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+        const resOwners = resAuthors.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
+        const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+        const resAvailabilities = resSubjects.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
+        const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+        const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
+        if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           return resTypes.sort((a, b) => ((a[this.sortingBy] > b[this.sortingBy]) ? this.sortDir : -1 * this.sortDir));
+        }
+        return resTypes.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
       }
-      return resTypes.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+      return [];
     },
   },
   mounted() {
+    this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author');
     Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
     this.countOwners = this.filterBuilder(this.resources, 'owner');
