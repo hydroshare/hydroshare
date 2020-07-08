@@ -13,10 +13,10 @@
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
     <link rel="shortcut icon" href="{% static "img/favicon.png" %}">
 
-    {#<link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">#}
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}" rel="stylesheet"/>
-    {#<link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">#}
-    {#<link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}" />#}
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}" />
 
     {#{% compress css %}#}
     <link href="{% static "css/bootstrap.3.0.2.min.css" %}" rel="stylesheet">
@@ -47,9 +47,9 @@
     }
 </style>
     {#{% compress js %}#}
-    {#<script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>#}
-    <script src="{% static "js/custom.js" %}"></script>
-    {#<script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->#}
+    <script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>
+{#    <script src="{% static "js/custom.js" %}"></script>#}
+    <script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
     <script src="{% static "js/jqcsrf.js" %}"></script>
     <script src='{% static 'js/jquery-ui.js' %}'></script>
     <script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
