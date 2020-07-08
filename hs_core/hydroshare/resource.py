@@ -786,6 +786,8 @@ def add_resource_files(pk, *files, **kwargs):
             resource_metadata_file = f
         elif is_metadata_file(f):
             metadata_files.append(f)
+        elif is_map_file(f):
+            pass
         else:
             full_dir = base_dir
             if f in full_paths:
@@ -826,6 +828,10 @@ def add_resource_files(pk, *files, **kwargs):
 
 def is_metadata_file(file):
     return file.name.endswith('_meta.xml')
+
+
+def is_map_file(file):
+    return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
 
 
 def is_resource_metadata_file(file):

@@ -1021,6 +1021,9 @@ class Identifier(AbstractMetaDataElement):
             if not url:
                 name = 'hydroShareIdentifier'
                 url = graph.value(subject=identifier_node, predicate=HSTERMS.hydroShareIdentifier)
+                if url:
+                    # overwrite hydroShareIdentifier url with this resource's url
+                    url = str(content_object.rdf_subject())
             if url:
                 Identifier.create(url=url, name=name, content_object=content_object)
 
