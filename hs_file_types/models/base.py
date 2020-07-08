@@ -299,7 +299,13 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
     def ingest_metadata(self, graph):
-        subject = self.rdf_subject()
+        subject = None
+        for s, _, _ in graph.triples((None, DC.title, None)):
+            subject = s
+            break
+        if not subject:
+            raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
+
         title = graph.value(subject=subject, predicate=DC.title)
         if title:
             self.logical_file.dataset_name = title
@@ -311,16 +317,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.extra_metadata[key] = value
 
-        for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata', 'is_dirty']:
-                continue
-            field_value = graph.value(subject=subject, predicate=getattr(HSTERMS, field.name))
-            if field_value:
-                setattr(self, field.name, field_value)
-
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
-            generic_relation.related_model.ingest_rdf(graph, self)
+            generic_relation.related_model.ingest_rdf(graph, subject, self)
         self.save()
 
     def get_rdf_graph(self):

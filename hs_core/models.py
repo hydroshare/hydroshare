@@ -703,8 +703,7 @@ class Title(AbstractMetaDataElement):
         graph.add((subject, DC.title, Literal(self.value)))
 
     @classmethod
-    def ingest_rdf(self, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(self, graph, subject, content_object):
         title = graph.value(subject=subject, predicate=DC.title)
         if title:
             Title.create(value=title.value, content_object=content_object)
@@ -729,6 +728,15 @@ class Type(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Define custom remove function for Type model."""
         raise ValidationError("Type element of a resource can't be deleted.")
+
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, DC.type, URIRef(self.url)))
+
+    @classmethod
+    def ingest_rdf(self, graph, subject, content_object):
+        url = graph.value(subject=subject, predicate=DC.type)
+        if url:
+            Type.create(url=url.value, content_object=content_object)
 
 
 class Date(AbstractMetaDataElement):
@@ -766,8 +774,7 @@ class Date(AbstractMetaDataElement):
         graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
-    def ingest_rdf(self, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(self, graph, subject, content_object):
         for _, _, date_node in graph.triples((subject, DC.date, None)):
             type = graph.value(subject=date_node, predicate=RDF.type)
             value = graph.value(subject=date_node, predicate=RDF.value)
@@ -900,8 +907,7 @@ class Relation(AbstractMetaDataElement):
         graph.add((relation_node, getattr(HSTERMS, self.type), URIRef(self.value)))
 
     @classmethod
-    def ingest_rdf(self, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(self, graph, subject, content_object):
         for _, _, relation_node in graph.triples((subject, DC.relation, None)):
             for _, p, o in graph.triples((relation_node, None, None)):
                 type_term = p
@@ -1008,8 +1014,7 @@ class Identifier(AbstractMetaDataElement):
             graph.add((identifier_node, HSTERMS.hydroShareIdentifier, URIRef(self.url)))
 
     @classmethod
-    def ingest_rdf(self, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(self, graph, subject, content_object):
         for _, _, identifier_node in graph.triples((subject, DC.identifier, None)):
             url = graph.value(subject=identifier_node, predicate=HSTERMS.doi)
             name = 'doi'
@@ -1204,8 +1209,7 @@ class Language(AbstractMetaDataElement):
         graph.add((subject, DC.language, Literal(self.code)))
 
     @classmethod
-    def ingest_rdf(self, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(self, graph, subject, content_object):
         code = graph.value(subject=subject, predicate=DC.language)
         if code:
             Language.create(code=code.value, content_object=content_object)
@@ -1392,8 +1396,7 @@ class Coverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(cls, graph, subject, content_object):
         cov = graph.value(subject=subject, predicate=DC.coverage)
         if cov:
             for _, term, o in graph.triples((cov, None, None)):

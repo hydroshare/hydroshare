@@ -144,8 +144,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         graph.add((value, RDF.value, Literal(value_string)))
 
     @classmethod
-    def ingest_rdf(cls, graph, content_object):
-        subject = content_object.rdf_subject()
+    def ingest_rdf(cls, graph, subject, content_object):
         spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
         box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
         value_str = graph.value(subject=box_object, predicate=RDF.value)
