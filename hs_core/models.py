@@ -1215,7 +1215,7 @@ class Language(AbstractMetaDataElement):
     def ingest_rdf(self, graph, subject, content_object):
         code = graph.value(subject=subject, predicate=DC.language)
         if code:
-            Language.create(code=code.value, content_object=content_object)
+            Language.create(code=str(code), content_object=content_object)
 
 
 class Coverage(AbstractMetaDataElement):

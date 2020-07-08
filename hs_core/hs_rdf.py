@@ -35,8 +35,8 @@ class RDF_MetaData_Mixin(object):
 
         self.resource.extra_metadata = {}
         for _, _, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
-            key = graph.value(subject=o, predicate=HSTERMS.key).value
-            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            key = str(graph.value(subject=o, predicate=HSTERMS.key))
+            value = str(graph.value(subject=o, predicate=HSTERMS.value))
             self.resource.extra_metadata[key] = value
         self.resource.save()
 
@@ -58,11 +58,6 @@ class RDF_MetaData_Mixin(object):
                 graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
-
-        for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'extra_metadata', 'is_dirty']:
-                continue
-            graph.add((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
@@ -139,7 +134,7 @@ class RDF_Term_MixIn(object):
                     field_term = getattr(HSTERMS, field.name)
                 val = graph.value(metadata_node, field_term)
                 if val:
-                    value_dict[field.name] = val.value if isinstance(val, Literal) else str(val)
+                    value_dict[field.name] = str(val)
             if value_dict:
                 cls.create(content_object=content_object, **value_dict)
 
