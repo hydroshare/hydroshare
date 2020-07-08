@@ -13,10 +13,10 @@
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
     <link rel="shortcut icon" href="{% static "img/favicon.png" %}">
 
-    {% ifinstalled mezzanine.blog %}
-        <link rel="alternate" type="application/rss+xml" title="RSS" href="{% url "blog_post_feed" "rss" %}">
-        <link rel="alternate" type="application/atom+xml" title="Atom" href="{% url "blog_post_feed" "atom" %}">
-    {% endifinstalled %}
+{#    {% ifinstalled mezzanine.blog %}#}
+{#        <link rel="alternate" type="application/rss+xml" title="RSS" href="{% url "blog_post_feed" "rss" %}">#}
+{#        <link rel="alternate" type="application/atom+xml" title="Atom" href="{% url "blog_post_feed" "atom" %}">#}
+{#    {% endifinstalled %}#}
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}" rel="stylesheet"/>
@@ -33,21 +33,18 @@
         <link href="{{ STATIC_URL }}css/academicons.min.css" rel="stylesheet"/>
         <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_extends.css" %}"/>
         <style>
+            .navbar {
+                max-height: 60px;
+            }
             .navbar-nav {
                 display: block;
                 flex-direction: row;
             }
             #toplevel-nav-container {
+                display: block;
                 flex-wrap: nowrap;
             }
         </style>
-        {% if request.user.is_staff %}
-            <style>
-                .animated {
-                    animation-fill-mode: none;
-                }
-            </style>
-        {% endif %}
         {% block extra_css %}{% endblock %}
     {% endcompress %}
 

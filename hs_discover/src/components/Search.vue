@@ -1,36 +1,20 @@
 <template>
-<!--    <div class="main-container">-->
-<!--        <input type="hidden" id="static-url" value="/static/">-->
-<!--        <div class="container" id="discover-main">-->
-<!--            <div class="row">-->
-<!--                <div class="col-xs-12" id="items">-->
-                    <div id="discover-search">
-                        <div>
-                            <h2 class="page-title">Discover
-                                <small class="text-muted"><i>Public resources shared with the community.</i></small>
-                            </h2>
-                            <!--            <span id="solr-help-info" class="glyphicon-->
-                            <!--            glyphicon-info-sign info-popover-glypn-->
-                            <!--            c-pointer" data-toggle="popover"-->
-                            <!--                  data-placement="bottom" data-original-title="" title="">-->
-                            <!--            </span>-->
-                            <div id="search" @keyup.enter="searchClick()">
-                                <input type="search" class="form-control" v-model="searchtext"
-                                       placeholder="Search all Public and Discoverable Resources">
-                                <!--                <i class="fa fa-search" aria-hidden="true"></i>-->
-                            </div>
-
-                        </div>
-                        <resource-listing :resources="resources"
-                                          :key="resources"
-                                          :columns="gridColumns"
-                                          :labels="gridColumnLabels">
-                        </resource-listing>
-                    </div>
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
+    <div id="discover-search">
+        <div>
+            <h2 class="page-title">Discover
+                <small class="text-muted"><i>Public resources shared with the community</i></small>
+            </h2>
+            <div id="search" @keyup.enter="searchClick()">
+                <input type="search" class="form-control" v-model="searchtext"
+                       placeholder="Search all Public and Discoverable Resources">
+            </div>
+        </div>
+        <resource-listing :resources="resources"
+                          :key="resources"
+                          :columns="gridColumns"
+                          :labels="gridColumnLabels">
+        </resource-listing>
+    </div>
 </template>
 
 <script>
@@ -60,7 +44,7 @@ export default {
           this.$data.resources = JSON.parse(response.data.resources);
         })
         .catch((error) => {
-                        console.error(error); // eslint-disable-line
+          console.error(error); // eslint-disable-line
         });
     },
   },
@@ -68,19 +52,6 @@ export default {
 </script>
 
 <style scoped>
-    #wrapper {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        margin-bottom: 2em;
-    }
-
-    #wrapper .search-field, #advanced-discover-search {
-        flex-grow: 1;
-        max-width: 500px;
-        position: relative;
-    }
-
     #wrapper .search-field div {
         width: 100%;
     }
@@ -97,11 +68,6 @@ export default {
 
     table tr th {
         cursor: pointer;
-    }
-
-    div.table-wrapper {
-        max-width: 100%;
-        overflow: auto;
     }
 
 </style>
