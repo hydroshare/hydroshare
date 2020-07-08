@@ -2,7 +2,29 @@
     <div id="resources-main" class="row">
         <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-items">
-            <!-- filter by author -->
+            <!-- filter by temporal overlap -->
+                <div id="faceting-temporal">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+<!--                            <a data-toggle="collapse">-->
+                                &nbsp; Temporal
+<!--                                <span class="glyphicon glyphicon-minus pull-left">-->
+<!--                            </span>-->
+<!--                            </a>-->
+                        </h4></div>
+            <date-pick
+                v-model="startdate"
+                @change="temporalFilter"
+                :displayFormat="'MM/DD/YYYY'"
+            ></date-pick>
+            <date-pick
+                v-model="enddate"
+                @change="temporalFilter"
+                :displayFormat="'MM/DD/YYYY'"
+            ></date-pick>
+                </div></div>
+
             <div id="faceting-creator">
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -208,9 +230,14 @@
 </template>
 
 <script>
+import DatePick from 'vue-date-pick';
+import 'vue-date-pick/dist/vueDatePick.css';
+
 export default {
   data() {
     return {
+      startdate: '2019-01-01',
+      enddate: '2019-01-01',
       resloaded: false,
       countAuthors: {},
       authorFilter: [],
@@ -254,6 +281,9 @@ export default {
   name: 'Resources',
   props:
   ['resources', 'columns', 'labels'],
+  components: {
+    datePick: DatePick,
+  },
   computed: {
     filteredResources() {
       if (this.resloaded) {
@@ -337,6 +367,9 @@ export default {
       // c.forEach(x => b.push(x.split(',')));
       // const ret = [].concat.apply([], b);
       return c;
+    },
+    temporalFilter(ele) {
+      console.log(ele);
     },
   },
 };

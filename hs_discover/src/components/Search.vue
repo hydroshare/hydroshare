@@ -1,5 +1,6 @@
 <template>
     <div class="main-container">
+        <link rel="stylesheet" type="text/css" href="/static/css/datepick.css"/>
     <input type="hidden" id="static-url" value="/static/">
     <div class="container" id="discover-main">
         <div class="row">
@@ -19,6 +20,7 @@
                        placeholder="Search all Public and Discoverable Resources">
 <!--                <i class="fa fa-search" aria-hidden="true"></i>-->
             </div>
+
         </div>
         <table cellpadding='20'>
             <tr>
@@ -59,8 +61,6 @@ export default {
   },
   components: {
     resourceListing: Resources,
-  },
-  beforeMount() {
   },
   mounted() {
     this.searchClick();

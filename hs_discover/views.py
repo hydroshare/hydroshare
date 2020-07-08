@@ -1,7 +1,7 @@
 import json
 
 from django.shortcuts import render
-from django.template.defaultfilters import date, time
+from django.template.defaultfilters import date
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet, SQ
 from rest_framework.response import Response
@@ -71,6 +71,8 @@ class SearchAPI(APIView):
                 "subject":
                 "created":
                 "modified":
+                "start_date":
+                "end_date":
         """
         sqs = SearchQuerySet().all()
 
@@ -78,13 +80,10 @@ class SearchAPI(APIView):
             searchtext = request.GET.get('searchtext')
             sqs = sqs.filter(content=searchtext).boost('keyword', 2.0)
 
-        NElat = request.GET.get('nelat')
-        NElng = request.GET.get('nelng')
-        SWlat = request.GET.get('swlat')
-        SWlng = request.GET.get('swlng')
-        start_date = request.GET.get('swlng')
-        end_date = request.GET.get('swlng')
-        coverage_type = request.GET.get('swlng')
+        # NElat = request.GET.get('nelat')
+        # NElng = request.GET.get('nelng')
+        # SWlat = request.GET.get('swlat')
+        # SWlng = request.GET.get('swlng')
 
         sort_order = None  # sorting is handled by frontend
         sort_direction = None  # reinstate only if pagination requires backend coordination
@@ -96,20 +95,6 @@ class SearchAPI(APIView):
         if geo_sq is not None:
             sqs = sqs.filter(geo_sq)
 
-        # allow overlapping ranges
-        # cs < s < ce OR s < cs => s < ce
-        # AND
-        # cs < e < ce OR e > ce => cs < e
-        if start_date and end_date:
-            sqs = sqs.filter(SQ(end_date__gte=start_date) & SQ(start_date__lte=end_date))
-        elif start_date:
-            sqs = sqs.filter(SQ(end_date__gte=start_date))
-        elif end_date:
-            sqs = sqs.filter(SQ(start_date__lte=end_date))
-
-        if coverage_type:
-            sqs = sqs.filter(coverage_types__in=[coverage_type])
-
         # vocab = []  # will be populated with autocomplete terms from resource
         # vocab = [x for x in vocab if len(x) > 2]
         # vocab = list(set(vocab))
@@ -118,7 +103,12 @@ class SearchAPI(APIView):
         resources = []
 
         for result in sqs:
-            print(date(result.created))
+            try:
+                start_date = result.start_date.isoformat()
+                end_date = result.end_date.isoformat()
+            except:
+                start_date = ''
+                end_date = ''
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,
@@ -131,11 +121,11 @@ class SearchAPI(APIView):
                 "owner": result.owner[0],
                 "abstract": result.abstract,
                 "subject": result.subject,
-                # "created": date(result.created, "M d, Y") + " at " + time(result.created),
-                # "modified": date(result.modified, "M d, Y") + " at " + time(result.modified),
                 "created": result.created.isoformat(),
                 "modified": result.created.isoformat(),
-                "shareable": True
+                "shareable": True,
+                "start_date": start_date,
+                "end_date": end_date
             })
 
         return Response({
