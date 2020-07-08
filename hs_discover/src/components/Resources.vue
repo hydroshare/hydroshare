@@ -1,5 +1,8 @@
 <template>
     <div id="resources-main" class="row">
+        <div class="col-xs-12" id="resultsdisp">
+            Results: {{filteredResources.length}}
+        </div>
         <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
@@ -31,11 +34,10 @@
                             <ul class="list-group" id="list-group-creator">
                                 <li class="list-group-item" v-for="(author) in Object.keys(countAuthors)"
                                     v-bind:key="author">
-                                    <span class="badge">{{countAuthors[author]}}</span>
-                                    <label class="checkbox noselect" :for="name-author">{{author}}
-                                        <input type="checkbox" class="faceted-selections" :value=author
-                                               v-model="authorFilter"
-                                               :id="name-author">
+                                    <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="name-author">{{author}}
+                                    <input type="checkbox" class="faceted-selections" :value=author
+                                           v-model="authorFilter"
+                                           :id="name-author">
                                     </label>
                                 </li>
                             </ul>
@@ -150,7 +152,7 @@
             </div>
         </div>
         <div id="resource-rows" class="col-sm-9 col-xs-12">
-            <p>Results: {{filteredResources.length}}</p>
+            <br/>
             <div class="table-wrapper">
                 <table v-if="filteredResources.length"
                        class="table-hover table-striped resource-custom-table" id="items-discovered">
@@ -337,4 +339,7 @@ export default {
 </script>
 
 <style scoped>
+    .table-wrapper {
+        margin-top: 10px;
+    }
 </style>

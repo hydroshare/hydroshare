@@ -1,48 +1,36 @@
 <template>
-    <div class="main-container">
-        <link rel="stylesheet" type="text/css" href="/static/css/datepick.css"/>
-    <input type="hidden" id="static-url" value="/static/">
-    <div class="container" id="discover-main">
-        <div class="row">
-            <div class="col-xs-12" id="items">
+<!--    <div class="main-container">-->
+<!--        <input type="hidden" id="static-url" value="/static/">-->
+<!--        <div class="container" id="discover-main">-->
+<!--            <div class="row">-->
+<!--                <div class="col-xs-12" id="items">-->
                     <div id="discover-search">
-        <div>
-            <h2 class="page-title">Discover
-                <small class="text-muted"><i>Public resources shared with the community.</i></small>
-            </h2>
-<!--            <span id="solr-help-info" class="glyphicon-->
-<!--            glyphicon-info-sign info-popover-glypn-->
-<!--            c-pointer" data-toggle="popover"-->
-<!--                  data-placement="bottom" data-original-title="" title="">-->
-<!--            </span>-->
-            <div id="search" @keyup.enter="searchClick()">
-                <input type="search" class="form-control" v-model="searchtext"
-                       placeholder="Search all Public and Discoverable Resources">
-<!--                <i class="fa fa-search" aria-hidden="true"></i>-->
-            </div>
+                        <div>
+                            <h2 class="page-title">Discover
+                                <small class="text-muted"><i>Public resources shared with the community.</i></small>
+                            </h2>
+                            <!--            <span id="solr-help-info" class="glyphicon-->
+                            <!--            glyphicon-info-sign info-popover-glypn-->
+                            <!--            c-pointer" data-toggle="popover"-->
+                            <!--                  data-placement="bottom" data-original-title="" title="">-->
+                            <!--            </span>-->
+                            <div id="search" @keyup.enter="searchClick()">
+                                <input type="search" class="form-control" v-model="searchtext"
+                                       placeholder="Search all Public and Discoverable Resources">
+                                <!--                <i class="fa fa-search" aria-hidden="true"></i>-->
+                            </div>
 
-        </div>
-        <table cellpadding='20'>
-            <tr>
-                <td>
-                    &nbsp;
-                </td>
-                <td>
-                    &nbsp;
-                </td>
-            </tr>
-        </table>
-        <resource-listing :resources="resources"
-                          :key="resources"
-                          :columns="gridColumns"
-                          :labels="gridColumnLabels">
-        </resource-listing>
-    </div>
-            </div>
-        </div>
-    </div>
-
-</div>
+                        </div>
+                        <resource-listing :resources="resources"
+                                          :key="resources"
+                                          :columns="gridColumns"
+                                          :labels="gridColumnLabels">
+                        </resource-listing>
+                    </div>
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
 </template>
 
 <script>
