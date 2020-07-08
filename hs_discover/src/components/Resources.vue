@@ -9,19 +9,20 @@
                 <div id="faceting-temporal">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">
-                                Temporal
-                            </h4></div>
-                        <date-pick
-                                v-model="startdate"
-                                @change="temporalFilter"
-                                :displayFormat="'MM/DD/YYYY'"
-                        ></date-pick>
-                        <date-pick
-                                v-model="enddate"
-                                @change="temporalFilter"
-                                :displayFormat="'MM/DD/YYYY'"
-                        ></date-pick>
+                            <h4 class="panel-title">Temporal</h4>
+                        </div>
+                        <div v-if="filteredResources.length" id="dateselectors">
+                            <date-pick
+                                    v-model="startdate"
+                                    @change="temporalFilter"
+                                    :displayFormat="'MM/DD/YYYY'"
+                            ></date-pick>
+                            <date-pick
+                                    v-model="enddate"
+                                    @change="temporalFilter"
+                                    :displayFormat="'MM/DD/YYYY'"
+                            ></date-pick>
+                        </div>
                     </div>
                 </div>
 
@@ -34,10 +35,9 @@
                             <ul class="list-group" id="list-group-creator">
                                 <li class="list-group-item" v-for="(author) in Object.keys(countAuthors)"
                                     v-bind:key="author">
-                                    <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="name-author">{{author}}
+                                    <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
                                     <input type="checkbox" class="faceted-selections" :value=author
-                                           v-model="authorFilter"
-                                           :id="name-author">
+                                        v-model="authorFilter" :id="'author-'+author">
                                     </label>
                                 </li>
                             </ul>
@@ -55,10 +55,9 @@
                                 <li class="list-group-item" v-for="(owner) in Object.keys(countOwners)"
                                     v-bind:key="owner">
                                     <span class="badge">{{countOwners[owner]}}</span>
-                                    <label class="checkbox noselect" :for="name-owner">{{owner}}
+                                    <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
                                         <input type="checkbox" class="faceted-selections" :value=owner
-                                               v-model="ownerFilter"
-                                               :id="name-owner">
+                                               v-model="ownerFilter" :id="'owner-'+owner">
                                     </label>
                                 </li>
                             </ul>
@@ -76,10 +75,9 @@
                                 <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects)"
                                     v-bind:key="subject">
                                     <span class="badge">{{countSubjects[subject]}}</span>
-                                    <label class="checkbox noselect" :for="name-subject">{{subject}}
+                                    <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
                                         <input type="checkbox" class="faceted-selections" :value=subject
-                                               v-model="subjectFilter"
-                                               :id="name-subject">
+                                               v-model="subjectFilter" :id="'subj-'+subject">
                                     </label>
                                 </li>
                             </ul>
@@ -97,10 +95,10 @@
                                 <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors)"
                                     v-bind:key="contributor">
                                     <span class="badge">{{countContributors[contributor]}}</span>
-                                    <label class="checkbox noselect" :for="name-contributor">{{contributor}}
+                                    <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
                                         <input type="checkbox" class="faceted-selections" :value=contributor
                                                v-model="contributorFilter"
-                                               :id="name-contributor">
+                                               :id="'contrib-'+contributor">
                                     </label>
                                 </li>
                             </ul>
@@ -118,10 +116,10 @@
                                 <li class="list-group-item" v-for="(type) in Object.keys(countTypes)"
                                     v-bind:key="type">
                                     <span class="badge">{{countTypes[type]}}</span>
-                                    <label class="checkbox noselect" :for="name-type">{{type}}
+                                    <label class="checkbox noselect" :for="'type-'+type">{{type}}
                                         <input type="checkbox" class="faceted-selections" :value=type
                                                v-model="typeFilter"
-                                               :id="name-type">
+                                               :id="'type-'+type">
                                     </label>
                                 </li>
                             </ul>
@@ -139,10 +137,10 @@
                                 <li class="list-group-item" v-for="(availability) in Object.keys(countAvailabilities)"
                                     v-bind:key="availability">
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
-                                    <label class="checkbox noselect" :for="name-availability">{{availability}}
+                                    <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
                                         <input type="checkbox" class="faceted-selections" :value=availability
                                                v-model="availabilityFilter"
-                                               :id="name-availability">
+                                               :id="'avail-'+availability">
                                     </label>
                                 </li>
                             </ul>
@@ -340,6 +338,9 @@ export default {
 
 <style scoped>
     .table-wrapper {
-        margin-top: 10px;
+        margin-top: 1px;
+    }
+    .checkbox {
+
     }
 </style>
