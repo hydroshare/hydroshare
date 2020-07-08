@@ -736,7 +736,7 @@ class Type(AbstractMetaDataElement):
     def ingest_rdf(self, graph, subject, content_object):
         url = graph.value(subject=subject, predicate=DC.type)
         if url:
-            Type.create(url=url.value, content_object=content_object)
+            Type.create(url=str(url), content_object=content_object)
 
 
 class Date(AbstractMetaDataElement):
@@ -1023,9 +1023,9 @@ class Identifier(AbstractMetaDataElement):
                 url = graph.value(subject=identifier_node, predicate=HSTERMS.hydroShareIdentifier)
                 if url:
                     # overwrite hydroShareIdentifier url with this resource's url
-                    url = str(content_object.rdf_subject())
+                    url = content_object.rdf_subject()
             if url:
-                Identifier.create(url=url, name=name, content_object=content_object)
+                Identifier.create(url=str(url), name=name, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):

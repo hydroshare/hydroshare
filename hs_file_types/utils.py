@@ -275,6 +275,8 @@ def ingest_logical_file_metadata(metadata_file, resource):
         else:
             aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
             file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
+            if logical_file_class is RefTimeseriesLogicalFile:
+                file_path = file_path + '.json'
             if logical_file_class is GenericLogicalFile:
                 # single file logical files have a potential name clash, so we have to guess what the file is
                 # the name clash is a larger problem than just here and we should work to resolve it
