@@ -272,25 +272,22 @@ def ingest_logical_file_metadata(metadata_file, resource):
             res_file = resource.files.get(file_folder=file_path)
             if res_file:
                 FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
-        else:
+        elif logical_file_class is GenericLogicalFile:
             aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
             file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
-            if logical_file_class is RefTimeseriesLogicalFile:
-                file_path = file_path + '.json'
-            if logical_file_class is GenericLogicalFile:
-                # single file logical files have a potential name clash, so we have to guess what the file is
-                # the name clash is a larger problem than just here and we should work to resolve it
-                if '/' in file_path:
-                    parts = file_path.rsplit('/', 1)
-                    file_path = parts[0]
-                    file_name = parts[1] + "."
-                else:
-                    file_name = file_path
-                    file_path = ''
-                for file in resource.files.filter(file_folder=file_path):
-                    if file.file_name.startswith(file_name):
-                        res_file = file
-                        break
+            # single file logical files have a potential name clash, so we have to guess what the file is
+            # the name clash is a larger problem than just here and we should work to resolve it
+            if '/' in file_path:
+                parts = file_path.rsplit('/', 1)
+                file_path = parts[0]
+                file_name = parts[1] + "."
+            else:
+                file_name = file_path
+                file_path = ''
+            for file in resource.files.filter(file_folder=file_path):
+                if file.file_name.startswith(file_name):
+                    res_file = file
+                    break
             else:
                 res_file = get_resource_file(resource.short_id, file_path)
             if res_file:
