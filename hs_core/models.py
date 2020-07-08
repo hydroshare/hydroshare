@@ -699,6 +699,16 @@ class Title(AbstractMetaDataElement):
         """Define custom remove function for Title class."""
         raise ValidationError("Title element of a resource can't be deleted.")
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, DC.title, Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(self, graph, content_object):
+        subject = content_object.rdf_subject()
+        title = graph.value(subject=subject, predicate=DC.title)
+        if title:
+            Title.create(value=title.value, content_object=content_object)
+
 
 class Type(AbstractMetaDataElement):
     """Define Type metadata element model."""

@@ -26,7 +26,12 @@ class RDF_MetaData_Mixin(object):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
 
     def ingest_metadata(self, graph):
-        subject = self.rdf_subject()
+        subject = None
+        for s, _, _ in graph.triples((None, DC.title, None)):
+            subject = s
+            break
+        if not subject:
+            raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
 
         self.resource.extra_metadata = {}
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
