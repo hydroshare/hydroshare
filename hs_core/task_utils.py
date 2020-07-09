@@ -159,11 +159,7 @@ def get_task_by_id(task_id, name='', payload=''):
             status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
             if not payload:
                 payload = ret_value
-            with transaction.atomic():
-                TaskNotification.objects.get_or_create(task_id=task_id,
-                                                       defaults={'name': name,
-                                                                 'payload': payload,
-                                                                 'status': status})
+            create_task_notification(task_id=task_id, status=status, name=name, payload=payload)
         # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
         except Exception:
             # logging exception will log the full stack trace and prepend a line with the message str input argument
@@ -199,7 +195,7 @@ def revoke_task_by_id(task_id):
 
 def dismiss_task_by_id(task_id):
     """
-    dismiss a celery task from TaskNotificatoin model by task id
+    dismiss a celery task from TaskNotification model by task id
     :param task_id: task id
     :return: dismissed task dict
     """
@@ -213,4 +209,24 @@ def dismiss_task_by_id(task_id):
             'payload': filter_task.payload
         }
         TaskNotification.objects.filter(task_id=task_id).delete()
+    return task_dict
+
+
+def set_task_delivered_by_id(task_id):
+    """
+    Set task to delivered status from TaskNotificatoin model by task id
+    :param task_id: task id
+    :return: dict of the task that has been set to the delivered status
+    """
+    task_dict = {}
+    filter_task = TaskNotification.objects.filter(task_id=task_id).first()
+    if filter_task:
+        filter_task.status = 'delivered'
+        filter_task.save()
+        task_dict = {
+            'id': task_id,
+            'name': filter_task.name,
+            'status': dict(TaskNotification.TASK_STATUS_CHOICES)[filter_task.status],
+            'payload': filter_task.payload
+        }
     return task_dict

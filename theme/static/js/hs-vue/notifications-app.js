@@ -33,7 +33,8 @@ $(document).ready(function () {
                         "Pending execution": "Pending...",
                         "In progress": "Getting your files ready for download...",
                         "Aborted": "Aborted",
-                        "Failed": "Download failed"
+                        "Failed": "Download failed",
+                        "Delivered": "Download delivered"
                     }
                 },
                 "zip download": {
@@ -42,7 +43,8 @@ $(document).ready(function () {
                         "Pending execution": "Pending...",
                         "In progress": "Getting your files ready for download...",
                         "Aborted": "Aborted",
-                        "Failed": "Download failed"
+                        "Failed": "Download failed",
+                        "Delivered": "Download delivered"
                     }
                 }
             },
@@ -51,7 +53,8 @@ $(document).ready(function () {
                 "Failed": "glyphicon glyphicon-remove-sign",
                 "Completed": "glyphicon glyphicon-ok-sign",
                 "Pending execution": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
-                "In progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"
+                "In progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
+                "Delivered": "glyphicon glyphicon-ok-sign"
             }
         },
         computed: {
@@ -106,6 +109,25 @@ $(document).ready(function () {
                 return task.status === 'Completed'
                     || task.status === 'Failed'
                     || task.status === 'Aborted'
+                    || task.status === 'Delivered'
+            },
+            deliverTask: function(task) {
+                let vue = this;
+                if (vue.canBeDelivered(task)) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/set_task_delivered/' + task.id,
+                        success: function (task) {
+                            vue.registerTask(task);
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            },
+            canBeDelivered: function (task) {
+                return task.status === 'Completed'
             },
             abortTask: function(task) {
                 let vue = this;
@@ -199,6 +221,7 @@ $(document).ready(function () {
                         if (task.status === "Completed" && task.payload) {
                             const bagUrl = task.payload;
                             vue.downloadFile(bagUrl, task.id);
+                            vue.deliverTask(task);
                         }
                         break;
                     case "zip download":
@@ -206,6 +229,7 @@ $(document).ready(function () {
                         if (task.status === "Completed" && task.payload) {
                             const zipUrl = task.payload;
                             vue.downloadFile(zipUrl, task.id);
+                            vue.deliverTask(task);
                         }
                         break;
                     default:
@@ -239,14 +263,16 @@ $(document).ready(function () {
                     if (task.status !== targetTask.status || task.payload !== targetTask.payload) {
                         targetTask.status = task.status;
                         targetTask.payload = task.payload;
-                        vue.processTask(targetTask);
+                        if (task.status !== 'Delivered')
+                            vue.processTask(targetTask);
                     }
                 }
                 else {
                     // Add new task
                     targetTask = task;
                     vue.tasks = [targetTask, ...vue.tasks];
-                    vue.processTask(targetTask);
+                    if (task.status !== 'Delivered')
+                        vue.processTask(targetTask);
                 }
             },
             // Used to know when a task should inform users of alternative way to download their files

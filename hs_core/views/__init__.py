@@ -47,7 +47,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
-from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id, dismiss_task_by_id
+from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id, dismiss_task_by_id, \
+    set_task_delivered_by_id
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -119,7 +120,19 @@ def abort_task(request, task_id):
 @login_required
 def dismiss_task(request, task_id):
     task_dict = dismiss_task_by_id(task_id)
-    return JsonResponse(task_dict)
+    if task_dict:
+        return JsonResponse(task_dict)
+    else:
+        return JsonResponse({'error': 'requested task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@login_required
+def set_task_delivered(request, task_id):
+    task_dict = set_task_delivered_by_id(task_id)
+    if task_dict:
+        return JsonResponse(task_dict)
+    else:
+        return JsonResponse({'error': 'requested task does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @login_required

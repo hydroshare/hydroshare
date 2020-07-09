@@ -4392,7 +4392,8 @@ class TaskNotification(models.Model):
         ('progress', 'In progress'),
         ('failed', 'Failed'),
         ('aborted', 'Aborted'),
-        ('completed', 'Completed')
+        ('completed', 'Completed'),
+        ('delivered', 'Delivered')
     )
     task_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=1000, blank=True)

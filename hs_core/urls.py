@@ -104,4 +104,5 @@ urlpatterns = [
     url(r'^_internal/get_task/(?P<task_id>[0-9a-f-]+)$', views.get_task, name='get_task'),
     url(r'^_internal/abort_task/(?P<task_id>[0-9a-f-]+)$', views.abort_task, name='abort_task'),
     url(r'^_internal/dismiss_task/(?P<task_id>[0-9a-f-]+)$', views.dismiss_task, name='dismiss_task'),
+    url(r'^_internal/set_task_delivered/(?P<task_id>[0-9a-f-]+)$', views.set_task_delivered, name='set_task_delivered'),
 ]
