@@ -69,9 +69,6 @@ export default {
         padding-right: 25px;
         z-index: 1;
     }
-    table tr th {
-        cursor: pointer;
-    }
     .inside {
         position: absolute;
         top: 10px;

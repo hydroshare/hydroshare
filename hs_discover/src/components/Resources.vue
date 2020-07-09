@@ -13,14 +13,14 @@
                         </div>
                         <div v-if="filteredResources.length" id="dateselectors">
                             <date-pick
-                                    v-model="startdate"
-                                    @change="temporalFilter"
-                                    :displayFormat="'MM/DD/YYYY'"
+                                 v-model="startdate"
+                                 :parseDate="temporalFilter"
+                                 :displayFormat="'MM/DD/YYYY'"
                             ></date-pick>
                             <date-pick
-                                    v-model="enddate"
-                                    @change="temporalFilter"
-                                    :displayFormat="'MM/DD/YYYY'"
+                                 v-model="enddate"
+                                 :parseDate="temporalFilter"
+                                 :displayFormat="'MM/DD/YYYY'"
                             ></date-pick>
                         </div>
                     </div>
@@ -97,8 +97,7 @@
                                     <span class="badge">{{countContributors[contributor]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
                                         <input type="checkbox" class="faceted-selections" :value=contributor
-                                               v-model="contributorFilter"
-                                               :id="'contrib-'+contributor">
+                                               v-model="contributorFilter" :id="'contrib-'+contributor">
                                     </label>
                                 </li>
                             </ul>
@@ -118,8 +117,7 @@
                                     <span class="badge">{{countTypes[type]}}</span>
                                     <label class="checkbox noselect" :for="'type-'+type">{{type}}
                                         <input type="checkbox" class="faceted-selections" :value=type
-                                               v-model="typeFilter"
-                                               :id="'type-'+type">
+                                            v-model="typeFilter" :id="'type-'+type">
                                     </label>
                                 </li>
                             </ul>
@@ -139,8 +137,7 @@
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
                                         <input type="checkbox" class="faceted-selections" :value=availability
-                                               v-model="availabilityFilter"
-                                               :id="'avail-'+availability">
+                                            v-model="availabilityFilter" :id="'avail-'+availability">
                                     </label>
                                 </li>
                             </ul>
@@ -197,8 +194,8 @@ import 'vue-date-pick/dist/vueDatePick.css';
 export default {
   data() {
     return {
-      startdate: '2019-01-01',
-      enddate: '2019-01-01',
+      startdate: 'Start Date',
+      enddate: 'End Date',
       resloaded: false,
       countAuthors: {},
       authorFilter: [],
@@ -329,8 +326,21 @@ export default {
       // const ret = [].concat.apply([], b);
       return c;
     },
-    temporalFilter(ele) {
-      console.log(ele);
+    temporalFilter() {
+      // console.log(this.startdate);
+      const d = new Date(Date.parse(this.startdate));
+      if (Object.prototype.toString.call(d) === '[object Date]') {
+        // it is a date
+        // eslint-disable-next-line no-restricted-globals
+        if (isNaN(d.getTime())) { // d.valueOf() could also work
+          // console.log('invalid date');
+        } else {
+          console.log(`selected-start: ${this.startdate} sample-res-start: ${this.resources[2].start_date}`);
+          return d;
+        }
+      } else {
+        // console.log('not a date');
+      }
     },
   },
 };
@@ -343,5 +353,4 @@ export default {
     .checkbox {
 
     }
-
 </style>
