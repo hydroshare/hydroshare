@@ -1365,7 +1365,7 @@ $(document).ready(function () {
             maxFiles: allowMultiple,
             autoProcessQueue: true,
             uploadMultiple: true,
-            parallelUploads : 10,
+            parallelUploads : 100,
             error: function (file, response) {
                 // console.log(response);
             },
