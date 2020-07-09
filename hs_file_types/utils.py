@@ -243,7 +243,7 @@ def get_logical_file(agg_type_name):
     return file_type_map[agg_type_name]
 
 
-def ingest_logical_file_metadata(metadata_file, resource):
+def ingest_logical_file_metadata(metadata_file, resource, new_lfs):
     graph = Graph()
     with open(metadata_file.temporary_file_path(), mode='r') as f:
         graph = graph.parse(data=f.read())
@@ -262,7 +262,11 @@ def ingest_logical_file_metadata(metadata_file, resource):
 
     from hs_file_types.utils import get_logical_file
     logical_file_class = get_logical_file(agg_type_name)
-    lf = get_logical_file_by_map_file_path(resource, logical_file_class, str(subject))
+    lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
+    if not lf:
+        for logical_file in new_lfs:
+            if logical_file.map_short_file_path in subject:
+                lf = logical_file
     if not lf:
         # see if the files exist and create it
         res_file = None
@@ -297,7 +301,7 @@ def ingest_logical_file_metadata(metadata_file, resource):
             res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
-            raise Exception("Could not find file {} for aggregation {}".format(file_path, metadata_file))
+            raise Exception("Could not find aggregation for {}".format(metadata_file))
         if not lf:
             raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file))
 
@@ -307,8 +311,9 @@ def ingest_logical_file_metadata(metadata_file, resource):
 
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
-    for logical_file in logical_file_class.objects.filter(resource=resource):
-        if logical_file.map_file_path in str(map_file_path):
+    logical_file_class._result_cache = None
+    for logical_file in resource.logical_files:
+        if logical_file.map_short_file_path in map_file_path:
             return logical_file
     return None
 
@@ -323,11 +328,12 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='',
         # Some aggregations use the folder name for the aggregation name
         folder_path = folder_path.rstrip('/') if folder_path else folder_path
         if extra_data:
-            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
-                                                  folder_path=folder_path, extra_data=extra_data)
+            return logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                         folder_path=folder_path, extra_data=extra_data)
         else:
-            logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
-                                                  folder_path=folder_path)
+            return logical_file_type_class.set_file_type(resource=res, user=user, file_id=file_id,
+                                                         folder_path=folder_path)
     except:
         if fail_feedback:
             raise
+        return None

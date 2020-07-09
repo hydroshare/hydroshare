@@ -1061,6 +1061,7 @@ def check_aggregations(resource, res_files):
     :param res_files: list of ResourceFile objects to check for aggregations creation
     :return:
     """
+    new_logical_files = []
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
 
@@ -1068,5 +1069,8 @@ def check_aggregations(resource, res_files):
         for res_file in res_files:
             if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                 # create aggregation from file 'res_file'
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      fail_feedback=False)
+                logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                                     fail_feedback=False)
+                if logical_file:
+                    new_logical_files.append(logical_file)
+    return new_logical_files

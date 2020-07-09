@@ -802,15 +802,16 @@ def add_resource_files(pk, *files, **kwargs):
         ret.append(utils.add_file_to_resource(resource, None,
                                               folder=folder,
                                               source_name=ifname))
+    new_lfs = []
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+            new_lfs = utils.check_aggregations(resource, ret)
     from hs_file_types.utils import ingest_logical_file_metadata
     for md in metadata_files:
-        ingest_logical_file_metadata(md, resource)
+        ingest_logical_file_metadata(md, resource, new_lfs)
     if resource_metadata_file:
         graph = Graph()
         with open(resource_metadata_file.temporary_file_path(), mode='r') as f:
