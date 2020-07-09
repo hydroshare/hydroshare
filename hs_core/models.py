@@ -770,7 +770,7 @@ class Date(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         date_node = BNode()
         graph.add((subject, DC.date, date_node))
-        graph.add((date_node, RDF.type, getattr(DC, self.type)))
+        graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
         graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
@@ -1727,6 +1727,14 @@ class Subject(AbstractMetaDataElement):
                                   content_type__pk=sub.content_type.id).count() == 1:
             raise ValidationError("The only subject element of the resource can't be deleted.")
         sub.delete()
+
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, DC.subject, URIRef(self.value)))
+
+    @classmethod
+    def ingest_rdf(self, graph, subject, content_object):
+        for _, _, o in graph.triples((subject, DC.type, None)):
+            Subject.create(value=str(o), content_object=content_object)
 
 
 class Source(AbstractMetaDataElement):

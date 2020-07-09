@@ -312,6 +312,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             self.logical_file.save()
         for _, _, object in graph.triples((subject, DC.subject, None)):
             self.keywords.append(object.value)
+        self.extra_metadata.clear()
         for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
             key = graph.value(subject=o, predicate=HSTERMS.key).value
             value = graph.value(subject=o, predicate=HSTERMS.value).value
