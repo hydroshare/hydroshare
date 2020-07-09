@@ -457,6 +457,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
                 if not file_type_success:
                     raise ValidationError(msg)
+                return logical_file
             else:
                 err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
                 log.error(err_msg)

@@ -577,6 +577,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
             if not file_type_success:
                 raise ValidationError(msg)
+            return logical_file
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""

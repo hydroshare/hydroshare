@@ -101,6 +101,7 @@ class FileSetLogicalFile(AbstractLogicalFile):
             logical_file.add_resource_files_in_folder(resource, folder_path)
             ft_ctx.logical_file = logical_file
             log.info("Fie set aggregation was created for folder:{}.".format(folder_path))
+            return logical_file
 
     def add_resource_files_in_folder(self, resource, folder):
         """

@@ -354,6 +354,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
                 if not file_type_success:
                     raise ValidationError(msg)
+                return logical_file
             else:
                 err_msg = "Geographic raster aggregation type validation failed. {}".format(
                     ' '.join(validation_results['error_info']))

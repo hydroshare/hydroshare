@@ -834,6 +834,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)
+                return logical_file
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""

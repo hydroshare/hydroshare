@@ -293,6 +293,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             if not file_type_success:
                 raise ValidationError(msg)
+            return logical_file
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
