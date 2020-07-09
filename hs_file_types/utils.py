@@ -311,8 +311,7 @@ def ingest_logical_file_metadata(metadata_file, resource, new_lfs):
 
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
-    logical_file_class._result_cache = None
-    for logical_file in resource.logical_files:
+    for logical_file in logical_file_class.objects.all().filter(resource=resource):
         if logical_file.map_short_file_path in map_file_path:
             return logical_file
     return None
