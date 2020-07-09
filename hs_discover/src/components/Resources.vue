@@ -36,7 +36,7 @@
                                     <span class="badge">{{countOwners[owner]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
                                         <input type="checkbox" class="faceted-selections" :value=owner
-                                               v-model="ownerFilter" :id="'owner-'+owner">
+                                            v-model="ownerFilter" :id="'owner-'+owner">
                                     </label>
                                 </li>
                             </ul>
@@ -56,7 +56,7 @@
                                     <span class="badge">{{countSubjects[subject]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
                                         <input type="checkbox" class="faceted-selections" :value=subject
-                                               v-model="subjectFilter" :id="'subj-'+subject">
+                                           v-model="subjectFilter" :id="'subj-'+subject">
                                     </label>
                                 </li>
                             </ul>
@@ -76,7 +76,7 @@
                                     <span class="badge">{{countContributors[contributor]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
                                         <input type="checkbox" class="faceted-selections" :value=contributor
-                                               v-model="contributorFilter" :id="'contrib-'+contributor">
+                                            v-model="contributorFilter" :id="'contrib-'+contributor">
                                     </label>
                                 </li>
                             </ul>
@@ -143,14 +143,14 @@
                         </div>
                     </div>
                 </div>
-
+                <!-- end facet panels -->
             </div>
         </div>
         <div id="resource-rows" class="col-sm-9 col-xs-12">
             <br/>
             <div class="table-wrapper">
                 <table v-if="filteredResources.length"
-                       class="table-hover table-striped resource-custom-table" id="items-discovered">
+                    class="table-hover table-striped resource-custom-table" id="items-discovered">
                     <thead>
                     <tr>
                         <th v-for="key in labels" v-bind:key="key"
@@ -166,7 +166,7 @@
                                  :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip"
                                  :title="entry.availability" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.shareable" src="/static/img/shareable.png" alt="Sharable Resource"
+                            <img v-if="entry.shareable" src="/static/img/shareable.png" alt="Shareable Resource"
                                 data-toggle="tooltip" data-placement="right" title=""
                                 data-original-title="Shareable">
                         </td>
@@ -177,6 +177,7 @@
                         <td>
                             <a :href="entry.author_link">{{entry.author}}</a>
                         </td>
+                        <!-- python is passing .isoformat() in views.py -->
                         <td>{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
                         <td>{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
@@ -189,14 +190,14 @@
 
 <script>
 import DatePick from 'vue-date-pick';
-import 'vue-date-pick/dist/vueDatePick.css';
+import 'vue-date-pick/dist/vueDatePick.css'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
 export default {
   data() {
     return {
       startdate: 'Start Date',
       enddate: 'End Date',
-      resloaded: false,
+      resloaded: false, // track axios resource data promise after component mount
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
