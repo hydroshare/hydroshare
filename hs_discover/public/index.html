@@ -8,7 +8,7 @@
     /* Always set the map height explicitly to define the size of the div
      * element that contains the map. */
     #map {
-        height: 0%;
+        height: 50%;
     }
     .vdpHeadCellContent {
         font-size: 1em;
@@ -17,7 +17,6 @@
         font-size: 1em;
     }
 </style>
-<!--<input type="hidden" id="static-url" value="{{ STATIC_URL }}">-->
 <div class="container" id="discover-main">
     <div class="row">
         <div class="col-xs-12">
@@ -188,17 +187,17 @@
         </div>
     </div>
 </div>
-<!--    <div id="map-view">-->
-<!--        <input id="map-search" class="controls" type="text" placeholder="Search Box">-->
-<!--        <div id="map"></div>-->
-<!--        <div id="discover-map-legend"></div>-->
-<!--        <div id="reset-zoom"></div>-->
-<!--    </div>-->
+    <div id="map-view">
+        <input id="map-search" class="controls" type="text" placeholder="Search Box">
+        <div id="map"></div>
+        <div id="discover-map-legend"></div>
+        <div id="reset-zoom"></div>
+    </div>
 <script src=/static/js/chunk-vendors.js></script>
 <script src=/static/js/app.js></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<!--    <script src=/static/js/map.js></script>-->
-<!--    <script async defer-->
-<!--      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"-->
-<!--    ></script>-->
+    <script src=/static/js/map.js></script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"
+    ></script>
 {% endblock %}

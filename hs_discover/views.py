@@ -1,7 +1,6 @@
 import json
 
 from django.shortcuts import render
-from django.template.defaultfilters import date
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet, SQ
 from rest_framework.response import Response
