@@ -2,11 +2,19 @@
 <!--{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}-->
 {% block meta_title %}Discover{% endblock %}
 {% block main %}
+<!-- Google map needs explicit height or may not show up -->
+<!-- vue-date-pick needs font-size override or will inherit an odd oversized appearance from the import of the css -->
 <style type="text/css">
     /* Always set the map height explicitly to define the size of the div
      * element that contains the map. */
     #map {
         height: 0%;
+    }
+    .vdpHeadCellContent {
+        font-size: 1em;
+    }
+    .vdpCellContent {
+        font-size: 1em;
     }
 </style>
 <!--<input type="hidden" id="static-url" value="{{ STATIC_URL }}">-->

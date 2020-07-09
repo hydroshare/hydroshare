@@ -343,4 +343,5 @@ export default {
     .checkbox {
 
     }
+
 </style>
