@@ -253,7 +253,6 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     return JsonResponse({'bag_status': 'Not ready',
                                          'task_id': task_id})
 
-                request.session['download_path'] = request.path
                 return HttpResponseRedirect(res.get_absolute_url())
             else:
                 ret_status = create_bag_by_irods(res_id)

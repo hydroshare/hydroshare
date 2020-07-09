@@ -66,7 +66,7 @@ class HSRESTTestCase(APITestCase):
         :param task_id: ID of download celery task
         :return: Django test client response object
         """
-        url = reverse('get_task', kwargs={'task_id': task_id})
+        url = reverse('get_task_status', kwargs={'task_id': task_id})
         return self.client.get(url, follow=True)
 
 

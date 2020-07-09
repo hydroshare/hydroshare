@@ -214,12 +214,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'maps_key': maps_key
         }
 
-        if 'download_path' in request.session:
-            download_path = request.session.get('download_path', None)
-            if download_path:
-                context['download_path'] = download_path
-            del request.session['download_path']
-
         return context
 
     # user requested the resource in EDIT MODE

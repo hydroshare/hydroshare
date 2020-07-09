@@ -46,7 +46,7 @@ class TestCreateResource(HSRESTTestCase):
                 task_id = content['task_id']
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content.decode())
-                if status_content['status'] == 'Completed':
+                if status_content['status']:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
                     self.assertEqual(response['Content-Type'], 'application/zip')
@@ -89,7 +89,7 @@ class TestCreateResource(HSRESTTestCase):
                 task_id = content['task_id']
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content.decode())
-                if status_content['status'] == 'Completed':
+                if status_content['status']:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
                     self.assertEqual(response['Content-Type'], 'application/zip')
