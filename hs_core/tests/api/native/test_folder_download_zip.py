@@ -69,7 +69,7 @@ class TestFolderDownloadZip(TestCase):
         input_path = "{}/data/contents/foo".format(self.res.short_id)
         output_path = "zips/rand/foo.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path,output_path,
+        self.assertEqual(create_temp_zip(self.res.short_id, input_path, output_path,
                                          download_path=input_path), input_path)
         self.assertTrue(self.istorage.exists(output_path))
 
@@ -88,7 +88,7 @@ class TestFolderDownloadZip(TestCase):
         output_path = "zips/rand/aggregation.zip"
 
         self.assertEqual(create_temp_zip(self.res.short_id, input_path,
-                                        output_path,
-                                        aggregation_name="multi_sites_formatted_version1.0.refts.json",
-                                        download_path=input_path), input_path)
+                                         output_path,
+                                         aggregation_name="multi_sites_formatted_version1.0.refts.json",
+                                         download_path=input_path), input_path)
         self.assertTrue(self.istorage.exists(output_path))
