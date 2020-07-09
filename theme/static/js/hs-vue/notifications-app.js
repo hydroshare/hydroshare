@@ -118,7 +118,6 @@ $(document).ready(function () {
                         type: "GET",
                         url: '/hsapi/_internal/set_task_delivered/' + task.id,
                         success: function (task) {
-                            vue.registerTask(task);
                         },
                         error: function (response) {
                             console.log(response);

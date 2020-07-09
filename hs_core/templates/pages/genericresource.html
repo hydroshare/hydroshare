@@ -33,16 +33,6 @@
             {% endif %}
         {% endblock %}
 
-        {%  if task_id and download_path %}
-            <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
-            <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-            <div class="col-sm-12">
-                <div id='download-status-info' class="alert alert-success">
-                    Please wait for the download to be prepared<span id="loading">.</span>
-                </div>
-            </div>
-        {% endif %}
-
         {# Needs to be included first so it's available before other instances initialize #}
         {% include "includes/profile-card.html" %}
 
