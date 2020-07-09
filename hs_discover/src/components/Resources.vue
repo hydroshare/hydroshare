@@ -5,27 +5,6 @@
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-items">
-                <!-- filter by temporal overlap -->
-                <div id="faceting-temporal">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">Filter by temporal overlap</h4>
-                        </div>
-                        <div v-if="filteredResources.length" id="dateselectors">
-                            <date-pick
-                                 v-model="startdate"
-                                 :parseDate="temporalFilter"
-                                 :displayFormat="'MM/DD/YYYY'"
-                            ></date-pick>
-                            <date-pick
-                                 v-model="enddate"
-                                 :parseDate="temporalFilter"
-                                 :displayFormat="'MM/DD/YYYY'"
-                            ></date-pick>
-                        </div>
-                    </div>
-                </div>
-
                 <div id="faceting-creator">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -144,6 +123,27 @@
                         </div>
                     </div>
                 </div>
+                <!-- filter by temporal overlap -->
+                <div id="faceting-temporal">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Filter by temporal overlap</h4>
+                        </div>
+                        <div v-if="filteredResources.length" id="dateselectors">
+                            <date-pick
+                                 v-model="startdate"
+                                 :parseDate="temporalFilter"
+                                 :displayFormat="'MM/DD/YYYY'"
+                            ></date-pick>
+                            <date-pick
+                                 v-model="enddate"
+                                 :parseDate="temporalFilter"
+                                 :displayFormat="'MM/DD/YYYY'"
+                            ></date-pick>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
         <div id="resource-rows" class="col-sm-9 col-xs-12">
