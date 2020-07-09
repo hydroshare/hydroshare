@@ -177,8 +177,8 @@
                         <td>
                             <a :href="entry.author_link">{{entry.author}}</a>
                         </td>
-                        <td>{{new Date(entry.created).toDateString()}}</td>
-                        <td>{{new Date(entry.modified).toDateString()}}</td>
+                        <td>{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
+                        <td>{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -254,7 +254,8 @@ export default {
         const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
         const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-          return resTypes.sort((a, b) => ((a[this.sortingBy] > b[this.sortingBy]) ? this.sortDir : -1 * this.sortDir));
+          const datesorted = resTypes.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+          return this.sortDir === -1 ? datesorted : datesorted.reverse();
         }
         return resTypes.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
       }
