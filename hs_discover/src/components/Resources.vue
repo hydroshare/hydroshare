@@ -9,7 +9,7 @@
                 <div id="faceting-temporal">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Temporal</h4>
+                            <h4 class="panel-title">Filter by date overlap</h4>
                         </div>
                         <div v-if="filteredResources.length" id="dateselectors">
                             <date-pick
