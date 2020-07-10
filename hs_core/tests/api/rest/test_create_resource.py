@@ -83,7 +83,7 @@ class TestCreateResource(HSRESTTestCase):
         response = self.getResourceBag(res_id)
         if response['Content-Type'] == 'application/json':
             content = json.loads(response.content.decode())
-            if content['bag_status'] != "Completed":
+            if content['status'] != "Completed":
                 # wait for 10 seconds to give task a chance to run and finish
                 time.sleep(10)
                 task_id = content['id']
