@@ -6,7 +6,9 @@ from django.contrib.contenttypes.fields import GenericRelation
 from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div
+from rdflib import RDF, BNode, Literal
 
+from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 
@@ -28,6 +30,36 @@ class OriginalCoverage(AbstractMetaDataElement):
     class Meta:
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, HSTERMS.spatialReference, None)):
+            value = graph.value(subject=cov, predicate=RDF.value)
+            value_dict = {}
+            for key_value in value.split("; "):
+                k, v = key_value.split("=")
+                if k == 'units':
+                    value_dict['unit'] = v
+                else:
+                    value[k] = v
+            OriginalCoverage.create(**value_dict, content_object=content_object)
+
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, HSTERMS.spatialReference, coverage))
+        graph.add((coverage, RDF.type, HSTERMS.box))
+        value_dict = {}
+        value_dict['northlimit'] = self.northlimit
+        value_dict['southlimit'] = self.southlimit
+        value_dict['westlimit'] = self.westlimit
+        value_dict['eastlimit'] = self.eastlimit
+        value_dict['projection_string'] = self.projection_string
+        value_dict['projection_name'] = self.projection_name
+        value_dict['datum'] = self.datum
+        value_dict['units'] = self.unit
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
 
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
