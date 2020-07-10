@@ -69,7 +69,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     value_dict['projection'] = v
                 else:
                     value_dict[k] = v
-            OriginalCoverage.create(projection_string_type=type, projection_string_text=projection_string_text, _value=value_dict, datum=datum, content_object=content_object)
+            OriginalCoverage.create(projection_string_type=type, projection_string_text=projection_string_text, _value=json.dumps(value_dict), datum=datum, content_object=content_object)
 
 
     def rdf_triples(self, subject, graph):
