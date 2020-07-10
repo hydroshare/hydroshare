@@ -41,7 +41,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                 if k == 'units':
                     value_dict['unit'] = v
                 else:
-                    value[k] = v
+                    value_dict[k] = v
             OriginalCoverage.create(**value_dict, content_object=content_object)
 
 
