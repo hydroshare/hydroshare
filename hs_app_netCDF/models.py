@@ -57,10 +57,14 @@ class OriginalCoverage(AbstractMetaDataElement):
             value = graph.value(subject=cov, predicate=RDF.value)
             type = type.split('/')[-1]
             value_dict = {}
+            datum = ''
             for key_value in value.split("; "):
                 k, v = key_value.split("=")
-                value_dict[k] = v
-            OriginalCoverage.create(type=type, value=value_dict, content_object=content_object)
+                if k == 'datum':
+                    datum = v
+                else:
+                    value_dict[k] = v
+            OriginalCoverage.create(projection_string_type=type, projection_string_text=value_dict, datum=datum, content_object=content_object)
 
 
     def rdf_triples(self, subject, graph):
@@ -71,6 +75,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         value_dict = {}
         for k, v in self.value.items():
             value_dict[k] = v
+        value_dict['datum'] = self.datum
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
         graph.add((coverage, RDF.value, Literal(value_string)))
 
