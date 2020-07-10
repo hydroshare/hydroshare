@@ -1400,32 +1400,31 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        cov = graph.value(subject=subject, predicate=DC.coverage)
-        if cov:
-            for _, term, o in graph.triples((cov, None, None)):
-                for _, _, value in graph.triples((o, RDF.value, None)):
-                    type = term.split('/')[-1]
-                    value_dict = {}
-                    for key_value in value.split("; "):
-                        k, v = key_value.split("=")
-                        if k in ['start', 'end']:
-                            v = parser.parse(v).strftime("%Y/%m/%d")
-                        value_dict[k] = v
-                    Coverage.create(type=type, value=value_dict, content_object=content_object)
+        for _, _, cov in graph.triples((subject, DC.coverage, None)):
+            type = graph.value(subject=cov, predicate=RDF.type)
+            value = graph.value(subject=cov, predicate=RDF.value)
+            type = type.split('/')[-1]
+            value_dict = {}
+            for key_value in value.split("; "):
+                k, v = key_value.split("=")
+                if k in ['start', 'end']:
+                    v = parser.parse(v).strftime("%Y/%m/%d")
+                value_dict[k] = v
+            Coverage.create(type=type, value=value_dict, content_object=content_object)
+
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()
         graph.add((subject, DC.coverage, coverage))
-        value = BNode()
         DCTERMS_type = getattr(DCTERMS, self.type)
-        graph.add((coverage, DCTERMS_type, value))
+        graph.add((coverage, RDF.type, DCTERMS_type))
         value_dict = {}
         for k, v in self.value.items():
             if k in ['start', 'end']:
                 v = parser.parse(v).isoformat()
             value_dict[k] = v
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
-        graph.add((value, RDF.value, Literal(value_string)))
+        graph.add((coverage, RDF.value, Literal(value_string)))
 
     def add_to_xml_container(self, container):
         """Update etree SubElement container with coverage values."""
@@ -1733,7 +1732,7 @@ class Subject(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(self, graph, subject, content_object):
-        for _, _, o in graph.triples((subject, DC.type, None)):
+        for _, _, o in graph.triples((subject, DC.subject, None)):
             Subject.create(value=str(o), content_object=content_object)
 
 

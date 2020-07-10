@@ -32,13 +32,13 @@ class RDF_MetaData_Mixin(object):
             break
         if not subject:
             raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
-
-        self.resource.extra_metadata = {}
+        res = self.resource
+        res.extra_metadata.clear()
         for _, _, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
             key = str(graph.value(subject=o, predicate=HSTERMS.key))
             value = str(graph.value(subject=o, predicate=HSTERMS.value))
-            self.resource.extra_metadata[key] = value
-        self.resource.save()
+            res.extra_metadata[key] = value
+        res.save()
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
@@ -65,7 +65,7 @@ class RDF_MetaData_Mixin(object):
                 f.rdf_triples(subject, graph)
 
         from .hydroshare import current_site_url
-        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), self.resource.resource_type)
+        TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
         graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return graph
