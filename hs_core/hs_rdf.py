@@ -32,13 +32,13 @@ class RDF_MetaData_Mixin(object):
             break
         if not subject:
             raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
-        res = self.resource
-        res.extra_metadata.clear()
+        extendedMetadata = {}
         for _, _, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
             key = str(graph.value(subject=o, predicate=HSTERMS.key))
             value = str(graph.value(subject=o, predicate=HSTERMS.value))
-            res.extra_metadata[key] = value
-        res.save()
+            extendedMetadata[key] = value
+        self.resource.extra_metadata = extendedMetadata
+        self.resource.save()
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:

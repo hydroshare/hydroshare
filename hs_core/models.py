@@ -438,6 +438,30 @@ class Party(AbstractMetaDataElement):
 
         abstract = True
 
+    def rdf_triples(self, subject, graph):
+        super(Party).rdf_triples(subject, graph)
+        party_type = getattr(DC, self.__class__.__name__)
+        party = graph.value(subject=subject, predicate=party_type)
+        for k, v in self.identifiers.items():
+            graph.add((party, getattr(HSTERMS, k), URIRef(v)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        """Default implementation that ingests by convention"""
+        party_type = getattr(DC, cls.__name__)
+        party = graph.value(subject=subject, predicate=party_type)
+        value_dict = {}
+        identifiers = {}
+        for _, p, o in graph.triples((party, None, None)):
+            field = p.split(':')[1]
+            if field in ['name', 'organization', 'email', 'address', 'phone', 'homepage', 'description']:
+                value_dict[field] = str(o)
+            else:
+                identifiers[field] = str(o)
+        if value_dict or identifiers:
+            cls.create(content_object=content_object, **value_dict, identifiers=identifiers)
+
+
     @classmethod
     def get_post_data_with_identifiers(cls, request, as_json=True):
         identifier_names = request.POST.getlist('identifier_name')
@@ -704,7 +728,7 @@ class Title(AbstractMetaDataElement):
         graph.add((subject, DC.title, Literal(self.value)))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         title = graph.value(subject=subject, predicate=DC.title)
         if title:
             Title.create(value=title.value, content_object=content_object)
@@ -734,7 +758,7 @@ class Type(AbstractMetaDataElement):
         graph.add((subject, DC.type, URIRef(self.url)))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         url = graph.value(subject=subject, predicate=DC.type)
         if url:
             Type.create(url=str(url), content_object=content_object)
@@ -775,7 +799,7 @@ class Date(AbstractMetaDataElement):
         graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         for _, _, date_node in graph.triples((subject, DC.date, None)):
             type = graph.value(subject=date_node, predicate=RDF.type)
             value = graph.value(subject=date_node, predicate=RDF.value)
@@ -908,7 +932,7 @@ class Relation(AbstractMetaDataElement):
         graph.add((relation_node, getattr(HSTERMS, self.type), URIRef(self.value)))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         for _, _, relation_node in graph.triples((subject, DC.relation, None)):
             for _, p, o in graph.triples((relation_node, None, None)):
                 type_term = p
@@ -1015,7 +1039,7 @@ class Identifier(AbstractMetaDataElement):
             graph.add((identifier_node, HSTERMS.hydroShareIdentifier, URIRef(self.url)))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         for _, _, identifier_node in graph.triples((subject, DC.identifier, None)):
             url = graph.value(subject=identifier_node, predicate=HSTERMS.doi)
             name = 'doi'
@@ -1213,7 +1237,7 @@ class Language(AbstractMetaDataElement):
         graph.add((subject, DC.language, Literal(self.code)))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         code = graph.value(subject=subject, predicate=DC.language)
         if code:
             Language.create(code=str(code), content_object=content_object)
@@ -1732,7 +1756,7 @@ class Subject(AbstractMetaDataElement):
         graph.add((subject, DC.subject, URIRef(self.value)))
 
     @classmethod
-    def ingest_rdf(self, graph, subject, content_object):
+    def ingest_rdf(cls, graph, subject, content_object):
         for _, _, o in graph.triples((subject, DC.subject, None)):
             Subject.create(value=str(o), content_object=content_object)
 
