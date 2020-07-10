@@ -8,7 +8,10 @@ from django.contrib.contenttypes.fields import GenericRelation
 from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, _input
+from rdflib import RDF, BNode, Literal
+from rdflib.namespace import DCTERMS
 
+from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
@@ -45,6 +48,31 @@ class OriginalCoverage(AbstractMetaDataElement):
     @property
     def value(self):
         return json.loads(self._value)
+
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, HSTERMS.spatialReference, None)):
+            type = graph.value(subject=cov, predicate=RDF.type)
+            value = graph.value(subject=cov, predicate=RDF.value)
+            type = type.split('/')[-1]
+            value_dict = {}
+            for key_value in value.split("; "):
+                k, v = key_value.split("=")
+                value_dict[k] = v
+            OriginalCoverage.create(type=type, value=value_dict, content_object=content_object)
+
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, HSTERMS.spatialReference, coverage))
+        DCTERMS_type = getattr(DCTERMS, self.type)
+        graph.add((coverage, RDF.type, DCTERMS_type))
+        value_dict = {}
+        for k, v in self.value.items():
+            value_dict[k] = v
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
 
     @classmethod
     def create(cls, **kwargs):

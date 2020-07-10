@@ -618,6 +618,7 @@ class Party(AbstractMetaDataElement):
         return identifiers
 
 
+@rdf_terms(DC.contributor)
 class Contributor(Party):
     """Extend Party model with the term of 'Contributor'."""
 
@@ -1736,6 +1737,7 @@ class Subject(AbstractMetaDataElement):
             Subject.create(value=str(o), content_object=content_object)
 
 
+@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 

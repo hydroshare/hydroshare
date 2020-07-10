@@ -121,9 +121,9 @@ class RDF_Term_MixIn(object):
     def ingest_rdf(cls, graph, subject, content_object):
         """Default implementation that ingests by convention"""
         term = cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)
-        value_dict = {}
         metadata_nodes = graph.objects(subject=subject, predicate=term)
         for metadata_node in metadata_nodes:
+            value_dict = {}
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
