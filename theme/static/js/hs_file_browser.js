@@ -382,27 +382,32 @@ function updateSelectionMenuContext() {
             }
 
             if (!fileName.toUpperCase().endsWith(".TIF") && !fileName.toUpperCase().endsWith(".TIFF") ||
-                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
+                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                logicalFileType !== "ModelInstanceLogicalFile") {
                 uiActionStates.setGeoRasterFileType.disabled = true;
             }
 
             if (!fileName.toUpperCase().endsWith(".NC") ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setNetCDFFileType.disabled = true;
             }
 
             if ((!fileName.toUpperCase().endsWith(".SHP")) ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setGeoFeatureFileType.disabled = true;
             }
 
             if (!fileName.toUpperCase().endsWith(".REFTS.JSON") ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setRefTimeseriesFileType.disabled = true;
             }
 
             if ((!fileName.toUpperCase().endsWith(".SQLITE") && !fileName.toUpperCase().endsWith(".CSV")) ||
-                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile")) {
+                (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                    logicalFileType !== "ModelInstanceLogicalFile")) {
                 uiActionStates.setTimeseriesFileType.disabled = true;
             }
 
