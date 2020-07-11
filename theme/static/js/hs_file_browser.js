@@ -335,8 +335,8 @@ function updateSelectionMenuContext() {
             let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
             if (!logicalFileTypeToSet || !logicalFileTypeToSet.length) {
                 uiActionStates.setFileSetFileType.fileMenu.hidden = true;
-                uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
-                uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                uiActionStates.subMenuSetContentType.disabled = true;
+                uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
             }
             else {
                 if (logicalFileTypeToSet !== "ModelProgramLogicalFile" &&
@@ -346,6 +346,9 @@ function updateSelectionMenuContext() {
                 if (logicalFileTypeToSet !=="ModelInstanceLogicalFile" &&
                     logicalFileTypeToSet !=="ModelProgramOrInstanceLogicalFile") {
                     uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                }
+                if (logicalFileTypeToSet === "ModelProgramLogicalFile") {
+                    uiActionStates.setFileSetFileType.fileMenu.hidden = true;
                 }
             }
         }
@@ -368,8 +371,14 @@ function updateSelectionMenuContext() {
                 uiActionStates.setGenericFileType.disabled = true;
                 uiActionStates.setGenericFileType.fileMenu.hidden = true;
 
-                uiActionStates.subMenuSetContentType.disabled = true;
-                uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                if (logicalFileType !== "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === 'true'){
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
+                if (logicalFileType === "ModelProgramLogicalFile"){
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
             }
 
             if (!fileName.toUpperCase().endsWith(".TIF") && !fileName.toUpperCase().endsWith(".TIFF") ||
@@ -442,6 +451,13 @@ function updateSelectionMenuContext() {
                         // created based on a folder
                         uiActionStates.removeAggregation.disabled = true;
                         uiActionStates.removeAggregation.fileMenu.hidden = true;
+                    }
+                    if (logicalFileType === "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === "true") {
+                        uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                    }
+                    else if(logicalFileType === "ModelProgramLogicalFile" && fileHasModelProgramAggrFolder === "true") {
+                        uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
+                        uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
                     }
                 }
             }
@@ -839,6 +855,17 @@ function showFileTypeMetadata(file_type_time_series, url){
         if (selectedItem.hasClass("fb-file")) {
             $("#btnSideAddMetadata").attr("data-fb-action", "setGenericFileType");
         }
+        else if (selectedItem.hasClass("fb-folder")) {
+            var folderLogicalFileTypeToSet = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+            if (folderLogicalFileTypeToSet === undefined || folderLogicalFileTypeToSet === "ModelProgramLogicalFile" ||
+                folderLogicalFileTypeToSet.length === 0) {
+                $("#fileTypeMetaData").html(no_metadata_alert);
+                $("#btnSideAddMetadata").addClass("disabled");
+            }
+            else {
+                $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
+            }
+        }
         else {
             $("#btnSideAddMetadata").attr("data-fb-action", "setFileSetFileType");
         }
@@ -878,6 +905,15 @@ function showFileTypeMetadata(file_type_time_series, url){
             }
         }
     }
+    else if (selectedItem.hasClass("fb-folder")) {
+        var folderLogicalFileTypeToSet = selectedItem.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+        if (folderLogicalFileTypeToSet === undefined || folderLogicalFileTypeToSet === "ModelProgramLogicalFile" ||
+            folderLogicalFileTypeToSet.length === 0) {
+            $("#fileTypeMetaData").html(no_metadata_alert);
+            $("#btnSideAddMetadata").addClass("disabled");
+        }
+    }
+
     var resource_mode = RESOURCE_MODE;
     if (!resource_mode) {
         return;
