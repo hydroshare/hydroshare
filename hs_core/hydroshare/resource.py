@@ -937,7 +937,7 @@ def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
     :param resource: BaseResource object representing a HydroShare resource
-    :param file_name: the file name to be deleted
+    :param file_name: name of the file that got deleted
     :return:
     """
     delete_file_mime_type = utils.get_file_mime_type(file_name)

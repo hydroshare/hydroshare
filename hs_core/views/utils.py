@@ -816,49 +816,47 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             fobj.set_storage_path(new_path)
 
 
-def remove_irods_folder_in_django(resource, istorage, folderpath, user):
+def remove_irods_folder_in_django(resource, folder_path, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     If the folder contains any aggregations, those are also deleted from DB
     :param resource: the BaseResource object representing a HydroShare resource
-    :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
-    :param foldername: the folder name that has been removed from iRODS
-    :user  user who initiated the folder delete operation
+    :param folder_path: full path (starting with resource id) of the folder that has been removed from iRODS
+    :param user: who initiated the folder delete operation
     :return:
     """
-    # TODO: Istorage parameter is redundant; derived from resource; can be deleted.
-    if resource and istorage and folderpath:
-        if not folderpath.endswith('/'):
-            folderpath += '/'
-        res_file_set = ResourceFile.objects.filter(object_id=resource.id)
 
-        # then delete resource file objects
-        for f in res_file_set:
-            filename = f.storage_path
-            if filename.startswith(folderpath):
-                # TODO: integrate deletion of logical file with ResourceFile.delete
-                # delete the logical file (if it's not a fileset) object if the resource file
-                # has one
-                if f.has_logical_file and not f.logical_file.is_fileset:
-                    # this should delete the logical file and any associated metadata
-                    # but does not delete the resource files that are part of the logical file
-                    f.logical_file.logical_delete(user, delete_res_files=False)
-                f.delete()
-                hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+    if folder_path.endswith('/'):
+        folder_path = folder_path.rstrip('/')
 
-        # if the folder getting deleted contains any fileset aggregation those aggregations need to
-        # be deleted
-        # note: for other types of aggregation the aggregation gets deleted as part of deleting
-        # the resource file - see above for resource file delete
-        if resource.resource_type == 'CompositeResource':
-            rel_folder_path = folderpath[len(resource.file_path) + 1:].rstrip('/')
-            filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
-            for fileset in filesets:
-                if fileset.folder.startswith(rel_folder_path):
-                    fileset.logical_delete(user, delete_res_files=True)
+    # we need to delete only the files that are under the folder_path
+    rel_folder_path = folder_path[len(resource.file_path) + 1:]
+    res_file_set = ResourceFile.objects.filter(object_id=resource.id, file_folder__startswith=rel_folder_path)
 
-        # send the post-delete signal
-        post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
+    # then delete resource file objects
+    for f in res_file_set:
+        # TODO: integrate deletion of logical file with ResourceFile.delete
+        # delete the logical file (if it's not a fileset) object if the resource file
+        # has one
+        if f.has_logical_file and not f.logical_file.is_fileset:
+            # this should delete the logical file and any associated metadata
+            # but does not delete the resource files that are part of the logical file
+            f.logical_file.logical_delete(user, delete_res_files=False)
+        f.delete()
+        hydroshare.delete_format_metadata_after_delete_file(resource, f.file_name)
+
+    # if the folder getting deleted contains any fileset aggregation those aggregations need to
+    # be deleted
+    # note: for other types of aggregation the aggregation gets deleted as part of deleting
+    # the resource file - see above for resource file delete
+    if resource.resource_type == 'CompositeResource':
+        filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
+        for fileset in filesets:
+            if fileset.folder.startswith(rel_folder_path):
+                fileset.logical_delete(user, delete_res_files=True)
+
+    # send the post-delete signal
+    post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
 
 
 # TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible.
@@ -1077,10 +1075,9 @@ def remove_folder(user, res_id, folder_path):
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
-    # TODO: Pabitra - resource should check here if folder can be removed
     istorage.delete(coll_path)
 
-    remove_irods_folder_in_django(resource, istorage, coll_path, user)
+    remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required
 
