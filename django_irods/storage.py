@@ -425,7 +425,7 @@ class IrodsStorage(Storage):
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "checksum".format(obj_name))
         # remove potential '\n' from stdout
-        checksum = stdout.rstrip('\n')
+        checksum = stdout.strip('\n')
         if not checksum:
             if force_compute:
                 raise ValidationError("checksum for {} cannot be found in iRODS".format(obj_name))
