@@ -89,6 +89,7 @@ class ResourceFileToListItemMixin(object):
         logical_file_type = f.logical_file_type_name
         file_name = os.path.basename(f.resource_file.name)
         modified_time = f.modified_time
+        checksum = f.checksum
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -100,7 +101,8 @@ class ResourceFileToListItemMixin(object):
                                                                size=fsize,
                                                                content_type=ftype,
                                                                logical_file_type=logical_file_type,
-                                                               modified_time=modified_time)
+                                                               modified_time=modified_time,
+                                                               checksum=checksum)
         return resource_file_info_item
 
 
@@ -735,14 +737,16 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 mytest_resource/text_file.txt",
                 "size": 21,
                 "content_type": "text/plain",
-                "modified_time": "2020-02-25T08:28:14"
+                "modified_time": "2020-02-25T08:28:14",
+                "checksum": "7265548b8f345605113bd9539313b4e7"
             },
             {
                 "url": "http://mill24.cep.unc.edu/django_irods/download/
                 bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
                 "size": 270993,
                 "content_type": "image/tiff",
-                "modified_time": "2020-02-25T08:28:14"
+                "modified_time": "2020-02-25T08:28:14",
+                "checksum": "ed06b456c22f7123d20888d16bcd181d"
             }
         ]
     }
