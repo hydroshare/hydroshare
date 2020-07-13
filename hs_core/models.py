@@ -2753,7 +2753,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def checksum(self):
-        return self.resource_file.storage.checksum(self.resource_file.name)
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
 
     # TODO: write unit test
     @property
