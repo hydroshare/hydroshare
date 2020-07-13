@@ -57,8 +57,11 @@ export default {
                       if (thisRes.coverage_type === 'point') {
                         console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
                         createMarker({ lat: thisRes.north, lng: thisRes.east });
-                      } else {
+                      } else if (thisRes.coverage_type === 'box') {
                         console.log(`mapdata: ${thisRes.coverage_type}`);
+                        if (thisRes.north === thisRes.south && thisRes.east === thisRes.west) {
+                          createMarker({ lat: thisRes.north, lng: thisRes.east });
+                        }
                       }
                     } catch (e) {
                       console.log(`Error parsing map response or creating marker: ${e}`);
