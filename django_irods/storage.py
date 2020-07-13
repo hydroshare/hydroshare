@@ -427,6 +427,8 @@ class IrodsStorage(Storage):
         # remove potential '\n' from stdout
         checksum = stdout.rstrip('\n')
         if not checksum:
+            if force_compute:
+                raise ValidationError("checksum for {} cannot be found in iRODS".format(obj_name))
             # checksum hasn't been computed, so force the checksum computation
             return self.checksum(full_name, force_compute=True)
         return checksum
