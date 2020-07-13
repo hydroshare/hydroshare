@@ -57,6 +57,8 @@ export default {
                       if (thisRes.coverage_type === 'point') {
                         console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
                         createMarker({ lat: thisRes.north, lng: thisRes.east });
+                      } else {
+                        console.log(`mapdata: ${thisRes.coverage_type}`);
                       }
                     } catch (e) {
                       console.log(`Error parsing map response or creating marker: ${e}`);
