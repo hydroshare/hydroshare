@@ -60,7 +60,9 @@ export default {
                       } else if (thisRes.coverage_type === 'box') {
                         console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
                         if (thisRes.north === thisRes.south && thisRes.east === thisRes.west) {
-                          createMarker({ lat: thisRes.north, lng: thisRes.east });
+                          if (Number.isInteger(parseInt(thisRes.north))) {
+                            createMarker({ lat: thisRes.north, lng: thisRes.east });
+                          }
                         }
                       }
                     } catch (e) {
