@@ -43,15 +43,23 @@ export default {
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
           if (response) {
-            this.$data.resources = JSON.parse(response.data.resources);
+            try {
+              this.$data.resources = JSON.parse(response.data.resources);
+            } catch (e) {
+              console.log(`Error prasing discoverapi JSON: ${e}`);
+            }
             axios.get('/searchjson/', { params: { data: {} } })
               .then((mapResponse) => {
                 if (mapResponse.status === 200) {
                   mapResponse.data.forEach((mapResource) => {
-                    const thisRes = JSON.parse(mapResource);
-                    if (thisRes.coverage_type === 'point') {
-                      console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
-                      createMarker({ lat: thisRes.north, lng: thisRes.east });
+                    try {
+                      const thisRes = JSON.parse(mapResource);
+                      if (thisRes.coverage_type === 'point') {
+                        console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
+                        createMarker({ lat: thisRes.north, lng: thisRes.east });
+                      }
+                    } catch (e) {
+                      console.log(`Error parsing map response or creating marker: ${e}`);
                     }
                   });
                 } else {
@@ -59,12 +67,12 @@ export default {
                 }
               })
               .catch((error) => {
-                  console.error(error); // eslint-disable-line
+                  console.error(`/searchjson/ error: ${error}`); // eslint-disable-line
               });
           }
         })
         .catch((error) => {
-          console.error(error); // eslint-disable-line
+          console.error(`/discoverapi/ error: ${error}`); // eslint-disable-line
         });
     },
     clearSearch() {
