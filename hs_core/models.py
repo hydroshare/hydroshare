@@ -1684,6 +1684,38 @@ class ResourceManager(PageManager):
         return qs
 
 
+class DjangoAVU(Object):
+    """ Simulate iRODS AVU functions in Django """
+    name = models.CharField(max_length=255, unique=True)
+    value = models.CharField(max_length=255)
+    unit = models.CharField(max_length=255)
+
+    @classmethod
+    def set(cls, n, v, u): 
+        record, create = cls.objects.get_or_create(defaults={'value': v, 'unit': u},
+                                                   name=n)
+        if not create: 
+           record.unit = u
+           record.value = v
+           record.save()
+
+    @classmethod
+    def get(cls, n): 
+        try: 
+            record = cls.object.get(name=n)
+            return record
+        except ObjectDoesNotExist: 
+            return None
+
+    @classmethod
+    def remove(cls, n): 
+        try: 
+            record = cls.object.get(name=n)
+            record.delete()
+        except ObjectDoesNotExist: 
+            pass
+        
+    
 class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
     Create Abstract Class for all Resources.
