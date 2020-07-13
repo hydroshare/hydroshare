@@ -152,12 +152,12 @@
                 <table v-if="filteredResources.length"
                     class="table-hover table-striped resource-custom-table" id="items-discovered">
                     <thead>
-                    <tr>
-                        <th v-for="key in labels" v-bind:key="key"
-                            @click="sortBy(key)">
-                            <i :class="sortStyling(key)"></i>{{key}}
-                        </th>
-                    </tr>
+                        <tr>
+                            <th v-for="key in labels" v-bind:key="key"
+                                @click="sortBy(key)">
+                                <i :class="sortStyling(key)"></i>{{key}}
+                            </th>
+                        </tr>
                     </thead>
                     <tbody>
                     <tr v-for="entry in filteredResources" v-bind:key="entry">
@@ -184,6 +184,10 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="col-sm-3 col-xs-12">
+            <!-- toggleMap defined in map.js -->
+            <input type="button" value="Toggle Map" onclick="toggleMap()">
         </div>
     </div>
 </template>

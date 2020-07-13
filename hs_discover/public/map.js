@@ -1,46 +1,13 @@
 ((exports) => {
   const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
-  const point = { info_link: '', lat: 42, lng: -71 };
+  // eslint-disable-next-line no-unused-vars
   let infowindow;
-
-  function createMarker(place) {
-    const marker = new google.maps.Marker({
-      map: exports.map,
-      position: place.geometry.location,
-    });
-
-    google.maps.event.addListener(marker, 'click', function() {
-      infowindow.setContent(place.name);
-      infowindow.open(exports.map, this);
-    });
-  }
-
-  const locations = [{ lat: 39, lng: -75 }, { lat: 42, lng: -71 }];
-
-  // const markers = locations.map((location, i) => {
-  //   return new google.maps.Marker({
-  //     // icon: './images/pin.svg',
-  //     position: location,
-  //     zIndex: i,
-  //     map: exports.map,
-  //   });
-    // Add event listeners to the markers
-    // eslint-disable-next-line array-callback-return,no-unused-vars
-    // markers.map((marker, i) => {
-    //   marker.addListener('mouseover', () => {
-    //     toggleIcon(marker, true);
-    //   });
-    //   marker.addListener('mouseout', () => {
-    //     toggleIcon(marker, false);
-    //   });
-    // });
-  // });
 
   const createSearcher = () => {
     const searchBox = new google.maps.places.SearchBox(document.getElementById('map-search'));
     exports.map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('map-search'));
     // Bias the SearchBox results towards current map's viewport.
-    exports.map.addListener('bounds_changed', function() {
+    exports.map.addListener('bounds_changed', function () {
       searchBox.setBounds(exports.map.getBounds());
     });
 
@@ -100,15 +67,33 @@
     exports.map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
     let legendTable = '<table><tbody>';
     legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_red_marker.png'>"
-        + '</td><td>Point Coverage Locations</td></tr>';
-    // legendTable += "<tr><td class='text-center'>
-    // <img src='/static/img/discover_map_blue_marker.png'>
-    // </td><td>Box Coverage Centers</td></tr>";
-    // legendTable += "<tr><td class='text-center'>
-    // <img src='/static/img/discover_map_cluster_icon.png'>
-    // </td><td>Clusters</td></tr></tbody></table>";
+      + '</td><td>Point Coverage Locations</td></tr>';
+    legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_blue_marker.png'>"
+      + '</td><td>Box Coverage Centers</td></tr>';
+    legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_cluster_icon.png'>"
+      + '</td><td>Clusters</td></tr></tbody></table>';
     legend.innerHTML = legendTable;
     return legend;
+  };
+
+  const createMarker = (loc) => {
+    const marker = new google.maps.Marker({
+      // icon: './images/pin.png',
+      // zIndex: i,
+      map: exports.map,
+      position: loc,
+    });
+    google.maps.event.addListener(marker, 'mouseover', function () {
+      infowindow.setContent("testplace");
+      infowindow.open(exports.map, this);
+    });
+    google.maps.event.addListener(marker, 'mouseout', function () {
+      infowindow.close();
+    });
+  };
+
+  const toggleMap = () => {
+    document.getElementById('map-view').style.display = document.getElementById('map-view').style.display === 'block' ? 'none' : 'block';
   };
 
   const initMap = () => {
@@ -116,8 +101,8 @@
     // eslint-disable-next-line no-param-reassign
     exports.map = new google.maps.Map(document.getElementById('map'), {
       center: {
-        lat: point.lat,
-        lng: point.lng,
+        lat: 42,
+        lng: -71,
       },
       zoom: mapDefaultZoom,
       mapTypeId: google.maps.MapTypeId.TERRAIN,
@@ -125,18 +110,8 @@
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     const mapLegend = createLegend();
     const searchBox = createSearcher();
-    const request = {
-      query: 'Atlanta georgia',
-      fields: ['name', 'geometry'],
-    };
-
-    axios.get('/searchjson/', { params: { data: {} } })
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((error) => {
-        console.error(error); // eslint-disable-line
-      });
   };
   exports.initMap = initMap; // eslint-disable-line
+  exports.createMarker = createMarker; // eslint-disable-line
+  exports.toggleMap = toggleMap; // eslint-disable-line
 })(this.window = this.window || {});

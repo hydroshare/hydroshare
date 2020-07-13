@@ -16,6 +16,9 @@
     .vdpCellContent {
         font-size: 1em;
     }
+    #map-view {
+        display: none;
+    }
 </style>
 <div class="container" id="discover-main">
     <div class="row">
@@ -24,6 +27,12 @@
         </div>
     </div>
     <br>
+    <div id="map-view">
+        <input id="map-search" class="controls" type="text" placeholder="Search Box">
+        <div id="map"></div>
+        <div id="discover-map-legend"></div>
+        <div id="reset-zoom"></div>
+    </div><br>
     <div class="row">
         <div class="col-xs-12">
             <div class="alert alert-info">
@@ -116,7 +125,7 @@
                                         </div>
 
                                         <div class="col-sm-6">
-                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/>
+                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Shareable Resource"/>
                                             <small>Shareable</small>
                                         </div>
 
@@ -187,17 +196,11 @@
         </div>
     </div>
 </div>
-    <div id="map-view">
-        <input id="map-search" class="controls" type="text" placeholder="Search Box">
-        <div id="map"></div>
-        <div id="discover-map-legend"></div>
-        <div id="reset-zoom"></div>
-    </div>
 <script src=/static/js/chunk-vendors.js></script>
 <script src=/static/js/app.js></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src=/static/js/map.js></script>
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"
-    ></script>
+<script src=/static/js/map.js></script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBv1tggGSW3-12h6vkbo8BL711KaUnG1w0&callback=initMap&libraries=&v=weekly&libraries=places"
+></script>
 {% endblock %}

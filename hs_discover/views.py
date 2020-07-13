@@ -89,10 +89,10 @@ class SearchAPI(APIView):
 
         # self.do_clean_data()
         # self.do_assign_haystack(NElng, SWlng, NElat, SWlat)
-        geo_sq = None
-
-        if geo_sq is not None:
-            sqs = sqs.filter(geo_sq)
+        # geo_sq = None
+        #
+        # if geo_sq is not None:
+        #     sqs = sqs.filter(geo_sq)
 
         # vocab = []  # will be populated with autocomplete terms from resource
         # vocab = [x for x in vocab if len(x) > 2]
@@ -108,24 +108,27 @@ class SearchAPI(APIView):
             except:
                 start_date = ''
                 end_date = ''
-            resources.append({
-                "title": result.title,
-                "link": result.absolute_url,
-                "availability": result.availability,
-                "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
-                "type": result.resource_type_exact,
-                "author": result.author,
-                "contributor": result.creator[0],
-                "author_link": result.author_url,
-                "owner": result.owner[0],
-                "abstract": result.abstract,
-                "subject": result.subject,
-                "created": result.created.isoformat(),
-                "modified": result.modified.isoformat(),
-                "shareable": True,
-                "start_date": start_date,
-                "end_date": end_date
-            })
+            try:
+                resources.append({
+                    "title": result.title,
+                    "link": result.absolute_url,
+                    "availability": result.availability,
+                    "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
+                    "type": result.resource_type_exact,
+                    "author": result.author,
+                    "contributor": result.creator[0],
+                    "author_link": result.author_url,
+                    "owner": result.owner[0],
+                    "abstract": result.abstract,
+                    "subject": result.subject,
+                    "created": result.created.isoformat(),
+                    "modified": result.modified.isoformat(),
+                    "shareable": True,
+                    "start_date": start_date,
+                    "end_date": end_date
+                })
+            except Exception as e:
+                print('discover error: {}'.format(e))
 
         return Response({
             'resources': json.dumps(resources),

@@ -42,7 +42,26 @@ export default {
     searchClick() {
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
-          this.$data.resources = JSON.parse(response.data.resources);
+          if (response) {
+            this.$data.resources = JSON.parse(response.data.resources);
+            axios.get('/searchjson/', { params: { data: {} } })
+              .then((mapResponse) => {
+                if (mapResponse.status === 200) {
+                  mapResponse.data.forEach((mapResource) => {
+                    const thisRes = JSON.parse(mapResource);
+                    if (thisRes.coverage_type === 'point') {
+                      console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
+                      createMarker({ lat: thisRes.north, lng: thisRes.east });
+                    }
+                  });
+                } else {
+                  console.log(`Error map API response: ${mapResponse.statusText}`);
+                }
+              })
+              .catch((error) => {
+                  console.error(error); // eslint-disable-line
+              });
+          }
         })
         .catch((error) => {
           console.error(error); // eslint-disable-line
