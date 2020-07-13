@@ -835,6 +835,7 @@ def remove_irods_folder_in_django(resource, folder_path, user):
 
     # then delete resource file objects
     for f in res_file_set:
+        file_name = f.file_name
         # TODO: integrate deletion of logical file with ResourceFile.delete
         # delete the logical file (if it's not a fileset) object if the resource file
         # has one
@@ -843,7 +844,7 @@ def remove_irods_folder_in_django(resource, folder_path, user):
             # but does not delete the resource files that are part of the logical file
             f.logical_file.logical_delete(user, delete_res_files=False)
         f.delete()
-        hydroshare.delete_format_metadata_after_delete_file(resource, f.file_name)
+        hydroshare.delete_format_metadata_after_delete_file(resource, file_name)
 
     # if the folder getting deleted contains any fileset aggregation those aggregations need to
     # be deleted
