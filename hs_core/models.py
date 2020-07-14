@@ -3786,13 +3786,12 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         super(CoreMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)
 
-        extendedMetadata = {}
+        self.resource.extra_metadata.clear()
         for extendedMetadata_subject in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
             key = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.key))
             value = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.value))
-            extendedMetadata[key] = value
+            self.resource.extra_metadata[key] = value
 
-        self.resource.extra_metadata = extendedMetadata
         self.resource.save()
 
     def get_rdf_graph(self):
