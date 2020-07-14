@@ -14,15 +14,17 @@
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#dateselectors" role="button" aria-expanded="false" aria-controls="dateselectors"></i>
                                 Temporal Coverage</h4>
                         </div>
-                        <div v-if="filteredResources.length" id="dateselectors" class="facet-list panel-collapse collapse in">
+                        <div id="dateselectors" class="facet-list panel-collapse collapse in">
+                            &nbsp;&nbsp;From
                             <date-pick
                                  v-model="startdate"
-                                 :parseDate="temporalFilter"
+                                 :parseDate="temporalFilterStart"
                                  :displayFormat="'MM/DD/YYYY'"
-                            ></date-pick>
+                            ></date-pick><br/>
+                            &nbsp;&nbsp;To&nbsp;&nbsp;&nbsp;&nbsp;
                             <date-pick
                                  v-model="enddate"
-                                 :parseDate="temporalFilter"
+                                 :parseDate="temporalFilterEnd"
                                  :displayFormat="'MM/DD/YYYY'"
                             ></date-pick>
                         </div>
@@ -317,6 +319,7 @@ export default {
       return [];
     },
     filteredResources() {
+      console.log('filter resources');
       if (this.resloaded) {
         let resfiltered = this.resources;
         if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
@@ -347,6 +350,32 @@ export default {
             const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
             resfiltered = resTypes;
           }
+        }
+        if (this.startdate !== 'Start Date' && this.startdate !== '') {
+          const resStartDate = [];
+          resfiltered.forEach((item) => {
+            if (item.start_date) {
+              console.log(`has a start date ${item.start_date}`);
+              if (item.start_date >= this.startdate) {
+                console.log(`including date ${item.start_date}`);
+                resStartDate.push(item);
+              }
+            }
+          });
+          resfiltered = resStartDate;
+        }
+        if (this.enddate !== 'End Date' && this.enddate !== '') {
+          const resEndDate = [];
+          resfiltered.forEach((item) => {
+            if (item.end_date) {
+              console.log(`has an end date ${item.end_date}`);
+              if (item.end_date <= this.enddate) {
+                console.log(`including date ${item.end_date}`);
+                resEndDate.push(item);
+              }
+            }
+          });
+          resfiltered = resEndDate;
         }
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
@@ -428,8 +457,7 @@ export default {
       }
       return '';
     },
-    temporalFilter() {
-      // console.log(this.startdate);
+    temporalFilterStart() {
       const d = new Date(Date.parse(this.startdate));
       if (Object.prototype.toString.call(d) === '[object Date]') {
         // it is a date
@@ -437,7 +465,24 @@ export default {
         if (isNaN(d.getTime())) { // d.valueOf() could also work
           // console.log('invalid date');
         } else {
-          console.log(`selected-start: ${this.startdate} sample-res-start: ${this.resources[2].start_date}`);
+          // console.log(`selected-start: ${d} sample-res-start: ${this.resources[2].start_date}`);
+          d.setDate(d.getDate() + 1);
+          return d;
+        }
+      } else {
+        // console.log('not a date');
+      }
+    },
+    temporalFilterEnd() {
+      const d = new Date(Date.parse(this.enddate));
+      if (Object.prototype.toString.call(d) === '[object Date]') {
+        // it is a date
+        // eslint-disable-next-line no-restricted-globals
+        if (isNaN(d.getTime())) { // d.valueOf() could also work
+          // console.log('invalid date');
+        } else {
+          // console.log(`selected-start: ${d} sample-res-start: ${this.resources[2].start_date}`);
+          d.setDate(d.getDate() + 1);
           return d;
         }
       } else {
