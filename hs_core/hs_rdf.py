@@ -97,17 +97,13 @@ class RDF_Term_MixIn(object):
 
     def rdf_triples(self, subject, graph):
         """Default implementation that parses by convention."""
-        term = self.rdf_term if hasattr(self, 'rdf_term') else getattr(HSTERMS, self.__class__.__name__)
+        term = self.__class__.get_class_term()
         metadata_node = BNode()
         graph.add((subject, term, metadata_node))
         for field in self.__class__._meta.fields:
             if self.ignored_fields and field.name in self.ignored_fields:
                 continue
-            field_term_attr = field.name + '_rdf_term'
-            if hasattr(self, field_term_attr):
-                field_term = getattr(self, field_term_attr)
-            else:
-                field_term = getattr(HSTERMS, field.name)
+            field_term = self.__class__.get_field_term(field.name)
             field_value = getattr(self, field.name)
             # urls should be a URIRef term, all others should be a Literal term
             if field_value and field_value != 'None':
@@ -118,20 +114,28 @@ class RDF_Term_MixIn(object):
                 graph.add((metadata_node, field_term, field_value))
 
     @classmethod
+    def get_class_term(cls):
+        return cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)
+
+    @classmethod
+    def get_field_term(cls, field_name):
+        field_term_attr = field_name + '_rdf_term'
+        if hasattr(cls, field_term_attr):
+            return getattr(cls, field_term_attr)
+        else:
+            return getattr(HSTERMS, field_name)
+
+    @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         """Default implementation that ingests by convention"""
-        term = cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)
+        term = cls.get_class_term()
         metadata_nodes = graph.objects(subject=subject, predicate=term)
         for metadata_node in metadata_nodes:
             value_dict = {}
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
-                field_term_attr = field.name + '_rdf_term'
-                if hasattr(cls, field_term_attr):
-                    field_term = getattr(cls, field_term_attr)
-                else:
-                    field_term = getattr(HSTERMS, field.name)
+                field_term = cls.get_field_term(field.name)
                 val = graph.value(metadata_node, field_term)
                 if val:
                     value_dict[field.name] = str(val)

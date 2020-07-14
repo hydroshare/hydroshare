@@ -439,31 +439,28 @@ class Party(AbstractMetaDataElement):
         abstract = True
 
     def rdf_triples(self, subject, graph):
-        party_type = getattr(DC, self.__class__.__name__)
+        party_type = self.__class__.get_class_term()
         party = BNode()
         graph.add((subject, party_type, party))
-        party = graph.value(subject=subject, predicate=party_type)
         field_names = [field.name for field in self.__class__._meta.fields]
         for f in field_names:
-            graph.add((party, getattr(HSTERMS, f), Literal(getattr(self, f))))
+            graph.add((party, self.__class__.get_field_term(f), Literal(getattr(self, f))))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         """Default implementation that ingests by convention"""
-        party_type = getattr(DC, cls.__name__)
-        party = graph.value(subject=subject, predicate=party_type)
-        if party:
+        party_type = cls.get_class_term()
+        for party in graph.objects(subject=subject, predicate=party_type):
             value_dict = {}
             identifiers = {}
-            field_names = [field.name for field in cls._meta.fields]
+            fields_by_term = {cls.get_field_term(field.name):field for field in cls._meta.fields}
             for _, p, o in graph.triples((party, None, None)):
-                field = p.split(':')[1]
-                if field in field_names:
-                    value_dict[field] = str(o)
+                if p not in fields_by_term:
+                    identifiers[p.rsplit("/", 1)[1]] = str(o)
                 else:
-                    identifiers[field] = str(o)
+                    value_dict[fields_by_term[p].name] = str(o)
             if value_dict or identifiers:
                 cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
 
