@@ -443,7 +443,8 @@ class Party(AbstractMetaDataElement):
         party = BNode()
         graph.add((subject, party_type, party))
         party = graph.value(subject=subject, predicate=party_type)
-        for f in ['name', 'organization', 'email', 'address', 'phone', 'homepage', 'description']:
+        field_names = [field.name for field in self.__class__._meta.fields]
+        for f in field_names:
             graph.add((party, getattr(HSTERMS, f), Literal(getattr(self, f))))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
@@ -456,9 +457,10 @@ class Party(AbstractMetaDataElement):
         if party:
             value_dict = {}
             identifiers = {}
+            field_names = [field.name for field in cls._meta.fields]
             for _, p, o in graph.triples((party, None, None)):
                 field = p.split(':')[1]
-                if field in ['name', 'organization', 'email', 'address', 'phone', 'homepage', 'description']:
+                if field in field_names:
                     value_dict[field] = str(o)
                 else:
                     identifiers[field] = str(o)
