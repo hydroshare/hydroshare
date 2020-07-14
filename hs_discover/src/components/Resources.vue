@@ -41,7 +41,7 @@
                                 <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort()"
                                     v-bind:key="author">
                                     <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
-                                    <input type="checkbox" class="faceted-selections" :value=author
+                                    <input type="checkbox" :value="author" class="faceted-selections"
                                         v-model="authorFilter" :id="'author-'+author">
                                     </label>
                                 </li>
@@ -268,6 +268,26 @@ export default {
   computed: {
     filteredResources() {
       if (this.resloaded) {
+        if (this.authorFilter.length === 0 && this.ownerFilter.length === 0) {
+          return this.resources;
+        }
+        let resfiltered = [];
+        resfiltered = resfiltered.concat(this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1));
+        resfiltered = resfiltered.concat(this.resources.filter(element => this.ownerFilter.indexOf(element.owner) > -1));
+        resfiltered = resfiltered.concat(this.resources.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0));
+        resfiltered = resfiltered.concat(this.resources.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0));
+        resfiltered = resfiltered.concat(this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1));
+        resfiltered = resfiltered.concat(this.resources.filter(element => this.typeFilter.indexOf(element.type) > -1));
+        if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
+          const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+          return this.sortDir === -1 ? datesorted : datesorted.reverse();
+        }
+        return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+      }
+      return [];
+    },
+    oldFilteredResources() {
+      if (this.resloaded) {
         console.log(`filtered resources with length ${this.resources.length}`);
         // Filters should be most restrictive when two conflicting states are selected
         const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
@@ -288,13 +308,13 @@ export default {
   mounted() {
     this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author');
-    Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
+    // Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
     this.countOwners = this.filterBuilder(this.resources, 'owner');
-    Object.keys(this.countOwners).forEach(item => this.ownerFilter.push(item));
+    // Object.keys(this.countOwners).forEach(item => this.ownerFilter.push(item));
     this.countContributors = this.filterBuilder(this.resources, 'contributor');
-    Object.keys(this.countContributors).forEach(item => this.contributorFilter.push(item));
+    // Object.keys(this.countContributors).forEach(item => this.contributorFilter.push(item));
     this.countTypes = this.filterBuilder(this.resources, 'type');
-    Object.keys(this.countTypes).forEach(item => this.typeFilter.push(item));
+    // Object.keys(this.countTypes).forEach(item => this.typeFilter.push(item));
 
     let subjectbox = [];
     // res.subject is python list js array
@@ -302,8 +322,8 @@ export default {
       subjectbox = subjectbox.concat(this.enumMulti(res.subject));
     });
     this.countSubjects = new this.Counter(subjectbox);
-    Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
-      .push(subject));
+    // Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
+    //   .push(subject));
 
     let availabilitybox = [];
     // res.availability is python list js array
@@ -311,8 +331,8 @@ export default {
       availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
     });
     this.countAvailabilities = new this.Counter(availabilitybox);
-    Object.keys(this.countAvailabilities).forEach(availability => this.availabilityFilter
-      .push(availability));
+    // Object.keys(this.countAvailabilities).forEach(availability => this.availabilityFilter
+    //   .push(availability));
   },
   methods: {
     filterBuilder(resources, thing) {
@@ -351,7 +371,10 @@ export default {
       return c;
     },
     ellip(input) {
-      return input.length > 200 ? `${input.substring(0, 200)}...` : input;
+      if (input) {
+        return input.length > 200 ? `${input.substring(0, 200)}...` : input;
+      }
+      return '';
     },
     temporalFilter() {
       // console.log(this.startdate);

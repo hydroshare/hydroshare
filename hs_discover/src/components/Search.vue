@@ -55,10 +55,10 @@ export default {
                     try {
                       const thisRes = JSON.parse(mapResource);
                       if (thisRes.coverage_type === 'point') {
-                        console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
+                        // console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
                         createMarker({ lat: thisRes.north, lng: thisRes.east });
                       } else if (thisRes.coverage_type === 'box') {
-                        console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
+                        // console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
                         if (thisRes.north === thisRes.south && thisRes.east === thisRes.west) {
                           if (Number.isInteger(parseInt(thisRes.north, 10))) {
                             createMarker({ lat: thisRes.north, lng: thisRes.east });
