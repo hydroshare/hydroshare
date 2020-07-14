@@ -9,7 +9,8 @@
                 <div id="faceting-temporal">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by temporal overlap</h4>
+                            <h4 data-toggle="tooltip" title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
+                                class="panel-title">Temporal Coverage</h4>
                         </div>
                         <div v-if="filteredResources.length" id="dateselectors">
                             <date-pick
@@ -33,7 +34,7 @@
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-creator">
-                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors)"
+                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort()"
                                     v-bind:key="author">
                                     <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
                                     <input type="checkbox" class="faceted-selections" :value=author
@@ -52,7 +53,7 @@
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-owner">
-                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners)"
+                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort()"
                                     v-bind:key="owner">
                                     <span class="badge">{{countOwners[owner]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
@@ -72,7 +73,7 @@
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-subject">
-                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects)"
+                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort()"
                                     v-bind:key="subject">
                                     <span class="badge">{{countSubjects[subject]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
@@ -92,7 +93,7 @@
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-contributor">
-                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors)"
+                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort()"
                                     v-bind:key="contributor">
                                     <span class="badge">{{countContributors[contributor]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
@@ -112,7 +113,7 @@
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-type">
-                                <li class="list-group-item" v-for="(type) in Object.keys(countTypes)"
+                                <li class="list-group-item" v-for="(type) in Object.keys(countTypes).sort()"
                                     v-bind:key="type">
                                     <span class="badge">{{countTypes[type]}}</span>
                                     <label class="checkbox noselect" :for="'type-'+type">{{type}}
@@ -132,7 +133,7 @@
                         </div>
                         <div id="availability" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-availability">
-                                <li class="list-group-item" v-for="(availability) in Object.keys(countAvailabilities)"
+                                <li class="list-group-item" v-for="(availability) in Object.keys(countAvailabilities).sort()"
                                     v-bind:key="availability">
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
