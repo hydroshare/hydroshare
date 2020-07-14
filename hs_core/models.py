@@ -3783,8 +3783,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         return URIRef("{}/resource/{}".format(current_site_url(), self.resource.short_id))
 
     def ingest_metadata(self, graph):
-        self.super(RDF_MetaData_Mixin).ingest_metadata(graph)
-        subject = self.rdf_subject(graph)
+        super(CoreMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
 
         extendedMetadata = {}
         for extendedMetadata_subject in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
@@ -3792,17 +3792,11 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             value = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.value))
             extendedMetadata[key] = value
 
-        subjects = []
-        for keyword in graph.objects(subject=subject, predicate=DC.subject):
-            subjects.append(keyword)
-        self.subjects = subjects
-        self.save()
-
         self.resource.extra_metadata = extendedMetadata
         self.resource.save()
 
     def get_rdf_graph(self):
-        graph = self.super(RDF_MetaData_Mixin).get_rdf_graph()
+        graph = super(CoreMetaData, self).get_rdf_graph()
 
         subject = self.rdf_subject()
 
@@ -3814,8 +3808,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
-        for keyword in self.subjects:
-            graph.add((subject, DC.subject, Literal(keyword)))
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))

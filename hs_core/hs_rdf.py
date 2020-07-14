@@ -26,7 +26,7 @@ class RDF_MetaData_Mixin(object):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
 
     @classmethod
-    def rdf_subject(cls, graph):
+    def rdf_subject_from_graph(cls, graph):
         subject = None
         for s, _, _ in graph.triples((None, DC.title, None)):
             subject = s
@@ -36,7 +36,7 @@ class RDF_MetaData_Mixin(object):
         return subject
 
     def ingest_metadata(self, graph):
-        subject = self.rdf_subject(graph)
+        subject = self.rdf_subject_from_graph(graph)
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:

@@ -299,8 +299,8 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
     def ingest_metadata(self, graph):
-        self.super(RDF_MetaData_Mixin).ingest_metadata(graph)
-        subject = self.rdf_subject(graph)
+        super(AbstractFileMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
 
         title = graph.value(subject=subject, predicate=DC.title)
         if title:
@@ -317,7 +317,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         self.save()
 
     def get_rdf_graph(self):
-        graph = self.super(RDF_MetaData_Mixin).get_rdf_graph()
+        graph = super(AbstractFileMetaData, self).get_rdf_graph()
 
         resource = self.logical_file.resource
         subject = self.rdf_subject()
