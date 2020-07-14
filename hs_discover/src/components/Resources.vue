@@ -272,12 +272,42 @@ export default {
           return this.resources;
         }
         let resfiltered = [];
-        resfiltered = resfiltered.concat(this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1));
-        resfiltered = resfiltered.concat(this.resources.filter(element => this.ownerFilter.indexOf(element.owner) > -1));
-        resfiltered = resfiltered.concat(this.resources.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0));
-        resfiltered = resfiltered.concat(this.resources.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0));
-        resfiltered = resfiltered.concat(this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1));
-        resfiltered = resfiltered.concat(this.resources.filter(element => this.typeFilter.indexOf(element.type) > -1));
+        const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+        resAuthors.forEach((item) => {
+          if (!resfiltered.includes(item)) {
+            resfiltered.push(item);
+          }
+        });
+        const resOwners = this.resources.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
+        resOwners.forEach((item) => {
+          if (!resfiltered.includes(item)) {
+            resfiltered.push(item);
+          }
+        });
+        const resSubjects = this.resources.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+        resSubjects.forEach((item) => {
+          if (!resfiltered.includes(item)) {
+            resfiltered.push(item);
+          }
+        });
+        const resAvailabilities = this.resources.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
+        resAvailabilities.forEach((item) => {
+          if (!resfiltered.includes(item)) {
+            resfiltered.push(item);
+          }
+        });
+        const resContributors = this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+        resContributors.forEach((item) => {
+          if (!resfiltered.includes(item)) {
+            resfiltered.push(item);
+          }
+        });
+        const resTypes = this.resources.filter(element => this.typeFilter.indexOf(element.type) > -1);
+        resTypes.forEach((item) => {
+          if (!resfiltered.includes(item)) {
+            resfiltered.push(item);
+          }
+        });
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           return this.sortDir === -1 ? datesorted : datesorted.reverse();
