@@ -10,9 +10,11 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 data-toggle="tooltip" title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
-                                class="panel-title">Temporal Coverage</h4>
+                                class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#dateselectors" role="button" aria-expanded="false" aria-controls="dateselectors"></i>
+                                Temporal Coverage</h4>
                         </div>
-                        <div v-if="filteredResources.length" id="dateselectors">
+                        <div v-if="filteredResources.length" id="dateselectors" class="facet-list panel-collapse collapse in">
                             <date-pick
                                  v-model="startdate"
                                  :parseDate="temporalFilter"
@@ -26,11 +28,13 @@
                         </div>
                     </div>
                 </div>
-                <!-- filter by creator -->
+                <!-- filter by author -->
                 <div id="faceting-creator">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by author</h4>
+                            <h4 class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#creator" role="button" aria-expanded="false" aria-controls="creator"></i>
+                                Filter by author</h4>
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-creator">
@@ -49,7 +53,9 @@
                 <div id="faceting-owner">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by owner</h4>
+                            <h4 class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#owner" role="button" aria-expanded="false" aria-controls="owner"></i>
+                                Filter by owner</h4>
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-owner">
@@ -69,7 +75,9 @@
                 <div id="faceting-subject">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by subject</h4>
+                            <h4 class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#subject" role="button" aria-expanded="false" aria-controls="subject"></i>
+                                Filter by subject</h4>
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-subject">
@@ -89,7 +97,9 @@
                 <div id="faceting-contributor">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by contributor</h4>
+                            <h4 class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#contributor" role="button" aria-expanded="false" aria-controls="contributor"></i>
+                                Filter by contributor</h4>
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-contributor">
@@ -109,7 +119,9 @@
                 <div id="faceting-type">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by type</h4>
+                            <h4 class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#type" role="button" aria-expanded="false" aria-controls="type"></i>
+                                Filter by type</h4>
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-type">
@@ -129,16 +141,19 @@
                 <div id="faceting-availability">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title">Filter by availability</h4>
+                            <h4 class="panel-title">
+                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#availability" role="button" aria-expanded="false" aria-controls="availability"></i>
+                                Filter by availability</h4>
                         </div>
                         <div id="availability" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-availability">
-                                <li class="list-group-item" v-for="(availability) in Object.keys(countAvailabilities).sort()"
+                                <li class="list-group-item"
+                                    v-for="(availability) in Object.keys(countAvailabilities).sort()"
                                     v-bind:key="availability">
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
                                         <input type="checkbox" class="faceted-selections" :value=availability
-                                            v-model="availabilityFilter" :id="'avail-'+availability">
+                                               v-model="availabilityFilter" :id="'avail-'+availability">
                                     </label>
                                 </li>
                             </ul>
@@ -168,20 +183,21 @@
                                  :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip"
                                  :title="entry.availability" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.shareable" src="/static/img/shareable.png" alt="Shareable Resource"
-                                data-toggle="tooltip" data-placement="right" title=""
+                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"
+                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"
                                 data-original-title="Shareable">
                         </td>
                         <td>
                             <a :href="entry.link" data-toggle="tooltip"
-                               :title="entry.abstract" data-placement="top">{{entry.title}}</a>
+                               :title="ellip(entry.abstract)" data-placement="top">{{entry.title}}</a>
                         </td>
                         <td>
-                            <a :href="entry.author_link">{{entry.author}}</a>
+                            <a :href="entry.author_link" data-toggle="tooltip"
+                                 :title="`Author: ${entry.author} | Owner: ${entry.owner} | Contributor: ${entry.contributor}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td>{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td>{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                        <td data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
+                        <td data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -333,6 +349,9 @@ export default {
       // c.forEach(x => b.push(x.split(',')));
       // const ret = [].concat.apply([], b);
       return c;
+    },
+    ellip(input) {
+      return input.length > 200 ? `${input.substring(0, 200)}...` : input;
     },
     temporalFilter() {
       // console.log(this.startdate);
