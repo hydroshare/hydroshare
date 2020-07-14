@@ -439,9 +439,12 @@ class Party(AbstractMetaDataElement):
         abstract = True
 
     def rdf_triples(self, subject, graph):
-        super(Party).rdf_triples(subject, graph)
         party_type = getattr(DC, self.__class__.__name__)
+        party = BNode()
+        graph.add((subject, party_type, party))
         party = graph.value(subject=subject, predicate=party_type)
+        for f in ['name', 'organization', 'email', 'address', 'phone', 'homepage', 'description']:
+            graph.add((party, getattr(HSTERMS, f), Literal(getattr(self, f))))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
 
@@ -450,16 +453,17 @@ class Party(AbstractMetaDataElement):
         """Default implementation that ingests by convention"""
         party_type = getattr(DC, cls.__name__)
         party = graph.value(subject=subject, predicate=party_type)
-        value_dict = {}
-        identifiers = {}
-        for _, p, o in graph.triples((party, None, None)):
-            field = p.split(':')[1]
-            if field in ['name', 'organization', 'email', 'address', 'phone', 'homepage', 'description']:
-                value_dict[field] = str(o)
-            else:
-                identifiers[field] = str(o)
-        if value_dict or identifiers:
-            cls.create(content_object=content_object, **value_dict, identifiers=identifiers)
+        if party:
+            value_dict = {}
+            identifiers = {}
+            for _, p, o in graph.triples((party, None, None)):
+                field = p.split(':')[1]
+                if field in ['name', 'organization', 'email', 'address', 'phone', 'homepage', 'description']:
+                    value_dict[field] = str(o)
+                else:
+                    identifiers[field] = str(o)
+            if value_dict or identifiers:
+                cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
 
 
     @classmethod
