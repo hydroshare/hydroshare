@@ -1686,7 +1686,7 @@ class Format(AbstractMetaDataElement):
 
 
 @rdf_terms(HSTERMS.awardInfo, agency_name=HSTERMS.fundingAgencyName, award_title=HSTERMS.awardTitle,
-           award_number=HSTERMS.awardNumber, agency_url=RDF.about)
+           award_number=HSTERMS.awardNumber, agency_url=HSTERMS.fundingAgencyURL)
 class FundingAgency(AbstractMetaDataElement):
     """Define FundingAgency custom metadata element mode."""
 
