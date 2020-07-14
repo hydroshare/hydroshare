@@ -266,12 +266,12 @@ export default {
     datePick: DatePick,
   },
   computed: {
-    filteredResources() {
+    additiveFilteredResources() {
       if (this.resloaded) {
-        if (this.authorFilter.length === 0 && this.ownerFilter.length === 0) {
+        if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
           return this.resources;
         }
-        let resfiltered = [];
+        const resfiltered = [];
         const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
         resAuthors.forEach((item) => {
           if (!resfiltered.includes(item)) {
@@ -316,21 +316,43 @@ export default {
       }
       return [];
     },
-    oldFilteredResources() {
+    filteredResources() {
       if (this.resloaded) {
-        console.log(`filtered resources with length ${this.resources.length}`);
-        // Filters should be most restrictive when two conflicting states are selected
-        const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-        const resOwners = resAuthors.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
-        const resSubjects = resOwners.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-        const resAvailabilities = resSubjects.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
-        const resContributors = resAvailabilities.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-        const resTypes = resContributors.filter(element => this.typeFilter.indexOf(element.type) > -1);
+        let resfiltered = this.resources;
+        if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
+          // do nothing
+        } else {
+           // Filters should be most restrictive when two conflicting states are selected
+          if (this.authorFilter.length > 0) {
+            const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
+            resfiltered = resAuthors;
+          }
+          if (this.ownerFilter.length > 0) {
+            const resOwners = resfiltered.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
+            resfiltered = resOwners;
+          }
+          if (this.subjectFilter.length > 0) {
+            const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+            resfiltered = resSubjects;
+          }
+          if (this.availabilityFilter.length > 0) {
+            const resAvailabilities = resfiltered.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
+            resfiltered = resAvailabilities;
+          }
+          if (this.contributorFilter.length > 0) {
+            const resContributors = resfiltered.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+            resfiltered = resContributors;
+          }
+          if (this.typeFilter.length > 0) {
+            const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
+            resfiltered = resTypes;
+          }
+        }
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-          const datesorted = resTypes.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+          const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           return this.sortDir === -1 ? datesorted : datesorted.reverse();
         }
-        return resTypes.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+        return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
       }
       return [];
     },
