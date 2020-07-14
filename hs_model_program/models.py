@@ -6,12 +6,14 @@ from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
+from hs_core.hs_rdf import rdf_terms
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 
 from lxml import etree
 
 
+@rdf_terms(None)
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
 
@@ -135,6 +137,10 @@ class ModelProgramMetaData(CoreMetaData):
         # add the name of any additional element to the list
         elements.append('MpMetadata')
         return elements
+
+    def delete_all_elements(self):
+        super(ModelProgramMetaData, self).delete_all_elements()
+        self._mpmetadata.all().delete()
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata

@@ -84,8 +84,11 @@ class RDF_Term_MixIn(object):
     def rdf_triples(self, subject, graph):
         """Default implementation that parses by convention."""
         term = self.get_class_term()
-        metadata_node = BNode()
-        graph.add((subject, term, metadata_node))
+        if not term:
+            metadata_node = subject
+        else:
+            metadata_node = BNode()
+            graph.add((subject, term, metadata_node))
         for field in self._meta.fields:
             if self.ignored_fields and field.name in self.ignored_fields:
                 continue
@@ -115,7 +118,10 @@ class RDF_Term_MixIn(object):
     def ingest_rdf(cls, graph, subject, content_object):
         """Default implementation that ingests by convention"""
         term = cls.get_class_term()
-        metadata_nodes = graph.objects(subject=subject, predicate=term)
+        if not term:
+            metadata_nodes = [subject]
+        else:
+            metadata_nodes = graph.objects(subject=subject, predicate=term)
         for metadata_node in metadata_nodes:
             value_dict = {}
             for field in cls._meta.fields:
@@ -131,8 +137,7 @@ class RDF_Term_MixIn(object):
 
 def rdf_terms(class_term, **field_terms):
     def decorator(obj):
-        if class_term:
-            obj.rdf_term = class_term
+        obj.rdf_term = class_term
         for k, v in field_terms.items():
             if not hasattr(obj, k):
                 raise Exception("field {} not found".format(k))
