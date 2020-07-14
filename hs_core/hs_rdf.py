@@ -25,20 +25,18 @@ class RDF_MetaData_Mixin(object):
     def rdf_subject(self):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
 
-    def ingest_metadata(self, graph):
+    @classmethod
+    def rdf_subject(cls, graph):
         subject = None
         for s, _, _ in graph.triples((None, DC.title, None)):
             subject = s
             break
         if not subject:
             raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
-        extendedMetadata = {}
-        for _, _, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
-            key = str(graph.value(subject=o, predicate=HSTERMS.key))
-            value = str(graph.value(subject=o, predicate=HSTERMS.value))
-            extendedMetadata[key] = value
-        self.resource.extra_metadata = extendedMetadata
-        self.resource.save()
+        return subject
+
+    def ingest_metadata(self, graph):
+        subject = self.rdf_subject(graph)
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
@@ -51,23 +49,11 @@ class RDF_MetaData_Mixin(object):
 
         subject = self.rdf_subject()
 
-        # add any key/value metadata items
-        if len(self.resource.extra_metadata) > 0:
-            for key, value in list(self.resource.extra_metadata.items()):
-                extendedMetadata = BNode()
-                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
-                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
-                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
-
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
             for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
                 f.rdf_triples(subject, graph)
 
-        from .hydroshare import current_site_url
-        TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
-        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
-        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
         return graph
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
@@ -97,13 +83,13 @@ class RDF_Term_MixIn(object):
 
     def rdf_triples(self, subject, graph):
         """Default implementation that parses by convention."""
-        term = self.__class__.get_class_term()
+        term = self.get_class_term()
         metadata_node = BNode()
         graph.add((subject, term, metadata_node))
-        for field in self.__class__._meta.fields:
+        for field in self._meta.fields:
             if self.ignored_fields and field.name in self.ignored_fields:
                 continue
-            field_term = self.__class__.get_field_term(field.name)
+            field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
             # urls should be a URIRef term, all others should be a Literal term
             if field_value and field_value != 'None':

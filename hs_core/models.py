@@ -6,7 +6,7 @@ import arrow
 import logging
 from uuid import uuid4
 
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
@@ -439,12 +439,12 @@ class Party(AbstractMetaDataElement):
         abstract = True
 
     def rdf_triples(self, subject, graph):
-        party_type = self.__class__.get_class_term()
+        party_type = self.get_class_term()
         party = BNode()
         graph.add((subject, party_type, party))
         field_names = [field.name for field in self.__class__._meta.fields]
         for f in field_names:
-            graph.add((party, self.__class__.get_field_term(f), Literal(getattr(self, f))))
+            graph.add((party, self.get_field_term(f), Literal(getattr(self, f))))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
 
@@ -3781,6 +3781,45 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     def rdf_subject(self):
         from .hydroshare import current_site_url
         return URIRef("{}/resource/{}".format(current_site_url(), self.resource.short_id))
+
+    def ingest_metadata(self, graph):
+        self.super(RDF_MetaData_Mixin).ingest_metadata(graph)
+        subject = self.rdf_subject(graph)
+
+        extendedMetadata = {}
+        for extendedMetadata_subject in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.key))
+            value = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.value))
+            extendedMetadata[key] = value
+
+        subjects = []
+        for keyword in graph.objects(subject=subject, predicate=DC.subject):
+            subjects.append(keyword)
+        self.subjects = subjects
+        self.save()
+
+        self.resource.extra_metadata = extendedMetadata
+        self.resource.save()
+
+    def get_rdf_graph(self):
+        graph = self.super(RDF_MetaData_Mixin).get_rdf_graph()
+
+        subject = self.rdf_subject()
+
+        # add any key/value metadata items
+        if len(self.resource.extra_metadata) > 0:
+            for key, value in list(self.resource.extra_metadata.items()):
+                extendedMetadata = BNode()
+                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
+
+        for keyword in self.subjects:
+            graph.add((subject, DC.subject, Literal(keyword)))
+        from .hydroshare import current_site_url
+        TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
 
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):

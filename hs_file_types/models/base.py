@@ -299,33 +299,25 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
     def ingest_metadata(self, graph):
-        subject = None
-        for s, _, _ in graph.triples((None, DC.title, None)):
-            subject = s
-            break
-        if not subject:
-            raise Exception("Invalid rdf/xml, could not find required predicate dc:title")
+        self.super(RDF_MetaData_Mixin).ingest_metadata(graph)
+        subject = self.rdf_subject(graph)
 
         title = graph.value(subject=subject, predicate=DC.title)
         if title:
             self.logical_file.dataset_name = title
             self.logical_file.save()
-        for _, _, object in graph.triples((subject, DC.subject, None)):
+        for object in graph.objects(subject=subject, predicate=DC.subject):
             self.keywords.append(object.value)
         self.extra_metadata.clear()
-        for s, p, o in graph.triples((subject, HSTERMS.extendedMetadata, None)):
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
             key = graph.value(subject=o, predicate=HSTERMS.key).value
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             self.extra_metadata[key] = value
 
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
-        for generic_relation in generic_relations:
-            generic_relation.related_model.ingest_rdf(graph, subject, self)
         self.save()
 
     def get_rdf_graph(self):
-        graph = Graph()
-        graph.namespace_manager = NAMESPACE_MANAGER
+        graph = self.super(RDF_MetaData_Mixin).get_rdf_graph()
 
         resource = self.logical_file.resource
         subject = self.rdf_subject()
@@ -355,16 +347,6 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                 graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
-
-        for field in self.__class__._meta.fields:
-            if field.name in ['id', 'object_id', 'content_type', 'keywords', 'extra_metadata', 'is_dirty']:
-                continue
-            graph.add((subject, getattr(HSTERMS, field.name), Literal(field.value_from_object(self))))
-
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
-        for generic_relation in generic_relations:
-            for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
-                f.rdf_triples(subject, graph)
 
         TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), aggregation_type)
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
