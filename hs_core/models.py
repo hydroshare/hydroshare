@@ -2751,6 +2751,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     def modified_time(self):
         return self.resource_file.storage.get_modified_time(self.resource_file.name)
 
+    @property
+    def checksum(self):
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+
     # TODO: write unit test
     @property
     def exists(self):
