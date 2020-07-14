@@ -400,15 +400,13 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                      res_type_specific_meta, file_type_metadata, resource)
 
                 # create the ncdump text file
-                header_info_exists = False
-                for file in resource.files.objects.filter(file_folder=folder_path):
-                    if file.resource_file.name == temp_file.name:
-                        header_info_exists = True
+                dump_file_name = nc_file_name + "_header_info.txt"
+                for file in resource.files.filter(file_folder=folder_path):
+                    fname = os.path.basename(file.resource_file.name)
+                    if fname in dump_file_name:
+                        file.resource_file.delete()
                         break
-                if header_info_exists:
-                    dump_file = [create_header_info_txt_file(temp_file, nc_file_name)]
-                else:
-                    dump_file = []
+                dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 file_folder = res_file.file_folder
                 upload_folder = file_folder
                 dataset_title = res_dublin_core_meta.get('title', nc_file_name)
@@ -419,7 +417,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         logical_file = cls.create_aggregation(dataset_name=dataset_title,
                                                               resource=resource,
                                                               res_files=[res_file],
-                                                              new_files_to_upload=dump_file,
+                                                              new_files_to_upload=[dump_file],
                                                               folder_path=upload_folder)
 
                         log.info("NetCDF aggregation creation - a new file was added to the "
