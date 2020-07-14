@@ -2,7 +2,7 @@
     selected at least 5 qualified resources in the last 30 days. Resources with more
     than two keywords are considered to be qualified resources.
 """
-from datetime import timedelta, datetime
+from datetime import timedelta, date
 from hs_explore.utils import get_resource_to_subjects, get_resource_to_abstract,\
     get_resource_to_published, get_users_interacted_resources, get_resource_to_keep_words,\
     jaccard_sim, store_user_preferences, store_recommended_resources, clear_old_data
@@ -19,7 +19,8 @@ def make_recommendations():
     """
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
-    end_date = datetime.now()
+    end_date = date(2020, 6, 7)
+    # end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
@@ -116,15 +117,15 @@ def make_recommendations():
                     t = ldamodel.get_document_topics(bow)
                     topic_prob_dict = dict((x, y) for x, y in t)
                     # Skip resources without any probable topics.
-                    # A dominant topic is defined as any topic with probablity over (1/#topics),
+                    # A probable topic is defined as any topic with probablity over (1/#topics),
                     # which is 0.2 in our case
                     if max(topic_prob_dict.values()) - 0.2 < 0.001:
                         continue
-                    res_dominant_topics = set()
+                    res_probable_topics = set()
                     for topic, prob in topic_prob_dict.items():
                         if prob - 0.2 > 0.001:
-                            res_dominant_topics.add(topic)
-                    common_topics = set.intersection(user_probable_topics_set, res_dominant_topics)
+                            res_probable_topics.add(topic)
+                    common_topics = set.intersection(user_probable_topics_set, res_probable_topics)
                     # If the resource has no topics in common with the user's prbable topics set,
                     # Skip it.
                     if len(common_topics) == 0:
