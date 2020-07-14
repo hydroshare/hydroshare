@@ -227,31 +227,6 @@ class Site(TimeSeriesAbstractMetaDataElement):
         # get the series ids associated with this element
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        element_fields = [('site_code', 'SiteCode')]
-
-        if self.site_name:
-            element_fields.append(('site_name', 'SiteName'))
-
-        if self.elevation_m:
-            element_fields.append(('elevation_m', 'Elevation_m'))
-
-        if self.elevation_datum:
-            element_fields.append(('elevation_datum', 'ElevationDatum'))
-
-        if self.site_type:
-            element_fields.append(('site_type', 'SiteType'))
-
-        if self.latitude:
-            element_fields.append(('latitude', 'Latitude'))
-
-        if self.longitude:
-            element_fields.append(('longitude', 'Longitude'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'site'), element_fields)
-
 
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
@@ -355,23 +330,6 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                         td(self.speciation)
 
         return html_table.render(pretty=pretty)
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        element_fields = [('variable_code', 'VariableCode'),
-                          ('variable_name', 'VariableName'),
-                          ('variable_type', 'VariableType'),
-                          ('no_data_value', 'NoDataValue')
-                          ]
-
-        if self.variable_definition:
-            element_fields.append(('variable_definition', 'VariableDefinition'))
-
-        if self.speciation:
-            element_fields.append(('speciation', 'Speciation'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'variable'), element_fields)
 
 
 class Method(TimeSeriesAbstractMetaDataElement):
@@ -490,20 +448,6 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
         return html_table.render(pretty=pretty)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
-                          ('method_type', 'MethodType')]
-
-        if self.method_description:
-            element_fields.append(('method_description', 'MethodDescription'))
-
-        if self.method_link:
-            element_fields.append(('method_link', 'MethodLink'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'method'), element_fields)
-
 
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
@@ -595,19 +539,6 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
                             td(self.explanation, style="word-break: normal;")
 
         return html_table.render(pretty=pretty)
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        element_fields = [('processing_level_code', 'ProcessingLevelCode')]
-
-        if self.definition:
-            element_fields.append(('definition', 'Definition'))
-
-        if self.explanation:
-            element_fields.append(('explanation', 'Explanation'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'processingLevel'), element_fields)
 
 
 class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
@@ -706,55 +637,6 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
                             td(self.metadata.utc_offset.value)
 
         return html_table.render(pretty=pretty)
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-        from lxml import etree
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        hsterms_time_series_result = etree.SubElement(
-            container, '{%s}timeSeriesResult' % NAMESPACES['hsterms'])
-        hsterms_time_series_result_rdf_Description = etree.SubElement(
-            hsterms_time_series_result, '{%s}Description' % NAMESPACES['rdf'])
-        hsterms_result_UUID = etree.SubElement(
-            hsterms_time_series_result_rdf_Description, '{%s}timeSeriesResultUUID' %
-                                                        NAMESPACES['hsterms'])
-        hsterms_result_UUID.text = str(self.series_ids[0])
-        hsterms_units = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                         '{%s}units' % NAMESPACES['hsterms'])
-        hsterms_units_rdf_Description = etree.SubElement(hsterms_units, '{%s}Description' %
-                                                         NAMESPACES['rdf'])
-        hsterms_units_type = etree.SubElement(hsterms_units_rdf_Description,
-                                              '{%s}UnitsType' % NAMESPACES['hsterms'])
-        hsterms_units_type.text = self.units_type
-
-        hsterms_units_name = etree.SubElement(hsterms_units_rdf_Description,
-                                              '{%s}UnitsName' % NAMESPACES['hsterms'])
-        hsterms_units_name.text = self.units_name
-
-        hsterms_units_abbv = etree.SubElement(
-            hsterms_units_rdf_Description, '{%s}UnitsAbbreviation' % NAMESPACES['hsterms'])
-        hsterms_units_abbv.text = self.units_abbreviation
-
-        if self.status:
-            hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                              '{%s}Status' % NAMESPACES['hsterms'])
-            hsterms_status.text = self.status
-
-        hsterms_sample_medium = etree.SubElement(
-            hsterms_time_series_result_rdf_Description, '{%s}SampleMedium' %
-                                                        NAMESPACES['hsterms'])
-        hsterms_sample_medium.text = self.sample_medium
-
-        hsterms_value_count = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                               '{%s}ValueCount' % NAMESPACES['hsterms'])
-        hsterms_value_count.text = str(self.value_count)
-
-        hsterms_statistics = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                              '{%s}AggregationStatistic' %
-                                              NAMESPACES['hsterms'])
-        hsterms_statistics.text = self.aggregation_statistics
-        return hsterms_time_series_result_rdf_Description
 
 
 class UTCOffSet(TimeSeriesAbstractMetaDataElement):
@@ -1885,22 +1767,6 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
     @property
     def resource(self):
         return TimeSeriesResource.objects.filter(object_id=self.id).first()
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-        from hs_file_types.models.timeseries import add_to_xml_container_helper
-
-        # get the xml string representation of the core metadata elements
-        xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-        add_to_xml_container_helper(self, container)
-
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         super(TimeSeriesMetaData, self).copy_all_elements_from(src_md, exclude_elements)

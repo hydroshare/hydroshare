@@ -190,30 +190,6 @@ class ModelInstanceMetaData(CoreMetaData):
                         self.update_non_repeatable_element(element_name, metadata,
                                                            element_property_name)
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        # get the xml string representation of the core metadata elements
-        xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.model_output:
-            modelOutputFields = ['includesModelOutput']
-            self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
-
-        if self.executed_by:
-            executed_by = self.executed_by
-        else:
-            executed_by = ExecutedBy()
-
-        executedByFields = ['modelProgramName','modelProgramIdentifier']
-        self.add_metadata_element_to_xml(container,executed_by,executedByFields)
-
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
-
     def delete_all_elements(self):
         super(ModelInstanceMetaData, self).delete_all_elements()
         self._model_output.all().delete()

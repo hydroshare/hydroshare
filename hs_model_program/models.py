@@ -165,47 +165,6 @@ class ModelProgramMetaData(CoreMetaData):
                                                        element_property_name)
                     break
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-
-
-        # get the xml string for Model Program
-        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)
-
-        # create  etree element
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get the root 'Description' element, which contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.program:
-            self.build_xml_for_uploaded_content(container, 'modelEngine', self.program.get_engine_list())
-            self.build_xml_for_uploaded_content(container, 'modelSoftware', self.program.get_software_list())
-            self.build_xml_for_uploaded_content(container, 'modelDocumentation', self.program.get_documentation_list())
-            self.build_xml_for_uploaded_content(container, 'modelReleaseNotes', self.program.get_releasenotes_list())
-
-            if self.program.modelReleaseDate:
-                model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
-                model_release_date.text = self.program.modelReleaseDate.isoformat()
-
-            model_version = etree.SubElement(container, '{%s}modelVersion' % self.NAMESPACES['hsterms'])
-            model_version.text = self.program.modelVersion
-
-            model_website = etree.SubElement(container, '{%s}modelWebsite' % self.NAMESPACES['hsterms'])
-            model_website.text = self.program.modelWebsite
-
-            model_program_language = etree.SubElement(container, '{%s}modelProgramLanguage' % self.NAMESPACES['hsterms'])
-            model_program_language.text = self.program.modelProgramLanguage
-
-            model_operating_system = etree.SubElement(container, '{%s}modelOperatingSystem' % self.NAMESPACES['hsterms'])
-            model_operating_system.text = self.program.modelOperatingSystem
-
-            model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
-            model_code_repository.text = self.program.modelCodeRepository
-
-        xml_string = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
-
-        return xml_string
-
     def build_xml_for_uploaded_content(self, parent_container, element_name, content_list):
         # create an XML element for each content file
         for content in content_list:

@@ -112,29 +112,6 @@ class OriginalCoverage(AbstractMetaDataElement):
     hsterms = ['spatialReference', 'box', ]
     rdf = ['value']
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
-        cov_term = '{%s}' + 'box'
-        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
-        rdf_coverage_value = etree.SubElement(coverage_terms,
-                                              '{%s}value' % NAMESPACES['rdf'])
-        # raster original coverage is of box type
-        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                    % (self.value['northlimit'], self.value['eastlimit'],
-                       self.value['southlimit'], self.value['westlimit'],
-                       self.value['units'])
-
-        for meta_element in self.value:
-            if meta_element == 'projection':
-                cov_value += '; projection_name={}'.format(self.value[meta_element])
-            if meta_element in ['projection_string', 'datum']:
-                cov_value += '; {}={}'.format(meta_element, self.value[meta_element])
-
-        rdf_coverage_value.text = cov_value
-
     def rdf_triples(self, subject, graph):
         original_coverage = BNode()
         graph.add((subject, HSTERMS.spatialReference, original_coverage))
@@ -243,14 +220,6 @@ class BandInformation(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
-                           'maximumValue', 'minimumValue',
-                           'method', 'comment']
-        add_metadata_element_to_xml(container, self, bandinfo_fields)
-
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
@@ -314,13 +283,6 @@ class CellInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
-                           'cellDataType']
-        add_metadata_element_to_xml(container, self, cellinfo_fields)
 
     def get_html_form(self, resource):
         """Generates html form code for this metadata element so that this element can be edited"""
@@ -535,26 +497,3 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
                     err_string = self.get_form_errors_as_string(validation_form)
                     raise ValidationError(err_string)
                 self.update_element('bandinformation', band_element.id, **bandinfo_data)
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-        # get the xml string representation of the core metadata elements
-        xml_string = super(RasterMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        # inject raster resource specific metadata elements to container element
-        if self.cellInformation:
-            self.cellInformation.add_to_xml_container(container)
-
-        for band_info in self.bandInformations:
-            band_info.add_to_xml_container(container)
-
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container)
-
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
