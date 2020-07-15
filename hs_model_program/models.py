@@ -5,16 +5,13 @@ from django.db import models, transaction
 from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
-from rdflib import Literal, URIRef
 
-from hs_core.hs_rdf import rdf_terms, HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 
 from lxml import etree
 
 
-@rdf_terms(None)
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
 
@@ -83,35 +80,6 @@ class MpMetadata(AbstractMetaDataElement):
     def get_engine_list(self):
         return self.modelEngine.split(';')
 
-    def rdf_triples(self, subject, graph):
-        for field_term, field_value in self.get_field_terms_and_values():
-            if field_term in [HSTERMS.modelEngine, HSTERMS.modelReleaseNotes,
-                              HSTERMS.modelDocumentation, HSTERMS.modelSoftware]:
-                for f in field_value.split(';'):
-                    graph.add((subject, field_term, Literal('/data/contents/' + f)))
-            else:
-                graph.add((subject, field_term, field_value))
-
-    @classmethod
-    def ingest_rdf(cls, graph, subject, content_object):
-        value_dict = {}
-        for field in cls._meta.fields:
-            field_term = cls.get_field_term(field.name)
-            if cls.ignored_fields and field.name in cls.ignored_fields:
-                continue
-            if field.name in ['modelEngine', 'modelReleaseNotes', 'modelDocumentation', 'modelSoftware']:
-                values = []
-                for o in graph.objects(subject=subject, predicate=field_term):
-                    values.append(o.lstrip('/data/contents/'))
-                if values:
-                    value_dict[field.name] = ';'.join(values)
-            else:
-                val = graph.value(subject, field_term)
-                if val:
-                    value_dict[field.name] = str(val)
-        if value_dict:
-            cls.create(content_object=content_object, **value_dict)
-
 
 class ModelProgramResource(BaseResource):
     objects = ResourceManager("ModelProgramResource")
@@ -168,10 +136,6 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def delete_all_elements(self):
-        super(ModelProgramMetaData, self).delete_all_elements()
-        self._mpmetadata.all().delete()
-
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
         from .forms import ModelProgramMetadataValidationForm
@@ -200,6 +164,47 @@ class ModelProgramMetaData(CoreMetaData):
                     self.update_non_repeatable_element(element_name, metadata,
                                                        element_property_name)
                     break
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
+
+
+        # get the xml string for Model Program
+        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)
+
+        # create  etree element
+        RDF_ROOT = etree.fromstring(xml_string)
+
+        # get the root 'Description' element, which contains all other elements
+        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
+
+        if self.program:
+            self.build_xml_for_uploaded_content(container, 'modelEngine', self.program.get_engine_list())
+            self.build_xml_for_uploaded_content(container, 'modelSoftware', self.program.get_software_list())
+            self.build_xml_for_uploaded_content(container, 'modelDocumentation', self.program.get_documentation_list())
+            self.build_xml_for_uploaded_content(container, 'modelReleaseNotes', self.program.get_releasenotes_list())
+
+            if self.program.modelReleaseDate:
+                model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
+                model_release_date.text = self.program.modelReleaseDate.isoformat()
+
+            model_version = etree.SubElement(container, '{%s}modelVersion' % self.NAMESPACES['hsterms'])
+            model_version.text = self.program.modelVersion
+
+            model_website = etree.SubElement(container, '{%s}modelWebsite' % self.NAMESPACES['hsterms'])
+            model_website.text = self.program.modelWebsite
+
+            model_program_language = etree.SubElement(container, '{%s}modelProgramLanguage' % self.NAMESPACES['hsterms'])
+            model_program_language.text = self.program.modelProgramLanguage
+
+            model_operating_system = etree.SubElement(container, '{%s}modelOperatingSystem' % self.NAMESPACES['hsterms'])
+            model_operating_system.text = self.program.modelOperatingSystem
+
+            model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
+            model_code_repository.text = self.program.modelCodeRepository
+
+        xml_string = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
+
+        return xml_string
 
     def build_xml_for_uploaded_content(self, parent_container, element_name, content_list):
         # create an XML element for each content file

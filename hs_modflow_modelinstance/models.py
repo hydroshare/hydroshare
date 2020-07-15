@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -826,6 +828,133 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                         raise ValidationError(err_string)
             self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                            property_name='model_inputs')
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
+        # get the xml string representation of the core metadata elements
+        xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+
+        # create an etree xml object
+        RDF_ROOT = etree.fromstring(xml_string)
+
+        # get root 'Description' element that contains all other elements
+        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
+
+        if self.study_area:
+            studyAreaFields = ['totalLength', 'totalWidth', 'maximumElevation', 'minimumElevation']
+            self.add_metadata_element_to_xml(container, self.study_area, studyAreaFields)
+
+        if self.grid_dimensions:
+            gridDimensionsFields = ['numberOfLayers', 'typeOfRows', 'numberOfRows', 'typeOfColumns',
+                                    'numberOfColumns']
+            self.add_metadata_element_to_xml(container, self.grid_dimensions, gridDimensionsFields)
+
+        if self.stress_period:
+            stressPeriodFields = ['stressPeriodType', 'steadyStateValue',
+                                  'transientStateValueType', 'transientStateValue']
+            self.add_metadata_element_to_xml(container, self.stress_period, stressPeriodFields)
+
+        if self.ground_water_flow:
+            groundWaterFlowFields = ['flowPackage', 'includesUnsaturatedZonePackage',
+                                     'includesHorizontalFlowBarrierPackage',
+                                     'includesSeawaterIntrusionPackage', 'flowParameter']
+            self.add_metadata_element_to_xml(container, self.ground_water_flow,
+                                             groundWaterFlowFields)
+
+        if self.boundary_condition:
+            hsterms_boundary = etree.SubElement(container,
+                                                '{%s}BoundaryCondition' %
+                                                self.NAMESPACES['hsterms'])
+            hsterms_boundary_rdf_Description = \
+                etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
+
+            if self.boundary_condition.specified_head_boundary_packages:
+                hsterms_boundary_package = \
+                    etree.SubElement(hsterms_boundary_rdf_Description,
+                                     '{%s}specifiedHeadBoundaryPackages' %
+                                     self.NAMESPACES['hsterms'])
+                if len(self.boundary_condition.get_specified_head_boundary_packages()) == 0 and \
+                        self.boundary_condition.other_specified_head_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.other_specified_head_boundary_packages
+                elif len(self.boundary_condition.get_specified_head_boundary_packages()) != 0 and \
+                        not self.boundary_condition.other_specified_head_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_specified_head_boundary_packages()
+                else:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_specified_head_boundary_packages() + ', ' +\
+                            self.boundary_condition.other_specified_head_boundary_packages
+            if self.boundary_condition.specified_flux_boundary_packages:
+                hsterms_boundary_package = \
+                    etree.SubElement(hsterms_boundary_rdf_Description,
+                                     '{%s}specifiedFluxBoundaryPackages' %
+                                     self.NAMESPACES['hsterms'])
+                if len(self.boundary_condition.get_specified_flux_boundary_packages()) == 0 and \
+                        self.boundary_condition.other_specified_flux_boundary_packages:
+                    hsterms_boundary_package.text = \
+                        self.boundary_condition.other_specified_flux_boundary_packages
+                elif len(self.boundary_condition.get_specified_flux_boundary_packages()) != 0 and \
+                        not self.boundary_condition.other_specified_flux_boundary_packages:
+                    hsterms_boundary_package.text = \
+                        self.boundary_condition.get_specified_flux_boundary_packages()
+                else:
+                    hsterms_boundary_package.text = \
+                        self.boundary_condition.get_specified_flux_boundary_packages() + ', ' + \
+                        self.boundary_condition.other_specified_flux_boundary_packages
+
+            if self.boundary_condition.head_dependent_flux_boundary_packages:
+                hsterms_boundary_package = \
+                    etree.SubElement(hsterms_boundary_rdf_Description,
+                                     '{%s}headDependentFluxBoundaryPackages' %
+                                     self.NAMESPACES['hsterms'])
+                if len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) == 0 \
+                        and self.boundary_condition.other_head_dependent_flux_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.other_head_dependent_flux_boundary_packages
+                elif len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) != 0 \
+                        and not self.boundary_condition.other_head_dependent_flux_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_head_dependent_flux_boundary_packages()
+                else:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_head_dependent_flux_boundary_packages() + \
+                            ', ' + \
+                            self.boundary_condition.other_head_dependent_flux_boundary_packages
+
+        if self.model_calibration:
+            modelCalibrationFields = ['calibratedParameter', 'observationType',
+                                      'observationProcessPackage', 'calibrationMethod']
+            self.add_metadata_element_to_xml(container, self.model_calibration,
+                                             modelCalibrationFields)
+
+        if self.model_inputs:
+            modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
+            for model_input in self.model_inputs:
+                self.add_metadata_element_to_xml(container, model_input, modelInputFields)
+
+        if self.general_elements:
+
+            if self.general_elements.modelParameter:
+                model_parameter = etree.SubElement(container, '{%s}modelParameter' %
+                                                   self.NAMESPACES['hsterms'])
+                model_parameter.text = self.general_elements.modelParameter
+
+            if self.general_elements.modelSolver:
+                model_solver = etree.SubElement(container, '{%s}modelSolver' %
+                                                self.NAMESPACES['hsterms'])
+                model_solver.text = self.general_elements.modelSolver
+
+            if self.general_elements.output_control_package:
+                output_package = etree.SubElement(container, '{%s}outputControlPackage' %
+                                                  self.NAMESPACES['hsterms'])
+                output_package.text = self.general_elements.get_output_control_package()
+
+            if self.general_elements.subsidencePackage:
+                subsidence_package = etree.SubElement(container, '{%s}subsidencePackage' %
+                                                      self.NAMESPACES['hsterms'])
+                subsidence_package.text = self.general_elements.subsidencePackage
+
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(MODFLOWModelInstanceMetaData, self).delete_all_elements()

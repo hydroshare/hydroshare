@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -490,6 +492,63 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                         element_property_name = attribute_mappings[element_name]
                         self.update_non_repeatable_element(element_name, metadata,
                                                            element_property_name)
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
+
+        # get the xml string representation of the core metadata elements
+        xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+
+        # create an etree xml object
+        RDF_ROOT = etree.fromstring(xml_string)
+
+        # get root 'Description' element that contains all other elements
+        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
+
+        if self.model_objective:
+            hsterms_model_objective = etree.SubElement(container,
+                                                       '{%s}modelObjective'
+                                                       % self.NAMESPACES['hsterms'])
+
+            if self.model_objective.other_objectives:
+                hsterms_model_objective.text = self.model_objective.get_swat_model_objectives() + \
+                                               ', ' + self.model_objective.other_objectives
+            else:
+                hsterms_model_objective.text = self.model_objective.get_swat_model_objectives()
+        if self.simulation_type:
+            if self.simulation_type.simulation_type_name:
+                hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType'
+                                                           % self.NAMESPACES['hsterms'])
+                hsterms_simulation_type.text = self.simulation_type.simulation_type_name
+
+        if self.model_method:
+            modelMethodFields = ['runoffCalculationMethod', 'flowRoutingMethod',
+                                 'petEstimationMethod']
+            self.add_metadata_element_to_xml(container, self.model_method, modelMethodFields)
+
+        if self.model_parameter:
+            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}modelParameter'
+                                                             % self.NAMESPACES['hsterms'])
+
+            if self.model_parameter.other_parameters:
+                hsterms_swat_model_parameters.text = \
+                    self.model_parameter.get_swat_model_parameters() + ', ' + \
+                    self.model_parameter.other_parameters
+            else:
+                hsterms_swat_model_parameters.text = \
+                    self.model_parameter.get_swat_model_parameters()
+
+        if self.model_input:
+            modelInputFields = ['warmupPeriodType', 'warmupPeriodValue', 'rainfallTimeStepType',
+                                'rainfallTimeStepValue', 'routingTimeStepType',
+                                'routingTimeStepValue', 'simulationTimeStepType',
+                                'simulationTimeStepValue', 'watershedArea', 'numberOfSubbasins',
+                                'numberOfHRUs', 'demResolution', 'demSourceName', 'demSourceURL',
+                                'landUseDataSourceName', 'landUseDataSourceURL',
+                                'soilDataSourceName', 'soilDataSourceURL'
+                                ]
+            self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
+
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(SWATModelInstanceMetaData, self).delete_all_elements()
