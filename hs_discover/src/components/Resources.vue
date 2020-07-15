@@ -217,6 +217,7 @@ import 'vue-date-pick/dist/vueDatePick.css'; // css font-size overridden in hs_d
 export default {
   data() {
     return {
+      geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
       resloaded: false, // track axios resource data promise after component mount
@@ -261,7 +262,7 @@ export default {
   },
   name: 'Resources',
   props:
-  ['resources', 'columns', 'labels'],
+  ['resources', 'geodata', 'columns', 'labels'],
   components: {
     datePick: DatePick,
   },
@@ -317,13 +318,12 @@ export default {
       return [];
     },
     filteredResources() {
-      console.log('filter resources');
       if (this.resloaded) {
         let resfiltered = this.resources;
         if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
           // do nothing
         } else {
-           // Filters should be most restrictive when two conflicting states are selected
+          // Filters should be most restrictive when two conflicting states are selected
           if (this.authorFilter.length > 0) {
             const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
             resfiltered = resAuthors;
@@ -375,6 +375,10 @@ export default {
           });
           resfiltered = resEndDate;
         }
+        const shids = resfiltered.map(x => x.short_id);
+        // TODO rename geodata is static and the entire list geopoints are the dynamic filtered list
+        const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        this.renderMap(geopoints);
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           return this.sortDir === -1 ? datesorted : datesorted.reverse();
@@ -454,6 +458,17 @@ export default {
         return input.length > 200 ? `${input.substring(0, 200)}...` : input;
       }
       return '';
+    },
+    renderMap(pts) {
+      pts.forEach((pt) => {
+        if (pt.coverage_type === 'point') {
+          createMarker({ lat: pt.north, lng: pt.east }, pt.title);
+        } else if (pt.coverage_type === 'box') {
+          if (pt.north === pt.south && pt.east === pt.west) {
+            console.log('region');
+          }
+        }
+      });
     },
   },
 };

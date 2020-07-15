@@ -76,7 +76,7 @@
     return legend;
   };
 
-  const createMarker = (loc) => {
+  const createMarker = (loc, title) => {
     const marker = new google.maps.Marker({
       // icon: './images/pin.png',
       // zIndex: i,
@@ -84,7 +84,7 @@
       position: loc,
     });
     google.maps.event.addListener(marker, 'mouseover', function () {
-      infowindow.setContent("testplace");
+      infowindow.setContent(title);
       infowindow.open(exports.map, this);
     });
     google.maps.event.addListener(marker, 'mouseout', function () {

@@ -11,6 +11,7 @@
             </div>
         </div>
         <resource-listing :resources="resources"
+                          :geodata="geodata"
                           :key="resources"
                           :columns="gridColumns"
                           :labels="gridColumnLabels">
@@ -27,6 +28,7 @@ export default {
   data() {
     return {
       resources: [],
+      geodata: [],
       searchtext: '',
       gridColumns: ['type', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -37,6 +39,7 @@ export default {
   },
   mounted() {
     this.searchClick();
+    this.loadGeo();
   },
   methods: {
     searchClick() {
@@ -46,40 +49,31 @@ export default {
             try {
               this.$data.resources = JSON.parse(response.data.resources);
             } catch (e) {
-              console.log(`Error prasing discoverapi JSON: ${e}`);
+              console.log(`Error parsing discoverapi JSON: ${e}`);
             }
-            axios.get('/searchjson/', { params: { data: {} } })
-              .then((mapResponse) => {
-                if (mapResponse.status === 200) {
-                  mapResponse.data.forEach((mapResource) => {
-                    try {
-                      const thisRes = JSON.parse(mapResource);
-                      if (thisRes.coverage_type === 'point') {
-                        // console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
-                        createMarker({ lat: thisRes.north, lng: thisRes.east });
-                      } else if (thisRes.coverage_type === 'box') {
-                        // console.log(`mapdata: ${thisRes.coverage_type} ${thisRes.north} ${thisRes.east}`);
-                        if (thisRes.north === thisRes.south && thisRes.east === thisRes.west) {
-                          if (Number.isInteger(parseInt(thisRes.north, 10))) {
-                            createMarker({ lat: thisRes.north, lng: thisRes.east });
-                          }
-                        }
-                      }
-                    } catch (e) {
-                      console.log(`Error parsing map response or creating marker: ${e}`);
-                    }
-                  });
-                } else {
-                  console.log(`Error map API response: ${mapResponse.statusText}`);
-                }
-              })
-              .catch((error) => {
-                  console.error(`/searchjson/ error: ${error}`); // eslint-disable-line
-              });
           }
         })
         .catch((error) => {
-          console.error(`/discoverapi/ error: ${error}`); // eslint-disable-line
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+        });
+    },
+    loadGeo() {
+      console.log('loading geo...');
+      axios.get('/searchjson/', { params: { data: {} } })
+        .then((response) => {
+          if (response.status === 200) {
+            response.data.forEach((item) => {
+              const val = JSON.parse(item);
+              if (val.coverage_type) {
+                this.$data.geodata.push(val);
+              }
+            });
+          } else {
+            console.log(`Error: ${response.statusText}`);
+          }
+        })
+        .catch((error) => {
+          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
         });
     },
     clearSearch() {
