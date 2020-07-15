@@ -89,14 +89,14 @@ class RDF_Term_MixIn(object):
         else:
             metadata_node = BNode()
             graph.add((subject, term, metadata_node))
-        for field_term, field_value in self.get_field_terms_and_values:
+        for field_term, field_value in self.get_field_terms_and_values():
             graph.add((metadata_node, field_term, field_value))
 
     def get_field_terms_and_values(self, extra_ignored_fields=[]):
         term_values = []
         extra_ignored_fields.extend(self.ignored_fields)
         for field in self._meta.fields:
-            if field.name in self.extra_ignored_fields:
+            if field.name in extra_ignored_fields:
                 continue
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
@@ -106,7 +106,7 @@ class RDF_Term_MixIn(object):
                     field_value = URIRef(field_value)
                 else:
                     field_value = Literal(field_value)
-                term_values.append({field_term, field_value})
+                term_values.append((field_term, field_value))
         return term_values
 
 
