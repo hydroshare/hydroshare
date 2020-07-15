@@ -3,7 +3,6 @@ import logging
 import shutil
 import zipfile
 import xmltodict
-from lxml import etree
 
 from osgeo import ogr, osr
 
@@ -14,7 +13,7 @@ from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title, CoreMetaData
+from hs_core.models import Title
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm
 from hs_core.signals import post_add_geofeature_aggregation

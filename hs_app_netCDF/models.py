@@ -1,5 +1,4 @@
 import json
-from lxml import etree
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -15,7 +14,7 @@ from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
-    add_metadata_element_to_xml, get_resource_files_by_extension
+    get_resource_files_by_extension
 
 
 # Define original spatial coverage metadata info
@@ -49,7 +48,6 @@ class OriginalCoverage(AbstractMetaDataElement):
     def value(self):
         return json.loads(self._value)
 
-
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, cov in graph.triples((subject, HSTERMS.spatialReference, None)):
@@ -69,8 +67,8 @@ class OriginalCoverage(AbstractMetaDataElement):
                     value_dict['projection'] = v
                 else:
                     value_dict[k] = v
-            OriginalCoverage.create(projection_string_type=type, projection_string_text=projection_string_text, _value=json.dumps(value_dict), datum=datum, content_object=content_object)
-
+            OriginalCoverage.create(projection_string_type=type, projection_string_text=projection_string_text,
+                                    _value=json.dumps(value_dict), datum=datum, content_object=content_object)
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()

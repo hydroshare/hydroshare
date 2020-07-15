@@ -1,5 +1,3 @@
-from lxml import etree
-
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
@@ -11,8 +9,6 @@ from rdflib import RDF, BNode, Literal
 from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
-
-from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
 
 class OriginalCoverage(AbstractMetaDataElement):

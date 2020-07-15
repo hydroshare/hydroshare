@@ -4,7 +4,6 @@ from dateutil import parser
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 import jsonschema
-from lxml import etree
 
 from django.utils import timezone
 from django.db import models, transaction
@@ -14,7 +13,6 @@ from django.template import Template, Context
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
-from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
@@ -141,7 +139,6 @@ class TimeSeries(object):
                                     td(self.end_date)
 
         return root_div
-
 
 
 class Site(object):

@@ -10,8 +10,7 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from rdflib import Graph, Literal
-from rdflib.namespace import DC, RDFS
+from rdflib import Graph
 
 from rest_framework import status
 

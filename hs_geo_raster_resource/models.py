@@ -1,5 +1,4 @@
 import json
-from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -8,13 +7,12 @@ from django.core.exceptions import ValidationError
 from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
-from rdflib import BNode, RDF, Literal, URIRef
+from rdflib import BNode, RDF, Literal
 
 from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
-from hs_core.hydroshare.utils import add_metadata_element_to_xml, \
-    get_resource_file_name_and_extension
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 
 
 # extended metadata for raster resource type to store the original box type coverage

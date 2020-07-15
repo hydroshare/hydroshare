@@ -44,7 +44,7 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from rdflib import Literal, Namespace, BNode, URIRef, Graph
+from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 
 import unicodedata
@@ -455,7 +455,7 @@ class Party(AbstractMetaDataElement):
         for party in graph.objects(subject=subject, predicate=party_type):
             value_dict = {}
             identifiers = {}
-            fields_by_term = {cls.get_field_term(field.name):field for field in cls._meta.fields}
+            fields_by_term = {cls.get_field_term(field.name): field for field in cls._meta.fields}
             for _, p, o in graph.triples((party, None, None)):
                 if p not in fields_by_term:
                     identifiers[p.rsplit("/", 1)[1]] = str(o)
@@ -463,7 +463,6 @@ class Party(AbstractMetaDataElement):
                     value_dict[fields_by_term[p].name] = str(o)
             if value_dict or identifiers:
                 cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
-
 
     @classmethod
     def get_post_data_with_identifiers(cls, request, as_json=True):
@@ -651,6 +650,7 @@ class Contributor(Party):
 
     term = 'Contributor'
 
+
 @rdf_terms(DC.creator, order=HSTERMS.creatorOrder)
 class Creator(Party):
     """Extend Party model with the term of 'Creator' and a proper ordering."""
@@ -662,6 +662,7 @@ class Creator(Party):
         """Define meta properties for Creator class."""
 
         ordering = ['order']
+
 
 @rdf_terms(DC.description, abstract=DCTERMS.abstract)
 class Description(AbstractMetaDataElement):
@@ -1440,7 +1441,6 @@ class Coverage(AbstractMetaDataElement):
                 value_dict[k] = v
             Coverage.create(type=type, value=value_dict, content_object=content_object)
 
-
     def rdf_triples(self, subject, graph):
         coverage = BNode()
         graph.add((subject, DC.coverage, coverage))
@@ -1453,7 +1453,6 @@ class Coverage(AbstractMetaDataElement):
             value_dict[k] = v
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
         graph.add((coverage, RDF.value, Literal(value_string)))
-
 
     @classmethod
     def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):

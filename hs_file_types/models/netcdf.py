@@ -11,7 +11,6 @@ from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
 from dominate.tags import div, legend, form, button, p, textarea, _input
-from lxml import etree
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
@@ -21,7 +20,7 @@ from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCo
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
-from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.models import Creator, Contributor
 from hs_core.signals import post_add_netcdf_aggregation
 
 

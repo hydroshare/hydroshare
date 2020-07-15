@@ -2,7 +2,6 @@ import os
 import shutil
 import logging
 import sqlite3
-from lxml import etree
 import csv
 from dateutil import parser
 import tempfile
@@ -16,7 +15,6 @@ from dominate.tags import div, legend, strong, form, select, option, button, _in
     textarea, span
 
 from hs_core.hydroshare import utils
-from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_timeseries_aggregation
 
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable

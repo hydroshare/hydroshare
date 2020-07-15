@@ -20,7 +20,7 @@ from mezzanine.conf import settings
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, _input, ul, li, p
 
-from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin, NAMESPACE_MANAGER
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
@@ -1376,8 +1376,6 @@ class AbstractLogicalFile(models.Model):
     def read_metadata_as_rdf(self):
         g = Graph()
         return g.parse(data=self.read_metadata_file())
-
-
 
 
 class FileTypeContext(object):

@@ -3,7 +3,7 @@ from rdflib import Graph, BNode
 from rdflib.collection import Collection
 from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS, RDF, RDFS
 from rdflib.plugin import register
-from rdflib.plugins.serializers.rdfxml import PrettyXMLSerializer, XMLLANG, OWL_NS, XMLBASE
+from rdflib.plugins.serializers.rdfxml import XMLLANG, OWL_NS, XMLBASE
 from rdflib.plugins.serializers.xmlwriter import XMLWriter
 from rdflib.serializer import Serializer
 from rdflib.term import Literal, URIRef
@@ -219,7 +219,7 @@ class HydroPrettyXMLSerializer(Serializer):
             writer.pop(RDF.Description)
             self.forceRDFAbout.remove(subject)
 
-        elif not subject in self.__serialized:
+        elif subject not in self.__serialized:
             self.__serialized[subject] = 1
             type = first(store.objects(subject, RDF.type))
 
@@ -273,9 +273,7 @@ class HydroPrettyXMLSerializer(Serializer):
                 writer.attribute(RDF.resource, self.relativize(object))
 
         else:
-            if first(store.objects(object, RDF.first)):  # may not have type
-                                                         # RDF.List
-
+            if first(store.objects(object, RDF.first)):
                 self.__serialized[object] = 1
 
                 # Warn that any assertions on object other than
@@ -308,7 +306,7 @@ class HydroPrettyXMLSerializer(Serializer):
 
                 elif isinstance(object, BNode):
 
-                    if not object in self.__serialized \
+                    if object not in self.__serialized \
                             and (object, None, None) in store \
                             and len(list(store.subjects(object=object))) == 1:
                         # inline blank nodes if they haven't been serialized yet
