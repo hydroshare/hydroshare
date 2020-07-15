@@ -444,7 +444,9 @@ class Party(AbstractMetaDataElement):
         graph.add((subject, party_type, party))
         field_names = [field.name for field in self.__class__._meta.fields]
         for f in field_names:
-            graph.add((party, self.get_field_term(f), Literal(getattr(self, f))))
+            field_value = getattr(self, f)
+            if field_value and field_value != 'None':
+                graph.add((party, self.get_field_term(f), Literal(field_value)))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
 
@@ -462,7 +464,10 @@ class Party(AbstractMetaDataElement):
                 else:
                     value_dict[fields_by_term[p].name] = str(o)
             if value_dict or identifiers:
-                cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
+                if identifiers:
+                    cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
+                else:
+                    cls.create(content_object=content_object, **value_dict)
 
     @classmethod
     def get_post_data_with_identifiers(cls, request, as_json=True):
