@@ -18,13 +18,11 @@
                             &nbsp;&nbsp;From
                             <date-pick
                                  v-model="startdate"
-                                 :parseDate="temporalFilterStart"
                                  :displayFormat="'MM/DD/YYYY'"
                             ></date-pick><br/>
                             &nbsp;&nbsp;To&nbsp;&nbsp;&nbsp;&nbsp;
                             <date-pick
                                  v-model="enddate"
-                                 :parseDate="temporalFilterEnd"
                                  :displayFormat="'MM/DD/YYYY'"
                             ></date-pick>
                         </div>
@@ -456,38 +454,6 @@ export default {
         return input.length > 200 ? `${input.substring(0, 200)}...` : input;
       }
       return '';
-    },
-    temporalFilterStart() {
-      const d = new Date(Date.parse(this.startdate));
-      if (Object.prototype.toString.call(d) === '[object Date]') {
-        // it is a date
-        // eslint-disable-next-line no-restricted-globals
-        if (isNaN(d.getTime())) { // d.valueOf() could also work
-          // console.log('invalid date');
-        } else {
-          // console.log(`selected-start: ${d} sample-res-start: ${this.resources[2].start_date}`);
-          d.setDate(d.getDate() + 1);
-          return d;
-        }
-      } else {
-        // console.log('not a date');
-      }
-    },
-    temporalFilterEnd() {
-      const d = new Date(Date.parse(this.enddate));
-      if (Object.prototype.toString.call(d) === '[object Date]') {
-        // it is a date
-        // eslint-disable-next-line no-restricted-globals
-        if (isNaN(d.getTime())) { // d.valueOf() could also work
-          // console.log('invalid date');
-        } else {
-          // console.log(`selected-start: ${d} sample-res-start: ${this.resources[2].start_date}`);
-          d.setDate(d.getDate() + 1);
-          return d;
-        }
-      } else {
-        // console.log('not a date');
-      }
     },
   },
 };
