@@ -51,9 +51,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, cov in graph.triples((subject, HSTERMS.spatialReference, None)):
-            type = graph.value(subject=cov, predicate=RDF.type)
             value = graph.value(subject=cov, predicate=RDF.value)
-            type = type.split('/')[-1]
             value_dict = {}
             datum = ''
             projection_string_text = ''
@@ -65,16 +63,17 @@ class OriginalCoverage(AbstractMetaDataElement):
                     projection_string_text = v
                 elif k == 'projection_name':
                     value_dict['projection'] = v
+                elif k == 'projection_string_type':
+                    projection_string_type = v
                 else:
                     value_dict[k] = v
-            OriginalCoverage.create(projection_string_type=type, projection_string_text=projection_string_text,
+            OriginalCoverage.create(projection_string_type=projection_string_type, projection_string_text=projection_string_text,
                                     _value=json.dumps(value_dict), datum=datum, content_object=content_object)
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()
         graph.add((subject, HSTERMS.spatialReference, coverage))
-        DCTERMS_type = getattr(DCTERMS, self.type)
-        graph.add((coverage, RDF.type, DCTERMS_type))
+        graph.add((coverage, RDF.type, DCTERMS.box))
         value_dict = {}
         for k, v in self.value.items():
             if k == 'projection':
@@ -83,6 +82,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                 value_dict[k] = v
         value_dict['datum'] = self.datum
         value_dict['projection_string'] = self.projection_string_text
+        value_dict['projection_string_type'] = self.projection_string_type
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
         graph.add((coverage, RDF.value, Literal(value_string)))
 
