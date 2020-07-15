@@ -153,7 +153,7 @@
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
                                         <input type="checkbox" class="faceted-selections" :value=availability
-                                               v-model="availabilityFilter" :id="'avail-'+availability">
+                                            v-model="availabilityFilter" :id="'avail-'+availability">
                                     </label>
                                 </li>
                             </ul>
@@ -180,9 +180,9 @@
                     <tr v-for="entry in filteredResources" v-bind:key="entry">
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip"
-                                 :title="entry.type" :alt="entry.type">
+                                :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip"
-                                 :title="entry.availability" :alt="entry.availability" :key="entry">
+                                :title="entry.availability" :alt="entry.availability" :key="entry">
                             <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"
                                 data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"
                                 data-original-title="Shareable">
@@ -193,7 +193,7 @@
                         </td>
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip"
-                                 :title="`Author: ${entry.author} | Owner: ${entry.owner} | Contributor: ${entry.contributor}`">{{entry.author}}</a>
+                               :title="`Author: ${entry.author} | Owner: ${entry.owner} | Contributor: ${entry.contributor}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                         <td data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
@@ -206,6 +206,8 @@
         <div class="col-sm-3 col-xs-12">
             <!-- toggleMap defined in map.js -->
             <input type="button" value="Toggle Map" onclick="toggleMap()">
+            <input type="button" value="Update Map" v-on:click="clearAllMarkers">
+
         </div>
     </div>
 </template>
@@ -221,6 +223,7 @@ export default {
       startdate: 'Start Date',
       enddate: 'End Date',
       resloaded: false, // track axios resource data promise after component mount
+      googMarkers: [],
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
@@ -375,10 +378,10 @@ export default {
           });
           resfiltered = resEndDate;
         }
-        const shids = resfiltered.map(x => x.short_id);
-        // TODO rename geodata is static and the entire list geopoints are the dynamic filtered list
-        const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        this.renderMap(geopoints);
+        // const shids = resfiltered.map(x => x.short_id);
+        // // TODO rename geodata is static and the entire list geopoints are the dynamic filtered list
+        // const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        // this.renderMap(geopoints);
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           return this.sortDir === -1 ? datesorted : datesorted.reverse();
@@ -458,6 +461,12 @@ export default {
         return input.length > 200 ? `${input.substring(0, 200)}...` : input;
       }
       return '';
+    },
+    clearAllMarkers() {
+      deleteMarkers();
+      const shids = this.filteredResources.map(x => x.short_id);
+      const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+      this.renderMap(geopoints);
     },
     renderMap(pts) {
       pts.forEach((pt) => {

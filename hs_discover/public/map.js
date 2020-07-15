@@ -2,6 +2,14 @@
   const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
   // eslint-disable-next-line no-unused-vars
   let infowindow;
+  let googMarkers = [];
+
+  const deleteMarkers = () => {
+    googMarkers.forEach((marker) => {
+      marker.setMap(null);
+    });
+    googMarkers = [];
+  };
 
   const createSearcher = () => {
     const searchBox = new google.maps.places.SearchBox(document.getElementById('map-search'));
@@ -77,19 +85,21 @@
   };
 
   const createMarker = (loc, title) => {
-    const marker = new google.maps.Marker({
+    const addmarker = new google.maps.Marker({
       // icon: './images/pin.png',
       // zIndex: i,
       map: exports.map,
       position: loc,
     });
-    google.maps.event.addListener(marker, 'mouseover', function () {
+    google.maps.event.addListener(addmarker, 'mouseover', function () {
       infowindow.setContent(title);
       infowindow.open(exports.map, this);
     });
-    google.maps.event.addListener(marker, 'mouseout', function () {
+    google.maps.event.addListener(addmarker, 'mouseout', function () {
       infowindow.close();
     });
+    googMarkers.push(addmarker);
+    console.log(`Added a marker. Array now contains ${googMarkers}`);
   };
 
   const toggleMap = () => {
@@ -114,4 +124,5 @@
   exports.initMap = initMap; // eslint-disable-line
   exports.createMarker = createMarker; // eslint-disable-line
   exports.toggleMap = toggleMap; // eslint-disable-line
+  exports.deleteMarkers = deleteMarkers; // eslint-disable-line
 })(this.window = this.window || {});
