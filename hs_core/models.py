@@ -442,11 +442,8 @@ class Party(AbstractMetaDataElement):
         party_type = self.get_class_term()
         party = BNode()
         graph.add((subject, party_type, party))
-        field_names = [field.name for field in self.__class__._meta.fields]
-        for f in field_names:
-            field_value = getattr(self, f)
-            if field_value and field_value != 'None':
-                graph.add((party, self.get_field_term(f), Literal(field_value)))
+        for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+            graph.add((party, field_term, field_value))
         for k, v in self.identifiers.items():
             graph.add((party, getattr(HSTERMS, k), URIRef(v)))
 
