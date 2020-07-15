@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from mezzanine.pages.page_processors import processor_for
 from rdflib import Literal, URIRef
 
-from hs_core.hs_rdf import rdf_terms
+from hs_core.hs_rdf import rdf_terms, HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 
@@ -84,25 +84,13 @@ class MpMetadata(AbstractMetaDataElement):
         return self.modelEngine.split(';')
 
     def rdf_triples(self, subject, graph):
-        for field in self._meta.fields:
-            if self.ignored_fields and field.name in self.ignored_fields:
-                continue
-            field_value = getattr(self, field.name)
-            if not field_value:
-                continue
-            if field.name in ['modelEngine', 'modelReleaseNotes', 'modelDocumentation', 'modelSoftware']:
-                field_term = self.get_field_term(field.name)
+        for field_term, field_value in self.get_field_terms_and_values():
+            if field_term in [HSTERMS.modelEngine, HSTERMS.modelReleaseNotes,
+                              HSTERMS.modelDocumentation, HSTERMS.modelSoftware]:
                 for f in field_value.split(';'):
                     graph.add((subject, field_term, Literal('/data/contents/' + f)))
             else:
-                field_term = self.get_field_term(field.name)
-                # urls should be a URIRef term, all others should be a Literal term
-                if field_value and field_value != 'None':
-                    if isinstance(field_value, str) and field_value.startswith('http'):
-                        field_value = URIRef(field_value)
-                    else:
-                        field_value = Literal(field_value)
-                    graph.add((subject, field_term, field_value))
+                graph.add((subject, field_term, field_value))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -115,7 +103,8 @@ class MpMetadata(AbstractMetaDataElement):
                 values = []
                 for o in graph.objects(subject=subject, predicate=field_term):
                     values.append(o.lstrip('/data/contents/'))
-                value_dict[field.name] = ';'.join(values)
+                if values:
+                    value_dict[field.name] = ';'.join(values)
             else:
                 val = graph.value(subject, field_term)
                 if val:
