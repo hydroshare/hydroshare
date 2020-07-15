@@ -1551,8 +1551,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(title_sub_element.text, self.res.metadata.title.value,
                          msg="'Title element attribute value did not match.")
 
-        type_sub_element = container.find('dc:type', namespaces=self.res.metadata.NAMESPACES)
-        self.assertEqual(type_sub_element.get('{%s}resource' % self.res.metadata.NAMESPACES['rdf']),
+        type_sub_element = container.find('dc:type', namespaces=self.res.metadata.NAMESPACES)[0]
+        self.assertEqual(type_sub_element.get('{%s}about' % self.res.metadata.NAMESPACES['rdf']),
                          self.res.metadata.type.url,
                          msg="'Resource type element url attribute value did not match.")
 
