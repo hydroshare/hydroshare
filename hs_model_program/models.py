@@ -94,9 +94,9 @@ class MpMetadata(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
+        value_dict = {}
         for field in cls._meta.fields:
             field_term = cls.get_field_term(field.name)
-            value_dict = {}
             if cls.ignored_fields and field.name in cls.ignored_fields:
                 continue
             if field.name in ['modelEngine', 'modelReleaseNotes', 'modelDocumentation', 'modelSoftware']:
