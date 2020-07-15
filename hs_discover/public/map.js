@@ -3,6 +3,7 @@
   // eslint-disable-next-line no-unused-vars
   let infowindow;
   let googMarkers = [];
+  let markerCluster;
 
   const deleteMarkers = () => {
     googMarkers.forEach((marker) => {
@@ -99,7 +100,8 @@
       infowindow.close();
     });
     googMarkers.push(addmarker);
-    console.log(`Added a marker. Array now contains ${googMarkers}`);
+    markerCluster = new MarkerClusterer(exports.map, googMarkers,
+      { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
   };
 
   const toggleMap = () => {
@@ -120,6 +122,10 @@
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     const mapLegend = createLegend();
     const searchBox = createSearcher();
+    exports.map.addListener('zoom_changed', function() {
+      markerCluster = new MarkerClusterer(exports.map, googMarkers,
+        { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+    });
   };
   exports.initMap = initMap; // eslint-disable-line
   exports.createMarker = createMarker; // eslint-disable-line

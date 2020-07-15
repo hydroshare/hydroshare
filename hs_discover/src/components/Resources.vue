@@ -206,7 +206,7 @@
         <div class="col-sm-3 col-xs-12">
             <!-- toggleMap defined in map.js -->
             <input type="button" value="Toggle Map" onclick="toggleMap()">
-            <input type="button" value="Update Map" v-on:click="clearAllMarkers">
+            <input type="button" value="Update Map" v-on:click="setAllMarkers">
 
         </div>
     </div>
@@ -378,10 +378,6 @@ export default {
           });
           resfiltered = resEndDate;
         }
-        // const shids = resfiltered.map(x => x.short_id);
-        // // TODO rename geodata is static and the entire list geopoints are the dynamic filtered list
-        // const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        // this.renderMap(geopoints);
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           return this.sortDir === -1 ? datesorted : datesorted.reverse();
@@ -462,7 +458,7 @@ export default {
       }
       return '';
     },
-    clearAllMarkers() {
+    setAllMarkers() {
       deleteMarkers();
       const shids = this.filteredResources.map(x => x.short_id);
       const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
@@ -473,9 +469,10 @@ export default {
         if (pt.coverage_type === 'point') {
           createMarker({ lat: pt.north, lng: pt.east }, pt.title);
         } else if (pt.coverage_type === 'box') {
-          if (pt.north === pt.south && pt.east === pt.west) {
-            console.log('region');
-          }
+          const lat = (parseInt(pt.northlimit, 10) + parseInt(pt.southlimit, 10)) / 2;
+          const lng = (parseInt(pt.eastlimit, 10) + parseInt(pt.westlimit, 10)) / 2;
+          console.log(pt.northlimit, pt.southlimit, pt.eastlimit, pt.westlimit);
+          createMarker({ lat: lat, lng: lng }, pt.title);
         }
       });
     },
