@@ -109,7 +109,6 @@ class RDF_Term_MixIn(object):
                 term_values.append((field_term, field_value))
         return term_values
 
-
     @classmethod
     def get_class_term(cls):
         return cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)

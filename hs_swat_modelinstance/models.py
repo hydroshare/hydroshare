@@ -383,7 +383,8 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     _model_input = GenericRelation(ModelInput)
 
     def ingest_metadata(self, graph):
-        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time".format(self.__class__.__name__))
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time"
+                                  .format(self.__class__.__name__))
 
     @property
     def resource(self):
