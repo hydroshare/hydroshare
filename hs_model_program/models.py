@@ -105,6 +105,9 @@ processor_for(ModelProgramResource)(resource_processor)
 class ModelProgramMetaData(CoreMetaData):
     _mpmetadata = GenericRelation(MpMetadata)
 
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time".format(self.__class__.__name__))
+
     @property
     def resource(self):
         return ModelProgramResource.objects.filter(object_id=self.id).first()

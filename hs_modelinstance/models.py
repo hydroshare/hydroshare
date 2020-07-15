@@ -129,6 +129,9 @@ class ModelInstanceMetaData(CoreMetaData):
     _model_output = GenericRelation(ModelOutput)
     _executed_by = GenericRelation(ExecutedBy)
 
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time".format(self.__class__.__name__))
+
     @property
     def resource(self):
         return ModelInstanceResource.objects.filter(object_id=self.id).first()
