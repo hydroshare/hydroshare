@@ -40,7 +40,6 @@ class OriginalCoverage(AbstractMetaDataElement):
                     value_dict[k] = v
             OriginalCoverage.create(**value_dict, content_object=content_object)
 
-
     def rdf_triples(self, subject, graph):
         coverage = BNode()
         graph.add((subject, HSTERMS.spatialReference, coverage))

@@ -64,7 +64,8 @@ class OriginalCoverage(AbstractMetaDataElement):
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if value_item not in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for {} is missing. {}".format(value_item, value_arg_dict))
+                    raise ValidationError("For coverage of type 'box' values for {} is missing. {}"
+                                          .format(value_item, value_arg_dict))
 
             value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
