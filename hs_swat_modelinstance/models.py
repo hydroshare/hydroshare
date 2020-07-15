@@ -496,7 +496,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     def get_xml(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string representation of the core metadata elements
-        xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(SWATModelInstanceMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)

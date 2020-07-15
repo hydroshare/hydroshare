@@ -169,7 +169,7 @@ class ModelProgramMetaData(CoreMetaData):
 
 
         # get the xml string for Model Program
-        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(ModelProgramMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create  etree element
         RDF_ROOT = etree.fromstring(xml_string)
