@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 
 from django_irods import icommands
-from hs_core.hydroshare import check_resource_type
+from hs_core.hydroshare.resource import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.task_utils import get_resource_bag_task, get_task_by_id, create_task_notification
 

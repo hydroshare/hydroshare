@@ -48,8 +48,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id, dismiss_task_by_id, \
-    set_task_delivered_by_id
-
+    set_task_delivered_by_id, create_task_notification
+from hs_core.tasks import delete_resource_task
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -66,7 +66,7 @@ from hs_core.hydroshare import utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
 
-from hs_collection_resource.models import CollectionDeletedResource
+
 logger = logging.getLogger(__name__)
 
 
@@ -702,43 +702,17 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
-
+    task = delete_resource_task.apply_async((shortkey, request.user.username))
+    task_id = task.task_id
+    task_dict = get_task_by_id(task_id, name='resource delete', payload=shortkey)
+    create_task_notification(task_id, name='resource delete', payload=shortkey)
     res_title = res.metadata.title
-    res_id = shortkey
     res_type = res.resource_type
-    resource_related_collections = [col for col in res.collections.all()]
-    owners_list = [owner for owner in res.raccess.owners.all()]
-    ajax_response_data = {'status': 'success'}
-    try:
-        hydroshare.delete_resource(shortkey)
-    except ValidationError as ex:
-        if request.is_ajax():
-            ajax_response_data['status'] = 'error'
-            ajax_response_data['message'] = str(ex)
-            return JsonResponse(ajax_response_data)
-        else:
-            request.session['validation_error'] = str(ex)
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    # if the deleted resource is part of any collection resource, then for each of those collection
-    # create a CollectionDeletedResource object which can then be used to list collection deleted
-    # resources on collection resource landing page
-    for collection_res in resource_related_collections:
-        o=CollectionDeletedResource.objects.create(
-             resource_title=res_title,
-             deleted_by=user,
-             resource_id=res_id,
-             resource_type=res_type,
-             collection=collection_res
-             )
-        o.resource_owners.add(*owners_list)
-
     post_delete_resource.send(sender=type(res), request=request, user=user,
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
-
     if request.is_ajax():
-        return JsonResponse(ajax_response_data)
+        return JsonResponse(task_dict)
     else:
         return HttpResponseRedirect('/my-resources/')
 

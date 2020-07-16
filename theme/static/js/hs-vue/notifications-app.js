@@ -46,6 +46,16 @@ $(document).ready(function () {
                         "Failed": "Download failed",
                         "Delivered": "Download delivered"
                     }
+                },
+                "resource delete": {
+                    title: "Resource delete",
+                    status: {
+                        "Pending execution": "Pending...",
+                        "In progress": "Getting your resource ready for deletion...",
+                        "Aborted": "Aborted",
+                        "Failed": "Resource deletion failed",
+                        "Delivered": "Resource deletion delivered"
+                    }
                 }
             },
             statusIcons: {
@@ -229,6 +239,13 @@ $(document).ready(function () {
                             const zipUrl = task.payload;
                             vue.downloadFile(zipUrl, task.id);
                             vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource delete":
+                        // Check if resource delete is finished
+                        if (task.status === "Completed" && task.payload) {
+                            vue.deliverTask(task);
+                            window.location.href = '/my-resources/';
                         }
                         break;
                     default:

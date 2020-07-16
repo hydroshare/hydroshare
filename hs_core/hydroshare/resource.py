@@ -277,11 +277,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         if bag_modified_flag:
             # import here to avoid circular import issue
             from hs_core.tasks import create_bag_by_irods
-            status = create_bag_by_irods(res_id)
-            if not status:
-                # bag fails to be created successfully
-                raise SessionException(-1, '', 'The resource bag fails to be created '
-                                               'before bag replication')
+            create_bag_by_irods(res_id)
 
         # do replication of the resource bag to irods user zone
         if not res.resource_federation_path:
@@ -872,36 +868,10 @@ def delete_resource(pk):
     Exceptions.NotFound - The resource identified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
 
-    Note:  Only HydroShare administrators will be able to delete formally published resour
+    Note:  Only HydroShare administrators will be able to delete formally published resource
     """
-
-    res = utils.get_resource_by_shortkey(pk)
-
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
-                              'cannot be deleted.')
-
-    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
-    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
-    # relation element
-    if res.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of_res_link = \
-            res.metadata.relations.all().filter(type='isVersionOf').first().value
-        idx = is_version_of_res_link.rindex('/')
-        if idx == -1:
-            obsolete_res_id = is_version_of_res_link
-        else:
-            obsolete_res_id = is_version_of_res_link[idx+1:]
-        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
-            obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable if not published now that it becomes the latest version
-            if not obsolete_res.raccess.published:
-                obsolete_res.raccess.immutable = False
-                obsolete_res.raccess.save()
-
-    res.delete()
+    from hs_core.tasks import delete_resource_task
+    delete_resource_task(pk)
     return pk
 
 
