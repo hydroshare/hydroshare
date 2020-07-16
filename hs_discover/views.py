@@ -108,36 +108,41 @@ class SearchAPI(APIView):
             except:
                 start_date = ''
                 end_date = ''
-            try:
-                contributor = ''
-                if result.creator:
-                    if len(result.creator) > 0:
-                        contributor = result.creator[0]
-                owner = ''
-                if result.owner:
-                    if len(result.owner) > 0:
-                        owner = result.owner[0]
-                resources.append({
-                    "title": result.title,
-                    "link": result.absolute_url,
-                    "availability": result.availability,
-                    "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
-                    "type": result.resource_type_exact,
-                    "author": result.author,
-                    "contributor": contributor,
-                    "author_link": result.author_url,
-                    "owner": owner,
-                    "abstract": result.abstract,
-                    "subject": result.subject,
-                    "created": result.created.isoformat(),
-                    "modified": result.modified.isoformat(),
-                    "shareable": True,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "short_id": result.short_id
-                })
-            except Exception as e:
-                print('discover error: {}'.format(e))
+
+            contributor = ''
+            owner = ''
+
+            if result.creator is not None:
+                try:
+                    contributor = result.creator[0]
+                except:
+                    print("Missing contributor: {}".format(result.short_id))
+
+            if result.owner is not None:
+                try:
+                    owner = result.owner[0]
+                except:
+                    print("Missing owner: {}".format(result.short_id))
+
+            resources.append({
+                "title": result.title,
+                "link": result.absolute_url,
+                "availability": result.availability,
+                "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
+                "type": result.resource_type_exact,
+                "author": result.author,
+                "contributor": contributor,
+                "author_link": result.author_url,
+                "owner": owner,
+                "abstract": result.abstract,
+                "subject": result.subject,
+                "created": result.created.isoformat(),
+                "modified": result.modified.isoformat(),
+                "shareable": True,
+                "start_date": start_date,
+                "end_date": end_date,
+                "short_id": result.short_id
+            })
 
         return Response({
             'resources': json.dumps(resources),
