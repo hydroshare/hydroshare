@@ -702,12 +702,12 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    res_title = res.metadata.title
+    res_type = res.resource_type
     task = delete_resource_task.apply_async((shortkey, request.user.username))
     task_id = task.task_id
     task_dict = get_task_by_id(task_id, name='resource delete', payload=shortkey)
     create_task_notification(task_id, name='resource delete', payload=shortkey)
-    res_title = res.metadata.title
-    res_type = res.resource_type
     post_delete_resource.send(sender=type(res), request=request, user=user,
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
