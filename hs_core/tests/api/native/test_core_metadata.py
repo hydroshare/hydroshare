@@ -1535,7 +1535,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
                                          agency_url="http://www.nsf.gov")
         # check the content of the metadata xml string
-        RDF_ROOT = etree.XML(self.res.metadata.get_xml())
+        RDF_ROOT = etree.XML(self.res.metadata.get_xml().encode())
 
         # check root 'Description' element
         container = RDF_ROOT.find('rdf:Description', namespaces=self.res.metadata.NAMESPACES)
