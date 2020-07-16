@@ -109,6 +109,14 @@ class SearchAPI(APIView):
                 start_date = ''
                 end_date = ''
             try:
+                contributor = ''
+                if result.creator:
+                    if len(result.creator) > 0:
+                        contributor = result.creator[0]
+                owner = ''
+                if result.owner:
+                    if len(result.owner) > 0:
+                        owner = result.owner[0]
                 resources.append({
                     "title": result.title,
                     "link": result.absolute_url,
@@ -116,9 +124,9 @@ class SearchAPI(APIView):
                     "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                     "type": result.resource_type_exact,
                     "author": result.author,
-                    "contributor": result.creator[0] if len(result.creator) > 0 else '',
+                    "contributor": contributor,
                     "author_link": result.author_url,
-                    "owner": result.owner[0] if len(result.owner) > 0 else '',
+                    "owner": owner,
                     "abstract": result.abstract,
                     "subject": result.subject,
                     "created": result.created.isoformat(),
