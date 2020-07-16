@@ -160,6 +160,8 @@ $(document).ready(function () {
             clear: function () {
                 let vue = this;
                 vue.tasks = vue.tasks.filter(function(task) {
+                    if (vue.canBeDismissed(task))
+                        vue.dismissTask(task);
                     return !vue.canBeDismissed(task);
                 });
             },
