@@ -38,7 +38,7 @@
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-creator">
-                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort()"
+                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="author">
                                     <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
                                     <input type="checkbox" :value="author" class="faceted-selections"
@@ -59,7 +59,7 @@
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-owner">
-                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort()"
+                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="owner">
                                     <span class="badge">{{countOwners[owner]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
@@ -81,7 +81,7 @@
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-subject">
-                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort()"
+                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="subject">
                                     <span class="badge">{{countSubjects[subject]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
@@ -103,7 +103,7 @@
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-contributor">
-                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort()"
+                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="contributor">
                                     <span class="badge">{{countContributors[contributor]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
@@ -460,11 +460,12 @@ export default {
     },
     setAllMarkers() {
       deleteMarkers();
+      console.log(`num filtered res: ${this.filteredResources.length}`);
       const shids = this.filteredResources.map(x => x.short_id);
       const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
       this.renderMap(geopoints);
     },
-    renderMap(pts) {
+    renderMapSingle(pts) {
       pts.forEach((pt) => {
         if (pt.coverage_type === 'point') {
           createMarker({ lat: pt.north, lng: pt.east }, pt.title);
@@ -475,6 +476,12 @@ export default {
           createMarker({ lat: lat, lng: lng }, pt.title);
         }
       });
+    },
+    renderMap(geos) {
+      const pts = geos.filter(x => x.coverage_type === 'point');
+      const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
+      const pointlbls = pts.map(x => x.title);
+      createBatchMarkers(pointlocs, pointlbls);
     },
   },
 };

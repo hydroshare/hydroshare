@@ -85,6 +85,18 @@
     return legend;
   };
 
+  const createBatchMarkers = (locations, labels) => {
+    googMarkers = locations.map(function(location, k) {
+      return new google.maps.Marker({
+        map: exports.map,
+        position: location,
+        title: labels[k % labels.length],
+      });
+    });
+    markerCluster = new MarkerClusterer(exports.map, googMarkers,
+      { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+  };
+
   const createMarker = (loc, title) => {
     const addmarker = new google.maps.Marker({
       // icon: './images/pin.png',
@@ -100,8 +112,8 @@
       infowindow.close();
     });
     googMarkers.push(addmarker);
-    markerCluster = new MarkerClusterer(exports.map, googMarkers,
-      { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+    // markerCluster = MarkerClusterer(exports.map, googMarkers,
+    //   { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
   };
 
   const toggleMap = () => {
@@ -122,13 +134,13 @@
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     const mapLegend = createLegend();
     const searchBox = createSearcher();
-    exports.map.addListener('zoom_changed', function() {
-      markerCluster = new MarkerClusterer(exports.map, googMarkers,
-        { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
-    });
+    // exports.map.addListener('zoom_changed', function() {
+    // markerCluster = new MarkerClusterer(exports.map, googMarkers,
+    //   { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+    // });
   };
   exports.initMap = initMap; // eslint-disable-line
-  exports.createMarker = createMarker; // eslint-disable-line
+  exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
   exports.toggleMap = toggleMap; // eslint-disable-line
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
 })(this.window = this.window || {});
