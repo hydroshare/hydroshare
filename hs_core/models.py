@@ -2113,10 +2113,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 fl.logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
             fl.delete()
-        hs_bagit.delete_files_and_bag(self)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
+        hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
 
     @property

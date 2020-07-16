@@ -17,7 +17,7 @@ from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-
+from django.db import transaction
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -491,41 +491,42 @@ def delete_resource_task(resource_id, request_username=None):
         raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
                               'cannot be deleted.')
 
-    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
-    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
-    # relation element
-    if res.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of_res_link = \
-            res.metadata.relations.all().filter(type='isVersionOf').first().value
-        idx = is_version_of_res_link.rindex('/')
-        if idx == -1:
-            obsolete_res_id = is_version_of_res_link
-        else:
-            obsolete_res_id = is_version_of_res_link[idx + 1:]
-        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
-            obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable if not published now that it becomes the latest version
-            if not obsolete_res.raccess.published:
-                obsolete_res.raccess.immutable = False
-                obsolete_res.raccess.save()
+    with transaction.atomic():
+        # when the most recent version of a resource in an obsolescence chain is deleted, the previous
+        # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
+        # relation element
+        if res.metadata.relations.all().filter(type='isVersionOf').exists():
+            is_version_of_res_link = \
+                res.metadata.relations.all().filter(type='isVersionOf').first().value
+            idx = is_version_of_res_link.rindex('/')
+            if idx == -1:
+                obsolete_res_id = is_version_of_res_link
+            else:
+                obsolete_res_id = is_version_of_res_link[idx + 1:]
+            obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
+            if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
+                eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
+                obsolete_res.metadata.delete_element('relation', eid)
+                # also make this obsoleted resource editable if not published now that it becomes the latest version
+                if not obsolete_res.raccess.published:
+                    obsolete_res.raccess.immutable = False
+                    obsolete_res.raccess.save()
 
-    res.delete()
+        res.delete()
 
-    if request_username:
-        # if the deleted resource is part of any collection resource, then for each of those collection
-        # create a CollectionDeletedResource object which can then be used to list collection deleted
-        # resources on collection resource landing page
-        for collection_res in resource_related_collections:
-            o=CollectionDeletedResource.objects.create(
-                 resource_title=res_title,
-                 deleted_by=User.objects.get(username=request_username),
-                 resource_id=resource_id,
-                 resource_type=res_type,
-                 collection=collection_res
-                 )
-            o.resource_owners.add(*owners_list)
+        if request_username:
+            # if the deleted resource is part of any collection resource, then for each of those collection
+            # create a CollectionDeletedResource object which can then be used to list collection deleted
+            # resources on collection resource landing page
+            for collection_res in resource_related_collections:
+                o = CollectionDeletedResource.objects.create(
+                    resource_title=res_title,
+                    deleted_by=User.objects.get(username=request_username),
+                    resource_id=resource_id,
+                    resource_type=res_type,
+                    collection=collection_res
+                    )
+                o.resource_owners.add(*owners_list)
 
     return resource_id
 
