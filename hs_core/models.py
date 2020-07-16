@@ -1429,6 +1429,57 @@ class Coverage(AbstractMetaDataElement):
         """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
 
+    def add_to_xml_container(self, container):
+        """Update etree SubElement container with coverage values."""
+        NAMESPACES = CoreMetaData.NAMESPACES
+        dc_coverage = etree.SubElement(container, '{%s}coverage' % NAMESPACES['dc'])
+        cov_dcterm = '{%s}' + self.type
+        dc_coverage_dcterms = etree.SubElement(dc_coverage,
+                                               cov_dcterm % NAMESPACES['dcterms'])
+        rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        if self.type == 'period':
+            start_date = parser.parse(self.value['start'])
+            end_date = parser.parse(self.value['end'])
+            cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
+                                                              end_date.isoformat())
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+
+        elif self.type == 'point':
+            cov_value = 'east=%s; north=%s; units=%s' % (self.value['east'],
+                                                         self.value['north'],
+                                                         self.value['units'])
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'elevation' in self.value:
+                cov_value += '; elevation=%s' % self.value['elevation']
+                if 'zunits' in self.value:
+                    cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        else:
+            # this is box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        % (self.value['northlimit'], self.value['eastlimit'],
+                           self.value['southlimit'], self.value['westlimit'],
+                           self.value['units'])
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'uplimit' in self.value:
+                cov_value += '; uplimit=%s' % self.value['uplimit']
+            if 'downlimit' in self.value:
+                cov_value += '; downlimit=%s' % self.value['downlimit']
+            if 'uplimit' in self.value or 'downlimit' in self.value:
+                cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        rdf_coverage_value.text = cov_value
+
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, cov in graph.triples((subject, DC.coverage, None)):
