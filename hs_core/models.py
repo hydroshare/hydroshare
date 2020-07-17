@@ -902,7 +902,7 @@ class Date(AbstractMetaDataElement):
         dt.delete()
 
 
-@rdf_Terms(DC.relation)
+@rdf_terms(DC.relation)
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
