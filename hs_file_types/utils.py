@@ -245,8 +245,7 @@ def get_logical_file(agg_type_name):
 
 def ingest_logical_file_metadata(metadata_file, resource, new_lfs):
     graph = Graph()
-    with open(metadata_file.temporary_file_path(), mode='r') as f:
-        graph = graph.parse(data=f.read())
+    graph = graph.parse(data=metadata_file.read())
     agg_type_name = None
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]

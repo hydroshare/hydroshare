@@ -813,8 +813,7 @@ def add_resource_files(pk, *files, **kwargs):
         ingest_logical_file_metadata(md, resource, new_lfs)
     if resource_metadata_file:
         graph = Graph()
-        with open(resource_metadata_file.temporary_file_path(), mode='r') as f:
-            graph = graph.parse(data=f.read())
+        graph = graph.parse(data=resource_metadata_file.read())
         try:
             with transaction.atomic():
                 resource.metadata.delete_all_elements()
