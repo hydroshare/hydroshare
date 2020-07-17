@@ -5,6 +5,8 @@ from django.conf import settings
 from django.db import transaction
 
 from hs_core.models import TaskNotification
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.signals import post_delete_resource
 
 import logging
 
@@ -37,6 +39,25 @@ def _retrieve_task_id(job_name, res_id, job_dict):
     return None
 
 
+def _retrieve_job_id(job_name, res_id):
+    """
+    Retrieve a job id corresponding to the job_name and match the res_id
+    :param job_name: job name
+    :param res_id: resource id
+    :return: job id
+    """
+    i = inspect()
+    active_jobs = i.active()
+    job_id = _retrieve_task_id(job_name, res_id, active_jobs)
+    if not job_id:
+        reserved_jobs = i.reserved()
+        job_id = _retrieve_task_id(job_name, res_id, reserved_jobs)
+        if not job_id:
+            scheduled_jobs = i.scheduled()
+            job_id = _retrieve_task_id(job_name, res_id, scheduled_jobs)
+    return job_id
+
+
 def _retrieve_user_tasks(username, job_dict, queue_type):
     """
     :param username: requesting user's username
@@ -65,10 +86,11 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
                             status = 'completed'
                             payload = str(result.get()).lower()
                             create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
-                                                     payload=payload)
+                                                     payload=payload, username=username)
                         elif result.failed():
                             status = 'Failed'
-                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']])
+                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
+                                                     username=username)
                     task_list.append({
                         'id': task_id,
                         'name': task_name_mapper[job['name']],
@@ -89,13 +111,17 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
     return task_list, task_ids
 
 
-def create_task_notification(task_id, status='pending', name='', payload=''):
+def create_task_notification(task_id, status='pending', name='', payload='', username=''):
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
                                                               defaults={'name': name,
                                                                         'payload': payload,
-                                                                        'status': status})
+                                                                        'status': status,
+                                                                        'username': username
+                                                                        })
         if not created:
+            if username:
+                obj.username = username
             if name:
                 obj.name = name
             if payload:
@@ -106,17 +132,12 @@ def create_task_notification(task_id, status='pending', name='', payload=''):
 
 def get_resource_bag_task(res_id):
     job_name = 'hs_core.tasks.create_bag_by_irods'
-    i = inspect()
-    active_jobs = i.active()
-    job_id = _retrieve_task_id(job_name, res_id, active_jobs)
-    if not job_id:
-        reserved_jobs = i.reserved()
-        job_id = _retrieve_task_id(job_name, res_id, reserved_jobs)
-        if not job_id:
-            scheduled_jobs = i.scheduled()
-            job_id = _retrieve_task_id(job_name, res_id, scheduled_jobs)
+    return _retrieve_job_id(job_name, res_id)
 
-    return job_id
+
+def get_resource_delete_task(res_id):
+    job_name = 'hs_core.tasks.delete_resource_task'
+    return _retrieve_job_id(job_name, res_id)
 
 
 def get_all_tasks(username):
@@ -143,23 +164,32 @@ def get_all_tasks(username):
     return task_list
 
 
-def get_task_by_id(task_id, name='', payload=''):
+def get_task_by_id(task_id, name='', payload='', request=None):
     """
     get task dict by celery task id
     :param task_id: task id
     :param name: task name with default being empty
     :param payload: task payload to use. If empty, task return result will be used as payload
+    :param request: the request object
     :return: task dict with keys id, name, status
     """
     result = AsyncResult(task_id)
     status = dict(TaskNotification.TASK_STATUS_CHOICES)['progress']
+    username = request.user.username if request else ''
     if result.ready():
         try:
             ret_value = result.get()
             status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
             if not payload:
                 payload = ret_value
-            create_task_notification(task_id=task_id, status=status, name=name, payload=payload)
+            if name == "resource delete" and request:
+                res = get_resource_by_shortkey(ret_value)
+                res_title = res.metadata.title
+                res_type = res.resource_type
+                post_delete_resource.send(sender=type(res), request=request, user=request.user,
+                                          resource_shortkey=ret_value, resource=res,
+                                          resource_title=res_title, resource_type=res_type)
+            create_task_notification(task_id=task_id, status=status, name=name, payload=payload, username=username)
         # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
         except Exception:
             # logging exception will log the full stack trace and prepend a line with the message str input argument

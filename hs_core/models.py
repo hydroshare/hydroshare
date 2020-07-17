@@ -4395,6 +4395,7 @@ class TaskNotification(models.Model):
         ('completed', 'Completed'),
         ('delivered', 'Delivered')
     )
+    username = models.CharField(max_length=150, blank=True)
     task_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=1000, blank=True)
     payload = models.CharField(max_length=1000, blank=True)
