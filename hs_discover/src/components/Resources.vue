@@ -321,6 +321,7 @@ export default {
       return [];
     },
     filteredResources() {
+      const startd = new Date();
       if (this.resloaded) {
         let resfiltered = this.resources;
         if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
@@ -380,14 +381,17 @@ export default {
         }
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+          console.log(`filter compute: ${(new Date() - startd) / 1000}`);
           return this.sortDir === -1 ? datesorted : datesorted.reverse();
         }
+        console.log(`filter compute: ${(new Date() - startd) / 1000}`);
         return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
       }
       return [];
     },
   },
   mounted() {
+    const startd = new Date();
     this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author');
     // Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
@@ -415,6 +419,7 @@ export default {
     this.countAvailabilities = new this.Counter(availabilitybox);
     // Object.keys(this.countAvailabilities).forEach(availability => this.availabilityFilter
     //   .push(availability));
+    console.log(`mount filter build: ${(new Date() - startd) / 1000}`);
   },
   methods: {
     filterBuilder(resources, thing) {

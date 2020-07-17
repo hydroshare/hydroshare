@@ -43,11 +43,13 @@ export default {
   },
   methods: {
     searchClick() {
+      const startdApiSearch = new Date();
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
           if (response) {
             try {
               this.$data.resources = JSON.parse(response.data.resources);
+              console.log(`/discoverapi/ call in: ${(new Date() - startdApiSearch) / 1000} sec`);
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
             }

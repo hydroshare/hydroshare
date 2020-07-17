@@ -77,7 +77,7 @@ class SearchAPI(APIView):
 
         if request.GET.get('searchtext'):
             searchtext = request.GET.get('searchtext')
-            sqs = sqs.filter(content=searchtext).boost('keyword', 2.0)
+            sqs = sqs.filter(content=searchtext)#.boost('keyword', 2.0)
 
         # NElat = request.GET.get('nelat')
         # NElng = request.GET.get('nelng')
