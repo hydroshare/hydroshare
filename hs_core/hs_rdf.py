@@ -100,7 +100,7 @@ class RDF_Term_MixIn(object):
                 continue
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value and field_value != 'None':
+            if field_value != None and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
                     field_value = URIRef(field_value)
@@ -136,7 +136,7 @@ class RDF_Term_MixIn(object):
                     continue
                 field_term = cls.get_field_term(field.name)
                 val = graph.value(metadata_node, field_term)
-                if val:
+                if val != None:
                     value_dict[field.name] = str(val)
             if value_dict:
                 cls.create(content_object=content_object, **value_dict)
