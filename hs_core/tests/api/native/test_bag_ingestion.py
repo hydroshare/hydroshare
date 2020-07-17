@@ -11,7 +11,7 @@ from rdflib import Graph
 from rdflib.compare import _squashed_graphs_triples
 
 from hs_composite_resource.models import CompositeResource
-from hs_core.hydroshare import resource, add_resource_files
+from hs_core.hydroshare import resource, add_resource_files, current_site_url
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
@@ -59,7 +59,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         def normalize_metadata(metadata_str):
             """Prepares metadata string to match resource id and hydroshare url of original"""
             return metadata_str\
-                .replace("http://localhost:8000", "http://www.hydroshare.org")\
+                .replace(current_site_url(), "http://www.hydroshare.org")\
                 .replace(res.short_id, "97523bdb7b174901b3fc2d89813458f1")
 
         # create empty resource
