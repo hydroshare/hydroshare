@@ -1204,6 +1204,7 @@ class Publisher(AbstractMetaDataElement):
         """Define custom remove method for Publisher model."""
         raise ValidationError("Publisher element can't be deleted.")
 
+
 @rdf_terms(DC.language)
 class Language(AbstractMetaDataElement):
     """Define language custom metadata model."""
@@ -1488,7 +1489,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, cov in graph.triples((subject, self.get_class_term(), None)):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
             type = graph.value(subject=cov, predicate=RDF.type)
             value = graph.value(subject=cov, predicate=RDF.value)
             type = type.split('/')[-1]
@@ -1502,7 +1503,7 @@ class Coverage(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()
-        graph.add((subject, cls.get_class_term(), coverage))
+        graph.add((subject, self.get_class_term(), coverage))
         DCTERMS_type = getattr(DCTERMS, self.type)
         graph.add((coverage, RDF.type, DCTERMS_type))
         value_dict = {}
