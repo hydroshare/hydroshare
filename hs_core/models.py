@@ -699,6 +699,7 @@ class Description(AbstractMetaDataElement):
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
+@rdf_terms(DC.title)
 class Title(AbstractMetaDataElement):
     """Define Title metadata element model."""
 
@@ -731,15 +732,16 @@ class Title(AbstractMetaDataElement):
         raise ValidationError("Title element of a resource can't be deleted.")
 
     def rdf_triples(self, subject, graph):
-        graph.add((subject, DC.title, Literal(self.value)))
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        title = graph.value(subject=subject, predicate=DC.title)
+        title = graph.value(subject=subject, predicate=cls.get_class_term())
         if title:
             Title.create(value=title.value, content_object=content_object)
 
 
+@rdf_terms(DC.type)
 class Type(AbstractMetaDataElement):
     """Define Type metadata element model."""
 
@@ -761,15 +763,16 @@ class Type(AbstractMetaDataElement):
         raise ValidationError("Type element of a resource can't be deleted.")
 
     def rdf_triples(self, subject, graph):
-        graph.add((subject, DC.type, URIRef(self.url)))
+        graph.add((subject, self.get_class_term(), URIRef(self.url)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        url = graph.value(subject=subject, predicate=DC.type)
+        url = graph.value(subject=subject, predicate=cls.get_class_term())
         if url:
             Type.create(url=str(url), content_object=content_object)
 
 
+@rdf_terms(DC.date)
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
@@ -800,13 +803,13 @@ class Date(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         date_node = BNode()
-        graph.add((subject, DC.date, date_node))
+        graph.add((subject, self.get_class_term(), date_node))
         graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
         graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, date_node in graph.triples((subject, DC.date, None)):
+        for _, _, date_node in graph.triples((subject, cls.get_class_term(), None)):
             type = graph.value(subject=date_node, predicate=RDF.type)
             value = graph.value(subject=date_node, predicate=RDF.value)
             if type and value:
@@ -899,6 +902,7 @@ class Date(AbstractMetaDataElement):
         dt.delete()
 
 
+@rdf_Terms(DC.relation)
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
@@ -934,12 +938,12 @@ class Relation(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
-        graph.add((subject, DC.relation, relation_node))
+        graph.add((subject, self.get_class_term(), relation_node))
         graph.add((relation_node, getattr(HSTERMS, self.type), URIRef(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, relation_node in graph.triples((subject, DC.relation, None)):
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
             for _, p, o in graph.triples((relation_node, None, None)):
                 type_term = p
                 value = o
@@ -1025,6 +1029,7 @@ class Relation(AbstractMetaDataElement):
         super(Relation, cls).update(element_id, **kwargs)
 
 
+@rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):
     """Create Identifier custom metadata element."""
 
@@ -1038,7 +1043,7 @@ class Identifier(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         identifier_node = BNode()
-        graph.add((subject, DC.identifier, identifier_node))
+        graph.add((subject, self.get_class_term(), identifier_node))
         if self.name.lower() == 'doi':
             graph.add((identifier_node, HSTERMS.doi, URIRef(self.url)))
         else:
@@ -1046,7 +1051,7 @@ class Identifier(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, identifier_node in graph.triples((subject, DC.identifier, None)):
+        for _, _, identifier_node in graph.triples((subject, cls.get_class_term(), None)):
             url = graph.value(subject=identifier_node, predicate=HSTERMS.doi)
             name = 'doi'
             if not url:
@@ -1199,7 +1204,7 @@ class Publisher(AbstractMetaDataElement):
         """Define custom remove method for Publisher model."""
         raise ValidationError("Publisher element can't be deleted.")
 
-
+@rdf_terms(DC.language)
 class Language(AbstractMetaDataElement):
     """Define language custom metadata model."""
 
@@ -1240,15 +1245,16 @@ class Language(AbstractMetaDataElement):
             raise ValidationError('Language code is missing.')
 
     def rdf_triples(self, subject, graph):
-        graph.add((subject, DC.language, Literal(self.code)))
+        graph.add((subject, self.get_class_term(), Literal(self.code)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        code = graph.value(subject=subject, predicate=DC.language)
+        code = graph.value(subject=subject, predicate=cls.get_class_term())
         if code:
             Language.create(code=str(code), content_object=content_object)
 
 
+@rdf_terms(DC.coverage)
 class Coverage(AbstractMetaDataElement):
     """Define Coverage custom metadata element model."""
 
@@ -1482,7 +1488,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, cov in graph.triples((subject, DC.coverage, None)):
+        for _, _, cov in graph.triples((subject, self.get_class_term(), None)):
             type = graph.value(subject=cov, predicate=RDF.type)
             value = graph.value(subject=cov, predicate=RDF.value)
             type = type.split('/')[-1]
@@ -1496,7 +1502,7 @@ class Coverage(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()
-        graph.add((subject, DC.coverage, coverage))
+        graph.add((subject, cls.get_class_term(), coverage))
         DCTERMS_type = getattr(DCTERMS, self.type)
         graph.add((coverage, RDF.type, DCTERMS_type))
         value_dict = {}
@@ -1721,6 +1727,7 @@ class FundingAgency(AbstractMetaDataElement):
         super(FundingAgency, cls).update(element_id, **kwargs)
 
 
+@rdf_terms(DC.subject)
 class Subject(AbstractMetaDataElement):
     """Define Subject custom metadata element model."""
 
@@ -1758,11 +1765,11 @@ class Subject(AbstractMetaDataElement):
         sub.delete()
 
     def rdf_triples(self, subject, graph):
-        graph.add((subject, DC.subject, URIRef(self.value)))
+        graph.add((subject, self.get_class_term(), URIRef(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, o in graph.triples((subject, DC.subject, None)):
+        for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
             Subject.create(value=str(o), content_object=content_object)
 
 

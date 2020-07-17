@@ -6,11 +6,12 @@ from mezzanine.pages.page_processors import processor_for
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div
 from rdflib import RDF, BNode, Literal
 
-from hs_core.hs_rdf import HSTERMS
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 
 
+@rdf_terms(HSTERMS.spatialReference)
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -29,7 +30,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        for _, _, cov in graph.triples((subject, HSTERMS.spatialReference, None)):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
             value = graph.value(subject=cov, predicate=RDF.value)
             value_dict = {}
             for key_value in value.split("; "):
@@ -42,7 +43,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         coverage = BNode()
-        graph.add((subject, HSTERMS.spatialReference, coverage))
+        graph.add((subject, self.get_class_term(), coverage))
         graph.add((coverage, RDF.type, HSTERMS.box))
         value_dict = {}
         value_dict['northlimit'] = self.northlimit

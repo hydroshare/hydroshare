@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ValidationError
 from rdflib import Graph, BNode
 from rdflib.collection import Collection
 from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS, RDF, RDFS
@@ -21,12 +22,17 @@ NAMESPACE_MANAGER.bind('dcterms', DCTERMS, override=False)
 
 
 class RDF_MetaData_Mixin(object):
+    """
+    A mixin for MetaData objects which store their metadata in generic relations.  If metadata outside of generic
+    relations need to be used, you may extend ingest_metadata and get_rdf_graph to include the other metadata elements
+    """
 
     def rdf_subject(self):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
 
     @classmethod
     def rdf_subject_from_graph(cls, graph):
+        """Derive the root subject of an rdflib Graph by returning the subject in the triple with predicate DC.title"""
         subject = None
         for s, _, _ in graph.triples((None, DC.title, None)):
             subject = s
@@ -36,6 +42,7 @@ class RDF_MetaData_Mixin(object):
         return subject
 
     def ingest_metadata(self, graph):
+        """Given an rdflib Graph, run ingest_rdf for all generic relations on the object"""
         subject = self.rdf_subject_from_graph(graph)
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
@@ -44,6 +51,7 @@ class RDF_MetaData_Mixin(object):
         self.save()
 
     def get_rdf_graph(self):
+        """adds the rdf triples of all generic relations on the object into an rdflib Graph"""
         graph = Graph()
         graph.namespace_manager = NAMESPACE_MANAGER
 
@@ -57,19 +65,19 @@ class RDF_MetaData_Mixin(object):
         return graph
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+        """Generates ORI+RDF xml for this metadata"""
 
-        # get the xml root element and the xml element to which contains all other elements
         g = self.get_rdf_graph()
         return g.serialize(format='hydro-xml').decode()
 
 
 class RDF_Term_MixIn(object):
-    """Provides methods for serializing a django model into and rdflib triples and deserializing from an rdflib Graph
+    """
+    Provides methods for serializing a django model into and rdflib triples and deserializing from an rdflib Graph
      back to a django model.  This mixin is designed for django models that are generic relations of another django
      model which represents a group of metadata.
 
-     Without any configuration, the rdf_triples(subject) method will add all fields on the model except
+     Without any configuration, the rdf_triples(subject) method will add all fields on the generic relation model except
      for 'id', 'object_id', 'content_type' will be serialized as rdf triples.  If rdf_term is defined, it will be
      used as the predicate.  If rdf_term is not defined, one will be defined using the class name and the
      HSTERMS namespace.
@@ -93,6 +101,7 @@ class RDF_Term_MixIn(object):
             graph.add((metadata_node, field_term, field_value))
 
     def get_field_terms_and_values(self, extra_ignored_fields=[]):
+        """Method that returns the field terms and field values on an object"""
         term_values = []
         extra_ignored_fields.extend(self.ignored_fields)
         for field in self._meta.fields:
@@ -100,7 +109,7 @@ class RDF_Term_MixIn(object):
                 continue
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value != None and field_value != 'None':
+            if field_value is not None and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
                     field_value = URIRef(field_value)
@@ -111,10 +120,18 @@ class RDF_Term_MixIn(object):
 
     @classmethod
     def get_class_term(cls):
+        """
+        return a term mapped by the @rdf_terms decorator or if the deocorator is not provided, create an
+        HSTERMS.{cls.__name__}
+        """
         return cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)
 
     @classmethod
     def get_field_term(cls, field_name):
+        """
+        Given a class field_name, return a term mapped by the @rdf_terms decoroator or if the decorator is
+        not provided, create an HSTERMS.{field_name}
+        """
         field_term_attr = field_name + '_rdf_term'
         if hasattr(cls, field_term_attr):
             return getattr(cls, field_term_attr)
@@ -136,18 +153,23 @@ class RDF_Term_MixIn(object):
                     continue
                 field_term = cls.get_field_term(field.name)
                 val = graph.value(metadata_node, field_term)
-                if val != None:
+                if val is not None:
                     value_dict[field.name] = str(val)
             if value_dict:
                 cls.create(content_object=content_object, **value_dict)
 
 
 def rdf_terms(class_term, **field_terms):
+    """
+    Deocorator for mapping a class and fields to RDF terms.  The first parameter maps the class to your specified
+    term.  field_terms are key/values with the key matching a class's field and the value being the mapped term.
+
+    :raises ValidationError when a field_term key does not match a field on the class"""
     def decorator(obj):
         obj.rdf_term = class_term
         for k, v in field_terms.items():
             if not hasattr(obj, k):
-                raise Exception("field {} not found".format(k))
+                raise ValidationError("field {} not found".format(k))
             setattr(obj, k + '_rdf_term', v)
         return obj
     return decorator
