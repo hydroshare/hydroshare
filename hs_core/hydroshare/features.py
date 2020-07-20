@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from hs_access_control.models import PrivilegeCodes, GroupAccess
+from hs_access_control.models import PrivilegeCodes, GroupAccess, GroupResourcePrivilege
 from hs_core.models import BaseResource
 from hs_core.search_indexes import BaseResourceIndex
 from hs_tracking.models import Variable
@@ -465,3 +465,11 @@ class Features(object):
                                                           ind.prepare_extra(obj))
         absolute_url = ind.prepare_absolute_url(obj)
         return absolute_url, output
+
+    @staticmethod
+    def group_resources(g):
+        """ return resources of interest to a specific group """
+        resources = []
+        for p in GroupResourcePrivilege.objects.filter(group=g):
+            resources.append(p.group)
+        return resources
