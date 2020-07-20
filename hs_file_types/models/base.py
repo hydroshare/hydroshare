@@ -1157,6 +1157,7 @@ class AbstractLogicalFile(models.Model):
         :param  resource: an instance of CompositeResource for which aggregation being created
         :param  files_to_copy: a list of resource file paths in irods that need to be copied
         to a specified directory *tgt_folder* and made part of this aggregation
+        :param  tgt_folder: folder to which files need to be copied to
         """
 
         for res_file in files_to_copy:
