@@ -20,7 +20,7 @@ def check_bag(rid, options):
     requests.packages.urllib3.disable_warnings()
     try:
         resource = BaseResource.objects.get(short_id=rid)
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_storage()
 
         root_exists = istorage.exists(resource.root_path)
 

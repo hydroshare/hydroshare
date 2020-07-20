@@ -251,7 +251,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
 
     res = utils.get_resource_by_shortkey(res_id)
     res_coll = res.root_path
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     bag_modified_flag = True
     # needs to check whether res_id collection exists before getting/setting AVU on it to
     # accommodate the case where the very same resource gets deleted by another request when

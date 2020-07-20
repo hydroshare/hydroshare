@@ -106,7 +106,7 @@ class Command(BaseCommand):
            (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
            (options['access'] != 'private' or not resource.raccess.discoverable) and \
            (not options['has_subfolders'] or has_subfolders(resource)):
-            storage = resource.get_irods_storage()
+            storage = resource.get_storage()
             if storage.exists(resource.root_path):
                 repair_solr(resource.short_id)
             else:

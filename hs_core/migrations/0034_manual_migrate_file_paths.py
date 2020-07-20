@@ -291,7 +291,7 @@ def resource_path_is_acceptable(resource, path, test_exists=True):
     as a folder/filename pair.
     """
     if test_exists:
-        storage = get_irods_storage(resource)
+        storage = get_storage(resource)
     locpath = os.path.join(resource.short_id, "data", "contents") + "/"
     relpath = path
     fedpath = resource.resource_federation_path
@@ -333,8 +333,8 @@ def resource_path_is_acceptable(resource, path, test_exists=True):
     return folder, base
 
 
-def get_irods_storage(resource):
-    """ Copy of BaseResource.get_irods_storage """
+def get_storage(resource):
+    """ Copy of BaseResource.get_storage """
     if is_federated(resource):
         return IrodsStorage("federated")
     else:
@@ -546,7 +546,7 @@ def migrate_file_paths(apps, schema_editor):
             # This existence test is fouled up by a mangled resource name.
             # Invalid istorage object. A name consisting of spaces is the
             # most likely culprit.
-            # istorage = get_irods_storage(resource)
+            # istorage = get_storage(resource)
             # if not istorage.exists(storage_path(BaseResource, file)):
             #     print("ERROR: name '{}' does not exist".format(storage_path(BaseResource, file)))
             # else:

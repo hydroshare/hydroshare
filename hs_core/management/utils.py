@@ -87,7 +87,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     from hs_core.hydroshare.resource import delete_resource_file
 
     logger = logging.getLogger(__name__)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     errors = []
     ecount = 0
 
@@ -247,7 +247,7 @@ def __check_irods_directory(resource, dir, logger,
     """
     errors = []
     ecount = 0
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     try:
         listing = istorage.listdir(dir)
         for fname in listing[1]:  # files
@@ -303,7 +303,7 @@ def ingest_irods_files(resource,
                        log_errors=False,
                        return_errors=False):
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     errors = []
     ecount = 0
 
@@ -369,7 +369,7 @@ def __ingest_irods_directory(resource,
     """
     errors = []
     ecount = 0
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     try:
         listing = istorage.listdir(dir)
         for fname in listing[1]:  # files
@@ -604,7 +604,7 @@ class CheckResource(object):
                 .format(self.resource.short_id)
             print(msg)
 
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
 
         if not istorage.exists(self.resource.root_path):
             self.label()

@@ -56,7 +56,7 @@ class TestBagIt(TestCase):
         self.test_res.raccess.save()
         hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
-        istorage = self.test_res.get_irods_storage()
+        istorage = self.test_res.get_storage()
         bag_path = self.test_res.bag_path
         self.assertFalse(istorage.exists(bag_path))
 

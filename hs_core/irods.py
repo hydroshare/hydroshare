@@ -137,7 +137,7 @@ class ResourceIRODSMixin(models.Model):
             elif path == self.resmap_path or path == self.scimeta_path:
                 self.update_metadata_files()
 
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         read_or_write = 'write' if write else 'read'
         if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
             path = os.path.join(self.irods_home_path, path)
@@ -165,7 +165,7 @@ class ResourceIRODSMixin(models.Model):
 
     def list_ticket(self, ticket_id):
         """ List a ticket's attributes """
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket_id)
         if stdout.startswith('id:'):
             stuff = stdout.split('\n')
@@ -260,7 +260,7 @@ class ResourceIRODSMixin(models.Model):
             if not user.is_authenticated() or not user.uaccess.can_view_resource(self):
                 raise PermissionDenied("user {} cannot delete view ticket {} for {}"
                                        .format(user.username, ticket_id, self.short_id))
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         istorage.session.run('iticket', None, 'delete', ticket_id)
         return meta
 

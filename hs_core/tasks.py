@@ -349,7 +349,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
     aggregation = None
     if aggregation_name:
         aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
-    istorage = res.get_irods_storage()  # invoke federated storage as necessary
+    istorage = res.get_storage()  # invoke federated storage as necessary
 
     if res.resource_type == "CompositeResource":
         if '/data/contents/' in input_path:
@@ -405,7 +405,7 @@ def create_bag_by_irods(resource_id):
     """
     res = utils.get_resource_by_shortkey(resource_id)
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
 
     bag_path = res.bag_path
 

@@ -28,7 +28,7 @@ def check_django_metadata(self, stop_on_error=False,
 
     # print("check_django_metadata: check {}".format(self.short_id))
     logger = logging.getLogger(__name__)
-    istorage = self.get_irods_storage()
+    istorage = self.get_storage()
     errors = []
     ecount = 0
 

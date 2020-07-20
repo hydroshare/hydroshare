@@ -272,7 +272,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     res_files = []
     res_files.extend(aggregation.files.all())
     orig_aggregation_name = aggregation.aggregation_name

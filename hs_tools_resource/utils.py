@@ -104,7 +104,7 @@ def copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_sho
 
             irods_path = app_res.extra_metadata[irods_path_key]
             irods_resc = app_res.extra_metadata[irods_resc_key]
-            istorage = res.get_irods_storage()
+            istorage = res.get_storage()
             src_path = res.root_path
             # delete all temporary resources copied to this user's space before pushing resource
             dest_path = os.path.join(irods_path, user.username)

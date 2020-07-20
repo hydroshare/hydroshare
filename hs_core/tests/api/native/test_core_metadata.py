@@ -877,7 +877,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
 
-        istorage = res.get_irods_storage()
+        istorage = res.get_storage()
 
         # there should be not be any format element at this point for this resource
         self.assertEqual(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")

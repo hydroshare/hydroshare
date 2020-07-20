@@ -30,7 +30,7 @@ def measure_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     if resource.raccess.public:
         status = "public"
     elif resource.raccess.discoverable:
@@ -109,7 +109,7 @@ class Command(BaseCommand):
            (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
            (options['access'] != 'private' or not resource.raccess.discoverable) and \
            (not options['has_subfolders'] or has_subfolders(resource)):
-            storage = resource.get_irods_storage()
+            storage = resource.get_storage()
             if options['brief']:
                 print(resource.short_id)
             else:
