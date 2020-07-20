@@ -124,9 +124,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     def clean_mi_json_schema_file(self):
         json_schema = dict()
         json_schema_file = self.cleaned_data['mi_json_schema_file']
-        print(">> file type:" + str(type(json_schema_file)))
         if json_schema_file:
-            print(">> file type:" + str(type(json_schema_file)))
             schema_data = json_schema_file.read().decode("utf-8")
             if schema_data:
                 return self._validate_json_schema(schema_string=schema_data, field_name='mi_json_schema_file')
@@ -179,14 +177,31 @@ class ModelProgramMetadataValidationForm(forms.Form):
             json_schema = json.loads(schema_string)
         except ValueError as exp:
             is_schema_valid = False
-            self.add_error(field_name, "Not valid json data")
+            self.add_error(field_name, "Not a valid JSON string")
 
         if json_schema:
-            try:
-                jsonschema.Draft4Validator.check_schema(json_schema)
-            except jsonschema.SchemaError as ex:
+            schema_version = json_schema.get("$schema", "")
+            if not schema_version:
                 is_schema_valid = False
-                self.add_error(field_name, "Not a valid json schema.{}".format(str(ex)))
+                err_message = "Not a valid JSON schema. {}"
+                if "$schema" not in json_schema:
+                    err_message = err_message.format("Key '$schema' is missing")
+                else:
+                    err_message = err_message.format("Key '$schema' is missing a value for schema version")
+                self.add_error(field_name, err_message)
+            else:
+                if "/draft-04/" not in schema_version:
+                    is_schema_valid = False
+                    err_message = "Not a valid JSON schema. Schema version is invalid. Supported valid version(s): " \
+                                  "draft-04"
+                    self.add_error(field_name, err_message)
+
+            if is_schema_valid:
+                try:
+                    jsonschema.Draft4Validator.check_schema(json_schema)
+                except jsonschema.SchemaError as ex:
+                    is_schema_valid = False
+                    self.add_error(field_name, "Not a valid JSON schema.{}".format(str(ex)))
 
         if is_schema_valid:
             # custom validation - hydroshare requirements
