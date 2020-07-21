@@ -52,7 +52,6 @@ $(document).ready(function () {
                     status: {
                         "Pending execution": "Pending...",
                         "In progress": "Getting your resource ready for deletion...",
-                        "Aborted": "Aborted",
                         "Failed": "Resource deletion failed",
                         "Delivered": "Resource deletion delivered"
                     }
@@ -154,8 +153,8 @@ $(document).ready(function () {
                 }
             },
             canBeAborted: function (task) {
-                return task.status === 'In progress'
-                    || task.status === 'Pending execution'
+                return task.name != 'resource delete' && (task.status === 'In progress'
+                    || task.status === 'Pending execution')
             },
             clear: function () {
                 let vue = this;
