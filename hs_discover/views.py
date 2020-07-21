@@ -87,7 +87,7 @@ class SearchAPI(APIView):
 
         resources = []
 
-        p = Paginator(sqs, len(sqs))
+        p = Paginator(sqs, max(len(sqs), 1))
 
         for result in p.page(1):
             try:

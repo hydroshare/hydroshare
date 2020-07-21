@@ -1,7 +1,7 @@
 <template>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
-            Showing: {{Math.min(displen, resources.length)}} of {{resources.length}}
+            Showing: {{Math.min(displen, resources.length, filteredResources.length)}} of {{resources.length}}
             <input type="number" v-model="displen" data-toggle="tooltip"
                             title="values over 500 may make operations sluggish">
             <!-- toggleMap defined in map.js -->
