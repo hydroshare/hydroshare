@@ -15,12 +15,12 @@
                                 Temporal Coverage</h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in">
-                            &nbsp;&nbsp;From
+                            From
                             <date-pick
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
                             ></date-pick><br/>
-                            &nbsp;&nbsp;To&nbsp;&nbsp;&nbsp;&nbsp;
+                            To
                             <date-pick
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
@@ -493,8 +493,14 @@ export default {
 </script>
 
 <style scoped>
+    #filter-items {
+        width: 253px;
+    }
     .table-wrapper {
-        margin-top: 1px;
+        margin-top: 0px;
+    }
+    .table-hover {
+        margin-top: 0px;
     }
     .checkbox {
 

@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet, SQ
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.core.paginator import Paginator
 
 
 class SearchView(TemplateView):
@@ -101,7 +102,9 @@ class SearchAPI(APIView):
 
         resources = []
 
-        for result in sqs:
+        p = Paginator(sqs, 200)
+
+        for result in p.page(1):
             try:
                 start_date = result.start_date.isoformat()
                 end_date = result.end_date.isoformat()
@@ -146,5 +149,4 @@ class SearchAPI(APIView):
 
         return Response({
             'resources': json.dumps(resources),
-            # 'vocab': vocab,
         })

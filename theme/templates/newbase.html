@@ -44,6 +44,19 @@
                 display: block;
                 flex-wrap: nowrap;
             }
+            #profile-menu .dropdown-menu {
+                position: absolute;
+            }
+            #resource-dropdown {
+                display: block;
+                position: relative;
+                float: left;
+            }
+            #resource-dropdown .open{
+                display: block;
+                position: relative;
+                float: left;
+            }
         </style>
         {% block extra_css %}{% endblock %}
     {% endcompress %}
@@ -187,7 +200,7 @@
                 </li>
             </ul>
 
-            <ul class="nav navbar-nav navbar-right">
+            <ul id="resource-dropdown" class="nav navbar-nav navbar-right">
                 {% if not user.is_anonymous %}
                     <li class="res-dropdown">
                         <button id="select-resource-type" data-toggle="dropdown"
