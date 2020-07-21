@@ -1,9 +1,6 @@
 <template>
     <div id="discover-search">
         <div>
-            <h2 class="page-title">Discover
-                <small class="text-muted"><i>Public resources shared with the community</i></small>
-            </h2>
             <div id="search" @keyup.enter="searchClick" class="input-group">
                 <input type="search" class="form-control" v-model="searchtext"
                        placeholder="Search all Public and Discoverable Resources">
@@ -44,23 +41,26 @@ export default {
   methods: {
     searchClick() {
       const startdApiSearch = new Date();
+      document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
         .then((response) => {
           if (response) {
             try {
               this.$data.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startdApiSearch) / 1000} sec`);
+              document.body.style.cursor = 'default';
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
+              document.body.style.cursor = 'default';
             }
           }
         })
         .catch((error) => {
           console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          document.body.style.cursor = 'default';
         });
     },
     loadGeo() {
-      console.log('loading geo...');
       axios.get('/searchjson/', { params: { data: {} } })
         .then((response) => {
           if (response.status === 200) {

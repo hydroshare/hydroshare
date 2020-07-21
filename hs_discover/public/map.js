@@ -10,6 +10,9 @@
       marker.setMap(null);
     });
     googMarkers = [];
+    if (markerCluster) {
+      markerCluster.clearMarkers();
+    }
   };
 
   const createSearcher = () => {
@@ -21,8 +24,6 @@
     });
 
     let markers = [];
-    // Listen for the event fired when the user selects a prediction and retrieve
-    // more details for that place.
     searchBox.addListener('places_changed', function () {
       const places = searchBox.getPlaces();
 
@@ -30,13 +31,11 @@
         return;
       }
 
-      // Clear out the old markers.
       markers.forEach(function (marker) {
         marker.setMap(null);
       });
       markers = [];
 
-      // For each place, get the icon, name and location.
       const bounds = new google.maps.LatLngBounds();
       places.forEach(function (place) {
         if (!place.geometry) {
@@ -51,7 +50,6 @@
           scaledSize: new google.maps.Size(25, 25),
         };
 
-        // Create a marker for each place.
         markers.push(new google.maps.Marker({
           map: exports.map,
           icon: icon,
@@ -86,6 +84,7 @@
   };
 
   const createBatchMarkers = (locations, labels) => {
+    document.body.style.cursor = 'wait';
     googMarkers = locations.map(function(location, k) {
       return new google.maps.Marker({
         map: exports.map,
@@ -95,6 +94,7 @@
     });
     markerCluster = new MarkerClusterer(exports.map, googMarkers,
       { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+    document.body.style.cursor = 'default';
   };
 
   const createMarker = (loc, title) => {
@@ -112,8 +112,6 @@
       infowindow.close();
     });
     googMarkers.push(addmarker);
-    // markerCluster = MarkerClusterer(exports.map, googMarkers,
-    //   { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
   };
 
   const toggleMap = () => {
@@ -134,10 +132,6 @@
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     const mapLegend = createLegend();
     const searchBox = createSearcher();
-    // exports.map.addListener('zoom_changed', function() {
-    // markerCluster = new MarkerClusterer(exports.map, googMarkers,
-    //   { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
-    // });
   };
   exports.initMap = initMap; // eslint-disable-line
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line

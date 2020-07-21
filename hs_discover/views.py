@@ -80,21 +80,6 @@ class SearchAPI(APIView):
             searchtext = request.GET.get('searchtext')
             sqs = sqs.filter(content=searchtext)#.boost('keyword', 2.0)
 
-        # NElat = request.GET.get('nelat')
-        # NElng = request.GET.get('nelng')
-        # SWlat = request.GET.get('swlat')
-        # SWlng = request.GET.get('swlng')
-
-        sort_order = None  # sorting is handled by frontend
-        sort_direction = None  # reinstate only if pagination requires backend coordination
-
-        # self.do_clean_data()
-        # self.do_assign_haystack(NElng, SWlng, NElat, SWlat)
-        # geo_sq = None
-        #
-        # if geo_sq is not None:
-        #     sqs = sqs.filter(geo_sq)
-
         # vocab = []  # will be populated with autocomplete terms from resource
         # vocab = [x for x in vocab if len(x) > 2]
         # vocab = list(set(vocab))
@@ -102,7 +87,7 @@ class SearchAPI(APIView):
 
         resources = []
 
-        p = Paginator(sqs, 200)
+        p = Paginator(sqs, len(sqs))
 
         for result in p.page(1):
             try:

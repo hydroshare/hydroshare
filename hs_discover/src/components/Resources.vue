@@ -1,7 +1,12 @@
 <template>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
-            Results: {{filteredResources.length}}
+            Showing: {{Math.min(displen, resources.length)}} of {{resources.length}}
+            <input type="number" v-model="displen" data-toggle="tooltip"
+                            title="values over 500 may make operations sluggish">
+            <!-- toggleMap defined in map.js -->
+            <input type="button" class="mapdisp" value="Toggle Map" v-on:click="displayMap">
+            <input type="button" class="mapdisp" value="Update Map" v-on:click="setAllMarkers">
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-items">
@@ -203,12 +208,6 @@
                 </table>
             </div>
         </div>
-        <div class="col-sm-3 col-xs-12">
-            <!-- toggleMap defined in map.js -->
-            <input type="button" value="Toggle Map" onclick="toggleMap()">
-            <input type="button" value="Update Map" v-on:click="setAllMarkers">
-
-        </div>
     </div>
 </template>
 
@@ -222,6 +221,7 @@ export default {
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
+      displen: 50,
       resloaded: false, // track axios resource data promise after component mount
       googMarkers: [],
       countAuthors: {},
@@ -270,57 +270,58 @@ export default {
     datePick: DatePick,
   },
   computed: {
-    additiveFilteredResources() {
-      if (this.resloaded) {
-        if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
-          return this.resources;
-        }
-        const resfiltered = [];
-        const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-        resAuthors.forEach((item) => {
-          if (!resfiltered.includes(item)) {
-            resfiltered.push(item);
-          }
-        });
-        const resOwners = this.resources.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
-        resOwners.forEach((item) => {
-          if (!resfiltered.includes(item)) {
-            resfiltered.push(item);
-          }
-        });
-        const resSubjects = this.resources.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-        resSubjects.forEach((item) => {
-          if (!resfiltered.includes(item)) {
-            resfiltered.push(item);
-          }
-        });
-        const resAvailabilities = this.resources.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
-        resAvailabilities.forEach((item) => {
-          if (!resfiltered.includes(item)) {
-            resfiltered.push(item);
-          }
-        });
-        const resContributors = this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-        resContributors.forEach((item) => {
-          if (!resfiltered.includes(item)) {
-            resfiltered.push(item);
-          }
-        });
-        const resTypes = this.resources.filter(element => this.typeFilter.indexOf(element.type) > -1);
-        resTypes.forEach((item) => {
-          if (!resfiltered.includes(item)) {
-            resfiltered.push(item);
-          }
-        });
-        if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-          const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
-          return this.sortDir === -1 ? datesorted : datesorted.reverse();
-        }
-        return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
-      }
-      return [];
-    },
+    // additiveFilteredResources() {
+    //   if (this.resloaded) {
+    //     if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
+    //       return this.resources;
+    //     }
+    //     const resfiltered = [];
+    //     const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
+    //     resAuthors.forEach((item) => {
+    //       if (!resfiltered.includes(item)) {
+    //         resfiltered.push(item);
+    //       }
+    //     });
+    //     const resOwners = this.resources.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
+    //     resOwners.forEach((item) => {
+    //       if (!resfiltered.includes(item)) {
+    //         resfiltered.push(item);
+    //       }
+    //     });
+    //     const resSubjects = this.resources.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+    //     resSubjects.forEach((item) => {
+    //       if (!resfiltered.includes(item)) {
+    //         resfiltered.push(item);
+    //       }
+    //     });
+    //     const resAvailabilities = this.resources.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
+    //     resAvailabilities.forEach((item) => {
+    //       if (!resfiltered.includes(item)) {
+    //         resfiltered.push(item);
+    //       }
+    //     });
+    //     const resContributors = this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+    //     resContributors.forEach((item) => {
+    //       if (!resfiltered.includes(item)) {
+    //         resfiltered.push(item);
+    //       }
+    //     });
+    //     const resTypes = this.resources.filter(element => this.typeFilter.indexOf(element.type) > -1);
+    //     resTypes.forEach((item) => {
+    //       if (!resfiltered.includes(item)) {
+    //         resfiltered.push(item);
+    //       }
+    //     });
+    //     if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
+    //       const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+    //       return this.sortDir === -1 ? datesorted : datesorted.reverse();
+    //     }
+    //     return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+    //   }
+    //   return [];
+    // },
     filteredResources() {
+      document.body.style.cursor = 'wait';
       const startd = new Date();
       if (this.resloaded) {
         let resfiltered = this.resources;
@@ -379,13 +380,14 @@ export default {
           });
           resfiltered = resEndDate;
         }
+        document.body.style.cursor = 'default';
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           console.log(`filter compute: ${(new Date() - startd) / 1000}`);
-          return this.sortDir === -1 ? datesorted : datesorted.reverse();
+          return this.sortDir === -1 ? datesorted.slice(0, this.displen) : datesorted.reverse().slice(0, this.displen);
         }
         console.log(`filter compute: ${(new Date() - startd) / 1000}`);
-        return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+        return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir)).slice(0, this.displen);
       }
       return [];
     },
@@ -463,6 +465,9 @@ export default {
       }
       return '';
     },
+    displayMap() {
+      toggleMap();
+    },
     setAllMarkers() {
       deleteMarkers();
       console.log(`num filtered res: ${this.filteredResources.length}`);
@@ -483,6 +488,7 @@ export default {
       });
     },
     renderMap(geos) {
+      console.log(`rendering map: ${geos.length} points`);
       const pts = geos.filter(x => x.coverage_type === 'point');
       const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
       const pointlbls = pts.map(x => x.title);
@@ -504,5 +510,8 @@ export default {
     }
     .checkbox {
 
+    }
+    .mapdisp {
+        right: 0px;
     }
 </style>
