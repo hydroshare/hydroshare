@@ -23,8 +23,7 @@ class CSDMSName(models.Model):
             :param p, a choice from part describes which part the word is extracted from
             :param, v, a string value for the word to be added
         """
-        with transaction.atomic():
-            object, _ = CSDMSName.objects.get_or_create(source=s, part=p, value=v)
+        object, _ = CSDMSName.objects.get_or_create(source=s, part=p, value=v)
 
         return object
 
