@@ -1,9 +1,8 @@
 def split_csdms_names():
     """ Split each record in csdms file and assign them to corresponding return part
         :return names, names in csdms
-        :return splitted_names, split each name by space
         :return decors, decorations for each name in csdms
-        :return splitted_decors, split each decor by space
+        :return measures, measurement units for names
 
     """
     filename = 'hs_csdms/csdms'
