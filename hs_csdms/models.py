@@ -29,7 +29,7 @@ class CSDMSName(models.Model):
 
     @staticmethod
     def populate_csdms_names():
-        """ Store each part from split_csdms into LDAWord model
+        """ Store each part from split_csdms into CSDMSName model
         """
         csdms_names, csdms_decors, csdms_measures = split_csdms_names()
         for csdms_name in csdms_names:
