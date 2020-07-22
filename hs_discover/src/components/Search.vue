@@ -35,6 +35,9 @@ export default {
     resourceListing: Resources,
   },
   mounted() {
+    if (document.getElementById('qstring').value.trim() !== '') {
+      this.searchtext = document.getElementById('qstring').value.trim();
+    }
     this.searchClick();
     this.loadGeo();
   },
@@ -42,7 +45,7 @@ export default {
     searchClick() {
       const startdApiSearch = new Date();
       document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { searchtext: this.$data.searchtext } })
+      axios.get('/discoverapi/', { params: { q: this.$data.searchtext } })
         .then((response) => {
           if (response) {
             try {

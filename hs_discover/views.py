@@ -76,9 +76,9 @@ class SearchAPI(APIView):
         """
         sqs = SearchQuerySet().all()
 
-        if request.GET.get('searchtext'):
-            searchtext = request.GET.get('searchtext')
-            sqs = sqs.filter(content=searchtext)#.boost('keyword', 2.0)
+        if request.GET.get('q'):
+            q = request.GET.get('q')
+            sqs = sqs.filter(content=q)#.boost('keyword', 2.0)
 
         # vocab = []  # will be populated with autocomplete terms from resource
         # vocab = [x for x in vocab if len(x) > 2]

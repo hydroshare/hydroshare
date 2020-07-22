@@ -321,8 +321,8 @@ export default {
     //   return [];
     // },
     filteredResources() {
-      document.body.style.cursor = 'wait';
       const startd = new Date();
+      // document.body.style.cursor = 'wait';
       if (this.resloaded) {
         let resfiltered = this.resources;
         if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
@@ -380,7 +380,7 @@ export default {
           });
           resfiltered = resEndDate;
         }
-        document.body.style.cursor = 'default';
+        // document.body.style.cursor = 'default';
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           console.log(`filter compute: ${(new Date() - startd) / 1000}`);
@@ -389,6 +389,7 @@ export default {
         console.log(`filter compute: ${(new Date() - startd) / 1000}`);
         return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir)).slice(0, this.displen);
       }
+      // document.body.style.cursor = 'default';
       return [];
     },
   },
