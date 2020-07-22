@@ -134,7 +134,9 @@ def get_collectable_resources(user, coll_resource):
     return get_my_resources_list(user) \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True)) \
-        .filter(Q(raccess__shareable=True) | (Q(r2urp__user=user) & Q(r2urp__privilege=PrivilegeCodes.OWNER)))
+        .filter(Q(raccess__discoverable=True) |
+                Q(r2urp__user=user, raccess__shareable=True) |  # at least VIEW privilege
+                Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER))
 
 
 def _get_owners_string(owners_list):
