@@ -12,6 +12,8 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
+from hs_core.task_utils import get_task_by_id, create_task_notification
+from hs_core.tasks import unzip_task
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
@@ -291,8 +293,11 @@ def data_store_folder_unzip(request, **kwargs):
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
 
     try:
-        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original=remove_original_zip,
-                   overwrite=overwrite)
+        task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite))
+        task_id = task.task_id
+        task_dict = get_task_by_id(task_id, name='unzip file', request=request)
+        create_task_notification(task_id, name='unzip file', username=request.user.username)
+        return JsonResponse(task_dict)
     except SessionException as ex:
         specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                        "protection from overwriting existing files. Unzip in a different " \
