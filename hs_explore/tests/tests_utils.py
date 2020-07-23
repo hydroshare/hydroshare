@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 from hs_access_control.tests.utilities import global_reset
 from hs_explore.utils import user_resource_matrix, get_resource_to_subjects, get_resource_to_abstract,\
     get_resource_to_published, get_users_interacted_resources, jaccard_sim, store_user_preferences,\
-    store_recommended_resources
+    store_recommended_resources, resource_owners, resource_editors
 from datetime import datetime, timedelta
 import socket
 from django.test import Client
@@ -54,6 +54,16 @@ class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
         self.posts.raccess.save()
 
         self.client.login(username='cat', password='foobar')
+
+    def test_resource_owners(self):
+        owner_to_resources =i resource_owners()
+        test_dict = {'cat': [self.posts.short_id]}
+        self.assertCountEqual(owner_to_resources['cat'], test_dict['cat'])
+
+    def test_resource_editors(self):
+        editor_to_resources = resource_editors()
+        test_dict = {'cat': [self.posts.short_id]}
+        self.assertCountEqual(editor_to_resources['cat'], test_dict['cat'])
 
     def test_user_resource_matrix(self):
         response = self.client.get(self.resource_url.format(res_id=self.posts.short_id))

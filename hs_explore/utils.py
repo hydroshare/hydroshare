@@ -8,6 +8,35 @@ from hs_explore.models import RecommendedResource, UserPreferences, Status
 import string
 from nltk.stem import WordNetLemmatizer
 from hs_explore.models import LDAWord
+from hs_access_control.models import PrivilegeCodes
+
+
+def resource_owners():
+    """ return a dictionary representing resource ownership """
+    return resource_privileges(PrivilegeCodes.OWNER)
+
+
+def resource_editors():
+    """ return a dictionary representing resource editable relationship """
+    return resource_privileges(PrivilegeCodes.CHANGE)
+
+
+def resource_privileges(privilege_code):
+    """:privilege_code, a specific PriviledgCode to query
+       :return user_to_resources, a dictionary of each user to a resources list
+       that satifies the given privilege_code
+    """
+    user_ids = User.objects.all().values_list("pk", flat=True)
+    resources = BaseResource.objects.filter(r2urp__user__id__in=user_ids,
+                                            r2urp__privilege=privilege_code)
+    records = resources.values_list("r2urp__user__username", "short_id")
+    sorted_records = records.order_by("r2urp__user")
+    user_to_resources = defaultdict(list)
+    for record in sorted_records.all():
+        username = record[0]
+        res_id = record[1]
+        user_to_resources[username].append(res_id)
+    return user_to_resources
 
 
 def user_resource_matrix(fromdate, todate):
