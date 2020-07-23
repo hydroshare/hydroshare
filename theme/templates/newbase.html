@@ -11,55 +11,50 @@
     <meta name="description" content="{% block meta_description %}{% endblock %}">
     <title>
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
-    <link rel="shortcut icon" href="{% static "img/favicon.png" %}">
+    <link rel="shortcut icon" href="/static/img/favicon.png">
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}" rel="stylesheet"/>
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}"/>
 
-    {% compress css %}
-        <link href="{% static "css/bootstrap.3.0.2.min.css" %}" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="{% static "css/animate.css" %}"/>
-        <link rel="stylesheet" type="text/css" href="{% static "css/elements.css" %}"/>
-        <link rel='stylesheet' type='text/css' href='{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}'/>
-        <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_core.css" %}"/>
-        <link href="{{ STATIC_URL }}css/identifiers.css" rel="stylesheet"/>
-        <link href="{{ STATIC_URL }}css/academicons.min.css" rel="stylesheet"/>
-        <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_extends.css" %}"/>
-        <style>
-            .navbar {
-                max-height: 60px;
-            }
-            .navbar-nav {
-                display: block;
-                flex-direction: row;
-            }
-            #toplevel-nav-container {
-                display: block;
-                flex-wrap: nowrap;
-            }
-            #profile-menu .dropdown-menu {
-                position: absolute;
-            }
-            #resource-dropdown {
-                position: relative;
-            }
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.3.0.2.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/animate.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/elements.css"/>
+    <link rel='stylesheet' type="text/css" href="/static/css/jquery-ui/smoothness/jquery-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_core.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/identifiers.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/academicons.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_extends.css"/>
+    <style>
+        .navbar {
+            max-height: 60px;
+        }
+        .navbar-nav {
+            display: block;
+            flex-direction: row;
+        }
+        #toplevel-nav-container {
+            display: block;
+            flex-wrap: nowrap;
+        }
+        #profile-menu .dropdown-menu {
+            position: absolute;
+        }
+        #resource-dropdown {
+            position: relative;
+        }
 
-        </style>
-        {% block extra_css %}{% endblock %}
-    {% endcompress %}
-
-    {% compress js %}
-        <script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>
-        <script src="{% static "js/custom.js" %}"></script>
-        <script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
-        <script src="{% static "js/jqcsrf.js" %}"></script>
-        <script src='{% static 'js/jquery-ui.js' %}'></script>
-        <script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
-        <script src="{% static "js/bootstrap-extras.js" %}"></script>
-        {% block extra_js %}{% endblock %}
-    {% endcompress %}
+    </style>
+    {% block extra_css %}{% endblock %}
+    <script src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
+    <script src="/static/js/custom.js"></script>
+    <script src="/static/js/scrolltopcontrol.js"></script><!-- Scroll to top javascript -->
+    <script src="/static/js/jqcsrf.js"></script>
+    <script src="/static/js/jquery-ui.js"></script>
+    <script src="/static/js/bootstrap.3.0.2.min.js"></script>
+    <script src="/static/js/bootstrap-extras.js"></script>
+    {% block extra_js %}{% endblock %}
     {% include 'autocomplete_light/static.html' %}
 
     {% load inplace_edit %}
@@ -109,7 +104,7 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="/landingPage">
-                <img id="img-brand-logo" src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
+                <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
             </a>
         </div>
         <div class="collapse navbar-collapse">
@@ -160,7 +155,6 @@
                             </ul>
                         </li>
                     {% else %}
-                        <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
                         <li id="signin-menu"><a href="{% url 'login' %}"><span
                                 class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
                     {% endif %}
@@ -204,7 +198,7 @@
                                        data-modal-title="Create a Resource"
                                        data-modal-input-title="Enter the title for the new resource."
                                        data-value="CompositeResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                        <img src="/static/img/resource-icons/composite48x48.png"
                                              alt="Composite Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Resource</div>
                                     </a>
@@ -215,7 +209,7 @@
                                        data-modal-title="Create a Collection"
                                        data-modal-input-title="Enter the title for the new collection of HydroShare resources."
                                        data-value="CollectionResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                        <img src="/static/img/resource-icons/collection48x48.png"
                                              alt="Collection Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Collection</div>
                                     </a>
@@ -226,7 +220,7 @@
                                        data-modal-title="Create a Web App Connector"
                                        data-modal-input-title="Enter the name for the new Web App Connector."
                                        data-value="ToolResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                        <img src="/static/img/resource-icons/webapp48x48.png"
                                              alt="Web App Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Web App Connector</div>
                                     </a>
@@ -237,7 +231,7 @@
                                        data-modal-title="Create a Model Program Resource"
                                        data-modal-input-title="Enter the name for the new Model Program Resource."
                                        data-value="ModelProgramResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                        <img src="/static/img/resource-icons/modelprogram48x48.png"
                                              alt="Model Program Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Model Program</div>
                                     </a>
@@ -248,7 +242,7 @@
                                        data-modal-title="Create a Model Instance Resource"
                                        data-modal-input-title="Enter the name for the new Model Instance Resource."
                                        data-value="ModelInstanceResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                        <img src="/static/img/resource-icons/modelinstance48x48.png"
                                              alt="Model Instance Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Model Instance</div>
                                     </a>
@@ -259,7 +253,7 @@
                                        data-modal-title="Create a SWAT Model Instance Resource"
                                        data-modal-input-title="Enter the name for the new SWAT Model Instance Resource."
                                        data-value="SWATModelInstanceResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                        <img src="/static/img/resource-icons/swat48x48.png"
                                              alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
                                     </a>
@@ -270,7 +264,7 @@
                                        data-modal-title="Create a MODFLOW Model Instance Resource"
                                        data-modal-input-title="Enter the name for the new MODFLOW Model Instance Resource."
                                        data-value="MODFLOWModelInstanceResource">
-                                        <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                        <img src="/static/img/resource-icons/modflow48x48.png"
                                              alt="Collection Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
                                     </a>
