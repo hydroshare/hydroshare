@@ -375,7 +375,7 @@ export default {
       return [];
     },
   },
-  mounted() {
+  updated() {
     const startd = new Date();
     this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author');
@@ -476,11 +476,12 @@ export default {
       });
     },
     renderMap(geos) {
-      console.log(`rendering map: ${geos.length} points`);
+      console.log(`rendering map: ${geos.length} locations`);
       const pts = geos.filter(x => x.coverage_type === 'point');
       const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
+      const pointlinks = pts.map(x => `/resource/${x.short_id}`);
       const pointlbls = pts.map(x => x.title);
-      createBatchMarkers(pointlocs, pointlbls);
+      createBatchMarkers(pointlocs, pointlinks, pointlbls);
     },
   },
 };

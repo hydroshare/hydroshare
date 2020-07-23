@@ -19,25 +19,25 @@
     const searchBox = new google.maps.places.SearchBox(document.getElementById('map-search'));
     exports.map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('map-search'));
     // Bias the SearchBox results towards current map's viewport.
-    exports.map.addListener('bounds_changed', function () {
+    exports.map.addListener('bounds_changed', () => {
       searchBox.setBounds(exports.map.getBounds());
     });
 
     let markers = [];
-    searchBox.addListener('places_changed', function () {
+    searchBox.addListener('places_changed', () => {
       const places = searchBox.getPlaces();
 
       if (places.length === 0) {
         return;
       }
 
-      markers.forEach(function (marker) {
+      markers.forEach((marker) => {
         marker.setMap(null);
       });
       markers = [];
 
       const bounds = new google.maps.LatLngBounds();
-      places.forEach(function (place) {
+      places.forEach((place) => {
         if (!place.geometry) {
           console.log('Returned place contains no geometry');
           return;
@@ -52,7 +52,7 @@
 
         markers.push(new google.maps.Marker({
           map: exports.map,
-          icon: icon,
+          icon,
           // title: place.name,
           position: place.geometry.location,
         }));
@@ -83,15 +83,19 @@
     return legend;
   };
 
-  const createBatchMarkers = (locations, labels) => {
+  const createBatchMarkers = (locations, links, labels) => {
     document.body.style.cursor = 'wait';
-    googMarkers = locations.map(function(location, k) {
-      console.log(location);
-      return new google.maps.Marker({
+    googMarkers = locations.map(function (location, k) {
+      const marker = new google.maps.Marker({
         map: exports.map,
         position: location,
         title: labels[k % labels.length],
       });
+      infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
+      marker.addListener('click', () => {
+        infowindow.open(exports.map, marker);
+      });
+      return marker;
     });
     markerCluster = new MarkerClusterer(exports.map, googMarkers,
       { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
@@ -109,7 +113,7 @@
       infowindow.setContent(title);
       infowindow.open(exports.map, this);
     });
-    google.maps.event.addListener(addmarker, 'mouseout', function () {
+    google.maps.event.addListener(addmarker, 'mouseout', () => {
       infowindow.close();
     });
     googMarkers.push(addmarker);
@@ -131,7 +135,7 @@
       mapTypeId: google.maps.MapTypeId.TERRAIN,
     });
     // https://stackoverflow.com/questions/29869261/google-map-search-box
-    const mapLegend = createLegend();
+    // const mapLegend = createLegend();
     const searchBox = createSearcher();
   };
   exports.initMap = initMap; // eslint-disable-line

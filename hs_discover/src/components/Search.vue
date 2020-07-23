@@ -39,6 +39,8 @@ export default {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
     this.searchClick();
+  },
+  updated() {
     this.loadGeo();
   },
   methods: {
