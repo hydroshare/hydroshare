@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="{{ LANGUAGE_CODE }}"{% if LANGUAGE_BIDI %} dir="rtl"{% endif %}>
-{% load pages_tags mezzanine_tags staticfiles theme_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags theme_tags hydroshare_tags %}
 {% get_site_conf as siteconf %}
 <head>
     {% if page|is_debug %}
-        <meta name="robots" content="noindex">{% endif %}
+        <meta name="robots" content="noindex">
+    {% endif %}
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width">
     <meta name="keywords" content="{% block meta_keywords %}{% endblock %}">
@@ -13,10 +14,10 @@
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
     <link rel="shortcut icon" href="/static/img/favicon.png">
 
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_fonts.css" %}" rel="stylesheet"/>
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="{% static "fonts/font-mfizz/font-mfizz.css" %}"/>
+{#    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">#}
+    <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_fonts.css" rel="stylesheet"/>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet"/>
+{#    <link rel="stylesheet" type="text/css" href="/static/fonts/font-mfizz/font-mfizz.css"/>#}
 
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.3.0.2.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/animate.css"/>
