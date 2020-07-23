@@ -16,3 +16,7 @@ class TestCSDMSName(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(csdms_name.value, 'cat')
         self.assertEqual(csdms_decoration.value, 'cute')
         self.assertEqual(csdms_measure.value, 'ft')
+
+    def test_populate_csdms_names(self):
+        CSDMSName.populate_csdms_names()
+        self.assertIsNotNone(CSDMSName.objects.all())
