@@ -56,5 +56,8 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 check_shareable(rid, options)
         else:
-            for resource in BaseResource.objects.all():
-                check_shareable(resource.short_id)
+            print("No resource id's given.")
+            print("set_shareable usage: python manage.py set_shareable [--on|--off|] {resource-ids}")
+            print("     no options: print shareable flag state.")
+            print("     --on: make the resource shareable.")
+            print("     --off: make the resource not shareable.")
