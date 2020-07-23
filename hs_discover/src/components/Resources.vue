@@ -6,7 +6,7 @@
                             title="values over 500 may make operations sluggish">
             <!-- toggleMap defined in map.js -->
             <input type="button" class="mapdisp" value="Toggle Map" v-on:click="displayMap">
-            <input type="button" class="mapdisp" value="Update Map" v-on:click="setAllMarkers">
+            <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">
         </div>
         <div class="col-xs-3 col-xs-7" id="facets">
             <div id="filter-items">
@@ -213,15 +213,18 @@
 
 <script>
 import DatePick from 'vue-date-pick';
-import 'vue-date-pick/dist/vueDatePick.css'; // css font-size overridden in hs_discover/index.html to enforce 1em
+import 'vue-date-pick/dist/vueDatePick.css';
+import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
 export default {
   data() {
     return {
+      geodata: [],
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
       displen: 50,
+      geoloaded: false,
       resloaded: false, // track axios resource data promise after component mount
       googMarkers: [],
       countAuthors: {},
@@ -265,7 +268,7 @@ export default {
   },
   name: 'Resources',
   props:
-  ['resources', 'geodata', 'columns', 'labels'],
+  ['resources', 'columns', 'labels'],
   components: {
     datePick: DatePick,
   },
@@ -375,7 +378,7 @@ export default {
       return [];
     },
   },
-  updated() {
+  mounted() {
     const startd = new Date();
     this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author');
@@ -405,6 +408,9 @@ export default {
     // Object.keys(this.countAvailabilities).forEach(availability => this.availabilityFilter
     //   .push(availability));
     console.log(`mount filter build: ${(new Date() - startd) / 1000}`);
+    if (this.resloaded) { // update causes second mount
+      this.loadGeo();
+    }
   },
   methods: {
     filterBuilder(resources, thing) {
@@ -455,6 +461,9 @@ export default {
     },
     displayMap() {
       toggleMap();
+      if (this.geoloaded) {
+        this.setAllMarkers();
+      }
     },
     setAllMarkers() {
       deleteMarkers();
@@ -462,6 +471,29 @@ export default {
       const shids = this.filteredResources.map(x => x.short_id);
       const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
       this.renderMap(geopoints);
+    },
+    loadGeo() {
+      const startd = new Date();
+      axios.get('/searchjson/', { params: { data: {} } })
+        .then((response) => {
+          if (response.status === 200) {
+            console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
+            response.data.forEach((item) => {
+              const val = JSON.parse(item);
+              if (val.coverage_type) {
+                this.geodata.push(val);
+              }
+            });
+            this.geoloaded = true;
+          } else {
+            console.log(`Error: ${response.statusText}`);
+            this.geoloaded = false;
+          }
+        })
+        .catch((error) => {
+          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
+          this.geoloaded = false;
+        });
     },
     renderMapSingle(pts) {
       pts.forEach((pt) => {
@@ -471,7 +503,7 @@ export default {
           const lat = (parseInt(pt.northlimit, 10) + parseInt(pt.southlimit, 10)) / 2;
           const lng = (parseInt(pt.eastlimit, 10) + parseInt(pt.westlimit, 10)) / 2;
           console.log(pt.northlimit, pt.southlimit, pt.eastlimit, pt.westlimit);
-          createMarker({ lat: lat, lng: lng }, pt.title);
+          createMarker({ lat, lng }, pt.title);
         }
       });
     },

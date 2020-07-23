@@ -8,7 +8,6 @@
             </div>
         </div>
         <resource-listing :resources="resources"
-                          :geodata="geodata"
                           :key="resources"
                           :columns="gridColumns"
                           :labels="gridColumnLabels">
@@ -25,7 +24,6 @@ export default {
   data() {
     return {
       resources: [],
-      geodata: [],
       searchtext: '',
       gridColumns: ['type', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -39,9 +37,6 @@ export default {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
     this.searchClick();
-  },
-  updated() {
-    this.loadGeo();
   },
   methods: {
     searchClick() {
@@ -63,24 +58,6 @@ export default {
         .catch((error) => {
           console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
-        });
-    },
-    loadGeo() {
-      axios.get('/searchjson/', { params: { data: {} } })
-        .then((response) => {
-          if (response.status === 200) {
-            response.data.forEach((item) => {
-              const val = JSON.parse(item);
-              if (val.coverage_type) {
-                this.$data.geodata.push(val);
-              }
-            });
-          } else {
-            console.log(`Error: ${response.statusText}`);
-          }
-        })
-        .catch((error) => {
-          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
         });
     },
     clearSearch() {
