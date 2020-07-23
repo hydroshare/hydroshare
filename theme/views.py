@@ -525,12 +525,6 @@ def dashboard(request, template="pages/dashboard.html"):
                 for k, v in list(r.keywords.items()):
                     resources_matched_keywords.add(k)
                     common_keywords.append(k)
-            '''
-            if keywords:
-                for k in keywords:
-                    resources_matched_keywords.add(k.value)
-                    common_keywords.append(k.value)
-            '''
             resource_context = {
                 'resource_title': recommended_resource.title,
                 'resource_short_id': recommended_resource.short_id,
