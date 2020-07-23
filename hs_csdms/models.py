@@ -45,22 +45,22 @@ class CSDMSName(models.Model):
                 CSDMSName.add_word('CSDMSName', 'measure', csdms_measure)
 
     @staticmethod
-    def list_all_names():
-        raw_names = CSDMSName.objects.filter(part='name').values_list('value').order_by('value')
+    def list_all(part):
+        raw_names = CSDMSName.objects.filter(part=part).values_list('value').order_by('value')
         list_names = [name[0] for name in raw_names]
         return list_names
 
     @staticmethod
+    def list_all_names():
+        return CSDMSName.list_all('names')
+
+    @staticmethod
     def list_all_decors():
-        raw_decors = CSDMSName.objects.filter(part='decoration').values_list('value').order_by('value')
-        list_decors = [decor[0] for decor in raw_decors]
-        return list_decors
+        return CSDMSName.list_all('decoration')
 
     @staticmethod
     def list_all_measures():
-        raw_measures = CSDMSName.objects.filter(part='measure').values_list('value').order_by('value')
-        list_measures = [measure[0] for measure in raw_measures]
-        return list_measures
+        return CSDMSName.list_all('measure')
 
     @staticmethod
     def clear():
