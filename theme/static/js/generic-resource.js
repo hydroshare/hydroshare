@@ -279,6 +279,16 @@ $(document).ready(function () {
             $('#download-file-btn').attr('disabled', 'disabled');
     });
 
+    function checkDeleteResourceTask(task) {
+        out_task = notificationsApp.getUpdatedTask(task);
+        if (out_task.status === 'Completed' || out_task.status === 'Delivered')
+            window.location.href = '/my-resources/';
+        else
+            setTimeout(function() {
+                        checkDeleteResourceTask(task);
+                    }, 1000);
+    }
+
     $("#btn-delete-resource").on('click', function(e) {
         e.stopImmediatePropagation();
         $.ajax({
@@ -288,6 +298,9 @@ $(document).ready(function () {
                 $('#delete-resource-dialog').modal('hide');
                 notificationsApp.registerTask(task);
                 notificationsApp.show();
+                setTimeout(function() {
+                        checkDeleteResourceTask(task);
+                    }, 1000);
             },
             error: function (xhr, errmsg, err) {
                 display_error_message('Failed to delete the resource', xhr.responseText);

@@ -78,6 +78,11 @@ $(document).ready(function () {
             show: function () {
                 $('#notifications-dropdown').addClass('open');
             },
+            getUpdatedTask: function(in_task) {
+                return this.tasks.find(function(task) {
+                    return task.id === in_task.id
+                });
+            },
             fetchTasks: function () {
                 let vue = this;
                 vue.loading = true;
@@ -246,7 +251,6 @@ $(document).ready(function () {
                         // Check if resource delete is finished
                         if (task.status === "Completed" && task.payload) {
                             vue.deliverTask(task);
-                            window.location.href = '/my-resources/';
                         }
                         break;
                     default:
