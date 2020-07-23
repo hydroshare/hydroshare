@@ -162,7 +162,7 @@ class RecommendedResource(models.Model):
 
 
 class UserPreferences(models.Model):
-    """ store user preferences to each keyword and resoruces that selected by the user """
+    """ store user preferences to each keyword and resources that selected by the user """
     user = models.OneToOneField(User, editable=False)
     preferences = HStoreField(default={})
     pref_for = models.CharField(max_length=8, choices=(('Resource', 'Resource'),
@@ -234,8 +234,7 @@ class LDAWord(models.Model):
             :param p, a choice from part describes which part the word is extracted from
             :param, v, a string value for the word to be added
         """
-        with transaction.atomic():
-            object, _ = LDAWord.objects.get_or_create(source=s, word_type=t, part=p, value=v)
+        object, _ = LDAWord.objects.get_or_create(source=s, word_type=t, part=p, value=v)
 
         return object
 
