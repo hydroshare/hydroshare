@@ -21,6 +21,7 @@ from hs_app_timeseries import views as hs_ts_views
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
+from django.views.decorators.cache import cache_page
 
 autocomplete_light.autodiscover()
 admin.autodiscover()

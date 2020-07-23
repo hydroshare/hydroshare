@@ -8,7 +8,7 @@
             <input type="button" class="mapdisp" value="Toggle Map" v-on:click="displayMap">
             <input type="button" class="mapdisp" value="Update Map" v-on:click="setAllMarkers">
         </div>
-        <div class="col-sm-3 col-xs-12" id="facets">
+        <div class="col-xs-3 col-xs-7" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -39,7 +39,7 @@
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#creator" role="button" aria-expanded="false" aria-controls="creator"></i>
-                                Filter by author</h4>
+                                Filter by Author</h4>
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-creator">
@@ -60,7 +60,7 @@
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#owner" role="button" aria-expanded="false" aria-controls="owner"></i>
-                                Filter by owner</h4>
+                                Filter by Owner</h4>
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-owner">
@@ -82,7 +82,7 @@
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#subject" role="button" aria-expanded="false" aria-controls="subject"></i>
-                                Filter by subject</h4>
+                                Filter by Subject</h4>
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-subject">
@@ -104,7 +104,7 @@
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#contributor" role="button" aria-expanded="false" aria-controls="contributor"></i>
-                                Filter by contributor</h4>
+                                Filter by Contributor</h4>
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-contributor">
@@ -126,7 +126,7 @@
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#type" role="button" aria-expanded="false" aria-controls="type"></i>
-                                Filter by type</h4>
+                                Filter by Type</h4>
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-type">
@@ -148,7 +148,7 @@
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#availability" role="button" aria-expanded="false" aria-controls="availability"></i>
-                                Filter by availability</h4>
+                                Filter by Availability</h4>
                         </div>
                         <div id="availability" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-availability">
@@ -187,7 +187,7 @@
                             <img :src="resIconName[entry.type]" data-toggle="tooltip"
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip"
-                                :title="entry.availability" :alt="entry.availability" :key="entry">
+                                :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
                             <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"
                                 data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"
                                 data-original-title="Shareable">
@@ -359,7 +359,7 @@ export default {
           resfiltered.forEach((item) => {
             if (item.start_date) {
               console.log(`has a start date ${item.start_date}`);
-              if (item.start_date >= this.startdate) {
+              if (item.start_date >= this.startdate || item.start_date <= this.enddate) {
                 console.log(`including date ${item.start_date}`);
                 resStartDate.push(item);
               }
@@ -372,7 +372,7 @@ export default {
           resfiltered.forEach((item) => {
             if (item.end_date) {
               console.log(`has an end date ${item.end_date}`);
-              if (item.end_date <= this.enddate) {
+              if (item.end_date <= this.enddate || item.end_date >= this.startdate) {
                 console.log(`including date ${item.end_date}`);
                 resEndDate.push(item);
               }

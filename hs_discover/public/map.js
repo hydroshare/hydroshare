@@ -53,7 +53,7 @@
         markers.push(new google.maps.Marker({
           map: exports.map,
           icon: icon,
-          title: place.name,
+          // title: place.name,
           position: place.geometry.location,
         }));
 
