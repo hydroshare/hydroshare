@@ -5,7 +5,8 @@
 from datetime import timedelta, date
 from hs_explore.utils import get_resource_to_subjects, get_resource_to_abstract,\
     get_resource_to_published, get_users_interacted_resources, get_resource_to_keep_words,\
-    jaccard_sim, store_user_preferences, store_recommended_resources, clear_old_data
+    jaccard_sim, store_user_preferences, store_recommended_resources, clear_old_data,\
+    resource_owners, resource_editors
 from collections import defaultdict
 from django.core.management.base import BaseCommand
 import gensim
@@ -20,10 +21,11 @@ def make_recommendations():
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
     end_date = date(2020, 6, 7)
-    # end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
+    owner_to_resources = resource_owners()
+    editor_to_resources = resource_editors()
     print("resource_to_keep_words")
     resource_to_keep_words = get_resource_to_keep_words(resource_to_subjects, resource_to_abstract)
 
@@ -81,7 +83,15 @@ def make_recommendations():
                 for topic, prob in ldamodel[c]:
                     if prob - 0.2 > 0.001:
                         user_probable_topics_set.add(topic)
-            user_resources = user_to_resources[username]
+            user_resources = []
+            user_selected_resources = user_to_resources[username]
+            user_resources += user_selected_resources
+            if username in owner_to_resources:
+                user_owned_resources = owner_to_resources[username]
+                user_resources += user_owned_resources
+            if username in editor_to_resources:
+                user_editable_resources = editor_to_resources[username]
+                user_resources += user_editable_resources
 
             # pre-filter by SOLR
             out = SearchQuerySet()
