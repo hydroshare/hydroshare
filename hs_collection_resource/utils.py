@@ -128,15 +128,13 @@ def get_collectable_resources(user, coll_resource):
     get_my_resources_list(user)
 
     # resource is collectable if
-    # 1) Shareable=True and resource is accessible with view privilege.
-    # 2) Discoverable=True (which is also true if public or published is True)
-    # 3) OR, current user is a owner of it
+    # 1) shareable=True and resource is public in my resources, --or--
+    # 2) shareable=True and resource is accessible with view privilege, --or--
+    # 2) current user owns the resource.
     # Also exclude this resource as well as resources already in the collection
-    # Note that get_my_resources_list currently only returns resources with user
-    # or group view privilege, so that the check for user access is currently redundant.
+    # Start with both my resources and annexed public resources
     return get_my_resources_list(user) \
-        .filter(Q(raccess__discoverable=True) |  # at least discoverable, -- or --
-                Q(r2urp__user=user, raccess__shareable=True) |  # VIEW and shareable, -- or --
+        .filter(Q(raccess__shareable=True) |  # shareable and public or viewable, --or--
                 Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True))
