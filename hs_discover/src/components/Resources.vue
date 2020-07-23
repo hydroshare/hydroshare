@@ -249,6 +249,7 @@ export default {
         'Collection Resource': '/static/img/resource-icons/collection48x48.png',
         'Web App Resource': '/static/img/resource-icons/webapp48x48.png',
         'Time Series': '/static/img/resource-icons/timeseries48x48.png',
+        'Script Resource': '/static/img/resource-icons/script48x48.png',
         'Model Instance Resource': '/static/img/resource-icons/modelinstance48x48.png',
         'SWAT Model Instance Resource': '/static/img/resource-icons/swat48x48.png',
         'MODFLOW Model Instance Resource': '/static/img/resource-icons/modflow48x48.png',
