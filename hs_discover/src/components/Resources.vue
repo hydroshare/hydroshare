@@ -322,7 +322,6 @@ export default {
     // },
     filteredResources() {
       const startd = new Date();
-      // document.body.style.cursor = 'wait';
       if (this.resloaded) {
         let resfiltered = this.resources;
         if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
@@ -354,33 +353,17 @@ export default {
             resfiltered = resTypes;
           }
         }
-        if (this.startdate !== 'Start Date' && this.startdate !== '') {
-          const resStartDate = [];
+        if (this.startdate !== 'Start Date' && this.startdate !== '' && this.enddate !== 'End Date' && this.enddate !== '') {
+          const resDate = [];
           resfiltered.forEach((item) => {
-            if (item.start_date) {
-              console.log(`has a start date ${item.start_date}`);
-              if (item.start_date >= this.startdate || item.start_date <= this.enddate) {
-                console.log(`including date ${item.start_date}`);
-                resStartDate.push(item);
+            if (item.start_date && item.end_date) {
+              if (this.dateOverlap(item.start_date, item.end_date)) {
+                resDate.push(item);
               }
             }
           });
-          resfiltered = resStartDate;
+          resfiltered = resDate;
         }
-        if (this.enddate !== 'End Date' && this.enddate !== '') {
-          const resEndDate = [];
-          resfiltered.forEach((item) => {
-            if (item.end_date) {
-              console.log(`has an end date ${item.end_date}`);
-              if (item.end_date <= this.enddate || item.end_date >= this.startdate) {
-                console.log(`including date ${item.end_date}`);
-                resEndDate.push(item);
-              }
-            }
-          });
-          resfiltered = resEndDate;
-        }
-        // document.body.style.cursor = 'default';
         if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
           const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
           console.log(`filter compute: ${(new Date() - startd) / 1000}`);
@@ -389,7 +372,6 @@ export default {
         console.log(`filter compute: ${(new Date() - startd) / 1000}`);
         return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir)).slice(0, this.displen);
       }
-      // document.body.style.cursor = 'default';
       return [];
     },
   },
@@ -465,6 +447,11 @@ export default {
         return input.length > 200 ? `${input.substring(0, 200)}...` : input;
       }
       return '';
+    },
+    dateOverlap(dtstart, dtend) {
+      const ol = (Date.parse(dtstart) > Date.parse(this.startdate) && Date.parse(dtstart) < Date.parse(this.enddate) || Date.parse(this.startdate) > Date.parse(dtstart) && Date.parse(this.startdate) < Date.parse(dtend));
+      console.log(`${dtstart} ${dtend} : ${this.startdate} ${this.enddate} : ${ol}`);
+      return ol;
     },
     displayMap() {
       toggleMap();

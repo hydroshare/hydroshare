@@ -75,8 +75,8 @@
     let legendTable = '<table><tbody>';
     legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_red_marker.png'>"
       + '</td><td>Point Coverage Locations</td></tr>';
-    legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_blue_marker.png'>"
-      + '</td><td>Box Coverage Centers</td></tr>';
+    // legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_blue_marker.png'>"
+    //   + '</td><td>Box Coverage Centers</td></tr>';
     legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_cluster_icon.png'>"
       + '</td><td>Clusters</td></tr></tbody></table>';
     legend.innerHTML = legendTable;
@@ -86,6 +86,7 @@
   const createBatchMarkers = (locations, labels) => {
     document.body.style.cursor = 'wait';
     googMarkers = locations.map(function(location, k) {
+      console.log(location);
       return new google.maps.Marker({
         map: exports.map,
         position: location,
