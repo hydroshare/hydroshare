@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
         for ts_res in TimeSeriesResource.objects.all():
             # check resource exists on irods
-            istorage = ts_res.get_irods_storage()
+            istorage = ts_res.get_storage()
             if not istorage.exists(ts_res.root_path):
                 err_msg = "Timeseries resource not found in irods (ID: {})".format(ts_res.short_id)
                 logger.error(err_msg)

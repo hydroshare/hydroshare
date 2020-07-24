@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
         for nc_res in NetcdfResource.objects.all():
             # check resource exists on irods
-            istorage = nc_res.get_irods_storage()
+            istorage = nc_res.get_storage()
             if not istorage.exists(nc_res.root_path):
                 err_msg = "NetCDF resource not found in irods (ID: {})".format(nc_res.short_id)
                 logger.error(err_msg)

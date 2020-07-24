@@ -25,7 +25,7 @@ def delete_files_and_bag(resource):
     :param resource: the resource to delete the bag and files for.
     :return: none
     """
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
 
     # delete resource directory first to remove all generated bag-related files for the resource
     try:
@@ -57,7 +57,7 @@ def create_bag_files(resource):
     """
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
 
     # the temp_path is a temporary holding path to make the files available to iRODS
     # we have to make temp_path unique even for the same resource with same update time

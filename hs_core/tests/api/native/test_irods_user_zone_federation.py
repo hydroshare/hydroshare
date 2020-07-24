@@ -133,7 +133,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(res.creator == self.user)
         self.assertTrue(res.get_quota_holder() == self.user)
 
-        istorage = res.get_irods_storage()
+        istorage = res.get_storage()
         attname = self.user.username + '-usage'
         test_qsize = '2000000000'  # 2GB
         # this quota size AVU will be set by real time iRODS quota usage update micro-services.

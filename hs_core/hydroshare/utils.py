@@ -266,7 +266,7 @@ def get_file_from_irods(res_file, temp_dir=None):
     :return: location of the copied file
     """
     res = res_file.resource
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     res_file_path = res_file.storage_path
     file_name = os.path.basename(res_file_path)
 
@@ -300,7 +300,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     :return:
     """
     ori_res = original_resource_file.resource
-    istorage = ori_res.get_irods_storage()
+    istorage = ori_res.get_storage()
     ori_storage_path = original_resource_file.storage_path
 
     # Note: this doesn't update metadata at all.
@@ -361,7 +361,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
 
     # This makes the assumption that the destination is in the same exact zone.
     # Also, bags and similar attached files are not copied.
-    istorage = src_res.get_irods_storage()
+    istorage = src_res.get_storage()
 
     # This makes an exact copy of all physical files.
     src_files = os.path.join(src_res.root_path, 'data')
@@ -502,7 +502,7 @@ def set_dirty_bag_flag(resource):
     """
     res_coll = resource.root_path
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     res_coll = resource.root_path
     istorage.setAVU(res_coll, "bag_modified", "true")
     istorage.setAVU(res_coll, "metadata_dirty", "true")
@@ -868,7 +868,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 # TODO: move this to BaseResource
 def create_empty_contents_directory(resource):
     res_contents_dir = resource.file_path
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     if not istorage.exists(res_contents_dir):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 

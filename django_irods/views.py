@@ -102,7 +102,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             response.content = "<h1>" + content_msg + "</h1>"
             return response
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
 
     irods_path = res.get_irods_path(path, prepend_short_id=False)
 

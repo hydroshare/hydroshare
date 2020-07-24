@@ -604,7 +604,7 @@ def file_download_url_mapper(request, shortkey):
     path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     url_download = True if request.GET.get('url_download', 'false').lower() == 'true' else False
     zipped = True if request.GET.get('zipped', 'false').lower() == 'true' else False
     aggregation = True if request.GET.get('aggregation', 'false').lower() == 'true' else False

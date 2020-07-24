@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
         for gf_res in GeographicFeatureResource.objects.all():
             # check resource exists on irods
-            istorage = gf_res.get_irods_storage()
+            istorage = gf_res.get_storage()
             if not istorage.exists(gf_res.root_path):
                 err_msg = "Geofeature resource not found in irods (ID: {})".format(gf_res.short_id)
                 logger.error(err_msg)

@@ -348,7 +348,7 @@ class CompositeResource(BaseResource):
         """
 
         def delete_old_xml_files(folder=''):
-            istorage = self.get_irods_storage()
+            istorage = self.get_storage()
             # remove file extension from aggregation name (note: aggregation name is a file path
             # for all aggregation types except fileset
             xml_file_name, _ = os.path.splitext(orig_path)
@@ -414,7 +414,7 @@ class CompositeResource(BaseResource):
             assert(src_full_path.startswith(self.file_path))
             assert(tgt_full_path.startswith(self.file_path))
 
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
 
         # need to find out which of the following actions the user is trying to do:
         # renaming a file
@@ -506,7 +506,7 @@ class CompositeResource(BaseResource):
         :param target_full_path: full folder path name where file needs to be uploaded to
         :return: True or False
         """
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         if istorage.exists(target_full_path):
             path_to_check = target_full_path
         else:

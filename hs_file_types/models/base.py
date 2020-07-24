@@ -842,7 +842,7 @@ class AbstractLogicalFile(models.Model):
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
             res_file = None
-            storage = resource.get_irods_storage()
+            storage = resource.get_storage()
             if folder_path.startswith("data/contents/"):
                 folder_path = folder_path[len("data/contents/"):]
             path_to_check = os.path.join(resource.file_path, folder_path)
@@ -1113,7 +1113,7 @@ class AbstractLogicalFile(models.Model):
         # directory path, first check that the folder does not exist
         # If folder path exists then change the folder name by adding a number
         # to the end
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_storage()
         counter = 0
         while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
             new_file_name = file_name + "_{}".format(counter)
@@ -1138,7 +1138,7 @@ class AbstractLogicalFile(models.Model):
         from hs_core.hydroshare.resource import delete_resource_file
 
         # delete associated metadata and map xml documents
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -1165,7 +1165,7 @@ class AbstractLogicalFile(models.Model):
         object. However, it doesn't delete any resource files that are part of the aggregation."""
 
         # delete associated metadata and map xml document
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -1260,7 +1260,7 @@ class AbstractLogicalFile(models.Model):
 
         # create a temp dir where the xml files will be temporarily saved before copying to iRODS
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
 
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)

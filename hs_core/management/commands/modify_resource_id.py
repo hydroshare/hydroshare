@@ -54,7 +54,7 @@ class Command(BaseCommand):
         else:
             new_res_id = short_id()
 
-        storage = res.get_irods_storage()
+        storage = res.get_storage()
 
         if storage.exists(res.bag_path):
             try:

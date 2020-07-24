@@ -167,7 +167,7 @@ class TestCaseCommonUtilities(object):
         # an iRODS exception will be raised which will be caught by the test runner and mark as
         # a test failure
         create_folder(res.short_id, 'data/contents/sub_test_dir')
-        istorage = res.get_irods_storage()
+        istorage = res.get_storage()
         res_path = res.file_path
         store = istorage.listdir(res_path)
         self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')

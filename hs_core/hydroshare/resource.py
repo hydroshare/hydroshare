@@ -251,7 +251,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
 
     res = utils.get_resource_by_shortkey(res_id)
     res_coll = res.root_path
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     bag_modified_flag = True
     # needs to check whether res_id collection exists before getting/setting AVU on it to
     # accommodate the case where the very same resource gets deleted by another request when
@@ -896,9 +896,10 @@ def delete_resource(pk):
         if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
             eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
             obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable now that it becomes the latest version
-            obsolete_res.raccess.immutable = False
-            obsolete_res.raccess.save()
+            # also make this obsoleted resource editable if not published now that it becomes the latest version
+            if not obsolete_res.raccess.published:
+                obsolete_res.raccess.immutable = False
+                obsolete_res.raccess.save()
 
     res.delete()
     return pk

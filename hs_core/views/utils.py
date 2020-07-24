@@ -27,7 +27,7 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.utils.http import int_to_base36
 from mezzanine.conf import settings
-from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -44,6 +44,7 @@ from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResourc
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_file_types.utils import set_logical_file_type
+from theme.backends import without_login_date_token_generator
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -224,7 +225,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         if not is_valid:
             return status.HTTP_400_BAD_REQUEST, err_msg
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_storage()
     # temp path to hold updated url file to be written to iRODS
     temp_path = istorage.getUniqueTmpPath
 
@@ -653,7 +654,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to),
+            "token": without_login_date_token_generator.make_token(email_to),
             "membership_request_id": membership_request.id
         }) + "?next=" + (next_url(request) or "/")
 
@@ -664,7 +665,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to)
+            "token": without_login_date_token_generator.make_token(email_to)
         }) + "?next=" + (next_url(request) or "/")
 
     context['action_url'] = action_url
@@ -750,7 +751,7 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     if __debug__:
         assert(isinstance(resource, BaseResource))
     if istorage is None:
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_storage()
 
     res_files = []
     if foldername:
@@ -831,7 +832,7 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     If the folder contains any aggregations, those are also deleted from DB
     :param resource: the BaseResource object representing a HydroShare resource
-    :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
+    :param istorage: IrodsStorage object (redundant; equal to resource.get_storage())
     :param foldername: the folder name that has been removed from iRODS
     :user  user who initiated the folder delete operation
     :return:
@@ -889,7 +890,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         assert(input_coll_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
 
     # check resource supports zipping of a folder
@@ -943,7 +944,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
         assert(zip_with_rel_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
 
     if not resource.supports_unzip(zip_with_rel_path):
@@ -1058,7 +1059,7 @@ def create_folder(res_id, folder_path):
         assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
     if not resource.supports_folder_creation(coll_path):
@@ -1084,7 +1085,7 @@ def remove_folder(user, res_id, folder_path):
         assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
     # TODO: Pabitra - resource should check here if folder can be removed
@@ -1110,7 +1111,7 @@ def list_folder(res_id, folder_path):
         assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
     return istorage.listdir(coll_path)
@@ -1138,7 +1139,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
         assert(tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
@@ -1181,7 +1182,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
         assert(tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
@@ -1225,7 +1226,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         assert(tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
     if validate_move:

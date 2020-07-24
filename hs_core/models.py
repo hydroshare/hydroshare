@@ -10,7 +10,9 @@ from dateutil import parser
 from lxml import etree
 from markdown import markdown
 
+from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+# from hs_linux.storage import LinuxStorage
 
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -23,7 +25,6 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
-from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
@@ -44,6 +45,50 @@ from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 
 import unicodedata
+
+
+class StorageCodes(object):
+    """
+    Storage codes describe what file storage medium is in use.
+    Storage is a numeric code 1-4:
+
+        * 1 or StorageCodes.IRODS:
+            object is stored in Native iRODs
+
+        * 2 or StorageCodes.FEDERATED:
+            object is stored in a non-Native (federated) iRODs.
+
+        * 3 or StorageCodes.LINUX:
+            object is stored in native Linux.
+
+    """
+    IRODS = 1
+    FEDERATED = 2
+    LINUX = 3
+    CHOICES = (
+        (IRODS, 'iRODs'),
+        (FEDERATED, 'Federated iRODs'),
+        (LINUX, 'Linux')
+    )
+    # Names of privileges for printing
+    NAMES = ('Unspecified', 'iRODs', 'Federated iRODs', 'Linux')
+
+    @classmethod
+    def from_string(self, privilege):
+        """ Converts a string representation to a StorageCode """
+        if privilege.lower() == 'view':
+            return StorageCodes.VIEW
+        if privilege.lower() == 'edit':
+            return StorageCodes.CHANGE
+        if privilege.lower() == 'owner':
+            return StorageCodes.OWNER
+        if privilege.lower() == 'none':
+            return StorageCodes.NONE
+        return None
+
+
+class StorageTypeNotFoundException(Exception):
+    pass
 
 
 def clean_for_xml(s):
@@ -1684,6 +1729,38 @@ class ResourceManager(PageManager):
         return qs
 
 
+class DjangoAVU(models.Model):
+    """ Simulate iRODS AVU functions in Django """
+    name = models.CharField(max_length=255, unique=True)
+    value = models.CharField(max_length=255)
+    unit = models.CharField(max_length=255)
+
+    @classmethod
+    def set(cls, n, v, u):
+        record, create = cls.objects.get_or_create(defaults={'value': v, 'unit': u},
+                                                   name=n)
+        if not create:
+            record.unit = u
+            record.value = v
+            record.save()
+
+    @classmethod
+    def get(cls, n):
+        try:
+            record = cls.object.get(name=n)
+            return record
+        except ObjectDoesNotExist:
+            return None
+
+    @classmethod
+    def remove(cls, n):
+        try:
+            record = cls.object.get(name=n)
+            record.delete()
+        except ObjectDoesNotExist:
+            pass
+
+
 class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
     Create Abstract Class for all Resources.
@@ -2023,7 +2100,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         This avoids mistakes in setting AVUs by assuring that the appropriate root path
         is alway used.
         """
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         root_path = self.root_path
         istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
 
@@ -2035,7 +2112,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         if isinstance(value, bool):
             value = str(value).lower()  # normalize boolean values to strings
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         root_path = self.root_path
         # has to create the resource collection directory if it does not exist already due to
         # the need for setting quota holder on the resource collection before adding files into
@@ -2050,7 +2127,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         This avoids mistakes in getting AVUs by assuring that the appropriate root path
         is alway used.
         """
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
 
@@ -2485,7 +2562,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # handles federation
         irods_path = os.path.join(self.root_path, dir_path)
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         try:
             listing = istorage.listdir(irods_path)
         except SessionException:
@@ -2601,16 +2678,14 @@ class ResourceFile(ResourceFileIRODSMixin):
     # See get_path and get_resource_file_path above.
     file_folder = models.CharField(max_length=4096, null=False, default="")
 
-    # This pair of FileFields deals with the fact that there are two kinds of storage
+    # This triple of FileFields deals with the fact that there are two kinds of storage
+
     resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                      null=True, blank=True, storage=IrodsStorage())
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
-
-    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
-    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # DEPRECATED: use native size routine
-    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    # linux_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+    #                                        null=True, blank=True, storage=LinuxStorage())
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2688,7 +2763,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
-                istorage = resource.get_irods_storage()
+                istorage = resource.get_storage()
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
@@ -2755,7 +2830,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def exists(self):
         """Check existence of files for both federated and non-federated."""
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_storage()
         if self.resource.is_federated:
             if __debug__:
                 assert self.resource_file.name is None or \
@@ -2805,7 +2880,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2815,7 +2890,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2928,7 +3003,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         as a folder/filename pair.
         """
         if test_exists:
-            storage = resource.get_irods_storage()
+            storage = resource.get_storage()
         locpath = os.path.join(resource.short_id, "data", "contents") + "/"
         relpath = path
         fedpath = resource.resource_federation_path
@@ -3189,7 +3264,12 @@ class BaseResource(Page, AbstractResource):
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
 
-    # this resource_federation_path is added to record where a HydroShare resource is
+    storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
+                                       editable=False,
+                                       default=StorageCodes.IRODS)
+
+    # This only applies if storage_type == FEDERATED
+    # The resource_federation_path is added to record where a HydroShare resource is
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
     # federated root path in the format of /federated_zone/home/localHydroProxy
@@ -3226,12 +3306,18 @@ class BaseResource(Page, AbstractResource):
         """Pass through to abstract resource can_view function."""
         return AbstractResource.can_view(self, request)
 
-    def get_irods_storage(self):
+    def get_storage(self):
         """Return either IrodsStorage or FedStorage."""
-        if self.resource_federation_path:
-            return FedStorage()
-        else:
-            return IrodsStorage()
+
+        # if self.resource.storage_type == StorageCodes.IRODS:
+        return IrodsStorage()
+        # elif self.resource.storage_type == StorageCodes.FEDERATED:
+        #     return FedStorage()
+        # elif self.resource.storage_type == StorageCodes.LINUX:
+        #     return LinuxStorage()
+        # else:
+        #     raise StorageTypeNotFoundException(
+        #         "unknown storage type {}".format(self.storage_type))
 
     @property
     def is_federated(self):
@@ -3298,7 +3384,7 @@ class BaseResource(Page, AbstractResource):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=self.short_id,
                                                            postfix=bagit_postfix)
-        istorage = self.get_irods_storage()
+        istorage = self.get_storage()
         bag_url = istorage.url(bag_path)
         return bag_url
 

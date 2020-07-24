@@ -58,7 +58,7 @@ def data_store_structure(request):
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
     directory_in_irods = resource.get_irods_path(store_path)
 
     try:
@@ -608,7 +608,7 @@ def data_store_move_to_folder(request, pk=None):
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
 
     tgt_short_path = tgt_path[len('data/contents/'):]
     tgt_storage_path = os.path.join(resource.root_path, tgt_path)
@@ -730,7 +730,7 @@ def data_store_rename_file_or_folder(request, pk=None):
         return HttpResponse('Rename: Source and target names must be in same folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_storage()
 
     # protect against stale data botches: source files should exist
     src_storage_path = os.path.join(resource.root_path, src_path)
