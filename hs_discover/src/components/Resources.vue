@@ -5,7 +5,7 @@
             <input type="number" v-model="displen" data-toggle="tooltip"
                             title="values over 500 may make operations sluggish">
             <!-- toggleMap defined in map.js -->
-            <input type="button" class="mapdisp" value="Toggle Map" v-on:click="displayMap">
+            <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap">
             <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">
         </div>
         <div class="col-xs-3 col-xs-7" id="facets">
@@ -193,11 +193,11 @@
                                 data-original-title="Shareable">
                         </td>
                         <td>
-                            <a :href="entry.link" data-toggle="tooltip"
+                            <a :href="entry.link" data-toggle="tooltip" target="_blank"
                                :title="ellip(entry.abstract)" data-placement="top">{{entry.title}}</a>
                         </td>
                         <td>
-                            <a :href="entry.author_link" data-toggle="tooltip"
+                            <a :href="entry.author_link" data-toggle="tooltip" target="_blank"
                                :title="`Author: ${entry.author} | Owner: ${entry.owner} | Contributor: ${entry.contributor}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
@@ -220,6 +220,7 @@ export default {
   data() {
     return {
       geodata: [],
+      filterlimit: 10,
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
@@ -382,11 +383,11 @@ export default {
   mounted() {
     const startd = new Date();
     this.resloaded = this.resources.length > 0;
-    this.countAuthors = this.filterBuilder(this.resources, 'author');
+    this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
     // Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
-    this.countOwners = this.filterBuilder(this.resources, 'owner');
+    this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
     // Object.keys(this.countOwners).forEach(item => this.ownerFilter.push(item));
-    this.countContributors = this.filterBuilder(this.resources, 'contributor');
+    this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
     // Object.keys(this.countContributors).forEach(item => this.contributorFilter.push(item));
     this.countTypes = this.filterBuilder(this.resources, 'type');
     // Object.keys(this.countTypes).forEach(item => this.typeFilter.push(item));
@@ -396,7 +397,8 @@ export default {
     this.resources.forEach((res) => {
       subjectbox = subjectbox.concat(this.enumMulti(res.subject));
     });
-    this.countSubjects = new this.Counter(subjectbox);
+    const csubjs = new this.Counter(subjectbox);
+    this.countSubjects = Object.fromEntries(Object.entries(csubjs).filter(([k, v]) => v > this.filterlimit));
     // Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
     //   .push(subject));
 
@@ -414,14 +416,24 @@ export default {
     }
   },
   methods: {
-    filterBuilder(resources, thing) {
+    filterBuilder(resources, thing, limit) {
       const box = [];
+
       try {
         resources.forEach(res => box.push(res[thing]));
       } catch (err) {
         console.log(`Type ${thing} not found when building filter: ${err}`);
       }
-      return new this.Counter(box);
+      const c = new this.Counter(box);
+      if (limit) {
+        try {
+          return Object.fromEntries(Object.entries(c).filter(([k, v]) => v > limit));
+        } catch (err) {
+          console.log(`Could not truncate ${thing}: ${err}`);
+          return c;
+        }
+      }
+      return c;
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
