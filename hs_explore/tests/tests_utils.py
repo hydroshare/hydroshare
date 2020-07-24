@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import socket
 from django.test import Client
 from rest_framework import status
+from hs_access_control.models import PrivilegeCodes
 
 
 class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
@@ -52,7 +53,16 @@ class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
         )
         self.posts.raccess.published = True
         self.posts.raccess.save()
+        self.squirrel = hydroshare.create_account(
+            'squirrel@gmail.com',
+            username='squirrel',
+            first_name='first_name_squirrel',
+            last_name='last_name_squirrel',
+            superuser=False,
+            groups=[]
+        )
 
+        self.cat.uaccess.share_resource_with_user(self.posts, self.squirrel, PrivilegeCodes.CHANGE)
         self.client.login(username='cat', password='foobar')
 
     def test_resource_owners(self):
@@ -62,8 +72,8 @@ class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_resource_editors(self):
         editor_to_resources = resource_editors()
-        test_dict = {'cat': [self.posts.short_id]}
-        self.assertCountEqual(editor_to_resources['cat'], test_dict['cat'])
+        test_dict = {'squirrel': [self.posts.short_id]}
+        self.assertCountEqual(editor_to_resources['squirrel'], test_dict['squirrel'])
 
     def test_user_resource_matrix(self):
         response = self.client.get(self.resource_url.format(res_id=self.posts.short_id))
