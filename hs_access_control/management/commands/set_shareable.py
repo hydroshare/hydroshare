@@ -16,16 +16,16 @@ def check_shareable(rid, options):
         return
 
     print("{}: shareable bit is now {}".format(rid, resource.raccess.shareable))
-    if options['on'] and not options['off']:
+    if options['off'] and options['on']:
+        print("{}: conflicting options for shareable bit. No action taken.".format(rid))
+    elif options['on']:
         print("{}: changing sharable bit to True".format(rid))
         resource.raccess.shareable = True
         resource.raccess.save()
-    elif options['off'] and not options['on']:
+    elif options['off']:
         print("{}: changing sharable bit to False".format(rid))
         resource.raccess.shareable = False
         resource.raccess.save()
-    elif options['off'] and options['on']:
-        print("{}: conflicting options for shareable bit. No action taken.".format(rid))
 
 
 class Command(BaseCommand):
