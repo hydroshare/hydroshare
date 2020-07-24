@@ -68,6 +68,13 @@
         #resource-dropdown {
             position: relative;
         }
+        #res-menu-contents {
+            position: absolute;
+        }
+        .modal-header {
+            {#reason#}
+            display: block;
+        }
 
     </style>
     {% block extra_css %}{% endblock %}
@@ -215,7 +222,7 @@
                                 role="button" aria-haspopup="true" aria-expanded="false">Create
                         </button>
                         {% if not user.is_anonymous %}
-                            <ul class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
+                            <ul id="res-menu-contents" class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
                                 <li>
                                     <a data-toggle="tooltip" data-placement="left"
                                        title="A resource which can include multiple files without file format limitations."

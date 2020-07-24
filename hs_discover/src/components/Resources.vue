@@ -534,6 +534,7 @@ export default {
 
 <style scoped>
     #filter-items {
+        /*reason*/
         width: 253px;
     }
     .table-wrapper {
