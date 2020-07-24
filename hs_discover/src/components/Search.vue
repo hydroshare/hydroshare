@@ -2,9 +2,9 @@
     <div id="discover-search">
         <div>
             <div id="search" @keyup.enter="searchClick" class="input-group">
-                <input type="search" class="form-control" v-model="searchtext"
+                <input id="search-input" type="search" class="form-control" v-model="searchtext"
                        placeholder="Search all Public and Discoverable Resources">
-                <i id="search-clear" v-on:click="clearSearch"  class="fa fa-times-circle inside"></i>
+                <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside"></i>
             </div>
         </div>
         <resource-listing :resources="resources"

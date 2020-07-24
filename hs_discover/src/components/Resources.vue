@@ -182,28 +182,28 @@
                     <tbody>
                     <tr v-for="entry in filteredResources" v-bind:key="entry">
                         <td>
-                            <img :src="resIconName[entry.type]" data-toggle="tooltip"
+                            <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
-                            <img :src="entry.availabilityurl" data-toggle="tooltip"
+                            <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
                             <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"
                                 data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"
-                                data-original-title="Shareable">
+                                style="cursor:pointer" data-original-title="Shareable">
                         </td>
                         <td>
-                            <a :href="entry.link" data-toggle="tooltip" target="_blank"
+                            <a :href="entry.link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
                                :title="ellip(entry.abstract)" data-placement="top">{{entry.title}}</a>
                         </td>
                         <td>
-                            <a :href="entry.author_link" data-toggle="tooltip" target="_blank"
+                            <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
                                :title="`Author: ${entry.author}
 Owner: ${entry.owner}
 Contributor: ${entry.contributor}`">{{entry.author}}</a>
 <!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                        <td style="cursor:pointer" data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
+                        <td style="cursor:pointer" data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>

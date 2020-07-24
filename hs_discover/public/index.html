@@ -25,6 +25,10 @@
     #map-view {
         display: none;
     }
+    #discover-footer {
+        /* align with filters and resource rows */
+        padding: 0;
+    }
 </style>
 <input type="hidden" id="qstring" value="{{ request.GET.q }}">
 <div class="container" id="discover-main">
@@ -42,7 +46,7 @@
     </div>
     <br>
     <div class="row">
-        <div class="col-xs-12">
+        <div class="col-xs-12" id="discover-footer">
             <div class="alert alert-info">
                 <strong>
                     <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
