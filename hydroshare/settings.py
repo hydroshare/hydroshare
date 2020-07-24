@@ -308,7 +308,8 @@ INSTALLED_APPS = (
     "security",
     "markdown",
     "hs_communities",
-    "hs_discover"
+    "hs_discover", 
+    "hs_linux"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'

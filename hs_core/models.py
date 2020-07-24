@@ -1729,38 +1729,6 @@ class ResourceManager(PageManager):
         return qs
 
 
-class DjangoAVU(models.Model):
-    """ Simulate iRODS AVU functions in Django """
-    name = models.CharField(max_length=255, unique=True)
-    value = models.CharField(max_length=255)
-    unit = models.CharField(max_length=255)
-
-    @classmethod
-    def set(cls, n, v, u):
-        record, create = cls.objects.get_or_create(defaults={'value': v, 'unit': u},
-                                                   name=n)
-        if not create:
-            record.unit = u
-            record.value = v
-            record.save()
-
-    @classmethod
-    def get(cls, n):
-        try:
-            record = cls.object.get(name=n)
-            return record
-        except ObjectDoesNotExist:
-            return None
-
-    @classmethod
-    def remove(cls, n):
-        try:
-            record = cls.object.get(name=n)
-            record.delete()
-        except ObjectDoesNotExist:
-            pass
-
-
 class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
     Create Abstract Class for all Resources.
@@ -3264,9 +3232,9 @@ class BaseResource(Page, AbstractResource):
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
 
-    storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
-                                       editable=False,
-                                       default=StorageCodes.IRODS)
+    # storage_type = models.IntegerField(choices=StorageCodes.CHOICES,
+    #                                    editable=False,
+    #                                    default=StorageCodes.IRODS)
 
     # This only applies if storage_type == FEDERATED
     # The resource_federation_path is added to record where a HydroShare resource is
