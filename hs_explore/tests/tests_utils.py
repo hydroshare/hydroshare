@@ -56,7 +56,7 @@ class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
         self.client.login(username='cat', password='foobar')
 
     def test_resource_owners(self):
-        owner_to_resources =i resource_owners()
+        owner_to_resources = resource_owners()
         test_dict = {'cat': [self.posts.short_id]}
         self.assertCountEqual(owner_to_resources['cat'], test_dict['cat'])
 
