@@ -8,7 +8,7 @@
             <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap">
             <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">
         </div>
-        <div class="col-xs-3 col-xs-7" id="facets">
+        <div class="col-xs-3" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -20,12 +20,10 @@
                                 Temporal Coverage</h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in">
-                            From
                             <date-pick
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
                             ></date-pick><br/>
-                            To
                             <date-pick
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
@@ -168,7 +166,7 @@
                 <!-- end facet panels -->
             </div>
         </div>
-        <div id="resource-rows" class="col-sm-9 col-xs-12">
+        <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
                 <table v-if="filteredResources.length"
@@ -198,7 +196,10 @@
                         </td>
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip" target="_blank"
-                               :title="`Author: ${entry.author} | Owner: ${entry.owner} | Contributor: ${entry.contributor}`">{{entry.author}}</a>
+                               :title="`Author: ${entry.author}
+Owner: ${entry.owner}
+Contributor: ${entry.contributor}`">{{entry.author}}</a>
+<!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                         <td data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
@@ -240,7 +241,7 @@ export default {
       typeFilter: [],
       countAvailabilities: {},
       availabilityFilter: [],
-      sortDir: 1, // 1 asc -1 desc
+      sortDir: -1, // 1 asc -1 desc
       sortingBy: 'modified',
       resIconName: {
         'Composite Resource': '/static/img/resource-icons/composite48x48.png',
@@ -534,8 +535,8 @@ export default {
 
 <style scoped>
     #filter-items {
-        /*reason*/
-        width: 253px;
+        /* ensure collapse without overlap */
+        width: 235px;
     }
     .table-wrapper {
         margin-top: 0px;
