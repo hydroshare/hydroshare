@@ -367,13 +367,9 @@ class CompositeResource(BaseResource):
         # get resource level core metadata as xml string
         # for composite resource we don't want the format elements at the resource level
         # as they are included at the aggregation map xml document
-        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=False,
+        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=True,
                                                                      include_format_elements=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
+        return xml_string
 
     def _recreate_nested_aggr_xml_docs(self, folder, nested_aggr):
         """Recreates xml files for all fileset or model instance aggregations that exist under the path 'folder'

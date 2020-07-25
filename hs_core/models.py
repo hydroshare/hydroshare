@@ -3527,9 +3527,7 @@ Page.get_content_model = new_get_content_model
 class CoreMetaData(models.Model):
     """Define CoreMetaData model."""
 
-    XML_HEADER = '''<?xml version="1.0"?>
-<!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
-"http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
+    XML_HEADER = '''<?xml version="1.0" encoding="UTF-8"?>'''
 
     NAMESPACES = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",

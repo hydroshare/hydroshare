@@ -451,7 +451,7 @@ class AbstractFileMetaData(models.Model):
         can then add any additional elements for metadata xml generation"""
 
         xml_string = super(type(self), self).get_xml(pretty_print=False)
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode('utf-8'))
 
         # get root 'Description' element that contains all other elements
         container_to_add_to = RDF_ROOT.find('rdf:Description', namespaces=CoreMetaData.NAMESPACES)
