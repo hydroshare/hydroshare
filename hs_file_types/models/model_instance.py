@@ -1,4 +1,5 @@
 import json
+import os
 
 import jsonschema
 from django.contrib.postgres.fields import JSONField
@@ -8,6 +9,7 @@ from django.template import Template, Context
 from dominate import tags as dom_tags
 from lxml import etree
 
+from hs_core.hydroshare.utils import current_site_url
 from hs_core.models import CoreMetaData, ResourceFile
 from .base import NestedLogicalFileMixin
 from .base_model_program_instance import AbstractModelLogicalFile
@@ -295,12 +297,16 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                         '{%s}includesModelOutput' % CoreMetaData.NAMESPACES['hsterms'])
         model_output.text = includes_output
         if self.executed_by or self.executed_by_url:
-            executed_by = etree.SubElement(container_to_add_to,
-                                           '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms'])
+            executed_by = '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms']
             if self.executed_by:
-                executed_by.text = self.executed_by.aggregation_path
+                resource = self.logical_file.resource
+                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
+                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
+                attrib = {"resource": aggr_url}
+                etree.SubElement(container_to_add_to, executed_by, attrib=attrib)
             else:
-                executed_by.text = self.executed_by_url
+                attrib = {"resource": self.executed_by_url}
+                etree.SubElement(container_to_add_to, executed_by, attrib=attrib)
 
         if self.metadata_json:
             ns_hsterms = CoreMetaData.NAMESPACES['hsterms']
@@ -345,8 +351,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         # remove xml node since there is no data for the node
                         container_to_add_to.remove(k_obj_element)
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
+        xml_body = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
+        xml_body = xml_body.replace('resource=', 'rdf:resource=')
+        return CoreMetaData.XML_HEADER + '\n' + xml_body
 
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
