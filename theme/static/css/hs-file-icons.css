@@ -90,14 +90,14 @@
 	height: 32px;
 }
 
-.fb-view-grid .fb-stack-mp img, .fb-stack-mi img {
+.fb-view-grid .fb-stack-mp img, .fb-view-grid .fb-stack-mi img {
     width: 18px;
     top: 8px;
     position: absolute;
     left: 3px;
 }
 
-.fb-view-list .fb-stack-mp img, .fb-stack-mi img {
+.fb-view-list .fb-stack-mp img, .fb-view-list .fb-stack-mi img {
     width: 9px;
     top: 5px;
     position: absolute;
@@ -299,7 +299,7 @@
 	font-size: 9px;
 }
 
-.fb-view-list .fb-folder-aggregation, .fb-view-list .fb-folder-mp {
+.fb-view-list .fb-folder-aggregation, .fb-view-list .fb-folder-mp, .fb-view-list .fb-folder-mi {
 	margin-left: 0;
 }
 
