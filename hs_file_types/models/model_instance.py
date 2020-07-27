@@ -352,7 +352,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         container_to_add_to.remove(k_obj_element)
 
         xml_body = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
-        xml_body = xml_body.replace('resource=', 'rdf:resource=')
+        xml_body = xml_body.replace('executedByModelProgram resource=', 'executedByModelProgram rdf:resource=')
         return CoreMetaData.XML_HEADER + '\n' + xml_body
 
 
