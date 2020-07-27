@@ -362,8 +362,6 @@ class CompositeResource(BaseResource):
         return True
 
     def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-
         # get resource level core metadata as xml string
         # for composite resource we don't want the format elements at the resource level
         # as they are included at the aggregation map xml document
