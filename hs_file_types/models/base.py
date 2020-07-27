@@ -1234,6 +1234,11 @@ class AbstractLogicalFile(models.Model):
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
         metadata = self.metadata if self.has_metadata else None
+
+        # if we are deleting a model program aggregation, then we need to set the
+        # metadata of all the associated model instances to dirty
+        if self.is_model_program:
+            self.set_model_instances_dirty()
         self.delete()
 
         if metadata is not None:
@@ -1275,6 +1280,11 @@ class AbstractLogicalFile(models.Model):
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
         metadata = self.metadata if self.has_metadata else None
+
+        # if we are removing a model program aggregation, then we need to set the
+        # metadata of all the associated model instances to dirty
+        if self.is_model_program:
+            self.set_model_instances_dirty()
         self.delete()
 
         if metadata is not None:

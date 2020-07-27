@@ -2101,7 +2101,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Get URL of resource map xml."""
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 
-    def delete(self, using=None):
+    def delete(self, using=None, keep_parents=False):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
         for fl in self.files.all():
@@ -2110,7 +2110,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # so no need for fl.logical_file.delete() and deleting of metadata file
                 # object deletes (cascade delete) all the contained GenericRelated metadata
                 # elements
-                fl.logical_file.metadata.delete()
+                logical_file = fl.logical_file
+                # if we are deleting a model program aggregation, then we need to set the
+                # metadata of all the associated model instances to dirty
+                if logical_file.is_model_program:
+                    logical_file.set_model_instances_dirty()
+                logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
             fl.delete()
         hs_bagit.delete_files_and_bag(self)

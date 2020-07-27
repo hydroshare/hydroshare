@@ -536,3 +536,10 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         copy_of_logical_file.folder = self.folder
         copy_of_logical_file.save()
         return copy_of_logical_file
+
+    def set_model_instances_dirty(self):
+        """set metadata to dirty for all the model instances related to this model program instance"""
+        for mi_meta in self.mi_metadata_objects.all():
+            mi_meta.is_dirty = True
+            mi_meta.save()
+
