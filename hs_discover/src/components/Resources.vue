@@ -376,6 +376,7 @@ export default {
           return this.sortDir === -1 ? datesorted.slice(0, this.displen) : datesorted.reverse().slice(0, this.displen);
         }
         console.log(`filter compute: ${(new Date() - startd) / 1000}`);
+        Object.keys(resfiltered).forEach(key => (!resfiltered[key] ? delete resfiltered[key] : {}));
         return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir)).slice(0, this.displen);
       }
       return [];
