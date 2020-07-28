@@ -518,7 +518,6 @@ def dashboard(request, template="pages/dashboard.html"):
             r.shown()
         if r.rec_type == 'Propensity' and r.relevance > 0:
             recommended_resource = r.candidate_resource
-            # keywords = r.keywords.all()
             common_keywords = []
            
             if len(r.keywords) > 0:
