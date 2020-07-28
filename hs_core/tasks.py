@@ -25,7 +25,6 @@ from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
-from hs_core.views.utils import unzip_file
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
@@ -597,6 +596,7 @@ def resource_debug(resource_id):
 @shared_task
 def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
     user = User.objects.get(pk=user_pk)
+    from hs_core.views.utils import unzip_file
     unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite)
 
 
