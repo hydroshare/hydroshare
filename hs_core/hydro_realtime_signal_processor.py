@@ -37,7 +37,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 using_backends = self.connection_router.for_write(instance=newinstance)
                 for using in using_backends:
                     # if object is public/discoverable or becoming public/discoverable, index it 
-                    if instance.raccess.public or instance.raccess.discoverable: 
+                    if instance.raccess.discoverable: 
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newinstance, using=using)
