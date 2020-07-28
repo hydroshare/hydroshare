@@ -155,8 +155,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     availability = indexes.MultiValueField(faceted=True)
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField(stored=False)
-    created = indexes.DateTimeField(model_attr='created', stored=False)
-    modified = indexes.DateTimeField(model_attr='last_updated', stored=False)
+    created = indexes.DateTimeField(model_attr='created')
+    modified = indexes.DateTimeField(model_attr='last_updated')
     organization = indexes.MultiValueField(stored=False)
     creator_email = indexes.MultiValueField(stored=False)
     publisher = indexes.CharField(stored=False)
@@ -552,19 +552,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period':
                     clean_date = coverage.value["start"][:10]
+                    start_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else:
-                            start_date = ""
                     elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else:
-                            start_date = ""
-
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -588,18 +584,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period' and 'end' in coverage.value:
                     clean_date = coverage.value["end"][:10]
+                    end_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else:
-                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else:
-                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
