@@ -1,4 +1,4 @@
-from hs_haystack import HaystackView
+from hs_haystack.views import HaystackView
 from django.conf.urls import url
 
 urlpatterns = [
