@@ -167,7 +167,8 @@ $(document).ready(function () {
                 }
             },
             canBeAborted: function (task) {
-                return taskMessages[task.name].status.has("Aborted") && (task.status === 'In progress'
+                let vue = this;
+                return "Aborted" in vue.taskMessages[task.name].status && (task.status === 'In progress'
                     || task.status === 'Pending execution')
             },
             clear: function () {
