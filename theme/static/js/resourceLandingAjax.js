@@ -843,7 +843,6 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
             remove_original_zip: "false"
         },
         success: function (task) {
-            task = JSON.parse(task)
             notificationsApp.registerTask(task);
             notificationsApp.show();
         },
