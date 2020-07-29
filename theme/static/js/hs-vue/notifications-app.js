@@ -167,7 +167,7 @@ $(document).ready(function () {
                 }
             },
             canBeAborted: function (task) {
-                return task.name != 'resource delete' && (task.status === 'In progress'
+                return taskMessages[task.name].status.has("Aborted") && (task.status === 'In progress'
                     || task.status === 'Pending execution')
             },
             clear: function () {
