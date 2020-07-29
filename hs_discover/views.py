@@ -56,6 +56,7 @@ class SearchAPI(APIView):
         :param args:
         :param kwargs:
         :return:
+                Values should never be empty string or None, instead return string "None" with str() call
                 "title":
                 "link":
                 "availability": list value, js will parse JSON as Array
@@ -95,8 +96,8 @@ class SearchAPI(APIView):
                 start_date = ''
                 end_date = ''
 
-            contributor = ''
-            owner = ''
+            contributor = 'None'
+            owner = 'None'
 
             if result.creator is not None:
                 try:
@@ -116,7 +117,7 @@ class SearchAPI(APIView):
                 "availability": result.availability,
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
-                "author": result.author,
+                "author": str(result.author),
                 "contributor": contributor,
                 "author_link": result.author_url,
                 "owner": owner,
