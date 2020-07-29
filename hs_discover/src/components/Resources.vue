@@ -1,9 +1,8 @@
 <template>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
-            Showing: {{Math.min(displen, resources.length, filteredResources.length)}} of {{resources.length}}
-            <input type="number" v-model="displen" data-toggle="tooltip"
-                            title="values over 500 may make operations sluggish">
+            Page: {{pagenum}} of {{Math.ceil(filteredResources.length / perpage)}}
+            Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
             <!-- toggleMap defined in map.js -->
             <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap">
             <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">
@@ -180,7 +179,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="entry in filteredResources" v-bind:key="entry">
+                    <tr v-for="entry in filteredResources.slice(0, this.perpage)" v-bind:key="entry">
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -225,7 +224,9 @@ export default {
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
-      displen: 40,
+      filteredcount: 0,
+      perpage: 40,
+      pagenum: 1,
       geoloaded: false,
       resloaded: false, // track axios resource data promise after component mount
       googMarkers: [],
@@ -277,6 +278,7 @@ export default {
   },
   computed: {
     filteredResources() {
+      // this routine typically completes in thousandths or hundredths of seconds with 3000 resources in Chrome
       const startd = new Date();
       if (this.resloaded) {
         let resfiltered = this.resources;
@@ -320,14 +322,9 @@ export default {
           });
           resfiltered = resDate;
         }
-        if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-          const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
-          console.log(`filter compute: ${(new Date() - startd) / 1000}`);
-          return this.sortDir === -1 ? datesorted.slice(0, this.displen) : datesorted.reverse().slice(0, this.displen);
-        }
+        resfiltered = this.columnSort(resfiltered);
         console.log(`filter compute: ${(new Date() - startd) / 1000}`);
-        Object.keys(resfiltered).forEach(key => (!resfiltered[key] ? delete resfiltered[key] : {}));
-        return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir)).slice(0, this.displen);
+        return resfiltered;
       }
       return [];
     },
@@ -378,6 +375,14 @@ export default {
         }
       }
       return c;
+    },
+    columnSort(_res) {
+      if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
+        const datesorted = _res.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+        return this.sortDir === -1 ? datesorted : datesorted.reverse();
+      }
+      Object.keys(_res).forEach(key => (!_res[key] ? delete _res[key] : {}));
+      return _res.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
