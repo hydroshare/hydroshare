@@ -225,7 +225,7 @@ export default {
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
-      displen: 50,
+      displen: 40,
       geoloaded: false,
       resloaded: false, // track axios resource data promise after component mount
       googMarkers: [],
@@ -276,56 +276,6 @@ export default {
     datePick: DatePick,
   },
   computed: {
-    // additiveFilteredResources() {
-    //   if (this.resloaded) {
-    //     if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
-    //       return this.resources;
-    //     }
-    //     const resfiltered = [];
-    //     const resAuthors = this.resources.filter(element => this.authorFilter.indexOf(element.author) > -1);
-    //     resAuthors.forEach((item) => {
-    //       if (!resfiltered.includes(item)) {
-    //         resfiltered.push(item);
-    //       }
-    //     });
-    //     const resOwners = this.resources.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
-    //     resOwners.forEach((item) => {
-    //       if (!resfiltered.includes(item)) {
-    //         resfiltered.push(item);
-    //       }
-    //     });
-    //     const resSubjects = this.resources.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
-    //     resSubjects.forEach((item) => {
-    //       if (!resfiltered.includes(item)) {
-    //         resfiltered.push(item);
-    //       }
-    //     });
-    //     const resAvailabilities = this.resources.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
-    //     resAvailabilities.forEach((item) => {
-    //       if (!resfiltered.includes(item)) {
-    //         resfiltered.push(item);
-    //       }
-    //     });
-    //     const resContributors = this.resources.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-    //     resContributors.forEach((item) => {
-    //       if (!resfiltered.includes(item)) {
-    //         resfiltered.push(item);
-    //       }
-    //     });
-    //     const resTypes = this.resources.filter(element => this.typeFilter.indexOf(element.type) > -1);
-    //     resTypes.forEach((item) => {
-    //       if (!resfiltered.includes(item)) {
-    //         resfiltered.push(item);
-    //       }
-    //     });
-    //     if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-    //       const datesorted = resfiltered.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
-    //       return this.sortDir === -1 ? datesorted : datesorted.reverse();
-    //     }
-    //     return resfiltered.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
-    //   }
-    //   return [];
-    // },
     filteredResources() {
       const startd = new Date();
       if (this.resloaded) {
@@ -386,13 +336,9 @@ export default {
     const startd = new Date();
     this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
-    // Object.keys(this.countAuthors).forEach(item => this.authorFilter.push(item));
     this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
-    // Object.keys(this.countOwners).forEach(item => this.ownerFilter.push(item));
     this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
-    // Object.keys(this.countContributors).forEach(item => this.contributorFilter.push(item));
     this.countTypes = this.filterBuilder(this.resources, 'type');
-    // Object.keys(this.countTypes).forEach(item => this.typeFilter.push(item));
 
     let subjectbox = [];
     // res.subject is python list js array
@@ -401,8 +347,6 @@ export default {
     });
     const csubjs = new this.Counter(subjectbox);
     this.countSubjects = Object.fromEntries(Object.entries(csubjs).filter(([k, v]) => v > this.filterlimit));
-    // Object.keys(this.countSubjects).forEach(subject => this.subjectFilter
-    //   .push(subject));
 
     let availabilitybox = [];
     // res.availability is python list js array
@@ -410,8 +354,6 @@ export default {
       availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
     });
     this.countAvailabilities = new this.Counter(availabilitybox);
-    // Object.keys(this.countAvailabilities).forEach(availability => this.availabilityFilter
-    //   .push(availability));
     console.log(`mount filter build: ${(new Date() - startd) / 1000}`);
     if (this.resloaded) { // update causes second mount
       this.loadGeo();
