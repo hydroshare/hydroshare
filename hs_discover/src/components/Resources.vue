@@ -179,7 +179,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="entry in filteredResources.slice(0, this.perpage)" v-bind:key="entry">
+                    <tr v-for="entry in doPager(filteredResources)" v-bind:key="entry">
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -399,6 +399,9 @@ export default {
     Counter(array) {
       // eslint-disable-next-line no-return-assign
       array.forEach(val => this[val] = (this[val] || 0) + 1);
+    },
+    doPager(_res) {
+      return _res.slice(0, this.perpage);
     },
     enumMulti(a) {
       let c = [];
