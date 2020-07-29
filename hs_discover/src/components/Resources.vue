@@ -258,6 +258,7 @@ export default {
         'SWAT Model Instance Resource': '/static/img/resource-icons/swat48x48.png',
         'MODFLOW Model Instance Resource': '/static/img/resource-icons/modflow48x48.png',
         'Multidimensional (NetCDF)': '/static/img/resource-icons/multidimensional48x48.png',
+        'HIS Referenced Time Series': '/static/img/resource-icons/his48x48.png',
       },
       sortMap: {
         'First Author': 'author',
