@@ -292,30 +292,33 @@ def data_store_folder_unzip(request, **kwargs):
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
 
-    try:
+    if request.is_ajax():
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite))
         task_id = task.task_id
         task_dict = get_task_by_id(task_id, name='unzip file', request=request)
         create_task_notification(task_id, name='unzip file', username=request.user.username,
                                  payload=os.path.dirname(zip_with_rel_path))
         return JsonResponse(task_dict)
-    except SessionException as ex:
-        specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
-                       "protection from overwriting existing files. Unzip in a different " \
-                       "location (e.g., folder) or move or rename the file being overwritten. " \
-                       "iRODS error follows: "
-        return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except DRF_ValidationError as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        try:
+            unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite)
+        except SessionException as ex:
+            specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
+                           "protection from overwriting existing files. Unzip in a different " \
+                           "location (e.g., folder) or move or rename the file being overwritten. " \
+                           "iRODS error follows: "
+            return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except DRF_ValidationError as ex:
+            return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    # this unzipped_path can be used for POST request input to data_store_structure()
-    # to list the folder structure after unzipping
-    return_object = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
+        # this unzipped_path can be used for POST request input to data_store_structure()
+        # to list the folder structure after unzipping
+        return_object = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
 
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type="application/json"
-    )
+        return HttpResponse(
+            json.dumps(return_object),
+            content_type="application/json"
+        )
 
 
 @api_view(['POST'])

@@ -38,11 +38,10 @@ $(document).ready(function () {
                     }
                 },
                 "unzip file": {
-                    title: "File Unzip",
+                    title: "File Unzipping",
                     status: {
                         "Pending execution": "Pending...",
                         "In progress": "Unzipping your file...",
-                        "Aborted": "Aborted",
                         "Failed": "Unzip failed",
                         "Delivered": "Unzipping completed"
                     }
