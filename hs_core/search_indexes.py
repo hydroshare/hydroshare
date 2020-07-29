@@ -1,5 +1,9 @@
 """Define search indexes for hs_core module."""
 
+# NOTE: this has been optimized for the current and future discovery pages.
+# Features that are not used have been commented out temporarily
+# and marked as # unused # for future deletion once discovery is revised.
+
 from haystack import indexes
 from hs_core.models import BaseResource
 from hs_geographic_feature_resource.models import GeographicFeatureMetaData
@@ -145,7 +149,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True, stored=False)
     author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    # author_raw = indexes.CharField(indexed=False)  # not normalized
+    # unused # author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
     abstract = indexes.CharField(stored=False)
@@ -158,9 +162,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     created = indexes.DateTimeField(model_attr='created')
     modified = indexes.DateTimeField(model_attr='last_updated')
     organization = indexes.MultiValueField(stored=False)
-    creator_email = indexes.MultiValueField(stored=False)
+    # unused # creator_email = indexes.MultiValueField(stored=False)
     publisher = indexes.CharField(stored=False)
-    rating = indexes.IntegerField(model_attr='rating_sum',stored=False)
+    # deprecated # rating = indexes.IntegerField(model_attr='rating_sum', stored=False)
     coverage = indexes.MultiValueField()
     coverage_type = indexes.MultiValueField(stored=False)
     # TODO: these are duplicated in the coverage field.
@@ -187,10 +191,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     resource_type = indexes.CharField(faceted=True)
     content_type = indexes.MultiValueField(faceted=True)
     comment = indexes.MultiValueField(stored=False)
-    comments_count = indexes.IntegerField(stored=False)
+    # deprecated # comments_count = indexes.IntegerField(stored=False)
     owner_login = indexes.MultiValueField(stored=False)
     owner = indexes.MultiValueField(faceted=True, stored=False)
-    owners_count = indexes.IntegerField(stored=False)
+    # deprecated # owners_count = indexes.IntegerField(stored=False)
     # # TODO: We might need these later for social discovery
     # viewer_login = indexes.MultiValueField(faceted=True)
     # viewer = indexes.MultiValueField(faceted=True)
@@ -217,11 +221,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     sample_medium = indexes.MultiValueField(stored=False)
     units = indexes.MultiValueField(stored=False)
     units_type = indexes.MultiValueField(stored=False)
-    aggregation_statistics = indexes.MultiValueField(stored=False)
+    # unused # aggregation_statistics = indexes.MultiValueField(stored=False)
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
-    extra = indexes.MultiValueField(stored=False)
+    # unused # extra = indexes.MultiValueField(stored=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -257,26 +261,26 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_author_raw(self, obj):
-        """
-        Return metadata author if exists, otherwise return None.
+    # unused # def prepare_author_raw(self, obj):
+    # unused #     """
+    # unused #     Return metadata author if exists, otherwise return None.
 
-        This must be represented as a single-value field to enable sorting.
-        """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator is None:
-                return 'none'
-            elif first_creator.name:
-                return first_creator.name.lstrip()
-            elif first_creator.organization:
-                return first_creator.organization.strip()
-            else:
-                return 'none'
-        else:
-            return 'none'
+    # unused #     This must be represented as a single-value field to enable sorting.
+    # unused #     """
+    # unused #     if hasattr(obj, 'metadata') and \
+    # unused #             obj.metadata is not None and \
+    # unused #             obj.metadata.creators is not None:
+    # unused #         first_creator = obj.metadata.creators.filter(order=1).first()
+    # unused #         if first_creator is None:
+    # unused #             return 'none'
+    # unused #         elif first_creator.name:
+    # unused #             return first_creator.name.lstrip()
+    # unused #         elif first_creator.organization:
+    # unused #             return first_creator.organization.strip()
+    # unused #         else:
+    # unused #             return 'none'
+    # unused #     else:
+    # unused #         return 'none'
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -389,15 +393,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_creator_email(self, obj):
-        """Return metadata emails if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            return [creator.email.strip() for creator in obj.metadata.creators.all()
-                    .exclude(email__isnull=True).exclude(email='')]
-        else:
-            return []
+    # unused # def prepare_creator_email(self, obj):
+    # unused #     """Return metadata emails if exists, otherwise return empty array."""
+    # unused #     if hasattr(obj, 'metadata') and \
+    # unused #             obj.metadata is not None and \
+    # unused #             obj.metadata.creators is not None:
+    # unused #         return [creator.email.strip() for creator in obj.metadata.creators.all()
+    # unused #                 .exclude(email__isnull=True).exclude(email='')]
+    # unused #     else:
+    # unused #         return []
 
     def prepare_availability(self, obj):
         """
@@ -704,9 +708,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return list of all comments on resource."""
         return [comment.comment.strip() for comment in obj.comments.all()]
 
-    def prepare_comments_count(self, obj):
-        """Return count of resource comments."""
-        return obj.comments_count
+    # deprecated # def prepare_comments_count(self, obj):
+    # deprecated #     """Return count of resource comments."""
+    # deprecated #     return obj.comments_count
 
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
@@ -747,12 +751,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                        .exclude(name__isnull=True).exclude(name='')]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
 
-    def prepare_owners_count(self, obj):
-        """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
-        if hasattr(obj, 'raccess'):
-            return obj.raccess.owners.all().count()
-        else:
-            return 0
+    # deprecated # def prepare_owners_count(self, obj):
+    # deprecated #     """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
+    # deprecated #     if hasattr(obj, 'raccess'):
+    # deprecated #         return obj.raccess.owners.all().count()
+    # deprecated #     else:
+    # deprecated #         return 0
 
     # # TODO: We might need these later for social discovery
     # def prepare_viewer_login(self, obj):
@@ -1032,25 +1036,25 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                         units_types.append(time_series_result.units_type.strip())
         return units_types
 
-    def prepare_aggregation_statistics(self, obj):
-        """
-        Return list of aggregation statistics if exists, otherwise return empty array.
-        """
-        aggregation_statistics = []
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
-                    if time_series_result.aggregation_statistics is not None:
-                        aggregation_statistics.append(time_series_result.aggregation_statistics)
-        return aggregation_statistics
+    # unused # def prepare_aggregation_statistics(self, obj):
+    # unused #     """
+    # unused #     Return list of aggregation statistics if exists, otherwise return empty array.
+    # unused #     """
+    # unused #     aggregation_statistics = []
+    # unused #     if hasattr(obj, 'metadata'):
+    # unused #         if isinstance(obj.metadata, TimeSeriesMetaData):
+    # unused #             for time_series_result in obj.metadata.time_series_results:
+    # unused #                 if time_series_result.aggregation_statistics is not None:
+    # unused #                     aggregation_statistics.append(time_series_result.aggregation_statistics)
+    # unused #     return aggregation_statistics
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""
         return obj.get_absolute_url()
 
-    def prepare_extra(self, obj):
-        """ For extra metadata, include both key and value """
-        extra = []
-        for key, value in list(obj.extra_metadata.items()):
-            extra.append(key + ': ' + value)
-        return extra
+    # unused # def prepare_extra(self, obj):
+    # unused #     """ For extra metadata, include both key and value """
+    # unused #     extra = []
+    # unused #     for key, value in list(obj.extra_metadata.items()):
+    # unused #         extra.append(key + ': ' + value)
+    # unused #     return extra
