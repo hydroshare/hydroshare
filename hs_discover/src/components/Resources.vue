@@ -1,6 +1,7 @@
 <template>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
+            <input type="number" v-model="pagenum">
             Page: {{pagenum}} of {{Math.ceil(filteredResources.length / perpage)}}
             Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
             <!-- toggleMap defined in map.js -->
@@ -401,7 +402,10 @@ export default {
       array.forEach(val => this[val] = (this[val] || 0) + 1);
     },
     doPager(_res) {
-      return _res.slice(0, this.perpage);
+      // return _res.slice(0, this.perpage);
+      const startx = (this.pagenum - 1) * this.perpage;
+      console.log(startx);
+      return _res.slice(startx, startx + this.perpage);
     },
     enumMulti(a) {
       let c = [];
