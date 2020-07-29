@@ -13,13 +13,13 @@
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 data-toggle="tooltip" title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
-                                class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#dateselectors" role="button" aria-expanded="false" aria-controls="dateselectors"></i>
-                                Temporal Coverage</h4>
+                        <div id="headingDate" class="panel-heading">
+                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
+                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
+                                Temporal Coverage</a>
+                            </h4>
                         </div>
-                        <div id="dateselectors" class="facet-list panel-collapse collapse in">
+                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
                             <date-pick
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
@@ -34,12 +34,12 @@
                 <!-- filter by author -->
                 <div id="faceting-creator">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#creator" role="button" aria-expanded="false" aria-controls="creator"></i>
-                                Filter by Author</h4>
+                        <div id="headingAuthor" class="panel-heading">
+                            <h4 class="panel-title"><a data-toggle="collapse" href="#creator" aria-expanded="true" aria-controls="creator">
+                                Filter by Author</a>
+                            </h4>
                         </div>
-                        <div id="creator" class="facet-list panel-collapse collapse in">
+                        <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">
                             <ul class="list-group" id="list-group-creator">
                                 <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="author">
@@ -55,12 +55,12 @@
                 <!-- filter by owner -->
                 <div id="faceting-owner">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#owner" role="button" aria-expanded="false" aria-controls="owner"></i>
-                                Filter by Owner</h4>
+                        <div id="headingOwner" class="panel-heading">
+                            <h4 class="panel-title"><a data-toggle="collapse" href="#owner" aria-expanded="true" aria-controls="owner">
+                                Filter by Owner</a>
+                            </h4>
                         </div>
-                        <div id="owner" class="facet-list panel-collapse collapse in">
+                        <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">
                             <ul class="list-group" id="list-group-owner">
                                 <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="owner">
@@ -77,12 +77,12 @@
                 <!-- filter by subject -->
                 <div id="faceting-subject">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#subject" role="button" aria-expanded="false" aria-controls="subject"></i>
-                                Filter by Subject</h4>
+                        <div id="headingSubject" class="panel-heading">
+                            <h4 class="panel-title"><a data-toggle="collapse" href="#subject" aria-expanded="true" aria-controls="subject">
+                                Filter by Subject</a>
+                            </h4>
                         </div>
-                        <div id="subject" class="facet-list panel-collapse collapse in">
+                        <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">
                             <ul class="list-group" id="list-group-subject">
                                 <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="subject">
@@ -99,12 +99,12 @@
                 <!-- filter by contributor -->
                 <div id="faceting-contributor">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#contributor" role="button" aria-expanded="false" aria-controls="contributor"></i>
-                                Filter by Contributor</h4>
+                        <div id="headingContributor" class="panel-heading">
+                            <h4 class="panel-title"><a data-toggle="collapse" href="#contributor" aria-expanded="true" aria-controls="contributor">
+                                Filter by Contributor</a>
+                            </h4>
                         </div>
-                        <div id="contributor" class="facet-list panel-collapse collapse in">
+                        <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">
                             <ul class="list-group" id="list-group-contributor">
                                 <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
                                     v-bind:key="contributor">
@@ -121,12 +121,12 @@
                 <!-- filter by type -->
                 <div id="faceting-type">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#type" role="button" aria-expanded="false" aria-controls="type"></i>
-                                Filter by Type</h4>
+                        <div id="headingType" class="panel-heading">
+                            <h4 class="panel-title"><a data-toggle="collapse" href="#type" aria-expanded="true" aria-controls="type">
+                                Filter by Type</a>
+                            </h4>
                         </div>
-                        <div id="type" class="facet-list panel-collapse collapse in">
+                        <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">
                             <ul class="list-group" id="list-group-type">
                                 <li class="list-group-item" v-for="(type) in Object.keys(countTypes).sort()"
                                     v-bind:key="type">
@@ -143,12 +143,12 @@
                 <!-- filter by availability -->
                 <div id="faceting-availability">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <i class="fa fa-window-minimize" aria-hidden="true" data-toggle="collapse" href="#availability" role="button" aria-expanded="false" aria-controls="availability"></i>
-                                Filter by Availability</h4>
+                        <div id="headingAvailability" class="panel-heading">
+                            <h4 class="panel-title"><a data-toggle="collapse" href="#availability" aria-expanded="true" aria-controls="availability">
+                                Filter by Availability</a>
+                            </h4>
                         </div>
-                        <div id="availability" class="facet-list panel-collapse collapse in">
+                        <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">
                             <ul class="list-group" id="list-group-availability">
                                 <li class="list-group-item"
                                     v-for="(availability) in Object.keys(countAvailabilities).sort()"
@@ -173,7 +173,7 @@
                     class="table-hover table-striped resource-custom-table" id="items-discovered">
                     <thead>
                         <tr>
-                            <th v-for="key in labels" v-bind:key="key"
+                            <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
                                 @click="sortBy(key)">
                                 <i :class="sortStyling(key)"></i>{{key}}
                             </th>
@@ -489,6 +489,22 @@ export default {
 </script>
 
 <style scoped>
+    @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
+    .panel-title > a:before {
+        float: left !important;
+        font-family: FontAwesome;
+        content:"\f068";
+        padding-right: 5px;
+    }
+    .panel-title > a.collapsed:before {
+        float: left !important;
+        content:"\f067";
+    }
+    .panel-title > a:hover,
+    .panel-title > a:active,
+    .panel-title > a:focus  {
+        text-decoration:none;
+    }
     #filter-items {
         /* ensure collapse without overlap */
         width: 235px;
