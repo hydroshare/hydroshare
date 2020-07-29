@@ -37,6 +37,16 @@ $(document).ready(function () {
                         "Delivered": "Download delivered"
                     }
                 },
+                "unzip file": {
+                    title: "File Unzip",
+                    status: {
+                        "Pending execution": "Pending...",
+                        "In progress": "Unzipping your file...",
+                        "Aborted": "Aborted",
+                        "Failed": "Unzip failed",
+                        "Delivered": "Unzipping completed"
+                    }
+                },
                 "zip download": {
                     title: "File download",
                     status: {

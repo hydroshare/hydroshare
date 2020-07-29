@@ -842,10 +842,10 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
             zip_with_rel_path: zip_with_rel_path,
             remove_original_zip: "false"
         },
-        success: function (result) {
+        success: function (task) {
+            task = JSON.parse(task)
             notificationsApp.registerTask(task);
             notificationsApp.show();
-            $(event.currentTarget).toggleClass("disabled", false);
         },
         error: function (xhr, errmsg, err) {
             display_error_message('File Unzipping Failed', xhr.responseText);
