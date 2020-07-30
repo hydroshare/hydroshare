@@ -152,11 +152,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # unused # author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
-    abstract = indexes.CharField(stored=False)
-    creator = indexes.MultiValueField(faceted=True)
+    abstract = indexes.CharField()
+    creator = indexes.MultiValueField(faceted=True, stored=False)
     contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
     availability = indexes.MultiValueField(faceted=True)
+    shareable = indexes.BooleanField(stored=False)
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField(stored=False)
     created = indexes.DateTimeField(model_attr='created')
@@ -165,17 +166,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # unused # creator_email = indexes.MultiValueField(stored=False)
     publisher = indexes.CharField(stored=False)
     # deprecated # rating = indexes.IntegerField(model_attr='rating_sum', stored=False)
-    coverage = indexes.MultiValueField()
-    coverage_type = indexes.MultiValueField(stored=False)
+    coverage = indexes.MultiValueField(indexed=False)
+    coverage_type = indexes.MultiValueField()
     # TODO: these are duplicated in the coverage field.
-    east = indexes.FloatField(null=True, stored=False)
-    north = indexes.FloatField(null=True, stored=False)
-    northlimit = indexes.FloatField(null=True, stored=False)
-    eastlimit = indexes.FloatField(null=True, stored=False)
-    southlimit = indexes.FloatField(null=True, stored=False)
-    westlimit = indexes.FloatField(null=True, stored=False)
-    start_date = indexes.DateField(null=True, stored=False)
-    end_date = indexes.DateField(null=True, stored=False)
+    east = indexes.FloatField(null=True)
+    north = indexes.FloatField(null=True)
+    northlimit = indexes.FloatField(null=True)
+    eastlimit = indexes.FloatField(null=True)
+    southlimit = indexes.FloatField(null=True)
+    westlimit = indexes.FloatField(null=True)
+    start_date = indexes.DateField(null=True)
+    end_date = indexes.DateField(null=True)
     storage_type = indexes.CharField(stored=False)
 
     # # TODO: SOLR extension needs to be installed for these to work
@@ -226,6 +227,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     # extra metadata
     # unused # extra = indexes.MultiValueField(stored=False)
+
+    # json field for discovery
+    # json = indexes.CharField(use_template=True, indexed=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -422,6 +426,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             options.append('private')
         return options
+
+    def prepare_shareable(self, obj):
+        """ used in depicting results """
+        return obj.raccess.shareable
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
