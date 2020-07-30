@@ -61,6 +61,7 @@ $(document).ready(function () {
                     status: {
                         "Pending execution": "Pending...",
                         "In progress": "Resource copy in progress...",
+                        "Aborted": "Aborted",
                         "Failed": "Resource copy failed",
                         "Delivered": "Resource copy delivered"
                     }
