@@ -10,6 +10,7 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
+from django.contrib.auth.models import User
 
 from rest_framework import status
 
@@ -601,7 +602,7 @@ def create_resource(
     return resource
 
 
-def create_empty_resource(pk, user, action='version'):
+def create_empty_resource(pk, user_or_username, action='version'):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
     This empty resource object is then used to create metadata and content from its original
@@ -616,6 +617,10 @@ def create_empty_resource(pk, user, action='version'):
         resource which is then further populated with metadata and content in a subsequent step.
     """
     res = utils.get_resource_by_shortkey(pk)
+    if isinstance(user_or_username, User):
+        user = user_or_username
+    else:
+        user = User.objects.get(username=user_or_username)
     if action == 'version':
         if not user.uaccess.owns_resource(res):
             raise PermissionDenied('Only resource owners can create new versions')
@@ -656,21 +661,11 @@ def copy_resource(ori_res, new_res, user=None):
     """
 
     # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
-
-    utils.copy_and_create_metadata(ori_res, new_res)
-
-    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    if hs_identifier:
-        new_res.metadata.create_element('source', derived_from=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create bag for the new resource
-    hs_bagit.create_bag(new_res)
+    from hs_core.tasks import copy_resource_task
+    if user:
+        copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
+    else:
+        copy_resource_task(ori_res.short_id, new_res.short_id)
     return new_res
 
 

@@ -49,7 +49,7 @@ from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id, dismiss_task_by_id, \
     set_task_delivered_by_id, create_task_notification, get_resource_delete_task
-from hs_core.tasks import delete_resource_task
+from hs_core.tasks import delete_resource_task, copy_resource_task
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -713,10 +713,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
     task_id = get_resource_delete_task(shortkey)
     if not task_id:
-        task = delete_resource_task.apply_async((shortkey, request.user.username))
+        task = delete_resource_task.apply_async((shortkey, user.username))
         task_id = task.task_id
         task_dict = get_task_by_id(task_id, name='resource delete', payload=shortkey, request=request)
-        create_task_notification(task_id, name='resource delete', payload=shortkey, username=request.user.username)
+        create_task_notification(task_id, name='resource delete', payload=shortkey, username=user.username)
     else:
         task_dict = get_task_by_id(task_id, name='resource delete', payload=shortkey, request=request)
         return JsonResponse(task_dict)
@@ -775,20 +775,18 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    new_resource = None
-    try:
-        new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource, user=request.user)
-    except Exception as ex:
-        if new_resource:
-            new_resource.delete()
-        request.session['resource_creation_error'] = 'Failed to copy this resource: ' + str(ex)
-        return HttpResponseRedirect(res.get_absolute_url())
-
-    # go to resource landing page
-    request.session['just_created'] = True
-    request.session['just_copied'] = True
-    return HttpResponseRedirect(new_resource.get_absolute_url())
+    if request.is_ajax():
+        task = copy_resource_task.apply_async((shortkey, None, user.username))
+        task_id = task.task_id
+        task_dict = get_task_by_id(task_id, name='resource copy', payload=shortkey, request=request)
+        create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
+        return JsonResponse(task_dict)
+    else:
+        try:
+            response_url = copy_resource_task(shortkey, new_res_id=None, request_username=user.username)
+            return HttpResponseRedirect(response_url)
+        except utils.ResourceCopyException:
+            return HttpResponseRedirect(res.get_absolute_url())
 
 
 @api_view(['POST'])

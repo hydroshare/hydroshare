@@ -60,9 +60,18 @@ $(document).ready(function () {
                     title: "Resource delete",
                     status: {
                         "Pending execution": "Pending...",
-                        "In progress": "Getting your resource ready for deletion...",
+                        "In progress": "Resource deletion in progress...",
                         "Failed": "Resource deletion failed",
                         "Delivered": "Resource deletion delivered"
+                    }
+                },
+                "resource copy": {
+                    title: "Resource copy",
+                    status: {
+                        "Pending execution": "Pending...",
+                        "In progress": "Resource copy in progress...",
+                        "Failed": "Resource copy failed",
+                        "Delivered": "Resource copy delivered"
                     }
                 }
             },
@@ -258,6 +267,12 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource delete":
+                        // Check if resource delete is finished
+                        if (task.status === "Completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource copy":
                         // Check if resource delete is finished
                         if (task.status === "Completed" && task.payload) {
                             vue.deliverTask(task);
