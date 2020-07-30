@@ -420,7 +420,7 @@ export default {
     },
     ellip(input) {
       if (input) {
-        return input.length > 200 ? `${input.substring(0, 200)}...` : input;
+        return input.length > 500 ? `${input.substring(0, 500)}...` : input;
       }
       return '';
     },

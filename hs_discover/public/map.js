@@ -89,11 +89,12 @@
       const marker = new google.maps.Marker({
         map: exports.map,
         position: location,
-        title: labels[k % labels.length],
+        // title: labels[k % labels.length],
       });
-      infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
+      const _infowindow = new google.maps.InfoWindow();
+      _infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
       marker.addListener('click', () => {
-        infowindow.open(exports.map, marker);
+        _infowindow.open(exports.map, marker);
       });
       return marker;
     });
@@ -137,6 +138,11 @@
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     // const mapLegend = createLegend();
     const searchBox = createSearcher();
+
+//     for(var i = 0; i < markers.length; i++){ // looping through my Markers Collection
+// if(bounds.contains(markers[i].position))
+//  console.log("Marker"+ i +" - matched");
+// }
   };
   exports.initMap = initMap; // eslint-disable-line
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
