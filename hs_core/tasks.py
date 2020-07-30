@@ -593,10 +593,11 @@ def resource_debug(resource_id):
     from hs_core.management.utils import check_irods_files
     return check_irods_files(resource, log_errors=False, return_errors=True)
 
+
 @shared_task
 def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
-    user = User.objects.get(pk=user_pk)
     from hs_core.views.utils import unzip_file
+    user = User.objects.get(pk=user_pk)
     unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite)
 
 

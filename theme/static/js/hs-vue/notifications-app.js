@@ -37,7 +37,7 @@ $(document).ready(function () {
                         "Delivered": "Download delivered"
                     }
                 },
-                "unzip file": {
+                "file unzip": {
                     title: "File Unzipping",
                     status: {
                         "Pending execution": "Pending...",
