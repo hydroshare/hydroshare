@@ -706,7 +706,8 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
 TASK_NAME_MAPPING = {
     'hs_core.tasks.create_bag_by_irods': 'bag download',
     'hs_core.tasks.create_temp_zip': 'zip download',
-    'hs_core.tasks.delete_resource_task': 'resource delete'
+    'hs_core.tasks.delete_resource_task': 'resource delete',
+    'hs_core.tasks.copy_resource_task': 'resource copy',
 }
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

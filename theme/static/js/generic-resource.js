@@ -279,6 +279,36 @@ $(document).ready(function () {
             $('#download-file-btn').attr('disabled', 'disabled');
     });
 
+    function checkCopyResourceTask(task) {
+        out_task = notificationsApp.getUpdatedTask(task);
+        if (out_task.status === 'Completed' || out_task.status === 'Delivered')
+            window.location.href = task.payload;
+        else
+            setTimeout(function() {
+                        checkCopyResourceTask(task);
+                    }, 1000);
+    }
+
+    $("#copy-btn").on('click', function(e) {
+        e.stopImmediatePropagation();
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/copy-resource/",
+            success: function (task) {
+                $('#copy-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+                setTimeout(function() {
+                        checkCopyResourceTask(task);
+                    }, 1000);
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to copy the resource', xhr.responseText);
+                $('#copy-resource-dialog').modal('hide');
+            }
+        })
+    });
+
     function checkDeleteResourceTask(task) {
         out_task = notificationsApp.getUpdatedTask(task);
         if (out_task.status === 'Completed' || out_task.status === 'Delivered')

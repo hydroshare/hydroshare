@@ -21,8 +21,8 @@ from django.db import transaction
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.hydroshare import utils, create_empty_resource
+from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from hs_odm2.models import ODM2Variable
@@ -529,6 +529,37 @@ def delete_resource_task(resource_id, request_username=None):
                 o.resource_owners.add(*owners_list)
 
     return resource_id
+
+
+@shared_task
+def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
+    try:
+        new_res = None
+        if not new_res_id:
+            new_res = create_empty_resource(ori_res_id, request_username, action='copy')
+            new_res_id = new_res.short_id
+        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
+        if not new_res:
+            new_res = utils.get_resource_by_shortkey(new_res_id)
+        utils.copy_and_create_metadata(ori_res, new_res)
+
+        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        if hs_identifier:
+            new_res.metadata.create_element('source', derived_from=hs_identifier.url)
+
+        if ori_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new collection will not contain "deleted resources"
+            new_res.resources = ori_res.resources.all()
+
+        # create bag for the new resource
+        create_bag(new_res)
+        return new_res.get_absolute_url()
+    except Exception as ex:
+        if new_res:
+            new_res.delete()
+        raise utils.ResourceCopyException(str(ex))
 
 
 @shared_task
