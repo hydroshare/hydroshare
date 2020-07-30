@@ -1,8 +1,7 @@
 <template>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
-            <input type="number" v-model="pagenum">
-            Page: {{pagenum}} of {{Math.ceil(filteredResources.length / perpage)}}
+            Page: <input type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
             Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
             <!-- toggleMap defined in map.js -->
             <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap">
@@ -16,7 +15,7 @@
                         <div id="headingDate" class="panel-heading">
                             <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
                                 class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
-                                Temporal Coverage</a>
+                                Filter by Date</a>
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">

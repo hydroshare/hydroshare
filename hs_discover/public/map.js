@@ -1,7 +1,6 @@
 ((exports) => {
   const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
   // eslint-disable-next-line no-unused-vars
-  let infowindow;
   let googMarkers = [];
   let markerCluster;
 
@@ -91,10 +90,10 @@
         position: location,
         // title: labels[k % labels.length],
       });
-      const _infowindow = new google.maps.InfoWindow();
-      _infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
+      const infowindow = new google.maps.InfoWindow();
+      infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
       marker.addListener('click', () => {
-        _infowindow.open(exports.map, marker);
+        infowindow.open(exports.map, marker);
       });
       return marker;
     });
@@ -103,29 +102,11 @@
     document.body.style.cursor = 'default';
   };
 
-  const createMarker = (loc, title) => {
-    const addmarker = new google.maps.Marker({
-      // icon: './images/pin.png',
-      // zIndex: i,
-      map: exports.map,
-      position: loc,
-    });
-    google.maps.event.addListener(addmarker, 'mouseover', function () {
-      infowindow.setContent(title);
-      infowindow.open(exports.map, this);
-    });
-    google.maps.event.addListener(addmarker, 'mouseout', () => {
-      infowindow.close();
-    });
-    googMarkers.push(addmarker);
-  };
-
   const toggleMap = () => {
     document.getElementById('map-view').style.display = document.getElementById('map-view').style.display === 'block' ? 'none' : 'block';
   };
 
   const initMap = () => {
-    infowindow = new google.maps.InfoWindow();
     // eslint-disable-next-line no-param-reassign
     exports.map = new google.maps.Map(document.getElementById('map'), {
       center: {
