@@ -130,12 +130,14 @@ def get_collectable_resources(user, coll_resource, annotate=True):
     # 2) shareable=True and resource is accessible with view privilege, --or--
     # 2) current user owns the resource.
     # Also exclude this resource as well as resources already in the collection
-    # Start with both my resources and annexed public resources
+    # Start with both my resources and favorited public resources; so no need to
+    # check that user can view resources.
     return get_my_resources_list(user, annotate) \
-        .filter(Q(raccess__shareable=True) |  # shareable and public or viewable, --or--
+        .filter(Q(raccess__shareable=True) |  # shareable and viewable, --or--
+                Q(raccess__discoverable=True) |  # discoverable, public, and/or published --or--
                 Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
-        .exclude(id__in=coll_resource.resources.values_list("id", flat=True))
+        .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
 
 
 def _get_owners_string(owners_list):
