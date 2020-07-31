@@ -166,6 +166,7 @@ class ResourceFileSerializer(serializers.Serializer):
     content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
     logical_file_type = serializers.CharField(max_length=255)
     modified_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S")
+    checksum = serializers.CharField(max_length=100)
 
 
 class GroupPrivilegeSerializer(serializers.Serializer):
@@ -235,7 +236,8 @@ ResourceFileItem = namedtuple('ResourceFileItem',
                                'size',
                                'content_type',
                                'logical_file_type',
-                               'modified_time'])
+                               'modified_time',
+                               'checksum'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):

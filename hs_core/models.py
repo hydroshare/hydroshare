@@ -155,6 +155,8 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
+    if not hasattr(request, 'user'):
+        raise PermissionDenied
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
@@ -2793,6 +2795,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def modified_time(self):
         return self.resource_file.storage.get_modified_time(self.resource_file.name)
+
+    @property
+    def checksum(self):
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
 
     # TODO: write unit test
     @property
