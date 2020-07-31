@@ -226,7 +226,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
-    # unused # extra = indexes.MultiValueField(stored=False)
+    extra = indexes.MultiValueField(stored=False)
 
     # json field for discovery
     # json = indexes.CharField(use_template=True, indexed=False)
@@ -1060,9 +1060,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return absolute URL of object."""
         return obj.get_absolute_url()
 
-    # unused # def prepare_extra(self, obj):
-    # unused #     """ For extra metadata, include both key and value """
-    # unused #     extra = []
-    # unused #     for key, value in list(obj.extra_metadata.items()):
-    # unused #         extra.append(key + ': ' + value)
-    # unused #     return extra
+    def prepare_extra(self, obj):
+        """ For extra metadata, include both key and value """
+        extra = []
+        for key, value in list(obj.extra_metadata.items()):
+            extra.append(key + ': ' + value)
+        return extra
