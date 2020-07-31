@@ -1,4 +1,5 @@
 from django.core.files.storage import  FileSystemStorage
+from hs_core.models import DjangoAVU
 import os, tarfile, shutil, errno
 from pprint import pprint
 
