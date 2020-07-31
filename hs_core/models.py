@@ -110,6 +110,8 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
+    if not hasattr(request, 'user'):
+        raise PermissionDenied
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
