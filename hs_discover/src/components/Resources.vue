@@ -2,11 +2,10 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
-            Page: <input type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}<br/><br/>
+            Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}<br/><br/>
             <!-- toggleMap defined in map.js -->
-            <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap">
-<!--            <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">-->
+            <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
+            <input type="button" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="setAllMarkers">
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -221,16 +220,18 @@ export default {
   data() {
     return {
       geodata: [],
-      filterlimit: 10,
+      filterlimit: 10, // Minimum threshold for filter item to display with checkbox
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
       filteredcount: 0,
-      perpage: 40,
-      pagenum: 1,
-      geoloaded: false,
+      perpage: 40, // resources per page
+      pagenum: 1, // initial page number to show
+      geoloaded: false, // searchjson endpoint called and retrieved geo data
       resloaded: false, // track axios resource data promise after component mount
       googMarkers: [],
+      countMap: {},
+      mapFilter: [],
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
@@ -444,11 +445,13 @@ export default {
       }
     },
     setAllMarkers() {
-      deleteMarkers();
-      console.log(`num filtered res: ${this.filteredResources.length}`);
-      const shids = this.filteredResources.map(x => x.short_id);
-      const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-      this.renderMap(geopoints);
+      if (document.getElementById('map-view').style.display === 'block') {
+        deleteMarkers();
+        console.log(`num filtered res: ${this.filteredResources.length}`);
+        const shids = this.filteredResources.map(x => x.short_id);
+        const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        this.renderMap(geopoints);
+      }
     },
     loadGeo() {
       const startd = new Date();
@@ -472,6 +475,11 @@ export default {
           console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
           this.geoloaded = false;
         });
+    },
+    liveMapFilter() {
+      if (document.getElementById('map-view').style.display === 'block') {
+        console.log('hi');
+      }
     },
     renderMapSingle(pts) {
       pts.forEach((pt) => {

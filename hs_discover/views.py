@@ -7,11 +7,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 
+
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
 
         return render(request, 'hs_discover/index.html', {})
+
 
 class SearchAPI(APIView):
 

@@ -92,7 +92,7 @@
   const createBatchMarkers = (locations, links, labels) => {
     document.body.style.cursor = 'wait';
     googMarkers = locations.map(function (location, k) {
-      if (validLatLng(location)) {
+      try {
         const marker = new google.maps.Marker({
           map: exports.map,
           position: location,
@@ -104,6 +104,8 @@
           infowindow.open(exports.map, marker);
         });
         return marker;
+      } catch (err) {
+        console.log(`Invalid geographic data resource: ${labels[k % labels.length]} location: ${location} | ${err}`);
       }
     });
     markerCluster = new MarkerClusterer(exports.map, googMarkers,
@@ -123,6 +125,7 @@
         lng: -71,
       },
       zoom: mapDefaultZoom,
+      maxZoom: 13,
       mapTypeId: google.maps.MapTypeId.TERRAIN,
     });
     // https://stackoverflow.com/questions/29869261/google-map-search-box
