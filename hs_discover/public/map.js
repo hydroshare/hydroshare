@@ -82,20 +82,29 @@
     return legend;
   };
 
+  const validLatLng = (loc) => {
+    if (Number.isNaN(loc.lat) || Number.isNaN(loc.lng)) {
+      return false;
+    }
+    return true;
+  };
+
   const createBatchMarkers = (locations, links, labels) => {
     document.body.style.cursor = 'wait';
     googMarkers = locations.map(function (location, k) {
-      const marker = new google.maps.Marker({
-        map: exports.map,
-        position: location,
-        // title: labels[k % labels.length],
-      });
-      const infowindow = new google.maps.InfoWindow();
-      infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
-      marker.addListener('click', () => {
-        infowindow.open(exports.map, marker);
-      });
-      return marker;
+      if (validLatLng(location)) {
+        const marker = new google.maps.Marker({
+          map: exports.map,
+          position: location,
+          // title: labels[k % labels.length],
+        });
+        const infowindow = new google.maps.InfoWindow();
+        infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
+        marker.addListener('click', () => {
+          infowindow.open(exports.map, marker);
+        });
+        return marker;
+      }
     });
     markerCluster = new MarkerClusterer(exports.map, googMarkers,
       { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
