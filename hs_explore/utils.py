@@ -46,27 +46,24 @@ def user_resource_matrix(fromdate, todate):
         :param fromdate (date type), the start date of the time period
         :param todate (date, type), the end date of the time period
     """
-    users = User.objects.filter(
+    user_ids = User.objects.filter(
         visitor__session__variable__timestamp__gte=fromdate,
         visitor__session__variable__timestamp__lte=todate)\
-            .distinct()
-    events = []
-    for u in users:
-        resources = BaseResource.objects.filter(
-                variable__timestamp__gte=fromdate,
-                variable__timestamp__lte=todate,
-                variable__session__visitor__user=u)
-        for r in resources:
-            latest = Variable.objects.filter(
-                    resource=r,
-                    session__visitor__user=u,
-                    timestamp__gte=fromdate,
-                    timestamp__lte=todate)\
-                    .aggregate(latest=Max('timestamp'))
+            .distinct().values_list("pk", flat=True)
 
-            events.append((u.username, r.short_id, latest['latest']))
+    res_ids = BaseResource.objects.filter(
+            variable__timestamp__gte=fromdate,
+            variable__timestamp__lte=todate,
+            variable__session__visitor__user__id__in=user_ids).values_list("pk", flat=True)
 
-    return events
+    latest = Variable.objects.filter(
+                            resource__id__in=res_ids,
+                            session__visitor__user__id__in=user_ids,
+                            timestamp__gte=fromdate,
+                            timestamp__lte=todate)
+    grouped = latest.values('session__visitor__user__username', 'resource__short_id')
+    grouped_with_latest = grouped.annotate(latest=Max('timestamp'))
+    return grouped_with_latest.values_list('session__visitor__user__username', 'resource__short_id', 'latest')
 
 
 def get_resource_to_subjects():
@@ -127,24 +124,13 @@ def get_users_interacted_resources(beginning, today):
         :return usernames, a set of all active users' usernames
     """
     all_usernames = set()
-    user_to_resources_set = defaultdict(set)
+    user_to_resources = defaultdict(list)
     triples = user_resource_matrix(beginning, today)
     for v in triples:
         username = v[0]
         res = v[1]
         all_usernames.add(username)
-        user_to_resources_set[username].add(res)
-    user_to_resources = defaultdict(list)
-    for username, res_ids_set in user_to_resources_set.items():
-        res_ids_list = list(res_ids_set)
-        user_to_resources[username] = list(res_ids_set)
-        res_list = []
-        for res_id in res_ids_list:
-            try:
-                r = get_resource_by_shortkey(res_id)
-                res_list.append(r)
-            except:
-                continue
+        user_to_resources[username].append(res)
     return user_to_resources, all_usernames
 
 
