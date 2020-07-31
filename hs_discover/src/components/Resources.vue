@@ -1,11 +1,12 @@
 <template>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
-            Page: <input type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
+            <br/>
             Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
+            Page: <input type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}<br/><br/>
             <!-- toggleMap defined in map.js -->
             <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap">
-            <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">
+<!--            <input type="button" class="mapdisp" value="Update Map" :disabled="!geoloaded" v-on:click="setAllMarkers">-->
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -44,7 +45,7 @@
                                     v-bind:key="author">
                                     <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
                                     <input type="checkbox" :value="author" class="faceted-selections"
-                                        v-model="authorFilter" :id="'author-'+author">
+                                        v-model="authorFilter" :id="'author-'+author" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -66,7 +67,7 @@
                                     <span class="badge">{{countOwners[owner]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
                                         <input type="checkbox" class="faceted-selections" :value=owner
-                                            v-model="ownerFilter" :id="'owner-'+owner">
+                                            v-model="ownerFilter" :id="'owner-'+owner" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -88,7 +89,7 @@
                                     <span class="badge">{{countSubjects[subject]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
                                         <input type="checkbox" class="faceted-selections" :value=subject
-                                           v-model="subjectFilter" :id="'subj-'+subject">
+                                           v-model="subjectFilter" :id="'subj-'+subject" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -110,7 +111,7 @@
                                     <span class="badge">{{countContributors[contributor]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
                                         <input type="checkbox" class="faceted-selections" :value=contributor
-                                            v-model="contributorFilter" :id="'contrib-'+contributor">
+                                            v-model="contributorFilter" :id="'contrib-'+contributor" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -132,7 +133,7 @@
                                     <span class="badge">{{countTypes[type]}}</span>
                                     <label class="checkbox noselect" :for="'type-'+type">{{type}}
                                         <input type="checkbox" class="faceted-selections" :value=type
-                                            v-model="typeFilter" :id="'type-'+type">
+                                            v-model="typeFilter" :id="'type-'+type" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -155,7 +156,7 @@
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
                                         <input type="checkbox" class="faceted-selections" :value=availability
-                                            v-model="availabilityFilter" :id="'avail-'+availability">
+                                            v-model="availabilityFilter" :id="'avail-'+availability" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -328,6 +329,14 @@ export default {
         return resfiltered;
       }
       return [];
+    },
+  },
+  watch: {
+    startdate() {
+      this.setAllMarkers();
+    },
+    enddate() {
+      this.setAllMarkers();
     },
   },
   mounted() {
