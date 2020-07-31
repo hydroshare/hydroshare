@@ -783,7 +783,7 @@ def add_resource_files(pk, *files, **kwargs):
     for f in files:
         if is_resource_metadata_file(f):
             resource_metadata_file = f
-        elif is_metadata_file(f):
+        elif is_aggregation_metadata_file(f):
             metadata_files.append(f)
         elif is_map_file(f):
             pass
@@ -825,7 +825,7 @@ def add_resource_files(pk, *files, **kwargs):
     return ret
 
 
-def is_metadata_file(file):
+def is_aggregation_metadata_file(file):
     return file.name.endswith('_meta.xml')
 
 

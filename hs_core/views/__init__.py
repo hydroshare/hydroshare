@@ -206,7 +206,6 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        logger.exception("failed")
         msg = {'validation_error': str(ex)}
         return JsonResponse(msg, status=500)
 
@@ -1248,7 +1247,6 @@ def create_resource(request, *args, **kwargs):
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
         ajax_response_data['message'] = str(ex)
-        logger.exception("fail")
         return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
