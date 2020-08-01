@@ -65,7 +65,7 @@ class SearchAPI(APIView):
 
             contributor = 'None'
             owner = 'None'
-            author_link = ''
+            author_link = None  # Send None to avoid anchor render
 
             if result.author:
                 author_link = result.author_url
