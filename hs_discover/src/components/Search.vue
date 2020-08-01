@@ -99,11 +99,11 @@ export default {
         const pts = geopoints.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
-          if (!x.north || !x.east) {
+          if (!x.north || !x.east || Number.isNaN(x.north) || Number.isNaN(x.east)) {
             console.log(`Bad geodata ${x.short_id} ${x.north} ${x.east}`);
           }
-          const lat = x.north || 0.0;
-          const lng = x.east || 0.0;
+          const lat = parseFloat(x.north) || 0.0;
+          const lng = parseFloat(x.east) || 0.0;
           pointlocs.push({ lat, lng });
         });
         const pointuids = pts.map(x => x.short_id);
