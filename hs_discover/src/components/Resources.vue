@@ -3,8 +3,8 @@
         <div class="col-xs-12" id="resultsdisp">
             <br/>
             <!-- toggleMap defined in map.js -->
-            <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input id="page-number" type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
-            <input id="map-filter-button" type="button" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"><br/><br/>
+            <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input id="page-number" type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}<br/><br/>
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Redo Search in this Area" :disabled="!geoloaded" v-on:click="liveMapFilter"><br/><br/>
             Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
         </div>
         <div class="col-xs-3" id="facets">
@@ -369,8 +369,11 @@ export default {
     });
     this.countAvailabilities = new this.Counter(availabilitybox);
     console.log(`mount filter build: ${(new Date() - startd) / 1000}`);
-    if (this.resloaded && this.geodata.length > 0) { // update causes second mount
-      this.geoloaded = true;
+    if (this.resloaded) {
+      // find earliest start date
+      if (this.geodata.length > 0) { // update causes second mount
+        this.geoloaded = true;
+      }
     }
   },
   methods: {
@@ -447,6 +450,9 @@ export default {
       }
       if (document.getElementById('map-view').style.display !== 'block') {
         this.uidFilter = [];
+        document.getElementById('map-filter-button').style.display = 'none';
+      } else if (document.getElementById('map-view').style.display === 'block') {
+        document.getElementById('map-filter-button').style.display = 'block';
       }
     },
     setAllMarkers() {

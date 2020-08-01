@@ -137,6 +137,8 @@
       });
       console.log(`Pushed ${visMarkers.length} marker hs short ids`);
       this.visMarkers = visMarkers; // window
+      // const mapfilter = document.getElementById('map-filter-button');
+      // exports.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(mapfilter);
     });
   };
   exports.initMap = initMap; // eslint-disable-line
