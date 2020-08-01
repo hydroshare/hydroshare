@@ -375,6 +375,9 @@ export default {
         this.geoloaded = true;
       }
     }
+    if (document.getElementById('map-view').style.display === 'block') {
+      document.getElementById('map-filter-button').style.display = 'block';
+    }
   },
   methods: {
     filterBuilder(resources, thing, limit) {

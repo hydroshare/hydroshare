@@ -65,6 +65,10 @@ class SearchAPI(APIView):
 
             contributor = 'None'
             owner = 'None'
+            author_link = ''
+
+            if result.author:
+                author_link = result.author_url
 
             if result.creator is not None:
                 try:
@@ -86,7 +90,7 @@ class SearchAPI(APIView):
                 "type": result.resource_type_exact,
                 "author": str(result.author),
                 "contributor": contributor,
-                "author_link": result.author_url,
+                "author_link": author_link,
                 "owner": owner,
                 "abstract": result.abstract,
                 "subject": result.subject,
