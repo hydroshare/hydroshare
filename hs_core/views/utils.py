@@ -17,7 +17,7 @@ from dateutil import parser
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
@@ -30,7 +30,7 @@ from mezzanine.conf import settings
 from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -365,7 +365,6 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     """
     authorized = False
     user = get_user(request)
-
     try:
         res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
     except ObjectDoesNotExist:
@@ -395,7 +394,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         authorized = res.raccess.public
 
     if raises_exception and not authorized:
-        raise PermissionDenied()
+        raise PermissionDenied
     else:
         return res, authorized, user
 

@@ -51,3 +51,4 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
         # test if the last modified time for the file can be obtained
         # assert time is not None without iRODS Session Exception being raised
         self.assertTrue(res_file.modified_time)
+        self.assertTrue(res_file.checksum)
