@@ -1451,6 +1451,17 @@ class AbstractLogicalFile(models.Model):
             resFiles[n]._ore.isAggregatedBy = ag_url
             resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
 
+        # if this is a model program, add the metadata schema json file
+        if self.is_model_program and self.mi_schema_json:
+            n = len(files)
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_short_path}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                file_short_path=self.schema_short_file_path)
+            resFiles.append(AggregatedResource(res_uri))
+            resFiles[n]._ore.isAggregatedBy = ag_url
+            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(self.schema_short_file_path))
+
         # Add the resource files to the aggregation
         a.add_resource(resMetaFile)
         for f in resFiles:
