@@ -104,18 +104,11 @@
     document.body.style.cursor = 'default';
   };
 
-  // const removeHighlighter = () => {
-  //   poi.setMap(null);
-  //   poi = new google.maps.Marker({
-  //     map: exports.map,
-  //   });
-  // };
-
   const highlightMarker = (hsid) => {
     const loc = googMarkers.filter(x => x.hsUid === hsid)[0];
     pois.forEach(x => x.setMap(null));
     pois = [];
-    console.log(loc);
+    // console.log(loc);
     if (loc.position.lat() && loc.position.lng()) {
       const poi = new google.maps.Marker({
         map: exports.map,
@@ -161,11 +154,11 @@
       // const mapfilter = document.getElementById('map-filter-button');
       // exports.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(mapfilter);
     });
+    exports.map.setOptions({ minZoom: 2, maxZoom: 15 });
   };
   exports.initMap = initMap; // eslint-disable-line
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
   exports.toggleMap = toggleMap; // eslint-disable-line
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
   exports.highlightMarker = highlightMarker; // eslint-disable-line
-  // exports.removeHighlighter = removeHighlighter; // eslint-disable-line
 })(this.window = this.window || {});

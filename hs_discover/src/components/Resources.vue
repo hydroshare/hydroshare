@@ -3,9 +3,11 @@
         <div class="col-xs-12" id="resultsdisp">
             <br/>
             <!-- toggleMap defined in map.js -->
-            <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input id="page-number" type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}<br/><br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"><br/><br/>
-            Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
+            Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
+                min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
+            <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded"
+                v-on:click="displayMap"> Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}<br/><br/>
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter">
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -412,6 +414,7 @@ export default {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
         this.sortingBy = this.sortMap[key];
+        this.pagenum = 1;
       }
     },
     sortStyling(key) {
@@ -424,10 +427,10 @@ export default {
       // eslint-disable-next-line no-return-assign
       array.forEach(val => this[val] = (this[val] || 0) + 1);
     },
-    doPager(_res) {
-      // return _res.slice(0, this.perpage);
+    doPager(res) {
+      // return res.slice(0, this.perpage);
       const startx = (this.pagenum - 1) * this.perpage;
-      return _res.slice(startx, startx + this.perpage);
+      return res.slice(startx, startx + this.perpage);
     },
     enumMulti(a) {
       let c = [];
