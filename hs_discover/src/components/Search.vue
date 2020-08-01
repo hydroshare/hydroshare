@@ -8,6 +8,7 @@
             </div>
         </div>
         <resource-listing :resources="resources"
+                          :geodata="geodata"
                           :key="resources"
                           :columns="gridColumns"
                           :labels="gridColumnLabels">
@@ -24,6 +25,7 @@ export default {
   data() {
     return {
       resources: [],
+      geodata: [],
       searchtext: '',
       gridColumns: ['type', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -36,6 +38,29 @@ export default {
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
+    const startd = new Date();
+    const geodata = [];
+    axios.get('/searchjson/', { params: { data: {} } })
+      .then((response) => {
+        if (response.status === 200) {
+          console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
+          response.data.forEach((item) => {
+            const val = JSON.parse(item);
+            if (val.coverage_type) {
+              // TODO if coverage_type box ensure northlimit, southlimit, eastlimit, westlimit are floats or integers
+              // TODO if point ensure east north
+              geodata.push(val);
+            }
+          });
+          this.geodata = geodata;
+        } else {
+          console.log(`Error: ${response.statusText}`);
+        }
+      })
+      .catch((error) => {
+        console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
+        // this.geoloaded = false;
+      });
     this.searchClick();
   },
   methods: {
@@ -46,8 +71,9 @@ export default {
         .then((response) => {
           if (response) {
             try {
-              this.$data.resources = JSON.parse(response.data.resources);
+              this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startdApiSearch) / 1000} sec`);
+              this.setAllMarkers();
               document.body.style.cursor = 'default';
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
@@ -63,6 +89,18 @@ export default {
     clearSearch() {
       this.searchtext = '';
       this.searchClick();
+    },
+    setAllMarkers() {
+      if (document.getElementById('map-view').style.display === 'block' && this.geodata.length > 0) {
+        deleteMarkers();
+        const shids = this.resources.map(x => x.short_id);
+        const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        const pts = geopoints.filter(x => x.coverage_type === 'point');
+        const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
+        const pointuids = pts.map(x => x.short_id);
+        const pointlbls = pts.map(x => x.title);
+        createBatchMarkers(pointlocs, pointuids, pointlbls);
+      }
     },
   },
 };

@@ -2,10 +2,10 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}<br/><br/>
             <!-- toggleMap defined in map.js -->
-            <input type="button" class="mapdisp" value="Toggle Map" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
-            <input type="button" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="setAllMarkers">
+            <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input id="page-number" type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
+            <input id="map-filter-button" type="button" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"><br/><br/>
+            Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -44,7 +44,7 @@
                                     v-bind:key="author">
                                     <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
                                     <input type="checkbox" :value="author" class="faceted-selections"
-                                        v-model="authorFilter" :id="'author-'+author" @change="setAllMarkers">
+                                        v-model.lazy="authorFilter" :id="'author-'+author" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -66,7 +66,7 @@
                                     <span class="badge">{{countOwners[owner]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
                                         <input type="checkbox" class="faceted-selections" :value=owner
-                                            v-model="ownerFilter" :id="'owner-'+owner" @change="setAllMarkers">
+                                            v-model.lazy="ownerFilter" :id="'owner-'+owner" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -88,7 +88,7 @@
                                     <span class="badge">{{countSubjects[subject]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
                                         <input type="checkbox" class="faceted-selections" :value=subject
-                                           v-model="subjectFilter" :id="'subj-'+subject" @change="setAllMarkers">
+                                           v-model.lazy="subjectFilter" :id="'subj-'+subject" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -110,7 +110,7 @@
                                     <span class="badge">{{countContributors[contributor]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
                                         <input type="checkbox" class="faceted-selections" :value=contributor
-                                            v-model="contributorFilter" :id="'contrib-'+contributor" @change="setAllMarkers">
+                                            v-model.lazy="contributorFilter" :id="'contrib-'+contributor" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -132,7 +132,7 @@
                                     <span class="badge">{{countTypes[type]}}</span>
                                     <label class="checkbox noselect" :for="'type-'+type">{{type}}
                                         <input type="checkbox" class="faceted-selections" :value=type
-                                            v-model="typeFilter" :id="'type-'+type" @change="setAllMarkers">
+                                            v-model.lazy="typeFilter" :id="'type-'+type" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -155,7 +155,7 @@
                                     <span class="badge">{{countAvailabilities[availability]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
                                         <input type="checkbox" class="faceted-selections" :value=availability
-                                            v-model="availabilityFilter" :id="'avail-'+availability" @change="setAllMarkers">
+                                            v-model.lazy="availabilityFilter" :id="'avail-'+availability" @change="setAllMarkers">
                                     </label>
                                 </li>
                             </ul>
@@ -179,7 +179,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="entry in doPager(filteredResources)" v-bind:key="entry">
+                    <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry">
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -213,13 +213,11 @@ Contributor: ${entry.contributor}`">{{entry.author}}</a>
 
 <script>
 import DatePick from 'vue-date-pick';
-import 'vue-date-pick/dist/vueDatePick.css';
-import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
+import 'vue-date-pick/dist/vueDatePick.css'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
 export default {
   data() {
     return {
-      geodata: [],
       filterlimit: 10, // Minimum threshold for filter item to display with checkbox
       geopoints: [],
       startdate: 'Start Date',
@@ -230,8 +228,7 @@ export default {
       geoloaded: false, // searchjson endpoint called and retrieved geo data
       resloaded: false, // track axios resource data promise after component mount
       googMarkers: [],
-      countMap: {},
-      mapFilter: [],
+      uidFilter: [],
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
@@ -275,7 +272,7 @@ export default {
   },
   name: 'Resources',
   props:
-  ['resources', 'columns', 'labels'],
+  ['resources', 'geodata', 'columns', 'labels'],
   components: {
     datePick: DatePick,
   },
@@ -285,10 +282,14 @@ export default {
       const startd = new Date();
       if (this.resloaded) {
         let resfiltered = this.resources;
-        if (this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
+        if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
           // do nothing
         } else {
           // Filters should be most restrictive when two conflicting states are selected
+          if (this.uidFilter.length > 0) {
+            const resUids = resfiltered.filter(element => this.uidFilter.indexOf(element.short_id) > -1);
+            resfiltered = resUids;
+          }
           if (this.authorFilter.length > 0) {
             const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
             resfiltered = resAuthors;
@@ -333,6 +334,11 @@ export default {
     },
   },
   watch: {
+    geodata() {
+      if (this.geodata.length > 0) {
+        this.geoloaded = true;
+      }
+    },
     startdate() {
       this.setAllMarkers();
     },
@@ -363,8 +369,8 @@ export default {
     });
     this.countAvailabilities = new this.Counter(availabilitybox);
     console.log(`mount filter build: ${(new Date() - startd) / 1000}`);
-    if (this.resloaded) { // update causes second mount
-      this.loadGeo();
+    if (this.resloaded && this.geodata.length > 0) { // update causes second mount
+      this.geoloaded = true;
     }
   },
   methods: {
@@ -414,7 +420,6 @@ export default {
     doPager(_res) {
       // return _res.slice(0, this.perpage);
       const startx = (this.pagenum - 1) * this.perpage;
-      console.log(startx);
       return _res.slice(startx, startx + this.perpage);
     },
     enumMulti(a) {
@@ -422,9 +427,6 @@ export default {
       if (a) {
         c = Object.values(a);
       }
-      // const b = [];
-      // c.forEach(x => b.push(x.split(',')));
-      // const ret = [].concat.apply([], b);
       return c;
     },
     ellip(input) {
@@ -443,6 +445,9 @@ export default {
       if (this.geoloaded) {
         this.setAllMarkers();
       }
+      if (document.getElementById('map-view').style.display !== 'block') {
+        this.uidFilter = [];
+      }
     },
     setAllMarkers() {
       if (document.getElementById('map-view').style.display === 'block') {
@@ -453,32 +458,38 @@ export default {
         this.renderMap(geopoints);
       }
     },
-    loadGeo() {
-      const startd = new Date();
-      axios.get('/searchjson/', { params: { data: {} } })
-        .then((response) => {
-          if (response.status === 200) {
-            console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
-            response.data.forEach((item) => {
-              const val = JSON.parse(item);
-              if (val.coverage_type) {
-                this.geodata.push(val);
-              }
-            });
-            this.geoloaded = true;
-          } else {
-            console.log(`Error: ${response.statusText}`);
-            this.geoloaded = false;
-          }
-        })
-        .catch((error) => {
-          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
-          this.geoloaded = false;
-        });
-    },
+    // loadGeo() {
+    //   const startd = new Date();
+    //   const geodata = [];
+    //   if (!this.geoloaded) {
+    //     axios.get('/searchjson/', { params: { data: {} } })
+    //       .then((response) => {
+    //         if (response.status === 200) {
+    //           console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
+    //           response.data.forEach((item) => {
+    //             const val = JSON.parse(item);
+    //             if (val.coverage_type) {
+    //             // TODO if coverage_type box ensure northlimit, southlimit, eastlimit, westlimit are floats or integers
+    //             // TODO if point ensure east north
+    //               geodata.push(val);
+    //             }
+    //           });
+    //           this.geodata = geodata;
+    //           this.geoloaded = true;
+    //         } else {
+    //           console.log(`Error: ${response.statusText}`);
+    //           this.geoloaded = false;
+    //         }
+    //       })
+    //       .catch((error) => {
+    //       console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
+    //         this.geoloaded = false;
+    //       });
+    //   }
+    // },
     liveMapFilter() {
       if (document.getElementById('map-view').style.display === 'block') {
-        console.log('hi');
+        this.uidFilter = window.visMarkers;
       }
     },
     renderMapSingle(pts) {
@@ -494,12 +505,12 @@ export default {
       });
     },
     renderMap(geos) {
-      console.log(`rendering map: ${geos.length} locations`);
+      // console.log(`rendering map: ${geos.length} locations`);
       const pts = geos.filter(x => x.coverage_type === 'point');
       const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
-      const pointlinks = pts.map(x => `/resource/${x.short_id}`);
+      const pointuids = pts.map(x => x.short_id);
       const pointlbls = pts.map(x => x.title);
-      createBatchMarkers(pointlocs, pointlinks, pointlbls);
+      createBatchMarkers(pointlocs, pointuids, pointlbls);
     },
   },
 };
@@ -537,5 +548,8 @@ export default {
     }
     .mapdisp {
         right: 0px;
+    }
+    #page-number {
+        width: 60px;
     }
 </style>

@@ -1,59 +1,24 @@
 import json
 
+from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from haystack.query import SearchQuerySet, SQ
+from haystack.query import SearchQuerySet
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.core.paginator import Paginator
 
 
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-
         return render(request, 'hs_discover/index.html', {})
 
 
 class SearchAPI(APIView):
 
-    def do_clean_data(self):
-        """
-        Stub function for data validation to be moved elsewhere
-
-
-        if self.cleaned_data.get('q'):
-        The prior code corrected for an failed match of complete words, as documented
-        in issue #2308. This version instead uses an advanced query syntax in which
-        "word" indicates an exact match and the bare word indicates a stemmed match.
-        cdata = self.cleaned_data.get('q')
-        """
-
-    def do_assign_haystack(self, NElng, SWlng, NElat, SWlat):
-        """
-
-        :return:
-        """
-        if NElng and SWlng:
-            geo_sq = SQ(east__lte=float(NElng))
-            geo_sq.add(SQ(east__gte=float(SWlng)), SQ.AND)
-        else:
-            geo_sq = SQ(east__gte=float(SWlng))
-            geo_sq.add(SQ(east__lte=float(180)), SQ.OR)
-            geo_sq.add(SQ(east__lte=float(NElng)), SQ.AND)
-            geo_sq.add(SQ(east__gte=float(-180)), SQ.AND)
-
-        if NElat and SWlat:
-            # latitude might be specified without longitude
-            if geo_sq is None:
-                geo_sq = SQ(north__lte=float(NElat))
-            else:
-                geo_sq.add(SQ(north__lte=float(NElat)), SQ.AND)
-            geo_sq.add(SQ(north__gte=float(SWlat)), SQ.AND)
-
     def get(self, request, *args, **kwargs):
         """
-
+        Primary endpoint for retrieving resources via the index
         :param request:
         :param args:
         :param kwargs:
@@ -79,7 +44,7 @@ class SearchAPI(APIView):
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q)#.boost('keyword', 2.0)
+            sqs = sqs.filter(content=q)  # .boost('keyword', 2.0)
 
         # vocab = []  # will be populated with autocomplete terms from resource
         # vocab = [x for x in vocab if len(x) > 2]

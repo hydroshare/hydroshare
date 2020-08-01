@@ -82,31 +82,28 @@
     return legend;
   };
 
-  const validLatLng = (loc) => {
-    if (Number.isNaN(loc.lat) || Number.isNaN(loc.lng)) {
-      return false;
-    }
-    return true;
-  };
+  // const validLatLng = (loc) => {
+  //   if (Number.isNaN(loc.lat) || Number.isNaN(loc.lng)) {
+  //     return false;
+  //   }
+  //   return true;
+  // };
 
-  const createBatchMarkers = (locations, links, labels) => {
+  const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
-    googMarkers = locations.map(function (location, k) {
-      try {
-        const marker = new google.maps.Marker({
-          map: exports.map,
-          position: location,
-          // title: labels[k % labels.length],
-        });
-        const infowindow = new google.maps.InfoWindow();
-        infowindow.setContent(`<a href="${links[k % links.length]}" target="_blank">${labels[k % labels.length]}</a>`);
-        marker.addListener('click', () => {
-          infowindow.open(exports.map, marker);
-        });
-        return marker;
-      } catch (err) {
-        console.log(`Invalid geographic data resource: ${labels[k % labels.length]} location: ${location} | ${err}`);
-      }
+    googMarkers = locations.map((location, k) => {
+      const marker = new google.maps.Marker({
+        map: exports.map,
+        position: location,
+        hsUid: hsUid[k % hsUid.length],
+        // title: labels[k % labels.length],
+      });
+      const infowindow = new google.maps.InfoWindow();
+      infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>`);
+      marker.addListener('click', () => {
+        infowindow.open(exports.map, marker);
+      });
+      return marker;
     });
     markerCluster = new MarkerClusterer(exports.map, googMarkers,
       { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
@@ -125,17 +122,22 @@
         lng: -71,
       },
       zoom: mapDefaultZoom,
-      maxZoom: 13,
       mapTypeId: google.maps.MapTypeId.TERRAIN,
     });
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     // const mapLegend = createLegend();
     const searchBox = createSearcher();
-
-//     for(var i = 0; i < markers.length; i++){ // looping through my Markers Collection
-// if(bounds.contains(markers[i].position))
-//  console.log("Marker"+ i +" - matched");
-// }
+    exports.map.addListener('bounds_changed', () => {
+      const visMarkers = [];
+      const bounds = exports.map.getBounds();
+      googMarkers.forEach((marker) => {
+        if (bounds.contains(marker.position)) {
+          visMarkers.push(marker.hsUid);
+        }
+      });
+      console.log(`Pushed ${visMarkers.length} marker hs short ids`);
+      this.visMarkers = visMarkers; // window
+    });
   };
   exports.initMap = initMap; // eslint-disable-line
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
