@@ -542,4 +542,3 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
             mi_meta.save()
-
