@@ -4,7 +4,7 @@
             <br/>
             <!-- toggleMap defined in map.js -->
             <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded" v-on:click="displayMap"> Page: <input id="page-number" type="number" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}<br/><br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Redo Search in this Area" :disabled="!geoloaded" v-on:click="liveMapFilter"><br/><br/>
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"><br/><br/>
             Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}
         </div>
         <div class="col-xs-3" id="facets">
@@ -180,7 +180,7 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry"
-                        v-on:mouseover="showgeo(entry.short_id)">
+                    v-on:mouseup="showHighlighter(entry.short_id)">
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -483,50 +483,21 @@ export default {
         createBatchMarkers(pointlocs, pointuids, pointlbls);
       }
     },
-    // loadGeo() {
-    //   const startd = new Date();
-    //   const geodata = [];
-    //   if (!this.geoloaded) {
-    //     axios.get('/searchjson/', { params: { data: {} } })
-    //       .then((response) => {
-    //         if (response.status === 200) {
-    //           console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
-    //           response.data.forEach((item) => {
-    //             const val = JSON.parse(item);
-    //             if (val.coverage_type) {
-    //             // TODO if coverage_type box ensure northlimit, southlimit, eastlimit, westlimit are floats or integers
-    //             // TODO if point ensure east north
-    //               geodata.push(val);
-    //             }
-    //           });
-    //           this.geodata = geodata;
-    //           this.geoloaded = true;
-    //         } else {
-    //           console.log(`Error: ${response.statusText}`);
-    //           this.geoloaded = false;
-    //         }
-    //       })
-    //       .catch((error) => {
-    //       console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
-    //         this.geoloaded = false;
-    //       });
-    //   }
-    // },
     liveMapFilter() {
       if (document.getElementById('map-view').style.display === 'block') {
         this.uidFilter = window.visMarkers;
       }
     },
-    showgeo(hsid) {
+    // clearHighlighter() {
+    //   if (document.getElementById('map-view').style.display === 'block') {
+    //     removeHighlighter();
+    //   }
+    // },
+    showHighlighter(hsid) {
       if (document.getElementById('map-view').style.display === 'block') {
         highlightMarker(hsid);
       }
     },
-    // hidegeo(hsid) {
-    //   if (document.getElementById('map-view').style.display === 'block') {
-    //     unhighlightMarker(hsid);
-    //   }
-    // },
     renderMapSingle(pts) {
       pts.forEach((pt) => {
         if (pt.coverage_type === 'point') {

@@ -2,9 +2,7 @@
   const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
-  // const poi = new google.maps.Marker({
-  //   map: exports.map,
-  // });
+  let pois = [];
   let markerCluster;
 
   const deleteMarkers = () => {
@@ -85,13 +83,6 @@
     return legend;
   };
 
-  // const validLatLng = (loc) => {
-  //   if (Number.isNaN(loc.lat) || Number.isNaN(loc.lng)) {
-  //     return false;
-  //   }
-  //   return true;
-  // };
-
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
     googMarkers = locations.map((location, k) => {
@@ -113,18 +104,28 @@
     document.body.style.cursor = 'default';
   };
 
-  // const highlightMarker = (hsid) => {
+  // const removeHighlighter = () => {
   //   poi.setMap(null);
-  //   poi.position = { lat: Math.random() * 90, lng: Math.random() * 180 }
-  //   poi.setMap(exports.map);
-  // };
-
-  // const unhighlightMarkers = () => {
-  //   const marker = new google.maps.Marker({
+  //   poi = new google.maps.Marker({
   //     map: exports.map,
-  //     position: { lat: Math.random() * 90, lng: Math.random() * 180 },
   //   });
   // };
+
+  const highlightMarker = (hsid) => {
+    const loc = googMarkers.filter(x => x.hsUid === hsid)[0];
+    pois.forEach(x => x.setMap(null));
+    pois = [];
+    console.log(loc);
+    if (loc.position.lat() && loc.position.lng()) {
+      const poi = new google.maps.Marker({
+        map: exports.map,
+        position: { lat: loc.position.lat(), lng: loc.position.lng() },
+      });
+      pois.push(poi);
+      exports.map.setZoom(7);
+      exports.map.panTo(poi.position);
+    }
+  };
 
   const toggleMap = () => {
     document.getElementById('map-view').style.display = document.getElementById('map-view').style.display === 'block' ? 'none' : 'block';
@@ -138,6 +139,7 @@
         lng: -71,
       },
       zoom: mapDefaultZoom,
+      gestureHandling: 'greedy',
       mapTypeId: google.maps.MapTypeId.TERRAIN,
     });
     // https://stackoverflow.com/questions/29869261/google-map-search-box
@@ -151,8 +153,11 @@
           visMarkers.push(marker.hsUid);
         }
       });
-      console.log(`Pushed ${visMarkers.length} marker hs short ids`);
+      // console.log(`Pushed ${visMarkers.length} marker hs short ids`);
       this.visMarkers = visMarkers; // window
+      poi = new google.maps.Marker({
+        map: exports.map,
+      });
       // const mapfilter = document.getElementById('map-filter-button');
       // exports.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(mapfilter);
     });
@@ -161,5 +166,6 @@
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
   exports.toggleMap = toggleMap; // eslint-disable-line
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
-  // exports.highlightMarker = highlightMarker; // eslint-disable-line
+  exports.highlightMarker = highlightMarker; // eslint-disable-line
+  // exports.removeHighlighter = removeHighlighter; // eslint-disable-line
 })(this.window = this.window || {});
