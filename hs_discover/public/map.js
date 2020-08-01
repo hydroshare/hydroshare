@@ -2,6 +2,9 @@
   const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
+  // const poi = new google.maps.Marker({
+  //   map: exports.map,
+  // });
   let markerCluster;
 
   const deleteMarkers = () => {
@@ -110,6 +113,19 @@
     document.body.style.cursor = 'default';
   };
 
+  // const highlightMarker = (hsid) => {
+  //   poi.setMap(null);
+  //   poi.position = { lat: Math.random() * 90, lng: Math.random() * 180 }
+  //   poi.setMap(exports.map);
+  // };
+
+  // const unhighlightMarkers = () => {
+  //   const marker = new google.maps.Marker({
+  //     map: exports.map,
+  //     position: { lat: Math.random() * 90, lng: Math.random() * 180 },
+  //   });
+  // };
+
   const toggleMap = () => {
     document.getElementById('map-view').style.display = document.getElementById('map-view').style.display === 'block' ? 'none' : 'block';
   };
@@ -145,4 +161,5 @@
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
   exports.toggleMap = toggleMap; // eslint-disable-line
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
+  // exports.highlightMarker = highlightMarker; // eslint-disable-line
 })(this.window = this.window || {});

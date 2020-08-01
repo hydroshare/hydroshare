@@ -179,7 +179,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry">
+                    <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry"
+                        v-on:mouseover="showgeo(entry.short_id)">
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -464,7 +465,22 @@ export default {
         console.log(`num filtered res: ${this.filteredResources.length}`);
         const shids = this.filteredResources.map(x => x.short_id);
         const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        this.renderMap(geopoints);
+
+        const pts = geopoints.filter(x => x.coverage_type === 'point');
+        const pointlocs = [];
+        pts.forEach((x) => {
+          if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
+            console.log(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
+          } else if (Math.abs(parseFloat(x.north)) > 90 || Math.abs(parseFloat(x.east)) > 180) {
+            console.log(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
+          }
+          const lat = Number.isNaN(parseFloat(x.north)) ? 0.0 : parseFloat(x.north);
+          const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
+          pointlocs.push({ lat, lng });
+        });
+        const pointuids = pts.map(x => x.short_id);
+        const pointlbls = pts.map(x => x.title);
+        createBatchMarkers(pointlocs, pointuids, pointlbls);
       }
     },
     // loadGeo() {
@@ -501,6 +517,16 @@ export default {
         this.uidFilter = window.visMarkers;
       }
     },
+    showgeo(hsid) {
+      if (document.getElementById('map-view').style.display === 'block') {
+        highlightMarker(hsid);
+      }
+    },
+    // hidegeo(hsid) {
+    //   if (document.getElementById('map-view').style.display === 'block') {
+    //     unhighlightMarker(hsid);
+    //   }
+    // },
     renderMapSingle(pts) {
       pts.forEach((pt) => {
         if (pt.coverage_type === 'point') {
@@ -512,14 +538,6 @@ export default {
           createMarker({ lat, lng }, pt.title);
         }
       });
-    },
-    renderMap(geos) {
-      // console.log(`rendering map: ${geos.length} locations`);
-      const pts = geos.filter(x => x.coverage_type === 'point');
-      const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
-      const pointuids = pts.map(x => x.short_id);
-      const pointlbls = pts.map(x => x.title);
-      createBatchMarkers(pointlocs, pointuids, pointlbls);
     },
   },
 };
