@@ -95,8 +95,17 @@ export default {
         deleteMarkers();
         const shids = this.resources.map(x => x.short_id);
         const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+
         const pts = geopoints.filter(x => x.coverage_type === 'point');
-        const pointlocs = pts.map(x => Object.assign({ lat: x.north, lng: x.east }), {});
+        const pointlocs = [];
+        pts.forEach((x) => {
+          if (!x.north || !x.east) {
+            console.log(`Bad geodata ${x.short_id} ${x.north} ${x.east}`);
+          }
+          const lat = x.north || 0.0;
+          const lng = x.east || 0.0;
+          pointlocs.push({ lat, lng });
+        });
         const pointuids = pts.map(x => x.short_id);
         const pointlbls = pts.map(x => x.title);
         createBatchMarkers(pointlocs, pointuids, pointlbls);
