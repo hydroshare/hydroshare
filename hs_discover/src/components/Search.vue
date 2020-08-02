@@ -47,8 +47,6 @@ export default {
           response.data.forEach((item) => {
             const val = JSON.parse(item);
             if (val.coverage_type) {
-              // TODO if coverage_type box ensure northlimit, southlimit, eastlimit, westlimit are floats or integers
-              // TODO if point ensure east north
               geodata.push(val);
             }
           });
@@ -94,9 +92,9 @@ export default {
       if (document.getElementById('map-view').style.display === 'block' && this.geodata.length > 0) {
         deleteMarkers();
         const shids = this.resources.map(x => x.short_id);
-        const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
 
-        const pts = geopoints.filter(x => x.coverage_type === 'point');
+        let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
           if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
@@ -108,9 +106,25 @@ export default {
           const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
           pointlocs.push({ lat, lng });
         });
-        const pointuids = pts.map(x => x.short_id);
-        const pointlbls = pts.map(x => x.title);
+        let pointuids = pts.map(x => x.short_id);
+        let pointlbls = pts.map(x => x.title);
         createBatchMarkers(pointlocs, pointuids, pointlbls);
+        
+        // pts = geocoords.filter(x => x.coverage_type === 'box');
+        // const pointlocs = [];
+        // pts.forEach((x) => {
+        //   if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
+        //     console.log(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
+        //   } else if (Math.abs(parseFloat(x.north)) > 90 || Math.abs(parseFloat(x.east)) > 180) {
+        //     console.log(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
+        //   }
+        //   const lat = Number.isNaN(parseFloat(x.north)) ? 0.0 : parseFloat(x.north);
+        //   const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
+        //   pointlocs.push({ lat, lng });
+        // });
+        // pointuids = pts.map(x => x.short_id);
+        // pointlbls = pts.map(x => x.title);
+        // createBatchMarkers(pointlocs, pointuids, pointlbls);
       }
     },
   },

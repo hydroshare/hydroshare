@@ -467,9 +467,9 @@ export default {
         deleteMarkers();
         console.log(`num filtered res: ${this.filteredResources.length}`);
         const shids = this.filteredResources.map(x => x.short_id);
-        const geopoints = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
 
-        const pts = geopoints.filter(x => x.coverage_type === 'point');
+        const pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
           if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
@@ -498,6 +498,7 @@ export default {
     // },
     showHighlighter(hsid) {
       if (document.getElementById('map-view').style.display === 'block') {
+        document.getElementById('topcontrol').click();
         highlightMarker(hsid);
       }
     },
