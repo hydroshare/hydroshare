@@ -146,7 +146,7 @@ class ScriptMetaData(CoreMetaData):
         xml_string = super(ScriptMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create  etree element
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode())
 
         # get the root 'Description' element, which contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)

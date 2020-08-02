@@ -104,7 +104,7 @@ class RefTSMetadata(CoreMetaData):
         # get the xml string representation of the core metadata elements
         xml_string = super(RefTSMetadata, self).get_xml(pretty_print=pretty_print)
         # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode())
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
