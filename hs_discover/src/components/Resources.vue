@@ -285,7 +285,9 @@ export default {
       const startd = new Date();
       if (this.resloaded) {
         let resfiltered = this.resources;
-        if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0 && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length === 0 && this.typeFilter.length === 0) {
+        if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0
+            && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length
+            === 0 && this.typeFilter.length === 0) {
           // do nothing
         } else {
           // Filters should be most restrictive when two conflicting states are selected
@@ -302,11 +304,13 @@ export default {
             resfiltered = resOwners;
           }
           if (this.subjectFilter.length > 0) {
-            const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val)).length > 0);
+            const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val))
+              .length > 0);
             resfiltered = resSubjects;
           }
           if (this.availabilityFilter.length > 0) {
-            const resAvailabilities = resfiltered.filter(res => res.availability.filter(val => this.availabilityFilter.includes(val)).length > 0);
+            const resAvailabilities = resfiltered.filter(res => res.availability
+              .filter(val => this.availabilityFilter.includes(val)).length > 0);
             resfiltered = resAvailabilities;
           }
           if (this.contributorFilter.length > 0) {
@@ -402,13 +406,14 @@ export default {
       }
       return c;
     },
-    columnSort(_res) {
+    columnSort(res) {
       if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-        const datesorted = _res.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
+        const datesorted = res.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
         return this.sortDir === -1 ? datesorted : datesorted.reverse();
       }
-      Object.keys(_res).forEach(key => (!_res[key] ? delete _res[key] : {}));
-      return _res.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy].toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+      Object.keys(res).forEach(key => (!res[key] ? delete res[key] : {}));
+      return res.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy]
+        .toLowerCase()) ? this.sortDir : -1 * this.sortDir));
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
@@ -469,7 +474,7 @@ export default {
         const shids = this.filteredResources.map(x => x.short_id);
         const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
 
-        const pts = geocoords.filter(x => x.coverage_type === 'point');
+        let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
           if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
@@ -483,7 +488,24 @@ export default {
         });
         const pointuids = pts.map(x => x.short_id);
         const pointlbls = pts.map(x => x.title);
-        createBatchMarkers(pointlocs, pointuids, pointlbls);
+
+        pts = geocoords.filter(x => x.coverage_type === 'box');
+        const regionlocs = [];
+        pts.forEach((x) => {
+          const eastlim = Number.isNaN(parseFloat(x.eastlimit)) ? 0.0 : parseFloat(x.eastlimit);
+          const westlim = Number.isNaN(parseFloat(x.westlimit)) ? 0.0 : parseFloat(x.westlimit);
+          const northlim = Number.isNaN(parseFloat(x.northlimit)) ? 0.0 : parseFloat(x.northlimit);
+          const southlim = Number.isNaN(parseFloat(x.southlimit)) ? 0.0 : parseFloat(x.southlimit);
+          const lat = (northlim + southlim) / 2;
+          const lng = (eastlim + westlim) / 2;
+          if (eastlim !== 0 && westlim !== 0 && northlim !== 0 && southlim !== 0) {
+            regionlocs.push({ lat, lng });
+          }
+        });
+        console.log(regionlocs);
+        const regionuids = pts.map(x => x.short_id);
+        const regionlbls = pts.map(x => x.title);
+        createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls));
       }
     },
     liveMapFilter() {
@@ -491,11 +513,6 @@ export default {
         this.uidFilter = window.visMarkers;
       }
     },
-    // clearHighlighter() {
-    //   if (document.getElementById('map-view').style.display === 'block') {
-    //     removeHighlighter();
-    //   }
-    // },
     showHighlighter(hsid) {
       if (document.getElementById('map-view').style.display === 'block') {
         document.getElementById('topcontrol').click();

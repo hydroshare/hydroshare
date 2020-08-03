@@ -108,7 +108,6 @@
     const loc = googMarkers.filter(x => x.hsUid === hsid)[0];
     pois.forEach(x => x.setMap(null));
     pois = [];
-    // console.log(loc);
     if (loc.position.lat() && loc.position.lng()) {
       const poi = new google.maps.Marker({
         map: exports.map,

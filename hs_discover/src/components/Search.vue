@@ -106,25 +106,25 @@ export default {
           const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
           pointlocs.push({ lat, lng });
         });
-        let pointuids = pts.map(x => x.short_id);
-        let pointlbls = pts.map(x => x.title);
-        createBatchMarkers(pointlocs, pointuids, pointlbls);
-        
-        // pts = geocoords.filter(x => x.coverage_type === 'box');
-        // const pointlocs = [];
-        // pts.forEach((x) => {
-        //   if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
-        //     console.log(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
-        //   } else if (Math.abs(parseFloat(x.north)) > 90 || Math.abs(parseFloat(x.east)) > 180) {
-        //     console.log(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
-        //   }
-        //   const lat = Number.isNaN(parseFloat(x.north)) ? 0.0 : parseFloat(x.north);
-        //   const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
-        //   pointlocs.push({ lat, lng });
-        // });
-        // pointuids = pts.map(x => x.short_id);
-        // pointlbls = pts.map(x => x.title);
-        // createBatchMarkers(pointlocs, pointuids, pointlbls);
+        const pointuids = pts.map(x => x.short_id);
+        const pointlbls = pts.map(x => x.title);
+
+        pts = geocoords.filter(x => x.coverage_type === 'box');
+        const regionlocs = [];
+        pts.forEach((x) => {
+          const eastlim = Number.isNaN(parseFloat(x.eastlimit)) ? 0.0 : parseFloat(x.eastlimit);
+          const westlim = Number.isNaN(parseFloat(x.westlimit)) ? 0.0 : parseFloat(x.westlimit);
+          const northlim = Number.isNaN(parseFloat(x.northlimit)) ? 0.0 : parseFloat(x.northlimit);
+          const southlim = Number.isNaN(parseFloat(x.southlimit)) ? 0.0 : parseFloat(x.southlimit);
+          const lat = northlim + southlim / 2;
+          const lng = eastlim + westlim / 2;
+          if (eastlim !== 0 && westlim !== 0 && northlim !== 0 && southlim !== 0) {
+            regionlocs.push({ lat, lng });
+          }
+        });
+        const regionuids = pts.map(x => x.short_id);
+        const regionlbls = pts.map(x => x.title);
+        createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls));
       }
     },
   },
