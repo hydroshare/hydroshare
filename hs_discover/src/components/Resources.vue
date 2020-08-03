@@ -6,8 +6,8 @@
             Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
                 min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
             <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded"
-                v-on:click="displayMap"> Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}}<br/><br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter">
+                v-on:click="displayMap"> Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/><br/>
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -170,8 +170,9 @@
         <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
-                <table v-if="filteredResources.length"
-                    class="table-hover table-striped resource-custom-table" id="items-discovered">
+                <p id="map-message" style="display:none">Select area of interest on the map then click 'Filter by Map View'</p>
+                <table id="items-discovered" v-if="filteredResources.length"
+                    class="table-hover table-striped resource-custom-table">
                     <thead>
                         <tr>
                             <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
@@ -181,8 +182,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry"
-                    v-on:mouseup="showHighlighter(entry.short_id)">
+                    <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry">
+<!--                    v-on:mouseup="showHighlighter(entry.short_id)">-->
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -230,6 +231,7 @@ export default {
       pagenum: 1, // initial page number to show
       geoloaded: false, // searchjson endpoint called and retrieved geo data
       resloaded: false, // track axios resource data promise after component mount
+      resgeotypes: '',
       googMarkers: [],
       uidFilter: [],
       countAuthors: {},
@@ -463,8 +465,13 @@ export default {
       if (document.getElementById('map-view').style.display !== 'block') {
         this.uidFilter = [];
         document.getElementById('map-filter-button').style.display = 'none';
+        document.getElementById('items-discovered').style.display = 'block';
+        document.getElementById('map-message').style.display = 'none';
+        this.resgeotypes = '';
       } else if (document.getElementById('map-view').style.display === 'block') {
         document.getElementById('map-filter-button').style.display = 'block';
+        document.getElementById('items-discovered').style.display = 'none';
+        document.getElementById('map-message').style.display = 'block';
       }
     },
     setAllMarkers() {
@@ -502,7 +509,6 @@ export default {
             regionlocs.push({ lat, lng });
           }
         });
-        console.log(regionlocs);
         const regionuids = pts.map(x => x.short_id);
         const regionlbls = pts.map(x => x.title);
         createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls));
@@ -511,6 +517,9 @@ export default {
     liveMapFilter() {
       if (document.getElementById('map-view').style.display === 'block') {
         this.uidFilter = window.visMarkers;
+        document.getElementById('items-discovered').style.display = 'block';
+        document.getElementById('map-message').style.display = 'none';
+        this.resgeotypes = 'with geographic coordinates';
       }
     },
     showHighlighter(hsid) {
@@ -537,6 +546,10 @@ export default {
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
+    #map-message {
+      position: absolute;
+      left: 110px;
+    }
     .panel-title > a:before {
         float: left !important;
         font-family: FontAwesome;
