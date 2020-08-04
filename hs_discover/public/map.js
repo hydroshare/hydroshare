@@ -147,9 +147,9 @@
       });
       // console.log(`Pushed ${visMarkers.length} marker hs short ids`);
       this.visMarkers = visMarkers; // window
-      poi = new google.maps.Marker({
-        map: exports.map,
-      });
+      // poi = new google.maps.Marker({
+      //   map: exports.map,
+      // });
       // const mapfilter = document.getElementById('map-filter-button');
       // exports.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(mapfilter);
     });

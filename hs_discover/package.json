@@ -44,7 +44,7 @@
       "max-len": [
         "error",
         {
-          "code": 125
+          "code": 255
         }
       ]
     },
