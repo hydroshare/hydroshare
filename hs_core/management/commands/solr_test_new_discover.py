@@ -1,13 +1,11 @@
 """
-This prints the state of a facet query.
-It is used for debugging the faceting system.
+This tests an iterator interface for StreamingHttpRequest responses.
+This eliminates a store-and-forward delay from memory to the client.
 """
 
 from django.core.management.base import BaseCommand
 from haystack.query import SearchQuerySet
-from django.core.paginator import Paginator
 import json
-from pprint import pprint
 
 
 def generate_json(result):
@@ -75,7 +73,7 @@ def stream_sqs(sqs):
 
 
 def test_stream_query(rid=None):
-    # this tests that the stream query is working properly. 
+    # this tests that the stream query is working properly.
     if rid is not None:
         sqs = SearchQuerySet().all().filter(short_id=rid)
     else:
