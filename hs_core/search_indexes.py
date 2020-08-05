@@ -157,7 +157,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
     availability = indexes.MultiValueField(faceted=True)
-    shareable = indexes.BooleanField(stored=False)
+    shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField(stored=False)
     created = indexes.DateTimeField(model_attr='created')

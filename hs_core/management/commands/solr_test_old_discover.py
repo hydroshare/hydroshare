@@ -13,6 +13,8 @@ from pprint import pprint
 def generate_json(result):
     solr = result.get_stored_fields()
 
+    json_obj = {}
+
     # assign title and url values to the object
     json_obj['short_id'] = solr['short_id']
     json_obj['title'] = solr['title']
