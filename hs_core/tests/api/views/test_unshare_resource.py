@@ -1,11 +1,11 @@
 import json
 
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 
 from hs_core import hydroshare
 from hs_core.views import unshare_resource_with_user, unshare_resource_with_group
