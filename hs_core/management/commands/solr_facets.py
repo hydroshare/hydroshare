@@ -6,6 +6,7 @@ It is used for debugging the faceting system.
 from django.core.management.base import BaseCommand
 from haystack.query import SearchQuerySet
 from pprint import pprint
+from hs_core.views.discovery_json_view import FIELDS_TO_SHOW
 
 
 def debug_facets(facets):

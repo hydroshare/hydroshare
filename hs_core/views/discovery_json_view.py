@@ -9,6 +9,8 @@ from haystack.query import SQ
 from hs_core.discovery_parser import ParseSQ, MatchingBracketsNotFoundError, \
     FieldNotRecognizedError, InequalityNotAllowedError, MalformedDateError
 
+FIELDS_TO_SHOW = ['creator', 'contributor', 'owner', 'content_type', 'subject', 'availability']
+
 
 class DiscoveryForm(FacetedSearchForm):
     SORT_ORDER_VALUES = ('title', 'author', 'created', 'modified')
@@ -190,7 +192,7 @@ class DiscoveryForm(FacetedSearchForm):
 # TODO Alva, can generic_views.py be cleaned up now Discover has been refactored?
 class DiscoveryJsonView(FacetedSearchView):
     # declare form class to use in this view
-    facet_fields = ['creator', 'contributor', 'owner', 'content_type', 'subject', 'availability']
+    facet_fields = FIELDS_TO_SHOW
     form_class = DiscoveryForm
 
     # overwrite Haystack generic_view.py form_valid() function to generate JSON response
