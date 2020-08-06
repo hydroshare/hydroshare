@@ -33,14 +33,13 @@ def find_url(string, alt_url):
 
 # returns the field_name of the text of the etree value val, or the empty string if null
 def set_field(val):
-    if val is None:
+    if val is None or val.text is None:
         return 'None'
     else:
         return val.text
 
 
 # utility functions
-
 
 def create_metadata_dict(temp_dir):
     # parse the xml metadata file as an etree
@@ -77,7 +76,7 @@ def create_metadata_dict(temp_dir):
     box_tag = '{http://purl.org/dc/terms/}box'
     spot_tag = '{http://purl.org/dc/terms/}point'
 
-    # source_tag = '{http://purl.org/dc/elements/1.1/}source'
+    source_tag = '{http://purl.org/dc/elements/1.1/}source'
     description_tag = '{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description'
 
     keyword_tag = '{http://purl.org/dc/elements/1.1/}subject'
@@ -393,7 +392,7 @@ def create_metadata_dict(temp_dir):
     # Get the start period and parse the strings into numerical date values
     period_text = set_field(root.find(".//%s/%s" % (period_tag, value_tag)))
     if (period_text != 'None'):
-        [start_period, end_period, scheme] = period_text.split()
+        [name, start_period, end_period, scheme] = period_text.split('; ')
         start_period = re.sub('start=', '', start_period)
         end_period = re.sub('end=', '', end_period)
         [start_period_date, start_period_time] = start_period.split('T')
@@ -408,11 +407,13 @@ def create_metadata_dict(temp_dir):
     for i, related_publication in enumerate(root.findall(".//%s/%s//*" % (relation_tag, description_tag))):
         related_publications_vals.append(copy.deepcopy(related_publications_dict))
         related_publications_vals[i]['publicationCitation']['value'] = set_field(related_publication)
-
-        print('string:', set_field(related_publication))
         related_publications_vals[i]['publicationURL']['value'] = find_url(set_field(related_publication), alt_url)
 
         related_resources.append(related_publication.text)
+
+    related_materials = []
+    for i, source in enumerate(root.findall(".//%s/%s//*" % (source_tag, description_tag))):
+        related_materials.append(set_field(source))
 
     # use the google location services api to find the location
     maps_api_token = getattr(settings, 'MAPS_KEY', '')
@@ -446,13 +447,16 @@ def create_metadata_dict(temp_dir):
 
     spot_text = set_field(root.find('.//%s/%s' % (spot_tag, value_tag)))
     if (spot_text != 'None'):
-        print('spot_text:', spot_text)
         [name, east, north, units, projection] = spot_text.split(';', 4)
         east = re.sub('east=', '', east)
         north = re.sub('north=', '', north)
         other_geo_info = re.sub('name=', '', name)
         geo_units.append(re.sub('units=', '', units))
         reverse_geo_code_result = gmaps.reverse_geocode((north, east))
+        if not reverse_geo_code_result:
+            type_dict = {'types':[]}
+            reverse_geo_code_result.append({'address_components': [type_dict]})
+        
 
         for box in root.findall(".//%s" % spot_tag):
             bounding_box_vals.append(copy.deepcopy(bounding_box_dict))
@@ -482,8 +486,7 @@ def create_metadata_dict(temp_dir):
         e = json.load(f)
 
     other_id_dict['otherIdValue']['value'] = str(e['rid'])
-    if e['published']:
-        other_id_dict['otherIdValue']['value'] = str(e['doi'])
+    
     notes_text = e['extended_metadata_notes']
 
     grant_vals = []
@@ -575,9 +578,9 @@ def create_metadata_dict(temp_dir):
 
     fields[19]['value'] = [software_dict]
 
-    fields[20]['value'] = ['related_papers']
+    fields[20]['value'] = related_materials  # related Material
 
-    fields[21]['value'] = related_resources
+    fields[21]['value'] = []  # related Datasets
 
     geofields[0]['value'] = geo_coverage_vals
     geofields[1]['value'] = geo_units

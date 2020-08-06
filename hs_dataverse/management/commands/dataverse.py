@@ -26,6 +26,82 @@ import shutil
 
 BUFSIZE = 4096
 
+# helper functions to get different kinds of metadata
+
+
+### get owners. An owner is a user
+### see https://docs.djangoproject.com/en/3.0/ref/contrib/auth/
+def get_owner_data(resource):
+    owners = list(resource.raccess.owners)
+    if len(owners) == 0:
+        owner_dict = {
+            'username': '',
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+            'organization': ''
+        }
+    else:
+        for o in owners: 
+            profile = o.userprofile
+            party = get_party_data_from_user(o)
+
+            owner_dict = {
+                'username': format(o.username),
+                'first_name': format(o.first_name),
+                'last_name': format(o.last_name),
+                'email': format(o.email),
+                'organization': format(party['organization'])
+            }
+    return owner_dict
+
+def get_other_metadata(res, rid):
+    # read extended metadata as key/value pairsi
+    ext_metadata = ''
+    for key, value in list(res.extra_metadata.items()):
+        print(" key={}, value={}".format(key, value))
+        ext_metadata = ext_metadata + key + ': ' + value + '\n'
+
+    # get funding agency data
+    funding_agency_names = []
+    award_numbers = []
+
+    for a in res.metadata.funding_agencies.all():
+        funding_agency_names.append(a.agency_name)
+        award_numbers.append(a.award_number) 
+
+    # get list of contributors
+    contributors = []
+    for c in res.metadata.contributors.all():
+        contributors.append(str(c))
+
+    # if the resource is published, set the doi and update booleans in dict.
+    doi = ''
+    if res.raccess.public:
+        public = True
+    else: 
+        public = False
+    
+    if res.raccess.published:
+        published = True
+        doi = res.doi
+    else:
+        published = False 
+
+    other_metadata_dict = {
+        'rid': rid,
+        'public': public,
+        'published': published,
+        'doi': doi,
+        'extended_metadata_notes': ext_metadata,
+        'language': str(res.metadata.language),
+        'funding_agency_names': funding_agency_names,
+        'award_numbers': award_numbers,
+        'contributors': contributors
+    }
+
+    return other_metadata_dict
+
 def export_bag(rid, options): 
     requests.packages.urllib3.disable_warnings()
     try:
@@ -35,8 +111,6 @@ def export_bag(rid, options):
         # instance with proper subclass type and access
         res = resource.get_content_model()
         assert res, (resource, resource.content_model)
-        print("resource is {}".format(res.short_id))
-        print("content type: {}".format(res.discovery_content_type))
         if (res.discovery_content_type != 'Composite'): 
             print("resource type '{}' is not supported. Aborting.".format(res.discovery_content_type))
             exit(1)
@@ -46,9 +120,7 @@ def export_bag(rid, options):
 
         # file handle
         istorage = res.get_irods_storage()
-
         root_exists = istorage.exists(res.root_path)
-
         if root_exists:
             # print status of metadata/bag system
             scimeta_path = os.path.join(res.root_path, 'data',
@@ -57,7 +129,6 @@ def export_bag(rid, options):
             
             if scimeta_exists:
                 print("resource metadata {} found".format(scimeta_path))
-                            
                 if icommands.ACTIVE_SESSION:
                     session = icommands.ACTIVE_SESSION
                 else:
@@ -73,7 +144,7 @@ def export_bag(rid, options):
                 
                 BUFSIZE = 4096
                 block = fd.stdout.read(BUFSIZE) 
-                while block !=   b"": 
+                while block != b"": 
                     # Do stuff with byte. 
                     contents += block
                     block = fd.stdout.read(BUFSIZE) 
@@ -146,7 +217,7 @@ def export_bag(rid, options):
                     
                     contents = b""
                     block = fd.stdout.read(BUFSIZE) 
-                    while block !=   b"": 
+                    while block != b"": 
                         # Do stuff with byte. 
                         contents += block
                         block = fd.stdout.read(BUFSIZE) 
@@ -163,88 +234,12 @@ def export_bag(rid, options):
 
 
 
-            ### get owners. An owner is a user
-            ### see https://docs.djangoproject.com/en/3.0/ref/contrib/auth/
-            
-            owners = list(resource.raccess.owners)
-
-            print('o:', owners)
-            if len(owners) == 0:
-                owner_dict = {
-                    'username': '',
-                    'first_name': '',
-                    'last_name': '',
-                    'email': '',
-                    'organization': ''
-                }
-            else:
-                for o in owners: 
-                    print("username: {}".format(o.username))
-                    print("first_name: {}".format(o.first_name))
-                    print("last_name: {}".format(o.last_name))
-                    print("email: {}".format(o.email))
-                    profile = o.userprofile
-                    party = get_party_data_from_user(o)
-                    print("organization: {}".format(party['organization']))
-
-                    owner_dict = {
-                        'username': format(o.username),
-                        'first_name': format(o.first_name),
-                        'last_name': format(o.last_name),
-                        'email': format(o.email),
-                        'organization': format(party['organization'])
-                    }
-
+            owner_dict = get_owner_data(resource)
             _, mkfile_path = tempfile.mkstemp(prefix='ownerdata.json', dir=mkdir)
             with open(mkfile_path, 'w') as mkfile:
                 json.dump(owner_dict, mkfile)
-            # get other metadata
-             
 
-            # read extended metadata as key/value pairsi
-            ext_metadata = ''
-            for key, value in list(res.extra_metadata.items()):
-                print(" key={}, value={}".format(key, value))
-                ext_metadata = ext_metadata + key + ': ' + value + '\n'
-
-            # get funding agency data
-            funding_agency_names = []
-            award_numbers = []
-
-            for a in res.metadata.funding_agencies.all():
-                funding_agency_names.append(a.agency_name)
-                award_numbers.append(a.award_number) 
-
-            # get list of contributors
-            contributors = []
-            for c in res.metadata.contributors.all():
-                contributors.append(str(c))
-
-            # if the resource is published, set the doi and update booleans in dict.
-            doi = ''
-            if res.raccess.public:
-                public = True
-            else: 
-                public = False
-            
-            if res.raccess.published:
-                published = True
-                doi = res.doi
-            else:
-                published = False 
-
-            other_metadata_dict = {
-                'rid': rid,
-                'public': public,
-                'published': published,
-                'doi': doi,
-                'extended_metadata_notes': ext_metadata,
-                'language': str(res.metadata.language),
-                'funding_agency_names': funding_agency_names,
-                'award_numbers': award_numbers,
-                'contributors': contributors
-            }
-
+            other_metadata_dict = get_other_metadata(res, rid)
             _, mkfile_path = tempfile.mkstemp(prefix='other_metadata.json', dir=mkdir)
             with open(mkfile_path, 'w') as mkfile:
                 json.dump(other_metadata_dict, mkfile)
