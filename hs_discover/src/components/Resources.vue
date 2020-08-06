@@ -410,12 +410,13 @@ export default {
             try {
               this.resources = JSON.parse(cacheresponse.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-              axios.get('/discoverapi/', { params: { q: this.searchtext, cache: '1' } })
+              axios.get('/discoverapi/', { params: { q: this.searchtext } })
                 .then((fullresponse) => {
                   if (fullresponse) {
                     try {
                       this.resources = JSON.parse(fullresponse.data.resources);
                       console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
+                      this.pagenum = 1;
                       document.body.style.cursor = 'default';
                     } catch (e) {
                       console.log(`Error parsing discoverapi JSON: ${e}`);
@@ -459,7 +460,7 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.searchClick();
+      this.cacheLoad();
     },
     loadgeo() {
       const startd = new Date();
