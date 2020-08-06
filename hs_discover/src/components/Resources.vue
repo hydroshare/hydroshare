@@ -1,4 +1,10 @@
 <template>
+  <div>
+    <div id="search" @keyup.enter="searchClick" class="input-group">
+        <input id="search-input" type="search" class="form-control" v-model="searchtext"
+               placeholder="Search all Public and Discoverable Resources">
+        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside"></i>
+    </div>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
@@ -213,16 +219,21 @@ Contributor: ${entry.contributor}`">{{entry.author}}</a>
             </div>
         </div>
     </div>
+    </div>
 </template>
 
 <script>
 import DatePick from 'vue-date-pick';
-import 'vue-date-pick/dist/vueDatePick.css'; // css font-size overridden in hs_discover/index.html to enforce 1em
+import 'vue-date-pick/dist/vueDatePick.css';
+import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
 export default {
   data() {
     return {
+      resources: [],
+      searchtext: '',
       filterlimit: 10, // Minimum threshold for filter item to display with checkbox
+      geodata: [],
       geopoints: [],
       startdate: 'Start Date',
       enddate: 'End Date',
@@ -230,7 +241,6 @@ export default {
       perpage: 40, // resources per page
       pagenum: 1, // initial page number to show
       geoloaded: false, // searchjson endpoint called and retrieved geo data
-      resloaded: false, // track axios resource data promise after component mount
       resgeotypes: '',
       googMarkers: [],
       uidFilter: [],
@@ -277,7 +287,7 @@ export default {
   },
   name: 'Resources',
   props:
-  ['resources', 'geodata', 'columns', 'labels'],
+  ['columns', 'labels'],
   components: {
     datePick: DatePick,
   },
@@ -285,61 +295,58 @@ export default {
     filteredResources() {
       // this routine typically completes in thousandths or hundredths of seconds with 3000 resources in Chrome
       const startd = new Date();
-      if (this.resloaded) {
-        let resfiltered = this.resources;
-        if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0
-            && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length
-            === 0 && this.typeFilter.length === 0) {
-          // do nothing
-        } else {
-          // Filters should be most restrictive when two conflicting states are selected
-          if (this.uidFilter.length > 0) {
-            const resUids = resfiltered.filter(element => this.uidFilter.indexOf(element.short_id) > -1);
-            resfiltered = resUids;
-          }
-          if (this.authorFilter.length > 0) {
-            const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
-            resfiltered = resAuthors;
-          }
-          if (this.ownerFilter.length > 0) {
-            const resOwners = resfiltered.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
-            resfiltered = resOwners;
-          }
-          if (this.subjectFilter.length > 0) {
-            const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val))
-              .length > 0);
-            resfiltered = resSubjects;
-          }
-          if (this.availabilityFilter.length > 0) {
-            const resAvailabilities = resfiltered.filter(res => res.availability
-              .filter(val => this.availabilityFilter.includes(val)).length > 0);
-            resfiltered = resAvailabilities;
-          }
-          if (this.contributorFilter.length > 0) {
-            const resContributors = resfiltered.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
-            resfiltered = resContributors;
-          }
-          if (this.typeFilter.length > 0) {
-            const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
-            resfiltered = resTypes;
-          }
+      let resfiltered = this.resources;
+      if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0
+          && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length
+          === 0 && this.typeFilter.length === 0) {
+        // do nothing
+      } else {
+        // Filters should be most restrictive when two conflicting states are selected
+        if (this.uidFilter.length > 0) {
+          const resUids = resfiltered.filter(element => this.uidFilter.indexOf(element.short_id) > -1);
+          resfiltered = resUids;
         }
-        if (this.startdate !== 'Start Date' && this.startdate !== '' && this.enddate !== 'End Date' && this.enddate !== '') {
-          const resDate = [];
-          resfiltered.forEach((item) => {
-            if (item.start_date && item.end_date) {
-              if (this.dateOverlap(item.start_date, item.end_date)) {
-                resDate.push(item);
-              }
-            }
-          });
-          resfiltered = resDate;
+        if (this.authorFilter.length > 0) {
+          const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
+          resfiltered = resAuthors;
         }
-        resfiltered = this.columnSort(resfiltered);
-        console.log(`filter compute: ${(new Date() - startd) / 1000}`);
-        return resfiltered;
+        if (this.ownerFilter.length > 0) {
+          const resOwners = resfiltered.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
+          resfiltered = resOwners;
+        }
+        if (this.subjectFilter.length > 0) {
+          const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val))
+            .length > 0);
+          resfiltered = resSubjects;
+        }
+        if (this.availabilityFilter.length > 0) {
+          const resAvailabilities = resfiltered.filter(res => res.availability
+            .filter(val => this.availabilityFilter.includes(val)).length > 0);
+          resfiltered = resAvailabilities;
+        }
+        if (this.contributorFilter.length > 0) {
+          const resContributors = resfiltered.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+          resfiltered = resContributors;
+        }
+        if (this.typeFilter.length > 0) {
+          const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
+          resfiltered = resTypes;
+        }
       }
-      return [];
+      if (this.startdate !== 'Start Date' && this.startdate !== '' && this.enddate !== 'End Date' && this.enddate !== '') {
+        const resDate = [];
+        resfiltered.forEach((item) => {
+          if (item.start_date && item.end_date) {
+            if (this.dateOverlap(item.start_date, item.end_date)) {
+              resDate.push(item);
+            }
+          }
+        });
+        resfiltered = resDate;
+      }
+      resfiltered = this.columnSort(resfiltered);
+      console.log(`filter compute: ${(new Date() - startd) / 1000}`);
+      return resfiltered;
     },
   },
   watch: {
@@ -356,6 +363,9 @@ export default {
     },
   },
   mounted() {
+    if (document.getElementById('qstring').value.trim() !== '') {
+      this.searchtext = document.getElementById('qstring').value.trim();
+    }
     const startd = new Date();
     this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
@@ -387,8 +397,60 @@ export default {
     if (document.getElementById('map-view').style.display === 'block') {
       document.getElementById('map-filter-button').style.display = 'block';
     }
+    this.searchClick();
+    this.loadgeo();
   },
   methods: {
+    searchClick() {
+      const startd = new Date();
+      document.body.style.cursor = 'wait';
+      axios.get('/discoverapi/', { params: { q: this.searchtext } })
+        .then((response) => {
+          if (response) {
+            try {
+              this.resources = JSON.parse(response.data.resources);
+              console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
+              // this.setAllMarkers();
+              document.body.style.cursor = 'default';
+            } catch (e) {
+              console.log(`Error parsing discoverapi JSON: ${e}`);
+              document.body.style.cursor = 'default';
+            }
+          }
+        })
+        .catch((error) => {
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          document.body.style.cursor = 'default';
+        });
+      this.pagenum = 1;
+    },
+    clearSearch() {
+      this.searchtext = '';
+      this.searchClick();
+    },
+    loadgeo() {
+      const startd = new Date();
+      const geodata = [];
+      axios.get('/searchjson/', { params: { data: {} } })
+        .then((response) => {
+          if (response.status === 200) {
+            console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
+            response.data.forEach((item) => {
+              const val = JSON.parse(item);
+              if (val.coverage_type) {
+                geodata.push(val);
+              }
+            });
+            this.geodata = geodata;
+          } else {
+            console.log(`Error: ${response.statusText}`);
+          }
+        })
+        .catch((error) => {
+          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
+          // this.geoloaded = false;
+        });
+    },
     filterBuilder(resources, thing, limit) {
       const box = [];
 
@@ -476,8 +538,8 @@ export default {
     },
     setAllMarkers() {
       if (document.getElementById('map-view').style.display === 'block') {
+        console.log('Rendering all markers');
         deleteMarkers();
-        console.log(`num filtered res: ${this.filteredResources.length}`);
         const shids = this.filteredResources.map(x => x.short_id);
         const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
 
@@ -583,5 +645,23 @@ export default {
     }
     #page-number {
         width: 60px;
+    }
+        #wrapper .search-field div {
+        width: 100%;
+    }
+    #wrapper > a {
+        margin-left: 1em;
+    }
+    #search input {
+        width: 100%;
+        padding-left: 25px;
+        padding-right: 25px;
+        z-index: 1;
+    }
+    .inside {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 2;
     }
 </style>
