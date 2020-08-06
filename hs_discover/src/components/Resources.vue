@@ -230,6 +230,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      loading: false,
       resources: [],
       searchtext: '',
       filterlimit: 10, // Minimum threshold for filter item to display with checkbox
@@ -366,8 +367,8 @@ export default {
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
+    this.cacheLoad();
     const startd = new Date();
-    this.resloaded = this.resources.length > 0;
     this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
     this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
     this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
@@ -397,10 +398,42 @@ export default {
     if (document.getElementById('map-view').style.display === 'block') {
       document.getElementById('map-filter-button').style.display = 'block';
     }
-    this.searchClick();
     this.loadgeo();
   },
   methods: {
+    cacheLoad() {
+      const startd = new Date();
+      document.body.style.cursor = 'wait';
+      axios.get('/discoverapi/', { params: { q: this.searchtext, cache: '1' } })
+        .then((cacheresponse) => {
+          if (cacheresponse) {
+            try {
+              this.resources = JSON.parse(cacheresponse.data.resources);
+              console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
+              axios.get('/discoverapi/', { params: { q: this.searchtext, cache: '1' } })
+                .then((fullresponse) => {
+                  if (fullresponse) {
+                    try {
+                      this.resources = JSON.parse(fullresponse.data.resources);
+                      console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
+                      document.body.style.cursor = 'default';
+                    } catch (e) {
+                      console.log(`Error parsing discoverapi JSON: ${e}`);
+                      document.body.style.cursor = 'default';
+                    }
+                  }
+                });
+            } catch (e) {
+              console.log(`Error parsing discoverapi JSON: ${e}`);
+              document.body.style.cursor = 'default';
+            }
+          }
+        })
+        .catch((error) => {
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          document.body.style.cursor = 'default';
+        });
+    },
     searchClick() {
       const startd = new Date();
       document.body.style.cursor = 'wait';
@@ -410,7 +443,7 @@ export default {
             try {
               this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-              // this.setAllMarkers();
+              this.setAllMarkers();
               document.body.style.cursor = 'default';
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
@@ -646,7 +679,7 @@ export default {
     #page-number {
         width: 60px;
     }
-        #wrapper .search-field div {
+    #wrapper .search-field div {
         width: 100%;
     }
     #wrapper > a {

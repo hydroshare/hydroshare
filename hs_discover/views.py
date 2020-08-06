@@ -53,7 +53,12 @@ class SearchAPI(APIView):
 
         resources = []
 
-        p = Paginator(sqs, max(len(sqs), 1))
+        if request.GET.get('cache'):
+            pagelim = 120
+        else:
+            pagelim = max(len(sqs), 1)
+
+        p = Paginator(sqs, pagelim)
 
         for result in p.page(1):
             try:
