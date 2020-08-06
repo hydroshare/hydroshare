@@ -1,5 +1,9 @@
 """Define search indexes for hs_core module."""
 
+# NOTE: this has been optimized for the current and future discovery pages.
+# Features that are not used have been commented out temporarily
+# and marked as # unused # for future deletion once discovery is revised.
+
 from haystack import indexes
 from hs_core.models import BaseResource
 from hs_geographic_feature_resource.models import GeographicFeatureMetaData
@@ -141,28 +145,30 @@ def get_content_types(res):
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
-    text = indexes.CharField(document=True, use_template=True)
+    text = indexes.CharField(document=True, use_template=True, stored=False)
     short_id = indexes.CharField(model_attr='short_id')
-    doi = indexes.CharField(model_attr='doi', null=True)
+    doi = indexes.CharField(model_attr='doi', null=True, stored=False)
     author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    author_raw = indexes.CharField(indexed=False)  # not normalized
+    # unused # author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
     abstract = indexes.CharField()
-    creator = indexes.MultiValueField(faceted=True)
+    creator = indexes.MultiValueField(faceted=True, stored=False)
     contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
     availability = indexes.MultiValueField(faceted=True)
+    shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
-    replaced = indexes.BooleanField()
+    replaced = indexes.BooleanField(stored=False)
     created = indexes.DateTimeField(model_attr='created')
     modified = indexes.DateTimeField(model_attr='last_updated')
-    organization = indexes.MultiValueField(faceted=True)
-    creator_email = indexes.MultiValueField()
-    publisher = indexes.CharField(faceted=True)
-    rating = indexes.IntegerField(model_attr='rating_sum')
-    coverage = indexes.MultiValueField()
+    organization = indexes.MultiValueField(stored=False)
+    # unused # creator_email = indexes.MultiValueField(stored=False)
+    publisher = indexes.CharField(stored=False)
+    # deprecated # rating = indexes.IntegerField(model_attr='rating_sum', stored=False)
+    coverage = indexes.MultiValueField(indexed=False)
     coverage_type = indexes.MultiValueField()
+    # TODO: these are duplicated in the coverage field.
     east = indexes.FloatField(null=True)
     north = indexes.FloatField(null=True)
     northlimit = indexes.FloatField(null=True)
@@ -171,27 +177,25 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     westlimit = indexes.FloatField(null=True)
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
-    storage_type = indexes.CharField()
-    # TODO re-enable after Dan and Alva engaged in SOLR configuration
-    # json = indexes.CharField(use_template=True, stored=True, indexed=False)
+    storage_type = indexes.CharField(stored=False)
 
     # # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
     # coverage_southwest = indexes.LocationField(null=True)
     # coverage_northeast = indexes.LocationField(null=True)
 
-    format = indexes.MultiValueField()
-    identifier = indexes.MultiValueField()
-    language = indexes.CharField(faceted=True)
-    source = indexes.MultiValueField()
-    relation = indexes.MultiValueField()
+    format = indexes.MultiValueField(stored=False)
+    identifier = indexes.MultiValueField(stored=False)
+    language = indexes.CharField(stored=False)
+    source = indexes.MultiValueField(stored=False)
+    relation = indexes.MultiValueField(stored=False)
     resource_type = indexes.CharField(faceted=True)
     content_type = indexes.MultiValueField(faceted=True)
-    comment = indexes.MultiValueField()
-    comments_count = indexes.IntegerField(faceted=True)
-    owner_login = indexes.MultiValueField(faceted=True)
-    owner = indexes.MultiValueField(faceted=True)
-    owners_count = indexes.IntegerField(faceted=True)
+    comment = indexes.MultiValueField(stored=False)
+    # deprecated # comments_count = indexes.IntegerField(stored=False)
+    owner_login = indexes.MultiValueField(stored=False)
+    owner = indexes.MultiValueField(faceted=True, stored=False)
+    # deprecated # owners_count = indexes.IntegerField(stored=False)
     # # TODO: We might need these later for social discovery
     # viewer_login = indexes.MultiValueField(faceted=True)
     # viewer = indexes.MultiValueField(faceted=True)
@@ -199,30 +203,33 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # editor_login = indexes.MultiValueField(faceted=True)
     # editor = indexes.MultiValueField(faceted=True)
     # editors_count = indexes.IntegerField(faceted=True)
-    person = indexes.MultiValueField(faceted=True)
+    person = indexes.MultiValueField(stored=False)
 
     # non-core metadata
-    geometry_type = indexes.CharField(faceted=True)
-    field_name = indexes.CharField()
-    field_type = indexes.CharField()
-    field_type_code = indexes.CharField()
-    variable = indexes.MultiValueField(faceted=True)
-    variable_type = indexes.MultiValueField(faceted=True)
-    variable_shape = indexes.MultiValueField()
-    variable_descriptive_name = indexes.MultiValueField()
-    variable_speciation = indexes.MultiValueField()
-    site = indexes.MultiValueField()
-    method = indexes.MultiValueField()
-    quality_level = indexes.MultiValueField()
-    data_source = indexes.MultiValueField()
-    sample_medium = indexes.MultiValueField(faceted=True)
-    units = indexes.MultiValueField(faceted=True)
-    units_type = indexes.MultiValueField(faceted=True)
-    aggregation_statistics = indexes.MultiValueField()
+    geometry_type = indexes.CharField(stored=False)
+    field_name = indexes.CharField(stored=False)
+    field_type = indexes.CharField(stored=False)
+    field_type_code = indexes.CharField(stored=False)
+    variable = indexes.MultiValueField(stored=False)
+    variable_type = indexes.MultiValueField(stored=False)
+    variable_shape = indexes.MultiValueField(stored=False)
+    variable_descriptive_name = indexes.MultiValueField(stored=False)
+    variable_speciation = indexes.MultiValueField(stored=False)
+    site = indexes.MultiValueField(stored=False)
+    method = indexes.MultiValueField(stored=False)
+    quality_level = indexes.MultiValueField(stored=False)
+    data_source = indexes.MultiValueField(stored=False)
+    sample_medium = indexes.MultiValueField(stored=False)
+    units = indexes.MultiValueField(stored=False)
+    units_type = indexes.MultiValueField(stored=False)
+    # unused # aggregation_statistics = indexes.MultiValueField(stored=False)
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
-    extra = indexes.MultiValueField()
+    extra = indexes.MultiValueField(stored=False)
+
+    # json field for discovery
+    # json = indexes.CharField(use_template=True, indexed=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -230,8 +237,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def index_queryset(self, using=None):
         """Return queryset including discoverable and public resources."""
-        return self.get_model().objects.filter(Q(raccess__discoverable=True) |
-                                               Q(raccess__public=True)).distinct()
+        return self.get_model().objects.filter(Q(raccess__discoverable=True)).distinct()
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -259,26 +265,26 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_author_raw(self, obj):
-        """
-        Return metadata author if exists, otherwise return None.
+    # unused # def prepare_author_raw(self, obj):
+    # unused #     """
+    # unused #     Return metadata author if exists, otherwise return None.
 
-        This must be represented as a single-value field to enable sorting.
-        """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator is None:
-                return 'none'
-            elif first_creator.name:
-                return first_creator.name.lstrip()
-            elif first_creator.organization:
-                return first_creator.organization.strip()
-            else:
-                return 'none'
-        else:
-            return 'none'
+    # unused #     This must be represented as a single-value field to enable sorting.
+    # unused #     """
+    # unused #     if hasattr(obj, 'metadata') and \
+    # unused #             obj.metadata is not None and \
+    # unused #             obj.metadata.creators is not None:
+    # unused #         first_creator = obj.metadata.creators.filter(order=1).first()
+    # unused #         if first_creator is None:
+    # unused #             return 'none'
+    # unused #         elif first_creator.name:
+    # unused #             return first_creator.name.lstrip()
+    # unused #         elif first_creator.organization:
+    # unused #             return first_creator.organization.strip()
+    # unused #         else:
+    # unused #             return 'none'
+    # unused #     else:
+    # unused #         return 'none'
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -391,15 +397,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_creator_email(self, obj):
-        """Return metadata emails if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            return [creator.email.strip() for creator in obj.metadata.creators.all()
-                    .exclude(email__isnull=True).exclude(email='')]
-        else:
-            return []
+    # unused # def prepare_creator_email(self, obj):
+    # unused #     """Return metadata emails if exists, otherwise return empty array."""
+    # unused #     if hasattr(obj, 'metadata') and \
+    # unused #             obj.metadata is not None and \
+    # unused #             obj.metadata.creators is not None:
+    # unused #         return [creator.email.strip() for creator in obj.metadata.creators.all()
+    # unused #                 .exclude(email__isnull=True).exclude(email='')]
+    # unused #     else:
+    # unused #         return []
 
     def prepare_availability(self, obj):
         """
@@ -420,6 +426,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             options.append('private')
         return options
+
+    def prepare_shareable(self, obj):
+        """ used in depicting results """
+        return obj.raccess.shareable
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
@@ -554,19 +564,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period':
                     clean_date = coverage.value["start"][:10]
+                    start_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else:
-                            start_date = ""
                     elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else:
-                            start_date = ""
-
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -590,18 +596,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period' and 'end' in coverage.value:
                     clean_date = coverage.value["end"][:10]
+                    end_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else:
-                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else:
-                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
@@ -713,9 +716,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return list of all comments on resource."""
         return [comment.comment.strip() for comment in obj.comments.all()]
 
-    def prepare_comments_count(self, obj):
-        """Return count of resource comments."""
-        return obj.comments_count
+    # deprecated # def prepare_comments_count(self, obj):
+    # deprecated #     """Return count of resource comments."""
+    # deprecated #     return obj.comments_count
 
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
@@ -756,12 +759,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                        .exclude(name__isnull=True).exclude(name='')]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
 
-    def prepare_owners_count(self, obj):
-        """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
-        if hasattr(obj, 'raccess'):
-            return obj.raccess.owners.all().count()
-        else:
-            return 0
+    # deprecated # def prepare_owners_count(self, obj):
+    # deprecated #     """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
+    # deprecated #     if hasattr(obj, 'raccess'):
+    # deprecated #         return obj.raccess.owners.all().count()
+    # deprecated #     else:
+    # deprecated #         return 0
 
     # # TODO: We might need these later for social discovery
     # def prepare_viewer_login(self, obj):
@@ -1041,17 +1044,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                         units_types.append(time_series_result.units_type.strip())
         return units_types
 
-    def prepare_aggregation_statistics(self, obj):
-        """
-        Return list of aggregation statistics if exists, otherwise return empty array.
-        """
-        aggregation_statistics = []
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
-                    if time_series_result.aggregation_statistics is not None:
-                        aggregation_statistics.append(time_series_result.aggregation_statistics)
-        return aggregation_statistics
+    # unused # def prepare_aggregation_statistics(self, obj):
+    # unused #     """
+    # unused #     Return list of aggregation statistics if exists, otherwise return empty array.
+    # unused #     """
+    # unused #     aggregation_statistics = []
+    # unused #     if hasattr(obj, 'metadata'):
+    # unused #         if isinstance(obj.metadata, TimeSeriesMetaData):
+    # unused #             for time_series_result in obj.metadata.time_series_results:
+    # unused #                 if time_series_result.aggregation_statistics is not None:
+    # unused #                     aggregation_statistics.append(time_series_result.aggregation_statistics)
+    # unused #     return aggregation_statistics
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""

@@ -74,6 +74,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertIn(self.txt_file_name, content_list)
         self.assertIn(self.raster_file_name, content_list)
         self.assertTrue(content['results'][0]['modified_time'])
+        self.assertTrue(content['results'][0]['checksum'])
 
     def test_get_resource_file(self):
         files = (MyTemporaryUploadedFile(file=open(self.txt_file_path, 'rb'), name=self.txt_file_path))
