@@ -295,7 +295,6 @@ export default {
   computed: {
     filteredResources() {
       // this routine typically completes in thousandths or hundredths of seconds with 3000 resources in Chrome
-      const startd = new Date();
       let resfiltered = this.resources;
       if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0
           && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length
@@ -346,11 +345,13 @@ export default {
         resfiltered = resDate;
       }
       resfiltered = this.columnSort(resfiltered);
-      console.log(`filter compute: ${(new Date() - startd) / 1000}`);
       return resfiltered;
     },
   },
   watch: {
+    resources() {
+      this.populateFilters();
+    },
     geodata() {
       if (this.geodata.length > 0) {
         this.geoloaded = true;
@@ -368,27 +369,7 @@ export default {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
     this.cacheLoad();
-    const startd = new Date();
-    this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
-    this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
-    this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
-    this.countTypes = this.filterBuilder(this.resources, 'type');
 
-    let subjectbox = [];
-    // res.subject is python list js array
-    this.resources.forEach((res) => {
-      subjectbox = subjectbox.concat(this.enumMulti(res.subject));
-    });
-    const csubjs = new this.Counter(subjectbox);
-    this.countSubjects = Object.fromEntries(Object.entries(csubjs).filter(([k, v]) => v > this.filterlimit));
-
-    let availabilitybox = [];
-    // res.availability is python list js array
-    this.resources.forEach((res) => {
-      availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
-    });
-    this.countAvailabilities = new this.Counter(availabilitybox);
-    console.log(`mount filter build: ${(new Date() - startd) / 1000}`);
     if (this.resloaded) {
       // find earliest start date
       if (this.geodata.length > 0) { // update causes second mount
@@ -401,6 +382,27 @@ export default {
     this.loadgeo();
   },
   methods: {
+    populateFilters() {
+      this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
+      this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
+      this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
+      this.countTypes = this.filterBuilder(this.resources, 'type');
+
+      let subjectbox = [];
+      // res.subject is python list js array
+      this.resources.forEach((res) => {
+        subjectbox = subjectbox.concat(this.enumMulti(res.subject));
+      });
+      const csubjs = new this.Counter(subjectbox);
+      this.countSubjects = Object.fromEntries(Object.entries(csubjs).filter(([k, v]) => v > this.filterlimit));
+
+      let availabilitybox = [];
+      // res.availability is python list js array
+      this.resources.forEach((res) => {
+        availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
+      });
+      this.countAvailabilities = new this.Counter(availabilitybox);
+    },
     cacheLoad() {
       const startd = new Date();
       document.body.style.cursor = 'wait';
