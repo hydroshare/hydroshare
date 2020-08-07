@@ -21,9 +21,9 @@ true = True
 # if the given string contains a url, returns it. Otherwise, returns the
 # generic hydroshare url
 def find_url(string, alt_url):
-    """ 
-    Finds the url in string, otherwise returns alt_url 
-    
+    """
+    Finds the url in string, otherwise returns alt_url
+
     :param string: a string potentially containing a url
     :param alt_url: the alternative url to return if string doesn't have one
     :return: a url
@@ -39,9 +39,9 @@ def find_url(string, alt_url):
 
 
 def set_field(val):
-    """ 
+    """
     returns the field_name of the text of the etree value val, or the empty string if null
-    
+
     :param val: an etree element containing the field information
     :return: the string contained in val
     """
@@ -54,7 +54,7 @@ def set_field(val):
 # utility functions
 
 def create_metadata_dict(temp_dir):
-    """ 
+    """
     creates a dict of all the resource's metadata, in the json format specified by dataverse
 
     :param temp_dir: the temporary directory containing the resource's bag metadata files
@@ -606,9 +606,9 @@ def create_metadata_dict(temp_dir):
 
 
 def upload_dataset(base_url, api_token, dv, temp_dir):
-    """ 
+    """
     uploads a dataset to the specified dataverse location, using the data specified in the file resourcemetadata.xml
-    
+
     :param base_url: the dataverse server url
     :param api_token: the dataverse api_token
     :param dv: the parent dataverse to upload the dataset to, either a dataverse name or id
@@ -626,7 +626,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     dv_data = resp.json()
 
     num_dv = len(dv_data[u'data'])
-    print(num_dv) # eventually, there should be a button which allows users to choose locations from among these
+    print(num_dv)  # eventually, there should be a button which allows users to choose locations from among these
     # print all dataverse and dataset titles
     for i in range(0, num_dv):
         if((dv_data[u'data'][i][u'type'] == 'dataverse')):

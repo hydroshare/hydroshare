@@ -23,7 +23,7 @@ BUFSIZE = 4096
 
 # get owners. An owner is a user. see https://docs.djangoproject.com/en/3.0/ref/contrib/auth/
 def get_owner_data(resource):
-    """ 
+    """
     gets the owner metadata for the given resource, and returns it in a dict
 
     :param resource: the hydroshare resource to get owner_data from
@@ -53,7 +53,7 @@ def get_owner_data(resource):
 
 
 def get_other_metadata(res, rid):
-    """ 
+    """
     gets the other metadata for the given resource, and returns it in a dict.
     other metadata includes extended metadata, funding agency data, contributors, language, doi
 
@@ -108,7 +108,7 @@ def get_other_metadata(res, rid):
 
 
 def export_bag(rid, options):
-    """ 
+    """
     exports the bag for the resource with the given resource id, contained in self (self.res)
 
     :param rid: the resource id of the resource
@@ -255,7 +255,7 @@ class Command(BaseCommand):
     help = "Export a resource to DataVerse."
 
     def add_arguments(self, parser):
-        """ 
+        """
         adds an argument to the command class instance
 
         :param self: the command object
@@ -297,12 +297,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """ 
+        """
         driver to handle the command
 
         :param self: the command object
         :param args: pointer to the arguments (unused)
-        :param options: additional optional parameters to the command line call 
+        :param options: additional optional parameters to the command line call
         :return: nothing
         """
         base_url = 'https://dataverse.harvard.edu'  # server url
