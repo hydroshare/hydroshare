@@ -16,8 +16,8 @@
   };
 
   const createSearcher = () => {
-    const searchBox = new google.maps.places.SearchBox(document.getElementById('map-search'));
-    exports.map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('map-search'));
+    const searchBox = new google.maps.places.SearchBox(document.getElementById('map-search')); // eslint-disable-line
+    exports.map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('map-search')); // eslint-disable-line
     // Bias the SearchBox results towards current map's viewport.
     exports.map.addListener('bounds_changed', () => {
       searchBox.setBounds(exports.map.getBounds());
@@ -36,7 +36,7 @@
       });
       markers = [];
 
-      const bounds = new google.maps.LatLngBounds();
+      const bounds = new google.maps.LatLngBounds(); // eslint-disable-line
       places.forEach((place) => {
         if (!place.geometry) {
           console.log('Returned place contains no geometry');
@@ -50,7 +50,7 @@
         //   scaledSize: new google.maps.Size(25, 25),
         // };
 
-        markers.push(new google.maps.Marker({
+        markers.push(new google.maps.Marker({ // eslint-disable-line
           map: exports.map,
           // icon,
           // title: place.name,
@@ -71,7 +71,7 @@
 
   const createLegend = () => {
     const legend = document.getElementById('discover-map-legend');
-    exports.map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
+    exports.map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend); // eslint-disable-line
     let legendTable = '<table><tbody>';
     legendTable += "<tr><td class='text-center'><img src='/static/img/discover_map_red_marker.png'>"
       + '</td><td>Point Coverage Locations</td></tr>';
@@ -86,20 +86,20 @@
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
     googMarkers = locations.map((location, k) => {
-      const marker = new google.maps.Marker({
+      const marker = new google.maps.Marker({ // eslint-disable-line
         map: exports.map,
         position: location,
         hsUid: hsUid[k % hsUid.length],
         // title: labels[k % labels.length],
       });
-      const infowindow = new google.maps.InfoWindow();
+      const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
       infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>`);
       marker.addListener('click', () => {
         infowindow.open(exports.map, marker);
       });
       return marker;
     });
-    markerCluster = new MarkerClusterer(exports.map, googMarkers,
+    markerCluster = new MarkerClusterer(exports.map, googMarkers, // eslint-disable-line
       { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
     document.body.style.cursor = 'default';
   };
@@ -109,7 +109,7 @@
     pois.forEach(x => x.setMap(null));
     pois = [];
     if (loc.position.lat() && loc.position.lng()) {
-      const poi = new google.maps.Marker({
+      const poi = new google.maps.Marker({ // eslint-disable-line
         map: exports.map,
         position: { lat: loc.position.lat(), lng: loc.position.lng() },
       });
@@ -132,7 +132,7 @@
       },
       zoom: mapDefaultZoom,
       gestureHandling: 'greedy',
-      mapTypeId: google.maps.MapTypeId.TERRAIN,
+      mapTypeId: google.maps.MapTypeId.TERRAIN, // eslint-disable-line
     });
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     // const mapLegend = createLegend();
