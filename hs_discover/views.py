@@ -30,11 +30,11 @@ class SearchAPI(APIView):
                 "availabilityurl":
                 "type": single value, pass a string to REST client
                 "author": single value, pass a string to REST client
-                "contributor": single value, pass a string to REST client
+                "contributor": list value, js will parse JSON as Array
                 "author_link":
-                "owner": single value, pass a string to REST client
+                "owner": list value, js will parse JSON as Array
                 "abstract":
-                "subject":
+                "subject": list value, js will parse JSON as Array
                 "created":
                 "modified":
                 "start_date":
@@ -77,13 +77,13 @@ class SearchAPI(APIView):
 
             if result.creator is not None:
                 try:
-                    contributor = result.creator[0]
+                    contributor = result.creator
                 except:
                     print("Missing contributor: {}".format(result.short_id))
 
             if result.owner is not None:
                 try:
-                    owner = result.owner[0]
+                    owner = result.owner
                 except:
                     print("Missing owner: {}".format(result.short_id))
 

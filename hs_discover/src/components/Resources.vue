@@ -206,7 +206,9 @@
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
                                :title="`Author: ${entry.author}
+
 Owner: ${entry.owner}
+
 Contributor: ${entry.contributor}`">{{entry.author}}</a>
 <!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
                         </td>
@@ -311,7 +313,8 @@ export default {
           resfiltered = resAuthors;
         }
         if (this.ownerFilter.length > 0) {
-          const resOwners = resfiltered.filter(element => this.ownerFilter.indexOf(element.owner) > -1);
+          const resOwners = resfiltered.filter(res => res.owner.filter(val => this.ownerFilter.includes(val))
+            .length > 0);
           resfiltered = resOwners;
         }
         if (this.subjectFilter.length > 0) {
@@ -325,9 +328,11 @@ export default {
           resfiltered = resAvailabilities;
         }
         if (this.contributorFilter.length > 0) {
-          const resContributors = resfiltered.filter(element => this.contributorFilter.indexOf(element.contributor) > -1);
+          const resContributors = resfiltered.filter(res => res.contributor.filter(val => this.contributorFilter.includes(val))
+            .length > 0);
           resfiltered = resContributors;
         }
+
         if (this.typeFilter.length > 0) {
           const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
           resfiltered = resTypes;
@@ -384,8 +389,8 @@ export default {
   methods: {
     populateFilters() {
       this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
-      this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
-      this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
+      // this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
+      // this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
       this.countTypes = this.filterBuilder(this.resources, 'type');
 
       let subjectbox = [];
@@ -395,6 +400,22 @@ export default {
       });
       const csubjs = new this.Counter(subjectbox);
       this.countSubjects = Object.fromEntries(Object.entries(csubjs).filter(([k, v]) => v > this.filterlimit));
+
+      let ownerbox = [];
+      // res.subject is python list js array
+      this.resources.forEach((res) => {
+        ownerbox = ownerbox.concat(this.enumMulti(res.owner));
+      });
+      const cowners = new this.Counter(ownerbox);
+      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([k, v]) => v > this.filterlimit));
+
+      let contributorbox = [];
+      // res.subject is python list js array
+      this.resources.forEach((res) => {
+        contributorbox = contributorbox.concat(this.enumMulti(res.contributor));
+      });
+      const ccontributors = new this.Counter(contributorbox);
+      this.countContributors = Object.fromEntries(Object.entries(ccontributors).filter(([k, v]) => v > this.filterlimit));
 
       let availabilitybox = [];
       // res.availability is python list js array
@@ -511,7 +532,7 @@ export default {
         const datesorted = res.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
         return this.sortDir === -1 ? datesorted : datesorted.reverse();
       }
-      Object.keys(res).forEach(key => (!res[key] ? delete res[key] : {}));
+      Object.keys(res).forEach(key => (!res[key] ? delete res[key] : {})); // eslint-disable-line
       return res.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy]
         .toLowerCase()) ? this.sortDir : -1 * this.sortDir));
     },
@@ -551,12 +572,13 @@ export default {
       return '';
     },
     dateOverlap(dtstart, dtend) {
+      // eslint-disable-next-line no-mixed-operators
       const ol = (Date.parse(dtstart) > Date.parse(this.startdate) && Date.parse(dtstart) < Date.parse(this.enddate) || Date.parse(this.startdate) > Date.parse(dtstart) && Date.parse(this.startdate) < Date.parse(dtend));
       console.log(`${dtstart} ${dtend} : ${this.startdate} ${this.enddate} : ${ol}`);
       return ol;
     },
     displayMap() {
-      toggleMap();
+      toggleMap(); // eslint-disable-line
       if (this.geoloaded) {
         this.setAllMarkers();
       }
@@ -575,7 +597,7 @@ export default {
     setAllMarkers() {
       if (document.getElementById('map-view').style.display === 'block') {
         console.log('Rendering all markers');
-        deleteMarkers();
+        deleteMarkers(); // eslint-disable-line
         const shids = this.filteredResources.map(x => x.short_id);
         const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
 
@@ -609,7 +631,7 @@ export default {
         });
         const regionuids = pts.map(x => x.short_id);
         const regionlbls = pts.map(x => x.title);
-        createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls));
+        createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls)); // eslint-disable-line
       }
     },
     liveMapFilter() {
@@ -623,18 +645,18 @@ export default {
     showHighlighter(hsid) {
       if (document.getElementById('map-view').style.display === 'block') {
         document.getElementById('topcontrol').click();
-        highlightMarker(hsid);
+        highlightMarker(hsid); // eslint-disable-line
       }
     },
     renderMapSingle(pts) {
       pts.forEach((pt) => {
         if (pt.coverage_type === 'point') {
-          createMarker({ lat: pt.north, lng: pt.east }, pt.title);
+          createMarker({ lat: pt.north, lng: pt.east }, pt.title); // eslint-disable-line
         } else if (pt.coverage_type === 'box') {
           const lat = (parseInt(pt.northlimit, 10) + parseInt(pt.southlimit, 10)) / 2;
           const lng = (parseInt(pt.eastlimit, 10) + parseInt(pt.westlimit, 10)) / 2;
           console.log(pt.northlimit, pt.southlimit, pt.eastlimit, pt.westlimit);
-          createMarker({ lat, lng }, pt.title);
+          createMarker({ lat, lng }, pt.title); // eslint-disable-line
         }
       });
     },
