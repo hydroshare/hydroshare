@@ -2,7 +2,6 @@
 
 # NOTE: this has been optimized for the current and future discovery pages.
 # Features that are not used have been commented out temporarily
-# and marked as # unused # for future deletion once discovery is revised.
 
 from haystack import indexes
 from hs_core.models import BaseResource
@@ -149,11 +148,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True, stored=False)
     author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    # unused # author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
     abstract = indexes.CharField()
-    creator = indexes.MultiValueField(faceted=True, stored=False)
+    creator = indexes.MultiValueField(faceted=True)
     contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
     availability = indexes.MultiValueField(faceted=True)
@@ -163,9 +161,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     created = indexes.DateTimeField(model_attr='created')
     modified = indexes.DateTimeField(model_attr='last_updated')
     organization = indexes.MultiValueField(stored=False)
-    # unused # creator_email = indexes.MultiValueField(stored=False)
     publisher = indexes.CharField(stored=False)
-    # deprecated # rating = indexes.IntegerField(model_attr='rating_sum', stored=False)
     coverage = indexes.MultiValueField(indexed=False)
     coverage_type = indexes.MultiValueField()
     # TODO: these are duplicated in the coverage field.
@@ -192,17 +188,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     resource_type = indexes.CharField(faceted=True)
     content_type = indexes.MultiValueField(faceted=True)
     comment = indexes.MultiValueField(stored=False)
-    # deprecated # comments_count = indexes.IntegerField(stored=False)
     owner_login = indexes.MultiValueField(stored=False)
-    owner = indexes.MultiValueField(faceted=True, stored=False)
-    # deprecated # owners_count = indexes.IntegerField(stored=False)
-    # # TODO: We might need these later for social discovery
-    # viewer_login = indexes.MultiValueField(faceted=True)
-    # viewer = indexes.MultiValueField(faceted=True)
-    # viewers_count = indexes.IntegerField(faceted=True)
-    # editor_login = indexes.MultiValueField(faceted=True)
-    # editor = indexes.MultiValueField(faceted=True)
-    # editors_count = indexes.IntegerField(faceted=True)
+    owner = indexes.MultiValueField(faceted=True)
     person = indexes.MultiValueField(stored=False)
 
     # non-core metadata
@@ -222,14 +209,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     sample_medium = indexes.MultiValueField(stored=False)
     units = indexes.MultiValueField(stored=False)
     units_type = indexes.MultiValueField(stored=False)
-    # unused # aggregation_statistics = indexes.MultiValueField(stored=False)
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
     extra = indexes.MultiValueField(stored=False)
-
-    # json field for discovery
-    # json = indexes.CharField(use_template=True, indexed=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -264,27 +247,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return obj.metadata.description.abstract.lstrip()
         else:
             return None
-
-    # unused # def prepare_author_raw(self, obj):
-    # unused #     """
-    # unused #     Return metadata author if exists, otherwise return None.
-
-    # unused #     This must be represented as a single-value field to enable sorting.
-    # unused #     """
-    # unused #     if hasattr(obj, 'metadata') and \
-    # unused #             obj.metadata is not None and \
-    # unused #             obj.metadata.creators is not None:
-    # unused #         first_creator = obj.metadata.creators.filter(order=1).first()
-    # unused #         if first_creator is None:
-    # unused #             return 'none'
-    # unused #         elif first_creator.name:
-    # unused #             return first_creator.name.lstrip()
-    # unused #         elif first_creator.organization:
-    # unused #             return first_creator.organization.strip()
-    # unused #         else:
-    # unused #             return 'none'
-    # unused #     else:
-    # unused #         return 'none'
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -396,16 +358,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return None
         else:
             return None
-
-    # unused # def prepare_creator_email(self, obj):
-    # unused #     """Return metadata emails if exists, otherwise return empty array."""
-    # unused #     if hasattr(obj, 'metadata') and \
-    # unused #             obj.metadata is not None and \
-    # unused #             obj.metadata.creators is not None:
-    # unused #         return [creator.email.strip() for creator in obj.metadata.creators.all()
-    # unused #                 .exclude(email__isnull=True).exclude(email='')]
-    # unused #     else:
-    # unused #         return []
 
     def prepare_availability(self, obj):
         """
@@ -620,40 +572,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_storage_type(self, obj):
         return obj.storage_type
 
-    # # TODO: SOLR extension needs to be installed for these to work
-    # def prepare_coverage_point(self, obj):
-    #     """ Return Point object associated with coverage, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'point':
-    #                 return Point(float(coverage.value["east"]),
-    #                              float(coverage.value["north"]))
-    #     return None
-
-    # def prepare_coverage_southwest(self, obj):
-    #     """ Return southwest limit of bounding box, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'box':
-    #                 return Point(float(coverage.value["westlimit"]),
-    #                              float(coverage.value["southlimit"]))
-    #     return None
-
-    # def prepare_coverage_northeast(self, obj):
-    #     """ Return northeast limit of bounding box, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'box':
-    #                 return Point(float(coverage.value["eastlimit"]),
-    #                              float(coverage.value["northlimit"]))
-    #     return None
-
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata') and \
@@ -716,10 +634,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return list of all comments on resource."""
         return [comment.comment.strip() for comment in obj.comments.all()]
 
-    # deprecated # def prepare_comments_count(self, obj):
-    # deprecated #     """Return count of resource comments."""
-    # deprecated #     return obj.comments_count
-
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
         if hasattr(obj, 'raccess'):
@@ -758,60 +672,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                        for contributor in obj.metadata.contributors.all()
                        .exclude(name__isnull=True).exclude(name='')]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
-
-    # deprecated # def prepare_owners_count(self, obj):
-    # deprecated #     """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
-    # deprecated #     if hasattr(obj, 'raccess'):
-    # deprecated #         return obj.raccess.owners.all().count()
-    # deprecated #     else:
-    # deprecated #         return 0
-
-    # # TODO: We might need these later for social discovery
-    # def prepare_viewer_login(self, obj):
-    #     """Return usernames of users that can view resource, otherwise return empty array."""
-    #     if hasattr(obj, 'raccess'):
-    #         return [viewer.username for viewer in obj.raccess.view_users.all()]
-    #     else:
-    #         return []
-
-    # def prepare_viewer(self, obj):
-    #     """Return full names of users that can view resource, otherwise return empty array."""
-    #     names = []
-    #     if hasattr(obj, 'raccess'):
-    #         for viewer in obj.raccess.view_users.all():
-    #             name = viewer.last_name + ', ' + viewer.first_name
-    #             names.append(name)
-    #     return names
-
-    # def prepare_viewers_count(self, obj):
-    #     """Return count of users who can view resource, otherwise return 0."""
-    #     if hasattr(obj, 'raccess'):
-    #         return obj.raccess.view_users.all().count()
-    #     else:
-    #         return 0
-
-    # def prepare_editor_login(self, obj):
-    #     """Return usernames of editors of a resource, otherwise return 0."""
-    #     if hasattr(obj, 'raccess'):
-    #         return [editor.username for editor in obj.raccess.edit_users.all()]
-    #     else:
-    #         return 0
-
-    # def prepare_editor(self, obj):
-    #     """Return full names of editors of a resource, otherwise return empty array."""
-    #     names = []
-    #     if hasattr(obj, 'raccess'):
-    #         for editor in obj.raccess.edit_users.all():
-    #             name = editor.last_name + ', ' + editor.first_name
-    #             names.append(name)
-    #     return names
-
-    # def prepare_editors_count(self, obj):
-    #     """Return count of editors of a resource, otherwise return 0."""
-    #     if hasattr(obj, 'raccess'):
-    #         return obj.raccess.edit_users.all().count()
-    #     else:
-    #         return 0
 
     # TODO: These should probably be multi-value fields and pick up all types.
     def prepare_geometry_type(self, obj):
@@ -1043,18 +903,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     if time_series_result.units_type is not None:
                         units_types.append(time_series_result.units_type.strip())
         return units_types
-
-    # unused # def prepare_aggregation_statistics(self, obj):
-    # unused #     """
-    # unused #     Return list of aggregation statistics if exists, otherwise return empty array.
-    # unused #     """
-    # unused #     aggregation_statistics = []
-    # unused #     if hasattr(obj, 'metadata'):
-    # unused #         if isinstance(obj.metadata, TimeSeriesMetaData):
-    # unused #             for time_series_result in obj.metadata.time_series_results:
-    # unused #                 if time_series_result.aggregation_statistics is not None:
-    # unused #                     aggregation_statistics.append(time_series_result.aggregation_statistics)
-    # unused #     return aggregation_statistics
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""
