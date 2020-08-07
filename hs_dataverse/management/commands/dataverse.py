@@ -4,33 +4,24 @@
 Generate metadata and bag for a resource from Django
 
 """
-
 import os
-from os import listdir
 import json
 import requests
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.tasks import create_bag_by_irods
-from django_irods.icommands import SessionException
-from django.contrib.auth.models import User
 from hs_core.hydroshare import get_party_data_from_user
 from django_irods import icommands
 from hs_dataverse.utils import upload_dataset
 import tempfile
-from django_irods.views import download as download_bag_from_irods
-from pprint import pprint
 import shutil
-#from hs_dataverse import run_tests
 
 BUFSIZE = 4096
-
 # helper functions to get different kinds of metadata
 
 
-### get owners. An owner is a user
-### see https://docs.djangoproject.com/en/3.0/ref/contrib/auth/
+# get owners. An owner is a user. see https://docs.djangoproject.com/en/3.0/ref/contrib/auth/
 def get_owner_data(resource):
     owners = list(resource.raccess.owners)
     if len(owners) == 0:
@@ -42,8 +33,7 @@ def get_owner_data(resource):
             'organization': ''
         }
     else:
-        for o in owners: 
-            profile = o.userprofile
+        for o in owners:
             party = get_party_data_from_user(o)
 
             owner_dict = {
@@ -54,6 +44,7 @@ def get_owner_data(resource):
                 'organization': format(party['organization'])
             }
     return owner_dict
+
 
 def get_other_metadata(res, rid):
     # read extended metadata as key/value pairsi
@@ -68,7 +59,7 @@ def get_other_metadata(res, rid):
 
     for a in res.metadata.funding_agencies.all():
         funding_agency_names.append(a.agency_name)
-        award_numbers.append(a.award_number) 
+        award_numbers.append(a.award_number)
 
     # get list of contributors
     contributors = []
@@ -79,14 +70,14 @@ def get_other_metadata(res, rid):
     doi = ''
     if res.raccess.public:
         public = True
-    else: 
+    else:
         public = False
-    
+
     if res.raccess.published:
         published = True
         doi = res.doi
     else:
-        published = False 
+        published = False
 
     other_metadata_dict = {
         'rid': rid,
@@ -102,20 +93,21 @@ def get_other_metadata(res, rid):
 
     return other_metadata_dict
 
-def export_bag(rid, options): 
+
+def export_bag(rid, options):
     requests.packages.urllib3.disable_warnings()
     try:
         # database handle
         resource = BaseResource.objects.get(short_id=rid)
- 
+
         # instance with proper subclass type and access
         res = resource.get_content_model()
         assert res, (resource, resource.content_model)
-        if (res.discovery_content_type != 'Composite'): 
+        if (res.discovery_content_type != 'Composite'):
             print("resource type '{}' is not supported. Aborting.".format(res.discovery_content_type))
             exit(1)
 
-        # create temporary directory 
+        # create temporary directory
         mkdir = tempfile.mkdtemp(prefix=rid, suffix='_dataverse_tempdir', dir='/tmp')
 
         # file handle
@@ -126,29 +118,26 @@ def export_bag(rid, options):
             scimeta_path = os.path.join(res.root_path, 'data',
                                         'resourcemetadata.xml')
             scimeta_exists = istorage.exists(scimeta_path)
-            
+
             if scimeta_exists:
                 print("resource metadata {} found".format(scimeta_path))
                 if icommands.ACTIVE_SESSION:
                     session = icommands.ACTIVE_SESSION
                 else:
-                    raise keyerror('settings must have irods_global_session set')
+                    raise KeyError('settings must have irods_global_session set')
 
-                args = ('-') # redirect to stdout
+                args = ('-')  # redirect to stdout
                 fd = session.run_safe('iget', None, scimeta_path, *args)
-                #read(fd) to get file contents
-                
+                # read(fd) to get file contents
+
                 contents = b""
-                #for temp in fd.stdout:
-                #    contents += str(temp.decode('utf8'))
-                
                 BUFSIZE = 4096
-                block = fd.stdout.read(BUFSIZE) 
-                while block != b"": 
-                    # Do stuff with byte. 
+                block = fd.stdout.read(BUFSIZE)
+                while block != b"":
+                    # Do stuff with byte.
                     contents += block
-                    block = fd.stdout.read(BUFSIZE) 
-        
+                    block = fd.stdout.read(BUFSIZE)
+
                 _, mkfile_path = tempfile.mkstemp(prefix='resourcemetadata.xml', dir=mkdir)
                 with open(mkfile_path, 'wb') as mkfile:
                     mkfile.write(contents)
@@ -196,43 +185,26 @@ def export_bag(rid, options):
                 if icommands.ACTIVE_SESSION:
                     session = icommands.ACTIVE_SESSION
                 else:
-                    raise keyerror('settings must have irods_global_session set')
+                    raise KeyError('settings must have irods_global_session set')
 
                 dir = '/'.join([res.root_path, 'data/contents'])
                 istorage = res.get_irods_storage()
                 data = istorage.listdir(dir)
-                
+
                 for file in data[1]:
                     bag_data_path = '/'.join([res.root_path, 'data/contents', file])
-                    args = ('-') # redirect to stdout
+                    args = ('-')  # redirect to stdout
                     fd = session.run_safe('iget', None, bag_data_path, *args)
 
-                    #contents = ''
-                    #for temp in fd.stdout:
-                    #    contents += str(temp.decode('utf8'))
-                    #_, mkfile_path = tempfile.mkstemp(prefix=file, dir=mkdir)
-                    #with open(mkfile_path, 'w') as mkfile:
-                    #    mkfile.write(contents)
-
-                    
                     contents = b""
-                    block = fd.stdout.read(BUFSIZE) 
-                    while block != b"": 
-                        # Do stuff with byte. 
+                    block = fd.stdout.read(BUFSIZE)
+                    while block != b"":
+                        # Do stuff with byte.
                         contents += block
-                        block = fd.stdout.read(BUFSIZE) 
+                        block = fd.stdout.read(BUFSIZE)
                     _, mkfile_path = tempfile.mkstemp(prefix=file, dir=mkdir)
                     with open(mkfile_path, 'wb') as mkfile:
                         mkfile.write(contents)
-
-
-                #try:
-                #    istorage.getFile(res.bag_path, mkfile)
-                #except SessionException as e:
-                #    print("bag file not found: {}".format(e.message))
-                #    exit(1)
-
-
 
             owner_dict = get_owner_data(resource)
             _, mkfile_path = tempfile.mkstemp(prefix='ownerdata.json', dir=mkdir)
@@ -249,14 +221,15 @@ def export_bag(rid, options):
     except BaseResource.DoesNotExist:
         print("Resource with id {} NOT FOUND in Django".format(rid))
 
-    # before returning the temporary directory, rename all the files by 
+    # before returning the temporary directory, rename all the files by
     # removing the extra characters inserted by mkstemp()
     for file in os.listdir(mkdir):
         file_path = '/'.join([mkdir, file])
-        os.rename(file_path, file_path[:-8]) # remove last 8 characters generated by tempfile
+        os.rename(file_path, file_path[:-8])  # remove last 8 characters generated by tempfile
         file_path = file_path[:-8]
 
     return mkdir
+
 
 class Command(BaseCommand):
     help = "Export a resource to DataVerse."
@@ -296,26 +269,11 @@ class Command(BaseCommand):
             help='HydroShare password'
         )
 
-        #parser.add_argument(
-        #    '--test',
-        #    default=None,
-        #    dest='test',  # value is options['test']
-        #    help='run tests'
-        #)
-
-
     def handle(self, *args, **options):
-        # server url
-        base_url = 'https://dataverse.harvard.edu'
+        base_url = 'https://dataverse.harvard.edu'  # server url
+        api_token = 'c57020c2-d954-48da-be47-4e06785ceba0'  # api-token
+        dv = 'mydv'  # parent given here
 
-        # api-token
-        api_token = 'c57020c2-d954-48da-be47-4e06785ceba0'
-
-        # parent given here
-        dv = 'mydv'
-
-        #if len(options['test']) > 0:
-        #    run_tests()
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 temp_dir = export_bag(rid, options)

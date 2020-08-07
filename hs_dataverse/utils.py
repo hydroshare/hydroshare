@@ -83,7 +83,7 @@ def create_metadata_dict(temp_dir):
 
     relation_tag = '{http://purl.org/dc/elements/1.1/}relation'
 
-    # Define the dicts to be filled in for dataverse fields that accept multpile values
+    # Define the dicts to be filled in for dataverse fields that accept multiple values
     other_id_dict = {
         "otherIdAgency": {
           "typeName": "otherIdAgency",
@@ -355,7 +355,7 @@ def create_metadata_dict(temp_dir):
             ".//%s[%s]/%s" % (creator_tag, i + 1, description_tag))), alt_url)
 
         if i == 0:  # use the first author as the contact person for the dataset
-            contact = contact_dict
+            contact = copy.deepcopy(contact_dict)
             contact['datasetContactName']['value'] = set_field(root.find(
                 ".//%s[%s]/%s/%s" % (creator_tag, i + 1, description_tag, name_tag)))
             contact['datasetContactAffiliation']['value'] = set_field(root.find(
@@ -451,12 +451,11 @@ def create_metadata_dict(temp_dir):
         east = re.sub('east=', '', east)
         north = re.sub('north=', '', north)
         other_geo_info = re.sub('name=', '', name)
-        geo_units.append(re.sub('units=', '', units))
+        geo_units.append(re.sub(' units=', '', units))
         reverse_geo_code_result = gmaps.reverse_geocode((north, east))
         if not reverse_geo_code_result:
-            type_dict = {'types':[]}
+            type_dict = {'types': []}
             reverse_geo_code_result.append({'address_components': [type_dict]})
-        
 
         for box in root.findall(".//%s" % spot_tag):
             bounding_box_vals.append(copy.deepcopy(bounding_box_dict))
@@ -486,7 +485,7 @@ def create_metadata_dict(temp_dir):
         e = json.load(f)
 
     other_id_dict['otherIdValue']['value'] = str(e['rid'])
-    
+
     notes_text = e['extended_metadata_notes']
 
     grant_vals = []
@@ -506,7 +505,7 @@ def create_metadata_dict(temp_dir):
     o = dict()
     with open('/'.join([temp_dir, 'ownerdata.json'])) as f:
         o = json.load(f)
-    contact = contact_dict
+    contact = copy.deepcopy(contact_dict)
     if 'username' in o:
         producer_dict['producerAbbreviation']['value'] = o['username']
     else:
@@ -532,7 +531,6 @@ def create_metadata_dict(temp_dir):
         contact['datasetContactEmail']['value'] = o['email']
     else:
         contact['datasetContactEmail']['value'] = ''
-
     if contact != contact_dict:
         contact_vals.append(contact)
 
