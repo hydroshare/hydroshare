@@ -3498,6 +3498,15 @@ class BaseResource(Page, AbstractResource):
 
         return hs_term_dict
 
+    def zip_path(self, input_path, output_path):
+        istorage = self.get_irods_storage()
+        try:
+            istorage.zipup(input_path, output_path)
+        except SessionException as ex:
+            # logger.error(ex.stderr)
+            return False
+        return True
+
 
 # TODO Deprecated
 class GenericResource(BaseResource):

@@ -3,6 +3,7 @@ import os
 from django.core.exceptions import ObjectDoesNotExist
 from mezzanine.pages.page_processors import processor_for
 
+from django_irods.icommands import SessionException
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 from hs_file_types.models import ModelProgramResourceFileType
 from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
@@ -587,6 +588,49 @@ class CompositeResource(BaseResource):
 
         raise ObjectDoesNotExist("No matching aggregation was found for "
                                  "name:{}".format(aggregation_name))
+
+    def zip_path(self, input_path, output_path):
+        short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
+        # censure aggregation xml documents exist
+        aggregation = self.get_aggregation_by_name(short_path)
+        if aggregation:
+            self.create_aggregation_xml_documents(path=short_path)
+            self.create_model_program_meta_json_schema_files(path=short_path)
+
+        istorage = self.get_irods_storage()
+        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
+        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        istorage.copyFiles(input_path, out_with_folder)
+
+        if aggregation:
+            try:
+                istorage.copyFiles(aggregation.map_file_path, temp_folder_name)
+            except SessionException:
+                pass
+                #logger.error("cannot copy {}".format(aggregation.map_file_path))
+            try:
+                istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
+            except SessionException:
+                pass
+                #logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            if aggregation.is_model_program:
+                try:
+                    istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
+                except SessionException:
+                    pass
+                    #logger.error("cannot copy {}".format(aggregation.schema_file_path))
+            for file in aggregation.files.all():
+                try:
+                    istorage.copyFiles(file.storage_path, temp_folder_name)
+                except SessionException:
+                    pass
+                    #logger.error("cannot copy {}".format(file.storage_path))
+            ret_value = super(BaseResource).zip_path(input_path, output_path)
+            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+            return ret_value
+        else:
+            return super(BaseResource).zip_path(input_path, output_path)
 
     def get_aggregation_by_name(self, name):
         """Get an aggregation that matches the aggregation name specified by *name*
