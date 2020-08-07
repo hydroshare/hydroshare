@@ -435,6 +435,7 @@ export default {
                       console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
                       this.pagenum = 1;
                       document.body.style.cursor = 'default';
+                      // this.$refs.snackbar.open('Finished loading resources');
                     } catch (e) {
                       console.log(`Error parsing discoverapi JSON: ${e}`);
                       document.body.style.cursor = 'default';

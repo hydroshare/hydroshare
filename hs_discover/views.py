@@ -40,11 +40,11 @@ class SearchAPI(APIView):
                 "start_date":
                 "end_date":
         """
-        sqs = SearchQuerySet().all()
+        sqs = SearchQuerySet().all().order_by('-modified')
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q)  # .boost('keyword', 2.0)
+            sqs = sqs.filter(content=q).order_by('-modified')  # .boost('keyword', 2.0)
 
         # vocab = []  # will be populated with autocomplete terms from resource
         # vocab = [x for x in vocab if len(x) > 2]
