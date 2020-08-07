@@ -21,6 +21,13 @@ true = True
 # if the given string contains a url, returns it. Otherwise, returns the
 # generic hydroshare url
 def find_url(string, alt_url):
+    """ 
+    Finds the url in string, otherwise returns alt_url 
+    
+    :param string: a string potentially containing a url
+    :param alt_url: the alternative url to return if string doesn't have one
+    :return: a url
+    """
     regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/" + \
         ")(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>" + \
         "]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
@@ -31,8 +38,13 @@ def find_url(string, alt_url):
         return [x[0] for x in url][0]
 
 
-# returns the field_name of the text of the etree value val, or the empty string if null
 def set_field(val):
+    """ 
+    returns the field_name of the text of the etree value val, or the empty string if null
+    
+    :param val: an etree element containing the field information
+    :return: the string contained in val
+    """
     if val is None or val.text is None:
         return 'None'
     else:
@@ -42,6 +54,12 @@ def set_field(val):
 # utility functions
 
 def create_metadata_dict(temp_dir):
+    """ 
+    creates a dict of all the resource's metadata, in the json format specified by dataverse
+
+    :param temp_dir: the temporary directory containing the resource's bag metadata files
+    :return: the metadata dict
+    """
     # parse the xml metadata file as an etree
     with open(os.path.join(sys.path[0], "hs_dataverse",  "template.json"), "r") as read_file:
         data = json.load(read_file)
@@ -587,8 +605,16 @@ def create_metadata_dict(temp_dir):
     return data
 
 
-# uploads a dataset to the specified dataverse location, using the data specified in the file resourcemetadata.xml
 def upload_dataset(base_url, api_token, dv, temp_dir):
+    """ 
+    uploads a dataset to the specified dataverse location, using the data specified in the file resourcemetadata.xml
+    
+    :param base_url: the dataverse server url
+    :param api_token: the dataverse api_token
+    :param dv: the parent dataverse to upload the dataset to, either a dataverse name or id
+    :param temp_dir: the temporary directory containing the resource's bag metadata files
+    :return: nothing
+    """
     metadata = create_metadata_dict(temp_dir)
     api = Api(base_url, api_token)
 
@@ -600,7 +626,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     dv_data = resp.json()
 
     num_dv = len(dv_data[u'data'])
-    print(num_dv)
+    print(num_dv) # eventually, there should be a button which allows users to choose locations from among these
     # print all dataverse and dataset titles
     for i in range(0, num_dv):
         if((dv_data[u'data'][i][u'type'] == 'dataverse')):
@@ -640,7 +666,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
                     time.sleep(7)
 
     # now delete the dataset, as to not fill up the datverse while testing
-    time.sleep(3)
+    # time.sleep(3)
     # r2 = api.delete_dataset(persistent_id, is_pid=True, auth=True)
     # print(r2)
     # print(r2.text)

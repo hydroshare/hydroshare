@@ -17,6 +17,12 @@ from hs_dataverse.utils import create_metadata_dict
 
 # The following two functions are copied from hs_dataverse/management/commands/dataverse.py
 def get_owner_data(resource):
+    """ 
+    gets the owner metadata for the given resource, and returns it in a dict
+
+    :param resource: the hydroshare resource to get owner_data from
+    :return: a dict containing owner data
+    """
     owners = list(resource.raccess.owners)
     if len(owners) == 0:
         owner_dict = {
@@ -40,6 +46,13 @@ def get_owner_data(resource):
 
 
 def get_other_metadata(res, rid):
+    """ 
+    gets the other metadata for the given resource, and returns it in a dict.
+    other metadata includes extended metadata, funding agency data, contributors, language, doi
+
+    :param resource: the hydroshare resource to get other metadata from
+    :return: a dict containing other metadata
+    """
     # read extended metadata as key/value pairsi
     ext_metadata = ''
     for key, value in list(res.extra_metadata.items()):
@@ -86,6 +99,12 @@ def get_other_metadata(res, rid):
 
 
 def export_bag(self):
+    """ 
+    exports the bag for the resource, contained in self (self.res)
+
+    :param self: an object with a resource self.res as an attribute
+    :return: a temporary directory containing the temporary files of metadata from the resource's bag
+    """
     irods_storage_obj = hs_bagit.create_bag_files(self.res)
     self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
     fd = irods_storage_obj.open("{}/data/resourcemetadata.xml".format(self.res.short_id), 'r')
@@ -124,6 +143,12 @@ def export_bag(self):
 class T01CheckMetadata(TestCase):
 
     def setUp(self):
+        """ 
+        sets up the object inherited from TestCase for testing
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
@@ -197,39 +222,81 @@ class T01CheckMetadata(TestCase):
         self.meta_dict = create_metadata_dict(self.temp_dir)
 
     def tearDown(self):
+        """ 
+        tears down the object inherited from TestCase for testing, kills the things from setup including tempdir
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         super(T01CheckMetadata, self).tearDown()
         # same pattern as setUp, kill everything I put in
         # also delete all tempfiles and tempdirs
         shutil.rmtree(self.temp_dir)
 
     def test_title(self):
+        """ 
+        tests that the title is extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         self.assertEqual(self.res.metadata.title.value,
                          self.meta_dict['datasetVersion']['metadataBlocks']['citation']['fields'][0]['value'])
 
     def test_authors(self):
+        """ 
+        tests that the authors are extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         for i, c in enumerate(self.res.metadata.creators.all()):
             self.assertEqual(c.name,
                              self.meta_dict['datasetVersion']['metadataBlocks']['citation']
                                            ['fields'][3]['value'][i]['authorName']['value'])
 
     def test_contacts(self):
+        """ 
+        tests that the contacts are extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         self.assertEqual(self.res.metadata.creators.first().name,
                          self.meta_dict['datasetVersion']['metadataBlocks']['citation']
                                        ['fields'][4]['value'][0]['datasetContactName']['value'])
         # also, the owners are the other contacts, but as of now this is not tested
 
     def test_description(self):
+        """ 
+        tests that the description is extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         self.assertEqual(self.res.metadata.description.abstract,
                          self.meta_dict['datasetVersion']['metadataBlocks']['citation']
                                        ['fields'][5]['value'][0]['dsDescriptionValue']['value'])
 
     def test_keywords(self):
+        """ 
+        tests that the keywords are extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         for i, keyword in enumerate(self.res.metadata.subjects.all()):
             self.assertEqual(keyword.value,
                              self.meta_dict['datasetVersion']['metadataBlocks']['citation']
                                            ['fields'][7]['value'][i]['keywordValue']['value'])
 
     def test_related_resources(self):
+        """ 
+        tests that the related resources are extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         for related_res in self.res.metadata.relations.all():
             if (related_res.type == 'IsDescribedBy'):
                 self.assertEqual(related_res.value,
@@ -237,6 +304,12 @@ class T01CheckMetadata(TestCase):
                                                ['fields'][21]['value'])
 
     def test_notes(self):
+        """ 
+        tests that the notes extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         notes_text = ''
         for key, value in list(self.res.extra_metadata.items()):
             notes_text = notes_text + '{}: {}'.format(key, value) + '\n'
@@ -245,12 +318,24 @@ class T01CheckMetadata(TestCase):
                                        ['fields'][9]['value'])
 
     def test_contributors(self):
+        """ 
+        tests that the contributors are extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         for contributor in self.res.metadata.contributors.all():
             self.assertEqual(contributor.name,
                              self.meta_dict['datasetVersion']['metadataBlocks']['citation']
                                            ['fields'][11]['value'][0]['contributorName']['value'])
 
     def test_grant_info(self):
+        """ 
+        tests that the grant info is extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         for funding_agency in self.res.metadata.funding_agencies.all():
             self.assertEqual(funding_agency.agency_name,
                              self.meta_dict['datasetVersion']['metadataBlocks']['citation']
@@ -260,6 +345,12 @@ class T01CheckMetadata(TestCase):
                                            ['fields'][12]['value']['grantNumberValue']['value'])
 
     def test_date_modified(self):
+        """ 
+        tests that the date modified is extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         if self.res.metadata.dates.all().filter(type='modified'):
             mod_date = self.res.metadata.dates.all().filter(type='modified')[0]
         self.assertIn(self.meta_dict['datasetVersion']['metadataBlocks']['citation']
@@ -267,6 +358,12 @@ class T01CheckMetadata(TestCase):
                       str(mod_date.start_date))
 
     def test_coverage(self):
+        """ 
+        tests that the coverage data is extracted correctly
+
+        :param self: an instance of the T01CheckMetadta object
+        :return: nothing
+        """
         for x in self.res.metadata.coverages.all():
             if x.type == 'box':  # For now this doesn't evaluate to true, so this is not tested
                 self.assertEqual(x.value.eastlimit,

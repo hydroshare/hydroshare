@@ -23,6 +23,12 @@ BUFSIZE = 4096
 
 # get owners. An owner is a user. see https://docs.djangoproject.com/en/3.0/ref/contrib/auth/
 def get_owner_data(resource):
+    """ 
+    gets the owner metadata for the given resource, and returns it in a dict
+
+    :param resource: the hydroshare resource to get owner_data from
+    :return: a dict containing owner data
+    """
     owners = list(resource.raccess.owners)
     if len(owners) == 0:
         owner_dict = {
@@ -47,7 +53,14 @@ def get_owner_data(resource):
 
 
 def get_other_metadata(res, rid):
-    # read extended metadata as key/value pairsi
+    """ 
+    gets the other metadata for the given resource, and returns it in a dict.
+    other metadata includes extended metadata, funding agency data, contributors, language, doi
+
+    :param resource: the hydroshare resource to get other metadata from
+    :return: a dict containing other metadata
+    """
+    # read extended metadata as key/value pairs
     ext_metadata = ''
     for key, value in list(res.extra_metadata.items()):
         print(" key={}, value={}".format(key, value))
@@ -95,6 +108,13 @@ def get_other_metadata(res, rid):
 
 
 def export_bag(rid, options):
+    """ 
+    exports the bag for the resource with the given resource id, contained in self (self.res)
+
+    :param rid: the resource id of the resource
+    :param options: any additional command line arguments to be included
+    :return: a temporary directory containing the temporary files of metadata from the resource's bag
+    """
     requests.packages.urllib3.disable_warnings()
     try:
         # database handle
@@ -235,6 +255,13 @@ class Command(BaseCommand):
     help = "Export a resource to DataVerse."
 
     def add_arguments(self, parser):
+        """ 
+        adds an argument to the command class instance
+
+        :param self: the command object
+        :param parser: the parser to which the argument should be added
+        :return: nothing
+        """
 
         # a list of resource id's, or none to check all resources
         parser.add_argument('resource_ids', nargs='*', type=str)
@@ -270,6 +297,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """ 
+        driver to handle the command
+
+        :param self: the command object
+        :param args: pointer to the arguments (unused)
+        :param options: additional optional parameters to the command line call 
+        :return: nothing
+        """
         base_url = 'https://dataverse.harvard.edu'  # server url
         api_token = 'c57020c2-d954-48da-be47-4e06785ceba0'  # api-token
         dv = 'mydv'  # parent given here
