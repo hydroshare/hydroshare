@@ -68,8 +68,8 @@ class SearchAPI(APIView):
                 start_date = ''
                 end_date = ''
 
-            contributor = 'None'
-            owner = 'None'
+            contributor = 'None'  # contributor is actually a list and can have multiple values
+            owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
 
             if result.author:

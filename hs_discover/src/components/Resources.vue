@@ -376,8 +376,7 @@ export default {
     this.cacheLoad();
 
     if (this.resloaded) {
-      // find earliest start date
-      if (this.geodata.length > 0) { // update causes second mount
+      if (this.geodata.length > 0) {
         this.geoloaded = true;
       }
     }
@@ -389,20 +388,17 @@ export default {
   methods: {
     populateFilters() {
       this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
-      // this.countOwners = this.filterBuilder(this.resources, 'owner', this.filterlimit);
-      // this.countContributors = this.filterBuilder(this.resources, 'contributor', this.filterlimit);
       this.countTypes = this.filterBuilder(this.resources, 'type');
 
+      // this.countSubjects = this.filterMultiBuilder(this.resources, 'subject', this.filterlimit);
       let subjectbox = [];
-      // res.subject is python list js array
       this.resources.forEach((res) => {
         subjectbox = subjectbox.concat(this.enumMulti(res.subject));
       });
-      const csubjs = new this.Counter(subjectbox);
-      this.countSubjects = Object.fromEntries(Object.entries(csubjs).filter(([k, v]) => v > this.filterlimit));
+      const csubjects = new this.Counter(subjectbox);
+      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([k, v]) => v > this.filterlimit));
 
       let ownerbox = [];
-      // res.subject is python list js array
       this.resources.forEach((res) => {
         ownerbox = ownerbox.concat(this.enumMulti(res.owner));
       });
@@ -410,7 +406,6 @@ export default {
       this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([k, v]) => v > this.filterlimit));
 
       let contributorbox = [];
-      // res.subject is python list js array
       this.resources.forEach((res) => {
         contributorbox = contributorbox.concat(this.enumMulti(res.contributor));
       });
@@ -418,7 +413,6 @@ export default {
       this.countContributors = Object.fromEntries(Object.entries(ccontributors).filter(([k, v]) => v > this.filterlimit));
 
       let availabilitybox = [];
-      // res.availability is python list js array
       this.resources.forEach((res) => {
         availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
       });
@@ -524,6 +518,18 @@ export default {
           console.log(`Could not truncate ${thing}: ${err}`);
           return c;
         }
+      }
+      return c;
+    },
+    filterMultiBuilder(resources, attribute, limit) {
+      // TODO under construction
+      let box = [];
+      resources.forEach((res) => {
+        box = box.concat(this.enumMulti(res[attribute]));
+      });
+      const c = new this.Counter(box);
+      if (limit) {
+        return Object.fromEntries(Object.entries(c).filter(([k, v]) => v > limit));
       }
       return c;
     },
