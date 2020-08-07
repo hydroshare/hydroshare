@@ -151,7 +151,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
     abstract = indexes.CharField()
-    creator = indexes.MultiValueField(faceted=True, stored=False)
+    creator = indexes.MultiValueField(faceted=True)
     contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
     availability = indexes.MultiValueField(faceted=True)
