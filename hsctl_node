@@ -1,0 +1,183 @@
+#!/bin/bash
+
+######  For Servers/Instances that do not have docker installed ####################
+#Check for Linux OS Version
+#osversion=`cat /etc/os-release | grep PRETTY | sed 's\"\ \g' | awk '{print $2}'`
+#case $osversion in
+#        Centos) curl -sL https://rpm.nodesource.com/setup_12.x | more #sudo bash -
+#                sudo yum -y install nodejs;
+#        Ubuntu) curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+#                sudo apt-get -y install nodejs;
+#esac
+##################################################################################
+
+### Set up branch variable.  This is only used with development systems 
+
+branch=$1
+
+### Setup host for Discovery
+
+set_up() {
+cd /home/hydro/hydroshare
+cp -f ~/backup/hydroshare-config.yaml /home/hydro/hydroshare/hydroshare-config.yaml
+sleep 1
+rm -rf tmp/static
+rm -rf hs_discover/static
+rm -rf hs_discover/templates
+sleep 1
+git fetch
+sleep 1
+git checkout -f $branch
+sleep 1
+git pull
+sleep 1
+cd ~/backup/
+./install.sh
+sleep 1
+
+cd /home/hydro/hydroshare/hs_discover
+
+mkdir -p static
+mkdir -p templates/hs_discover
+sleep 1
+
+}
+
+set_up_prod() {
+cd /home/hydro/hydroshare
+sleep 1
+rm -rf hs_discover/static
+rm -rf hs_discover/templates
+sleep 1
+cd ~/backup/
+./install.sh
+sleep 1
+
+cd /home/hydro/hydroshare/hs_discover
+
+mkdir -p static
+mkdir -p templates/hs_discover
+sleep 1
+
+}
+
+dis_build() {
+# Start Docker container and Run build
+
+docker run -i -v ~/hydroshare:/hydroshare --name=nodejs node:latest /bin/bash << eof
+
+cd hydroshare
+sleep 1
+cd hs_discover
+npm install
+sleep 1
+npm run build
+sleep 1
+mkdir -p static/js
+mkdir -p static/css
+sleep .5
+cp -rp templates/hs_discover/js static/
+cp -rp templates/hs_discover/css static/
+cp -p templates/hs_discover/map.js static/js/
+echo "----------------js--------------------"
+ls -l static/js
+echo "--------------------------------------"
+sleep 1
+echo "----------------css-------------------"
+ls -l static/css
+echo "--------------------------------------"
+sleep 1
+cd static/
+mv js/app.*.js js/app.js
+mv js/chunk-vendors.*.js js/chunk-vendors.js
+cd .. 
+chown -R 214401701:214400513 static
+chown -R 214401701:214400513 templates/hs_discover/index.html
+eof
+
+docker container rm nodejs
+sleep 1
+}
+
+file_chk() {
+## Validate required files are in correct directory
+
+## Testing for files
+echo "Check for files."
+ls -l static/js
+echo "--------------------------------"
+ls -l static/css
+echo "--------------------------------"
+ls -l templates/hs_discover | grep index
+echo "--------------------------------"
+
+}
+
+## Restart Hydroshare
+
+hs_restart() {
+cd /home/hydro/hydroshare
+### Restart Hydroshare
+echo "Restarting Hydroshare."
+./hsctl restart
+sleep 1
+./hsctl managepy collectstatic --noinput
+sleep 1
+}
+
+hs_collect() {
+sleep 1
+cd ~/hydroshare
+sleep 1
+./hsctl managepy collectstatic --noinput
+sleep 1
+}
+
+hydro_reindex() {
+
+cd ~/hydroshare
+./hsctl managepy solr_recover
+
+}
+
+### ONLY USED FOR TESTING ###
+#---------------------------
+discovery_test() {
+
+set_up
+sleep 1
+dis_build
+sleep 1
+file_chk
+sleep 1
+hs_restart
+sleep 1
+hs_collect
+sleep 1
+hydro_reindex
+sleep 1
+}
+#------------------------
+
+discovery_dev() {
+
+set_up
+sleep 1
+dis_build
+sleep 1
+file_chk
+sleep 1
+
+}
+
+discovery() {
+
+set_up_prod
+sleep 1
+dis_build
+sleep 1
+file_chk
+sleep 1
+
+}
+
