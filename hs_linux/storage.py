@@ -1,5 +1,5 @@
 from django.core.files.storage import  FileSystemStorage
-from hs_core.models import DjangoAVU
+from hs_linux.models import LinuxAVU
 import os, tarfile, shutil, errno
 from pprint import pprint
 
@@ -59,10 +59,12 @@ class LinuxStorage(FileSystemStorage):
                 Alva: he will generate default AVUs for everything.
         '''
         def setAVU(self, name, attName, attVal, attUnit=None):
-                pass
+                LinuxAVU.models.create(path=name, name=attName, val=attVal, unit=attUnit)
 
         def getAVU(self, name, attName):
-                return False
+                obj = LinuxAVU.filter(path__exact=name, name__exact=attName)
+                return obj.attVal
+                
 
 
 
