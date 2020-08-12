@@ -88,7 +88,7 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
                             create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
                                                      payload=payload, username=username)
                         elif result.failed():
-                            status = 'Failed'
+                            status = 'failed'
                             create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
                                                      username=username)
                     task_list.append({
@@ -153,7 +153,7 @@ def get_all_tasks(username):
     task_list = act_task_list + res_task_list + sched_task_list
     task_ids = act_task_ids.union(res_task_ids).union(sched_task_ids)
     task_notif_list = []
-    for obj in TaskNotification.objects.all():
+    for obj in TaskNotification.objects.filter(username=username):
         task_notif_list.append({
             'id': obj.task_id,
             'name': obj.name,
@@ -189,7 +189,7 @@ def get_task_by_id(task_id, name='', payload='', request=None):
                 post_delete_resource.send(sender=type(res), request=request, user=request.user,
                                           resource_shortkey=ret_value, resource=res,
                                           resource_title=res_title, resource_type=res_type)
-            create_task_notification(task_id=task_id, status=status, name=name, payload=payload, username=username)
+            create_task_notification(task_id=task_id, status='completed', name=name, payload=payload, username=username)
         # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
         except Exception:
             # logging exception will log the full stack trace and prepend a line with the message str input argument
