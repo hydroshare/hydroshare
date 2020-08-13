@@ -370,7 +370,14 @@ rebuild_hs() {
     sleep 2s
     rebuild_solr_index
     sleep 2s
+    discovery_dev $branch
+    sleep 2s
     restart_hs
+    sleep 2s
+    hs_collect
+    sleep 2s
+    hydro_reindex
+    sleep 2s
     echo "END BUILD"
 }
 
@@ -422,8 +429,21 @@ reset_all_hs() {
 }
 
 ### Display usage if exactly one argument is not provided ###
+### Check for branch variable placement ###
 if [  $# -ne 1 ]
 then
+    if [[ $4 == "" ]]
+    then
+        echo "Using the following branch: "$3
+        branch=$3
+    elif [ $3 != "" ]
+    then
+        echo "Using the following branch: "$4
+        branch=$4
+    else
+        branch="develop"
+        echo " Using the following branch: " $branch
+    fi
     if [ $1 != "rebuild" ] || [ $2 != "--db" ] && [ $1 != "managepy" ]
     then
         display_usage
