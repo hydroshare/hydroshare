@@ -666,7 +666,8 @@ def copy_resource(ori_res, new_res, user=None):
         copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
     else:
         copy_resource_task(ori_res.short_id, new_res.short_id)
-    return new_res
+    # cannot directly return the new_res object being passed in, but rather return the new resource object being copied
+    return utils.get_resource_by_shortkey(new_res.short_id)
 
 
 def create_new_version_resource(ori_res, new_res, user):

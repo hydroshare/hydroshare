@@ -528,7 +528,8 @@ def delete_resource_task(resource_id, request_username=None):
                     )
                 o.resource_owners.add(*owners_list)
 
-    return resource_id
+    # return the page URL to redirect to after resource deletion task is complete
+    return '/my-resources/'
 
 
 @shared_task
