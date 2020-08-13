@@ -190,6 +190,8 @@ class DiscoveryForm(FacetedSearchForm):
 # View class for generating JSON data format from Haystack
 # returned JSON objects array is used for building the map view
 # TODO Alva, can generic_views.py be cleaned up now Discover has been refactored?
+
+
 class DiscoveryJsonView(FacetedSearchView):
     # declare form class to use in this view
     facet_fields = FIELDS_TO_SHOW
