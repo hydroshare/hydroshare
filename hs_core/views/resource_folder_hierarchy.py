@@ -295,9 +295,9 @@ def data_store_folder_unzip(request, **kwargs):
     if request.is_ajax():
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite))
         task_id = task.task_id
-        task_dict = get_task_by_id(task_id, name='file unzip', request=request)
+        task_dict = get_task_by_id(task_id, name='file unzip', request=request, payload=resource.get_absolute_url())
         create_task_notification(task_id, name='file unzip', username=request.user.username,
-                                 payload=os.path.dirname(zip_with_rel_path))
+                                 payload=resource.get_absolute_url())
         return JsonResponse(task_dict)
     else:
         try:

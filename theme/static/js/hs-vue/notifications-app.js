@@ -42,6 +42,7 @@ $(document).ready(function () {
                     status: {
                         "Pending execution": "Pending...",
                         "In progress": "Unzipping your file...",
+                        "Completed": "Completed",
                         "Failed": "Unzip failed",
                         "Delivered": "Unzipping completed"
                     }
@@ -276,7 +277,11 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource copy":
-                        // Check if resource delete is finished
+                        if (task.status === "Completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "file unzip":
                         if (task.status === "Completed" && task.payload) {
                             vue.deliverTask(task);
                         }
