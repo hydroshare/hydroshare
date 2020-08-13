@@ -51,9 +51,10 @@ $(document).ready(function () {
                     title: "Resource delete",
                     status: {
                         "Pending execution": "Pending...",
-                        "In progress": "Resource deletion in progress...",
-                        "Failed": "Resource deletion failed",
-                        "Delivered": "Resource deletion delivered"
+                        "In progress": "In progress...",
+                        "Completed": "Completed",
+                        "Failed": "Failed",
+                        "Delivered": "Delivered"
                     }
                 },
                 "resource copy": {
@@ -62,8 +63,9 @@ $(document).ready(function () {
                         "Pending execution": "Pending...",
                         "In progress": "Resource copy in progress...",
                         "Aborted": "Aborted",
-                        "Failed": "Resource copy failed",
-                        "Delivered": "Resource copy delivered"
+                        "Completed": "Completed",
+                        "Failed": "Failed",
+                        "Delivered": "Delivered"
                     }
                 }
             },

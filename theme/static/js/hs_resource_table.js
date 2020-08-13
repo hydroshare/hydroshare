@@ -309,19 +309,6 @@ $(document).ready(function () {
     updateLabelCount();
 });
 
-function check_delete_resource_task(task, row) {
-    out_task = notificationsApp.getUpdatedTask(task);
-    if (typeof out_task != "undefined" && (out_task.status === 'Completed' || out_task.status === 'Delivered')) {
-        resourceTable.row(row).remove();  // Delete row from the table
-        resourceTable.draw();
-        updateLabelCount();
-    }
-    else if (typeof out_task != "undefined")
-        setTimeout(function() {
-                    check_delete_resource_task(task, row);
-                }, 1000);
-}
-
 function delete_multiple_resources_ajax_submit(indexes) {
     var calls = [];
 
@@ -344,9 +331,6 @@ function delete_multiple_resources_ajax_submit(indexes) {
                     task = JSON.parse(task)
                     notificationsApp.registerTask(task);
                     notificationsApp.show();
-                    setTimeout(function() {
-                            check_delete_resource_task(task, row);
-                        }, 1000);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log(textStatus, errorThrown);

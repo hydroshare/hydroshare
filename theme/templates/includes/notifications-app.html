@@ -26,7 +26,10 @@
                                                 :href="task.payload">here</a>
                                             to download your files directly.
                                         </small>
-                                        <small v-else>${taskMessages[task.name].status[task.status]}</small>
+                                        <small v-else>${taskMessages[task.name].status[task.status]}.
+                                            <span v-if="task.status === 'Delivered' || task.status === 'Completed'">
+                                            Click <a :href="task.payload">here</a> to refresh user interface.
+                                            </span></small>
                                     </div>
                                 </div>
                             </div>
