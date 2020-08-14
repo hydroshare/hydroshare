@@ -81,15 +81,17 @@
     <field name="django_ct" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="django_id" type="string" indexed="true" stored="true" multiValued="false"/>
     
-    <field name="text" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
     
     <field name="short_id" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="doi" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="doi" type="text_en" indexed="true" stored="true" multiValued="false" />
     
     <field name="author" type="text_en" indexed="true" stored="true" multiValued="false" />
     
     <field name="author_exact" type="string" indexed="true" stored="true" multiValued="false" />
+    
+    <field name="author_raw" type="string" indexed="false" stored="true" multiValued="false" />
     
     <field name="author_url" type="string" indexed="false" stored="true" multiValued="false" />
     
@@ -113,19 +115,25 @@
     
     <field name="availability_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="shareable" type="boolean" indexed="true" stored="true" multiValued="false" />
-    
-    <field name="replaced" type="boolean" indexed="true" stored="false" multiValued="false" />
+    <field name="replaced" type="boolean" indexed="true" stored="true" multiValued="false" />
     
     <field name="created" type="date" indexed="true" stored="true" multiValued="false" />
     
     <field name="modified" type="date" indexed="true" stored="true" multiValued="false" />
     
-    <field name="organization" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="organization" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="publisher" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="organization_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="coverage" type="string" indexed="false" stored="true" multiValued="true" />
+    <field name="creator_email" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="publisher" type="text_en" indexed="true" stored="true" multiValued="false" />
+    
+    <field name="publisher_exact" type="string" indexed="true" stored="true" multiValued="false" />
+    
+    <field name="rating" type="long" indexed="true" stored="true" multiValued="false" />
+    
+    <field name="coverage" type="text_en" indexed="true" stored="true" multiValued="true" />
     
     <field name="coverage_type" type="text_en" indexed="true" stored="true" multiValued="true" />
     
@@ -145,17 +153,19 @@
     
     <field name="end_date" type="date" indexed="true" stored="true" multiValued="false" />
     
-    <field name="storage_type" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="storage_type" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="format" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="format" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="identifier" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="identifier" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="language" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="language" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="source" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="language_exact" type="string" indexed="true" stored="true" multiValued="false" />
     
-    <field name="relation" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="source" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="relation" type="text_en" indexed="true" stored="true" multiValued="true" />
     
     <field name="resource_type" type="text_en" indexed="true" stored="true" multiValued="false" />
     
@@ -165,51 +175,77 @@
     
     <field name="content_type_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="comment" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="comment" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="owner_login" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="comments_count" type="long" indexed="true" stored="true" multiValued="false" />
+    
+    <field name="comments_count_exact" type="long" indexed="true" stored="true" multiValued="false" />
+    
+    <field name="owner_login" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="owner_login_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
     <field name="owner" type="text_en" indexed="true" stored="true" multiValued="true" />
     
     <field name="owner_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="person" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="owners_count" type="long" indexed="true" stored="true" multiValued="false" />
     
-    <field name="geometry_type" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="owners_count_exact" type="long" indexed="true" stored="true" multiValued="false" />
     
-    <field name="field_name" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="person" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="field_type" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="person_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="field_type_code" type="text_en" indexed="true" stored="false" multiValued="false" />
+    <field name="geometry_type" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="variable" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="geometry_type_exact" type="string" indexed="true" stored="true" multiValued="false" />
     
-    <field name="variable_type" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="field_name" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="variable_shape" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="field_type" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="variable_descriptive_name" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="field_type_code" type="text_en" indexed="true" stored="true" multiValued="false" />
     
-    <field name="variable_speciation" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="site" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="method" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable_type" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="quality_level" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable_type_exact" type="string" indexed="true" stored="true" multiValued="true" />
     
-    <field name="data_source" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable_shape" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="sample_medium" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable_descriptive_name" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="units" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="variable_speciation" type="text_en" indexed="true" stored="true" multiValued="true" />
     
-    <field name="units_type" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="site" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="method" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="quality_level" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="data_source" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="sample_medium" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="sample_medium_exact" type="string" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="units" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="units_exact" type="string" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="units_type" type="text_en" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="units_type_exact" type="string" indexed="true" stored="true" multiValued="true" />
+    
+    <field name="aggregation_statistics" type="text_en" indexed="true" stored="true" multiValued="true" />
     
     <field name="absolute_url" type="string" indexed="false" stored="true" multiValued="false" />
     
-    <field name="extra" type="text_en" indexed="true" stored="false" multiValued="true" />
+    <field name="extra" type="text_en" indexed="true" stored="true" multiValued="true" />
     
     <uniqueKey>id</uniqueKey>
 

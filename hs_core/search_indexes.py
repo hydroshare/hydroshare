@@ -1,8 +1,5 @@
 """Define search indexes for hs_core module."""
 
-# NOTE: this has been optimized for the current and future discovery pages.
-# Features that are not used have been commented out temporarily
-
 from haystack import indexes
 from hs_core.models import BaseResource
 from hs_geographic_feature_resource.models import GeographicFeatureMetaData
@@ -144,10 +141,11 @@ def get_content_types(res):
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
-    text = indexes.CharField(document=True, use_template=True, stored=False)
+    text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
-    doi = indexes.CharField(model_attr='doi', null=True, stored=False)
+    doi = indexes.CharField(model_attr='doi', null=True)
     author = indexes.CharField(faceted=True)  # normalized to last, first, middle
+    author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
     abstract = indexes.CharField()
@@ -155,16 +153,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
     availability = indexes.MultiValueField(faceted=True)
-    shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
-    replaced = indexes.BooleanField(stored=False)
+    replaced = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created')
     modified = indexes.DateTimeField(model_attr='last_updated')
-    organization = indexes.MultiValueField(stored=False)
-    publisher = indexes.CharField(stored=False)
-    coverage = indexes.MultiValueField(indexed=False)
+    organization = indexes.MultiValueField(faceted=True)
+    creator_email = indexes.MultiValueField()
+    publisher = indexes.CharField(faceted=True)
+    rating = indexes.IntegerField(model_attr='rating_sum')
+    coverage = indexes.MultiValueField()
     coverage_type = indexes.MultiValueField()
-    # TODO: these are duplicated in the coverage field.
     east = indexes.FloatField(null=True)
     north = indexes.FloatField(null=True)
     northlimit = indexes.FloatField(null=True)
@@ -173,46 +171,56 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     westlimit = indexes.FloatField(null=True)
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
-    storage_type = indexes.CharField(stored=False)
+    storage_type = indexes.CharField()
 
     # # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
     # coverage_southwest = indexes.LocationField(null=True)
     # coverage_northeast = indexes.LocationField(null=True)
 
-    format = indexes.MultiValueField(stored=False)
-    identifier = indexes.MultiValueField(stored=False)
-    language = indexes.CharField(stored=False)
-    source = indexes.MultiValueField(stored=False)
-    relation = indexes.MultiValueField(stored=False)
+    format = indexes.MultiValueField()
+    identifier = indexes.MultiValueField()
+    language = indexes.CharField(faceted=True)
+    source = indexes.MultiValueField()
+    relation = indexes.MultiValueField()
     resource_type = indexes.CharField(faceted=True)
     content_type = indexes.MultiValueField(faceted=True)
-    comment = indexes.MultiValueField(stored=False)
-    owner_login = indexes.MultiValueField(stored=False)
+    comment = indexes.MultiValueField()
+    comments_count = indexes.IntegerField(faceted=True)
+    owner_login = indexes.MultiValueField(faceted=True)
     owner = indexes.MultiValueField(faceted=True)
-    person = indexes.MultiValueField(stored=False)
+    owners_count = indexes.IntegerField(faceted=True)
+    # # TODO: We might need these later for social discovery
+    # viewer_login = indexes.MultiValueField(faceted=True)
+    # viewer = indexes.MultiValueField(faceted=True)
+    # viewers_count = indexes.IntegerField(faceted=True)
+    # editor_login = indexes.MultiValueField(faceted=True)
+    # editor = indexes.MultiValueField(faceted=True)
+    # editors_count = indexes.IntegerField(faceted=True)
+    person = indexes.MultiValueField(faceted=True)
 
     # non-core metadata
-    geometry_type = indexes.CharField(stored=False)
-    field_name = indexes.CharField(stored=False)
-    field_type = indexes.CharField(stored=False)
-    field_type_code = indexes.CharField(stored=False)
-    variable = indexes.MultiValueField(stored=False)
-    variable_type = indexes.MultiValueField(stored=False)
-    variable_shape = indexes.MultiValueField(stored=False)
-    variable_descriptive_name = indexes.MultiValueField(stored=False)
-    variable_speciation = indexes.MultiValueField(stored=False)
-    site = indexes.MultiValueField(stored=False)
-    method = indexes.MultiValueField(stored=False)
-    quality_level = indexes.MultiValueField(stored=False)
-    data_source = indexes.MultiValueField(stored=False)
-    sample_medium = indexes.MultiValueField(stored=False)
-    units = indexes.MultiValueField(stored=False)
-    units_type = indexes.MultiValueField(stored=False)
+    geometry_type = indexes.CharField(faceted=True)
+    field_name = indexes.CharField()
+    field_type = indexes.CharField()
+    field_type_code = indexes.CharField()
+    variable = indexes.MultiValueField(faceted=True)
+    variable_type = indexes.MultiValueField(faceted=True)
+    variable_shape = indexes.MultiValueField()
+    variable_descriptive_name = indexes.MultiValueField()
+    variable_speciation = indexes.MultiValueField()
+    site = indexes.MultiValueField()
+    method = indexes.MultiValueField()
+    quality_level = indexes.MultiValueField()
+    data_source = indexes.MultiValueField()
+    sample_medium = indexes.MultiValueField(faceted=True)
+    units = indexes.MultiValueField(faceted=True)
+    units_type = indexes.MultiValueField(faceted=True)
+    aggregation_statistics = indexes.MultiValueField()
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
-    extra = indexes.MultiValueField(stored=False)
+    extra = indexes.MultiValueField()
 
     def get_model(self):
         """Return BaseResource model."""
@@ -220,7 +228,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def index_queryset(self, using=None):
         """Return queryset including discoverable and public resources."""
-        return self.get_model().objects.filter(Q(raccess__discoverable=True)).distinct()
+        return self.get_model().objects.filter(Q(raccess__discoverable=True) |
+                                               Q(raccess__public=True)).distinct()
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -247,6 +256,27 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return obj.metadata.description.abstract.lstrip()
         else:
             return None
+
+    def prepare_author_raw(self, obj):
+        """
+        Return metadata author if exists, otherwise return None.
+
+        This must be represented as a single-value field to enable sorting.
+        """
+        if hasattr(obj, 'metadata') and \
+                obj.metadata is not None and \
+                obj.metadata.creators is not None:
+            first_creator = obj.metadata.creators.filter(order=1).first()
+            if first_creator is None:
+                return 'none'
+            elif first_creator.name:
+                return first_creator.name.lstrip()
+            elif first_creator.organization:
+                return first_creator.organization.strip()
+            else:
+                return 'none'
+        else:
+            return 'none'
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -359,6 +389,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
+    def prepare_creator_email(self, obj):
+        """Return metadata emails if exists, otherwise return empty array."""
+        if hasattr(obj, 'metadata') and \
+                obj.metadata is not None and \
+                obj.metadata.creators is not None:
+            return [creator.email.strip() for creator in obj.metadata.creators.all()
+                    .exclude(email__isnull=True).exclude(email='')]
+        else:
+            return []
+
     def prepare_availability(self, obj):
         """
         availability is published, public, or discoverable
@@ -378,10 +418,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             options.append('private')
         return options
-
-    def prepare_shareable(self, obj):
-        """ used in depicting results """
-        return obj.raccess.shareable
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
@@ -516,15 +552,19 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period':
                     clean_date = coverage.value["start"][:10]
-                    start_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else:
+                            start_date = ""
                     elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else:
+                            start_date = ""
+
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -548,15 +588,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period' and 'end' in coverage.value:
                     clean_date = coverage.value["end"][:10]
-                    end_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                        else:
+                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                        else:
+                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
@@ -571,6 +614,40 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_storage_type(self, obj):
         return obj.storage_type
+
+    # # TODO: SOLR extension needs to be installed for these to work
+    # def prepare_coverage_point(self, obj):
+    #     """ Return Point object associated with coverage, or None """
+    #     if hasattr(obj, 'metadata') and \
+    #             obj.metadata is not None and \
+    #             obj.metadata.coverages is not None:
+    #         for coverage in obj.metadata.coverages.all():
+    #             if coverage.type == 'point':
+    #                 return Point(float(coverage.value["east"]),
+    #                              float(coverage.value["north"]))
+    #     return None
+
+    # def prepare_coverage_southwest(self, obj):
+    #     """ Return southwest limit of bounding box, or None """
+    #     if hasattr(obj, 'metadata') and \
+    #             obj.metadata is not None and \
+    #             obj.metadata.coverages is not None:
+    #         for coverage in obj.metadata.coverages.all():
+    #             if coverage.type == 'box':
+    #                 return Point(float(coverage.value["westlimit"]),
+    #                              float(coverage.value["southlimit"]))
+    #     return None
+
+    # def prepare_coverage_northeast(self, obj):
+    #     """ Return northeast limit of bounding box, or None """
+    #     if hasattr(obj, 'metadata') and \
+    #             obj.metadata is not None and \
+    #             obj.metadata.coverages is not None:
+    #         for coverage in obj.metadata.coverages.all():
+    #             if coverage.type == 'box':
+    #                 return Point(float(coverage.value["eastlimit"]),
+    #                              float(coverage.value["northlimit"]))
+    #     return None
 
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
@@ -634,6 +711,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return list of all comments on resource."""
         return [comment.comment.strip() for comment in obj.comments.all()]
 
+    def prepare_comments_count(self, obj):
+        """Return count of resource comments."""
+        return obj.comments_count
+
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
         if hasattr(obj, 'raccess'):
@@ -672,6 +753,60 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                        for contributor in obj.metadata.contributors.all()
                        .exclude(name__isnull=True).exclude(name='')]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
+
+    def prepare_owners_count(self, obj):
+        """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
+        if hasattr(obj, 'raccess'):
+            return obj.raccess.owners.all().count()
+        else:
+            return 0
+
+    # # TODO: We might need these later for social discovery
+    # def prepare_viewer_login(self, obj):
+    #     """Return usernames of users that can view resource, otherwise return empty array."""
+    #     if hasattr(obj, 'raccess'):
+    #         return [viewer.username for viewer in obj.raccess.view_users.all()]
+    #     else:
+    #         return []
+
+    # def prepare_viewer(self, obj):
+    #     """Return full names of users that can view resource, otherwise return empty array."""
+    #     names = []
+    #     if hasattr(obj, 'raccess'):
+    #         for viewer in obj.raccess.view_users.all():
+    #             name = viewer.last_name + ', ' + viewer.first_name
+    #             names.append(name)
+    #     return names
+
+    # def prepare_viewers_count(self, obj):
+    #     """Return count of users who can view resource, otherwise return 0."""
+    #     if hasattr(obj, 'raccess'):
+    #         return obj.raccess.view_users.all().count()
+    #     else:
+    #         return 0
+
+    # def prepare_editor_login(self, obj):
+    #     """Return usernames of editors of a resource, otherwise return 0."""
+    #     if hasattr(obj, 'raccess'):
+    #         return [editor.username for editor in obj.raccess.edit_users.all()]
+    #     else:
+    #         return 0
+
+    # def prepare_editor(self, obj):
+    #     """Return full names of editors of a resource, otherwise return empty array."""
+    #     names = []
+    #     if hasattr(obj, 'raccess'):
+    #         for editor in obj.raccess.edit_users.all():
+    #             name = editor.last_name + ', ' + editor.first_name
+    #             names.append(name)
+    #     return names
+
+    # def prepare_editors_count(self, obj):
+    #     """Return count of editors of a resource, otherwise return 0."""
+    #     if hasattr(obj, 'raccess'):
+    #         return obj.raccess.edit_users.all().count()
+    #     else:
+    #         return 0
 
     # TODO: These should probably be multi-value fields and pick up all types.
     def prepare_geometry_type(self, obj):
@@ -903,6 +1038,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     if time_series_result.units_type is not None:
                         units_types.append(time_series_result.units_type.strip())
         return units_types
+
+    def prepare_aggregation_statistics(self, obj):
+        """
+        Return list of aggregation statistics if exists, otherwise return empty array.
+        """
+        aggregation_statistics = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for time_series_result in obj.metadata.time_series_results:
+                    if time_series_result.aggregation_statistics is not None:
+                        aggregation_statistics.append(time_series_result.aggregation_statistics)
+        return aggregation_statistics
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""

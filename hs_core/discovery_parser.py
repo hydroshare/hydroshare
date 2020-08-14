@@ -111,7 +111,7 @@ class ParseSQ(object):
         'modified',
         'organization',
         'publisher',
-        # deprecated # 'rating',
+        'rating',
         'coverage_type',
         'east',
         'north',
@@ -130,10 +130,10 @@ class ParseSQ(object):
         'resource_type',
         'content_type',
         'comment',
-        # deprecated # 'comments_count',
+        'comments_count',
         'owner_login',
         'owner',
-        # deprecated # 'owners_count',
+        'owners_count',
         'geometry_type',
         'field_name',
         'field_type',
@@ -161,7 +161,7 @@ class ParseSQ(object):
     }
 
     INEQUALITY_FIELDS = [
-        # deprecated # 'rating',
+        'rating',
         'created',
         'modified',
         'east',
@@ -172,8 +172,8 @@ class ParseSQ(object):
         'westlimit',
         'start_date',
         'end_date',
-        # deprecated # 'comments_count',
-        # deprecated # 'owners_count',
+        'comments_count',
+        'owners_count',
     ]
 
     DATE_FIELDS = [
