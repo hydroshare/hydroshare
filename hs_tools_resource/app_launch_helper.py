@@ -75,7 +75,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
         if tool_res_obj.metadata.app_icon else "raise-img-error"
 
-    url_key_values = get_app_dict(request_obj.user, resource_obj)
+    url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj.extra_metadata)
 
     tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
     tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
@@ -110,7 +110,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         return {}
 
 
-def get_app_dict(user, resource):
+def get_app_dict(user, resource, default_resource_term_dict):
     hs_term_dict_user = {}
     hs_term_dict_user["HS_USR_NAME"] = user.username if user.is_authenticated() else "anonymous"
     hs_term_dict_file = {}
@@ -119,7 +119,8 @@ def get_app_dict(user, resource):
     hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_AGG_KEY"
     hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_FILE_KEY"
     hs_term_dict_file["HS_MAIN_FILE"] = "HS_JS_MAIN_FILE_KEY"
-    return [resource.get_hs_term_dict(), hs_term_dict_user, hs_term_dict_file]
+    default_resource_term_dict.update(resource.get_hs_term_dict())
+    return [default_resource_term_dict, hs_term_dict_user, hs_term_dict_file]
 
 
 def _check_user_can_view_app(request_obj, tool_res_obj):
