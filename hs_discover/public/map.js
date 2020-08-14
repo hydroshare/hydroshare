@@ -69,6 +69,7 @@
     return searchBox;
   };
 
+  // eslint-disable-next-line no-unused-vars
   const createLegend = () => {
     const legend = document.getElementById('discover-map-legend');
     exports.map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend); // eslint-disable-line
@@ -93,7 +94,8 @@
         // title: labels[k % labels.length],
       });
       const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
-      infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>`);
+      infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
+lat: ${location.lat} lng: ${location.lng}`);
       marker.addListener('click', () => {
         infowindow.open(exports.map, marker);
       });
@@ -124,7 +126,7 @@
   };
 
   const initMap = () => {
-    // eslint-disable-next-line no-param-reassign
+    // eslint-disable-next-line no-param-reassign,no-undef
     exports.map = new google.maps.Map(document.getElementById('map'), {
       center: {
         lat: 42,
@@ -136,6 +138,7 @@
     });
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     // const mapLegend = createLegend();
+    // eslint-disable-next-line no-unused-vars
     const searchBox = createSearcher();
     exports.map.addListener('bounds_changed', () => {
       const visMarkers = [];

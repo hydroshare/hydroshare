@@ -3,7 +3,8 @@
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside"></i>
+        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>
+        <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
@@ -11,7 +12,7 @@
             <!-- toggleMap defined in map.js -->
             Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
                 min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
-            <input id="map-mode-button" type="button" class="mapdisp" value="Map Mode" :disabled="!geoloaded"
+            <input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
                 v-on:click="displayMap"> Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/><br/>
             <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
         </div>
@@ -594,11 +595,13 @@ export default {
         document.getElementById('map-filter-button').style.display = 'none';
         document.getElementById('items-discovered').style.display = 'block';
         document.getElementById('map-message').style.display = 'none';
+        document.getElementById('map-mode-button').value = 'Hide Map';
         this.resgeotypes = '';
       } else if (document.getElementById('map-view').style.display === 'block') {
         document.getElementById('map-filter-button').style.display = 'block';
         document.getElementById('items-discovered').style.display = 'none';
         document.getElementById('map-message').style.display = 'block';
+        document.getElementById('map-mode-button').value = 'Show Map';
       }
     },
     setAllMarkers() {
@@ -638,6 +641,7 @@ export default {
         });
         const regionuids = pts.map(x => x.short_id);
         const regionlbls = pts.map(x => x.title);
+
         createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls)); // eslint-disable-line
       }
     },
@@ -723,10 +727,16 @@ export default {
         padding-right: 25px;
         z-index: 1;
     }
-    .inside {
+    .inside-right {
         position: absolute;
         top: 10px;
         right: 20px;
+        z-index: 2;
+    }
+    .inside-left {
+        position: absolute;
+        top: 10px;
+        left: 10px;
         z-index: 2;
     }
 </style>
