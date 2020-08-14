@@ -274,7 +274,13 @@
 {% endif %}
 
 {% if is_version_of %}
-    <div class="col-xs-12">
+    {% if user.is_authenticated %}
+        {# right side toolbar buttons will be displayed after the resource version text #}
+        <div class="col-xs-12">
+    {% else %}
+        {# need to add space to the bottom as the right side toolbar buttons won't be displayed for unauthenticated user #}
+        <div class="col-xs-12 space-bottom">
+    {% endif %}
         <div class="clear-fix">
             <i>An older version of this resource <a
                 href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i>
