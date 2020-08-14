@@ -207,7 +207,7 @@ def relative_irods_path(fed_irods_file_name):
 def resource_from_uuid(id):
     if not id:
         return None
-    return get_resource_by_shortkey(id)
+    return get_resource_by_shortkey(id, or_404=False)
 
 
 @register.filter

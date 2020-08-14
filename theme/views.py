@@ -15,7 +15,7 @@ from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
@@ -49,22 +49,18 @@ class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
 
     def get_context_data(self, **kwargs):
-        u = User.objects.none()
         if 'user' in kwargs:
-            try:
-                u = User.objects.get(pk=int(kwargs['user']))
-            except:
-                u = User.objects.get(username=kwargs['user'])
-
+            user_id = kwargs['user']
         elif self.request.GET.get('user', False):
-            try:
-                u = User.objects.get(pk=int(self.request.GET['user']))
-            except:
-                u = User.objects.get(username=self.request.GET['user'])
-
-        elif not self.request.user.is_anonymous():
-            # if the user is logged in and no user is specified, show logged in user
-            u = User.objects.get(pk=int(self.request.user.id))
+            user_id = self.request.GET.get('user', False)
+        elif hasattr(self.request, 'user'):
+            user_id = self.request.id
+        else:
+            return HttpResponseBadRequest("User id or username is required")
+        try:
+            u = User.objects.get(Q(pk=int(user_id)) | Q(username=user_id))
+        except:
+            return HttpResponseBadRequest("User {} does not exist".format(user_id))
 
         # get all resources the profile user owns
         resources = u.uaccess.owned_resources
