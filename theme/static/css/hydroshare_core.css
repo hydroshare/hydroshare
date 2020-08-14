@@ -1700,7 +1700,7 @@ body > .main-container {
 	color: #428bca;
 }
 
-#fb-file-operations-controls #btn-download-all, #fb-file-operations-controls #rep-res-bag {
+#fb-file-operations-controls #rep-res-bag {
 	text-decoration: none;
 	padding: 0 6px;
 	display: inline-block;
@@ -4600,7 +4600,6 @@ div#fb-inner-controls button, .file-browser-search {
 }
 
 #fb-file-operations-controls > button,
-#fb-file-operations-controls #btn-download-all,
 #fb-file-operations-controls #rep-res-bag {
 	filter: progid:DXImageTransform.Microsoft.Gradient(enabled='false');
 	-webkit-box-shadow: none;
@@ -4616,7 +4615,6 @@ div#fb-inner-controls button, .file-browser-search {
 }
 
 #fb-file-operations-controls > button,
-#fb-file-operations-controls #btn-download-all,
 #fb-file-operations-controls #rep-res-bag {
 	margin-top: 8px;
 	text-shadow: 0 1px 0 #fff;
@@ -4632,7 +4630,6 @@ span.caption-file-type {
 }
 
 #fb-file-operations-controls > button:not(.disabled):hover,
-#fb-file-operations-controls #btn-download-all:hover,
 #fb-file-operations-controls #rep-res-bag:hover {
 	border: 1px solid #DDD;
 	box-shadow: 1px 1px 3px #e2e2e2;
@@ -5103,4 +5100,3 @@ a[data-toggle="modal"] {
 .c-pointer {
 	cursor: pointer;
 }
-

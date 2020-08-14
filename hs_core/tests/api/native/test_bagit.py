@@ -94,8 +94,9 @@ class TestBagIt(TestCase):
                                          'id': mock_scheduled_job_id,
                                          'worker_pid': None
                                      }}]}
-        ret_id = _retrieve_task_id(mock_res_id, mock_active_and_reserved_jobs)
+        job_name = 'hs_core.tasks.create_bag_by_irods'
+        ret_id = _retrieve_task_id(job_name, mock_res_id, mock_active_and_reserved_jobs)
         self.assertEqual(ret_id, mock_active_and_reserved_job_id, msg="retrieved task id not equal to "
                                                                       "mock_active_and_reserved_job_id")
-        ret_id = _retrieve_task_id(mock_res_id, mock_scheduled_jobs)
+        ret_id = _retrieve_task_id(job_name, mock_res_id, mock_scheduled_jobs)
         self.assertEqual(ret_id, mock_scheduled_job_id, msg="retrieved task id not equal to mock_scheduled_job_id")

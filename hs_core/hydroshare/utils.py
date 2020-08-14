@@ -45,6 +45,10 @@ class QuotaException(Exception):
     pass
 
 
+class ResourceCopyException(Exception):
+    pass
+
+
 def get_resource_types():
     resource_types = []
     for model in apps.get_models():
