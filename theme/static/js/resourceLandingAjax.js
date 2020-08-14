@@ -842,8 +842,9 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
             zip_with_rel_path: zip_with_rel_path,
             remove_original_zip: "false"
         },
-        success: function (result) {
-            // TODO: handle "File already exists" errors
+        success: function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
         },
         error: function (xhr, errmsg, err) {
             display_error_message('File Unzipping Failed', xhr.responseText);

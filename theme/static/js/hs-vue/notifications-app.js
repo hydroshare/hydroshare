@@ -37,6 +37,16 @@ $(document).ready(function () {
                         "Delivered": "Download delivered"
                     }
                 },
+                "file unzip": {
+                    title: "File Unzipping",
+                    status: {
+                        "Pending execution": "Pending...",
+                        "In progress": "Unzipping your file...",
+                        "Completed": "Completed",
+                        "Failed": "Unzip failed",
+                        "Delivered": "Unzipping completed"
+                    }
+                },
                 "zip download": {
                     title: "File download",
                     status: {
@@ -170,7 +180,8 @@ $(document).ready(function () {
                 }
             },
             canBeAborted: function (task) {
-                return task.name != 'resource delete' && (task.status === 'In progress'
+                let vue = this;
+                return "Aborted" in vue.taskMessages[task.name].status && (task.status === 'In progress'
                     || task.status === 'Pending execution')
             },
             clear: function () {
@@ -266,7 +277,11 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource copy":
-                        // Check if resource delete is finished
+                        if (task.status === "Completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "file unzip":
                         if (task.status === "Completed" && task.payload) {
                             vue.deliverTask(task);
                         }
