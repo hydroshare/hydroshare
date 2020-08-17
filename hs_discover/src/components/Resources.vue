@@ -420,7 +420,6 @@ export default {
       this.countAvailabilities = new this.Counter(availabilitybox);
     },
     cacheLoad() {
-      return;
       const startd = new Date();
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', { params: { q: this.searchtext, cache: '1' } })
