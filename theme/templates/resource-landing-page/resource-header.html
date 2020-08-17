@@ -17,12 +17,13 @@
                     </td>
 
                     <td v-if="res_mode === 'Edit'">
+                        {% if not cm.raccess.published %}
                         <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
                            class="btn btn-success btn-xs" data-toggle="modal"
                            data-target="#add-author-modal" title="Add Author">
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
-
+                        {% endif %}
                         <span :class="{loading: isUpdatingAuthor}" class="authors-wrapper sortable">
                             <span v-for="(author, index) in authors" :data-id="author.id">
                                 <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
