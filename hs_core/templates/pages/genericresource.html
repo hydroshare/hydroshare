@@ -13,7 +13,7 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% set_page_permissions page %}
-    {% if page.perms.change and resource_edit_mode %}
+    {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
     {% csrf_token %}
     {% endif %}
 
@@ -76,7 +76,7 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
                             <span class="fa fa-scissors icon-blue"></span>
@@ -216,7 +216,7 @@
 
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if page.perms.change and resource_edit_mode %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
@@ -251,7 +251,7 @@
 
             <div class="col-xs-12 content-block">
                 <h3>Content</h3>
-                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published and cm.get_supported_upload_file_types != "()" %}
                     <div class="alert alert-info alert-dismissible" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -284,7 +284,7 @@
                     </div>
                 </div>
 
-                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published and cm.get_supported_upload_file_types != "()" %}
                     <div id="fb-alerts">
                         <div class="alert alert-warning alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -348,7 +348,7 @@
                     {# ======= Modal window ends =======#}
 
                     <div id="hs-file-browser" data-current-path=""
-                         {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
+                         {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}data-mode="edit"{% endif %}
                          data-supported-files="{{ cm.get_supported_upload_file_types }}"
                          data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                          {% if cm.raccess.require_download_agreement %}
@@ -443,7 +443,7 @@
                                     </div>
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
-                                            {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published and cm.get_supported_upload_file_types != "()" %}
                                                 <a type="button" data-fb-action="uploadFiles"
                                                    class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                     <i class="fa fa-plus"></i> Add files
@@ -487,7 +487,7 @@
                                                 </div>
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                                                 {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
@@ -541,7 +541,7 @@
                                                 {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                                                 <button id="fb-delete" data-fb-action="delete"
                                                         class="disabled fb-space-right"
                                                         title="Delete" data-toggle="modal"
@@ -613,7 +613,7 @@
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
                                     <form id="hsDropzone"
-                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode %}dropzone{% endif %}"
+                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}dropzone{% endif %}"
                                           action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
                                           method="POST">
                                         {% csrf_token %}
@@ -639,7 +639,7 @@
                                         </ul>
                                     </form>
 
-                                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                    {% if page.perms.change and resource_edit_mode and not cm.raccess.published and cm.get_supported_upload_file_types != "()" %}
                                         <div class="fb-upload-caption ">
                                             <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
                                             smaller than 1GB in size by dragging & dropping, or click <a
@@ -677,7 +677,7 @@
                                 {% endif %}
                             </div>
 
-                            {% if page.perms.change and resource_edit_mode %}
+                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                                 <form id="fb-delete-files-form" class="hidden"
                                       action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
                                       method="POST" enctype="multipart/form-data">
@@ -767,7 +767,7 @@
         {% include "resource-landing-page/credits.html" %}
 
         {# ======= Citation ======= #}
-        {% if resource_edit_mode %}
+        {% if resource_edit_mode and not cm.raccess.published %}
             {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
         {% else %}
             {% include "resource-landing-page/citation.html" with resource_mode="view" %}
