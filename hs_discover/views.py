@@ -101,7 +101,6 @@ class SearchAPI(APIView):
                 "subject": result.subject,
                 "created": result.created.isoformat(),
                 "modified": result.modified.isoformat(),
-                "shareable": True,
                 "start_date": start_date,
                 "end_date": end_date,
                 "short_id": result.short_id

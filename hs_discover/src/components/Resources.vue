@@ -196,9 +196,9 @@
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"
-                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"
-                                style="cursor:pointer" data-original-title="Shareable">
+<!--                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"-->
+<!--                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"-->
+<!--                                style="cursor:pointer" data-original-title="Shareable">-->
                         </td>
                         <td>
                             <a :href="entry.link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
@@ -420,6 +420,7 @@ export default {
       this.countAvailabilities = new this.Counter(availabilitybox);
     },
     cacheLoad() {
+      return;
       const startd = new Date();
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', { params: { q: this.searchtext, cache: '1' } })
