@@ -201,8 +201,8 @@
 <!--                                style="cursor:pointer" data-original-title="Shareable">-->
                         </td>
                         <td>
-                            <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top">{{entry.title}}</a>
-<!--                             data-toggle="tooltip"  :title="ellip(entry.abstract)" -->
+                            <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip"  :title="ellip(entry.abstract)" >{{entry.title}}</a>
+<!--                             -->
                         </td>
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
