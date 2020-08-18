@@ -33,6 +33,8 @@ PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
 USE_LOCAL_IRODS=false
 
+source ~/hydroshare/hsctl_node
+
 display_usage() {
     echo "*** HydroShare Control script ***"
     echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
