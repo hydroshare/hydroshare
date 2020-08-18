@@ -97,7 +97,7 @@ class SearchAPI(APIView):
                 "contributor": contributor,
                 "author_link": author_link,
                 "owner": owner,
-                "abstract": result.abstract,
+                # "abstract": result.abstract,
                 "subject": result.subject,
                 "created": result.created.isoformat(),
                 "modified": result.modified.isoformat(),
