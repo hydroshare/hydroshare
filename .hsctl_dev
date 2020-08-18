@@ -1,0 +1,483 @@
+#!/usr/bin/env bash
+
+# hsctl
+# HydroShare Control Script
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+machine="`uname -s`"
+case "$machine" in
+  Linux*)  export SED_EXT=''   ;;
+  Darwin*) export SED_EXT='""' ;;
+  *)       export SED_EXT=''   ;;
+esac
+
+### Local Config ###
+CONFIG_DIRECTORY='./config'
+CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
+HOME_DIR=${PWD}
+
+# Read hydroshare-config.yaml into environment
+sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE}  | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
+while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
+
+### Docker Variables ###
+HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
+HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
+OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
+
+### Pre-flight Variables ###
+DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'
+DEV_SSH_COMMAND='runuser -p -u hydro-service -g storage-hydro /usr/sbin/sshd'
+PROD_SERVER='./run-server'
+PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
+
+USE_LOCAL_IRODS=false
+
+source ~/hydroshare/hsctl_node
+
+display_usage() {
+    echo "*** HydroShare Control script ***"
+    echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
+    echo "usage: $0 managepy [args] # use the arguments in a manage.py [args] call from the hydroshare container"
+    echo "usage: $0 maint_off       # removes maintenance page (only if USE_NGINX = true)"
+    echo "usage: $0 maint_on        # displays maintenance page (only if USE_NGINX = true)"
+    echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
+    echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
+    echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
+    echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
+    echo "usage: $0 restart         # restarts the hydroshare container without rebuilding (includes preflight)"
+    echo "usage: $0 start           # attempts to start all containers (without preflight)"
+    echo "usage: $0 stop            # stops all running containers"
+    echo "usage: $0 update_index    # update solr index in a non-interactive way to be run as a cron job"
+}
+
+start_nginx() {
+    cd ${NGINX_DIR}
+    ./run-nginx start
+    cd -
+}
+
+stop_nginx() {
+    cd ${NGINX_DIR}
+    ./run-nginx stop
+    cd -
+}
+
+get_nginx_ip() {
+    NGINX_IP=`docker network inspect bridge | grep nginx -A3 | grep IPv4 | cut -f4 -d'"' | cut -f1 -d'/'`
+    mkdir -p tmp
+    echo $NGINX_IP > tmp/nginx_ip
+}
+
+restart_hs() {
+    echo "RESTART HYDROSHARE:"
+    stop_nginx
+    docker-compose stop hydroshare defaultworker
+    delete_celerybeat_scheduler
+    preflight_hs
+    docker-compose start hydroshare defaultworker
+    if [ "${USE_NGINX}" = true ]; then
+        start_nginx;
+    fi
+    get_nginx_ip
+}
+
+maint_on_hs() {
+    echo "MAINTENANCE ON:"
+    if [ "${USE_NGINX}" = true ]; then
+        cd ${NGINX_DIR}
+        ./run-nginx maint_on
+        cd -;
+    else
+        echo "  - WARNING: Unable to apply: USE_NGINX = ${USE_NGINX}";
+    fi
+}
+
+maint_off_hs() {
+    echo "MAINTENANCE OFF:"
+    if [ "${USE_NGINX}" = true ]; then
+        cd ${NGINX_DIR}
+        ./run-nginx maint_off
+        cd -;
+    else
+        echo "  - WARNING: Unable to apply: USE_NGINX = ${USE_NGINX}";
+    fi
+}
+
+solr_schema_hs() {
+    echo "SOLR SCHEMA:"
+    echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
+    docker exec solr bin/solr create -c collection1 -d basic_configs
+    echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
+    docker exec hydroshare python manage.py build_solr_schema -f schema.xml
+    sleep 1s
+    echo "  - docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
+    docker exec solr cp /hydroshare/schema.xml /opt/solr/server/solr/collection1/conf/schema.xml
+    echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
+    docker exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
+    echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
+    docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
+
+}
+
+delete_celerybeat_scheduler() {
+    file1="celerybeat.pid"
+    file2="celery/*"
+    if [ -f ${file1} ] ; then
+        echo "DELETE CELERYBEAT:"
+        rm -f ${file1} ${file2};
+    fi
+}
+
+start_hs() {
+    echo "START HYDROSHARE:"
+    preflight_hs
+    for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
+        docker-compose start ${f};
+    done
+    for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+        docker-compose start ${f};
+    done
+    if [ "${USE_NGINX}" = true ]; then
+        start_nginx;
+    fi
+    get_nginx_ip
+}
+
+stop_hs() {
+    echo "STOP HYDROSHARE:"
+    if [ "${USE_NGINX}" = true ]; then
+        stop_nginx;
+    fi
+    for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+        CHECK_HS_DOCKER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+            docker-compose stop ${f};
+        fi
+    done
+    for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
+        CHECK_HS_OTHER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
+            docker-compose stop ${f};
+        fi
+    done
+    delete_celerybeat_scheduler
+}
+
+preflight_hs() {
+    echo "PREFLIGHT:"
+    echo "  - HS_PATH       :${HS_PATH}"
+    echo "  - HS_LOG_FILES  :${HS_LOG_FILES}"
+    echo "  - USE_NGINX     :${USE_NGINX}"
+    echo "  - USE_SSL       :${USE_SSL}"
+    echo "  - USE_SECURITY  :${USE_SECURITY}"
+    # Generate docker-compose.yml
+    if [[ "$USE_LOCAL_IRODS" = true ]]; then
+        cp -rf ${HS_PATH}/scripts/templates/docker-compose-local-irods.template ${HS_PATH}/docker-compose.yml
+    else
+        cp -rf ${HS_PATH}/scripts/templates/docker-compose.template ${HS_PATH}/docker-compose.yml
+    fi
+    sed -i $SED_EXT 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i $SED_EXT 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
+    # Create static directory if it does not exist
+    if [[ ! -d ${HS_PATH}/hydroshare/static ]]; then
+        mkdir -p ${HS_PATH}/hydroshare/static;
+    fi
+    # Create log directory if it does not exist
+    if [[ ! -d ${HS_LOG_FILES} ]]; then
+        mkdir -p ${HS_LOG_FILES}
+        touch ${HS_LOG_FILES}/access.log
+        touch ${HS_LOG_FILES}/django.log
+        touch ${HS_LOG_FILES}/error.log
+        touch ${HS_LOG_FILES}/gunicorn.log
+        touch ${HS_LOG_FILES}/gunicorn_supervisor.log
+        touch ${HS_LOG_FILES}/hydroshare.log
+        touch ${HS_LOG_FILES}/system.log;
+    fi
+    # Create celery directory if it does not exist
+    if [[ ! -f ${HS_PATH}/celery/readme.txt ]]; then
+        mkdir -p ${HS_PATH}/celery
+        echo "This directory is used for celery beat scheduler to write celerybeat-schedule file for \
+            scheduling purposes." > ${HS_PATH}/celery/readme.txt;
+    fi
+    # Generate init-hydroshare
+    cp -rf ${HS_PATH}/scripts/templates/init-hydroshare.template ${HS_PATH}/init-hydroshare
+    sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-hydroshare
+    sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-hydroshare
+    if [ "${USE_SSL}" = true ]; then
+        if [ "${USE_NGINX}" = false ]; then
+            echo "ERROR: Invalid USE_NGINX setting for USE_SSL = true in hydroshare-config.yaml"
+            exit 1;
+        fi
+        if [[ ! -d ${HOST_SSL_DIR} ]]; then
+            mkdir -p ${HOST_SSL_DIR};
+        fi
+        cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
+        cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
+        cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
+        sed -i $SED_EXT 's!HS_SSH_SERVER!'"${PROD_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        # disable /tests/ URL
+        sed -i $SED_EXT 's!.*tests.html.*!    # QUNIT_TESTS_OFF!' ${HS_PATH}/hydroshare/urls.py
+    elif [ "${USE_NGINX}" = true ]; then
+        cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
+        sed -i $SED_EXT 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        # enable /tests/ URL
+        sed -i $SED_EXT 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
+    else
+        cp -rf ${HS_PATH}/scripts/run-dev-server ${HS_PATH}/run-server
+        sed -i $SED_EXT 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
+        sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"${DEV_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        # enable /tests/ URL
+        sed -i $SED_EXT 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
+    fi
+    # Generate init-defaultworker
+    cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker
+    sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
+    sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
+    sed -i $SED_EXT 's!CELERY_CONCURRENCY!'${CELERY_CONCURRENCY}'!g' ${HS_PATH}/init-defaultworker
+    # Check security settings
+    if [ "${USE_SECURITY}" = true ]; then
+        sed -i $SED_EXT 's/\<USE_SECURITY = False\>/USE_SECURITY = True/g' ${HS_PATH}/hydroshare/settings.py
+    else
+        sed -i $SED_EXT 's/\<USE_SECURITY = True\>/USE_SECURITY = False/g' ${HS_PATH}/hydroshare/settings.py
+    fi
+}
+
+loaddb_hs() {
+    echo "LOADDB:"
+    # Ensure all prior connections to the database are removed prior to dropping the database
+    docker exec -u postgres -ti postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+    docker exec -u postgres -ti postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
+    echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
+    docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
+    echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
+    docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+}
+
+migrate_hs() {
+    echo "MIGRATE:"
+    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
+    docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
+    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
+    docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput
+    echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
+    docker exec -u hydro-service hydroshare python manage.py fix_permissions
+}
+
+manage_py_hs() {
+    echo "MANAGEPY:"
+    echo "  - docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}"
+    docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
+}
+
+solr_reload_hs() {
+    echo "SOLR RELOAD"
+    echo "  - docker exec hydroshare curl \"solr:8983/solr/admin/cores?action=RELOAD&core=collection1\""
+    docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+}
+
+update_solr_index() {
+    echo "UPDATE SOLR INDEX:"
+    echo "  - docker exec hydroshare python manage.py update_index"
+    docker exec hydroshare python manage.py update_index
+}
+
+rebuild_solr_index() {
+    echo "REBUILD SOLR INDEX:"
+    echo "  - docker exec hydroshare python manage.py rebuild_index --noinput"
+    docker exec hydroshare python manage.py rebuild_index --noinput
+}
+
+remove_hs_components(){
+    echo "REMOVE HYDROSHARE COMPONENTS:"
+    if [[ -f docker-compose.yml ]]; then
+        for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+            CHECK_HS_DOCKER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+            if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+                docker-compose rm -f ${f};
+            fi
+        done
+        sleep 1s
+    fi
+    for f in "${HS_DOCKER_IMAGES[@]}"; do
+        CHECK_HS_DOCKER_IMG=`docker images | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_IMG}" ]]; then
+            docker rmi -f ${f};
+        fi
+    done
+}
+
+remove_other_components(){
+    echo "REMOVE OTHER COMPONENTS:"
+    if [[ -f docker-compose.yml ]]; then
+        for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
+            CHECK_HS_OTHER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+            if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
+                docker-compose rm -f ${f};
+            fi
+        done
+    fi
+}
+
+rebuild_hs() {
+    echo "REBUILD ${@:2}"
+    if [[ -f docker-compose.yml ]]; then
+        stop_hs;
+    fi
+    remove_hs_components
+    if [ "$2" == "--db" ]; then
+        remove_other_components;
+    fi
+    preflight_hs
+    echo "BEGIN BUILD"
+    echo "  - git submodule init && git submodule update"
+    git submodule init && git submodule update
+    echo "  - docker-compose build"
+    docker-compose build
+    echo "  - docker-compose up -d"
+    docker-compose up -d
+    for pc in $(seq 20 -1 1); do
+        echo -ne "$pc ...\033[0K\r" && sleep 1;
+    done
+    if [ "$2" == "--db" ]; then
+        loaddb_hs;
+    fi
+    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
+    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
+    if [ "${USE_NGINX}" = true ]; then
+        start_nginx;
+    fi
+    echo "  - docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
+    docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
+    # Ensure any autogenerated robots.txt file is removed so that django-robots can work
+    echo "  - docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt"
+    docker exec -u hydro-service hydroshare rm -f hydroshare/static/robots.txt
+    migrate_hs
+    sleep 3s
+    solr_schema_hs
+    sleep 2s
+    solr_reload_hs
+    sleep 2s
+    rebuild_solr_index
+    sleep 2s
+    discovery_dev $branch
+    sleep 2s
+    restart_hs
+    sleep 2s
+    hs_collect
+    sleep 2s
+    hydro_reindex
+    sleep 2s
+    echo "END BUILD"
+}
+
+reloaddb_hs() {
+    loaddb_hs
+    migrate_hs
+    sleep 3s
+    solr_schema_hs
+    sleep 2s
+    rebuild_solr_index
+    sleep 2s
+    solr_reload_hs
+    sleep 2s
+    rebuild_solr_index
+}
+
+reset_all_hs() {
+    echo "RESET ALL:"
+    echo "  - WARNING: All data, containers, and hydroshare related images will be removed"
+    if [[ "$(docker-compose ps | grep hydroshare)" ]]; then
+        echo "  - INFO: HydroShare found previously running, proceeding with clean up"
+        # Remove root items
+        scripts/pre-remove-hs;
+    else
+        echo "  - WARNING: Could not find a running instance of HydroShare"
+        echo "  - WARNING: Attempting cleanup anyway";
+    fi
+    # Stopping all running docker containers
+    if [[ -f docker-compose.yml ]]; then
+        stop_hs STOP;
+    fi
+    echo "  - INFO: Removing all docker containers"
+    docker-compose rm -f
+    echo "  - INFO: Removing hydroshare related images"
+    while read line; do
+        docker rmi -f ${line};
+    done < <(docker images | grep "^hydroshare_" | tr -s ' ' | cut -d ' ' -f 3)
+    echo "  - INFO: Removing transient directories and files"
+    if [[ -d hydroshare/static ]]; then rm -rf hydroshare/static; fi
+    if [[ -d log ]]; then rm -rf log; fi
+    if [[ -d celery ]]; then rm -rf celery; fi
+    if [[ -f root-items.txt ]]; then rm -f root-items.txt; fi
+    if [[ -f celerybeat.pid ]]; then rm -f celerybeat.pid; fi
+    if [[ -f init-hydroshare ]]; then rm -f init-hydroshare; fi
+    if [[ -f init-defaultworker ]]; then rm -f init-defaultworker; fi
+    if [[ -f docker-compose.yml ]]; then rm -f docker-compose.yml; fi
+    if [[ -f run-server ]]; then rm -f run-server; fi
+    if [[ -f schema.xml ]]; then rm -f schema.xml; fi
+}
+
+### Display usage if exactly one argument is not provided ###
+### Check for branch variable placement ###
+if [  $# -ne 1 ]
+then
+    if [[ $4 == "" ]]
+    then
+        echo "Using the following branch: "$3
+        branch=$3
+    elif [ $3 != "" ]
+    then
+        echo "Using the following branch: "$4
+        branch=$4
+    else
+        branch="develop"
+        echo " Using the following branch: " $branch
+    fi
+    if [ $1 != "rebuild" ] || [ $2 != "--db" ] && [ $1 != "managepy" ]
+    then
+        display_usage
+        exit 1
+    fi
+fi
+
+case "$1" in
+    loaddb) reloaddb_hs $1
+        ;;
+    managepy) manage_py_hs "$@"
+        ;;
+    update_index) update_solr_index $1
+        ;;
+    rebuild_index) rebuild_solr_index $1
+        ;;
+    maint_off) maint_off_hs $1
+        ;;
+    maint_on) maint_on_hs $1
+        ;;
+    rebuild) rebuild_hs $1 $2
+        ;;
+    reset_all) reset_all_hs $1
+        ;;
+    restart) restart_hs $1
+        ;;
+    start) start_hs $1
+        ;;
+    stop) stop_hs $1
+        ;;
+    preflight) preflight_hs $1
+        ;;
+    *) display_usage
+        ;;
+esac
+
+exit 0;
