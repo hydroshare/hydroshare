@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div><input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
+                v-on:click="displayMap"><!-- displayMap defined in map.js --><br/><br/>
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -9,12 +10,10 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <!-- toggleMap defined in map.js -->
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
             Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
                 min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
-            <input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="displayMap"> Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/><br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
+            | Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/>
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -178,6 +177,7 @@
             <br/>
             <div class="table-wrapper">
                 <p id="map-message" style="display:none">Select area of interest on the map then click 'Filter by Map View'</p>
+                <p v-if="(!filteredResources.length) && resloaded">Too many filter selections: no resources match those restrictions</p>
                 <table id="items-discovered" v-if="filteredResources.length"
                     class="table-hover table-striped resource-custom-table">
                     <thead>
@@ -233,7 +233,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
-      loading: false,
+      resloaded: false,
       resources: [],
       searchtext: '',
       filterlimit: 10, // Minimum threshold for filter item to display with checkbox
@@ -357,6 +357,11 @@ export default {
   watch: {
     resources() {
       this.populateFilters();
+      if (this.resources.length > 0) {
+        this.resloaded = true;
+      } else {
+        this.resloaded = false;
+      }
     },
     geodata() {
       if (this.geodata.length > 0) {
@@ -376,11 +381,12 @@ export default {
     }
     this.cacheLoad();
 
-    if (this.resloaded) {
-      if (this.geodata.length > 0) {
-        this.geoloaded = true;
-      }
-    }
+    // if (this.resloaded) {
+    //   if (this.geodata.length > 0) {
+    //     this.geoloaded = true;
+    //   }
+    // }
+
     if (document.getElementById('map-view').style.display === 'block') {
       document.getElementById('map-filter-button').style.display = 'block';
     }
@@ -678,8 +684,11 @@ export default {
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
     #map-message {
-      position: absolute;
-      left: 110px;
+       position: absolute;
+       left: 110px;
+    }
+    #map-filter-button {
+        margin-bottom: 12px;
     }
     .panel-title > a:before {
         float: left !important;
@@ -723,6 +732,7 @@ export default {
     }
     #search input {
         width: 100%;
+        min-width: 800px;
         padding-left: 25px;
         padding-right: 25px;
         z-index: 1;
