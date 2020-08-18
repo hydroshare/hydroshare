@@ -428,6 +428,21 @@ reset_all_hs() {
     if [[ -f schema.xml ]]; then rm -f schema.xml; fi
 }
 
+hs_collect() {
+sleep 1
+cd ~/hydroshare
+sleep 1
+./hsctl managepy collectstatic --noinput
+sleep 1
+}
+
+hydro_reindex() {
+
+cd ~/hydroshare
+./hsctl managepy solr_recover
+
+}
+
 ### Display usage if exactly one argument is not provided ###
 ### Check for branch variable placement ###
 if [  $# -ne 1 ]
