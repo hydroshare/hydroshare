@@ -595,13 +595,13 @@ export default {
         document.getElementById('map-filter-button').style.display = 'none';
         document.getElementById('items-discovered').style.display = 'block';
         document.getElementById('map-message').style.display = 'none';
-        document.getElementById('map-mode-button').value = 'Hide Map';
+        document.getElementById('map-mode-button').value = 'Show Map';
         this.resgeotypes = '';
       } else if (document.getElementById('map-view').style.display === 'block') {
         document.getElementById('map-filter-button').style.display = 'block';
         document.getElementById('items-discovered').style.display = 'none';
         document.getElementById('map-message').style.display = 'block';
-        document.getElementById('map-mode-button').value = 'Show Map';
+        document.getElementById('map-mode-button').value = 'Hide Map';
       }
     },
     setAllMarkers() {
