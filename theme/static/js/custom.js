@@ -136,6 +136,11 @@ $(document).ready(function () {
         return false;
     });
 
+    // Prevents nav dropdowns from closing when clicking on elements inside
+    $('#hs-nav-bar .dropdown-menu').on('click', function (e) {
+        e.stopPropagation();
+    });
+
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
 

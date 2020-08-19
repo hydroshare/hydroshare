@@ -1043,7 +1043,7 @@ def _validate_json_data(json_data):
             try:
                 urlopen(url)
             except URLError:
-                raise Exception(err_msg.format("Invalid web service URL found {}".format(request_info['url'])))
+                raise Exception(err_msg.format("Invalid web service URL found"))
 
         #  validate methodDescription for empty string
         _check_for_empty_string(series['method']['methodDescription'], 'methodDescription')

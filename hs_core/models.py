@@ -110,6 +110,8 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
+    if not hasattr(request, 'user'):
+        raise PermissionDenied
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
@@ -2113,10 +2115,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 fl.logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
             fl.delete()
-        hs_bagit.delete_files_and_bag(self)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
+        hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
 
     @property
@@ -2750,6 +2752,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def modified_time(self):
         return self.resource_file.storage.get_modified_time(self.resource_file.name)
+
+    @property
+    def checksum(self):
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
 
     # TODO: write unit test
     @property
@@ -3494,6 +3500,7 @@ class BaseResource(Page, AbstractResource):
 
         hs_term_dict["HS_RES_ID"] = self.short_id
         hs_term_dict["HS_RES_TYPE"] = self.resource_type
+        hs_term_dict.update(self.extra_metadata.items())
 
         return hs_term_dict
 
@@ -4384,6 +4391,22 @@ class CoreMetaData(models.Model):
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
+
+
+class TaskNotification(models.Model):
+    TASK_STATUS_CHOICES = (
+        ('pending', 'Pending execution'),
+        ('progress', 'In progress'),
+        ('failed', 'Failed'),
+        ('aborted', 'Aborted'),
+        ('completed', 'Completed'),
+        ('delivered', 'Delivered')
+    )
+    username = models.CharField(max_length=150, blank=True)
+    task_id = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=1000, blank=True)
+    payload = models.CharField(max_length=1000, blank=True)
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='pending')
 
 
 def resource_processor(request, page):

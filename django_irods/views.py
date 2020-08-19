@@ -12,9 +12,9 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 
 from django_irods import icommands
-from hs_core.hydroshare import check_resource_type
+from hs_core.hydroshare.resource import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.task_utils import get_resource_bag_task
+from hs_core.task_utils import get_resource_bag_task, get_task_by_id, create_task_notification
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
@@ -172,13 +172,13 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
-
+        download_path = '/django_irods/download/' + output_path
         if use_async:
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request))
-            delete_zip.apply_async((irods_output_path, ),
+                                                aggregation_name, is_sf_request, download_path, request.user.username))
+            task_id = task.task_id
+            delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
-
             if rest_call:
                 return HttpResponse(
                     json.dumps({
@@ -187,17 +187,17 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                         'download_path': '/django_irods/rest_download/' + output_path}),
                     content_type="application/json")
             else:
-                # return status to the UI
-                request.session['task_id'] = task.task_id
-                # TODO: this is mistaken for a bag download in the UI!
-                # TODO: multiple asynchronous downloads don't stack!
-                request.session['download_path'] = '/django_irods/download/' + output_path
-                # redirect to resource landing page, which interprets session variables.
-                return HttpResponseRedirect(res.get_absolute_url())
+                # return status to the task notification App AJAX call
+                task_dict = get_task_by_id(task_id, name='zip download', payload=download_path,
+                                           request=request)
+                create_task_notification(task_id, name='zip download', payload=download_path,
+                                         username=request.user.username)
+                return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         aggregation_name, is_sf_request)
+                                         aggregation_name=aggregation_name, sf_zip=is_sf_request,
+                                         download_path=download_path)
             delete_zip.apply_async((irods_output_path, ),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
@@ -242,14 +242,22 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
 
                 task_id = get_resource_bag_task(res_id)
                 if not task_id:
-                    task = create_bag_by_irods.apply_async((res_id,), countdown=3)
+                    task = create_bag_by_irods.apply_async((res_id, request.user.username))
                     task_id = task.task_id
+                    task_dict = get_task_by_id(task_id, name='bag download', payload=res.bag_url,
+                                               request=request)
+                    create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                             username=request.user.username)
+                    return JsonResponse(task_dict)
+                else:
+                    task_dict = get_task_by_id(task_id, name='bag download', payload=res.bag_url,
+                                               request=request)
+                    return JsonResponse(task_dict)
+
                 if rest_call:
                     return JsonResponse({'bag_status': 'Not ready',
                                          'task_id': task_id})
 
-                request.session['task_id'] = task_id
-                request.session['download_path'] = request.path
                 return HttpResponseRedirect(res.get_absolute_url())
             else:
                 ret_status = create_bag_by_irods(res_id)
@@ -261,7 +269,14 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     else:
                         response.content = "<h1>" + content_msg + "</h1>"
                     return response
-
+        elif request.is_ajax():
+            task_dict = {
+                'id': datetime.datetime.today().isoformat(),
+                'name': "bag download",
+                'status': "Completed",
+                'payload': res.bag_url
+            }
+            return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
         if path.endswith("resourcemap.xml") or path.endswith('resourcemetadata.xml'):
@@ -359,9 +374,11 @@ def rest_download(request, path, *args, **kwargs):
     return download(request, path, rest_call=True, *args, **kwargs)
 
 
-def check_task_status(request, task_id=None, *args, **kwargs):
+@swagger_auto_schema(method='get', auto_schema=None)
+@api_view(['GET'])
+def rest_check_task_status(request, task_id, *args, **kwargs):
     '''
-    A view function to tell the client if the asynchronous create_bag_by_irods()
+    A REST view function to tell the client if the asynchronous create_bag_by_irods()
     task is done and the bag file is ready for download.
     Args:
         request: an ajax request to check for download status
@@ -383,10 +400,3 @@ def check_task_status(request, task_id=None, *args, **kwargs):
             return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse({"status": None})
-
-
-@swagger_auto_schema(method='get', auto_schema=None)
-@api_view(['GET'])
-def rest_check_task_status(request, task_id, *args, **kwargs):
-    # need to have a separate view function just for REST API call
-    return check_task_status(request, task_id, *args, **kwargs)

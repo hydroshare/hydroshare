@@ -120,71 +120,13 @@ class UrlValidationForm(forms.Form):
 class AppResourceLevelUrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
 
-    def clean(self):
-        cleaned_data = super(AppResourceLevelUrlValidationForm, self).clean()
-        cleaned_url = cleaned_data.get("value")
-        if not cleaned_url:
-            return
-
-        from .utils import parse_app_url_template
-
-        term_dict = {}
-        term_dict["HS_RES_ID"] = "a"
-        term_dict["HS_RES_TYPE"] = "b"
-        term_dict["HS_USR_NAME"] = "c"
-        term_dict["HS_FILE_NAME"] = "d"
-        parsed = parse_app_url_template(cleaned_url, [term_dict])
-
-        if not parsed:
-            raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                                  format(cleaned_url, str(list(term_dict.keys()))))
-
 
 class AppAggregationLevelUrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
 
-    def clean(self):
-        cleaned_data = super(AppAggregationLevelUrlValidationForm, self).clean()
-        cleaned_url = cleaned_data.get("value")
-        if not cleaned_url:
-            return
-
-        from .utils import parse_app_url_template
-
-        term_dict = {}
-        term_dict["HS_RES_ID"] = "a"
-        term_dict["HS_RES_TYPE"] = "b"
-        term_dict["HS_USR_NAME"] = "c"
-        term_dict["HS_AGG_PATH"] = "d"
-        term_dict["HS_MAIN_FILE"] = "e"
-        parsed = parse_app_url_template(cleaned_url, [term_dict])
-
-        if not parsed:
-            raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                                  format(cleaned_url, str(list(term_dict.keys()))))
-
 
 class AppFileLevelUrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
-
-    def clean(self):
-        cleaned_data = super(AppFileLevelUrlValidationForm, self).clean()
-        cleaned_url = cleaned_data.get("value")
-        if not cleaned_url:
-            return
-
-        from .utils import parse_app_url_template
-
-        term_dict = {}
-        term_dict["HS_RES_ID"] = "a"
-        term_dict["HS_RES_TYPE"] = "b"
-        term_dict["HS_USR_NAME"] = "c"
-        term_dict["HS_FILE_PATH"] = "d"
-        parsed = parse_app_url_template(cleaned_url, [term_dict])
-
-        if not parsed:
-            raise ValidationError("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
-                                  format(cleaned_url, str(list(term_dict.keys()))))
 
 
 class SupportedFileExtensionsValidationForm(forms.Form):
