@@ -49,7 +49,6 @@ generateBagIt {
       msiGetValByKey(*GenQOut, "DATA_ID", *objID);
       msiGetValByKey(*GenQOut, "DATA_NAME", *Object);
       msiGetValByKey(*GenQOut, "COLL_NAME", *Coll);
-      ### msiGetValByKey(*GenQOut, "DATA_CHECKSUM", *CHKSUM);
       ### query if checksum is already computed for the data object
       *CHKSUM = '';
       *checksumCondition = "COLL_NAME = '*Coll' AND DATA_ID = '*objID' AND DATA_CHECKSUM != ''";
