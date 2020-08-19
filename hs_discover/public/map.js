@@ -95,7 +95,7 @@
       });
       const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
       infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
-lat: ${location.lat} lng: ${location.lng}`);
+        lat: ${location.lat} lng: ${location.lng}`);
       marker.addListener('click', () => {
         infowindow.open(exports.map, marker);
       });

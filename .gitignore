@@ -31,7 +31,7 @@ init-defaultworker
 init-dockerworker
 init-hydroshare
 run-server
-schema.xml
+#schema.xml
 *.sublime-*
 .pycharm_helpers
 celerybeat.pid
