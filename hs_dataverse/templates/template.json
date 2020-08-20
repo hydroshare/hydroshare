@@ -1,0 +1,498 @@
+{
+  "datasetVersion": {
+    "metadataBlocks": {
+      "citation": {
+        "displayName": "Citation Metadata",
+        "fields":
+        [
+          {
+            "typeName": "title",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "{{ title }}"
+          },
+          {
+            "typeName": "alternativeURL",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "{{ alt_url }}"
+          },
+          {
+            "typeName": "otherId",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "otherIdAgency": {
+                  "typeName": "otherIdAgency",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "HydroShare"
+                },
+                "otherIdValue": {
+                  "typeName": "otherIdValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ rid }}"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "author",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for author in authors %}
+              {
+                "authorName": {
+                  "typeName": "authorName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ author.name }}"
+                },
+                "authorAffiliation": {
+                  "typeName": "authorAffiliation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ author.affiliation }}"
+                },
+                "authorIdentifierScheme": {
+                  "typeName": "authorIdentifierScheme",
+                  "multiple": false,
+                  "typeClass": "controlledVocabulary",
+                  "value": "{{ author.id_scheme }}"
+                },
+                "authorIdentifier": {
+                  "typeName": "authorIdentifier",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ author.identifier }}"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "datasetContact",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for contact in contacts %}
+              {
+                "datasetContactName": {
+                  "typeName": "datasetContactName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ contact.name }}"
+                },
+                "datasetContactAffiliation": {
+                  "typeName": "datasetContactAffiliation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ contact.affiliation }}"
+                },
+                "datasetContactEmail": {
+                  "typeName": "datasetContactEmail",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ contact.email }}"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "dsDescription",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "dsDescriptionValue": {
+                  "typeName": "dsDescriptionValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ abstract }}"
+                },
+                "dsDescriptionDate": {
+                  "typeName": "dsDescriptionDate",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ modified_date }}"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "subject",
+            "multiple": true,
+            "typeClass": "controlledVocabulary",
+            "value": [ "{{ subject }}" ]
+          },
+          {
+            "typeName": "keyword",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for keyword in keywords %}
+              {
+                "keywordValue": {
+                  "typeName": "keywordValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ keyword }}"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "publication",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for rp in related_publications %}
+              {
+                "publicationCitation": {
+                  "typeName": "publicationCitation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ rp.citation }}"
+                },
+                 "publicationURL": {
+                   "typeName": "publicationURL",
+                   "multiple": false,
+                   "typeClass": "primitive",
+                   "value": "{{ rp.url }}"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "notesText",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "{{ notes }}"
+          },
+          {
+            "typeName": "producer",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for producer in producers %}
+              {
+                "producerName": {
+                  "typeName": "producerName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ producer.name }}"
+                },
+                "producerAffiliation": {
+                  "typeName": "producerAffiliation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ producer.affiliation }}"
+                },
+                "producerAbbreviation": {
+                  "typeName": "producerAbbreviation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ producer.abbreviation }}"
+                },
+                "producerURL": {
+                  "typeName": "producerURL",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "https://www.hydroshare.org/home/"
+                },
+                "producerLogoURL": {
+                  "typeName": "producerLogoURL",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "https://www.hydroshare.org/static/img/logo-lg.png"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "contributor",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for contributor in contributors %}
+              {
+                "contributorType": {
+                  "typeName": "contributorType",
+                  "multiple": false,
+                  "typeClass": "controlledVocabulary",
+                  "value": "Related Person"
+                },
+                "contributorName": {
+                  "typeName": "contributorName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ contributor }}"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "grantNumber",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {% for g in grant_info %}
+              {
+                "grantNumberAgency": {
+                  "typeName": "grantNumberAgency",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ g.name }}"
+                },
+                "grantNumberValue": {
+                  "typeName": "grantNumberValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ g.number }}"
+                }
+              }
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "distributor",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "distributorName": {
+                  "typeName": "distributorName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "HydroShare"
+                },
+                "distributorAffiliation": {
+                  "typeName": "distributorAffiliation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "Consortium of Universities for the Advancement of Hydrological Science, Inc (CUAHSI)"
+                },
+                "distributorAbbreviation": {
+                  "typeName": "distributorAbbreviation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "HydroShare"
+                },
+                "distributorURL": {
+                  "typeName": "distributorURL",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "https://www.hydroshare.org"
+                },
+                "distributorLogoURL": {
+                  "typeName": "distributorLogoURL",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "https://www.hydroshare.org/static/img/logo-lg.png"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "distributionDate",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "{{ distribution_date }}"
+          },
+          {
+            "typeName": "depositor",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "{{ depositor }}"
+          },
+          {
+            "typeName": "dateOfDeposit",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "{{ deposit_date }}"
+          },
+          {
+            "typeName": "timePeriodCovered",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "timePeriodCoveredStart": {
+                  "typeName": "timePeriodCoveredStart",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ start_period_date }}"
+                },
+                "timePeriodCoveredEnd": {
+                  "typeName": "timePeriodCoveredEnd",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ end_period_date }}"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "kindOfData",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "Composite Resource"
+            ]
+          },
+          {
+            "typeName": "software",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "softwareName": {
+                  "typeName": "softwareName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": ""
+                },
+                "softwareVersion": {
+                  "typeName": "softwareVersion",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": ""
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "relatedMaterial",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              {% for r in related_materials %}
+              r
+              {% if not forloop.last %}
+              ,
+              {% endif %}
+              {% endfor %}
+            ]
+          },
+          {
+            "typeName": "relatedDatasets",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": []
+          }
+        ]
+      },
+      "geospatial": {
+        "displayName": "Geospatial Metadata",
+        "fields": [
+          {
+            "typeName": "geographicCoverage",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [ {% if geo_info.country or geo_info.state or geo_info.city or geo_info.other %}
+              {
+                "country": {
+                  "typeName": "country",
+                  "multiple": false,
+                  "typeClass": "controlledVocabulary",
+                  "value": "{{ geo_info.country }}"
+                },
+                "state": {
+                  "typeName": "state",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ geo_info.state }}"
+                },
+                "city": {
+                  "typeName": "city",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ geo_info.city }}"
+                },
+                "otherGeographicCoverage": {
+                  "typeName": "otherGeographicCoverage",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ geo_info.other }}"
+                }
+              }
+            {% endif %}
+            ]
+          },
+          {
+            "typeName": "geographicUnit",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [ {% for u in geo_units %}
+              "{{ u }}"
+              {% if not forloop.last %}, {% endif %}{% endfor %}]
+          },
+          {
+            "typeName": "geographicBoundingBox",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [ {% if bounding_box.west and bounding_box.east and bounding_box.north and bounding_box.south %}
+              {
+                "westLongitude": {
+                  "typeName": "westLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ bounding_box.west }}"
+                },
+                "eastLongitude": {
+                  "typeName": "eastLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ bounding_box.east }}"
+                },
+                "northLongitude": {
+                  "typeName": "northLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ bounding_box.north }}"
+                },
+                "southLongitude": {
+                  "typeName": "southLongitude",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "{{ bounding_box.south }}"
+                }
+              }
+            {% endif %}
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+
