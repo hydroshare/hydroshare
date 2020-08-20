@@ -1,4 +1,4 @@
-import tempfile
+import json
 import shutil
 
 from django.test import TestCase
@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from hs_core import hydroshare
 
 from hs_dataverse.utils import export_bag
+from hs_dataverse.utils import evaluate_json_template
 from hs_dataverse.tests.utilities import global_reset
 
 
@@ -73,7 +74,7 @@ class T01CheckMetadata(TestCase):
             resource_type='CompositeResource',
             owner=self.cat,
             title='all about dog holes',
-            metadata = metadata
+            metadata=metadata
         )
 
         self.res.extra_metadata = {'name': 'John Jackson', 'email': 'jj@gmail.com'}

@@ -10,8 +10,6 @@ from django.core.management.base import BaseCommand
 from hs_dataverse.utils import export_bag
 from hs_dataverse.utils import upload_dataset
 import shutil
-from hs_dataverse.utils import evaluate_json_template
-import json
 
 
 class Command(BaseCommand):
@@ -54,11 +52,11 @@ class Command(BaseCommand):
         :param options: additional optional parameters to the command line call
         :return: nothing
         """
-       
+
         base_url = 'https://dataverse.harvard.edu'  # server url
         api_token = 'c57020c2-d954-48da-be47-4e06785ceba0'  # api-token
         dv = 'mydv'  # parent given here
-        
+
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 temp_dir = export_bag(rid, options)

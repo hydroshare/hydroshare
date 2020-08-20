@@ -5,7 +5,6 @@ import copy
 from datetime import datetime
 from pyDataverse.api import Api
 import os
-import sys
 from django.conf import settings
 import googlemaps
 import time
@@ -17,15 +16,11 @@ from hs_core.hydroshare import get_party_data_from_user
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.tasks import create_bag_by_irods
 from django.template import Context, Template
-from django.utils.safestring import SafeString
 
 
 # global variables
-
 false = False
 true = True
-
-
 
 
 # if the given string contains a url, returns it. Otherwise, returns the
@@ -314,7 +309,7 @@ def evaluate_json_template(template_path, temp_dir):
 
     alt_url = set_field(root.find(".//%s" % hs_identifier_tag))
 
-    author_dict = {'name': '', 'affiliation': '', 'id_scheme': '', 'identifier': ''} 
+    author_dict = {'name': '', 'affiliation': '', 'id_scheme': '', 'identifier': ''}
     authors = []
     for creator in root.findall(".//%s" % creator_tag):
         authors.append(copy.deepcopy(author_dict))
@@ -395,9 +390,8 @@ def evaluate_json_template(template_path, temp_dir):
     gmaps = googlemaps.Client(key=maps_api_token)
 
     geo_info = {'country': '', 'state': '', 'city': '', 'other': ''}
-    geo_units = [] 
+    geo_units = []
     bounding_box = {'north': '', 'south': '', 'east': '', 'west': ''}
-    other_geo_info = ''
 
     bounding_box_text = set_field(root.find('.//%s/%s' % (box_tag, value_tag)))
     if (bounding_box_text != 'None'):
@@ -438,7 +432,7 @@ def evaluate_json_template(template_path, temp_dir):
 
     notes = e['extended_metadata_notes']
     rid = e['rid']
-    
+
     grant_dict = {'name': '', 'number': ''}
     grant_info = []
     for i, grant in enumerate(e['award_numbers']):
@@ -493,12 +487,12 @@ def evaluate_json_template(template_path, temp_dir):
                        'authors': authors,
                        'contacts': contacts,
                        'abstract': abstract,
-                       'modified_date' : last_modified_date,
+                       'modified_date': last_modified_date,
                        'subject': subject,
                        'keywords': keywords,
                        'related_publications': related_publications,
                        'notes': notes,
-                       'producers': [producer_dict], 
+                       'producers': [producer_dict],
                        'contributors': contributors,
                        'grant_info': grant_info,
                        'distribution_date': str(datetime.date(datetime.now())),
@@ -509,8 +503,7 @@ def evaluate_json_template(template_path, temp_dir):
                        'related_materials': related_materials,
                        'geo_info': geo_info,
                        'geo_units': geo_units,
-                       'bounding_box': bounding_box
-                      })
+                       'bounding_box': bounding_box})
 
     return template.render(context)
 
@@ -525,7 +518,7 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     :param temp_dir: the temporary directory containing the resource's bag metadata files
     :return: nothing
     """
-    
+
     x = evaluate_json_template('hs_dataverse/templates/template.json', temp_dir)
     metadata = json.loads(x)
     api = Api(base_url, api_token)
@@ -533,10 +526,10 @@ def upload_dataset(base_url, api_token, dv, temp_dir):
     # query_str = '/dataverses/' + dv + '/contents'
     # params = {}
     # resp = api.get_request(query_str, params=params, auth=True)
-    #   
+    #
     # extracting response data in json format
     # dv_data = resp.json()
-    # 
+    #
     # num_dv = len(dv_data[u'data'])
     # eventually, there should be a button which allows users to choose locations from among these
     # print all dataverse and dataset titles
