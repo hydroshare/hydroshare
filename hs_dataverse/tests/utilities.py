@@ -12,7 +12,7 @@ from hs_dataverse.utils import get_other_metadata
 from hs_core.models import BaseResource
 from django.contrib.auth.models import User, Group
 from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes, \
+    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, \
     UserResourceProvenance, GroupResourceProvenance, UserGroupProvenance
 
 
@@ -29,6 +29,7 @@ def global_reset():
     User.objects.all().delete()
     Group.objects.all().delete()
     BaseResource.objects.all().delete()
+
 
 def export_bag(self):
     """
