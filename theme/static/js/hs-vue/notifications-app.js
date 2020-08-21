@@ -30,68 +30,62 @@ $(document).ready(function () {
                 "bag download": {
                     title: "Download all content as Zipped BagIt Archive",
                     status: {
-                        "Pending execution": "Pending...",
-                        "In progress": "Getting your files ready for download...",
-                        "Aborted": "Aborted",
-                        "Failed": "Download failed",
-                        "Delivered": "Download delivered"
+                        "progress": "Getting your files ready for download...",
+                        "aborted": "Aborted",
+                        "failed": "Download failed",
+                        "delivered": "Download delivered"
                     }
                 },
                 "file unzip": {
                     title: "File Unzipping",
                     status: {
-                        "Pending execution": "Pending...",
-                        "In progress": "Unzipping your file...",
-                        "Completed": "Completed",
-                        "Failed": "Unzip failed",
-                        "Delivered": "Unzipping completed"
+                        "progress": "Unzipping your file...",
+                        "completed": "Completed",
+                        "failed": "Unzip failed",
+                        "delivered": "Unzipping completed"
                     }
                 },
                 "zip download": {
                     title: "File download",
                     status: {
-                        "Pending execution": "Pending...",
-                        "In progress": "Getting your files ready for download...",
-                        "Aborted": "Aborted",
-                        "Failed": "Download failed",
-                        "Delivered": "Download delivered"
+                        "progress": "Getting your files ready for download...",
+                        "aborted": "Aborted",
+                        "failed": "Download failed",
+                        "delivered": "Download delivered"
                     }
                 },
                 "resource delete": {
                     title: "Resource delete",
                     status: {
-                        "Pending execution": "Pending...",
-                        "In progress": "In progress...",
-                        "Completed": "Completed",
-                        "Failed": "Failed",
-                        "Delivered": "Delivered"
+                        "progress": "In progress...",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
                     }
                 },
                 "resource copy": {
                     title: "Resource copy",
                     status: {
-                        "Pending execution": "Pending...",
-                        "In progress": "Resource copy in progress...",
-                        "Aborted": "Aborted",
-                        "Completed": "Completed",
-                        "Failed": "Failed",
-                        "Delivered": "Delivered"
+                        "progress": "Resource copy in progress...",
+                        "aborted": "Aborted",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
                     }
                 }
             },
             statusIcons: {
-                "Aborted": "glyphicon glyphicon-ban-circle",
-                "Failed": "glyphicon glyphicon-remove-sign",
-                "Completed": "glyphicon glyphicon-ok-sign",
-                "Pending execution": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
-                "In progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
-                "Delivered": "glyphicon glyphicon-ok-sign"
+                "aborted": "glyphicon glyphicon-ban-circle",
+                "failed": "glyphicon glyphicon-remove-sign",
+                "completed": "glyphicon glyphicon-ok-sign",
+                "progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
+                "delivered": "glyphicon glyphicon-ok-sign"
             }
         },
         computed: {
             someInProgress: function () {
                 return this.tasks.find(function (task) {
-                    return task.status === "In progress" || task.status === "Pending execution";
+                    return task.status === "progress";
                 });
             }
         },
@@ -143,27 +137,10 @@ $(document).ready(function () {
                 }
             },
             canBeDismissed: function (task) {
-                return task.status === 'Completed'
-                    || task.status === 'Failed'
-                    || task.status === 'Aborted'
-                    || task.status === 'Delivered'
-            },
-            deliverTask: function(task) {
-                let vue = this;
-                if (vue.canBeDelivered(task)) {
-                    $.ajax({
-                        type: "GET",
-                        url: '/hsapi/_internal/set_task_delivered/' + task.id,
-                        success: function (task) {
-                        },
-                        error: function (response) {
-                            console.log(response);
-                        }
-                    });
-                }
-            },
-            canBeDelivered: function (task) {
-                return task.status === 'Completed'
+                return task.status === 'completed'
+                    || task.status === 'failed'
+                    || task.status === 'aborted'
+                    || task.status === 'delivered'
             },
             abortTask: function(task) {
                 let vue = this;
@@ -182,8 +159,7 @@ $(document).ready(function () {
             },
             canBeAborted: function (task) {
                 let vue = this;
-                return "Aborted" in vue.taskMessages[task.name].status && (task.status === 'In progress'
-                    || task.status === 'Pending execution')
+                return "aborted" in vue.taskMessages[task.name].status && (task.status === 'progress')
             },
             clear: function () {
                 let vue = this;
@@ -213,7 +189,7 @@ $(document).ready(function () {
 
                 if (vue.someInProgress) {
                     const tasksInProgress = vue.tasks.filter(function (task) {
-                        return task.status === "In progress" || task.status === "Pending execution";
+                        return task.status === "progress";
                     });
 
                     let calls = tasksInProgress.map(function (task) {
@@ -256,35 +232,12 @@ $(document).ready(function () {
                 let vue = this;
                 switch (task.name) {
                     case "bag download":
-                        // Check if bag creation is finished
-                        if (task.status === "Completed" && task.payload) {
-                            const bagUrl = task.payload;
-                            vue.downloadFile(bagUrl, task.id);
-                            vue.deliverTask(task);
-                        }
-                        break;
                     case "zip download":
-                        // Check if zip creation is finished
-                        if (task.status === "Completed" && task.payload) {
-                            const zipUrl = task.payload;
-                            vue.downloadFile(zipUrl, task.id);
-                            vue.deliverTask(task);
-                        }
-                        break;
-                    case "resource delete":
-                        // Check if resource delete is finished
-                        if (task.status === "Completed" && task.payload) {
-                            vue.deliverTask(task);
-                        }
-                        break;
-                    case "resource copy":
-                        if (task.status === "Completed" && task.payload) {
-                            vue.deliverTask(task);
-                        }
-                        break;
-                    case "file unzip":
-                        if (task.status === "Completed" && task.payload) {
-                            vue.deliverTask(task);
+                        if (task.status === "completed" && task.payload) {
+                            const downloadUrl = task.payload;
+                            vue.downloadFile(downloadUrl, task.id);
+                            // dismiss automatic downloads
+                            vue.dismissTask(task)
                         }
                         break;
                     default:
@@ -309,21 +262,20 @@ $(document).ready(function () {
                     if (task.status !== targetTask.status || task.payload !== targetTask.payload) {
                         targetTask.status = task.status;
                         targetTask.payload = task.payload;
-                        if (task.status !== 'Delivered')
-                            vue.processTask(targetTask);
+                        vue.processTask(targetTask);
                     }
                 }
                 else {
                     // Add new task
                     targetTask = task;
                     vue.tasks = [targetTask, ...vue.tasks];
-                    if (task.status !== 'Delivered')
+                    if (task.status !== 'delivered')
                         vue.processTask(targetTask);
                 }
             },
             // Used to know when a task should inform users of alternative way to download their files
             canNotifyDownload: function (task) {
-                return task.status === 'Completed'
+                return task.status === 'completed'
                     && (task.name === 'bag download' || task.name === 'zip download')
             }
         },

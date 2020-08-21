@@ -4,7 +4,6 @@ from celery.result import states
 from django.conf import settings
 from django.db import transaction
 
-from hs_core.models import TaskNotification
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.signals import post_delete_resource
 
@@ -76,7 +75,7 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
         workers = list(job_dict.keys())
         for worker in workers:
             for job in job_dict[worker]:
-                status = "progress" if queue_type == 'active' else "pending"
+                status = "progress"
                 payload = ''
                 if 'args' in job and username in job['args']:
                     task_id = job['id']
@@ -85,16 +84,12 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
                         if result.ready():
                             status = 'completed'
                             payload = str(result.get()).lower()
-                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
-                                                     payload=payload, username=username)
                         elif result.failed():
                             status = 'failed'
-                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
-                                                     username=username)
                     task_list.append({
                         'id': task_id,
                         'name': task_name_mapper[job['name']],
-                        'status': dict(TaskNotification.TASK_STATUS_CHOICES)[status],
+                        'status': status,
                         'payload': payload
                     })
                     task_ids.add(job['id'])
@@ -104,30 +99,11 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
                         task_list.append({
                             'id': scheduled_job['id'],
                             'name': task_name_mapper[scheduled_job['name']],
-                            'status': dict(TaskNotification.TASK_STATUS_CHOICES)['pending'],
+                            'status': 'pending',
                             'payload': payload
                         })
                         task_ids.add(scheduled_job['id'])
     return task_list, task_ids
-
-
-def create_task_notification(task_id, status='pending', name='', payload='', username=''):
-    with transaction.atomic():
-        obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
-                                                              defaults={'name': name,
-                                                                        'payload': payload,
-                                                                        'status': status,
-                                                                        'username': username
-                                                                        })
-        if not created:
-            if username:
-                obj.username = username
-            if name:
-                obj.name = name
-            if payload:
-                obj.payload = payload
-            obj.status = status
-            obj.save()
 
 
 def get_resource_bag_task(res_id):
@@ -151,20 +127,6 @@ def get_all_tasks(username):
     res_task_list, res_task_ids = _retrieve_user_tasks(username, i.reserved(), 'reserved')
     sched_task_list, sched_task_ids = _retrieve_user_tasks(username, i.scheduled(), 'scheduled')
     task_list = act_task_list + res_task_list + sched_task_list
-    task_ids = act_task_ids.union(res_task_ids).union(sched_task_ids)
-    task_notif_list = []
-    for obj in TaskNotification.objects.filter(username=username):
-        if obj.task_id not in task_ids:
-            if obj.status == 'pending' or obj.status == 'progress':
-                obj.status = 'failed'
-                obj.save()
-        task_notif_list.append({
-            'id': obj.task_id,
-            'name': obj.name,
-            'status': dict(TaskNotification.TASK_STATUS_CHOICES)[obj.status],
-            'payload': obj.payload
-        })
-    task_list.extend(item for item in task_notif_list if item['id'] not in task_ids)
     return task_list
 
 
@@ -178,13 +140,14 @@ def get_task_by_id(task_id, name='', payload='', request=None):
     :return: task dict with keys id, name, status
     """
     result = AsyncResult(task_id)
-    status = dict(TaskNotification.TASK_STATUS_CHOICES)['progress']
+    status = 'progress'
     username = request.user.username if request else ''
     try:
         ret_value = result.get()
-        status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
+        status = 'completed'
         if not payload:
             payload = ret_value
+        # TODO we can't do a post delete resource here. get_task_by_id can be called more than once for a task
         if name == "resource delete" and request:
             res = get_resource_by_shortkey(ret_value)
             res_title = res.metadata.title
@@ -192,15 +155,14 @@ def get_task_by_id(task_id, name='', payload='', request=None):
             post_delete_resource.send(sender=type(res), request=request, user=request.user,
                                       resource_shortkey=ret_value, resource=res,
                                       resource_title=res_title, resource_type=res_type)
-        create_task_notification(task_id=task_id, status='completed', name=name, payload=payload, username=username)
     except Exception:
         # logging exception will log the full stack trace and prepend a line with the message str input argument
         logger.exception('An exception is raised from task {}'.format(task_id))
-        status = 'Failed'
+        status = 'failed'
     if result.failed():
-        status = dict(TaskNotification.TASK_STATUS_CHOICES)['failed']
+        status = 'failed'
     elif result.status == states.PENDING:
-        status = dict(TaskNotification.TASK_STATUS_CHOICES)['pending']
+        status = 'pending'
 
     return {
         'id': task_id,
@@ -220,7 +182,7 @@ def revoke_task_by_id(task_id):
     result.revoke(terminate=True)
     return {
         'id': task_id,
-        'status': dict(TaskNotification.TASK_STATUS_CHOICES)['aborted'],
+        'status': 'aborted',
         'payload': ''
     }
 
@@ -231,34 +193,5 @@ def dismiss_task_by_id(task_id):
     :param task_id: task id
     :return: dismissed task dict
     """
-    task_dict = {}
-    filter_task = TaskNotification.objects.filter(task_id=task_id).first()
-    if filter_task:
-        task_dict = {
-            'id': task_id,
-            'name': filter_task.name,
-            'status': filter_task.status,
-            'payload': filter_task.payload
-        }
-        TaskNotification.objects.filter(task_id=task_id).delete()
-    return task_dict
-
-
-def set_task_delivered_by_id(task_id):
-    """
-    Set task to delivered status from TaskNotificatoin model by task id
-    :param task_id: task id
-    :return: dict of the task that has been set to the delivered status
-    """
-    task_dict = {}
-    filter_task = TaskNotification.objects.filter(task_id=task_id).first()
-    if filter_task:
-        filter_task.status = 'delivered'
-        filter_task.save()
-        task_dict = {
-            'id': task_id,
-            'name': filter_task.name,
-            'status': dict(TaskNotification.TASK_STATUS_CHOICES)[filter_task.status],
-            'payload': filter_task.payload
-        }
-    return task_dict
+    result = AsyncResult(task_id)
+    result.forget()
