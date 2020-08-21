@@ -154,6 +154,10 @@ def get_all_tasks(username):
     task_ids = act_task_ids.union(res_task_ids).union(sched_task_ids)
     task_notif_list = []
     for obj in TaskNotification.objects.filter(username=username):
+        if obj.task_id not in task_ids:
+            if obj.status == 'pending' or obj.status == 'progress':
+                obj.status = 'failed'
+                obj.save()
         task_notif_list.append({
             'id': obj.task_id,
             'name': obj.name,
@@ -176,26 +180,24 @@ def get_task_by_id(task_id, name='', payload='', request=None):
     result = AsyncResult(task_id)
     status = dict(TaskNotification.TASK_STATUS_CHOICES)['progress']
     username = request.user.username if request else ''
-    if result.ready():
-        try:
-            ret_value = result.get()
-            status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
-            if not payload:
-                payload = ret_value
-            if name == "resource delete" and request:
-                res = get_resource_by_shortkey(ret_value)
-                res_title = res.metadata.title
-                res_type = res.resource_type
-                post_delete_resource.send(sender=type(res), request=request, user=request.user,
-                                          resource_shortkey=ret_value, resource=res,
-                                          resource_title=res_title, resource_type=res_type)
-            create_task_notification(task_id=task_id, status='completed', name=name, payload=payload, username=username)
-        # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
-        except Exception:
-            # logging exception will log the full stack trace and prepend a line with the message str input argument
-            logger.exception('An exception is raised from task {}'.format(task_id))
-            status = 'Failed'
-    elif result.failed():
+    try:
+        ret_value = result.get()
+        status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
+        if not payload:
+            payload = ret_value
+        if name == "resource delete" and request:
+            res = get_resource_by_shortkey(ret_value)
+            res_title = res.metadata.title
+            res_type = res.resource_type
+            post_delete_resource.send(sender=type(res), request=request, user=request.user,
+                                      resource_shortkey=ret_value, resource=res,
+                                      resource_title=res_title, resource_type=res_type)
+        create_task_notification(task_id=task_id, status='completed', name=name, payload=payload, username=username)
+    except Exception:
+        # logging exception will log the full stack trace and prepend a line with the message str input argument
+        logger.exception('An exception is raised from task {}'.format(task_id))
+        status = 'Failed'
+    if result.failed():
         status = dict(TaskNotification.TASK_STATUS_CHOICES)['failed']
     elif result.status == states.PENDING:
         status = dict(TaskNotification.TASK_STATUS_CHOICES)['pending']
