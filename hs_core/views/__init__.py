@@ -41,13 +41,13 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
 
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
-from hs_core.task_utils import get_all_tasks, get_task_by_id, revoke_task_by_id, dismiss_task_by_id, \
+from hs_core.task_utils import get_all_tasks, get_task_by_id, dismiss_task_by_id, \
     get_resource_delete_task
 from hs_core.tasks import delete_resource_task, copy_resource_task
 from . import resource_rest_api
