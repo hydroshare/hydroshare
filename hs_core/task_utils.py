@@ -172,21 +172,6 @@ def get_task_by_id(task_id, name='', payload='', request=None):
     }
 
 
-def revoke_task_by_id(task_id):
-    """
-    revoke a celery task by task id
-    :param task_id: task id
-    :return: aborted task dict
-    """
-    result = AsyncResult(task_id)
-    result.revoke(terminate=True)
-    return {
-        'id': task_id,
-        'status': 'aborted',
-        'payload': ''
-    }
-
-
 def dismiss_task_by_id(task_id):
     """
     dismiss a celery task from TaskNotification model by task id

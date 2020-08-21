@@ -112,15 +112,6 @@ def get_task(request, task_id):
 
 
 @login_required
-def abort_task(request, task_id):
-    if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
-        task_dict = revoke_task_by_id(task_id)
-        return JsonResponse(task_dict)
-    else:
-        return JsonResponse({'error': 'not authorized to revoke the task'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-@login_required
 def dismiss_task(request, task_id):
     dismiss_task_by_id(task_id)
     return HttpResponse(status=204)

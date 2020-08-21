@@ -102,6 +102,5 @@ urlpatterns = [
         views.update_quota_usage, name='update_quota_usage'),
     url(r'^_internal/get_tasks_by_user/$', views.get_tasks_by_user, name='get_tasks_by_user'),
     url(r'^_internal/get_task/(?P<task_id>[0-9a-f-]+)$', views.get_task, name='get_task'),
-    url(r'^_internal/abort_task/(?P<task_id>[0-9a-f-]+)$', views.abort_task, name='abort_task'),
     url(r'^_internal/dismiss_task/(?P<task_id>[0-9a-f-]+)$', views.dismiss_task, name='dismiss_task'),
 ]

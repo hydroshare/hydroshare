@@ -31,7 +31,6 @@ $(document).ready(function () {
                     title: "Download all content as Zipped BagIt Archive",
                     status: {
                         "progress": "Getting your files ready for download...",
-                        "aborted": "Aborted",
                         "failed": "Download failed",
                         "delivered": "Download delivered"
                     }
@@ -49,7 +48,6 @@ $(document).ready(function () {
                     title: "File download",
                     status: {
                         "progress": "Getting your files ready for download...",
-                        "aborted": "Aborted",
                         "failed": "Download failed",
                         "delivered": "Download delivered"
                     }
@@ -67,7 +65,6 @@ $(document).ready(function () {
                     title: "Resource copy",
                     status: {
                         "progress": "Resource copy in progress...",
-                        "aborted": "Aborted",
                         "completed": "Completed",
                         "failed": "Failed",
                         "delivered": "Delivered"
@@ -75,7 +72,6 @@ $(document).ready(function () {
                 }
             },
             statusIcons: {
-                "aborted": "glyphicon glyphicon-ban-circle",
                 "failed": "glyphicon glyphicon-remove-sign",
                 "completed": "glyphicon glyphicon-ok-sign",
                 "progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
@@ -139,27 +135,7 @@ $(document).ready(function () {
             canBeDismissed: function (task) {
                 return task.status === 'completed'
                     || task.status === 'failed'
-                    || task.status === 'aborted'
                     || task.status === 'delivered'
-            },
-            abortTask: function(task) {
-                let vue = this;
-                if (vue.canBeAborted(task)) {
-                    $.ajax({
-                        type: "GET",
-                        url: '/hsapi/_internal/abort_task/' + task.id,
-                        success: function (task) {
-                            vue.registerTask(task);
-                        },
-                        error: function (response) {
-                            console.log(response);
-                        }
-                    });
-                }
-            },
-            canBeAborted: function (task) {
-                let vue = this;
-                return "aborted" in vue.taskMessages[task.name].status && (task.status === 'progress')
             },
             clear: function () {
                 let vue = this;
