@@ -117,6 +117,7 @@ $(document).ready(function () {
                         for (let i = 0; i < tasks.length; i++) {
                             vue.registerTask(tasks[i]);
                         }
+                        vue.scheduleCheck();
                     },
                     error: function (response) {
                         console.log(response);
@@ -287,15 +288,6 @@ $(document).ready(function () {
                         }
                         break;
                     default:
-                        break;
-                }
-
-                switch (task.status) {
-                    case "Pending execution":
-                        vue.scheduleCheck();
-                        break;
-                    case "In progress":
-                        vue.scheduleCheck();
                         break;
                 }
             },
