@@ -89,6 +89,7 @@ class ResourceFileToListItemMixin(object):
         logical_file_type = f.logical_file_type_name
         file_name = os.path.basename(f.resource_file.name)
         modified_time = f.modified_time
+        checksum = f.checksum
         # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -100,7 +101,8 @@ class ResourceFileToListItemMixin(object):
                                                                size=fsize,
                                                                content_type=ftype,
                                                                logical_file_type=logical_file_type,
-                                                               modified_time=modified_time)
+                                                               modified_time=modified_time,
+                                                               checksum=checksum)
         return resource_file_info_item
 
 
@@ -299,7 +301,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
         filter_parms['public'] = not self.request.user.is_authenticated()
         filtered_res_list = []
 
-        for r in hydroshare.get_resource_list(**filter_parms):
+        for r in self.paginate_queryset(hydroshare.get_resource_list(**filter_parms)):
             resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
@@ -735,14 +737,16 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 mytest_resource/text_file.txt",
                 "size": 21,
                 "content_type": "text/plain",
-                "modified_time": "2020-02-25T08:28:14"
+                "modified_time": "2020-02-25T08:28:14",
+                "checksum": "7265548b8f345605113bd9539313b4e7"
             },
             {
                 "url": "http://mill24.cep.unc.edu/django_irods/download/
                 bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
                 "size": 270993,
                 "content_type": "image/tiff",
-                "modified_time": "2020-02-25T08:28:14"
+                "modified_time": "2020-02-25T08:28:14",
+                "checksum": "ed06b456c22f7123d20888d16bcd181d"
             }
         ]
     }
@@ -823,7 +827,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
-        folder = request.POST.get('folder', None)
+        folder = request.POST.get('folder', '')
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource,
                                                            files=[resource_files[0]],

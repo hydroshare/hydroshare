@@ -110,6 +110,8 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
+    if not hasattr(request, 'user'):
+        raise PermissionDenied
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
@@ -1720,7 +1722,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     file_unpack_message = models.TextField(null=True, blank=True)
 
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
+    doi = models.CharField(max_length=128, null=False, blank=True, db_index=True, default='',
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -2113,10 +2115,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 fl.logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
             fl.delete()
-        hs_bagit.delete_files_and_bag(self)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
+        hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
 
     @property
@@ -2330,7 +2332,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder=None)
+        res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
         for res_file in res_files_at_root:
@@ -2502,7 +2504,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         unique_together = ("content_type", "object_id")
 
 
-def get_path(instance, filename, folder=None):
+def get_path(instance, filename, folder=''):
     """Get a path from a ResourceFile, filename, and folder.
 
     :param instance: instance of ResourceFile to use
@@ -2524,7 +2526,7 @@ def get_path(instance, filename, folder=None):
 
 
 # TODO: make this an instance method of BaseResource.
-def get_resource_file_path(resource, filename, folder=None):
+def get_resource_file_path(resource, filename, folder=''):
     """Determine storage path for a FileField based upon whether resource is federated.
 
     :param resource: resource containing the file.
@@ -2543,15 +2545,13 @@ def get_resource_file_path(resource, filename, folder=None):
     if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
-    if folder == '':
-        folder = None
 
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
         return filename
 
     # otherwise, it is an unqualified name.
-    if folder is not None:
+    if folder:
         # use subfolder
         folder = folder.strip('/')
         return os.path.join(resource.file_path, folder, filename)
@@ -2601,7 +2601,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_file_path above.
-    file_folder = models.CharField(max_length=4096, null=True)
+    file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096,
@@ -2632,7 +2632,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None):
+    def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2753,6 +2753,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     def modified_time(self):
         return self.resource_file.storage.get_modified_time(self.resource_file.name)
 
+    @property
+    def checksum(self):
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+
     # TODO: write unit test
     @property
     def exists(self):
@@ -2807,7 +2811,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2817,7 +2821,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2893,8 +2897,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         in a single point of truth.
         """
         folder, base = os.path.split(path)
-        if folder == "":
-            folder = None
         self.file_folder = folder  # must precede call to get_path
         if self.resource.is_federated:
             self.resource_file = None
@@ -2965,7 +2967,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
-            folder = None
+            folder = ''
             base = relpath
             abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
@@ -2976,7 +2978,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # classmethods do things that query or affect all files.
 
     @classmethod
-    def get(cls, resource, file, folder=None):
+    def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
             return ResourceFile.objects.get(object_id=resource.id,
@@ -3000,7 +3002,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         file_folder_to_match = folder
 
-        if folder is None:
+        if not folder:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
@@ -3498,6 +3500,7 @@ class BaseResource(Page, AbstractResource):
 
         hs_term_dict["HS_RES_ID"] = self.short_id
         hs_term_dict["HS_RES_TYPE"] = self.resource_type
+        hs_term_dict.update(self.extra_metadata.items())
 
         return hs_term_dict
 
@@ -4388,6 +4391,22 @@ class CoreMetaData(models.Model):
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
+
+
+class TaskNotification(models.Model):
+    TASK_STATUS_CHOICES = (
+        ('pending', 'Pending execution'),
+        ('progress', 'In progress'),
+        ('failed', 'Failed'),
+        ('aborted', 'Aborted'),
+        ('completed', 'Completed'),
+        ('delivered', 'Delivered')
+    )
+    username = models.CharField(max_length=150, blank=True)
+    task_id = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=1000, blank=True)
+    payload = models.CharField(max_length=1000, blank=True)
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='pending')
 
 
 def resource_processor(request, page):
