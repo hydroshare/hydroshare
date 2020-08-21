@@ -86,6 +86,8 @@ class T01CheckMetadata(TestCase):
 
         self.temp_dir = export_bag(self.res.short_id, options)
         x = evaluate_json_template('hs_dataverse/templates/template.json', self.temp_dir)
+        with open('junk.txt', 'w') as f:
+            f.write(x)
         self.meta_dict = json.loads(x)
 
     def tearDown(self):
@@ -177,7 +179,7 @@ class T01CheckMetadata(TestCase):
         """
         notes_text = ''
         for key, value in list(self.res.extra_metadata.items()):
-            notes_text = notes_text + '{}: {}'.format(key, value) + '\n'
+            notes_text = notes_text + '{}: {}'.format(key, value) + ', '
         self.assertEqual(notes_text,
                          self.meta_dict['datasetVersion']['metadataBlocks']['citation']
                                        ['fields'][9]['value'])

@@ -98,7 +98,7 @@ def get_other_metadata(res, rid):
     # read extended metadata as key/value pairs
     ext_metadata = ''
     for key, value in list(res.extra_metadata.items()):
-        ext_metadata = ext_metadata + key + ': ' + value + '\n'
+        ext_metadata = ext_metadata + key + ': ' + value + ', '
 
     # get funding agency data
     funding_agency_names = []

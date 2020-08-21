@@ -396,7 +396,7 @@
             "typeClass": "primitive",
             "value": [
               {% for r in related_materials %}
-              r
+              "{{ r }}"
               {% if not forloop.last %}
               ,
               {% endif %}
