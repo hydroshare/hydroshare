@@ -142,23 +142,24 @@ def get_task_by_id(task_id, name='', payload='', request=None):
     result = AsyncResult(task_id)
     status = 'progress'
     username = request.user.username if request else ''
-    try:
-        ret_value = result.get()
-        status = 'completed'
-        if not payload:
-            payload = ret_value
-        # TODO we can't do a post delete resource here. get_task_by_id can be called more than once for a task
-        if name == "resource delete" and request:
-            res = get_resource_by_shortkey(ret_value)
-            res_title = res.metadata.title
-            res_type = res.resource_type
-            post_delete_resource.send(sender=type(res), request=request, user=request.user,
-                                      resource_shortkey=ret_value, resource=res,
-                                      resource_title=res_title, resource_type=res_type)
-    except Exception:
-        # logging exception will log the full stack trace and prepend a line with the message str input argument
-        logger.exception('An exception is raised from task {}'.format(task_id))
-        status = 'failed'
+    if result.successful():
+        try:
+            ret_value = result.get()
+            status = 'completed'
+            if not payload:
+                payload = ret_value
+            # TODO we can't do a post delete resource here. get_task_by_id can be called more than once for a task
+            if name == "resource delete" and request:
+                res = get_resource_by_shortkey(ret_value)
+                res_title = res.metadata.title
+                res_type = res.resource_type
+                post_delete_resource.send(sender=type(res), request=request, user=request.user,
+                                          resource_shortkey=ret_value, resource=res,
+                                          resource_title=res_title, resource_type=res_type)
+        except Exception:
+            # logging exception will log the full stack trace and prepend a line with the message str input argument
+            logger.exception('An exception is raised from task {}'.format(task_id))
+            status = 'failed'
     if result.failed():
         status = 'failed'
     elif result.status == states.PENDING:
