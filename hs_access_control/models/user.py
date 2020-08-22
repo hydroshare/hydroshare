@@ -1368,11 +1368,12 @@ class UserAccess(models.Model):
 
         return False
 
-    def can_change_resource_flags(self, this_resource):
+    def can_change_resource_flags(self, this_resource, check_shareable=False):
         """
         Whether self can change resource flags.
 
         :param this_resource: Resource to check.
+        :param  check_shareable: if True only check for the shareable flag
         :return: True if user can set flags otherwise false.
 
         This is not enforced. It is up to the programmer to obey this restriction.
@@ -1390,8 +1391,13 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return self.user.is_superuser or \
-            (not this_resource.raccess.published and self.owns_resource(this_resource))
+        if self.user.is_superuser:
+            return True
+
+        if check_shareable:
+            return self.owns_resource(this_resource)
+
+        return not this_resource.raccess.published and self.owns_resource(this_resource)
 
     def can_view_resource(self, this_resource):
         """
