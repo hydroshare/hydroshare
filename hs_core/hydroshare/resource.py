@@ -1110,7 +1110,6 @@ def publish_resource(user, pk):
         resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.shareable = False
     resource.raccess.published = True
     resource.raccess.save()
 
