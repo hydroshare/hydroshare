@@ -242,11 +242,13 @@ def page_permissions_page_processor(request, page):
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
 
-        if cm.raccess.owners.filter(pk=request.user.pk).exists():
+        # this will get resource access privilege even for admin user
+        user_privilege = cm.raccess.get_effective_user_privilege(request.user)
+        if user_privilege == PrivilegeCodes.OWNER:
             self_access_level = 'owner'
-        elif cm.raccess.edit_users.filter(pk=request.user.pk).exists():
+        elif user_privilege == PrivilegeCodes.CHANGE:
             self_access_level = 'edit'
-        elif cm.raccess.view_users.filter(pk=request.user.pk).exists():
+        elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
     owners = cm.raccess.owners.all()
