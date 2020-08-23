@@ -3451,6 +3451,9 @@ class BaseResource(Page, AbstractResource):
         publication such as the Web App resource
         :return:
         """
+        if self.raccess.published:
+            return False
+
         return self.can_be_public_or_discoverable
 
     @classmethod
