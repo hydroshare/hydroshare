@@ -150,41 +150,43 @@
                                 view this resource.
                             </div>
 
-                            <template v-if="canChangeResourceFlags">
-                                <div class="btn-group" role="group">
-                                    {# -------- PUBLIC -------- #}
-                                    <button
-                                        :disabled="!canBePublicDiscoverable || resAccess.isPublic || isProcessingAccess"
-                                        @click="setResourceAccess('make_public')"
-                                        :class="{active: resAccess.isPublic}"
-                                        class="btn btn-default"
-                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded by anyone.' type="button">
-                                        Public
-                                    </button>
-
-                                    {# -------- DISCOVERABLE -------- #}
-                                    <button :disabled="!canBePublicDiscoverable || isProcessingAccess"
-                                            @click="setResourceAccess('make_discoverable')"
-                                            :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
+                            <template v-if="canChangeResourceFlags || '{{ cm.raccess.published }}'">
+                                {% if not cm.raccess.published %}
+                                    <div class="btn-group" role="group">
+                                        {# -------- PUBLIC -------- #}
+                                        <button
+                                            :disabled="!canBePublicDiscoverable || resAccess.isPublic || isProcessingAccess"
+                                            @click="setResourceAccess('make_public')"
+                                            :class="{active: resAccess.isPublic}"
                                             class="btn btn-default"
-                                            id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                            type="button" title='Metadata is public but data are protected.'>
-                                        Discoverable
-                                    </button>
+                                            id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded by anyone.' type="button">
+                                            Public
+                                        </button>
 
-                                    {# -------- PRIVATE -------- #}
-                                    <button
-                                        :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || isProcessingAccess"
-                                        @click="setResourceAccess('make_private')"
-                                        :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
-                                        class="btn btn-default"
-                                        id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded only by designated users or research groups.'
-                                        type="button">
-                                        Private
-                                    </button>
-                                </div>
+                                        {# -------- DISCOVERABLE -------- #}
+                                        <button :disabled="!canBePublicDiscoverable || isProcessingAccess"
+                                                @click="setResourceAccess('make_discoverable')"
+                                                :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
+                                                class="btn btn-default"
+                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                                type="button" title='Metadata is public but data are protected.'>
+                                            Discoverable
+                                        </button>
+
+                                        {# -------- PRIVATE -------- #}
+                                        <button
+                                            :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || isProcessingAccess"
+                                            @click="setResourceAccess('make_private')"
+                                            :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
+                                            class="btn btn-default"
+                                            id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded only by designated users or research groups.'
+                                            type="button">
+                                            Private
+                                        </button>
+                                    </div>
+                                {% endif %}
 
                                 <div
                                     v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
@@ -202,7 +204,7 @@
                                         </label>
                                     </div>
 
-                                    <div v-if="resAccess.isShareable" class="text-muted small">
+                                    <div v-if="resAccess.isShareable || '{{cm.raccess.published}}'" class="text-muted small">
                                         <ul>
                                             <li>
                                                <p>
