@@ -11,7 +11,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from rdflib import Graph
-from rdflib.compare import _squashed_graphs_triples
+from rdflib.compare import _squashed_graphs_triples, graph_diff
 
 from rest_framework import status
 
@@ -835,7 +835,7 @@ def add_resource_files(pk, *files, **kwargs):
 
 def normalize_metadata(md, short_id):
     """Prepares metadata string to match resource id and hydroshare url of original"""
-    with open(md, "r") as f:
+    with open(md.temporary_file_path(), "r") as f:
         metadata_str = f.read()
     from hs_core.hydroshare import current_site_url
     metadata_str = metadata_str.replace(current_site_url(), "http://www.hydroshare.org")
@@ -846,10 +846,21 @@ def normalize_metadata(md, short_id):
 
 def compare_metadatas(new_metadata_str, original_graph):
     new_graph = Graph()
-    new_graph = new_graph.parse(data=normalize_metadata(new_metadata_str))
+    new_graph = new_graph.parse(data=new_metadata_str)
     for (new_triple, original_triple) in _squashed_graphs_triples(new_graph, original_graph):
-        assert new_triple == original_triple, "new metadata {} does not match old {}".format(new_triple,
-                                                                                             original_triple)
+        try:
+            assert new_triple == original_triple, "new metadata {} does not match old {}".format(new_triple,
+                                                                                                 original_triple)
+        except:
+            in_new, in_original, _ = graph_diff(new_graph, original_graph)
+            msg = "in new: \n"
+            for t in in_new:
+                msg = msg + str(t) + "\n"
+            msg = msg + "in original: \n"
+            for t in in_original:
+                msg = msg + str(t) + "\n"
+            logger.error(msg)
+            raise
 
 
 def is_aggregation_metadata_file(file):

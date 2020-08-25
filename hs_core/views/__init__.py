@@ -203,10 +203,12 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
 
     except hydroshare.utils.ResourceFileSizeException as ex:
         msg = {'file_size_error': str(ex)}
+        logger.exception("failed")
         return JsonResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = {'validation_error': str(ex)}
+        logger.exception("failed")
         return JsonResponse(msg, status=500)
 
     try:
@@ -218,6 +220,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = {'validation_error': str(ex)}
+        logger.exception("failed")
         return JsonResponse(msg, status=500)
 
     res_public_status = 'public' if resource.raccess.public else 'not public'
