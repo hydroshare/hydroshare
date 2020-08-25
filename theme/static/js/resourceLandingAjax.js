@@ -89,6 +89,7 @@ function license_agreement_ajax_submit(event) {
                     $("#hs-file-browser").attr("data-agreement", "false");
                     $("#btn-download-all").attr("href", $("#download-bag-btn").attr("href"));
                     $("#btn-download-all").removeAttr("data-toggle");
+
                 }
                 else {
                     element.closest("form").find("input[name='flag']").val("make_not_require_lic_agreement");
@@ -822,11 +823,9 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
             remove_original_after_zip: "false"
         },
         success: function (result) {
-            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
             display_error_message('Folder Zipping Failed', xhr.responseText);
-            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
@@ -842,9 +841,8 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
             zip_with_rel_path: zip_with_rel_path,
             remove_original_zip: "false"
         },
-        success: function (task) {
-            notificationsApp.registerTask(task);
-            notificationsApp.show();
+        success: function (result) {
+            // TODO: handle "File already exists" errors
         },
         error: function (xhr, errmsg, err) {
             display_error_message('File Unzipping Failed', xhr.responseText);
@@ -869,6 +867,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 $("#txtFolderName").val("");
             }
+
         },
         error: function(xhr, errmsg, err){
             display_error_message('Folder Creation Failed', xhr.responseText);
