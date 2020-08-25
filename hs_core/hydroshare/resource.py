@@ -15,7 +15,7 @@ from rdflib.compare import _squashed_graphs_triples
 
 from rest_framework import status
 
-from hs_core.hydroshare import hs_bagit, current_site_url
+from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
@@ -837,6 +837,7 @@ def normalize_metadata(md, short_id):
     """Prepares metadata string to match resource id and hydroshare url of original"""
     with open(md, "r") as f:
         metadata_str = f.read()
+    from hs_core.hydroshare import current_site_url
     metadata_str = metadata_str.replace(current_site_url(), "http://www.hydroshare.org")
     import re
     p = re.compile(r"[0-9a-f-]{32}")
