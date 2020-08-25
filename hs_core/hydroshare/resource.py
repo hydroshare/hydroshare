@@ -11,10 +11,11 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
 from rdflib import Graph
+from rdflib.compare import _squashed_graphs_triples
 
 from rest_framework import status
 
-from hs_core.hydroshare import hs_bagit
+from hs_core.hydroshare import hs_bagit, current_site_url
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
@@ -811,6 +812,9 @@ def add_resource_files(pk, *files, **kwargs):
     from hs_file_types.utils import ingest_logical_file_metadata
     for md in metadata_files:
         ingest_logical_file_metadata(md, resource, new_lfs)
+        normalized_metadata_string = normalize_metadata(md, res.short_id)
+        normalized_original_graph = Graph().parse(data=normalized_metadata_string)
+        compare_metadatas(md.get_xml(), normalized_original_graph)
     if resource_metadata_file:
         graph = Graph()
         graph = graph.parse(data=resource_metadata_file.read())
@@ -822,7 +826,29 @@ def add_resource_files(pk, *files, **kwargs):
             logger.exception("Error processing resource metadata file")
             raise
 
+        normalized_metadata_string = normalize_metadata(resource_metadata_file, res.short_id)
+        normalized_original_graph = Graph().parse(data=normalized_metadata_string)
+        compare_metadatas(resource.metadata.get_xml(), normalized_original_graph)
+
     return ret
+
+
+def normalize_metadata(md, short_id):
+    """Prepares metadata string to match resource id and hydroshare url of original"""
+    with open(md, "r") as f:
+        metadata_str = f.read()
+    metadata_str = metadata_str.replace(current_site_url(), "http://www.hydroshare.org")
+    import re
+    p = re.compile(r"[0-9a-f-]{32}")
+    return p.sub(short_id, metadata_str)
+
+
+def compare_metadatas(new_metadata_str, original_graph):
+    new_graph = Graph()
+    new_graph = new_graph.parse(data=normalize_metadata(new_metadata_str))
+    for (new_triple, original_triple) in _squashed_graphs_triples(new_graph, original_graph):
+        assert new_triple == original_triple, "new metadata {} does not match old {}".format(new_triple,
+                                                                                             original_triple)
 
 
 def is_aggregation_metadata_file(file):
