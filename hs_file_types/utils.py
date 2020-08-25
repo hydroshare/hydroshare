@@ -308,6 +308,8 @@ def ingest_logical_file_metadata(metadata_file, resource, new_lfs):
         lf.metadata.delete_all_elements()
         lf.metadata.ingest_metadata(graph)
 
+    return lf
+
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
     for logical_file in logical_file_class.objects.filter(resource=resource):

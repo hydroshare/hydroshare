@@ -811,10 +811,10 @@ def add_resource_files(pk, *files, **kwargs):
             new_lfs = utils.check_aggregations(resource, ret)
     from hs_file_types.utils import ingest_logical_file_metadata
     for md in metadata_files:
-        ingest_logical_file_metadata(md, resource, new_lfs)
-        normalized_metadata_string = normalize_metadata(md, res.short_id)
+        lf = ingest_logical_file_metadata(md, resource, new_lfs)
+        normalized_metadata_string = normalize_metadata(md, resource.short_id)
         normalized_original_graph = Graph().parse(data=normalized_metadata_string)
-        compare_metadatas(md.get_xml(), normalized_original_graph)
+        compare_metadatas(lf.metadata.get_xml(), normalized_original_graph)
     if resource_metadata_file:
         graph = Graph()
         graph = graph.parse(data=resource_metadata_file.read())
@@ -826,7 +826,7 @@ def add_resource_files(pk, *files, **kwargs):
             logger.exception("Error processing resource metadata file")
             raise
 
-        normalized_metadata_string = normalize_metadata(resource_metadata_file, res.short_id)
+        normalized_metadata_string = normalize_metadata(resource_metadata_file, resource.short_id)
         normalized_original_graph = Graph().parse(data=normalized_metadata_string)
         compare_metadatas(resource.metadata.get_xml(), normalized_original_graph)
 
