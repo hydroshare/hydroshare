@@ -135,11 +135,6 @@ def get_resource_bag_task(res_id):
     return _retrieve_job_id(job_name, res_id)
 
 
-def get_resource_delete_task(res_id):
-    job_name = 'hs_core.tasks.delete_resource_task'
-    return _retrieve_job_id(job_name, res_id)
-
-
 def get_all_tasks(username):
     """
     get all tasks by a user identified by username input parameter
@@ -182,13 +177,6 @@ def get_task_by_id(task_id, name='', payload='', request=None):
             status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
             if not payload:
                 payload = ret_value
-            if name == "resource delete" and request:
-                res = get_resource_by_shortkey(ret_value)
-                res_title = res.metadata.title
-                res_type = res.resource_type
-                post_delete_resource.send(sender=type(res), request=request, user=request.user,
-                                          resource_shortkey=ret_value, resource=res,
-                                          resource_title=res_title, resource_type=res_type)
             create_task_notification(task_id=task_id, status='completed', name=name, payload=payload, username=username)
         # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
         except Exception:

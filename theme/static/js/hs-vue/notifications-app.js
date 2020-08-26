@@ -57,16 +57,6 @@ $(document).ready(function () {
                         "Delivered": "Download delivered"
                     }
                 },
-                "resource delete": {
-                    title: "Resource delete",
-                    status: {
-                        "Pending execution": "Pending...",
-                        "In progress": "In progress...",
-                        "Completed": "Completed",
-                        "Failed": "Failed",
-                        "Delivered": "Delivered"
-                    }
-                },
                 "resource copy": {
                     title: "Resource copy",
                     status: {
@@ -267,12 +257,6 @@ $(document).ready(function () {
                         if (task.status === "Completed" && task.payload) {
                             const zipUrl = task.payload;
                             vue.downloadFile(zipUrl, task.id);
-                            vue.deliverTask(task);
-                        }
-                        break;
-                    case "resource delete":
-                        // Check if resource delete is finished
-                        if (task.status === "Completed" && task.payload) {
                             vue.deliverTask(task);
                         }
                         break;
