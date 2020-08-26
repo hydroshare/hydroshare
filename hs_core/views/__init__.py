@@ -804,7 +804,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     if request.is_ajax():
         task = copy_resource_task.apply_async((shortkey, None, user.username))
         task_id = task.task_id
-        task_dict = get_task_by_id(task_id, name='resource copy', payload=shortkey, request=request)
+        task_dict = get_task_by_id(task_id, name='resource copy', request=request)
         create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
         return JsonResponse(task_dict)
     else:

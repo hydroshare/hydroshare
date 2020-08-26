@@ -80,21 +80,10 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
                 payload = ''
                 if 'args' in job and username in job['args']:
                     task_id = job['id']
-                    if queue_type == 'active':
-                        result = AsyncResult(task_id)
-                        if result.ready():
-                            status = 'completed'
-                            payload = str(result.get()).lower()
-                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
-                                                     payload=payload, username=username)
-                        elif result.failed():
-                            status = 'failed'
-                            create_task_notification(task_id, status=status, name=task_name_mapper[job['name']],
-                                                     username=username)
                     task_list.append({
                         'id': task_id,
                         'name': task_name_mapper[job['name']],
-                        'status': dict(TaskNotification.TASK_STATUS_CHOICES)[status],
+                        'status': status,
                         'payload': payload
                     })
                     task_ids.add(job['id'])
@@ -104,7 +93,7 @@ def _retrieve_user_tasks(username, job_dict, queue_type):
                         task_list.append({
                             'id': scheduled_job['id'],
                             'name': task_name_mapper[scheduled_job['name']],
-                            'status': dict(TaskNotification.TASK_STATUS_CHOICES)['pending'],
+                            'status': 'pending',
                             'payload': payload
                         })
                         task_ids.add(scheduled_job['id'])
@@ -152,14 +141,14 @@ def get_all_tasks(username):
         task_notif_list.append({
             'id': obj.task_id,
             'name': obj.name,
-            'status': dict(TaskNotification.TASK_STATUS_CHOICES)[obj.status],
+            'status': obj.status,
             'payload': obj.payload
         })
     task_list.extend(item for item in task_notif_list if item['id'] not in task_ids)
     return task_list
 
 
-def get_task_by_id(task_id, name='', payload='', request=None):
+def get_task_by_id(task_id, name='', request=None):
     """
     get task dict by celery task id
     :param task_id: task id
@@ -169,24 +158,22 @@ def get_task_by_id(task_id, name='', payload='', request=None):
     :return: task dict with keys id, name, status
     """
     result = AsyncResult(task_id)
-    status = dict(TaskNotification.TASK_STATUS_CHOICES)['progress']
+    status = 'progress'
     username = request.user.username if request else ''
     if result.ready():
         try:
             ret_value = result.get()
-            status = dict(TaskNotification.TASK_STATUS_CHOICES)['completed']
-            if not payload:
-                payload = ret_value
-            create_task_notification(task_id=task_id, status='completed', name=name, payload=payload, username=username)
+            status = 'completed'
+            create_task_notification(task_id=task_id, status='completed', name=name, username=username)
         # use the Broad scope Exception to catch all exception types since this function can be used for all tasks
         except Exception:
             # logging exception will log the full stack trace and prepend a line with the message str input argument
             logger.exception('An exception is raised from task {}'.format(task_id))
-            status = 'Failed'
+            status = 'failed'
     elif result.failed():
-        status = dict(TaskNotification.TASK_STATUS_CHOICES)['failed']
+        status = 'failed'
     elif result.status == states.PENDING:
-        status = dict(TaskNotification.TASK_STATUS_CHOICES)['pending']
+        status = 'pending'
 
     return {
         'id': task_id,
@@ -206,7 +193,7 @@ def revoke_task_by_id(task_id):
     result.revoke(terminate=True)
     return {
         'id': task_id,
-        'status': dict(TaskNotification.TASK_STATUS_CHOICES)['aborted'],
+        'status': 'aborted',
         'payload': ''
     }
 
@@ -244,7 +231,7 @@ def set_task_delivered_by_id(task_id):
         task_dict = {
             'id': task_id,
             'name': filter_task.name,
-            'status': dict(TaskNotification.TASK_STATUS_CHOICES)[filter_task.status],
+            'status': filter_task.status,
             'payload': filter_task.payload
         }
     return task_dict

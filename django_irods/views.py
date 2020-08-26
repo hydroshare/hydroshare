@@ -188,8 +188,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     content_type="application/json")
             else:
                 # return status to the task notification App AJAX call
-                task_dict = get_task_by_id(task_id, name='zip download', payload=download_path,
-                                           request=request)
+                task_dict = get_task_by_id(task_id, name='zip download', request=request)
                 create_task_notification(task_id, name='zip download', payload=download_path,
                                          username=request.user.username)
                 return JsonResponse(task_dict)
@@ -244,14 +243,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 if not task_id:
                     task = create_bag_by_irods.apply_async((res_id, request.user.username))
                     task_id = task.task_id
-                    task_dict = get_task_by_id(task_id, name='bag download', payload=res.bag_url,
-                                               request=request)
+                    task_dict = get_task_by_id(task_id, name='bag download', request=request)
                     create_task_notification(task_id, name='bag download', payload=res.bag_url,
                                              username=request.user.username)
                     return JsonResponse(task_dict)
                 else:
-                    task_dict = get_task_by_id(task_id, name='bag download', payload=res.bag_url,
-                                               request=request)
+                    task_dict = get_task_by_id(task_id, name='bag download', request=request)
                     return JsonResponse(task_dict)
 
                 if rest_call:

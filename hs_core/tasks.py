@@ -7,6 +7,7 @@ import zipfile
 import logging
 import json
 
+from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
@@ -16,8 +17,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -25,11 +25,12 @@ from hs_core.hydroshare import utils, create_empty_resource
 from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.task_utils import create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
-from hs_collection_resource.models import CollectionDeletedResource
 from django_irods.icommands import SessionException
+from celery.result import states
 
 from hs_core.models import BaseResource
 from theme.utils import get_quota_message
@@ -590,3 +591,23 @@ def monthly_group_membership_requests_cleanup():
     """
     two_months_ago = datetime.today() - timedelta(days=60)
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+
+@task_postrun.connect
+def update_task_notification(sender=None, task_id=None, state=None, retval=None, **kwargs):
+    """
+    Updates the state of TaskNotification model when a celery task completes
+    :param sender:
+    :param task_id:
+    :param state:
+    :param retval:
+    :param kwargs:
+    :return:
+    """
+    if state == states.SUCCESS:
+        create_task_notification(task_id, status="completed", payload=retval.lower())
+    elif state in states.EXCEPTION_STATES:
+        create_task_notification(task_id, status="failed", payload=retval.lower())
+    elif state == states.REVOKED:
+        create_task_notification(task_id, status="aborted", payload=retval.lower())
+    else:
+        logger.warning("Unhandled task state of {} for {}".format(state, task_id))
