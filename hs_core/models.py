@@ -4394,12 +4394,13 @@ class CoreMetaData(models.Model):
 
 
 class TaskNotification(models.Model):
-    TASK_STATUS_CHOICES = [
-        'failed',
-        'aborted',
-        'completed',
-        'delivered'
-    ]
+    TASK_STATUS_CHOICES = (
+        ('progress', 'Progress'),
+        ('failed', 'Failed'),
+        ('aborted', 'Aborted'),
+        ('completed', 'Completed'),
+        ('delivered', 'Delivered'),
+    )
     username = models.CharField(max_length=150, blank=True)
     task_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=1000, blank=True)
