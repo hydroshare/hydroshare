@@ -49,7 +49,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
-    set_task_delivered_by_id, create_task_notification
+    set_task_delivered_by_id, get_or_create_task_notification
 from hs_core.tasks import copy_resource_task
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -108,7 +108,7 @@ def get_tasks_by_user(request):
 
 @login_required
 def get_task(request, task_id):
-    task_dict = get_task_by_id(task_id, request=request)
+    task_dict = get_or_create_task_notification(task_id)
     return JsonResponse(task_dict)
 
 
@@ -804,7 +804,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     if request.is_ajax():
         task = copy_resource_task.apply_async((shortkey, None, user.username))
         task_id = task.task_id
-        task_dict = create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
+        task_dict = get_or_create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
         return JsonResponse(task_dict)
     else:
         try:

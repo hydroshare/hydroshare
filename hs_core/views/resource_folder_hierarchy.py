@@ -12,7 +12,7 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
-from hs_core.task_utils import create_task_notification
+from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import unzip_task
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
@@ -295,8 +295,8 @@ def data_store_folder_unzip(request, **kwargs):
     if request.is_ajax():
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite))
         task_id = task.task_id
-        task_dict = create_task_notification(task_id, name='file unzip', username=request.user.username,
-                                 payload=resource.get_absolute_url())
+        task_dict = get_or_create_task_notification(task_id, name='file unzip', username=request.user.username,
+                                                    payload=resource.get_absolute_url())
         return JsonResponse(task_dict)
     else:
         try:

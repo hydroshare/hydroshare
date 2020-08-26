@@ -14,7 +14,7 @@ from rest_framework import status
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.task_utils import get_resource_bag_task, create_task_notification
+from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
@@ -188,8 +188,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                     content_type="application/json")
             else:
                 # return status to the task notification App AJAX call
-                task_dict = create_task_notification(task_id, name='zip download', payload=download_path,
-                                         username=request.user.username)
+                task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                            username=request.user.username)
                 return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
@@ -242,12 +242,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 if not task_id:
                     task = create_bag_by_irods.apply_async((res_id, request.user.username))
                     task_id = task.task_id
-                    task_dict = create_task_notification(task_id, name='bag download', payload=res.bag_url,
-                                             username=request.user.username)
+                    task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                                                username=request.user.username)
                     return JsonResponse(task_dict)
                 else:
-                    task_dict = create_task_notification(task_id, name='bag download', payload=res.bag_url,
-                                                         username=request.user.username)
+                    task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                                                username=request.user.username)
                     return JsonResponse(task_dict)
 
                 if rest_call:

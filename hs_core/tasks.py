@@ -25,7 +25,7 @@ from hs_core.hydroshare import utils, create_empty_resource
 from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
-from hs_core.task_utils import create_task_notification
+from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
@@ -604,10 +604,10 @@ def update_task_notification(sender=None, task_id=None, state=None, retval=None,
     :return:
     """
     if state == states.SUCCESS:
-        create_task_notification(task_id, status="completed", payload=retval.lower())
+        get_or_create_task_notification(task_id, status="completed", payload=retval.lower())
     elif state in states.EXCEPTION_STATES:
-        create_task_notification(task_id, status="failed", payload=retval.lower())
+        get_or_create_task_notification(task_id, status="failed", payload=retval.lower())
     elif state == states.REVOKED:
-        create_task_notification(task_id, status="aborted", payload=retval.lower())
+        get_or_create_task_notification(task_id, status="aborted", payload=retval.lower())
     else:
         logger.warning("Unhandled task state of {} for {}".format(state, task_id))

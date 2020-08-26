@@ -58,7 +58,7 @@ def _retrieve_job_id(job_name, res_id):
     return job_id
 
 
-def create_task_notification(task_id, status='progress', name='', payload='', username=''):
+def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
                                                               defaults={'name': name,
