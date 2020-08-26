@@ -76,12 +76,33 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
             obj.status = status
             obj.save()
 
+        if status == "progress":
+            if not task_exists(task_id):
+                obj.status = 'failed'
+                obj.save()
+
         return {
             'id': task_id,
             'name': name,
             'status': obj.status,
             'payload': obj.payload
         }
+
+
+def task_exists(task_id):
+    """
+    get all tasks by a user identified by username input parameter
+    :param username: the user to retrieve all tasks for
+    :return: list of tasks where each task is a dict with id, name, and status keys
+    """
+    i = inspect()
+    if task_id in str(i.active()):
+        return True
+    if task_id in str(i.reserved()):
+        return True
+    if task_id in str(i.scheduled()):
+        return True
+    return False
 
 
 def get_resource_bag_task(res_id):
