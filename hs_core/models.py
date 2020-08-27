@@ -4405,7 +4405,7 @@ class TaskNotification(models.Model):
     task_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=1000, blank=True)
     payload = models.CharField(max_length=1000, blank=True)
-    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='progress')
 
 
 def resource_processor(request, page):

@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('task_id', models.CharField(max_length=50, unique=True)),
                 ('name', models.CharField(blank=True, max_length=1000)),
                 ('payload', models.CharField(blank=True, max_length=1000)),
-                ('status', models.CharField(choices=[('pending', 'Pending execution'), ('progress', 'In progress'), ('failed', 'Failed'), ('aborted', 'Aborted'), ('completed', 'Completed'), ('delivered', 'Delivered')], default='pending', max_length=20)),
+                ('status', models.CharField(choices=[('progress', 'Progress'), ('failed', 'Failed'), ('aborted', 'Aborted'), ('completed', 'Completed'), ('delivered', 'Delivered')], default='progress', max_length=20)),
             ],
         ),
     ]
