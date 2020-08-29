@@ -410,10 +410,13 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     sender_resource = _get_resource_sender(element_name, res)
     if element_name.lower() == 'subject' and len(request.POST['value']) == 0:
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
-        res.metadata.subjects.all().delete()
-        is_add_success = True
-        res.update_public_and_discoverable()
-        resource_modified(res, request.user, overwrite_bag=False)
+        if res.raccess.published:
+            err_msg = err_msg.format(element_name, "Published resource needs to have at least one subject")
+        else:
+            res.metadata.subjects.all().delete()
+            is_add_success = True
+            res.update_public_and_discoverable()
+            resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
                                                             element_name=element_name,
