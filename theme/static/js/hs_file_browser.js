@@ -192,7 +192,7 @@ function updateSelectionMenuContext() {
         "unzip",
         "updateRefUrl",
         "uploadFiles",
-        "zip",
+        "zip"
     ];
     var uiActionStates = {};
 
@@ -271,7 +271,7 @@ function updateSelectionMenuContext() {
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
-    else if (selected.length == 1) {
+    else if (selected.length === 1) {
         // Exactly one item selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
         if (size > maxSize) {
@@ -380,7 +380,7 @@ function updateSelectionMenuContext() {
                 // disable remove aggregation option if it is URL file
                 uiActionStates.removeAggregation.disabled = true;
 
-                if (mode != "edit") {
+                if (mode !== "edit") {
                     uiActionStates.updateRefUrl.disabled = true;
                     uiActionStates.updateRefUrl.fileMenu.hidden = true;
                 }
@@ -829,6 +829,9 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     resource_mode = resource_mode.toLowerCase();
+    if(RESOURCE_PUBLISHED) {
+        resource_mode = 'view';
+    }
     var $url;
     if (file_type_time_series) {
         $url = url;
