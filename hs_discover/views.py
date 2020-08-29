@@ -41,6 +41,26 @@ class SearchAPI(APIView):
                 "end_date":
         """
 
+        if request.GET.get('filter'):
+            filteritem = []
+            sqs = SearchQuerySet().all()
+            for result in sqs:
+                filteritem += result.subject
+                # TODO order by count as indicator of usefulness in autocomplete
+                # TODO can integrate with Alva future Recommendations work here
+
+            return Response({
+                'filter': json.dumps(list(set(filteritem))),
+            })
+
+        filtering = None
+        if request.GET.get('filtering'):
+            filtering = request.GET.get('filtering')
+
+        cat = None
+        if request.GET.get('cat'):
+            cat = request.GET.get('cat')
+
         asc = '-1'
         if request.GET.get('asc'):
             asc = request.GET.get('asc')
