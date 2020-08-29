@@ -1102,12 +1102,14 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 
-    response = deposit_res_metadata_with_crossref(resource)
-    if not response.status_code == status.HTTP_200_OK:
-        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-        # crontab celery task
-        resource.doi = get_resource_doi(pk, 'failure')
-        resource.save()
+    if not __debug__:
+        # only in production environment submit doi request to crossref
+        response = deposit_res_metadata_with_crossref(resource)
+        if not response.status_code == status.HTTP_200_OK:
+            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+            # crontab celery task
+            resource.doi = get_resource_doi(pk, 'failure')
+            resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
     resource.raccess.published = True
