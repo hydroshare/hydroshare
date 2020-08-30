@@ -4,8 +4,7 @@ from django.contrib.auth.models import Group
 
 from hs_access_control.models import PrivilegeCodes
 
-from hs_core.hydroshare.users import create_account
-from hs_core.hydroshare.resource import create_resource
+from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, \
@@ -22,7 +21,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         global_reset()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
-        self.alva = create_account(
+        self.alva = hydroshare.create_account(
             'alva@gmail.com',
             username='alva',
             first_name='alva',
@@ -31,7 +30,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.george = create_account(
+        self.george = hydroshare.create_account(
             'george@gmail.com',
             username='george',
             first_name='george',
@@ -40,7 +39,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.john = create_account(
+        self.john = hydroshare.create_account(
             'john@gmail.com',
             username='john',
             first_name='john',
@@ -49,7 +48,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.admin = create_account(
+        self.admin = hydroshare.create_account(
             'admin@gmail.com',
             username='admin',
             first_name='first_name_admin',
@@ -59,7 +58,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         )
 
         # george creates a resource 'bikes'
-        self.bikes = create_resource(
+        self.bikes = hydroshare.create_resource(
             resource_type='GenericResource',
             owner=self.george,
             title='Bikes',
