@@ -5,7 +5,7 @@
 <!--        <input id="search-input" type="search" class="form-control" v-model="searchtext"-->
 <!--               placeholder="Search all Public and Discoverable Resources">-->
         <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>
-        <i id="search-glass" class="fa fa-search inside-left"></i>
+<!--        <i id="search-glass" class="fa fa-search inside-left"></i>-->
         <vue-bootstrap-typeahead
             :data="autocomplete"
             v-model="searchtext"
@@ -14,18 +14,18 @@
             placeholder="Search..."
             @hit="selectedAddress = $event"
         />
-      <br/><br/>
+      <br/>
         <select v-model="searchcategory" @change="catsearch($event)">
-          <option>Abstract</option>
-          <option>Author</option>
-          <option>Subject</option>
-          <option>Owner</option>
-          <option>Contributor</option>
-          <option>Keywords</option>
-          <option>State</option>
-          <option>[Arbitrary Metadata Field]</option>
+          <option>all</option>
+          <option>abstract</option>
+          <option>author</option>
+          <option>subject</option>
+          <option>owner</option>
+          <option>contributor</option>
+          <option>a.i. smartsearch [beta]</option>
+          <option>Dr. Couch Recommends [coming soon]</option>
         </select>
-      <span>&nbsp; metadata matching</span>
+      <span>&nbsp; narrow matching</span>
     </div>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
@@ -35,164 +35,6 @@
                 min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
             | Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/>
         </div>
-<!--        <div class="col-xs-3" id="facets">-->
-<!--            <div id="filter-items">-->
-<!--                &lt;!&ndash; filter by temporal overlap &ndash;&gt;-->
-<!--                <div id="faceting-temporal">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingDate" class="panel-heading">-->
-<!--                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"-->
-<!--                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">-->
-<!--                                Filter by Date</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">-->
-<!--                            <date-pick-->
-<!--                                 v-model="startdate"-->
-<!--                                 :displayFormat="'MM/DD/YYYY'"-->
-<!--                            ></date-pick><br/>-->
-<!--                            <date-pick-->
-<!--                                 v-model="enddate"-->
-<!--                                 :displayFormat="'MM/DD/YYYY'"-->
-<!--                            ></date-pick>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; filter by author &ndash;&gt;-->
-<!--                <div id="faceting-creator">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingAuthor" class="panel-heading">-->
-<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#creator" aria-expanded="true" aria-controls="creator">-->
-<!--                                Filter by Author</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">-->
-<!--                            <ul class="list-group" id="list-group-creator">-->
-<!--                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
-<!--                                    v-bind:key="author">-->
-<!--                                    <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}-->
-<!--                                    <input type="checkbox" :value="author" class="faceted-selections"-->
-<!--                                        v-model.lazy="authorFilter" :id="'author-'+author" @change="setAllMarkers">-->
-<!--                                    </label>-->
-<!--                                </li>-->
-<!--                            </ul>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; filter by owner &ndash;&gt;-->
-<!--                <div id="faceting-owner">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingOwner" class="panel-heading">-->
-<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#owner" aria-expanded="true" aria-controls="owner">-->
-<!--                                Filter by Owner</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">-->
-<!--                            <ul class="list-group" id="list-group-owner">-->
-<!--                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
-<!--                                    v-bind:key="owner">-->
-<!--                                    <span class="badge">{{countOwners[owner]}}</span>-->
-<!--                                    <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}-->
-<!--                                        <input type="checkbox" class="faceted-selections" :value=owner-->
-<!--                                            v-model.lazy="ownerFilter" :id="'owner-'+owner" @change="setAllMarkers">-->
-<!--                                    </label>-->
-<!--                                </li>-->
-<!--                            </ul>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; filter by subject &ndash;&gt;-->
-<!--                <div id="faceting-subject">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingSubject" class="panel-heading">-->
-<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#subject" aria-expanded="true" aria-controls="subject">-->
-<!--                                Filter by Subject</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">-->
-<!--                            <ul class="list-group" id="list-group-subject">-->
-<!--                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
-<!--                                    v-bind:key="subject">-->
-<!--                                    <span class="badge">{{countSubjects[subject]}}</span>-->
-<!--                                    <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}-->
-<!--                                        <input type="checkbox" class="faceted-selections" :value=subject-->
-<!--                                           v-model.lazy="subjectFilter" :id="'subj-'+subject" @change="setAllMarkers">-->
-<!--                                    </label>-->
-<!--                                </li>-->
-<!--                            </ul>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; filter by contributor &ndash;&gt;-->
-<!--                <div id="faceting-contributor">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingContributor" class="panel-heading">-->
-<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#contributor" aria-expanded="true" aria-controls="contributor">-->
-<!--                                Filter by Contributor</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">-->
-<!--                            <ul class="list-group" id="list-group-contributor">-->
-<!--                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
-<!--                                    v-bind:key="contributor">-->
-<!--                                    <span class="badge">{{countContributors[contributor]}}</span>-->
-<!--                                    <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}-->
-<!--                                        <input type="checkbox" class="faceted-selections" :value=contributor-->
-<!--                                            v-model.lazy="contributorFilter" :id="'contrib-'+contributor" @change="setAllMarkers">-->
-<!--                                    </label>-->
-<!--                                </li>-->
-<!--                            </ul>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; filter by type &ndash;&gt;-->
-<!--                <div id="faceting-type">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingType" class="panel-heading">-->
-<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#type" aria-expanded="true" aria-controls="type">-->
-<!--                                Filter by Type</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">-->
-<!--                            <ul class="list-group" id="list-group-type">-->
-<!--                                <li class="list-group-item" v-for="(type) in Object.keys(countTypes).sort()"-->
-<!--                                    v-bind:key="type">-->
-<!--                                    <span class="badge">{{countTypes[type]}}</span>-->
-<!--                                    <label class="checkbox noselect" :for="'type-'+type">{{type}}-->
-<!--                                        <input type="checkbox" class="faceted-selections" :value=type-->
-<!--                                            v-model.lazy="typeFilter" :id="'type-'+type" @change="setAllMarkers">-->
-<!--                                    </label>-->
-<!--                                </li>-->
-<!--                            </ul>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; filter by availability &ndash;&gt;-->
-<!--                <div id="faceting-availability">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingAvailability" class="panel-heading">-->
-<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#availability" aria-expanded="true" aria-controls="availability">-->
-<!--                                Filter by Availability</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">-->
-<!--                            <ul class="list-group" id="list-group-availability">-->
-<!--                                <li class="list-group-item"-->
-<!--                                    v-for="(availability) in Object.keys(countAvailabilities).sort()"-->
-<!--                                    v-bind:key="availability">-->
-<!--                                    <span class="badge">{{countAvailabilities[availability]}}</span>-->
-<!--                                    <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}-->
-<!--                                        <input type="checkbox" class="faceted-selections" :value=availability-->
-<!--                                            v-model.lazy="availabilityFilter" :id="'avail-'+availability" @change="setAllMarkers">-->
-<!--                                    </label>-->
-<!--                                </li>-->
-<!--                            </ul>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; end facet panels &ndash;&gt;-->
-<!--            </div>-->
-<!--        </div>-->
         <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
@@ -209,22 +51,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(entry, idx) in resources" v-bind:key="entry">
+                    <tr v-for="(entry) in resources" v-bind:key="entry">
 <!--                    v-on:mouseup="showHighlighter(entry.short_id)">-->
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-<!--                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"-->
-<!--                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"-->
-<!--                                style="cursor:pointer" data-original-title="Shareable">-->
                         </td>
                         <td>
-<!--                            <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip" >{{entry.title}}</a>-->
-                                                      <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip"  :title="ellip(entry.abstract)" >{{entry.title}}</a>
-
-<!--                             -->
+                          <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip"  :title="ellip(entry.abstract)" >{{entry.title}}</a>
                         </td>
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
@@ -256,7 +92,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
-      autocomplete: ['mars', 'saturn', 'venus'],
+      autocomplete: [],
       searchcategory: 'select',
       resloaded: false,
       resources: [],
@@ -309,6 +145,7 @@ export default {
         Title: 'title',
         Type: 'type',
         Subject: 'subject',
+        Abstract: 'abstract',
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
@@ -422,14 +259,14 @@ export default {
         subjectbox = subjectbox.concat(this.enumMulti(res.subject));
       });
       const csubjects = new this.Counter(subjectbox);
-      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([k, v]) => v > this.filterlimit));
+      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([v]) => v > this.filterlimit));
 
       let ownerbox = [];
       this.resources.forEach((res) => {
         ownerbox = ownerbox.concat(this.enumMulti(res.owner));
       });
       const cowners = new this.Counter(ownerbox);
-      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([k, v]) => v > this.filterlimit));
+      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([v]) => v > this.filterlimit));
 
       let contributorbox = [];
       this.resources.forEach((res) => {
@@ -470,7 +307,7 @@ export default {
     catsearch() {
       let subjects = [];
       const startd = new Date();
-      axios.get('/discoverapi/', { params: { filter: 'subject' } })
+      axios.get('/discoverapi/', { params: { filter: this.searchcategory } })
         .then((response) => {
           if (response.status === 200) {
             subjects = JSON.parse(response.data.filter);
@@ -523,7 +360,7 @@ export default {
       const c = new this.Counter(box);
       if (limit) {
         try {
-          return Object.fromEntries(Object.entries(c).filter(([k, v]) => v > limit));
+          return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
         } catch (err) {
           console.log(`Could not truncate ${thing}: ${err}`);
           return c;
@@ -538,7 +375,7 @@ export default {
       });
       const c = new this.Counter(box);
       if (limit) {
-        return Object.fromEntries(Object.entries(c).filter(([k, v]) => v > limit));
+        return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
       }
       return c;
     },
