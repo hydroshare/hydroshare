@@ -751,7 +751,7 @@
                         <h3>Resource Specific</h3>
                         <div id="resourceSpecificTab">
                             <div class="row">
-                                {% if not resource_edit_mode %}
+                                {% if not resource_edit_mode or cm.raccess.published %}
                                     {% block extended_metadata %}{% endblock %}
                                 {% else %}
                                     {% crispy metadata_form  %}
