@@ -22,8 +22,6 @@
           <option>subject</option>
           <option>owner</option>
           <option>contributor</option>
-          <option>a.i. smartsearch [beta]</option>
-          <option>Dr. Couch Recommends [coming soon]</option>
         </select>
       <span>&nbsp; narrow matching</span>
     </div>
@@ -34,6 +32,164 @@
             Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
                 min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
             | Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/>
+        </div>
+        <div class="col-xs-3" id="facets">
+            <div id="filter-items">
+                <!-- filter by temporal overlap -->
+                <div id="faceting-temporal">
+                    <div class="panel panel-default">
+                        <div id="headingDate" class="panel-heading">
+                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
+                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
+                                Filter by Date</a>
+                            </h4>
+                        </div>
+                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
+                            <date-pick
+                                 v-model="startdate"
+                                 :displayFormat="'MM/DD/YYYY'"
+                            ></date-pick><br/>
+                            <date-pick
+                                 v-model="enddate"
+                                 :displayFormat="'MM/DD/YYYY'"
+                            ></date-pick>
+                        </div>
+                    </div>
+                </div>
+<!--                &lt;!&ndash; filter by author &ndash;&gt;-->
+<!--                <div id="faceting-creator">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingAuthor" class="panel-heading">-->
+<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#creator" aria-expanded="true" aria-controls="creator">-->
+<!--                                Filter by Author</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">-->
+<!--                            <ul class="list-group" id="list-group-creator">-->
+<!--                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
+<!--                                    v-bind:key="author">-->
+<!--                                    <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}-->
+<!--                                    <input type="checkbox" :value="author" class="faceted-selections"-->
+<!--                                        v-model.lazy="authorFilter" :id="'author-'+author" @change="setAllMarkers">-->
+<!--                                    </label>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; filter by owner &ndash;&gt;-->
+<!--                <div id="faceting-owner">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingOwner" class="panel-heading">-->
+<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#owner" aria-expanded="true" aria-controls="owner">-->
+<!--                                Filter by Owner</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">-->
+<!--                            <ul class="list-group" id="list-group-owner">-->
+<!--                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
+<!--                                    v-bind:key="owner">-->
+<!--                                    <span class="badge">{{countOwners[owner]}}</span>-->
+<!--                                    <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}-->
+<!--                                        <input type="checkbox" class="faceted-selections" :value=owner-->
+<!--                                            v-model.lazy="ownerFilter" :id="'owner-'+owner" @change="setAllMarkers">-->
+<!--                                    </label>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; filter by subject &ndash;&gt;-->
+<!--                <div id="faceting-subject">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingSubject" class="panel-heading">-->
+<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#subject" aria-expanded="true" aria-controls="subject">-->
+<!--                                Filter by Subject</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">-->
+<!--                            <ul class="list-group" id="list-group-subject">-->
+<!--                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
+<!--                                    v-bind:key="subject">-->
+<!--                                    <span class="badge">{{countSubjects[subject]}}</span>-->
+<!--                                    <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}-->
+<!--                                        <input type="checkbox" class="faceted-selections" :value=subject-->
+<!--                                           v-model.lazy="subjectFilter" :id="'subj-'+subject" @change="setAllMarkers">-->
+<!--                                    </label>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; filter by contributor &ndash;&gt;-->
+<!--                <div id="faceting-contributor">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingContributor" class="panel-heading">-->
+<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#contributor" aria-expanded="true" aria-controls="contributor">-->
+<!--                                Filter by Contributor</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">-->
+<!--                            <ul class="list-group" id="list-group-contributor">-->
+<!--                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"-->
+<!--                                    v-bind:key="contributor">-->
+<!--                                    <span class="badge">{{countContributors[contributor]}}</span>-->
+<!--                                    <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}-->
+<!--                                        <input type="checkbox" class="faceted-selections" :value=contributor-->
+<!--                                            v-model.lazy="contributorFilter" :id="'contrib-'+contributor" @change="setAllMarkers">-->
+<!--                                    </label>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; filter by type &ndash;&gt;-->
+<!--                <div id="faceting-type">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingType" class="panel-heading">-->
+<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#type" aria-expanded="true" aria-controls="type">-->
+<!--                                Filter by Type</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">-->
+<!--                            <ul class="list-group" id="list-group-type">-->
+<!--                                <li class="list-group-item" v-for="(type) in Object.keys(countTypes).sort()"-->
+<!--                                    v-bind:key="type">-->
+<!--                                    <span class="badge">{{countTypes[type]}}</span>-->
+<!--                                    <label class="checkbox noselect" :for="'type-'+type">{{type}}-->
+<!--                                        <input type="checkbox" class="faceted-selections" :value=type-->
+<!--                                            v-model.lazy="typeFilter" :id="'type-'+type" @change="setAllMarkers">-->
+<!--                                    </label>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; filter by availability &ndash;&gt;-->
+<!--                <div id="faceting-availability">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingAvailability" class="panel-heading">-->
+<!--                            <h4 class="panel-title"><a data-toggle="collapse" href="#availability" aria-expanded="true" aria-controls="availability">-->
+<!--                                Filter by Availability</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">-->
+<!--                            <ul class="list-group" id="list-group-availability">-->
+<!--                                <li class="list-group-item"-->
+<!--                                    v-for="(availability) in Object.keys(countAvailabilities).sort()"-->
+<!--                                    v-bind:key="availability">-->
+<!--                                    <span class="badge">{{countAvailabilities[availability]}}</span>-->
+<!--                                    <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}-->
+<!--                                        <input type="checkbox" class="faceted-selections" :value=availability-->
+<!--                                            v-model.lazy="availabilityFilter" :id="'avail-'+availability" @change="setAllMarkers">-->
+<!--                                    </label>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; end facet panels &ndash;&gt;-->
+            </div>
         </div>
         <div id="resource-rows" class="col-lg-9">
             <br/>
@@ -52,7 +208,6 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-<!--                    v-on:mouseup="showHighlighter(entry.short_id)">-->
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
