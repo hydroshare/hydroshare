@@ -51,6 +51,9 @@ class CollectionResource(BaseResource):
 
     @property
     def can_be_published(self):
+        if self.raccess.published:
+            return False
+
         return self.can_be_public_or_discoverable and \
                self.are_all_contained_resources_published
 
