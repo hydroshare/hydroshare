@@ -39,34 +39,7 @@ class SearchAPI(APIView):
                 "modified":
                 "start_date":
                 "end_date":
-                "coverage_type": list point, period, ...
-
         """
-
-        if request.GET.get('geo'):
-            geo = request.GET.get('geo')
-            geodata = []
-            sqs = SearchQuerySet().all()
-            for result in sqs:
-                # TODO validation and client error handling
-                # TODO getter for SearchResult Abstract / Interface?
-                if filter == 'subject':
-                    filteritem += result.subject
-                elif filter == 'abstract':
-                    filteritem.append(result.abstract)
-                elif filter == 'author':
-                    filteritem.append(result.author)
-                elif filter == 'contributor':
-                    filteritem.append(result.creator)
-                elif filter == 'owner':
-                    filteritem += result.owner
-
-                # TODO order by count as indicator of usefulness in autocomplete
-                # TODO can integrate with Alva future Recommendations work here
-
-            return Response({
-                'filter': json.dumps(list(set(filteritem))),
-            })
 
         if request.GET.get('filter'):
             filter = request.GET.get('filter')
