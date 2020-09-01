@@ -51,11 +51,11 @@ class SearchAPI(APIView):
                 if filter == 'subject':
                     filteritem += result.subject
                 elif filter == 'abstract':
-                    filteritem.append(result.abstract)
+                    filteritem += list(result.abstract)
                 elif filter == 'author':
-                    filteritem.append(result.author)
+                    filteritem += result.author
                 elif filter == 'contributor':
-                    filteritem.append(result.creator)
+                    filteritem += result.contributor
                 elif filter == 'owner':
                     filteritem += result.owner
 
