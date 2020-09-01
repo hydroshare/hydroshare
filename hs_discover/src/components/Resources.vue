@@ -4,7 +4,7 @@
     <div id="search" @keyup.enter="searchClick" class="input-group">
 <!--        <input id="search-input" type="search" class="form-control" v-model="searchtext"-->
 <!--               placeholder="Search all Public and Discoverable Resources">-->
-        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>
+<!--        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>-->
 <!--        <i id="search-glass" class="fa fa-search inside-left"></i>-->
         <vue-bootstrap-typeahead
             :data="autocomplete"
@@ -15,7 +15,7 @@
             @hit="selectedAddress = $event"
         />
       <br/>
-        <select v-model="searchcategory" @change="catsearch($event)">
+        <select v-model="searchcategory" @change="catsearch($event)" class="inside-right">
           <option>all</option>
           <option>abstract</option>
           <option>author</option>
@@ -23,9 +23,17 @@
           <option>owner</option>
           <option>contributor</option>
         </select>
-      <span>&nbsp; narrow matching</span>
+<!--      <span>&nbsp; narrow matching</span>-->
     </div>
     <div id="resources-main" class="row">
+      <div>
+        <input type="radio" id="Discoverable" name="availability" value="discoverable" checked>
+        <label for="Discoverable">Discoverable</label>
+        <input type="radio" id="Public" name="availability" value="public">
+        <label for="Public">Public</label>
+        <input type="radio" id="Private" name="availability" value="private">
+        <label for="Private">Private</label>
+      </div>
         <div class="col-xs-12" id="resultsdisp">
             <br/>
             <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
@@ -37,13 +45,9 @@
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
-                    <div class="panel panel-default">
-                        <div id="headingDate" class="panel-heading">
-                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
-                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
-                                Filter by Date</a>
+                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made">
+                                Filter by Date
                             </h4>
-                        </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
                             <date-pick
                                  v-model="startdate"
@@ -54,7 +58,6 @@
                                  :displayFormat="'MM/DD/YYYY'"
                             ></date-pick>
                         </div>
-                    </div>
                 </div>
 <!--                &lt;!&ndash; filter by author &ndash;&gt;-->
 <!--                <div id="faceting-creator">-->
@@ -401,7 +404,7 @@ export default {
     if (document.getElementById('map-view').style.display === 'block') {
       document.getElementById('map-filter-button').style.display = 'block';
     }
-    // this.loadgeo();
+    this.experimentalGeo();
   },
   methods: {
     populateFilters() {
@@ -481,6 +484,32 @@ export default {
       this.searchtext = '';
       this.cacheLoad();
     },
+    experimentalGeo() {
+      const startd = new Date();
+      document.body.style.cursor = 'wait';
+      axios.get('/discoverapi/', { params: { geo: 'load' } })
+        .then((response) => {
+          if (response) {
+            try {
+              this.geodata = JSON.parse(response.data.geo);
+              console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
+              this.setAllMarkers();
+              this.geoloaded = true;
+              document.body.style.cursor = 'default';
+            } catch (e) {
+              console.log(`Error parsing discoverapi JSON: ${e}`);
+              this.geoloaded = false;
+              document.body.style.cursor = 'default';
+            }
+          }
+        })
+        .catch((error) => {
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          this.geoloaded = false;
+          document.body.style.cursor = 'default';
+        });
+      this.pagenum = 1;
+    },
     loadgeo() {
       const startd = new Date();
       const geodata = [];
@@ -501,7 +530,7 @@ export default {
         })
         .catch((error) => {
           console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
-          // this.geoloaded = false;
+          this.geoloaded = false;
         });
     },
     filterBuilder(resources, thing, limit) {
@@ -608,8 +637,12 @@ export default {
       if (document.getElementById('map-view').style.display === 'block') {
         console.log('Rendering all markers');
         deleteMarkers(); // eslint-disable-line
-        const shids = this.filteredResources.map(x => x.short_id);
-        const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+
+        // TODO this code if we allow filtering in search to affect markers
+        // const shids = this.filteredResources.map(x => x.short_id);
+        // const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        // TODO for now just showing all geo
+        const geocoords = this.geodata;
 
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
@@ -626,7 +659,7 @@ export default {
         const pointuids = pts.map(x => x.short_id);
         const pointlbls = pts.map(x => x.title);
 
-        pts = geocoords.filter(x => x.coverage_type === 'box');
+        pts = geocoords.filter(x => x.coverage_type === 'region');
         const regionlocs = [];
         pts.forEach((x) => {
           const eastlim = Number.isNaN(parseFloat(x.eastlimit)) ? 0.0 : parseFloat(x.eastlimit);

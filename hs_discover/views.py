@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import time
 
 
 class SearchView(TemplateView):
@@ -43,29 +44,39 @@ class SearchAPI(APIView):
 
         """
 
+        start = time.time()
         if request.GET.get('geo'):
-            geo = request.GET.get('geo')
+            # geo = request.GET.get('geo')
             geodata = []
+
             sqs = SearchQuerySet().all()
             for result in sqs:
-                # TODO validation and client error handling
-                # TODO getter for SearchResult Abstract / Interface?
-                if filter == 'subject':
-                    filteritem += result.subject
-                elif filter == 'abstract':
-                    filteritem.append(result.abstract)
-                elif filter == 'author':
-                    filteritem.append(result.author)
-                elif filter == 'contributor':
-                    filteritem.append(result.creator)
-                elif filter == 'owner':
-                    filteritem += result.owner
+                pt = {}
+                pt['short_id'] = result.short_id
+                pt['title'] = result.title
+                if 'box' in result.coverage_type:
+                    pt['coverage_type'] = 'region'
+                elif 'point' in result.coverage_type:
+                    pt['coverage_type'] = 'point'
+                else:
+                    pt['coverage_type'] = ''
+                if isinstance(result.north, (int, float)):
+                    pt['north'] = result.north
+                if isinstance(result.east, (int, float)):
+                    pt['east'] = result.east
+                if isinstance(result.northlimit, (int, float)):
+                    pt['northlimit'] = result.northlimit
+                if isinstance(result.southlimit, (int, float)):
+                    pt['southlimit'] = result.southlimit
+                if isinstance(result.eastlimit, (int, float)):
+                    pt['eastlimit'] = result.eastlimit
+                if isinstance(result.westlimit, (int, float)):
+                    pt['westlimit'] = result.westlimit
 
-                # TODO order by count as indicator of usefulness in autocomplete
-                # TODO can integrate with Alva future Recommendations work here
-
+                geodata.append(pt)
             return Response({
-                'filter': json.dumps(list(set(filteritem))),
+                'time': (time.time() - start),
+                'geo': json.dumps(geodata)
             })
 
         if request.GET.get('filter'):
@@ -90,7 +101,8 @@ class SearchAPI(APIView):
                 # TODO can integrate with Alva future Recommendations work here
 
             return Response({
-                'filter': json.dumps(list(set(filteritem))),
+                'time': (time.time() - start),
+                'filter': json.dumps(list(set(filteritem)))
             })
 
         filtering = None
@@ -170,5 +182,6 @@ class SearchAPI(APIView):
             })
 
         return Response({
-            'resources': json.dumps(resources),
+            'time': (time.time() - start),
+            'resources': json.dumps(resources)
         })
