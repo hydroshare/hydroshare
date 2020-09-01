@@ -2,30 +2,18 @@
   <div><input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
                 v-on:click="displayMap"><!-- displayMap defined in map.js --><br/><br/>
     <div id="search" @keyup.enter="searchClick" class="input-group">
-<!--        <input id="search-input" type="search" class="form-control" v-model="searchtext"-->
-<!--               placeholder="Search all Public and Discoverable Resources">-->
+        <input id="search-input" type="search" class="form-control" v-model="searchtext"
+               placeholder="Search all Public and Discoverable Resources">
         <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
-        <vue-bootstrap-typeahead
-            :data="autocomplete"
-            v-model="searchtext"
-            size="lg"
-            :serializer="s => s"
-            placeholder="Search..."
-            @hit="selectedAddress = $event"
-        />
-      <br/><br/>
-        <select v-model="searchcategory" @change="catsearch($event)">
-          <option>Abstract</option>
+        <select v-model="searchcategory">
           <option>Author</option>
-          <option>Subject</option>
           <option>Owner</option>
           <option>Contributor</option>
-          <option>Keywords</option>
-          <option>State</option>
-          <option>[Arbitrary Metadata Field]</option>
+          <option>Type</option>
         </select>
-      <span>&nbsp; metadata matching</span>
+<!--        <span>&nbsp; Selected: {{ selected }}</span>-->
+      <span>&nbsp; limit search</span>
     </div>
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
@@ -216,9 +204,9 @@
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-<!--                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"-->
-<!--                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"-->
-<!--                                style="cursor:pointer" data-original-title="Shareable">-->
+                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"
+                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"
+                                style="cursor:pointer" data-original-title="Shareable">
                         </td>
                         <td>
 <!--                            <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip" >{{entry.title}}</a>-->
@@ -250,13 +238,11 @@ Contributor: ${entry.contributor}`">{{entry.author}}</a>
 <script>
 import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
-import VueBootstrapTypeahead from 'vue-bootstrap-typeahead';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
 export default {
   data() {
     return {
-      autocomplete: ['mars', 'saturn', 'venus'],
       searchcategory: 'select',
       resloaded: false,
       resources: [],
@@ -319,7 +305,6 @@ export default {
   ['columns', 'labels'],
   components: {
     datePick: DatePick,
-    VueBootstrapTypeahead,
   },
   computed: {
     filteredResources() {
@@ -447,7 +432,7 @@ export default {
     searchClick() {
       const startd = new Date();
       document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { q: this.searchtext, sort: this.sortingBy, asc: this.sortDir, cat: this.searchcategory } })
+      axios.get('/discoverapi/', { params: { q: this.searchtext, sort: this.sortingBy, asc: this.sortDir } })
         .then((response) => {
           if (response) {
             try {
@@ -466,24 +451,6 @@ export default {
           document.body.style.cursor = 'default';
         });
       this.pagenum = 1;
-    },
-    catsearch() {
-      let subjects = [];
-      const startd = new Date();
-      axios.get('/discoverapi/', { params: { filter: 'subject' } })
-        .then((response) => {
-          if (response.status === 200) {
-            subjects = JSON.parse(response.data.filter);
-            console.log(`/discoverapi/ filter call in: ${(new Date() - startd) / 1000} sec`);
-            this.autocomplete = subjects;
-            console.log(subjects);
-          } else {
-            console.log(`Error: ${response.statusText}`);
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-        });
     },
     clearSearch() {
       this.searchtext = '';
