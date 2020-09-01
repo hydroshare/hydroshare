@@ -40,26 +40,23 @@ class SearchAPI(APIView):
                 "start_date":
                 "end_date":
         """
-
-        asc = '-1'
-        if request.GET.get('asc'):
-            asc = request.GET.get('asc')
-
-        sort = 'modified'
-        if request.GET.get('sort'):
-            sort = request.GET.get('sort')
-        sort = sort if asc == '1' else '-{}'.format(sort)
-
-        sqs = SearchQuerySet().all().order_by(sort)
+        sqs = SearchQuerySet().all().order_by('-modified')
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q).order_by(sort)  # .boost('keyword', 2.0)
+            sqs = sqs.filter(content=q).order_by('-modified')  # .boost('keyword', 2.0)
+
+        # vocab = []  # will be populated with autocomplete terms from resource
+        # vocab = [x for x in vocab if len(x) > 2]
+        # vocab = list(set(vocab))
+        # vocab = sorted(vocab)
 
         resources = []
 
-        pagelim = 40
-            # pagelim = max(len(sqs), 1)
+        if request.GET.get('cache'):
+            pagelim = 120
+        else:
+            pagelim = max(len(sqs), 1)
 
         p = Paginator(sqs, pagelim)
 
