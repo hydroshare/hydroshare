@@ -234,6 +234,7 @@ class SignupForm(forms.ModelForm):
     user_type = forms.CharField(required=True)
     country = forms.CharField(label='Country', required=True)
     state = forms.CharField(label='State/Province', required=True)
+
     def __init__(self, request, *args, **kwargs):
         self.request = request
         super(SignupForm, self).__init__(*args, **kwargs)
