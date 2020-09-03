@@ -52,7 +52,7 @@ class CSDMSName(models.Model):
 
     @staticmethod
     def list_all_names():
-        return CSDMSName.list_all('names')
+        return CSDMSName.list_all('name')
 
     @staticmethod
     def list_all_decors():
