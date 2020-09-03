@@ -67,7 +67,7 @@ class RecommendedResource(models.Model):
         if state is not None:
             defaults['state'] = state
         if len(keywords) > 0:
-            defaults['keywords'] = copy.deepcopy(keywords)
+            defaults['keywords'] = keywords
         with transaction.atomic():
             object, created = RecommendedResource.objects.get_or_create(user=u,
                                                                         candidate_resource=r,
@@ -79,7 +79,7 @@ class RecommendedResource(models.Model):
                 if state is not None:
                     object.state = state
                 if len(keywords) > 0:
-                    object.keywords = copy.deepcopy(keywords)
+                    defaults['keywords'] = keywords
                 if relevance is not None or state is not None or len(keywords) > 0:
                     object.save()
 
@@ -98,7 +98,7 @@ class RecommendedResource(models.Model):
             :param frequency, a string frequency represents how much
             the user interests in the given keyword
         """
-        updated_keyword_frequency = copy.deepcopy(self.keywords)
+        updated_keyword_frequency = self.keywords
         updated_keyword_frequency[keyword] = frequency
         self.keywords = updated_keyword_frequency
         self.save()
@@ -178,14 +178,14 @@ class UserPreferences(models.Model):
         """
         defaults = {}
         if len(preferences) > 0:
-            defaults['preferences'] = copy.deepcopy(preferences)
+            defaults['preferences'] = preferences
         with transaction.atomic():
             object, created = UserPreferences.objects.get_or_create(user=u,
                                                                     pref_for=pf,
                                                                     defaults=defaults)
             if not created:
                 if len(preferences) > 0:
-                    object.preferences = copy.deepcopy(preferences)
+                    defaults['preferences'] = preferences
                     object.save()
 
         return object
@@ -196,7 +196,7 @@ class UserPreferences(models.Model):
             :param frequency, a string frequency represents how much
             the user interests in the given keyword
         """
-        updated_preferences = copy.deepcopy(self.preferences)
+        updated_preferences = self.preferences
         updated_preferences[keyword] = frequency
         self.preferences = updated_preferences
         self.save()

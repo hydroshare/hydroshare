@@ -128,6 +128,8 @@ def get_users_interacted_resources(beginning, today):
     triples = user_resource_matrix(beginning, today)
     for v in triples:
         username = v[0]
+        if username == 'admin' or '-admin' in username:
+            continue
         res = v[1]
         all_usernames.add(username)
         user_to_resources[username].append(res)
@@ -241,18 +243,20 @@ def store_recommended_resources(user_to_recommended_resources_list, resource_to_
 
         for res_id, sim in recommend_resources_list:
             recommended_res = get_resource_by_shortkey(res_id)
-            r = RecommendedResource.recommend(user,
-                                              recommended_res,
-                                              'Propensity',
-                                              round(sim, 4),
-                                              Status.STATUS_NEW,
-                                              {})
             recommended_keep_words = resource_to_keep_words[res_id]
             common_subjects = set.intersection(user_res_preferences_set,
                                                 set(recommended_keep_words))
+            recommended_resource_keep_words = {}
             for cs in common_subjects:
                 raw_cs = cs.replace("_", " ")
-                r.relate(raw_cs, str(user_res_pref_to_weight[cs]))
+                recommended_resource_keep_words[raw_cs] = str(user_res_pref_to_weight[cs])
+
+            RecommendedResource.recommend(user,
+                                          recommended_res,
+                                          'Propensity',
+                                          round(sim, 4),
+                                          Status.STATUS_NEW,
+                                          recommended_resource_keep_words)
 
 
 def clear_old_data():
