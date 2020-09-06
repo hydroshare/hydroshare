@@ -3847,6 +3847,7 @@ class CoreMetaData(models.Model):
         :param  user: user who is updating metadata
         :return:
         """
+        is_res_published = self.resource.raccess.published
         from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
             SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
@@ -3866,6 +3867,8 @@ class CoreMetaData(models.Model):
             for element_name in ('title', 'description', 'language', 'rights'):
                 for dict_item in metadata:
                     if element_name in dict_item:
+                        if element_name in ('title', 'rights') and is_res_published:
+                            raise ValidationError("{} can't be updated for a published resource".format(element_name))
                         validation_form = validation_forms_mapping[element_name](
                             dict_item[element_name])
                         if not validation_form.is_valid():
@@ -3900,6 +3903,9 @@ class CoreMetaData(models.Model):
                                                                              coverage_value_dict)
                             continue
                         if element_name in ['creator', 'contributor']:
+                            if element_name == 'creator':
+                                raise ValidationError(
+                                    "{} can't be updated for a published resource".format(element_name))
                             try:
                                 party_data = dict_item[element_name]
                                 if 'identifiers' in party_data:
@@ -3930,6 +3936,8 @@ class CoreMetaData(models.Model):
             element_name = 'date'
             date_list = [date_dict for date_dict in metadata if element_name in date_dict]
             if len(date_list) > 0:
+                if is_res_published:
+                    raise ValidationError("Date can't be updated for a published resource")
                 for date_item in date_list:
                     if 'type' in date_item[element_name]:
                         if date_item[element_name]['type'] == 'valid':
@@ -3943,6 +3951,8 @@ class CoreMetaData(models.Model):
             element_name = 'identifier'
             identifier_list = [id_dict for id_dict in metadata if element_name in id_dict]
             if len(identifier_list) > 0:
+                if is_res_published:
+                    raise ValidationError("Identifier can't be updated for a published resource")
                 for id_item in identifier_list:
                     if 'name' in id_item[element_name]:
                         if id_item[element_name]['name'].lower() != 'hydroshareidentifier':
@@ -4277,6 +4287,14 @@ class CoreMetaData(models.Model):
         """Create any supported metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name in ('creator', 'identifier', 'format', 'publisher'):
+                raise ValidationError("{} can't be created for a published resource".format(element_model_name))
+            elif element_model_name == 'date':
+                date_type = kwargs.get('type', '')
+                if date_type and date_type != 'modified':
+                    raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
         return element
 
@@ -4284,11 +4302,23 @@ class CoreMetaData(models.Model):
         """Update metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name in ('title', 'creator', 'rights', 'identifier', 'format', 'publisher'):
+                raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
+            elif element_model_name == 'date':
+                date_type = kwargs.get('type', '')
+                if date_type and date_type != 'modified':
+                    raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency'):
+                raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
 
     def _get_metadata_element_model_type(self, element_model_name):
