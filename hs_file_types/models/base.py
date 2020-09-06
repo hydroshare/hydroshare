@@ -395,6 +395,10 @@ class AbstractFileMetaData(models.Model):
         return RDF_ROOT, container_to_add_to
 
     def create_element(self, element_model_name, **kwargs):
+        resource = self.logical_file.resource
+        if resource.raccess.published:
+            raise ValidationError("Aggregation metadata editing is not allowed for a published resource")
+
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
@@ -419,6 +423,9 @@ class AbstractFileMetaData(models.Model):
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
+        resource = self.logical_file.resource
+        if resource.raccess.published:
+            raise ValidationError("Aggregation metadata editing is not allowed for a published resource")
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
@@ -426,7 +433,6 @@ class AbstractFileMetaData(models.Model):
         self.save()
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
-            resource = element.metadata.logical_file.resource
             resource.update_coverage()
 
             # if the aggregation (logical file) for which coverage data is updated
@@ -438,6 +444,9 @@ class AbstractFileMetaData(models.Model):
                 parent_aggr.update_coverage()
 
     def delete_element(self, element_model_name, element_id):
+        resource = self.logical_file.resource
+        if resource.raccess.published:
+            raise ValidationError("Aggregation metadata editing is not allowed for a published resource")
         model_type = self._get_metadata_element_model_type(element_model_name)
         model_type.model_class().remove(element_id)
         self.is_dirty = True
