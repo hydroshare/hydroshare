@@ -897,6 +897,9 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     """
 
     # validate parameters
+    if resource.raccess.published:
+        raise ValidationError("Can't add files to a published resource")
+
     if check_target_folder and resource.resource_type != 'CompositeResource':
         raise ValidationError("Resource must be a CompositeResource for validating target folder")
 

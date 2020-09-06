@@ -755,6 +755,8 @@ def add_resource_files(pk, *files, **kwargs):
 
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("Can't add files to a published resource")
     ret = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
@@ -876,7 +878,8 @@ def delete_resource(pk):
     """
 
     res = utils.get_resource_by_shortkey(pk)
-
+    if res.raccess.published:
+        raise ValidationError("This is a published resource which can't be deleted")
     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
         raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
                               'cannot be deleted.')
@@ -999,6 +1002,9 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     Note:  This does not handle immutability as previously intended.
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("Resource file can't be deleted for a published resource")
+
     res_cls = resource.__class__
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
@@ -1123,6 +1129,8 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
 
     # TODO: whether a resource can be published is not considered in can_be_published
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
