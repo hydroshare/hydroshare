@@ -19,7 +19,7 @@ def update_collection(request, shortkey, *args, **kwargs):
     """
     Update collection. The POST request should contain a
     list of resource ids and a 'update_type' parameter with value of 'set', 'add' or 'remove',
-    which are three differnt mode to update the collection.If no 'update_type' parameter is
+    which are three different mode to update the collection.If no 'update_type' parameter is
     provided, the 'set' will be used by default.
     To add a resource to collection, user should have certain premission on both collection
     and resources being added.
@@ -27,7 +27,7 @@ def update_collection(request, shortkey, *args, **kwargs):
     For resources being added, one the following criteria should be met:
     1) user has at lest View permission and the resource is Shareable
     2) user is resource owner
-    :param shortkey: id of the collection resource to which resources are to be added.
+    :param shortkey: id of the collection resource to which resources are to be added/removed.
     """
 
     status = "success"
@@ -44,6 +44,9 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+
+            if collection_res_obj.raccess.published:
+                raise Exception("Resources of a published collection can't be changed")
 
             # get 'resource_id_list' list from POST
             updated_contained_res_id_list = request.POST.getlist("resource_id_list")

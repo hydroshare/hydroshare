@@ -186,6 +186,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
+    if resource.raccess.published:
+        msg = {'validation_error': "Can't add files to a published resource"}
+        return JsonResponse(msg, status=500)
+
     res_files, full_paths = extract_files_with_paths(request)
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
     extract_metadata = request.GET.get('extract-metadata', 'No')
