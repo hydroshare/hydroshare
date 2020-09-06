@@ -3903,7 +3903,7 @@ class CoreMetaData(models.Model):
                                                                              coverage_value_dict)
                             continue
                         if element_name in ['creator', 'contributor']:
-                            if element_name == 'creator':
+                            if element_name == 'creator' and is_res_published:
                                 raise ValidationError(
                                     "{} can't be updated for a published resource".format(element_name))
                             try:
