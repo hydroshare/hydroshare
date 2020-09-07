@@ -4289,7 +4289,7 @@ class CoreMetaData(models.Model):
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
         if self.resource.raccess.published:
-            if element_model_name in ('creator', 'identifier', 'format', 'publisher'):
+            if element_model_name in ('creator', 'identifier', 'format'):
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
             elif element_model_name == 'date':
                 date_type = kwargs.get('type', '')
