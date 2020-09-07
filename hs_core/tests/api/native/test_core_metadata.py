@@ -1636,6 +1636,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(FundingAgency.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # delete resource
+        self.res.raccess.published = False
+        self.res.raccess.save()
         hydroshare.delete_resource(self.res.short_id)
         self.assertEqual(CoreMetaData.objects.all().count(), 0, msg="CoreMetadata object was found")
 
