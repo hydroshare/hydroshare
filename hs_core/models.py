@@ -4293,7 +4293,7 @@ class CoreMetaData(models.Model):
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
             elif element_model_name == 'date':
                 date_type = kwargs.get('type', '')
-                if date_type and date_type != 'modified':
+                if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
         return element
