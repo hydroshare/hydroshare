@@ -24,6 +24,15 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         self.is_dirty = True
         return element
 
+    def delete_element(self, element_model_name, element_id):
+        """Overriding the base class method to allow deleting any metadata element that's part of
+        generic aggregation (single file aggregation or file set aggregation) metadata"""
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        meta_element = model_type.model_class().objects.get(id=element_id)
+        meta_element.delete()
+        self.is_dirty = True
+        self.save()
+
     @property
     def has_modified_metadata(self):
         """Identifies whether a user has updated metadata."""
