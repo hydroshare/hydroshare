@@ -10,10 +10,11 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
-                min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
-            | Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/>
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"
+                   data-toggle="tooltip" title="Show list of resources that are located in the current map view">
+            Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" @change="searchClick"
+                min="1" max="9999" > of {{Math.ceil(1,1)}}
+            | Showing: {{Math.min(1, 1)}} of {{resources.length}} {{resgeotypes}}<br/>
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -177,8 +178,8 @@
             <br/>
             <div class="table-wrapper">
                 <p id="map-message" style="display:none">Select area of interest on the map then click 'Filter by Map View'</p>
-                <p v-if="(!filteredResources.length) && resloaded">Too many filter selections: no resources match those restrictions</p>
-                <table id="items-discovered" v-if="filteredResources.length"
+                <p v-if="(!resources.length) && resloaded">Too many filter selections: no resources match those restrictions</p>
+                <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table">
                     <thead>
                         <tr>
@@ -189,7 +190,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(entry, idx) in doPager(filteredResources)" v-bind:key="entry">
+                    <tr v-for="(entry) in resources" v-bind:key="entry">
 <!--                    v-on:mouseup="showHighlighter(entry.short_id)">-->
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
@@ -242,7 +243,6 @@ export default {
       startdate: 'Start Date',
       enddate: 'End Date',
       filteredcount: 0,
-      perpage: 40, // resources per page
       pagenum: 1, // initial page number to show
       geoloaded: false, // searchjson endpoint called and retrieved geo data
       resgeotypes: '',
@@ -296,67 +296,10 @@ export default {
     datePick: DatePick,
   },
   computed: {
-    filteredResources() {
-      // this routine typically completes in thousandths or hundredths of seconds with 3000 resources in Chrome
-      let resfiltered = this.resources;
-      if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0
-          && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length
-          === 0 && this.typeFilter.length === 0) {
-        // do nothing
-      } else {
-        // Filters should be most restrictive when two conflicting states are selected
-        if (this.uidFilter.length > 0) {
-          const resUids = resfiltered.filter(element => this.uidFilter.indexOf(element.short_id) > -1);
-          resfiltered = resUids;
-        }
-        if (this.authorFilter.length > 0) {
-          const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
-          resfiltered = resAuthors;
-        }
-        if (this.ownerFilter.length > 0) {
-          const resOwners = resfiltered.filter(res => res.owner.filter(val => this.ownerFilter.includes(val))
-            .length > 0);
-          resfiltered = resOwners;
-        }
-        if (this.subjectFilter.length > 0) {
-          const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val))
-            .length > 0);
-          resfiltered = resSubjects;
-        }
-        if (this.availabilityFilter.length > 0) {
-          const resAvailabilities = resfiltered.filter(res => res.availability
-            .filter(val => this.availabilityFilter.includes(val)).length > 0);
-          resfiltered = resAvailabilities;
-        }
-        if (this.contributorFilter.length > 0) {
-          const resContributors = resfiltered.filter(res => res.contributor.filter(val => this.contributorFilter.includes(val))
-            .length > 0);
-          resfiltered = resContributors;
-        }
-
-        if (this.typeFilter.length > 0) {
-          const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
-          resfiltered = resTypes;
-        }
-      }
-      if (this.startdate !== 'Start Date' && this.startdate !== '' && this.enddate !== 'End Date' && this.enddate !== '') {
-        const resDate = [];
-        resfiltered.forEach((item) => {
-          if (item.start_date && item.end_date) {
-            if (this.dateOverlap(item.start_date, item.end_date)) {
-              resDate.push(item);
-            }
-          }
-        });
-        resfiltered = resDate;
-      }
-      resfiltered = this.columnSort(resfiltered);
-      return resfiltered;
-    },
   },
   watch: {
     resources() {
-      this.populateFilters();
+      // this.populateFilters();
       if (this.resources.length > 0) {
         this.resloaded = true;
       } else {
@@ -379,18 +322,12 @@ export default {
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
-    this.cacheLoad();
-
-    // if (this.resloaded) {
-    //   if (this.geodata.length > 0) {
-    //     this.geoloaded = true;
-    //   }
-    // }
-
+    this.searchClick();
+    this.filterBuilder();
     if (document.getElementById('map-view').style.display === 'block') {
       document.getElementById('map-filter-button').style.display = 'block';
     }
-    this.loadgeo();
+    this.experimentalGeo();
   },
   methods: {
     populateFilters() {
@@ -403,21 +340,21 @@ export default {
         subjectbox = subjectbox.concat(this.enumMulti(res.subject));
       });
       const csubjects = new this.Counter(subjectbox);
-      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([k, v]) => v > this.filterlimit));
+      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([v]) => v > this.filterlimit));
 
       let ownerbox = [];
       this.resources.forEach((res) => {
         ownerbox = ownerbox.concat(this.enumMulti(res.owner));
       });
       const cowners = new this.Counter(ownerbox);
-      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([k, v]) => v > this.filterlimit));
+      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([v]) => v > this.filterlimit));
 
       let contributorbox = [];
       this.resources.forEach((res) => {
         contributorbox = contributorbox.concat(this.enumMulti(res.contributor));
       });
       const ccontributors = new this.Counter(contributorbox);
-      this.countContributors = Object.fromEntries(Object.entries(ccontributors).filter(([k, v]) => v > this.filterlimit));
+      this.countContributors = Object.fromEntries(Object.entries(ccontributors).filter(([v]) => v > this.filterlimit));
 
       let availabilitybox = [];
       this.resources.forEach((res) => {
@@ -425,45 +362,21 @@ export default {
       });
       this.countAvailabilities = new this.Counter(availabilitybox);
     },
-    cacheLoad() {
-      const startd = new Date();
-      document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { q: this.searchtext, cache: '1' } })
-        .then((cacheresponse) => {
-          if (cacheresponse) {
-            try {
-              this.resources = JSON.parse(cacheresponse.data.resources);
-              console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-              axios.get('/discoverapi/', { params: { q: this.searchtext } })
-                .then((fullresponse) => {
-                  if (fullresponse) {
-                    try {
-                      this.resources = JSON.parse(fullresponse.data.resources);
-                      console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-                      this.pagenum = 1;
-                      document.body.style.cursor = 'default';
-                      // this.$refs.snackbar.open('Finished loading resources');
-                    } catch (e) {
-                      console.log(`Error parsing discoverapi JSON: ${e}`);
-                      document.body.style.cursor = 'default';
-                    }
-                  }
-                });
-            } catch (e) {
-              console.log(`Error parsing discoverapi JSON: ${e}`);
-              document.body.style.cursor = 'default';
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-          document.body.style.cursor = 'default';
-        });
-    },
     searchClick() {
       const startd = new Date();
       document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { q: this.searchtext } })
+      const p = document.getElementById('page-number').value;
+      axios.get('/discoverapi/', {
+        params: {
+          q: this.searchtext,
+          sort: this.sortingBy,
+          asc: this.sortDir,
+          cat: this.searchcategory,
+          pnum: p,
+          // filterby: 'author',
+          // filtercontent: 'Tess Russo',
+        },
+      })
         .then((response) => {
           if (response) {
             try {
@@ -481,11 +394,38 @@ export default {
           console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
         });
-      this.pagenum = 1;
+      document.getElementById('page-number').value = 1;
     },
     clearSearch() {
       this.searchtext = '';
-      this.cacheLoad();
+      this.searchClick();
+    },
+    experimentalGeo() {
+      const startd = new Date();
+      document.body.style.cursor = 'wait';
+      axios.get('/discoverapi/', { params: { geo: 'load' } })
+        .then((response) => {
+          if (response) {
+            try {
+              this.geodata = JSON.parse(response.data.geo);
+              console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
+              console.log(this.geodata)
+              this.setAllMarkers();
+              this.geoloaded = true;
+              document.body.style.cursor = 'default';
+            } catch (e) {
+              console.log(`Error parsing discoverapi JSON: ${e}`);
+              this.geoloaded = false;
+              document.body.style.cursor = 'default';
+            }
+          }
+        })
+        .catch((error) => {
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          this.geoloaded = false;
+          document.body.style.cursor = 'default';
+        });
+      this.pagenum = 1;
     },
     loadgeo() {
       const startd = new Date();
@@ -511,6 +451,30 @@ export default {
         });
     },
     filterBuilder(resources, thing, limit) {
+      const startd = new Date();
+      axios.get('/discoverapi/', {
+        params: {
+          filterbuilder: '1',
+        },
+      })
+        .then((response) => {
+          if (response) {
+            try {
+              // this.resources = JSON.parse(response.data.resources);
+              console.log(`/discoverapi/ filterbuilder call in: ${(new Date() - startd) / 1000} sec`);
+              const fdata = JSON.parse(response.data.filterdata);
+              console.log(fdata);
+            } catch (e) {
+              console.log(`Error parsing discoverapi JSON: ${e}`);
+              document.body.style.cursor = 'default';
+            }
+          }
+        })
+        .catch((error) => {
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          document.body.style.cursor = 'default';
+        });
+
       const box = [];
 
       try {
@@ -521,7 +485,7 @@ export default {
       const c = new this.Counter(box);
       if (limit) {
         try {
-          return Object.fromEntries(Object.entries(c).filter(([k, v]) => v > limit));
+          return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
         } catch (err) {
           console.log(`Could not truncate ${thing}: ${err}`);
           return c;
@@ -530,14 +494,13 @@ export default {
       return c;
     },
     filterMultiBuilder(resources, attribute, limit) {
-      // TODO under construction
       let box = [];
       resources.forEach((res) => {
         box = box.concat(this.enumMulti(res[attribute]));
       });
       const c = new this.Counter(box);
       if (limit) {
-        return Object.fromEntries(Object.entries(c).filter(([k, v]) => v > limit));
+        return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
       }
       return c;
     },
@@ -555,6 +518,7 @@ export default {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
         this.sortingBy = this.sortMap[key];
         this.pagenum = 1;
+        this.searchClick();
       }
     },
     sortStyling(key) {
@@ -566,11 +530,6 @@ export default {
     Counter(array) {
       // eslint-disable-next-line no-return-assign
       array.forEach(val => this[val] = (this[val] || 0) + 1);
-    },
-    doPager(res) {
-      // return res.slice(0, this.perpage);
-      const startx = (this.pagenum - 1) * this.perpage;
-      return res.slice(startx, startx + this.perpage);
     },
     enumMulti(a) {
       let c = [];
@@ -614,7 +573,7 @@ export default {
       if (document.getElementById('map-view').style.display === 'block') {
         console.log('Rendering all markers');
         deleteMarkers(); // eslint-disable-line
-        const shids = this.filteredResources.map(x => x.short_id);
+        const shids = this.resources.map(x => x.short_id);
         const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
 
         let pts = geocoords.filter(x => x.coverage_type === 'point');
@@ -632,7 +591,7 @@ export default {
         const pointuids = pts.map(x => x.short_id);
         const pointlbls = pts.map(x => x.title);
 
-        pts = geocoords.filter(x => x.coverage_type === 'box');
+        pts = geocoords.filter(x => x.coverage_type === 'region');
         const regionlocs = [];
         pts.forEach((x) => {
           const eastlim = Number.isNaN(parseFloat(x.eastlimit)) ? 0.0 : parseFloat(x.eastlimit);
