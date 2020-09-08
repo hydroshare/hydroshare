@@ -45,7 +45,7 @@ def fill_stop_words():
                      'against', 'hasn', 'you', 'most']
 
     for stop_word in customized_stops:
-        LDDStopWord.add_word('Customized', 'name', stop_word)
+        LDAStopWord.add_word('Customized', 'name', stop_word)
     for stop_word in english_stops:
         LDAStopWord.add_word('English', 'name', stop_word)
 
