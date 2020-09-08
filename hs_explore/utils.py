@@ -7,8 +7,40 @@ from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 from hs_explore.models import RecommendedResource, UserPreferences, Status
 import string
 from nltk.stem import WordNetLemmatizer
-from hs_explore.models import LDAWord
+from hs_explore.models import LDAStopWord
 from hs_access_control.models import PrivilegeCodes
+from hs_csdms.models import CSDMSName
+from hs_odm2.models import ODM2Variable
+
+
+class LDAKeepWords():
+    def __iter__(self):
+        csdms_names = list(CSDMSName.list_all_names())
+        splitted_names = set()
+        keep_words_set = set()
+        for csdms_name in csdms_names:
+            if len(csdms_name) <= 1:
+                continue
+            tokens = csdms_name.split(" ")
+            keep_words_set.add(csdms_name)
+            splitted_names.update(tokens)
+
+        for splitted_name in splitted_names:
+            if len(splitted_name) <= 1:
+                continue
+            keep_words_set.add(splitted_name)
+
+        odm2_list = list(ODM2Variable.all())
+        for odm2 in odm2_list:
+            tokens = odm2.split(' - ')
+            new_string = tokens[0]
+            if len(tokens) > 1:
+                new_string = tokens[1] + ' ' + tokens[0]
+            if len(new_string) > 1:
+                keep_words_set.add(new_string.lower())
+
+        for i in list(keep_words_set):
+            yield i
 
 
 def resource_owners():
@@ -178,11 +210,12 @@ def get_resource_to_keep_words(resource_to_subjects, resource_to_abstract):
     resource_to_keep_words = {}
     stop_words = set()
     keep_words = set()
-    for word in LDAWord.objects.all():
-        if word.word_type == 'stop':
-            stop_words.add(word.value)
-        else:
-            keep_words.add(word.value)
+    for word in LDAStopWord.objects.all():
+        stop_words.add(word.value)
+
+    lda_keep_words = LDAKeepWords()
+    for lda_keep_word in lda_keep_words:
+        keep_words.add(lda_keep_word)
 
     for res_id, res_abs in resource_to_abstract.items():
         resource_subjects = set()

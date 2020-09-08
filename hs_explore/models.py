@@ -216,17 +216,15 @@ class UserPreferences(models.Model):
         UserPreferences.objects.all().delete()
 
 
-class LDAWord(models.Model):
+class LDAStopWord(models.Model):
     """ store keep-word and stop-words used in our LDA model"""
-    source = models.CharField(max_length=10, choices=(('ODM2', 'ODM2'),
-                                                      ('CSDMS', 'CSDMS'),
+    source = models.CharField(max_length=10, choices=(('English', 'English'),
                                                       ('Customized', 'Customized')))
-    word_type = models.CharField(max_length=4, choices=(('keep', 'keep'), ('stop', 'stop')))
     part = models.CharField(max_length=5, choices=(('name', 'name'), ('decor', 'decor')))
     value = models.CharField(max_length=255, editable=False, null=False, blank=False)
 
     @staticmethod
-    def add_word(s, t, p, v):
+    def add_word(s, p, v):
         """ add a record to the LDAWord model
             :param s, a choice from source describes where the word from
             :param t, a choice from word_type describes whether the word is keep-word
@@ -234,11 +232,11 @@ class LDAWord(models.Model):
             :param p, a choice from part describes which part the word is extracted from
             :param, v, a string value for the word to be added
         """
-        object, _ = LDAWord.objects.get_or_create(source=s, word_type=t, part=p, value=v)
+        object, _ = LDAStopWord.objects.get_or_create(source=s, part=p, value=v)
 
         return object
 
     @staticmethod
     def clear():
         """ clear all data records """
-        LDAWord.objects.all().delete()
+        LDAStopWord.objects.all().delete()
