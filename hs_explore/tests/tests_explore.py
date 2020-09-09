@@ -2,7 +2,7 @@ from django.test import TransactionTestCase
 from hs_core.testing import TestCaseCommonUtilities
 # Create your tests here.
 from hs_core import hydroshare
-from hs_explore.models import RecommendedResource, UserPreferences, LDAWord
+from hs_explore.models import RecommendedResource, UserPreferences, LDAStopWord
 from django.contrib.auth.models import Group
 
 
@@ -98,13 +98,12 @@ class TestCreateUserPreferences(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(UserPreferences.objects.all().count(), 0)
 
 
-class TestAddLDAWord(TestCaseCommonUtilities, TransactionTestCase):
+class TestAddLDAStopWord(TestCaseCommonUtilities, TransactionTestCase):
 
-    def test_add_lda_word(self):
-        lda_word = LDAWord.add_word('ODM2', 'keep', 'name', 'cat')
-        self.assertEqual(lda_word.source, 'ODM2')
-        self.assertEqual(lda_word.word_type, 'keep')
-        self.assertEqual(lda_word.part, 'name')
-        self.assertEqual(lda_word.value, 'cat')
-        lda_word2 = LDAWord.add_word('ODM2', 'keep', 'name', 'cat')
-        self.assertEqual(lda_word, lda_word2)
+    def test_add_lda_stop_word(self):
+        lda_stop_word = LDAStopWord.add_word('English', 'name', 'hi')
+        self.assertEqual(lda_stop_word.source, 'English')
+        self.assertEqual(lda_stop_word.part, 'name')
+        self.assertEqual(lda_stop_word.value, 'hi')
+        lda_stop_word2 = LDAStopWord.add_word('English', 'name', 'hi')
+        self.assertEqual(lda_stop_word, lda_stop_word2)
