@@ -3,6 +3,7 @@ import BootstrapVue from 'bootstrap-vue';
 import Vue from 'vue';
 import Search from './components/Search.vue';
 
+// Vue.config.devtools = true;
 Vue.use(BootstrapVue);
 Vue.prototype.mapTest = window.mapTest;
 

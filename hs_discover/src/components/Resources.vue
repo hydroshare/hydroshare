@@ -12,9 +12,9 @@
             <br/>
             <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"
                    data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" @change="searchClick"
-                min="1" max="9999" > of {{Math.ceil(1,1)}}
-            | Showing: {{Math.min(1, 1)}} of {{resources.length}} {{resgeotypes}}<br/>
+            «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick"
+                min="1" max="9999" > of {{pagecount}}»
+             «results {{pagenum * resources.length - resources.length + 1}} to {{pagenum * resources.length}} of {{rescount}} {{resgeotypes}}»<br/>
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -49,11 +49,11 @@
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">
                             <ul class="list-group" id="list-group-creator">
-                                <li class="list-group-item" v-for="(author) in Object.keys(countAuthors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
+                                <li class="list-group-item" v-for="(author) in countAuthors"
                                     v-bind:key="author">
-                                    <span class="badge">{{countAuthors[author]}}</span><label class="checkbox noselect" :for="'author-'+author">{{author}}
-                                    <input type="checkbox" :value="author" class="faceted-selections"
-                                        v-model.lazy="authorFilter" :id="'author-'+author" @change="setAllMarkers">
+                                    <span class="badge">{{author[1]}}</span><label class="checkbox noselect" :for="'author-'+author[0]">{{author[0]}}
+                                    <input type="checkbox" :value="author[0]" class="faceted-selections"
+                                        v-model.lazy="authorFilter" :id="'author-'+author[0]" @change="searchClick">
                                     </label>
                                 </li>
                             </ul>
@@ -70,12 +70,12 @@
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">
                             <ul class="list-group" id="list-group-owner">
-                                <li class="list-group-item" v-for="(owner) in Object.keys(countOwners).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
+                                <li class="list-group-item" v-for="(owner) in countOwners"
                                     v-bind:key="owner">
-                                    <span class="badge">{{countOwners[owner]}}</span>
-                                    <label class="checkbox noselect" :for="'owner-'+owner">{{owner}}
+                                    <span class="badge">{{owner[1]}}</span>
+                                    <label class="checkbox noselect" :for="'owner-'+owner[0]">{{owner[0]}}
                                         <input type="checkbox" class="faceted-selections" :value=owner
-                                            v-model.lazy="ownerFilter" :id="'owner-'+owner" @change="setAllMarkers">
+                                            v-model.lazy="ownerFilter" :id="'owner-'+owner[0]" @change="searchClick">
                                     </label>
                                 </li>
                             </ul>
@@ -92,12 +92,12 @@
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">
                             <ul class="list-group" id="list-group-subject">
-                                <li class="list-group-item" v-for="(subject) in Object.keys(countSubjects).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
+                                <li class="list-group-item" v-for="(subject) in countSubjects"
                                     v-bind:key="subject">
-                                    <span class="badge">{{countSubjects[subject]}}</span>
-                                    <label class="checkbox noselect" :for="'subj-'+subject">{{subject}}
-                                        <input type="checkbox" class="faceted-selections" :value=subject
-                                           v-model.lazy="subjectFilter" :id="'subj-'+subject" @change="setAllMarkers">
+                                    <span class="badge">{{subject[1]}}</span>
+                                    <label class="checkbox noselect" :for="'subj-'+subject[0]">{{subject[0]}}
+                                        <input type="checkbox" class="faceted-selections" :value=subject[0]
+                                           v-model.lazy="subjectFilter" :id="'subj-'+subject[0]" @change="searchClick">
                                     </label>
                                 </li>
                             </ul>
@@ -114,12 +114,12 @@
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">
                             <ul class="list-group" id="list-group-contributor">
-                                <li class="list-group-item" v-for="(contributor) in Object.keys(countContributors).sort( (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))"
+                                <li class="list-group-item" v-for="(contributor) in countContributors"
                                     v-bind:key="contributor">
-                                    <span class="badge">{{countContributors[contributor]}}</span>
-                                    <label class="checkbox noselect" :for="'contrib-'+contributor">{{contributor}}
-                                        <input type="checkbox" class="faceted-selections" :value=contributor
-                                            v-model.lazy="contributorFilter" :id="'contrib-'+contributor" @change="setAllMarkers">
+                                    <span class="badge">{{contributor[1]}}</span>
+                                    <label class="checkbox noselect" :for="'contrib-'+contributor[0]">{{contributor[0]}}
+                                        <input type="checkbox" class="faceted-selections" :value=contributor[0]
+                                            v-model.lazy="contributorFilter" :id="'contrib-'+contributor[0]" @change="searchClick">
                                     </label>
                                 </li>
                             </ul>
@@ -136,12 +136,12 @@
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">
                             <ul class="list-group" id="list-group-type">
-                                <li class="list-group-item" v-for="(type) in Object.keys(countTypes).sort()"
+                                <li class="list-group-item" v-for="(type) in countTypes"
                                     v-bind:key="type">
-                                    <span class="badge">{{countTypes[type]}}</span>
-                                    <label class="checkbox noselect" :for="'type-'+type">{{type}}
-                                        <input type="checkbox" class="faceted-selections" :value=type
-                                            v-model.lazy="typeFilter" :id="'type-'+type" @change="setAllMarkers">
+                                    <span class="badge">{{type[1]}}</span>
+                                    <label class="checkbox noselect" :for="'type-'+type[0]">{{type[0]}}
+                                        <input type="checkbox" class="faceted-selections" :value=type[0]
+                                            v-model.lazy="typeFilter" :id="'type-'+type[0]" @change="searchClick">
                                     </label>
                                 </li>
                             </ul>
@@ -159,12 +159,12 @@
                         <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">
                             <ul class="list-group" id="list-group-availability">
                                 <li class="list-group-item"
-                                    v-for="(availability) in Object.keys(countAvailabilities).sort()"
+                                    v-for="(availability) in countAvailabilities"
                                     v-bind:key="availability">
-                                    <span class="badge">{{countAvailabilities[availability]}}</span>
-                                    <label class="checkbox noselect" :for="'avail-'+availability">{{availability}}
-                                        <input type="checkbox" class="faceted-selections" :value=availability
-                                            v-model.lazy="availabilityFilter" :id="'avail-'+availability" @change="setAllMarkers">
+                                    <span class="badge">{{availability[1]}}</span>
+                                    <label class="checkbox noselect" :for="'avail-'+availability[0]">{{availability[0]}}
+                                        <input type="checkbox" class="faceted-selections" :value=availability[0]
+                                            v-model.lazy="availabilityFilter" :id="'avail-'+availability[0]" @change="searchClick">
                                     </label>
                                 </li>
                             </ul>
@@ -243,6 +243,7 @@ export default {
       startdate: 'Start Date',
       enddate: 'End Date',
       filteredcount: 0,
+      rescount: 0,
       pagenum: 1, // initial page number to show
       geoloaded: false, // searchjson endpoint called and retrieved geo data
       resgeotypes: '',
@@ -299,12 +300,7 @@ export default {
   },
   watch: {
     resources() {
-      // this.populateFilters();
-      if (this.resources.length > 0) {
-        this.resloaded = true;
-      } else {
-        this.resloaded = false;
-      }
+      this.resloaded = this.resources.length > 0;
     },
     geodata() {
       if (this.geodata.length > 0) {
@@ -330,42 +326,11 @@ export default {
     this.experimentalGeo();
   },
   methods: {
-    populateFilters() {
-      this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
-      this.countTypes = this.filterBuilder(this.resources, 'type');
-
-      // this.countSubjects = this.filterMultiBuilder(this.resources, 'subject', this.filterlimit);
-      let subjectbox = [];
-      this.resources.forEach((res) => {
-        subjectbox = subjectbox.concat(this.enumMulti(res.subject));
-      });
-      const csubjects = new this.Counter(subjectbox);
-      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([v]) => v > this.filterlimit));
-
-      let ownerbox = [];
-      this.resources.forEach((res) => {
-        ownerbox = ownerbox.concat(this.enumMulti(res.owner));
-      });
-      const cowners = new this.Counter(ownerbox);
-      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([v]) => v > this.filterlimit));
-
-      let contributorbox = [];
-      this.resources.forEach((res) => {
-        contributorbox = contributorbox.concat(this.enumMulti(res.contributor));
-      });
-      const ccontributors = new this.Counter(contributorbox);
-      this.countContributors = Object.fromEntries(Object.entries(ccontributors).filter(([v]) => v > this.filterlimit));
-
-      let availabilitybox = [];
-      this.resources.forEach((res) => {
-        availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
-      });
-      this.countAvailabilities = new this.Counter(availabilitybox);
-    },
     searchClick() {
       const startd = new Date();
       document.body.style.cursor = 'wait';
       const p = document.getElementById('page-number').value;
+      // TODO testing around invalid characters and i8n
       axios.get('/discoverapi/', {
         params: {
           q: this.searchtext,
@@ -373,8 +338,15 @@ export default {
           asc: this.sortDir,
           cat: this.searchcategory,
           pnum: p,
-          // filterby: 'author',
-          // filtercontent: 'Tess Russo',
+          filterby: {
+            author: this.authorFilter,
+            owner: this.ownerFilter,
+            subject: this.subjectFilter,
+            contributor: this.contributorFilter,
+            type: this.typeFilter,
+            availability: this.availabilityFilter,
+            uid: this.uidFilter,
+          },
         },
       })
         .then((response) => {
@@ -383,6 +355,9 @@ export default {
               this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
               this.setAllMarkers();
+              this.pagenum = 1;
+              this.pagecount = response.data.pagecount;
+              this.rescount = response.data.rescount;
               document.body.style.cursor = 'default';
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
@@ -409,7 +384,6 @@ export default {
             try {
               this.geodata = JSON.parse(response.data.geo);
               console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
-              console.log(this.geodata)
               this.setAllMarkers();
               this.geoloaded = true;
               document.body.style.cursor = 'default';
@@ -427,30 +401,7 @@ export default {
         });
       this.pagenum = 1;
     },
-    loadgeo() {
-      const startd = new Date();
-      const geodata = [];
-      axios.get('/searchjson/', { params: { data: {} } })
-        .then((response) => {
-          if (response.status === 200) {
-            console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
-            response.data.forEach((item) => {
-              const val = JSON.parse(item);
-              if (val.coverage_type) {
-                geodata.push(val);
-              }
-            });
-            this.geodata = geodata;
-          } else {
-            console.log(`Error: ${response.statusText}`);
-          }
-        })
-        .catch((error) => {
-          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
-          // this.geoloaded = false;
-        });
-    },
-    filterBuilder(resources, thing, limit) {
+    filterBuilder() {
       const startd = new Date();
       axios.get('/discoverapi/', {
         params: {
@@ -460,10 +411,9 @@ export default {
         .then((response) => {
           if (response) {
             try {
-              // this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ filterbuilder call in: ${(new Date() - startd) / 1000} sec`);
-              const fdata = JSON.parse(response.data.filterdata);
-              console.log(fdata);
+              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
@@ -474,35 +424,6 @@ export default {
           console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
         });
-
-      const box = [];
-
-      try {
-        resources.forEach(res => box.push(res[thing]));
-      } catch (err) {
-        console.log(`Type ${thing} not found when building filter: ${err}`);
-      }
-      const c = new this.Counter(box);
-      if (limit) {
-        try {
-          return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
-        } catch (err) {
-          console.log(`Could not truncate ${thing}: ${err}`);
-          return c;
-        }
-      }
-      return c;
-    },
-    filterMultiBuilder(resources, attribute, limit) {
-      let box = [];
-      resources.forEach((res) => {
-        box = box.concat(this.enumMulti(res[attribute]));
-      });
-      const c = new this.Counter(box);
-      if (limit) {
-        return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
-      }
-      return c;
     },
     columnSort(res) {
       if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
@@ -527,17 +448,6 @@ export default {
       }
       return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
     },
-    Counter(array) {
-      // eslint-disable-next-line no-return-assign
-      array.forEach(val => this[val] = (this[val] || 0) + 1);
-    },
-    enumMulti(a) {
-      let c = [];
-      if (a) {
-        c = Object.values(a);
-      }
-      return c;
-    },
     ellip(input) {
       if (input) {
         return input.length > 500 ? `${input.substring(0, 500)}...` : input;
@@ -558,24 +468,28 @@ export default {
       if (document.getElementById('map-view').style.display !== 'block') {
         this.uidFilter = [];
         document.getElementById('map-filter-button').style.display = 'none';
-        document.getElementById('items-discovered').style.display = 'block';
-        document.getElementById('map-message').style.display = 'none';
+        // document.getElementById('items-discovered').style.display = 'block';
+        // document.getElementById('map-message').style.display = 'none';
         document.getElementById('map-mode-button').value = 'Show Map';
         this.resgeotypes = '';
       } else if (document.getElementById('map-view').style.display === 'block') {
         document.getElementById('map-filter-button').style.display = 'block';
-        document.getElementById('items-discovered').style.display = 'none';
-        document.getElementById('map-message').style.display = 'block';
+        // document.getElementById('items-discovered').style.display = 'none';
+        // document.getElementById('map-message').style.display = 'block';
         document.getElementById('map-mode-button').value = 'Hide Map';
+        this.resgeotypes = 'with geographic coordinates';
+        this.uidFilter = window.visMarkers;
       }
+      this.searchClick();
     },
     setAllMarkers() {
       if (document.getElementById('map-view').style.display === 'block') {
         console.log('Rendering all markers');
         deleteMarkers(); // eslint-disable-line
-        const shids = this.resources.map(x => x.short_id);
-        const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-
+        // TODO showing all markers for now but can filter markers by active resource list
+        // const shids = this.resources.map(x => x.short_id);
+        // const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        const geocoords = this.geodata;
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
@@ -612,10 +526,10 @@ export default {
     },
     liveMapFilter() {
       if (document.getElementById('map-view').style.display === 'block') {
+        // document.getElementById('items-discovered').style.display = 'block';
+        // document.getElementById('map-message').style.display = 'none';
         this.uidFilter = window.visMarkers;
-        document.getElementById('items-discovered').style.display = 'block';
-        document.getElementById('map-message').style.display = 'none';
-        this.resgeotypes = 'with geographic coordinates';
+        this.searchClick();
       }
     },
     showHighlighter(hsid) {

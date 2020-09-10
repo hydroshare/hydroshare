@@ -26,7 +26,7 @@ def date_overlaps(searchdate):
     return overlap
 
 
-def queryBuilder():
+def query_builder():
     """
 
     :return:
@@ -80,15 +80,19 @@ class SearchAPI(APIView):
 
             sqs = SearchQuerySet().all()
             for result in sqs:
-                pt = {}
-                pt['short_id'] = result.short_id
-                pt['title'] = result.title
-                if 'box' in result.coverage_type:
-                    pt['coverage_type'] = 'region'
-                elif 'point' in result.coverage_type:
-                    pt['coverage_type'] = 'point'
-                else:
-                    pt['coverage_type'] = ''
+                try:
+                    pt = {}
+                    pt['short_id'] = result.short_id
+                    pt['title'] = result.title
+                    if 'box' in result.coverage_type:
+                        pt['coverage_type'] = 'region'
+                    elif 'point' in result.coverage_type:
+                        pt['coverage_type'] = 'point'
+                    else:
+                        continue
+                except TypeError:
+                    continue
+
                 if isinstance(result.north, (int, float)):
                     pt['north'] = result.north
                 if isinstance(result.east, (int, float)):
@@ -113,7 +117,7 @@ class SearchAPI(APIView):
             s2 = DateRange(start=datetime.date(2003, 1, 1), end=datetime.date(2004, 1, 1))
 
         if request.GET.get('filterbuilder'):
-            filterlimit = 15
+            filterlimit = 20
 
             sqs = SearchQuerySet().facet('author')
             authors = sqs.facet_counts()['fields']['author'][:filterlimit]
@@ -121,16 +125,16 @@ class SearchAPI(APIView):
             owners = sqs.facet_counts()['fields']['owner'][:filterlimit]
             sqs = SearchQuerySet().facet('subject')
             subjects = sqs.facet_counts()['fields']['subject'][:filterlimit]
-            sqs = SearchQuerySet().facet('contributor')
-            contributors = sqs.facet_counts()['fields']['contributor'][:filterlimit]
-            # sqs = SearchQuerySet().facet('type')
-            # types = sqs.facet_counts()['fields']
+            sqs = SearchQuerySet().facet('creator')
+            contributors = sqs.facet_counts()['fields']['creator'][:filterlimit]
+            sqs = SearchQuerySet().facet('resource_type_exact')
+            types = sqs.facet_counts()['fields']['resource_type'][:filterlimit]
             sqs = SearchQuerySet().facet('availability')
             availability = sqs.facet_counts()['fields']['availability'][:filterlimit]
 
             return Response({
                 'time': (time.time() - start),
-                'filterdata': json.dumps([authors, owners, subjects, contributors, availability])
+                'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
             })
 
         #################
@@ -159,29 +163,35 @@ class SearchAPI(APIView):
             sort = request.GET.get('sort')
         sort = sort if asc == '1' else '-{}'.format(sort)
 
-        sqs = SearchQuerySet().all().order_by(sort)
+        sqs = SearchQuerySet().all()
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q).order_by(sort)  # .boost('keyword', 2.0)
+            sqs = sqs.filter(content=q)  # .boost('keyword', 2.0)
 
-        if request.GET.get('filterby') and request.GET.get('filtercontent'):
+        if request.GET.get('filterby'):
             filterby = request.GET.get('filterby')
-            filtercontent = request.GET.get('filtercontent')
+            try:
+                filters = json.loads(filterby)
+                if filters['author']:
+                    sqs = sqs.filter(author__in=filters['author'])
+                if filters['owner']:
+                    for owner in filters['owner']:
+                        sqs = sqs.filter_or(owner__in=owner)
+                if filters['subject']:
+                    sqs = sqs.filter(subject__in=filters['subject'])
+                if filters['contributor']:
+                    sqs = sqs.filter(creator__in=filters['contributor'])
+                if filters['type']:
+                    sqs = sqs.filter(content_type__in=filters['type'])
+                if filters['availability']:
+                    sqs = sqs.filter(availability__in=filters['availability'])
+                if filters['uid']:
+                    sqs = sqs.filter(short_id__in=filters['uid'])
+            except:
+                print('Invalid filter data {}'.format(filterby))
 
-            # for result in sqs:
-            if filterby == 'subject':
-                sqs = sqs.filter(subject=filtercontent)
-            elif filterby == 'abstract':
-                sqs = sqs.filter(abstract=filtercontent)
-            elif filterby == 'author':
-                sqs = sqs.filter(author=filtercontent)
-            elif filterby == 'contributor':
-                sqs = sqs.filter(contributor=filtercontent)
-            elif filterby == 'owner':
-                sqs = sqs.filter(owner=filtercontent)
-            elif filterby == 'type':
-                sqs = sqs.filter(type=filtercontent)
+        sqs = sqs.order_by(sort)
 
         resources = []
 
@@ -230,12 +240,14 @@ class SearchAPI(APIView):
                 "subject": result.subject,
                 "created": result.created.isoformat(),
                 "modified": result.modified.isoformat(),
-                "start_date": start_date,
-                "end_date": end_date,
-                "short_id": result.short_id
+                # "start_date": start_date,
+                # "end_date": end_date,
+                "short_id": result.short_id,
             })
 
         return Response({
             'time': (time.time() - start),
-            'resources': json.dumps(resources)
+            'resources': json.dumps(resources),
+            'rescount': p.count,
+            'pagecount': p.num_pages
         })
