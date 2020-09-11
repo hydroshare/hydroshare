@@ -51,11 +51,15 @@ class SearchAPI(APIView):
                 "availability": list value, js will parse JSON as Array
                 "availabilityurl":
                 "type": single value, pass a string to REST client
-                "author": single value, pass a string to REST client
+                "author": single value, pass a string to REST client first author
+                "creator: authors,
                 "contributor": list value, js will parse JSON as Array
                 "owner": list value, js will parse JSON as Array
                 "subject": list value, js will parse JSON as Array
                 "coverage_type": list point, period, ...
+
+        The reason for the weird name is the DataOne standard. The metadata was designed to be compliant with DataOne
+        standards. These standards do not contain an author field. Instead, the creator field represents authors.
         """
         start = time.time()
 
@@ -128,12 +132,6 @@ class SearchAPI(APIView):
         if request.GET.get('cat'):
             cat = request.GET.get('cat')
 
-        # TODO min/max handling eg exceed max pages
-        pnum = 1
-        if request.GET.get('pnum'):
-            pnum = request.GET.get('pnum')
-            pnum = max(1, int(pnum))
-
         asc = '-1'
         if request.GET.get('asc'):
             asc = request.GET.get('asc')
@@ -186,9 +184,15 @@ class SearchAPI(APIView):
 
         resources = []
 
-        pagelim = 35
+        perpage = 35
 
-        p = Paginator(sqs, pagelim)
+        p = Paginator(sqs, perpage)
+
+        pnum = 1
+        if request.GET.get('pnum'):
+            pnum = request.GET.get('pnum')
+            pnum = max(1, int(pnum))
+            pnum = min(pnum, p.num_pages)
 
         for result in p.page(pnum):
             contributor = 'None'  # contributor is actually a list and can have multiple values
@@ -217,6 +221,7 @@ class SearchAPI(APIView):
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
                 "author": str(result.author),
+                "authors": result.creator,
                 "contributor": contributor,
                 "author_link": author_link,
                 "owner": owner,
@@ -236,5 +241,6 @@ class SearchAPI(APIView):
             'time': (time.time() - start),
             'resources': json.dumps(resources),
             'rescount': p.count,
-            'pagecount': p.num_pages
+            'pagecount': p.num_pages,
+            'perpage': perpage
         })

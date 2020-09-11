@@ -1,6 +1,6 @@
 <template>
   <div><input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="displayMap"><!-- displayMap defined in map.js --><br/><br/>
+                v-on:click="showMap"><!-- displayMap defined in map.js --><br/><br/>
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -10,11 +10,13 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter"
+            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
+                   data-toggle="tooltip" title="Show list of resources that are located in the current map view">
+            <input id="map-clear-filter-button" type="button" style="display:block" class="mapdisp" value="Clear Map Filter" :disabled="!geoloaded" v-on:click="clearMapFilter"
                    data-toggle="tooltip" title="Show list of resources that are located in the current map view">
             «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick"
-                min="1" max="9999" > of {{pagecount}}»
-             «results {{pagenum * resources.length - resources.length + 1}} to {{pagenum * resources.length}} of {{rescount}} {{resgeotypes}}»<br/>
+                min="1" :max="pagecount"> of {{pagecount}}»
+             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} {{resgeotypes}}»<br/>
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -207,11 +209,11 @@
                         </td>
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
-                               :title="`Author: ${entry.author}
+                               :title="`Authors: ${entry.authors}
 
 Owner: ${entry.owner}
 
-Contributor: ${entry.contributor}`">{{entry.author}}</a>
+Contributors: ${entry.contributor}`">{{entry.author}}</a>
 <!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
@@ -245,6 +247,9 @@ export default {
       filteredcount: 0,
       rescount: 0,
       pagenum: 1, // initial page number to show
+      pagedisp: 1, // page being displayed
+      perpage: 0,
+      pagecount: 0,
       geoloaded: false, // searchjson endpoint called and retrieved geo data
       resgeotypes: '',
       googMarkers: [],
@@ -309,10 +314,16 @@ export default {
       }
     },
     startdate() {
-      // this.setAllMarkers();
+      this.searchClick();
     },
     enddate() {
-      // this.setAllMarkers();
+      this.searchClick();
+    },
+    pagenum() {
+      if (this.pagenum) {
+        this.pagenum = Math.max(1, this.pagenum);
+        this.pagenum = Math.min(this.pagenum, this.pagecount);
+      }
     },
   },
   mounted() {
@@ -328,9 +339,9 @@ export default {
   },
   methods: {
     searchClick() {
+      if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       const startd = new Date();
       document.body.style.cursor = 'wait';
-      const p = document.getElementById('page-number').value;
       // TODO testing around invalid characters and i8n
       axios.get('/discoverapi/', {
         params: {
@@ -338,7 +349,7 @@ export default {
           sort: this.sortingBy,
           asc: this.sortDir,
           cat: this.searchcategory,
-          pnum: p,
+          pnum: this.pagenum,
           filterby: {
             author: this.authorFilter,
             owner: this.ownerFilter,
@@ -357,9 +368,11 @@ export default {
               this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
               // this.setAllMarkers();
-              this.pagenum = 1;
+              // this.pagenum = 1;
               this.pagecount = response.data.pagecount;
               this.rescount = response.data.rescount;
+              this.perpage = response.data.perpage;
+              this.pagedisp = this.pagenum;
               document.body.style.cursor = 'default';
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
@@ -371,10 +384,11 @@ export default {
           console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
         });
-      document.getElementById('page-number').value = 1;
+      // document.getElementById('page-number').value = 1;
     },
     clearSearch() {
       this.searchtext = '';
+      this.pagenum = 1;
       this.searchClick();
     },
     loadGeo() {
@@ -401,7 +415,7 @@ export default {
           this.geoloaded = false;
           document.body.style.cursor = 'default';
         });
-      this.pagenum = 1;
+      // this.pagenum = 1;
     },
     filterBuilder() {
       const startd = new Date();
@@ -447,32 +461,33 @@ export default {
       }
       return '';
     },
-    displayMap() {
+    showMap() {
       toggleMap(); // eslint-disable-line
-      this.setAllMarkers();
       if (document.getElementById('map-view').style.display !== 'block') {
-        this.uidFilter = [];
         document.getElementById('map-filter-button').style.display = 'none';
         // document.getElementById('items-discovered').style.display = 'block';
         // document.getElementById('map-message').style.display = 'none';
         document.getElementById('map-mode-button').value = 'Show Map';
         this.resgeotypes = '';
       } else if (document.getElementById('map-view').style.display === 'block') {
+        this.setAllMarkers();
         document.getElementById('map-filter-button').style.display = 'block';
         // document.getElementById('items-discovered').style.display = 'none';
         // document.getElementById('map-message').style.display = 'block';
         document.getElementById('map-mode-button').value = 'Hide Map';
         this.resgeotypes = 'with geographic coordinates';
-        this.uidFilter = window.visMarkers;
+        // this.uidFilter = window.visMarkers;
       }
       this.searchClick();
     },
-    setAllMarkers() {
+    setAllMarkers(all) {
       if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line
-        const shids = this.resources.map(x => x.short_id);
-        const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        // const geocoords = this.geodata; if you are going to show all
+        let geocoords = this.geodata;
+        if (!all) {
+          const shids = this.resources.map(x => x.short_id);
+          geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        }
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
@@ -507,34 +522,17 @@ export default {
         createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls)); // eslint-disable-line
       }
     },
-    liveMapFilter() {
+    filterByMap() {
       if (document.getElementById('map-view').style.display === 'block') {
-        // document.getElementById('items-discovered').style.display = 'block';
-        // document.getElementById('map-message').style.display = 'none';
-        this.uidFilter = [];
-        this.searchClick();
-        this.setAllMarkers();
         this.uidFilter = window.visMarkers;
         this.searchClick();
       }
     },
-    showHighlighter(hsid) {
+    clearMapFilter() {
       if (document.getElementById('map-view').style.display === 'block') {
-        document.getElementById('topcontrol').click();
-        highlightMarker(hsid); // eslint-disable-line
+        this.uidFilter = [];
+        this.searchClick();
       }
-    },
-    renderMapSingle(pts) {
-      pts.forEach((pt) => {
-        if (pt.coverage_type === 'point') {
-          createMarker({ lat: pt.north, lng: pt.east }, pt.title); // eslint-disable-line
-        } else if (pt.coverage_type === 'box') {
-          const lat = (parseInt(pt.northlimit, 10) + parseInt(pt.southlimit, 10)) / 2;
-          const lng = (parseInt(pt.eastlimit, 10) + parseInt(pt.westlimit, 10)) / 2;
-          console.log(pt.northlimit, pt.southlimit, pt.eastlimit, pt.westlimit);
-          createMarker({ lat, lng }, pt.title); // eslint-disable-line
-        }
-      });
     },
   },
 };
