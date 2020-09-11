@@ -33,7 +33,9 @@ server {
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log debug;
 
-    sendfile off;
+    sendfile on;
+    sendfile_max_chunk 512k;
+    aio threads;
     proxy_request_buffering off; 
     proxy_buffering off; 
 
