@@ -12,7 +12,6 @@ from collections import namedtuple
 DateRange = namedtuple('DateRange', ['start', 'end'])
 
 
-
 def date_overlaps(searchdate):
     """
     Expectation is the user is filtering for dates and looking for any kind of overlap in date
@@ -41,8 +40,6 @@ class SearchView(TemplateView):
 
 class SearchAPI(APIView):
 
-
-
     def get(self, request, *args, **kwargs):
         """
         Primary endpoint for retrieving resources via the index
@@ -51,31 +48,18 @@ class SearchAPI(APIView):
         :param kwargs:
         :return:
                 Values should never be empty string or None, instead return string "None" with str() call
-                "title":
-                "link":
                 "availability": list value, js will parse JSON as Array
                 "availabilityurl":
                 "type": single value, pass a string to REST client
                 "author": single value, pass a string to REST client
                 "contributor": list value, js will parse JSON as Array
-                "author_link":
                 "owner": list value, js will parse JSON as Array
-                "abstract":
                 "subject": list value, js will parse JSON as Array
-                "created":
-                "modified":
-                "start_date":
-                "end_date":
                 "coverage_type": list point, period, ...
-
         """
         start = time.time()
 
-        #####################
-        # TODO sub-endpoints
-        #####################
         if request.GET.get('geo'):
-            # geo = request.GET.get('geo')
             geodata = []
 
             sqs = SearchQuerySet().all()
@@ -111,10 +95,6 @@ class SearchAPI(APIView):
                 'time': (time.time() - start),
                 'geo': json.dumps(geodata)
             })
-
-        if request.GET.get('datematch'):
-            s1 = DateRange(start=datetime.date(2009, 1, 1), end=datetime.date(2013, 1, 1))
-            s2 = DateRange(start=datetime.date(2003, 1, 1), end=datetime.date(2004, 1, 1))
 
         if request.GET.get('filterbuilder'):
             filterlimit = 20
@@ -188,25 +168,29 @@ class SearchAPI(APIView):
                     sqs = sqs.filter(availability__in=filters['availability'])
                 if filters['uid']:
                     sqs = sqs.filter(short_id__in=filters['uid'])
-            except:
-                print('Invalid filter data {}'.format(filterby))
+                if filters['date']:
+                    # (searchdate.start < resource_temporal.start < searchdate.end)
+                    # or (resource_temporal.start < searchdate.start < resource_temporal.end)
+                    try:
+                        datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
+                                               end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
+                        sqs = sqs.filter(start_date__gte=datefilter.start).filter_and(start_date__lte=datefilter.end)
+
+                    except ValueError as e:
+                        print('Not all data information provided or invalid value sent - {}'.format(e))
+
+            except Exception as ex:
+                print('Invalid filter data {} - {}'.format(filterby, ex))
 
         sqs = sqs.order_by(sort)
 
         resources = []
 
-        pagelim = 40
+        pagelim = 35
 
         p = Paginator(sqs, pagelim)
 
         for result in p.page(pnum):
-            try:
-                start_date = result.start_date.isoformat()
-                end_date = result.end_date.isoformat()
-            except:
-                start_date = ''
-                end_date = ''
-
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
@@ -240,10 +224,13 @@ class SearchAPI(APIView):
                 "subject": result.subject,
                 "created": result.created.isoformat(),
                 "modified": result.modified.isoformat(),
-                # "start_date": start_date,
-                # "end_date": end_date,
                 "short_id": result.short_id,
             })
+
+        if sort == 'title':
+            resources = sorted(resources, key=lambda k: k['title'].lower())
+        elif sort == '-title':
+            resources = sorted(resources, key=lambda k: k['title'].lower(), reverse=True)
 
         return Response({
             'time': (time.time() - start),

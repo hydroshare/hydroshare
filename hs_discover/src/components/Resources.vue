@@ -237,7 +237,7 @@ export default {
       resloaded: false,
       resources: [],
       searchtext: '',
-      filterlimit: 10, // Minimum threshold for filter item to display with checkbox
+      // filterlimit: 10, // Minimum threshold for filter item to display with checkbox
       geodata: [],
       geopoints: [],
       startdate: 'Start Date',
@@ -301,6 +301,7 @@ export default {
   watch: {
     resources() {
       this.resloaded = this.resources.length > 0;
+      this.setAllMarkers();
     },
     geodata() {
       if (this.geodata.length > 0) {
@@ -308,10 +309,10 @@ export default {
       }
     },
     startdate() {
-      this.setAllMarkers();
+      // this.setAllMarkers();
     },
     enddate() {
-      this.setAllMarkers();
+      // this.setAllMarkers();
     },
   },
   mounted() {
@@ -323,7 +324,7 @@ export default {
     if (document.getElementById('map-view').style.display === 'block') {
       document.getElementById('map-filter-button').style.display = 'block';
     }
-    this.experimentalGeo();
+    this.loadGeo();
   },
   methods: {
     searchClick() {
@@ -346,6 +347,7 @@ export default {
             type: this.typeFilter,
             availability: this.availabilityFilter,
             uid: this.uidFilter,
+            date: [this.startdate, this.enddate],
           },
         },
       })
@@ -354,7 +356,7 @@ export default {
             try {
               this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-              this.setAllMarkers();
+              // this.setAllMarkers();
               this.pagenum = 1;
               this.pagecount = response.data.pagecount;
               this.rescount = response.data.rescount;
@@ -375,7 +377,7 @@ export default {
       this.searchtext = '';
       this.searchClick();
     },
-    experimentalGeo() {
+    loadGeo() {
       const startd = new Date();
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', { params: { geo: 'load' } })
@@ -384,7 +386,7 @@ export default {
             try {
               this.geodata = JSON.parse(response.data.geo);
               console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
-              this.setAllMarkers();
+              // this.setAllMarkers();
               this.geoloaded = true;
               document.body.style.cursor = 'default';
             } catch (e) {
@@ -425,15 +427,6 @@ export default {
           document.body.style.cursor = 'default';
         });
     },
-    columnSort(res) {
-      if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-        const datesorted = res.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
-        return this.sortDir === -1 ? datesorted : datesorted.reverse();
-      }
-      Object.keys(res).forEach(key => (!res[key] ? delete res[key] : {})); // eslint-disable-line
-      return res.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy]
-        .toLowerCase()) ? this.sortDir : -1 * this.sortDir));
-    },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
@@ -454,17 +447,9 @@ export default {
       }
       return '';
     },
-    dateOverlap(dtstart, dtend) {
-      // eslint-disable-next-line no-mixed-operators
-      const ol = (Date.parse(dtstart) > Date.parse(this.startdate) && Date.parse(dtstart) < Date.parse(this.enddate) || Date.parse(this.startdate) > Date.parse(dtstart) && Date.parse(this.startdate) < Date.parse(dtend));
-      console.log(`${dtstart} ${dtend} : ${this.startdate} ${this.enddate} : ${ol}`);
-      return ol;
-    },
     displayMap() {
       toggleMap(); // eslint-disable-line
-      if (this.geoloaded) {
-        this.setAllMarkers();
-      }
+      this.setAllMarkers();
       if (document.getElementById('map-view').style.display !== 'block') {
         this.uidFilter = [];
         document.getElementById('map-filter-button').style.display = 'none';
@@ -483,13 +468,11 @@ export default {
       this.searchClick();
     },
     setAllMarkers() {
-      if (document.getElementById('map-view').style.display === 'block') {
-        console.log('Rendering all markers');
+      if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line
-        // TODO showing all markers for now but can filter markers by active resource list
-        // const shids = this.resources.map(x => x.short_id);
-        // const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        const geocoords = this.geodata;
+        const shids = this.resources.map(x => x.short_id);
+        const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        // const geocoords = this.geodata; if you are going to show all
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
@@ -528,6 +511,9 @@ export default {
       if (document.getElementById('map-view').style.display === 'block') {
         // document.getElementById('items-discovered').style.display = 'block';
         // document.getElementById('map-message').style.display = 'none';
+        this.uidFilter = [];
+        this.searchClick();
+        this.setAllMarkers();
         this.uidFilter = window.visMarkers;
         this.searchClick();
       }
