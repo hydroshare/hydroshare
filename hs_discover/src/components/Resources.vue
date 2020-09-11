@@ -1,5 +1,5 @@
 <template>
-  <div><input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
+  <div><input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
                 v-on:click="showMap"><!-- displayMap defined in map.js --><br/><br/>
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
@@ -10,9 +10,9 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
+            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
                    data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            <input id="map-clear-filter-button" type="button" v-bind:style="mapmode" class="mapdisp" value="Clear Map Filter" :disabled="!geoloaded" v-on:click="clearMapFilter"
+            <input id="map-clear-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Clear Map Filter" :disabled="!geoloaded" v-on:click="clearMapFilter"
                    data-toggle="tooltip" title="Show list of resources that are located in the current map view">
             «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}»
@@ -600,5 +600,15 @@ export default {
         top: 10px;
         left: 10px;
         z-index: 2;
+    }
+    .btn.focus {
+        /* Remove unwanted outline behavior */
+        outline: 0;
+        box-shadow: None;
+    }
+    .btn:focus {
+        /* Remove unwanted outline behavior */
+        outline: 0;
+        box-shadow: None;
     }
 </style>
