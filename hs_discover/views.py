@@ -25,13 +25,6 @@ def date_overlaps(searchdate):
     return overlap
 
 
-def query_builder():
-    """
-
-    :return:
-    """
-
-
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
@@ -39,6 +32,11 @@ class SearchView(TemplateView):
 
 
 class SearchAPI(APIView):
+
+    def __init__(self, **kwargs):
+        super(SearchAPI, self).__init__(**kwargs)
+        self.filterlimit = 20
+        self.perpage = 35
 
     def get(self, request, *args, **kwargs):
         """
@@ -63,15 +61,14 @@ class SearchAPI(APIView):
         """
         start = time.time()
 
+        sqs = SearchQuerySet().all()
+
         if request.GET.get('geo'):
             geodata = []
 
-            sqs = SearchQuerySet().all()
             for result in sqs:
                 try:
-                    pt = {}
-                    pt['short_id'] = result.short_id
-                    pt['title'] = result.title
+                    pt = {'short_id': result.short_id, 'title': result.title}
                     if 'box' in result.coverage_type:
                         pt['coverage_type'] = 'region'
                     elif 'point' in result.coverage_type:
@@ -101,36 +98,23 @@ class SearchAPI(APIView):
             })
 
         if request.GET.get('filterbuilder'):
-            filterlimit = 20
-
             sqs = SearchQuerySet().facet('author')
-            authors = sqs.facet_counts()['fields']['author'][:filterlimit]
+            authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
             sqs = SearchQuerySet().facet('owner')
-            owners = sqs.facet_counts()['fields']['owner'][:filterlimit]
+            owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
             sqs = SearchQuerySet().facet('subject')
-            subjects = sqs.facet_counts()['fields']['subject'][:filterlimit]
+            subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
             sqs = SearchQuerySet().facet('creator')
-            contributors = sqs.facet_counts()['fields']['creator'][:filterlimit]
+            contributors = sqs.facet_counts()['fields']['creator'][:self.filterlimit]
             sqs = SearchQuerySet().facet('resource_type_exact')
-            types = sqs.facet_counts()['fields']['resource_type'][:filterlimit]
+            types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
             sqs = SearchQuerySet().facet('availability')
-            availability = sqs.facet_counts()['fields']['availability'][:filterlimit]
+            availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
 
             return Response({
                 'time': (time.time() - start),
                 'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
             })
-
-        #################
-        # TODO Main query
-        #################
-        filtering = None
-        if request.GET.get('filtering'):
-            filtering = request.GET.get('filtering')
-
-        cat = None
-        if request.GET.get('cat'):
-            cat = request.GET.get('cat')
 
         asc = '-1'
         if request.GET.get('asc'):
@@ -141,7 +125,7 @@ class SearchAPI(APIView):
             sort = request.GET.get('sort')
         sort = sort if asc == '1' else '-{}'.format(sort)
 
-        sqs = SearchQuerySet().all()
+        # sqs = SearchQuerySet().all()
 
         if request.GET.get('q'):
             q = request.GET.get('q')
@@ -184,9 +168,7 @@ class SearchAPI(APIView):
 
         resources = []
 
-        perpage = 35
-
-        p = Paginator(sqs, perpage)
+        p = Paginator(sqs, self.perpage)
 
         pnum = 1
         if request.GET.get('pnum'):
@@ -203,7 +185,7 @@ class SearchAPI(APIView):
                 author_link = result.author_url
 
             if result.creator is not None:
-                try:
+                try: # TODO should this be contributor
                     contributor = result.creator
                 except:
                     print("Missing contributor: {}".format(result.short_id))
@@ -242,5 +224,5 @@ class SearchAPI(APIView):
             'resources': json.dumps(resources),
             'rescount': p.count,
             'pagecount': p.num_pages,
-            'perpage': perpage
+            'perpage': self.perpage
         })

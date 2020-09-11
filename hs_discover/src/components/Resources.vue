@@ -10,13 +10,14 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
+            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
                    data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            <input id="map-clear-filter-button" type="button" style="display:block" class="mapdisp" value="Clear Map Filter" :disabled="!geoloaded" v-on:click="clearMapFilter"
+            <input id="map-clear-filter-button" type="button" v-bind:style="mapmode" class="mapdisp" value="Clear Map Filter" :disabled="!geoloaded" v-on:click="clearMapFilter"
                    data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick"
+            «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}»
-             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} {{resgeotypes}}»<br/>
+             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} »<br/>
+            <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>
         </div>
         <div class="col-xs-3" id="facets">
             <div id="filter-items">
@@ -236,6 +237,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      mapmode: 'display:none',
       resloaded: false,
       resources: [],
       searchtext: '',
@@ -251,7 +253,7 @@ export default {
       perpage: 0,
       pagecount: 0,
       geoloaded: false, // searchjson endpoint called and retrieved geo data
-      resgeotypes: '',
+      // resgeotypes: '',
       googMarkers: [],
       uidFilter: [],
       countAuthors: {},
@@ -332,17 +334,16 @@ export default {
     }
     this.searchClick();
     this.filterBuilder();
-    if (document.getElementById('map-view').style.display === 'block') {
-      document.getElementById('map-filter-button').style.display = 'block';
-    }
+    // if (document.getElementById('map-view').style.display === 'block') {
+    //   document.getElementById('map-filter-button').style.display = 'block';
+    // }
     this.loadGeo();
   },
   methods: {
-    searchClick() {
+    searchClick(paging) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       const startd = new Date();
       document.body.style.cursor = 'wait';
-      // TODO testing around invalid characters and i8n
       axios.get('/discoverapi/', {
         params: {
           q: this.searchtext,
@@ -368,7 +369,9 @@ export default {
               this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
               // this.setAllMarkers();
-              // this.pagenum = 1;
+              if (paging !== true) {
+                this.pagenum = 1;
+              }
               this.pagecount = response.data.pagecount;
               this.rescount = response.data.rescount;
               this.perpage = response.data.perpage;
@@ -463,20 +466,22 @@ export default {
     },
     showMap() {
       toggleMap(); // eslint-disable-line
-      if (document.getElementById('map-view').style.display !== 'block') {
-        document.getElementById('map-filter-button').style.display = 'none';
-        // document.getElementById('items-discovered').style.display = 'block';
-        // document.getElementById('map-message').style.display = 'none';
-        document.getElementById('map-mode-button').value = 'Show Map';
-        this.resgeotypes = '';
-      } else if (document.getElementById('map-view').style.display === 'block') {
+      if (document.getElementById('map-view').style.display === 'block') {
+        this.mapmode = 'display:block';
         this.setAllMarkers();
-        document.getElementById('map-filter-button').style.display = 'block';
+        // document.getElementById('map-filter-button').style.display = 'block';
         // document.getElementById('items-discovered').style.display = 'none';
         // document.getElementById('map-message').style.display = 'block';
         document.getElementById('map-mode-button').value = 'Hide Map';
-        this.resgeotypes = 'with geographic coordinates';
+        // this.resgeotypes = 'with geographic coordinates';
         // this.uidFilter = window.visMarkers;
+      } else if (document.getElementById('map-view').style.display !== 'block') {
+        this.mapmode = 'display:none';
+        // document.getElementById('map-filter-button').style.display = 'none';
+        // document.getElementById('items-discovered').style.display = 'block';
+        // document.getElementById('map-message').style.display = 'none';
+        document.getElementById('map-mode-button').value = 'Show Map';
+        // this.resgeotypes = '';
       }
       this.searchClick();
     },
@@ -577,6 +582,9 @@ export default {
     }
     .mapdisp {
         right: 0px;
+    }
+    #resultsdisp {
+      left: 300px;
     }
     #page-number {
         width: 60px;
