@@ -194,7 +194,6 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-<!--                    v-on:mouseup="showHighlighter(entry.short_id)">-->
                         <td>
                             <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
@@ -241,7 +240,6 @@ export default {
       resloaded: false,
       resources: [],
       searchtext: '',
-      // filterlimit: 10, // Minimum threshold for filter item to display with checkbox
       geodata: [],
       geopoints: [],
       startdate: 'Start Date',
@@ -253,7 +251,6 @@ export default {
       perpage: 0,
       pagecount: 0,
       geoloaded: false, // searchjson endpoint called and retrieved geo data
-      // resgeotypes: '',
       googMarkers: [],
       uidFilter: [],
       countAuthors: {},
@@ -334,9 +331,6 @@ export default {
     }
     this.searchClick();
     this.filterBuilder();
-    // if (document.getElementById('map-view').style.display === 'block') {
-    //   document.getElementById('map-filter-button').style.display = 'block';
-    // }
     this.loadGeo();
   },
   methods: {
@@ -368,7 +362,6 @@ export default {
             try {
               this.resources = JSON.parse(response.data.resources);
               console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-              // this.setAllMarkers();
               if (paging !== true) {
                 this.pagenum = 1;
               }
@@ -387,11 +380,9 @@ export default {
           console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
         });
-      // document.getElementById('page-number').value = 1;
     },
     clearSearch() {
       this.searchtext = '';
-      this.pagenum = 1;
       this.searchClick();
     },
     loadGeo() {
@@ -403,7 +394,6 @@ export default {
             try {
               this.geodata = JSON.parse(response.data.geo);
               console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
-              // this.setAllMarkers();
               this.geoloaded = true;
               document.body.style.cursor = 'default';
             } catch (e) {
@@ -418,7 +408,6 @@ export default {
           this.geoloaded = false;
           document.body.style.cursor = 'default';
         });
-      // this.pagenum = 1;
     },
     filterBuilder() {
       const startd = new Date();
@@ -448,7 +437,7 @@ export default {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
         this.sortingBy = this.sortMap[key];
-        this.pagenum = 1;
+        // this.pagenum = 1;
         this.searchClick();
       }
     },
@@ -473,7 +462,6 @@ export default {
         // document.getElementById('items-discovered').style.display = 'none';
         // document.getElementById('map-message').style.display = 'block';
         document.getElementById('map-mode-button').value = 'Hide Map';
-        // this.resgeotypes = 'with geographic coordinates';
         // this.uidFilter = window.visMarkers;
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
@@ -481,7 +469,6 @@ export default {
         // document.getElementById('items-discovered').style.display = 'block';
         // document.getElementById('map-message').style.display = 'none';
         document.getElementById('map-mode-button').value = 'Show Map';
-        // this.resgeotypes = '';
       }
       this.searchClick();
     },
