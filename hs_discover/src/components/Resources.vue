@@ -195,7 +195,7 @@
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
                         <td>
-                            <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
+                            <img :src="resIconName[entry.type]" style="cursor:pointer"
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
@@ -204,8 +204,7 @@
 <!--                                style="cursor:pointer" data-original-title="Shareable">-->
                         </td>
                         <td>
-                            <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip"  :title="ellip(entry.abstract)" >{{entry.title}}</a>
-<!--                             -->
+                            <a :href="entry.link" target="_blank" style="cursor:pointer" :title="ellip(entry.abstract)" >{{entry.title}}</a>
                         </td>
                         <td>
                             <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
@@ -457,7 +456,7 @@ export default {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
         this.mapmode = 'display:block';
-        this.setAllMarkers();
+        this.setAllMarkers(true);
         // document.getElementById('map-filter-button').style.display = 'block';
         // document.getElementById('items-discovered').style.display = 'none';
         // document.getElementById('map-message').style.display = 'block';
@@ -470,7 +469,7 @@ export default {
         // document.getElementById('map-message').style.display = 'none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
-      this.searchClick();
+      // this.searchClick();
     },
     setAllMarkers(all) {
       if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
