@@ -143,11 +143,9 @@ class SearchAPI(APIView):
                 if filters['subject']:
                     sqs = sqs.filter(subject__in=filters['subject'])
                 if filters['contributor']:
-                    for contributor in filters['contributor']:
-                        sqs = sqs.filter_or(contributor__in=contributor)
-                    # sqs = sqs.filter(contributor__in=filters['contributor'])
+                    sqs = sqs.filter_or(contributor__in=filters['contributor'])
                 if filters['type']:
-                    sqs = sqs.filter(content_type__in=filters['type'])
+                    sqs = sqs.filter(content_type__in=list(filters['type']))
                 if filters['availability']:
                     sqs = sqs.filter(availability__in=filters['availability'])
                 if filters['uid']:

@@ -16,8 +16,8 @@
              <br/>
         </div>
         <div class="col-xs-3" id="facets">
-            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
-                data-toggle="tooltip" title="Show list of resources that are located in the current map view">
+<!--            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"-->
+<!--                data-toggle="tooltip" title="Show list of resources that are located in the current map view">-->
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -203,12 +203,7 @@
                         </td>
                         <td>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank" style="cursor:pointer"
-                               :title="`Authors: ${entry.authors}
-
-Owner: ${entry.owner}
-
-Contributors: ${entry.contributor}`">{{entry.author}}</a>
-<!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
+                               :title="`Authors: ${entry.authors} | Owner: ${entry.owner} | Contributors: ${entry.contributor}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                         <td style="cursor:pointer" v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
@@ -460,18 +455,18 @@ export default {
       // this.searchClick();
     },
     setAllMarkers() {
-      let all;
-      if (this.authorFilter === [] && this.subjectFilter === []) {
-        all = true;
-      }
+      // let all;
+      // if (this.authorFilter === [] && this.subjectFilter === []) {
+      //   all = true;
+      // }
 
       if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line
         let geocoords = this.geodata;
-        if (!all) {
-          const shids = this.resources.map(x => x.short_id);
-          geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        }
+        // if (!all) {
+        //   const shids = this.resources.map(x => x.short_id);
+        //   geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        // }
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
