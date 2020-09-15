@@ -104,8 +104,8 @@ class SearchAPI(APIView):
             owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
             sqs = SearchQuerySet().facet('subject')
             subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('creator')
-            contributors = sqs.facet_counts()['fields']['creator'][:self.filterlimit]
+            sqs = SearchQuerySet().facet('contributor')
+            contributors = sqs.facet_counts()['fields']['contributor'][:self.filterlimit]
             sqs = SearchQuerySet().facet('resource_type')
             types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
             sqs = SearchQuerySet().facet('availability')
@@ -143,7 +143,7 @@ class SearchAPI(APIView):
                 if filters['subject']:
                     sqs = sqs.filter(subject__in=filters['subject'])
                 if filters['contributor']:
-                    sqs = sqs.filter(creator__in=filters['contributor'])
+                    sqs = sqs.filter(contributor__in=filters['contributor'])
                 if filters['type']:
                     sqs = sqs.filter(content_type__in=filters['type'])
                 if filters['availability']:
@@ -184,17 +184,17 @@ class SearchAPI(APIView):
             if result.author:
                 author_link = result.author_url
 
-            if result.creator is not None:
-                try: # TODO should this be contributor
-                    contributor = result.creator
+            if result.contributor is not None:
+                try:
+                    contributor = result.contributor
                 except:
-                    print("Missing contributor: {}".format(result.short_id))
+                    pass
 
             if result.owner is not None:
                 try:
                     owner = result.owner
                 except:
-                    print("Missing owner: {}".format(result.short_id))
+                    pass
 
             resources.append({
                 "title": result.title,
