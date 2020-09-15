@@ -106,7 +106,7 @@ class SearchAPI(APIView):
             subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
             sqs = SearchQuerySet().facet('creator')
             contributors = sqs.facet_counts()['fields']['creator'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('resource_type_exact')
+            sqs = SearchQuerySet().facet('resource_type')
             types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
             sqs = SearchQuerySet().facet('availability')
             availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
