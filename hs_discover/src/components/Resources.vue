@@ -459,14 +459,14 @@ export default {
       // if (this.authorFilter === [] && this.subjectFilter === []) {
       //   all = true;
       // }
-
+      const all = false;
       if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line
         let geocoords = this.geodata;
-        // if (!all) {
-        //   const shids = this.resources.map(x => x.short_id);
-        //   geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        // }
+        if (!all) {
+          const shids = this.resources.map(x => x.short_id);
+          geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        }
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
