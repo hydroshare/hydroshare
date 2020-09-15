@@ -655,6 +655,7 @@ def monthly_group_membership_requests_cleanup():
     two_months_ago = datetime.today() - timedelta(days=60)
     GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
 
+
 @task_postrun.connect
 def update_task_notification(sender=None, task_id=None, state=None, retval=None, **kwargs):
     """
