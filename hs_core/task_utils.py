@@ -1,12 +1,8 @@
 from celery.task.control import inspect
 from celery.result import AsyncResult
-from celery.result import states
-from django.conf import settings
 from django.db import transaction
 
 from hs_core.models import TaskNotification
-from hs_core.hydroshare.utils import get_resource_by_shortkey
-from hs_core.signals import post_delete_resource
 
 import logging
 
@@ -107,6 +103,11 @@ def task_exists(task_id):
 
 def get_resource_bag_task(res_id):
     job_name = 'hs_core.tasks.create_bag_by_irods'
+    return _retrieve_job_id(job_name, res_id)
+
+
+def get_resource_delete_task(res_id):
+    job_name = 'hs_core.tasks.delete_resource_task'
     return _retrieve_job_id(job_name, res_id)
 
 

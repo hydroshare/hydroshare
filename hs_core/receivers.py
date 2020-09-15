@@ -161,10 +161,16 @@ def hs_update_web_services(sender, **kwargs):
     """Signal to update resource web services."""
 
     if settings.HSWS_ACTIVATED:
-        update_web_services.apply_async((
-            settings.HSWS_URL,
-            settings.HSWS_API_TOKEN,
-            settings.HSWS_TIMEOUT,
-            settings.HSWS_PUBLISH_URLS,
-            kwargs.get("resource").short_id
-        ), countdown=1)
+        rid = None
+        if "resource" in kwargs:
+            rid = kwargs.get("resource").short_id
+        elif "resource_id" in kwargs:
+            rid = kwargs.get('resource_id')
+        if rid:
+            update_web_services.apply_async((
+                settings.HSWS_URL,
+                settings.HSWS_API_TOKEN,
+                settings.HSWS_TIMEOUT,
+                settings.HSWS_PUBLISH_URLS,
+                rid
+            ), countdown=1)
