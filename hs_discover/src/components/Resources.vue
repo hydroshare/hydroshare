@@ -10,16 +10,14 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
-                   data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            <input id="map-clear-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Clear Map Filter" :disabled="!geoloaded" v-on:click="clearMapFilter"
-                   data-toggle="tooltip" title="Show list of resources that are located in the current map view">
             «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}»
-             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} »<br/>
-            <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>
+             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} »
+             <br/>
         </div>
         <div class="col-xs-3" id="facets">
+            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"
+                data-toggle="tooltip" title="Show list of resources that are located in the current map view">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -249,7 +247,7 @@ export default {
       pagedisp: 1, // page being displayed
       perpage: 0,
       pagecount: 0,
-      geoloaded: false, // searchjson endpoint called and retrieved geo data
+      geoloaded: false, // endpoint called and retrieved geo data for all resources
       googMarkers: [],
       uidFilter: [],
       countAuthors: {},
@@ -436,7 +434,6 @@ export default {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
         this.sortingBy = this.sortMap[key];
-        // this.pagenum = 1;
         this.searchClick();
       }
     },
@@ -456,22 +453,21 @@ export default {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
         this.mapmode = 'display:block';
-        this.setAllMarkers(true);
-        // document.getElementById('map-filter-button').style.display = 'block';
-        // document.getElementById('items-discovered').style.display = 'none';
-        // document.getElementById('map-message').style.display = 'block';
+        this.setAllMarkers();
         document.getElementById('map-mode-button').value = 'Hide Map';
         // this.uidFilter = window.visMarkers;
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
-        // document.getElementById('map-filter-button').style.display = 'none';
-        // document.getElementById('items-discovered').style.display = 'block';
-        // document.getElementById('map-message').style.display = 'none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
       // this.searchClick();
     },
-    setAllMarkers(all) {
+    setAllMarkers() {
+      let all;
+      if (this.authorFilter === [] && this.subjectFilter === []) {
+        all = true;
+      }
+
       if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line
         let geocoords = this.geodata;
