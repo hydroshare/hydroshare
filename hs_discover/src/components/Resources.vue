@@ -12,7 +12,7 @@
             <br/>
             «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}»
-             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} »
+             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} » <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>
              <br/>
         </div>
         <div class="col-xs-3" id="facets">
@@ -193,19 +193,16 @@
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
                         <td>
-                            <img :src="resIconName[entry.type]" style="cursor:pointer"
+                            <img :src="resIconName[entry.type]" style="cursor:pointer" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type">
-                            <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
+                            <img :src="entry.availabilityurl" v-b-tooltip.hover style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-<!--                            <img v-if="entry.shareable" src="/static/img/shareable.png" :alt="entry.shareable?'Shareable':'Not Shareable'"-->
-<!--                                data-toggle="tooltip" data-placement="right" :title="entry.shareable?'Shareable':'Not Shareable'"-->
-<!--                                style="cursor:pointer" data-original-title="Shareable">-->
                         </td>
                         <td>
-                            <a :href="entry.link" target="_blank" style="cursor:pointer" :title="ellip(entry.abstract)" >{{entry.title}}</a>
+                            <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{entry.title}}</a>
                         </td>
                         <td>
-                            <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
+                            <a :href="entry.author_link" v-b-tooltip.hover target="_blank" style="cursor:pointer"
                                :title="`Authors: ${entry.authors}
 
 Owner: ${entry.owner}
@@ -214,8 +211,8 @@ Contributors: ${entry.contributor}`">{{entry.author}}</a>
 <!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td style="cursor:pointer" data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td style="cursor:pointer" data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                        <td style="cursor:pointer" v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
+                        <td style="cursor:pointer" v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>
