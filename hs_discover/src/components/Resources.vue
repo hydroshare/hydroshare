@@ -1,6 +1,6 @@
 <template>
   <div><input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="showMap"><!-- displayMap defined in map.js --><img :style="mapmode" src="/static/img/globe.png" height="25" width="25" v-b-tooltip.hover title="Map mode active: searching, filtering, sorting, paging will be updated seamlessles in the map"><br/><br/>
+                v-on:click="showMap"><!-- displayMap defined in map.js --><br/><br/>
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -12,7 +12,7 @@
             <br/>
             Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
-              &nbsp;&nbsp;&nbsp;<b>|</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+              &nbsp;&nbsp;&nbsp;<b>|</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} <img :style="mapmode" src="/static/img/globe.png" height="25" width="25" v-b-tooltip.hover title="Map mode active: searching, filtering, sorting, paging will be updated seamlessles in the map">
 <!--          <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>-->
              <br/>
         </div>
