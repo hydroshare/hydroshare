@@ -125,8 +125,6 @@ class SearchAPI(APIView):
             sort = request.GET.get('sort')
         sort = sort if asc == '1' else '-{}'.format(sort)
 
-        # sqs = SearchQuerySet().all()
-
         if request.GET.get('q'):
             q = request.GET.get('q')
             sqs = sqs.filter(content=q)  # .boost('keyword', 2.0)
@@ -145,7 +143,7 @@ class SearchAPI(APIView):
                 if filters['contributor']:
                     sqs = sqs.filter_or(contributor__in=filters['contributor'])
                 if filters['type']:
-                    sqs = sqs.filter(content_type__in=list(filters['type']))
+                    sqs = sqs.filter(resource_type__in=list(filters['type']))
                 if filters['availability']:
                     sqs = sqs.filter(availability__in=filters['availability'])
                 if filters['uid']:
@@ -176,6 +174,8 @@ class SearchAPI(APIView):
             pnum = max(1, int(pnum))
             pnum = min(pnum, p.num_pages)
 
+        geodata = []
+
         for result in p.page(pnum):
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values
@@ -195,6 +195,33 @@ class SearchAPI(APIView):
                     owner = result.owner
                 except:
                     pass
+
+
+            try:
+                pt = {'short_id': result.short_id, 'title': result.title}
+                if 'box' in result.coverage_type:
+                    pt['coverage_type'] = 'region'
+                elif 'point' in result.coverage_type:
+                    pt['coverage_type'] = 'point'
+                else:
+                    continue
+                if isinstance(result.north, (int, float)):
+                    pt['north'] = result.north
+                if isinstance(result.east, (int, float)):
+                    pt['east'] = result.east
+                if isinstance(result.northlimit, (int, float)):
+                    pt['northlimit'] = result.northlimit
+                if isinstance(result.southlimit, (int, float)):
+                    pt['southlimit'] = result.southlimit
+                if isinstance(result.eastlimit, (int, float)):
+                    pt['eastlimit'] = result.eastlimit
+                if isinstance(result.westlimit, (int, float)):
+                    pt['westlimit'] = result.westlimit
+
+                geodata.append(pt)
+            except:
+                pass
+
 
             resources.append({
                 "title": result.title,
@@ -222,6 +249,7 @@ class SearchAPI(APIView):
         return Response({
             'time': (time.time() - start),
             'resources': json.dumps(resources),
+            'geodata': json.dumps(geodata),
             'rescount': p.count,
             'pagecount': p.num_pages,
             'perpage': self.perpage

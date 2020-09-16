@@ -239,7 +239,7 @@ export default {
       pagedisp: 1, // page being displayed
       perpage: 0,
       pagecount: 0,
-      geoloaded: false, // endpoint called and retrieved geo data for all resources
+      geoloaded: true, // endpoint called and retrieved geo data for all resources
       googMarkers: [],
       uidFilter: [],
       countAuthors: {},
@@ -296,11 +296,11 @@ export default {
       this.resloaded = this.resources.length > 0;
       this.setAllMarkers();
     },
-    geodata() {
-      if (this.geodata.length > 0) {
-        this.geoloaded = true;
-      }
-    },
+    // geodata() {
+    //   if (this.geodata.length > 0) {
+    //     this.geoloaded = true;
+    //   }
+    // },
     startdate() {
       this.searchClick();
     },
@@ -320,7 +320,7 @@ export default {
     }
     this.searchClick();
     this.filterBuilder();
-    this.loadGeo();
+    // this.loadGeo();
   },
   methods: {
     searchClick(paging) { // paging flag to skip the page reset after data retrieval
@@ -358,6 +358,7 @@ export default {
               this.rescount = response.data.rescount;
               this.perpage = response.data.perpage;
               this.pagedisp = this.pagenum;
+              this.geodata = JSON.parse(response.data.geodata);
               document.body.style.cursor = 'default';
             } catch (e) {
               console.log(`Error parsing discoverapi JSON: ${e}`);
@@ -374,30 +375,30 @@ export default {
       this.searchtext = '';
       this.searchClick();
     },
-    loadGeo() {
-      const startd = new Date();
-      document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { geo: 'load' } })
-        .then((response) => {
-          if (response) {
-            try {
-              this.geodata = JSON.parse(response.data.geo);
-              console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
-              this.geoloaded = true;
-              document.body.style.cursor = 'default';
-            } catch (e) {
-              console.log(`Error parsing discoverapi JSON: ${e}`);
-              this.geoloaded = false;
-              document.body.style.cursor = 'default';
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-          this.geoloaded = false;
-          document.body.style.cursor = 'default';
-        });
-    },
+    // loadGeo() {
+    //   const startd = new Date();
+    //   document.body.style.cursor = 'wait';
+    //   axios.get('/discoverapi/', { params: { geo: 'load' } })
+    //     .then((response) => {
+    //       if (response) {
+    //         try {
+    //           this.geodata = JSON.parse(response.data.geo);
+    //           console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
+    //           this.geoloaded = true;
+    //           document.body.style.cursor = 'default';
+    //         } catch (e) {
+    //           console.log(`Error parsing discoverapi JSON: ${e}`);
+    //           this.geoloaded = false;
+    //           document.body.style.cursor = 'default';
+    //         }
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+    //       this.geoloaded = false;
+    //       document.body.style.cursor = 'default';
+    //     });
+    // },
     filterBuilder() {
       const startd = new Date();
       axios.get('/discoverapi/', {
@@ -460,7 +461,7 @@ export default {
       //   all = true;
       // }
       const all = false;
-      if (this.geoloaded && document.getElementById('map-view').style.display === 'block') {
+      if (document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line
         let geocoords = this.geodata;
         if (!all) {
