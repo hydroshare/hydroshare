@@ -63,39 +63,39 @@ class SearchAPI(APIView):
 
         sqs = SearchQuerySet().all()
 
-        if request.GET.get('geo'):
-            geodata = []
-
-            for result in sqs:
-                try:
-                    pt = {'short_id': result.short_id, 'title': result.title}
-                    if 'box' in result.coverage_type:
-                        pt['coverage_type'] = 'region'
-                    elif 'point' in result.coverage_type:
-                        pt['coverage_type'] = 'point'
-                    else:
-                        continue
-                except TypeError:
-                    continue
-
-                if isinstance(result.north, (int, float)):
-                    pt['north'] = result.north
-                if isinstance(result.east, (int, float)):
-                    pt['east'] = result.east
-                if isinstance(result.northlimit, (int, float)):
-                    pt['northlimit'] = result.northlimit
-                if isinstance(result.southlimit, (int, float)):
-                    pt['southlimit'] = result.southlimit
-                if isinstance(result.eastlimit, (int, float)):
-                    pt['eastlimit'] = result.eastlimit
-                if isinstance(result.westlimit, (int, float)):
-                    pt['westlimit'] = result.westlimit
-
-                geodata.append(pt)
-            return Response({
-                'time': (time.time() - start),
-                'geo': json.dumps(geodata)
-            })
+        # if request.GET.get('geo'):
+        #     geodata = []
+        #
+        #     for result in sqs:
+        #         try:
+        #             pt = {'short_id': result.short_id, 'title': result.title}
+        #             if 'box' in result.coverage_type:
+        #                 pt['coverage_type'] = 'region'
+        #             elif 'point' in result.coverage_type:
+        #                 pt['coverage_type'] = 'point'
+        #             else:
+        #                 continue
+        #         except TypeError:
+        #             continue
+        #
+        #         if isinstance(result.north, (int, float)):
+        #             pt['north'] = result.north
+        #         if isinstance(result.east, (int, float)):
+        #             pt['east'] = result.east
+        #         if isinstance(result.northlimit, (int, float)):
+        #             pt['northlimit'] = result.northlimit
+        #         if isinstance(result.southlimit, (int, float)):
+        #             pt['southlimit'] = result.southlimit
+        #         if isinstance(result.eastlimit, (int, float)):
+        #             pt['eastlimit'] = result.eastlimit
+        #         if isinstance(result.westlimit, (int, float)):
+        #             pt['westlimit'] = result.westlimit
+        #
+        #         geodata.append(pt)
+        #     return Response({
+        #         'time': (time.time() - start),
+        #         'geo': json.dumps(geodata)
+        #     })
 
         if request.GET.get('filterbuilder'):
             sqs = SearchQuerySet().facet('author')
@@ -197,13 +197,12 @@ class SearchAPI(APIView):
                     owner = result.owner
                 except:
                     pass
-            pt = None
+            pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
-                pt = {'short_id': result.short_id, 'title': result.title}
                 if 'box' in result.coverage_type:
-                    pt['coverage_type'] = 'region'
+                    pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'region'}
                 elif 'point' in result.coverage_type:
-                    pt['coverage_type'] = 'point'
+                    pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'point'}
                 else:
                     continue
                 if isinstance(result.north, (int, float)):
@@ -241,8 +240,6 @@ class SearchAPI(APIView):
                 "short_id": result.short_id,
                 "geo": pt
             })
-        # gids = [x['short_id'] for x in geodata]
-        # resources = [x for x in resources if x['short_id'] in gids]
 
         if sort == 'title':
             resources = sorted(resources, key=lambda k: k['title'].lower())
