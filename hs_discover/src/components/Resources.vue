@@ -192,7 +192,7 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td>
+                        <td>{{entry.geo.east}}
                             <img :src="resIconName[entry.type]" style="cursor:pointer" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover style="cursor:pointer"
@@ -290,6 +290,12 @@ export default {
     datePick: DatePick,
   },
   computed: {
+    filteredResources() {
+      if (this.mapmode === 'display:block') {
+        return this.resources.filter(element => this.geodata.indexOf(element.short_id) > -1);
+      }
+      return this.resources;
+    },
   },
   watch: {
     resources() {
@@ -343,6 +349,7 @@ export default {
             availability: this.availabilityFilter,
             uid: this.uidFilter,
             date: [this.startdate, this.enddate],
+            geofilter: this.mapmode === 'display:block',
           },
         },
       })
@@ -453,7 +460,7 @@ export default {
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
-      // this.searchClick();
+      this.searchClick();
     },
     setAllMarkers() {
       // let all;

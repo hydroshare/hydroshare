@@ -148,6 +148,9 @@ class SearchAPI(APIView):
                     sqs = sqs.filter(availability__in=filters['availability'])
                 if filters['uid']:
                     sqs = sqs.filter(short_id__in=filters['uid'])
+                if filters['geofilter']:
+                    sqs = sqs.filter(north__lte='0')
+                    sqs = sqs.filter_or(north__gte='0')
                 if filters['date']:
                     # (searchdate.start < resource_temporal.start < searchdate.end)
                     # or (resource_temporal.start < searchdate.start < resource_temporal.end)
@@ -195,8 +198,7 @@ class SearchAPI(APIView):
                     owner = result.owner
                 except:
                     pass
-
-
+            pt = None
             try:
                 pt = {'short_id': result.short_id, 'title': result.title}
                 if 'box' in result.coverage_type:
@@ -222,7 +224,6 @@ class SearchAPI(APIView):
             except:
                 pass
 
-
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,
@@ -239,7 +240,10 @@ class SearchAPI(APIView):
                 "created": result.created.isoformat(),
                 "modified": result.modified.isoformat(),
                 "short_id": result.short_id,
+                "geo": pt
             })
+        # gids = [x['short_id'] for x in geodata]
+        # resources = [x for x in resources if x['short_id'] in gids]
 
         if sort == 'title':
             resources = sorted(resources, key=lambda k: k['title'].lower())
