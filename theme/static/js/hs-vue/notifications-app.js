@@ -270,7 +270,7 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource delete":
-                        if (task.status === "Completed" && task.payload) {
+                        if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
                         }
                         break;
@@ -282,6 +282,8 @@ $(document).ready(function () {
                     default:
                         break;
                 }
+                if (task.status === 'progress')
+                    vue.scheduleCheck();
             },
             registerTask: function (task) {
                 let vue = this;
