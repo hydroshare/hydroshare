@@ -35,7 +35,6 @@ from autocomplete_light import shortcuts as autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
-from hs_collection_resource.models import CollectionDeletedResource
 
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
@@ -724,7 +723,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(task_dict)
     else:
         try:
-            hydroshare.delete_resource(shortkey)
+            hydroshare.delete_resource(shortkey, request_username=user.username)
             return HttpResponseRedirect('/my-resources/')
         except ValidationError as ex:
             request.session['validation_error'] = str(ex)

@@ -840,7 +840,7 @@ def update_science_metadata(pk, metadata, user):
     resource.update_public_and_discoverable()  # set to False if necessary
 
 
-def delete_resource(pk):
+def delete_resource(pk, request_username=None):
     """
     Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an
     administrator to perform this function. The operation removes the resource from further
@@ -867,7 +867,7 @@ def delete_resource(pk):
     Note:  Only HydroShare administrators will be able to delete formally published resource
     """
     from hs_core.tasks import delete_resource_task
-    delete_resource_task(pk)
+    delete_resource_task(pk, request_username=request_username)
     return pk
 
 
