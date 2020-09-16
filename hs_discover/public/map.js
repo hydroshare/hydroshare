@@ -95,7 +95,7 @@
       });
       const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
       infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
-        lat: ${location.lat} lng: ${location.lng}`);
+        lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
       marker.addListener('click', () => {
         infowindow.open(exports.map, marker);
       });
@@ -111,7 +111,6 @@
     // googMarkers.forEach(marker => console.log(marker));
     googMarkers.forEach(marker => bounds.extend(marker.position));
     exports.map.fitBounds(bounds);
-    console.log('moved')
   };
 
   const highlightMarker = (hsid) => {

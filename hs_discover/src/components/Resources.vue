@@ -1,6 +1,6 @@
 <template>
   <div><input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="showMap"><!-- displayMap defined in map.js --><br/><br/>
+                v-on:click="showMap"><!-- displayMap defined in map.js --><img :style="mapmode" src="/static/img/globe.png" height="25" width="25" v-b-tooltip.hover title="Map mode active: searching, filtering, sorting, paging will be updated seamlessles in the map"><br/><br/>
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -198,7 +198,7 @@
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/img/globe.png" height="25" width="25" >
+                            <img v-if="entry.geo" src="/static/img/globe.png" height="25" width="25">
                         </td>
                         <td>
                             <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{entry.title}}</a>
