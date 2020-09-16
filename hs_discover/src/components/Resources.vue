@@ -10,9 +10,10 @@
     <div id="resources-main" class="row">
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            «Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
-                min="1" :max="pagecount"> of {{pagecount}}»
-             «results {{Math.max(0, pagedisp * perpage - perpage + 1)}} to {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} » <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>
+            Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                min="1" :max="pagecount"> of {{pagecount}}
+              &nbsp;&nbsp;&nbsp;<b>|</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+<!--          <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>-->
              <br/>
         </div>
         <div class="col-xs-3" id="facets">
@@ -25,7 +26,7 @@
                         <div id="headingDate" class="panel-heading">
                             <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
                                 class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
-                                Filter by Date</a>
+                                Filter by Temporal Coverage</a>
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
@@ -300,7 +301,10 @@ export default {
   watch: {
     resources() {
       this.resloaded = this.resources.length > 0;
-      this.setAllMarkers();
+      if (this.mapmode === 'display:block') {
+        this.setAllMarkers();
+        gotoBounds(); // eslint-disable-line
+      }
     },
     // geodata() {
     //   if (this.geodata.length > 0) {
@@ -316,7 +320,7 @@ export default {
     pagenum() {
       if (this.pagenum) {
         this.pagenum = Math.max(1, this.pagenum);
-        this.pagenum = Math.min(this.pagenum, this.pagecount);
+        this.pagenum = Math.min(this.pagenum, this.pagecount)
       }
     },
   },

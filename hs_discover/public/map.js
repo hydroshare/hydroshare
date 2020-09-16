@@ -106,6 +106,14 @@
     document.body.style.cursor = 'default';
   };
 
+  const gotoBounds = () => {
+    const bounds = new google.maps.LatLngBounds();
+    // googMarkers.forEach(marker => console.log(marker));
+    googMarkers.forEach(marker => bounds.extend(marker.position));
+    exports.map.fitBounds(bounds);
+    console.log('moved')
+  };
+
   const highlightMarker = (hsid) => {
     const loc = googMarkers.filter(x => x.hsUid === hsid)[0];
     pois.forEach(x => x.setMap(null));
@@ -162,5 +170,5 @@
   exports.createBatchMarkers = createBatchMarkers; // eslint-disable-line
   exports.toggleMap = toggleMap; // eslint-disable-line
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
-  exports.highlightMarker = highlightMarker; // eslint-disable-line
+  exports.gotoBounds = gotoBounds; // eslint-disable-line
 })(this.window = this.window || {});

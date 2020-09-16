@@ -149,8 +149,7 @@ class SearchAPI(APIView):
                 if filters['uid']:
                     sqs = sqs.filter(short_id__in=filters['uid'])
                 if filters['geofilter']:
-                    sqs = sqs.filter(north__lte='0')
-                    sqs = sqs.filter_or(north__gte='0')
+                    sqs = sqs.filter(north__range=[-90, 90])
                 if filters['date']:
                     # (searchdate.start < resource_temporal.start < searchdate.end)
                     # or (resource_temporal.start < searchdate.start < resource_temporal.end)
