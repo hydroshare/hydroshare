@@ -39,6 +39,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         with zipfile.ZipFile(self.test_bag_path, 'r') as zip_ref:
             zip_ref.extractall(self.extracted_directory)
+        self.extracted_directory = os.path.join(self.extracted_directory, 'test_resource_metadata_files')
 
     def tearDown(self):
         super(TestCreateResource, self).tearDown()
@@ -93,7 +94,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                 self.assertEquals(new_triple, original_triple, "Ingested resource metadata does not match original")
 
         compare_metadatas(res.metadata.get_xml(), "resourcemetadata.xml")
-        print(res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml())
+
         compare_metadatas(res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
                           "test_meta.xml")
         compare_metadatas(res.get_logical_files(FileSetLogicalFile.type_name())[0].metadata.get_xml(),

@@ -308,12 +308,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             self.logical_file.save()
         for object in graph.objects(subject=subject, predicate=DC.subject):
             self.keywords.append(object.value)
-        self.extra_metadata.clear()
+        extra_metadata = {}
         for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
             key = graph.value(subject=o, predicate=HSTERMS.key).value
             value = graph.value(subject=o, predicate=HSTERMS.value).value
-            self.extra_metadata[key] = value
-
+            extra_metadata[key] = value
+        self.extra_metadata = copy.deepcopy(extra_metadata)
         self.save()
 
     def get_rdf_graph(self):

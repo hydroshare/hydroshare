@@ -1,5 +1,5 @@
 """Declare critical models for Hydroshare hs_core app."""
-
+import copy
 import os.path
 import json
 import arrow
@@ -3802,14 +3802,14 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     def ingest_metadata(self, graph):
         super(CoreMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)
-
-        self.resource.extra_metadata.clear()
-        for extendedMetadata_subject in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
-            key = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.key))
-            value = str(graph.value(subject=extendedMetadata_subject, predicate=HSTERMS.value))
-            self.resource.extra_metadata[key] = value
-
-        self.resource.save()
+        extra_metadata = {}
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            extra_metadata[key] = value
+        res = self.resource
+        res.extra_metadata = copy.deepcopy(extra_metadata)
+        res.save()
 
     def get_rdf_graph(self):
         graph = super(CoreMetaData, self).get_rdf_graph()
@@ -3823,7 +3823,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
-
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
