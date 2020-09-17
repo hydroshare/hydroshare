@@ -8,7 +8,7 @@
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
-        <div class="col-xs-12" id="resultsdisp">
+        <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
             <br/>
             Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
@@ -180,8 +180,7 @@
         <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
-                <p id="map-message" style="display:none">Select area of interest on the map then click 'Filter by Map View'</p>
-                <p v-if="(!resources.length) && resloaded">Too many filter selections: no resources match those restrictions</p>
+              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length || ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length || availabilityFilter.length)"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table">
                     <thead>
@@ -554,19 +553,23 @@ export default {
         width: 235px;
     }
     .table-wrapper {
-        margin-top: 0px;
+        margin-top: 0;
     }
     .table-hover {
-        margin-top: 0px;
+        margin-top: 0;
     }
     .checkbox {
-
+        /*override older version of bootstrap styling*/
     }
     .mapdisp {
-        right: 0px;
+        right: 0;
+    }
+    .table-message {
+        position: absolute;
+        left: 100px;
     }
     #resultsdisp {
-      left: 300px;
+        left: 300px;
     }
     #page-number {
         width: 60px;
