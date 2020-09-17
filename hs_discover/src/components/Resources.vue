@@ -12,7 +12,8 @@
             <br/>
             Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
-              &nbsp;&nbsp;&nbsp;<b>|</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}} <img :style="mapmode" src="/static/img/globe.png" height="25" width="25" v-b-tooltip.hover title="Map mode active: searching, filtering, sorting, paging will be updated seamlessles in the map">
+              &nbsp;&nbsp;&nbsp;<b>\</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+<!--          <img :style="mapmode" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Map mode active: searching, filtering, sorting, paging will be updated seamlessles in the map">-->
 <!--          <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>-->
              <br/>
         </div>
@@ -198,7 +199,7 @@
                                 :title="entry.type" :alt="entry.type">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover style="cursor:pointer"
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/img/globe.png" height="25" width="25">
+                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
                         </td>
                         <td>
                             <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{entry.title}}</a>
@@ -315,7 +316,7 @@ export default {
     pagenum() {
       if (this.pagenum) {
         this.pagenum = Math.max(1, this.pagenum);
-        this.pagenum = Math.min(this.pagenum, this.pagecount)
+        this.pagenum = Math.min(this.pagenum, this.pagecount);
       }
     },
   },
