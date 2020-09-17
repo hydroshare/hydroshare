@@ -301,11 +301,6 @@ export default {
         gotoBounds(); // eslint-disable-line
       }
     },
-    // geodata() {
-    //   if (this.geodata.length > 0) {
-    //     this.geoloaded = true;
-    //   }
-    // },
     startdate() {
       this.searchClick();
     },
@@ -339,14 +334,13 @@ export default {
           asc: this.sortDir,
           cat: this.searchcategory,
           pnum: this.pagenum,
-          filterby: {
+          filter: {
             author: this.authorFilter,
             owner: this.ownerFilter,
             subject: this.subjectFilter,
             contributor: this.contributorFilter,
             type: this.typeFilter,
             availability: this.availabilityFilter,
-            uid: this.uidFilter,
             date: [this.startdate, this.enddate],
             geofilter: this.mapmode === 'display:block',
           },

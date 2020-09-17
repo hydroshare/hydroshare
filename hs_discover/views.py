@@ -1,28 +1,20 @@
+import datetime
 import json
+import time
+import logging
+from collections import namedtuple
 
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import time, datetime
-from collections import namedtuple
+
+logger = logging.getLogger(__name__)
 
 DateRange = namedtuple('DateRange', ['start', 'end'])
-
-
-def date_overlaps(searchdate):
-    """
-    Expectation is the user is filtering for dates and looking for any kind of overlap in date
-    ranges of interest
-
-    :return:
-    """
-    resource_temporal = DateRange(start=datetime.date(2010, 1, 1), end=datetime.date(2015, 1, 1))
-
-    overlap = (searchdate.start < resource_temporal.start < searchdate.end) or (resource_temporal.start < searchdate.start < resource_temporal.end)
-    return overlap
 
 
 class SearchView(TemplateView):
@@ -41,61 +33,38 @@ class SearchAPI(APIView):
     def get(self, request, *args, **kwargs):
         """
         Primary endpoint for retrieving resources via the index
-        :param request:
-        :param args:
-        :param kwargs:
-        :return:
-                Values should never be empty string or None, instead return string "None" with str() call
-                "availability": list value, js will parse JSON as Array
-                "availabilityurl":
-                "type": single value, pass a string to REST client
-                "author": single value, pass a string to REST client first author
-                "creator: authors,
-                "contributor": list value, js will parse JSON as Array
-                "owner": list value, js will parse JSON as Array
-                "subject": list value, js will parse JSON as Array
-                "coverage_type": list point, period, ...
 
-        The reason for the weird name is the DataOne standard. The metadata was designed to be compliant with DataOne
+        Values should never be empty string or None, instead return string "None" with str() call
+        "availability": list value, js will parse JSON as Array
+        "availabilityurl":
+        "type": single value, pass a string to REST client
+        "author": single value, pass a string to REST client first author
+        "creator: authors,
+                The reason for the weird name is the DataOne standard. The metadata was designed to be compliant with DataOne
         standards. These standards do not contain an author field. Instead, the creator field represents authors.
+        "contributor": list value, js will parse JSON as Array
+        "owner": list value, js will parse JSON as Array
+        "subject": list value, js will parse JSON as Array
+        "coverage_type": list point, period, ...
+        :param request:
+            formed with querystrings q, asc, modified for the search term query, ascending/descending sort order,
+            and column name to sort by respectively
+            formed with request body key=filters value=JSON encoded filter requests. Example:
+            {
+                author: 'Anderson, Bob',
+                owner: 'Owner String',
+                subject: 'Subject String',
+                contributor: 'Contributor String',
+                type: 'this.typeFilter',
+                availability: 'this.availabilityFilter',
+                date: [this.startdate, this.enddate],
+                geofilter: false,
+            }
+        :return:
         """
         start = time.time()
 
         sqs = SearchQuerySet().all()
-
-        # if request.GET.get('geo'):
-        #     geodata = []
-        #
-        #     for result in sqs:
-        #         try:
-        #             pt = {'short_id': result.short_id, 'title': result.title}
-        #             if 'box' in result.coverage_type:
-        #                 pt['coverage_type'] = 'region'
-        #             elif 'point' in result.coverage_type:
-        #                 pt['coverage_type'] = 'point'
-        #             else:
-        #                 continue
-        #         except TypeError:
-        #             continue
-        #
-        #         if isinstance(result.north, (int, float)):
-        #             pt['north'] = result.north
-        #         if isinstance(result.east, (int, float)):
-        #             pt['east'] = result.east
-        #         if isinstance(result.northlimit, (int, float)):
-        #             pt['northlimit'] = result.northlimit
-        #         if isinstance(result.southlimit, (int, float)):
-        #             pt['southlimit'] = result.southlimit
-        #         if isinstance(result.eastlimit, (int, float)):
-        #             pt['eastlimit'] = result.eastlimit
-        #         if isinstance(result.westlimit, (int, float)):
-        #             pt['westlimit'] = result.westlimit
-        #
-        #         geodata.append(pt)
-        #     return Response({
-        #         'time': (time.time() - start),
-        #         'geo': json.dumps(geodata)
-        #     })
 
         if request.GET.get('filterbuilder'):
             sqs = SearchQuerySet().facet('author')
@@ -129,43 +98,48 @@ class SearchAPI(APIView):
             q = request.GET.get('q')
             sqs = sqs.filter(content=q)  # .boost('keyword', 2.0)
 
-        if request.GET.get('filterby'):
-            filterby = request.GET.get('filterby')
-            try:
-                filters = json.loads(filterby)
-                if filters['author']:
-                    sqs = sqs.filter(author__in=filters['author'])
-                if filters['owner']:
-                    for owner in filters['owner']:
-                        sqs = sqs.filter(owner__in=owner)
-                if filters['subject']:
-                    sqs = sqs.filter(subject__in=filters['subject'])
-                if filters['contributor']:
-                    sqs = sqs.filter(contributor__in=filters['contributor'])
-                if filters['type']:
-                    sqs = sqs.filter(resource_type__in=list(filters['type']))
-                if filters['availability']:
-                    sqs = sqs.filter(availability__in=filters['availability'])
-                if filters['uid']:
-                    sqs = sqs.filter(short_id__in=filters['uid'])
-                if filters['geofilter']:
-                    sqs = sqs.filter(north__range=[-90, 90])
-                if filters['date']:
-                    # (searchdate.start < resource_temporal.start < searchdate.end)
-                    # or (resource_temporal.start < searchdate.start)
-                    try:
-                        datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
-                                               end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
+        try:
+            qs = request.query_params
+            filters = json.loads(qs.get('filter'))
 
-                        # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
-                        # sqs = sqs.filter(start_date__gte=datefilter.start).filter_and(start_date__lte=datefilter.end).filter_or(datefilter)
-                        # sqs = sqs.filter(start_date__gte=datefilter.start).filter(start_date__lte=datefilter.end)#.filter_or(end_data__lte=datefilter.start)
-                        sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
-                    except ValueError as e:
-                        print('Not all data information provided or invalid value sent - {}'.format(e))
+            if filters.get('author'):
+                sqs = sqs.filter(author__in=filters['author'])
+            if filters.get('owner'):
+                for owner in filters['owner']:
+                    sqs = sqs.filter(owner__in=owner)
+            if filters.get('subject'):
+                sqs = sqs.filter(subject__in=filters['subject'])
+            if filters.get('contributor'):
+                sqs = sqs.filter(contributor__in=filters['contributor'])
+            if filters.get('type'):
+                sqs = sqs.filter(resource_type__in=list(filters['type']))
+            if filters.get('availability'):
+                sqs = sqs.filter(availability__in=filters['availability'])
+            if filters.get('geofilter'):
+                sqs = sqs.filter(north__range=[-90, 90])
+            if filters.get('date'):
+                # (searchdate.start < resource_temporal.start < searchdate.end)
+                # or (resource_temporal.start < searchdate.start)
+                try:
+                    datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
+                                           end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
 
-            except Exception as ex:
-                print('Invalid filter data {} - {}'.format(filterby, ex))
+                    # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
+                    sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
+                except ValueError as e:
+                    pass  # ignore bad values and don't filter which is the correct action
+
+        except json.JSONDecodeError as parse_ex:
+            return JsonResponse({'message': 'Filter JSON parsing error - {}'.format(str(parse_ex)),
+                                 'received': request.query_params}, status=400)
+        except KeyError as key_ex:
+            return JsonResponse({'message': 'Missing filter attribute {}'.format(str(key_ex)),
+                                'received': request.query_params}, status=404)
+
+        except Exception as gen_ex:
+            logger.debug('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
+            return JsonResponse({'message': '{}'.format('{}: server error. Contact a server administrator.'.format(type(gen_ex)))},
+                                status=404)
 
         sqs = sqs.order_by(sort)
 
@@ -222,7 +196,7 @@ class SearchAPI(APIView):
 
                 geodata.append(pt)
             except:
-                print('Error assigning geographic data')
+                pass  # HydroShare production contains dirty data, this handling is in place, until data cleaned
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,
@@ -247,11 +221,11 @@ class SearchAPI(APIView):
         elif sort == '-title':
             resources = sorted(resources, key=lambda k: k['title'].lower(), reverse=True)
 
-        return Response({
+        return JsonResponse({
             'time': (time.time() - start),
             'resources': json.dumps(resources),
             'geodata': json.dumps(geodata),
             'rescount': p.count,
             'pagecount': p.num_pages,
             'perpage': self.perpage
-        })
+        }, status=200)
