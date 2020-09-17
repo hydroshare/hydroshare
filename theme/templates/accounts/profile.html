@@ -414,7 +414,7 @@
                                             {#        State       #}
                                             <fieldset>
                                                 <label>State/Province *</label>
-                                                <input name="state" class="form-control form-required" value="{{ profile.state }}">
+                                                <input name="state" class="form-control form-required" {% if  profile.state and profile.state != 'None' %} value="{{ profile.state }}" {% endif %}>
                                             </fieldset>
 
                                             {#        Date Joined       #}
