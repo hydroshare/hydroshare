@@ -137,11 +137,11 @@ class SearchAPI(APIView):
                     sqs = sqs.filter(author__in=filters['author'])
                 if filters['owner']:
                     for owner in filters['owner']:
-                        sqs = sqs.filter_or(owner__in=owner)
+                        sqs = sqs.filter(owner__in=owner)
                 if filters['subject']:
                     sqs = sqs.filter(subject__in=filters['subject'])
                 if filters['contributor']:
-                    sqs = sqs.filter_or(contributor__in=filters['contributor'])
+                    sqs = sqs.filter(contributor__in=filters['contributor'])
                 if filters['type']:
                     sqs = sqs.filter(resource_type__in=list(filters['type']))
                 if filters['availability']:
