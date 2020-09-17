@@ -292,12 +292,6 @@ export default {
     datePick: DatePick,
   },
   computed: {
-    filteredResources() {
-      if (this.mapmode === 'display:block') {
-        return this.resources.filter(element => this.geodata.indexOf(element.short_id) > -1);
-      }
-      return this.resources;
-    },
   },
   watch: {
     resources() {

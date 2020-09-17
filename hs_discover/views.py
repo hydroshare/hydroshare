@@ -150,19 +150,19 @@ class SearchAPI(APIView):
                     sqs = sqs.filter(short_id__in=filters['uid'])
                 if filters['geofilter']:
                     sqs = sqs.filter(north__range=[-90, 90])
-                # if filters['date']:
-                #     # (searchdate.start < resource_temporal.start < searchdate.end)
-                #     # or (resource_temporal.start < searchdate.start)
-                #     try:
-                #         datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
-                #                                end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
-                #
-                #         # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
-                #         # sqs = sqs.filter(start_date__gte=datefilter.start).filter_and(start_date__lte=datefilter.end).filter_or(datefilter)
-                #         sqs = sqs.filter(start_date__gte=datefilter.start).filter(start_date__lte=datefilter.end)#.filter_or(start_data__lte=datefilter.start)
+                if filters['date']:
+                    # (searchdate.start < resource_temporal.start < searchdate.end)
+                    # or (resource_temporal.start < searchdate.start)
+                    try:
+                        datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
+                                               end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
 
-                    # except ValueError as e:
-                    #     print('Not all data information provided or invalid value sent - {}'.format(e))
+                        # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
+                        # sqs = sqs.filter(start_date__gte=datefilter.start).filter_and(start_date__lte=datefilter.end).filter_or(datefilter)
+                        # sqs = sqs.filter(start_date__gte=datefilter.start).filter(start_date__lte=datefilter.end)#.filter_or(end_data__lte=datefilter.start)
+                        sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
+                    except ValueError as e:
+                        print('Not all data information provided or invalid value sent - {}'.format(e))
 
             except Exception as ex:
                 print('Invalid filter data {} - {}'.format(filterby, ex))
@@ -193,21 +193,20 @@ class SearchAPI(APIView):
                 try:
                     contributor = result.contributor
                 except:
-                    pass
+                    print('Error assigning contributor')
 
             if result.owner is not None:
                 try:
                     owner = result.owner
                 except:
-                    pass
+                    print('Error assigning owner')
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
                 if 'box' in result.coverage_type:
                     pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'region'}
                 elif 'point' in result.coverage_type:
                     pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'point'}
-                else:
-                    continue
+
                 if isinstance(result.north, (int, float)):
                     pt['north'] = result.north
                 if isinstance(result.east, (int, float)):
@@ -223,8 +222,7 @@ class SearchAPI(APIView):
 
                 geodata.append(pt)
             except:
-                pass
-
+                print('Error assigning geographic data')
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,
