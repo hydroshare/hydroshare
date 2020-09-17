@@ -114,6 +114,8 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
+    if not hasattr(request, 'user'):
+        raise PermissionDenied
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
@@ -2914,6 +2916,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     def modified_time(self):
         return self.resource_file.storage.get_modified_time(self.resource_file.name)
 
+    @property
+    def checksum(self):
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+
     # TODO: write unit test
     @property
     def exists(self):
@@ -2968,7 +2974,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2978,7 +2984,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -3657,6 +3663,7 @@ class BaseResource(Page, AbstractResource):
 
         hs_term_dict["HS_RES_ID"] = self.short_id
         hs_term_dict["HS_RES_TYPE"] = self.resource_type
+        hs_term_dict.update(self.extra_metadata.items())
 
         return hs_term_dict
 

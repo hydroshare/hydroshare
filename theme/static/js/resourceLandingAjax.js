@@ -1454,9 +1454,8 @@ function updateResourceSpatialCoverage(spatialCoverage) {
             update_url = "/hsapi/_internal/" + res_short_id + "/coverage/add-metadata/";
         }
         $form.attr('action', update_url);
-        var $id_type_div = $("#div_id_type");
-        var $point_radio = $id_type_div.find("input[value='point']");
-        var $box_radio = $id_type_div.find("input[value='box']");
+        var $point_radio = $("#id_type_2");
+        var $box_radio = $("#id_type_1");
         var resourceType = RES_TYPE;
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {

@@ -5,9 +5,10 @@ Note: robot_detection needs to be updated periodically (possible inside the Dock
 """
 
 import robot_detection
+from django.utils.deprecation import MiddlewareMixin
 
 
-class RobotFilter:
+class RobotFilter(MiddlewareMixin):
     """Process request and apply is_human field if a robot is detected."""
 
     def process_request(self, request):
