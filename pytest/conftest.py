@@ -15,7 +15,7 @@ def resource_with_metadata():
     """Resource with metadata for testing"""
     rtype = 'CompositeResource'
     res_uuid = str(uuid.uuid4())
-    title = 'aaaaaaaa {}'.format(res_uuid)
+    title = 'aaaaaaaaaa veryuniqueword'
     metadata = []
     metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
                                                               'end': '12/12/2010'}}})
@@ -86,5 +86,8 @@ def resource_with_metadata():
         metadata=metadata,
         files=(open('pytest.ini', 'rb'),)
     )
-    yield res_uuid
+    _res.raccess.public = True
+    # _res.metadata.description.abstract = "Test abstract for short_id {} and named {}".format(_res.short_id, _res.title)
+    _res.keywords_string = "keyword123"
+    yield _res.short_id  # this is the elegant teardown pattern for PyTest
     _res.delete()

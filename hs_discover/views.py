@@ -128,6 +128,8 @@ class SearchAPI(APIView):
                     sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
                 except ValueError as e:
                     pass  # ignore bad values and don't filter which is the correct action
+        except TypeError as type_ex:
+            pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
 
         except json.JSONDecodeError as parse_ex:
             return JsonResponse({'message': 'Filter JSON parsing error - {}'.format(str(parse_ex)),
