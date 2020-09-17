@@ -150,16 +150,19 @@ class SearchAPI(APIView):
                     sqs = sqs.filter(short_id__in=filters['uid'])
                 if filters['geofilter']:
                     sqs = sqs.filter(north__range=[-90, 90])
-                if filters['date']:
-                    # (searchdate.start < resource_temporal.start < searchdate.end)
-                    # or (resource_temporal.start < searchdate.start < resource_temporal.end)
-                    try:
-                        datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
-                                               end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
-                        sqs = sqs.filter(start_date__gte=datefilter.start).filter_and(start_date__lte=datefilter.end)
+                # if filters['date']:
+                #     # (searchdate.start < resource_temporal.start < searchdate.end)
+                #     # or (resource_temporal.start < searchdate.start)
+                #     try:
+                #         datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
+                #                                end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
+                #
+                #         # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
+                #         # sqs = sqs.filter(start_date__gte=datefilter.start).filter_and(start_date__lte=datefilter.end).filter_or(datefilter)
+                #         sqs = sqs.filter(start_date__gte=datefilter.start).filter(start_date__lte=datefilter.end)#.filter_or(start_data__lte=datefilter.start)
 
-                    except ValueError as e:
-                        print('Not all data information provided or invalid value sent - {}'.format(e))
+                    # except ValueError as e:
+                    #     print('Not all data information provided or invalid value sent - {}'.format(e))
 
             except Exception as ex:
                 print('Invalid filter data {} - {}'.format(filterby, ex))

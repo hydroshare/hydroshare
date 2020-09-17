@@ -13,9 +13,9 @@ from hs_labels.models import UserLabels
 @pytest.fixture(scope="function")
 def resource_with_metadata():
     """Resource with metadata for testing"""
-    rtype = 'GenericResource'
+    rtype = 'CompositeResource'
     res_uuid = str(uuid.uuid4())
-    title = 'Resource {}'.format(res_uuid)
+    title = 'aaaaaaaa {}'.format(res_uuid)
     metadata = []
     metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
                                                               'end': '12/12/2010'}}})
@@ -84,7 +84,7 @@ def resource_with_metadata():
         owner=user,
         title=title,
         metadata=metadata,
-        files=(open('assets/cea.tif', 'rb'),)
+        files=(open('pytest.ini', 'rb'),)
     )
     yield res_uuid
     _res.delete()
