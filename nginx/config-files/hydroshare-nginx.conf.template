@@ -51,6 +51,10 @@ server {
     if ($need_rewrite = 11) {
         rewrite ^ http://FQDN_OR_IP$request_uri permanent;
     }
+    
+    sendfile on;
+    sendfile_max_chunk 512k;
+    aio threads;
 
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;

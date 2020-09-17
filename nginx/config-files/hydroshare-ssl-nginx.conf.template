@@ -68,6 +68,10 @@ server {
         return 301 https://FQDN_OR_IP$request_uri;
     }
 
+    sendfile on;
+    sendfile_max_chunk 512k;
+    aio threads;
+
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
     error_log       /var/log/nginx/system.log notice;
