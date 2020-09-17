@@ -1766,7 +1766,7 @@ class Subject(AbstractMetaDataElement):
         sub.delete()
 
     def rdf_triples(self, subject, graph):
-        graph.add((subject, self.get_class_term(), URIRef(self.value)))
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):

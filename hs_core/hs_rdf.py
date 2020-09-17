@@ -8,7 +8,6 @@ from rdflib.plugins.serializers.rdfxml import XMLLANG, OWL_NS, XMLBASE
 from rdflib.plugins.serializers.xmlwriter import XMLWriter
 from rdflib.serializer import Serializer
 from rdflib.term import Literal, URIRef
-from rdflib.py3compat import b
 from rdflib.util import first
 
 HSTERMS = Namespace("http://hydroshare.org/terms/")
@@ -233,7 +232,7 @@ class HydroPrettyXMLSerializer(Serializer):
                 self.subject(subject, 1)
 
         writer.pop(RDF.RDF)
-        stream.write(b("\n"))
+        stream.write(b"\n")
 
         # Set to None so that the memory can get garbage collected.
         self.__serialized = None
