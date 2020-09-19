@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_access_control.models import PrivilegeCodes

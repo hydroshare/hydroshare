@@ -119,13 +119,11 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         executed_by
         metadata_json
         """
-        from hs_file_types import utils
 
         form_action = "/hsapi/_internal/{}/update-modelinstance-metadata/"
         form_action = form_action.format(self.logical_file.id)
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
         base_div, context = super(ModelInstanceFileMetaData, self).get_html_forms(render=False)
-        user = kwargs['user']
 
         def get_schema_based_form():
             json_form_action = "/hsapi/_internal/{}/update-modelinstance-metadata-json/"
