@@ -10,7 +10,8 @@ from .utils import get_model_program_aggregations
 
 class ModelInstanceMetadataValidationForm(forms.Form):
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
+        self.user = kwargs.pop('user')
+        self.resource = kwargs.pop('resource')
         super(ModelInstanceMetadataValidationForm, self).__init__(*args, **kwargs)
 
     has_model_output = forms.BooleanField(required=False)
@@ -22,12 +23,12 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         user_selected_mp_aggr = None
         # if a model program has been selected then this form would have the id of that aggregation
         if executed_by is not None and executed_by > 0:
-            user_mp_aggregations = get_model_program_aggregations(self.user)
-            user_selected_mp_aggr = [mp_aggr for mp_aggr in user_mp_aggregations if mp_aggr.id == executed_by]
+            mp_aggregations = self.resource.get_model_program_aggregations()
+            user_selected_mp_aggr = [mp_aggr for mp_aggr in mp_aggregations if mp_aggr.id == executed_by]
             if user_selected_mp_aggr:
                 user_selected_mp_aggr = user_selected_mp_aggr[0]
             else:
-                self.add_error("executed_by", "You don't have access to the selected model program aggregation")
+                self.add_error("executed_by", "Selected model program aggregation must be from the same resource")
         return user_selected_mp_aggr
 
     def clean_executed_by_url(self):

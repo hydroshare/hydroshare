@@ -995,7 +995,8 @@ def update_model_instance_metadata(request, file_type_id, **kwargs):
     logical_file = kwargs['logical_file']
     metadata = logical_file.metadata
     current_executed_by = metadata.executed_by
-    mi_validation_form = ModelInstanceMetadataValidationForm(request.POST, user=request.user)
+    mi_validation_form = ModelInstanceMetadataValidationForm(request.POST, user=request.user,
+                                                             resource=logical_file.resource)
 
     if not mi_validation_form.is_valid():
         err_messages = []
