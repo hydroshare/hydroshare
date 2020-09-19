@@ -255,20 +255,3 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='',
     except:
         if fail_feedback:
             raise
-
-
-def get_model_program_aggregations(user):
-    """Gets a list of model program aggregations that the user has access
-    :param  user: an instance of User
-    """
-    # first get a list of all composite resources the user has access to
-    composite_resources = user.uaccess.view_resources.filter(resource_type="CompositeResource")
-    # collect model aggregations from each of the composite resources
-    mp_aggregations = []
-    for res in composite_resources:
-        # need to get the typed resource
-        res = res.get_content_model()
-        mp_aggrs = res.get_model_program_aggregations()
-        if mp_aggrs:
-            mp_aggregations.extend(mp_aggrs)
-    return mp_aggregations
