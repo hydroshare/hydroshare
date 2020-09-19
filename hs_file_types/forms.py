@@ -1,11 +1,11 @@
 import json
-import jsonschema
-from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
+from urllib.request import Request, urlopen
 
+import jsonschema
 from django import forms
+
 from .models.model_program import ModelProgramResourceFileType
-from .utils import get_model_program_aggregations
 
 
 class ModelInstanceMetadataValidationForm(forms.Form):
