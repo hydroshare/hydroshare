@@ -242,7 +242,7 @@ class CompositeResource(BaseResource):
         if any of the sub-folders is a fileset aggregation, return False
         if any of the sub-folders is a model program aggregation, return False
         if any of the sub-folders is a model instance aggregation, return False
-        if any of the parent folders is a model program aggregation, return False
+        if any of the parent folders is a model program aggregation or model instance aggregation, return False
         otherwise, return True
         """
         return self._can_set_folder_to_mi_or_mp_aggregation(dir_path=dir_path, aggr_type="ModelProgram")
@@ -302,14 +302,6 @@ class CompositeResource(BaseResource):
             path = os.path.dirname(path)
 
         if parent_aggregation is not None:
-            if aggr_type == "ModelProgram":
-                if parent_aggregation.is_model_program:
-                    # avoid creating a model program aggregation inside a model program aggregation folder
-                    return False
-            else:
-                if parent_aggregation.is_model_program or parent_aggregation.is_model_instance:
-                    # avoid creating a model instance aggregation inside a model program/instance aggregation folder
-                    return False
             if parent_aggregation.is_fileset:
                 # check that all resource files under the target folder 'dir_path' are associated with fileset only
                 files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
@@ -319,16 +311,8 @@ class CompositeResource(BaseResource):
                     return all(res_file.has_logical_file and res_file.logical_file.is_fileset for
                                res_file in files_in_path)
                 return False
-            elif parent_aggregation.is_model_instance:
-                # check that all resource files under the target folder 'dir_path' are associated with model
-                # instance only
-                files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
-                if files_in_path and aggr_type == 'ModelProgram':
-                    # if all the resource files are associated with model instance then we can set the
-                    # folder to model program aggregation
-                    return all(res_file.has_logical_file and res_file.logical_file.is_model_instance for
-                               res_file in files_in_path)
-            return False
+            else:
+                return False
         else:
             # none of the parent folders represents an aggregation
             # check the files in the target path
@@ -337,16 +321,10 @@ class CompositeResource(BaseResource):
             # if none of the resource files in the target path has logical file then we can set the folder
             # to model program or model instance aggregation
             if files_in_path:
-                if aggr_type == "ModelProgram":
-                    # if none of the resource files in the target path has logical file then we can set the folder
-                    # to model program aggregation
-                    return not any(res_file.has_logical_file for res_file in files_in_path)
-                else:
-                    # if any of the files is part of a model instance aggr or fileset - folder can't be
-                    # set to model instance
-                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
-                                                                  res_file.logical_file.is_fileset) for
-                                   res_file in files_in_path)
+                # if any of the resource files is part of aggregation other than fileset aggregation, the folder
+                # can't be set to model based aggregation
+                return not any(res_file.has_logical_file and not res_file.logical_file.is_fileset for
+                               res_file in files_in_path)
 
             # path has no files - can't set the folder to aggregation
             return False
@@ -792,6 +770,7 @@ class CompositeResource(BaseResource):
             # nested model program aggregation is NOT allowed
             # model instance aggregation can contain model program aggregation
             if src_aggr is not None and (src_aggr.is_model_program or src_aggr.is_model_instance):
+                # src_aggr is a model based aggregation
                 if is_moving_file or is_moving_folder:
                     src_model_aggr = src_aggr
                     #  find if there is any model program/instance aggregation in the target path
@@ -799,29 +778,11 @@ class CompositeResource(BaseResource):
                     if tgt_model_aggr is not None:
                         if src_model_aggr.folder is None:
                             # moving a file based model program/model instance aggregation
-                            if tgt_model_aggr.is_model_program:
-                                # aggregation nesting is not allowed for model program aggregation
-                                return False
-                            else:
-                                # target aggregation folder is a model instance aggregation
-                                if src_aggr.is_model_instance:
-                                    # not allowed to move a model instance to another model instance
-                                    return False
-                                # can move a model program aggregation into model instance aggregation
-                                return True
+                            return False
 
                         # moving a folder based model program/instance aggregation
-                        if src_model_aggr.id == tgt_model_aggr.id:
-                            # moving folder within the same model/instance aggregation is allowed
-                            return True
-
-                        if tgt_model_aggr.is_model_program:
-                            # aggregation nesting is not allowed for model program aggregation
-                            return False
-                        else:
-                            # tgt model aggregation is a model instance aggregation
-                            # a model instance aggregation is not allowed to contain another model instance
-                            return not src_aggr.is_model_instance
+                        # moving folder within the same model program/instance aggregation is allowed
+                        return src_model_aggr.id == tgt_model_aggr.id
 
                     # target folder is either a normal folder or fileset folder - file or folder move is allowed
                     return True
@@ -834,8 +795,9 @@ class CompositeResource(BaseResource):
                     tgt_aggregation = self.get_model_aggregation_in_path(tgt_aggr_path)
                 if src_aggr is not None and tgt_aggregation is not None:
                     if tgt_aggregation.is_model_instance:
-                        # model instance can contains any aggregation except fileset or model instance aggregation
-                        if src_aggr.is_fileset or src_aggr.is_model_instance:
+                        # model instance can contains any aggregation except fileset or model instance
+                        # or model program aggregation
+                        if src_aggr.is_fileset or src_aggr.is_model_instance or src_aggr.is_model_program:
                             return False
                     return tgt_aggregation.can_contain_aggregations
                 elif tgt_aggregation is not None:
