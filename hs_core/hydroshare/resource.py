@@ -490,8 +490,13 @@ def create_resource(
         resource creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
-    :return: a new resource which is an instance of BaseResource with specificed resource_type.
+    :return: a new resource which is an instance of BaseResource with specified resource_type.
     """
+    if not __debug__:
+        if resource_type in ("ModelInstanceResource", "ModelProgramResource", "MODFLOWModelInstanceResource",
+                             "SWATModelInstanceResource"):
+            raise ValidationError("Resource type '{}' is no more supported for resource creation".format(resource_type))
+
     with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
