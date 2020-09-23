@@ -13,13 +13,9 @@
             Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
               &nbsp;&nbsp;&nbsp;<b>\</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-<!--          <img :style="mapmode" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Map mode active: searching, filtering, sorting, paging will be updated seamlessles in the map">-->
-<!--          <span v-bind:style="mapmode">{{geodata.length}} with geographic coordinates</span>-->
              <br/>
         </div>
         <div class="col-xs-3" id="facets">
-<!--            <input id="map-filter-button" type="button" v-bind:style="mapmode" class="btn btn-default mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="filterByMap"-->
-<!--                data-toggle="tooltip" title="Show list of resources that are located in the current map view">-->
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -77,7 +73,7 @@
                                     v-bind:key="owner">
                                     <span class="badge">{{owner[1]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner[0]">{{owner[0]}}
-                                        <input type="checkbox" class="faceted-selections" :value=owner
+                                        <input type="checkbox" class="faceted-selections" :value=owner[0]
                                             v-model.lazy="ownerFilter" :id="'owner-'+owner[0]" @change="searchClick">
                                     </label>
                                 </li>
@@ -320,7 +316,6 @@ export default {
     }
     this.searchClick();
     this.filterBuilder();
-    // this.loadGeo();
   },
   methods: {
     searchClick(paging) { // paging flag to skip the page reset after data retrieval
@@ -375,30 +370,6 @@ export default {
       this.searchtext = '';
       this.searchClick();
     },
-    // loadGeo() {
-    //   const startd = new Date();
-    //   document.body.style.cursor = 'wait';
-    //   axios.get('/discoverapi/', { params: { geo: 'load' } })
-    //     .then((response) => {
-    //       if (response) {
-    //         try {
-    //           this.geodata = JSON.parse(response.data.geo);
-    //           console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
-    //           this.geoloaded = true;
-    //           document.body.style.cursor = 'default';
-    //         } catch (e) {
-    //           console.log(`Error parsing discoverapi JSON: ${e}`);
-    //           this.geoloaded = false;
-    //           document.body.style.cursor = 'default';
-    //         }
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-    //       this.geoloaded = false;
-    //       document.body.style.cursor = 'default';
-    //     });
-    // },
     filterBuilder() {
       const startd = new Date();
       axios.get('/discoverapi/', {
@@ -456,10 +427,6 @@ export default {
       this.searchClick();
     },
     setAllMarkers() {
-      // let all;
-      // if (this.authorFilter === [] && this.subjectFilter === []) {
-      //   all = true;
-      // }
       const all = false;
       if (document.getElementById('map-view').style.display === 'block') {
         deleteMarkers(); // eslint-disable-line

@@ -2,30 +2,25 @@ import json
 import uuid
 
 import pytest
-from django.contrib.auth.models import User
 
 from hs_access_control.models import UserAccess
 from hs_core import hydroshare
 from hs_labels.models import UserLabels
+from django.contrib.auth.models import User, Group
 
 
-@pytest.mark.django_db
-@pytest.fixture(scope="function")
-def resource_with_metadata():
-    """Resource with metadata for testing"""
+def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=str(uuid.uuid4()), creator=str(uuid.uuid4())):
+    """A resource with sample entries that can be customized by tests"""
     rtype = 'CompositeResource'
-    res_uuid = str(uuid.uuid4())
-    title = 'aaaaaaaaaa veryuniqueword'
-    metadata = []
-    metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
-                                                              'end': '12/12/2010'}}})
+    metadata = [{'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
+                                                          'end': '12/12/2010'}}}]
     statement = 'This resource is shared under the Creative Commons Attribution CC BY.'
     url = 'http://creativecommons.org/licenses/by/4.0/'
     metadata.append({'rights': {'statement': statement, 'url': url}})
     metadata.append({'language': {'code': 'fre'}})
 
     # contributor
-    con_name = 'Mike Sundar'
+    con_name = contributor
     con_org = "USU"
     con_email = 'mike.sundar@usu.edu'
     con_address = "11 River Drive, Logan UT-84321, USA"
@@ -40,7 +35,7 @@ def resource_with_metadata():
                                      'identifiers': con_identifiers}})
 
     # creator
-    cr_name = 'John Smith'
+    cr_name = creator
     cr_org = "USU"
     cr_email = 'jsmith@gmail.com'
     cr_address = "101 Clarson Ave, Provo UT-84321, USA"
@@ -60,7 +55,7 @@ def resource_with_metadata():
     metadata.append({'source': {'derived_from': 'http://hydroshare.org/resource/0001'}})
 
     # identifier
-    metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
+    # metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
 
     # fundingagency
     agency_name = 'NSF'
@@ -70,12 +65,12 @@ def resource_with_metadata():
     metadata.append({'fundingagency': {'agency_name': agency_name, 'award_title': award_title,
                                        'award_number': award_number, 'agency_url': agency_url}})
 
-    user = User.objects.get(username='admin')
+    user = User.objects.get(username=username)
 
     user_access = UserAccess(user=user)
-    user_access.save()
+    # user_access.save()
     user_labels = UserLabels(user=user)
-    user_labels.save()
+    # user_labels.save()
 
     metadata = json.loads(json.dumps(metadata))
 
@@ -86,8 +81,43 @@ def resource_with_metadata():
         metadata=metadata,
         files=(open('pytest.ini', 'rb'),)
     )
-    _res.raccess.public = True
-    # _res.metadata.description.abstract = "Test abstract for short_id {} and named {}".format(_res.short_id, _res.title)
-    _res.keywords_string = "keyword123"
-    yield _res.short_id  # this is the elegant teardown pattern for PyTest
-    _res.delete()
+    return _res
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def sample_user():
+    hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+    user = hydroshare.create_account(
+                '{}@noreply.org'.format(str(uuid.uuid4())),
+                username='{}'.format(str(uuid.uuid4())),
+                first_name='First',
+                last_name='Last',
+                superuser=False,
+                groups=[]
+            )
+    yield user
+    user.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def public_resource_with_metadata():
+    resource = base_sample_resource()
+    resource.raccess.public = True
+    resource.keywords_string = str(uuid.uuid4())
+    resource.raccess.save()  # saves flag, doesn't necessarily re-index
+    resource.save()  # invokes re-indexing.
+    yield resource  # this is the elegant teardown pattern for PyTest
+    resource.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def private_resource_with_metadata(sample_user):
+    resource = base_sample_resource(username=sample_user.username)
+    resource.keywords_string = str(uuid.uuid4())
+    resource.raccess.save()
+    resource.save()
+    yield resource
+    resource.delete()

@@ -101,12 +101,11 @@ class SearchAPI(APIView):
         try:
             qs = request.query_params
             filters = json.loads(qs.get('filter'))
-
+            # filter values expect lists, for example discoverapi/?filter={"owner":["Firstname Lastname"]}
             if filters.get('author'):
                 sqs = sqs.filter(author__in=filters['author'])
             if filters.get('owner'):
-                for owner in filters['owner']:
-                    sqs = sqs.filter(owner__in=owner)
+                sqs = sqs.filter(owner__in=filters['owner'])
             if filters.get('subject'):
                 sqs = sqs.filter(subject__in=filters['subject'])
             if filters.get('contributor'):
@@ -118,8 +117,6 @@ class SearchAPI(APIView):
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])
             if filters.get('date'):
-                # (searchdate.start < resource_temporal.start < searchdate.end)
-                # or (resource_temporal.start < searchdate.start)
                 try:
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
                                            end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
@@ -134,13 +131,10 @@ class SearchAPI(APIView):
         except json.JSONDecodeError as parse_ex:
             return JsonResponse({'message': 'Filter JSON parsing error - {}'.format(str(parse_ex)),
                                  'received': request.query_params}, status=400)
-        except KeyError as key_ex:
-            return JsonResponse({'message': 'Missing filter attribute {}'.format(str(key_ex)),
-                                'received': request.query_params}, status=404)
 
         except Exception as gen_ex:
             logger.debug('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
-            return JsonResponse({'message': '{}'.format('{}: server error. Contact a server administrator.'.format(type(gen_ex)))},
+            return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'.format(type(gen_ex)))},
                                 status=404)
 
         sqs = sqs.order_by(sort)
@@ -164,6 +158,12 @@ class SearchAPI(APIView):
 
             if result.author:
                 author_link = result.author_url
+                author = str(result.author)
+            else:
+                if result.authors:
+                    author = result.authors[0]
+                else:
+                    author = 'None'
 
             if result.contributor is not None:
                 try:
@@ -205,7 +205,7 @@ class SearchAPI(APIView):
                 "availability": result.availability,
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
-                "author": str(result.author),
+                "author": author,
                 "authors": result.creator,
                 "contributor": contributor,
                 "author_link": author_link,
