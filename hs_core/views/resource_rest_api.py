@@ -180,7 +180,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
+class ResourceListCreate(generics.ListCreateAPIView):
 
     @swagger_auto_schema(request_body=serializers.ResourceCreateRequestValidator,
                          operation_description="Create a resource",
@@ -299,13 +299,8 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             filter_parms['type'] = list(filter_parms['type'])
 
         filter_parms['public'] = not self.request.user.is_authenticated()
-        filtered_res_list = []
 
-        for r in self.paginate_queryset(hydroshare.get_resource_list(**filter_parms)):
-            resource_list_item = self.resourceToResourceListItem(r)
-            filtered_res_list.append(resource_list_item)
-
-        return filtered_res_list
+        return hydroshare.get_resource_list(**filter_parms)
 
     # covers serialization of output from GET request
     def get_serializer_class(self):

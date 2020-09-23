@@ -1,6 +1,6 @@
-
+import json
 from collections import namedtuple
-
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 
@@ -151,6 +151,44 @@ class ResourceListItemSerializer(serializers.Serializer):
     science_metadata_url = serializers.URLField()
     resource_map_url = serializers.URLField()
     resource_url = serializers.URLField()
+
+    def to_representation(self, instance):
+        # URLs in metadata should be fully qualified.
+        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
+        site_url = hydroshare.utils.current_site_url()
+        bag_url = site_url + instance.bag_url
+        science_metadata_url = site_url + reverse('get_update_science_metadata', args=[instance.short_id])
+        resource_map_url = site_url + reverse('get_resource_map', args=[instance.short_id])
+        resource_url = site_url + instance.get_absolute_url()
+        coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
+                     for v in list(instance.metadata.coverages.values())]
+        authors = []
+        for c in instance.metadata.creators.all():
+            authors.append(c.name)
+        doi = None
+        if instance.raccess.published:
+            doi = "10.4211/hs.{}".format(instance.short_id)
+        return {'resource_type': instance.resource_type,
+                'resource_id': instance.short_id,
+                'resource_title': instance.metadata.title.value,
+                'abstract': instance.metadata.description.abstract,
+                'authors': authors,
+                'creator': instance.first_creator.name,
+                'doi': doi,
+                'public': instance.raccess.public,
+                'discoverable': instance.raccess.discoverable,
+                'shareable': instance.raccess.shareable,
+                'immutable': instance.raccess.immutable,
+                'published': instance.raccess.published,
+                'date_created': instance.created,
+                'date_last_updated': instance.last_updated,
+                'bag_url': bag_url,
+                'coverages': coverages,
+                'science_metadata_url': science_metadata_url,
+                'resource_map_url': resource_map_url,
+                'resource_url': resource_url,
+                'content_types': instance.aggregation_types}
+        return resource_list_item
 
 
 class ResourceCreatedSerializer(serializers.Serializer):
