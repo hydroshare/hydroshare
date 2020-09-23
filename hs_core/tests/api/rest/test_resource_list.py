@@ -351,13 +351,13 @@ class TestResourceList(HSRESTTestCase):
                                                                      "url": "http://www.google.com"}},
                                                          {"description": {"abstract": "myabstract"}}])
         gen_res_three = resource.create_resource('CompositeResource', self.user, 'Resource 3',
-                                               metadata=[{"rights": {"statement": "mystatement",
-                                                                     "url": "http://www.google.com"}},
-                                                         {"description": {"abstract": "myabstract"}}])
+                                                 metadata=[{"rights": {"statement": "mystatement",
+                                                                       "url": "http://www.google.com"}},
+                                                           {"description": {"abstract": "myabstract"}}])
         gen_res_four = resource.create_resource('CompositeResource', self.user, 'Resource 2',
-                                               metadata=[{"rights": {"statement": "mystatement",
-                                                                     "url": "http://www.google.com"}},
-                                                         {"description": {"abstract": "myabstract"}}])
+                                                metadata=[{"rights": {"statement": "mystatement",
+                                                                      "url": "http://www.google.com"}},
+                                                          {"description": {"abstract": "myabstract"}}])
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
