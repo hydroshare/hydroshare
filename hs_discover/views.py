@@ -155,6 +155,10 @@ class SearchAPI(APIView):
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
+            creator = 'None'
+
+            if result.creator:
+                creator = result.creator
 
             if result.author:
                 author_link = result.author_url
@@ -206,7 +210,7 @@ class SearchAPI(APIView):
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
                 "author": author,
-                "authors": result.creator,
+                "authors": creator,
                 "contributor": contributor,
                 "author_link": author_link,
                 "owner": owner,
