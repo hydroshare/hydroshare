@@ -190,9 +190,9 @@
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
                         <td>
-                            <img :src="resIconName[entry.type]" style="cursor:pointer" v-b-tooltip.hover
+                            <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type">
-                            <img :src="entry.availabilityurl" v-b-tooltip.hover style="cursor:pointer"
+                            <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
                         </td>
@@ -200,12 +200,12 @@
                             <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{entry.title}}</a>
                         </td>
                         <td>
-                            <a :href="entry.author_link" v-b-tooltip.hover target="_blank" style="cursor:pointer"
+                            <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`Authors: ${entry.authors} | Owner: ${entry.owner} | Contributors: ${entry.contributor}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td style="cursor:pointer" v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td style="cursor:pointer" v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                        <td v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
+                        <td v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>
