@@ -469,18 +469,6 @@ export default {
         createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls)); // eslint-disable-line
       }
     },
-    filterByMap() {
-      if (document.getElementById('map-view').style.display === 'block') {
-        this.uidFilter = window.visMarkers;
-        this.searchClick();
-      }
-    },
-    clearMapFilter() {
-      if (document.getElementById('map-view').style.display === 'block') {
-        this.uidFilter = [];
-        this.searchClick();
-      }
-    },
   },
 };
 </script>

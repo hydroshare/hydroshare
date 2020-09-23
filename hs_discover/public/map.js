@@ -146,7 +146,7 @@
     // https://stackoverflow.com/questions/29869261/google-map-search-box
     // const mapLegend = createLegend();
     // eslint-disable-next-line no-unused-vars
-    const searchBox = createSearcher();
+    // const searchBox = createSearcher();
     exports.map.addListener('bounds_changed', () => {
       const visMarkers = [];
       const bounds = exports.map.getBounds();
