@@ -188,7 +188,6 @@ class ResourceListItemSerializer(serializers.Serializer):
                 'resource_map_url': resource_map_url,
                 'resource_url': resource_url,
                 'content_types': instance.aggregation_types}
-        return resource_list_item
 
 
 class ResourceCreatedSerializer(serializers.Serializer):
