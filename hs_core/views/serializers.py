@@ -168,10 +168,13 @@ class ResourceListItemSerializer(serializers.Serializer):
         doi = None
         if instance.raccess.published:
             doi = "10.4211/hs.{}".format(instance.short_id)
+        description = ''
+        if instance.metadata.description:
+            description = instance.metadata.description.abstract
         return {'resource_type': instance.resource_type,
                 'resource_id': instance.short_id,
                 'resource_title': instance.metadata.title.value,
-                'abstract': instance.metadata.description.abstract,
+                'abstract': description,
                 'authors': authors,
                 'creator': instance.first_creator.name,
                 'doi': doi,
