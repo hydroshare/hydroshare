@@ -45,6 +45,3 @@ def test_filter_by_atribute(admin_client, public_resource_with_metadata, private
     assert djangoresponse.status_code == 200
     assert public_resource_with_metadata.short_id in short_ids
     assert private_resource_with_metadata.short_id not in short_ids
-
-
-

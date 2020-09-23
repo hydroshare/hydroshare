@@ -67,10 +67,10 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 
     user = User.objects.get(username=username)
 
-    user_access = UserAccess(user=user)
-    # user_access.save()
-    user_labels = UserLabels(user=user)
-    # user_labels.save()
+    # user_access = UserAccess(user=user)
+    # # user_access.save()
+    # user_labels = UserLabels(user=user)
+    # # user_labels.save()
 
     metadata = json.loads(json.dumps(metadata))
 

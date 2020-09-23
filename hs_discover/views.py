@@ -40,7 +40,8 @@ class SearchAPI(APIView):
         "type": single value, pass a string to REST client
         "author": single value, pass a string to REST client first author
         "creator: authors,
-                The reason for the weird name is the DataOne standard. The metadata was designed to be compliant with DataOne
+                The reason for the weird name is the DataOne standard. The metadata was designed to be compliant
+                with DataOne
         standards. These standards do not contain an author field. Instead, the creator field represents authors.
         "contributor": list value, js will parse JSON as Array
         "owner": list value, js will parse JSON as Array
@@ -134,8 +135,8 @@ class SearchAPI(APIView):
 
         except Exception as gen_ex:
             logger.debug('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
-            return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'.format(type(gen_ex)))},
-                                status=404)
+            return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
+                                                        .format(type(gen_ex)))}, status=404)
 
         sqs = sqs.order_by(sort)
 
