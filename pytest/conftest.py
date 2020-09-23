@@ -2,14 +2,13 @@ import json
 import uuid
 
 import pytest
-
-from hs_access_control.models import UserAccess
-from hs_core import hydroshare
-from hs_labels.models import UserLabels
 from django.contrib.auth.models import User, Group
 
+from hs_core import hydroshare
 
-def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=str(uuid.uuid4()), creator=str(uuid.uuid4())):
+
+def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=str(uuid.uuid4()),
+                         creator=str(uuid.uuid4())):
     """A resource with sample entries that can be customized by tests"""
     rtype = 'CompositeResource'
     metadata = [{'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
