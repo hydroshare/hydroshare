@@ -167,6 +167,8 @@ class SearchAPI(APIView):
             else:
                 if result.authors:
                     author = result.authors[0]
+                elif result.organization:
+                    author = result.organization
                 else:
                     author = 'None'
 
