@@ -33,35 +33,19 @@ class SearchAPI(APIView):
     def get(self, request, *args, **kwargs):
         """
         Primary endpoint for retrieving resources via the index
-
-        Values should never be empty string or None, instead return string "None" with str() call
+        Values should never be empty string or python None, instead return string "None" with str() call
         "availability": list value, js will parse JSON as Array
-        "availabilityurl":
+        "availabilityurl": single value, pass a string to REST client
         "type": single value, pass a string to REST client
         "author": single value, pass a string to REST client first author
         "creator: authors,
                 The reason for the weird name is the DataOne standard. The metadata was designed to be compliant
-                with DataOne
-        standards. These standards do not contain an author field. Instead, the creator field represents authors.
+                with DataOne standards. These standards do not contain an author field. Instead, the creator field
+                represents authors.
         "contributor": list value, js will parse JSON as Array
         "owner": list value, js will parse JSON as Array
         "subject": list value, js will parse JSON as Array
         "coverage_type": list point, period, ...
-        :param request:
-            formed with querystrings q, asc, modified for the search term query, ascending/descending sort order,
-            and column name to sort by respectively
-            formed with request body key=filters value=JSON encoded filter requests. Example:
-            {
-                author: 'Anderson, Bob',
-                owner: 'Owner String',
-                subject: 'Subject String',
-                contributor: 'Contributor String',
-                type: 'this.typeFilter',
-                availability: 'this.availabilityFilter',
-                date: [this.startdate, this.enddate],
-                geofilter: false,
-            }
-        :return:
         """
         start = time.time()
 
@@ -136,7 +120,7 @@ class SearchAPI(APIView):
         except Exception as gen_ex:
             logger.debug('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
-                                                        .format(type(gen_ex)))}, status=404)
+                                                        .format(type(gen_ex)))}, status=520)
 
         sqs = sqs.order_by(sort)
 
@@ -176,13 +160,13 @@ class SearchAPI(APIView):
                 try:
                     contributor = result.contributor
                 except:
-                    print('Error assigning contributor')
+                    pass
 
             if result.owner is not None:
                 try:
                     owner = result.owner
                 except:
-                    print('Error assigning owner')
+                    pass
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
                 if 'box' in result.coverage_type:

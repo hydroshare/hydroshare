@@ -1,6 +1,8 @@
 <template>
-  <div><input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="showMap"><!-- displayMap defined in map.js --><br/><br/>
+  <div>
+    <img v-bind:style="mapmode" v-b-tooltip.hover title="Viewing resources with geographic coordinates" alt="info" src="/static/img/info.png" height="15" width="15">
+    <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
+                v-on:click="showMap"><!-- displayMap defined in map.js -->
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -176,7 +178,9 @@
         <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
-              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length || ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length || availabilityFilter.length)"><i>No resource matches</i></p>
+              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
+              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
+              availabilityFilter.length)"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table">
                     <thead>
@@ -320,7 +324,7 @@ export default {
   methods: {
     searchClick(paging) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
-      const startd = new Date();
+      // const startd = new Date();
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', {
         params: {
@@ -345,7 +349,7 @@ export default {
           if (response) {
             try {
               this.resources = JSON.parse(response.data.resources);
-              console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
+              // console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
               if (paging !== true) {
                 this.pagenum = 1;
               }
@@ -356,7 +360,7 @@ export default {
               this.geodata = JSON.parse(response.data.geodata);
               document.body.style.cursor = 'default';
             } catch (e) {
-              console.log(`Error parsing discoverapi JSON: ${e}`);
+              console.error(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }
@@ -371,7 +375,7 @@ export default {
       this.searchClick();
     },
     filterBuilder() {
-      const startd = new Date();
+      // const startd = new Date();
       axios.get('/discoverapi/', {
         params: {
           filterbuilder: '1',
@@ -380,11 +384,11 @@ export default {
         .then((response) => {
           if (response) {
             try {
-              console.log(`/discoverapi/ filterbuilder call in: ${(new Date() - startd) / 1000} sec`);
+              // console.log(`/discoverapi/ filterbuilder call in: ${(new Date() - startd) / 1000} sec`);
               [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
                 this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
             } catch (e) {
-              console.log(`Error parsing discoverapi JSON: ${e}`);
+              console.error(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }
@@ -439,9 +443,9 @@ export default {
         const pointlocs = [];
         pts.forEach((x) => {
           if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
-            console.log(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
+            console.error(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
           } else if (Math.abs(parseFloat(x.north)) > 90 || Math.abs(parseFloat(x.east)) > 180) {
-            console.log(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
+            console.error(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
           }
           const lat = Number.isNaN(parseFloat(x.north)) ? 0.0 : parseFloat(x.north);
           const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
@@ -512,6 +516,8 @@ export default {
     }
     .mapdisp {
         right: 0;
+        margin-top: 10px;
+        margin-bottom: 20px;
     }
     .table-message {
         position: absolute;
