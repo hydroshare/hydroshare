@@ -33,7 +33,6 @@ PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
 USE_LOCAL_IRODS=false
 
-
 display_usage() {
     echo "*** HydroShare Control script ***"
     echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
@@ -352,7 +351,6 @@ rebuild_hs() {
         loaddb_hs;
     fi
     dis_build
-    sleep 2s
     echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
     docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
     if [ "${USE_NGINX}" = true ]; then
@@ -372,7 +370,6 @@ rebuild_hs() {
     rebuild_solr_index
     sleep 2s
     restart_hs
-    sleep 2s
     echo "END BUILD"
 }
 
@@ -429,28 +426,22 @@ dis_build() {
 docker run -i -v ~/hydroshare:/hydroshare --name=nodejs node:latest /bin/bash << eof
 
 cd hydroshare
-sleep 1
 cd hs_discover
 rm -rf static templates
 mkdir -p static templates/hs_discover
 npm install
-sleep 1
 npm run build
-sleep 1
 mkdir -p static/js
 mkdir -p static/css
-sleep .5
 cp -rp templates/hs_discover/js static/
 cp -rp templates/hs_discover/css static/
 cp -p templates/hs_discover/map.js static/js/
 echo "----------------js--------------------"
 ls -l static/js
 echo "--------------------------------------"
-sleep 1
 echo "----------------css-------------------"
 ls -l static/css
 echo "--------------------------------------"
-sleep 1
 cd static/
 mv js/app.*.js js/app.js
 mv js/chunk-vendors.*.js js/chunk-vendors.js
@@ -464,7 +455,7 @@ sleep 1
 ### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
-    if [ $1 != "rebuild" ] && [ $2 != "--db" ] && [ $1 != "managepy" ]
+    if [ $1 != "rebuild" ] || [ $2 != "--db" ] && [ $1 != "managepy" ]
     then
         display_usage
         exit 1
