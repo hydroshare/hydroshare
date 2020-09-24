@@ -205,7 +205,7 @@
                         </td>
                         <td>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
-                               :title="`Authors: ${entry.authors} | Owner: ${entry.owner} | Contributors: ${entry.contributor}`">{{entry.author}}</a>
+                               :title="`Authors: ${nameList(entry.authors)} | Owner: ${entry.owner} | Contributors: ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                         <td v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
@@ -243,7 +243,6 @@ export default {
       pagecount: 0,
       geoloaded: true, // endpoint called and retrieved geo data for all resources
       googMarkers: [],
-      uidFilter: [],
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
@@ -417,13 +416,15 @@ export default {
       }
       return '';
     },
+    nameList(names) {
+      return names;
+    },
     showMap() {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
         this.mapmode = 'display:block';
         this.setAllMarkers();
         document.getElementById('map-mode-button').value = 'Hide Map';
-        // this.uidFilter = window.visMarkers;
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';

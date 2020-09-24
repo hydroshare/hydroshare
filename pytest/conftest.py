@@ -4,7 +4,9 @@ import uuid
 import pytest
 from django.contrib.auth.models import User, Group
 
+from hs_access_control.models import UserAccess
 from hs_core import hydroshare
+from hs_labels.models import UserLabels
 
 
 def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=str(uuid.uuid4()),
@@ -66,10 +68,8 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 
     user = User.objects.get(username=username)
 
-    # user_access = UserAccess(user=user)
-    # # user_access.save()
-    # user_labels = UserLabels(user=user)
-    # # user_labels.save()
+    _ = UserAccess(user=user)  # user_access.save()
+    _ = UserLabels(user=user)  # user_labels.save()
 
     metadata = json.loads(json.dumps(metadata))
 
