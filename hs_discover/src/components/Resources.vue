@@ -417,7 +417,12 @@ export default {
       return '';
     },
     nameList(names) {
-      return names;
+      // console.log(names)
+      try {
+        return names.join(', ');
+      } catch {
+        return names;
+      }
     },
     showMap() {
       toggleMap(); // eslint-disable-line
