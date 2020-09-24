@@ -68,8 +68,8 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 
     user = User.objects.get(username=username)
 
-    _ = UserAccess(user=user)  # user_access.save()
-    _ = UserLabels(user=user)  # user_labels.save()
+    _ = UserAccess(user=user)  # noqa
+    _ = UserLabels(user=user)  # noqa
 
     metadata = json.loads(json.dumps(metadata))
 
