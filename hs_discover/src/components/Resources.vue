@@ -205,11 +205,11 @@
                         </td>
                         <td>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
-                               :title="`Authors: ${nameList(entry.authors)} | Owner: ${entry.owner} | Contributors: ${nameList(entry.contributor)}`">{{entry.author}}</a>
+                               :title="`Authors: ${nameList(entry.authors)} / Owner: ${entry.owner} / Contributors: ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                         <td v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                        <td v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -419,7 +419,7 @@ export default {
     nameList(names) {
       // console.log(names)
       try {
-        return names.join(', ');
+        return names.join(' | ');
       } catch {
         return names;
       }

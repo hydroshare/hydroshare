@@ -209,6 +209,8 @@ class SearchAPI(APIView):
                 "geo": pt
             })
 
+
+
         if sort == 'title':
             resources = sorted(resources, key=lambda k: k['title'].lower())
         elif sort == '-title':
