@@ -50,7 +50,7 @@
                         </div>
                         <div id="creator" class="facet-list panel-collapse collapse in" aria-labelledby="headingAuthor">
                             <ul class="list-group" id="list-group-creator">
-                                <li class="list-group-item" v-for="(author) in countAuthors"
+                                <li class="list-group-item" v-for="(author) in orderedFilter(countAuthors)"
                                     v-bind:key="author">
                                     <span class="badge">{{author[1]}}</span><label class="checkbox noselect" :for="'author-'+author[0]">{{author[0]}}
                                     <input type="checkbox" :value="author[0]" class="faceted-selections"
@@ -71,7 +71,7 @@
                         </div>
                         <div id="owner" class="facet-list panel-collapse collapse in" aria-labelledby="headingOwner">
                             <ul class="list-group" id="list-group-owner">
-                                <li class="list-group-item" v-for="(owner) in countOwners"
+                                <li class="list-group-item" v-for="(owner) in orderedFilter(countOwners)"
                                     v-bind:key="owner">
                                     <span class="badge">{{owner[1]}}</span>
                                     <label class="checkbox noselect" :for="'owner-'+owner[0]">{{owner[0]}}
@@ -93,7 +93,7 @@
                         </div>
                         <div id="subject" class="facet-list panel-collapse collapse in" aria-labelledby="headingSubject">
                             <ul class="list-group" id="list-group-subject">
-                                <li class="list-group-item" v-for="(subject) in countSubjects"
+                                <li class="list-group-item" v-for="(subject) in orderedFilter(countSubjects)"
                                     v-bind:key="subject">
                                     <span class="badge">{{subject[1]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject[0]">{{subject[0]}}
@@ -115,7 +115,7 @@
                         </div>
                         <div id="contributor" class="facet-list panel-collapse collapse in" aria-labelledby="headingContributor">
                             <ul class="list-group" id="list-group-contributor">
-                                <li class="list-group-item" v-for="(contributor) in countContributors"
+                                <li class="list-group-item" v-for="(contributor) in orderedFilter(countContributors)"
                                     v-bind:key="contributor">
                                     <span class="badge">{{contributor[1]}}</span>
                                     <label class="checkbox noselect" :for="'contrib-'+contributor[0]">{{contributor[0]}}
@@ -137,7 +137,7 @@
                         </div>
                         <div id="type" class="facet-list panel-collapse collapse in" aria-labelledby="headingType">
                             <ul class="list-group" id="list-group-type">
-                                <li class="list-group-item" v-for="(type) in countTypes"
+                                <li class="list-group-item" v-for="(type) in orderedFilter(countTypes)"
                                     v-bind:key="type">
                                     <span class="badge">{{type[1]}}</span>
                                     <label class="checkbox noselect" :for="'type-'+type[0]">{{type[0]}}
@@ -182,7 +182,7 @@
               ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
               availabilityFilter.length)"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
-                    class="table-hover table-striped resource-custom-table">
+                    class="table-hover table-striped resource-custom-table main-table">
                     <thead>
                         <tr>
                             <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
@@ -193,23 +193,23 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td>
+                        <td style=width:15%;>
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
-                                :title="entry.type" :alt="entry.type">
+                                :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
                         </td>
-                        <td>
+                        <td style=width:60%;>
                             <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{entry.title}}</a>
                         </td>
-                        <td>
+                        <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`(Owner): ${entry.owner} (Authors): ${nameList(entry.authors)} (Contributors): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                        <td style=width:5%; v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
+                        <td style=width:5%; v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -373,6 +373,12 @@ export default {
       this.searchtext = '';
       this.searchClick();
     },
+    orderedFilter(items) {
+      if (items.length > 0) {
+        return Object.values(items).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()));
+      }
+      return [];
+    },
     filterBuilder() {
       // const startd = new Date();
       axios.get('/discoverapi/', {
@@ -417,8 +423,10 @@ export default {
       return '';
     },
     nameList(names) {
-      // console.log(names)
       try {
+        if (names.includes('[')) {
+          return 'None';
+        }
         return names.join(' | ');
       } catch {
         return names;
@@ -491,6 +499,9 @@ export default {
     }
     #map-filter-button {
         margin-bottom: 12px;
+    }
+    .main-table {
+        width: 100%;
     }
     .panel-title > a:before {
         float: left !important;
