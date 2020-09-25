@@ -227,7 +227,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
-      mapmessage: 'do map things',
+      mapmessage: 'show first page of point locations and center markers of regions',
       mapmode: 'display:none',
       resloaded: false,
       resources: [],
@@ -436,12 +436,12 @@ export default {
     showMap() {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
-        this.mapmessage = 'tips for using map';
+        this.mapmessage = 'show first page of point locations and center markers of regions with current filters';
         this.mapmode = 'display:block';
         this.setAllMarkers();
         document.getElementById('map-mode-button').value = 'Hide Map';
       } else if (document.getElementById('map-view').style.display !== 'block') {
-        this.mapmessage = 'if you want to do map things';
+        this.mapmessage = 'filters will remain selected and the resource list will update to show all resources';
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
