@@ -1,8 +1,8 @@
 <template>
   <div>
-    <img v-bind:style="mapmode" v-b-tooltip.hover title="Viewing resources with geographic coordinates" alt="info" src="/static/img/info.png" height="15" width="15">
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="showMap"><!-- displayMap defined in map.js -->
+                v-on:click="showMap">
+    <img id="info-icon" v-b-tooltip.hover :title="mapmessage" alt="info" src="/static/img/info.png" height="15" width="15">
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -227,6 +227,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      mapmessage: 'do map things',
       mapmode: 'display:none',
       resloaded: false,
       resources: [],
@@ -435,10 +436,12 @@ export default {
     showMap() {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
+        this.mapmessage = 'tips for using map';
         this.mapmode = 'display:block';
         this.setAllMarkers();
         document.getElementById('map-mode-button').value = 'Hide Map';
       } else if (document.getElementById('map-view').style.display !== 'block') {
+        this.mapmessage = 'if you want to do map things';
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
@@ -493,13 +496,6 @@ export default {
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
-    #map-message {
-       position: absolute;
-       left: 110px;
-    }
-    #map-filter-button {
-        margin-bottom: 12px;
-    }
     .main-table {
         width: 100%;
     }
@@ -539,6 +535,11 @@ export default {
     .table-message {
         position: absolute;
         left: 100px;
+    }
+    #info-icon {
+      opacity: .75;
+      margin-left: 10px;
+      margin-bottom: 5px;
     }
     #resultsdisp {
         left: 300px;
