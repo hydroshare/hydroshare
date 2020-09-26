@@ -263,10 +263,11 @@ class CompositeResource(BaseResource):
             # target folder is already an aggregation
             return False
 
+        aggregation_path = dir_path[len(self.file_path) + 1:]
         # checking sub-folders for fileset aggregation
         # check that we don't have any sub folder of dir_path representing a fileset aggregation
         # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation
-        if self.filesetlogicalfile_set.filter(folder__startswith=dir_path).exists():
+        if self.filesetlogicalfile_set.filter(folder__startswith=aggregation_path).exists():
             return False
 
         if aggr_type == "ModelProgram":
@@ -274,13 +275,13 @@ class CompositeResource(BaseResource):
             # check that we don't have any sub folder of dir_path representing a model program aggregation
             # so that we can avoid nesting a model program aggregation inside a model
             # program aggregation
-            if self.modelprogramlogicalfile_set.filter(folder__startswith=dir_path).exists():
+            if self.modelprogramlogicalfile_set.filter(folder__startswith=aggregation_path).exists():
                 return False
 
         # checking sub-folders for model instance aggregation
         # check that we don't have any sub folder of dir_path representing a model instance aggregation
         # so that we can avoid nesting a model instance aggregation inside a model program aggregation
-        if self.modelinstancelogicalfile_set.filter(folder__startswith=dir_path).exists():
+        if self.modelinstancelogicalfile_set.filter(folder__startswith=aggregation_path).exists():
             return False
 
         # check the first parent folder that represents an aggregation
