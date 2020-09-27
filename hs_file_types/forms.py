@@ -17,19 +17,21 @@ class ModelInstanceMetadataValidationForm(forms.Form):
     has_model_output = forms.BooleanField(required=False)
     executed_by = forms.IntegerField(required=False)
     executed_by_url = forms.URLField(required=False)
+    user_selected_mp_aggr = None
 
     def clean_executed_by(self):
         executed_by = self.cleaned_data['executed_by']
-        user_selected_mp_aggr = None
+        selected_mp_aggr = None
         # if a model program has been selected then this form would have the id of that aggregation
         if executed_by is not None and executed_by > 0:
             mp_aggregations = self.resource.get_model_program_aggregations()
-            user_selected_mp_aggr = [mp_aggr for mp_aggr in mp_aggregations if mp_aggr.id == executed_by]
-            if user_selected_mp_aggr:
-                user_selected_mp_aggr = user_selected_mp_aggr[0]
+            selected_mp_aggr = [mp_aggr for mp_aggr in mp_aggregations if mp_aggr.id == executed_by]
+            if selected_mp_aggr:
+                selected_mp_aggr = selected_mp_aggr[0]
+                self.user_selected_mp_aggr = selected_mp_aggr
             else:
                 self.add_error("executed_by", "Selected model program aggregation must be from the same resource")
-        return user_selected_mp_aggr
+        return selected_mp_aggr
 
     def clean_executed_by_url(self):
         executed_by_url = self.cleaned_data['executed_by_url']
@@ -48,6 +50,8 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         if executed_by:
             metadata.executed_by = executed_by
             metadata.executed_by_url = None
+            if not metadata.metadata_schema_json or not metadata.metadata_json:
+                metadata.metadata_schema_json = self.user_selected_mp_aggr.mi_schema_json
         elif executed_by_url:
             metadata.executed_by = None
             metadata.executed_by_url = executed_by_url
