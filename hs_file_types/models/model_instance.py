@@ -25,6 +25,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
     # url to a model program which was used to create a the model instance
     executed_by_url = models.URLField(blank=True, null=True)
 
+    # field to store the json schema from the associated model program aggregation
+    metadata_schema_json = JSONField(default=dict)
+
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
     metadata_json = JSONField(default=dict)
@@ -46,15 +49,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             dom_tags.legend("Executed By (Model Program)")
             if self.executed_by:
                 mp_aggr = self.executed_by
-                resource = mp_aggr.resource
-                this_resource = self.logical_file.resource
-                if this_resource.short_id != resource.short_id:
-                    # show resource id and title if the model program aggregation is from a different resource
-                    display_string = "{} ({}) - (Resource-{}: {})"
-                    display_string = display_string.format(mp_aggr.aggregation_name, mp_aggr.dataset_name,
-                                                           resource.short_id, resource.title)
-                else:
-                    display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
+                display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                 dom_tags.p(display_string)
             elif self.executed_by_url:
                 dom_tags.a(self.executed_by_url, href=self.executed_by_url)
@@ -64,8 +59,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         metadata_json_div = dom_tags.div(cls="content-block")
         if self.metadata_json:
             metadata_schema = {}
-            if self.executed_by and self.executed_by.mi_schema_json:
-                metadata_schema = self.executed_by.mi_schema_json
+            if self.metadata_schema_json:
+                metadata_schema = self.metadata_schema_json
             with metadata_json_div:
                 dom_tags.legend("Schema Based Metadata")
                 schema_properties_key = 'properties'
@@ -134,7 +129,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                    method="post", enctype="multipart/form-data"):
                     with dom_tags.fieldset():
                         dom_tags.legend("Schema Based Metadata")
-                        json_schema = json.dumps(self.executed_by.mi_schema_json)
+                        json_schema = json.dumps(self.metadata_schema_json)
                         json_data = "{}"
                         if self.metadata_json:
                             json_data = json.dumps(self.metadata_json, indent=4)
@@ -172,17 +167,17 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 dom_tags.option(option, value=mp_aggr.id)
                         else:
                             dom_tags.option(option, value=mp_aggr.id)
-                if self.executed_by and self.executed_by.mi_schema_json:
+                if self.metadata_schema_json:
                     dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
                                     cls="btn btn-success btn-block",
                                     data_toggle="collapse", data_target="#meta-schema")
                     mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
                                                  style="margin-top:10px; padding-bottom: 20px;")
                     with mi_schema_div:
-                        json_schema = json.dumps(self.executed_by.mi_schema_json, indent=4)
+                        json_schema = json.dumps(self.metadata_schema_json, indent=4)
                         dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;",
                                           cls="form-control")
-                elif self.executed_by:
+                if self.executed_by and not self.executed_by.mi_schema_json:
                     dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
 
                 with dom_tags.div(cls="control-group"):
@@ -251,22 +246,15 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             dom_tags.button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
                                             style="display: none;", type="button")
 
-                show_schema_based_form = True
                 invalid_metadata = False
-                if self.executed_by and self.executed_by.mi_schema_json:
+                if self.metadata_schema_json:
                     if self.metadata_json:
                         # validate metadata against the associated schema
                         try:
-                            jsonschema.Draft4Validator(self.executed_by.mi_schema_json).validate(self.metadata_json)
+                            jsonschema.Draft4Validator(self.metadata_schema_json).validate(self.metadata_json)
                         except jsonschema.ValidationError:
                             invalid_metadata = True
-                elif self.executed_by and self.metadata_json:
-                    # no metadata schema exists - so no way to validate the existing metadata
-                    invalid_metadata = True
-                else:
-                    show_schema_based_form = False
 
-                if show_schema_based_form:
                     with dom_tags.div():
                         get_schema_based_form()
 
