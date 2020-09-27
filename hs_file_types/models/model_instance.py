@@ -288,20 +288,21 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 etree.SubElement(container_to_add_to, executed_by, attrib=attrib)
 
         if self.metadata_json:
-            ns_hsterms = CoreMetaData.NAMESPACES['hsterms']
             metadata_dict = self.metadata_json
+            model_properties = etree.SubElement(container_to_add_to, 'modelProperties')
+            model_properties_desc = etree.SubElement(model_properties,
+                                                     '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
+
             # since we don't allow nested objects in the schema, we are not expecting nested dict objects in metadata
             for k, v in metadata_dict.items():
-                k_obj_element = etree.SubElement(container_to_add_to,
-                                                 '{{{ns}}}{element_name}'.format(ns=ns_hsterms, element_name=k))
+                k_obj_element = etree.SubElement(model_properties_desc, k)
                 if isinstance(v, dict):
                     k_obj_element_desc = etree.SubElement(
                         k_obj_element, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
 
                     sub_field_added = False
                     for k_sub, v_sub in v.items():
-                        field = etree.SubElement(k_obj_element_desc, "{{{ns}}}{element_name}".format(
-                            ns=ns_hsterms, element_name=k_sub))
+                        field = etree.SubElement(k_obj_element_desc, k_sub)
                         if isinstance(v_sub, list):
                             if v_sub:
                                 field.text = ", ".join(v_sub)
@@ -316,7 +317,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
                     if not sub_field_added:
                         # remove the parent xml node since we don't have any child nodes
-                        container_to_add_to.remove(k_obj_element)
+                        model_properties_desc.remove(k_obj_element)
                 else:
                     if isinstance(v, list):
                         if v:
@@ -328,7 +329,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
                     if not k_obj_element.text:
                         # remove xml node since there is no data for the node
-                        container_to_add_to.remove(k_obj_element)
+                        model_properties_desc.remove(k_obj_element)
 
         xml_body = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
         xml_body = xml_body.replace('executedByModelProgram resource=', 'executedByModelProgram rdf:resource=')
