@@ -14,7 +14,6 @@ export default {
   name: 'Search',
   data() {
     return {
-      geodata: [],
       gridColumns: ['type', 'name', 'author', 'created', 'modified'],
       gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
     };

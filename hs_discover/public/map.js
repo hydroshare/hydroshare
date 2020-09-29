@@ -1,5 +1,5 @@
 ((exports) => {
-  const mapDefaultZoom = 4; // TODO set back to 2 to match HydroShare
+  const mapDefaultZoom = 4;
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
   let pois = [];

@@ -1,9 +1,10 @@
 import datetime
 import json
-import time
 import logging
+import time
 from collections import namedtuple
 
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -20,7 +21,8 @@ DateRange = namedtuple('DateRange', ['start', 'end'])
 class SearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'hs_discover/index.html', {})
+        maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+        return render(request, 'hs_discover/index.html', {'maps_key': maps_key})
 
 
 class SearchAPI(APIView):
