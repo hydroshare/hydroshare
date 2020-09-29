@@ -73,7 +73,7 @@ class SearchAPI(APIView):
             })
 
         asc = '-1'
-        if request.GET.get('asc', '-1'):
+        if request.GET.get('asc'):
             asc = request.GET.get('asc')
 
         sort = 'modified'
@@ -134,10 +134,20 @@ class SearchAPI(APIView):
 
         p = Paginator(sqs, self.perpage)
 
-        pnum = 1
         if request.GET.get('pnum'):
             pnum = request.GET.get('pnum')
-            pnum = max(1, int(pnum))
+            pnum = int(pnum)
+            pnum = min(pnum, p.num_pages)
+            if pnum < 1:
+                return JsonResponse({
+                    'resources': json.dumps([]),
+                    'geodata': json.dumps([]),
+                    'rescount': 0,
+                    'pagecount': 1,
+                    'perpage': self.perpage
+                }, status=200)
+        else:
+            pnum = 1  # page number not specified, implies page 1
             pnum = min(pnum, p.num_pages)
 
         geodata = []
@@ -221,7 +231,7 @@ class SearchAPI(APIView):
             resources = sorted(resources, key=lambda k: k['title'].lower(), reverse=True)
 
         return JsonResponse({
-            'time': (time.time() - start),
+            # 'time': (time.time() - start),
             'resources': json.dumps(resources),
             'geodata': json.dumps(geodata),
             'rescount': p.count,

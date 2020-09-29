@@ -1,6 +1,6 @@
 import pytest
 import json
-
+import uuid
 
 @pytest.mark.django_db
 def test_search_term_found_in_title(admin_client, public_resource_with_metadata):
@@ -60,12 +60,28 @@ def test_filter_by_bad_date(admin_client, public_resource_with_metadata):
 
 
 @pytest.mark.django_db
-def test_filter_by_missing_date(admin_client, public_resource_with_metadata):
+def test_request_invalid_page(admin_client, public_resource_with_metadata):
     """
-    Test passing malformed date array/list
+    Test invalid page number
+    Test passing empty result set due to invalid page number
     """
-    query_filter = {"date": ["2019-11-01"]}
+    djangoresponse = admin_client.get('/discoverapi/?pnum=-20', follow=True)
+    response = json.loads(djangoresponse.content.decode("utf-8"))
+    resources = response['resources']
+    assert len(json.loads(resources)) == 0
+    assert djangoresponse.status_code == 200
+
+
+@pytest.mark.django_db
+def test_filter_returns_empty_results(admin_client, public_resource_with_metadata):
+    """
+    Test filter with no hits
+    Test passing empty result set due to filter not matching resources
+    """
+    # double uuid4 collision incredibly unlikely, especially for the purposes of a pytest
+    query_filter = {"author": ["{}".format(str(uuid.uuid4()))], "owner": ["{}".format(str(uuid.uuid4()))]}
     djangoresponse = admin_client.get('/discoverapi/?filter={}'.format(json.dumps(query_filter)), follow=True)
     response = json.loads(djangoresponse.content.decode("utf-8"))
-    assert djangoresponse.status_code == 400
-    assert "date parsing error" in response['message']
+    resources = response['resources']
+    assert len(json.loads(resources)) == 0
+    assert djangoresponse.status_code == 200
