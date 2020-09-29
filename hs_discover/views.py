@@ -174,7 +174,7 @@ class SearchAPI(APIView):
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
                 if 'box' in result.coverage_type:
-                    pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'region'}
+                    pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'box'}
                 elif 'point' in result.coverage_type:
                     pt = {'short_id': result.short_id, 'title': result.title, 'coverage_type': 'point'}
 

@@ -486,7 +486,7 @@ export default {
         const pointuids = pts.map(x => x.short_id);
         const pointlbls = pts.map(x => x.title);
 
-        pts = geocoords.filter(x => x.coverage_type === 'region');
+        pts = geocoords.filter(x => x.coverage_type === 'box');
         const regionlocs = [];
         pts.forEach((x) => {
           const eastlim = Number.isNaN(parseFloat(x.eastlimit)) ? 0.0 : parseFloat(x.eastlimit);
