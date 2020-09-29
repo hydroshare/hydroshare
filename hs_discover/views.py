@@ -30,7 +30,7 @@ class SearchAPI(APIView):
     def __init__(self, **kwargs):
         super(SearchAPI, self).__init__(**kwargs)
         self.filterlimit = 20
-        self.perpage = 35
+        self.perpage = 40
 
     def get(self, request, *args, **kwargs):
         """
