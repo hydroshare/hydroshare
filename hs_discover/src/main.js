@@ -6,7 +6,6 @@ import Search from './components/Search.vue';
 
 // Vue.config.devtools = true;
 Vue.use(BootstrapVue);
-Vue.prototype.mapTest = window.mapTest;
 
 new Vue({
   render: h => h(Search),
