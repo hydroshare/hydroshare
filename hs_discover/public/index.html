@@ -11,26 +11,33 @@
         /* a height must be specified to make visible */
         height: 50%;
     }
+
     .vdpHeadCellContent {
         font-size: 1em;
     }
+
     .vdpCellContent {
         font-size: 1em;
     }
-    .vdpComponent.vdpWithInput>input {
+
+    .vdpComponent.vdpWithInput > input {
 
     }
+
     .vdpClearInput {
         /* Option to hide the clear x in date inputs */
         /* display: none; */
     }
+
     input {
         /*padding-right: 30px;*/
         font-size: 14px;
     }
+
     #map-view {
         display: none;
     }
+
     #discover-footer {
         /* align with filters and resource rows */
         padding: 0;
@@ -42,11 +49,12 @@
         <small class="text-muted"><i>Public resources shared with the community</i></small>
     </h2>
     <div id="map-view">
-<!--        <input id="map-search" class="controls" type="text" placeholder="Jump To">-->
+        <!--        <input id="map-search" class="controls" type="text" placeholder="Jump To">-->
         <div id="map"></div>
         <div id="discover-map-legend"></div>
         <div id="reset-zoom"></div>
-    </div><br>
+    </div>
+    <br>
     <div class="row">
         <div id="app"></div>
     </div>
@@ -152,9 +160,19 @@
                                                  alt="Non Sharable Resource"/>
                                             <small>Not shareable</small>
                                         </div>
+                                    </div>
+                                    
+                                    <br/><br/>
 
-                                        <br>
-
+                                    <div class="row">
+                                        <div class="col-sm-12"><label>Geographic</label></div>
+                                        <div class="col-sm-12">
+                                            <img src="{{ STATIC_URL }}img/Globe-Green.png"
+                                                 height="25" width="25"
+                                                 alt="Geographic Coordinates"/>
+                                            <small>Has geographic coordinates and will
+                                                be discoverable on map</small>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -220,6 +238,6 @@
 <script src=/static/js/map.js></script>
 <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
 <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key={{ maps_key }}&callback=initMap&libraries=&v=weekly&libraries=places"
+        src="https://maps.googleapis.com/maps/api/js?key={{ maps_key }}&callback=initMap&libraries=&v=weekly&libraries=places"
 ></script>
 {% endblock %}
