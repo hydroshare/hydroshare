@@ -196,14 +196,16 @@
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
                         <td style=width:15%;>
+                          <span id="img-icons">
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
+                            </span>
                         </td>
                         <td style=width:60%;>
-                            <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{ellip(entry.title)}}</a>
+                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" ><span id="title-span">{{ellip(entry.title)}}</span></a>
                         </td>
                         <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
@@ -549,6 +551,10 @@ export default {
         position: absolute;
         left: 100px;
     }
+    #title-span {
+        max-width: 437px;
+        word-wrap: break-word;
+    }
     #info-icon {
       opacity: .75;
       margin-left: 10px;
@@ -572,6 +578,10 @@ export default {
         padding-left: 25px;
         padding-right: 25px;
         z-index: 1;
+    }
+    #img-icons {
+        min-width: 85px;
+        white-space: nowrap;
     }
     .inside-right {
         position: absolute;
