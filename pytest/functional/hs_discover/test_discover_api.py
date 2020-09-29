@@ -45,3 +45,27 @@ def test_filter_by_atribute(admin_client, public_resource_with_metadata, private
     assert djangoresponse.status_code == 200
     assert public_resource_with_metadata.short_id in short_ids
     assert private_resource_with_metadata.short_id not in short_ids
+
+
+@pytest.mark.django_db
+def test_filter_by_bad_date(admin_client, public_resource_with_metadata):
+    """
+    Test passing malformed date string
+    """
+    query_filter = {"date": ["2019-11-01", "bad-date"]}
+    djangoresponse = admin_client.get('/discoverapi/?filter={}'.format(json.dumps(query_filter)), follow=True)
+    response = json.loads(djangoresponse.content.decode("utf-8"))
+    assert djangoresponse.status_code == 400
+    assert "date parsing error" in response['message']
+
+
+@pytest.mark.django_db
+def test_filter_by_missing_date(admin_client, public_resource_with_metadata):
+    """
+    Test passing malformed date array/list
+    """
+    query_filter = {"date": ["2019-11-01"]}
+    djangoresponse = admin_client.get('/discoverapi/?filter={}'.format(json.dumps(query_filter)), follow=True)
+    response = json.loads(djangoresponse.content.decode("utf-8"))
+    assert djangoresponse.status_code == 400
+    assert "date parsing error" in response['message']

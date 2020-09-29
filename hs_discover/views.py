@@ -105,15 +105,17 @@ class SearchAPI(APIView):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
             if filters.get('date'):
                 try:
-                    print(filters['date'][0])
-                    print(filters['date'][1])
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
                                            end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
 
                     # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
                     sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
-                except ValueError as e:
-                    pass  # ignore bad values and don't filter which is the correct action
+                except ValueError as date_ex:
+                    return JsonResponse({'message': 'Filter date parsing error expecting String %Y-%m-%d : {}'
+                                        .format(str(date_ex)), 'received': request.query_params}, status=400)
+                except Exception as gen_date_ex:
+                    return JsonResponse({'message': 'Filter date parsing error expecting two date string values : {}'
+                                        .format(str(gen_date_ex)), 'received': request.query_params}, status=400)
         except TypeError as type_ex:
             pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
 
@@ -122,7 +124,7 @@ class SearchAPI(APIView):
                                  'received': request.query_params}, status=400)
 
         except Exception as gen_ex:
-            logger.warn('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
+            logger.warning('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
 
