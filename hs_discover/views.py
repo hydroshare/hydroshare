@@ -102,7 +102,7 @@ class SearchAPI(APIView):
             if filters.get('availability'):
                 sqs = sqs.filter(availability__in=filters['availability'])
             if filters.get('geofilter'):
-                sqs = sqs.filter(north__range=[-90, 90])
+                sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
             if filters.get('date'):
                 try:
                     print(filters['date'][0])
@@ -122,7 +122,7 @@ class SearchAPI(APIView):
                                  'received': request.query_params}, status=400)
 
         except Exception as gen_ex:
-            logger.debug('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
+            logger.warn('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
 
