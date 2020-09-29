@@ -32,10 +32,12 @@
                             <date-pick
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
+                                 :inputAttributes="{placeholder: 'Start Date'}"
                             ></date-pick><br/>
                             <date-pick
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
+                                 :inputAttributes="{placeholder: 'End Date'}"
                             ></date-pick>
                         </div>
                     </div>
@@ -160,7 +162,7 @@
                         <div id="availability" class="facet-list panel-collapse collapse in" aria-labelledby="headingAvailability">
                             <ul class="list-group" id="list-group-availability">
                                 <li class="list-group-item"
-                                    v-for="(availability) in countAvailabilities"
+                                    v-for="(availability) in orderedFilter(countAvailabilities)"
                                     v-bind:key="availability">
                                     <span class="badge">{{availability[1]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability[0]">{{availability[0]}}
@@ -201,15 +203,15 @@
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
                         </td>
                         <td style=width:60%;>
-                            <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{entry.title}}</a>
+                            <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" >{{ellip(entry.title)}}</a>
                         </td>
                         <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`(Owner): ${entry.owner} (Authors): ${nameList(entry.authors)} (Contributors): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td style=width:5%; v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td style=width:5%; v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
+                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
                     </tr>
                     </tbody>
                 </table>
@@ -234,8 +236,8 @@ export default {
       searchtext: '',
       geodata: [],
       geopoints: [],
-      startdate: 'Start Date',
-      enddate: 'End Date',
+      startdate: '',
+      enddate: '',
       filteredcount: 0,
       rescount: 0,
       pagenum: 1, // initial page number to show
@@ -302,9 +304,19 @@ export default {
       }
     },
     startdate() {
+      if (this.enddate) {
+        if (new Date(this.startdate) >= new Date(this.enddate)) {
+          this.enddate = '';
+        }
+      }
       this.searchClick();
     },
     enddate() {
+      if (this.startdate) {
+        if (new Date(this.startdate) >= new Date(this.enddate)) {
+          this.startdate = '';
+        }
+      }
       this.searchClick();
     },
     pagenum() {
@@ -340,7 +352,8 @@ export default {
             contributor: this.contributorFilter,
             type: this.typeFilter,
             availability: this.availabilityFilter,
-            date: [this.startdate, this.enddate],
+            date: [this.startdate !== '' ? this.startdate : new Date('1/1/1900').toISOString().split('T')[0],
+              this.enddate !== '' ? this.enddate : new Date().toISOString().split('T')[0]],
             geofilter: this.mapmode === 'display:block',
           },
         },
@@ -360,13 +373,13 @@ export default {
               this.geodata = JSON.parse(response.data.geodata);
               document.body.style.cursor = 'default';
             } catch (e) {
-              console.error(`Error parsing discoverapi JSON: ${e}`);
+              // console.error(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }
         })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+        .catch((error) => { // eslint-disable-line
+          // console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
         });
     },
@@ -394,7 +407,7 @@ export default {
               [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
                 this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
             } catch (e) {
-              console.error(`Error parsing discoverapi JSON: ${e}`);
+              // console.error(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }

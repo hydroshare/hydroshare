@@ -73,7 +73,7 @@ class SearchAPI(APIView):
             })
 
         asc = '-1'
-        if request.GET.get('asc'):
+        if request.GET.get('asc', '-1'):
             asc = request.GET.get('asc')
 
         sort = 'modified'
@@ -105,6 +105,8 @@ class SearchAPI(APIView):
                 sqs = sqs.filter(north__range=[-90, 90])
             if filters.get('date'):
                 try:
+                    print(filters['date'][0])
+                    print(filters['date'][1])
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
                                            end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
 
