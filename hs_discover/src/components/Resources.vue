@@ -204,8 +204,8 @@
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
                             </span>
                         </td>
-                        <td style=width:60%;>
-                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract)" ><span id="title-span">{{ellip(entry.title)}}</span></a>
+                        <td style="width:60%;" class="title-span">
+                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 200)}}</a>
                         </td>
                         <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
@@ -432,9 +432,9 @@ export default {
       }
       return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
     },
-    ellip(input) {
-      if (input) {
-        return input.length > 500 ? `${input.substring(0, 500)}...` : input;
+    ellip(input, size) {
+      if (input && size) {
+        return input.length > size ? `${input.substring(0, size)}...` : input;
       }
       return '';
     },
@@ -551,9 +551,11 @@ export default {
         position: absolute;
         left: 100px;
     }
-    #title-span {
+    .title-span {
         max-width: 437px;
         word-wrap: break-word;
+        word-break: break-all;
+        white-space: normal;
     }
     #info-icon {
       opacity: .75;
