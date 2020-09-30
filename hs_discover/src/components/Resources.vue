@@ -2,7 +2,7 @@
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
                 v-on:click="showMap">
-    <img id="info-icon" v-b-tooltip.hover :title="mapmessage" alt="info" src="/static/img/info.png" height="15" width="15">
+    <img id="info-icon" v-b-tooltip.hover title="" alt="info" src="/static/img/info.png" height="15" width="15">
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -203,7 +203,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Mappable">
+                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td style="width:60%;" class="title-span">
@@ -560,6 +560,8 @@ export default {
         word-wrap: break-word;
         word-break: break-all;
         white-space: normal;
+        padding-top: 4px;
+        padding-bottom: 4px;
     }
     #info-icon {
         opacity: .75;
