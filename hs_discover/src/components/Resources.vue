@@ -554,7 +554,9 @@ export default {
         left: 100px;
     }
     .title-span {
+        min-width: 437px;
         max-width: 437px;
+        width: 437px;
         word-wrap: break-word;
         word-break: break-all;
         white-space: normal;
