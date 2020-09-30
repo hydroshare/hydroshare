@@ -211,7 +211,7 @@
                         </td>
                         <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
-                               :title="`(Owner): ${entry.owner} (Authors): ${nameList(entry.authors)} (Contributors): ${nameList(entry.contributor)}`">{{entry.author}}</a>
+                               :title="`(AUTHORS): ${nameList(entry.authors)} (OWNER): ${entry.owner} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                       <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
