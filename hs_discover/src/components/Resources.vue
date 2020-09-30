@@ -207,7 +207,7 @@
                             </span>
                         </td>
                         <td style="width:60%;" class="title-span">
-                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 200)}}</a>
+                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 250)}}</a>
                         </td>
                         <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
