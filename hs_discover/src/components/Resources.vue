@@ -29,16 +29,18 @@
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
+                            <div class="date-wrapper">
                             <date-pick
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
                                  :inputAttributes="{placeholder: 'Start Date'}"
-                            ></date-pick><br/>
+                            ></date-pick></div>
+                          <div class="date-wrapper">
                             <date-pick
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
                                  :inputAttributes="{placeholder: 'End Date'}"
-                            ></date-pick>
+                            ></date-pick></div>
                         </div>
                     </div>
                 </div>
@@ -558,9 +560,9 @@ export default {
         white-space: normal;
     }
     #info-icon {
-      opacity: .75;
-      margin-left: 10px;
-      margin-bottom: 5px;
+        opacity: .75;
+        margin-left: 10px;
+        margin-bottom: 5px;
     }
     #resultsdisp {
         left: 300px;
@@ -606,5 +608,9 @@ export default {
         /* Remove unwanted outline behavior */
         outline: 0;
         box-shadow: None;
+    }
+    .date-wrapper {
+        display: block;
+        width: 100%;
     }
 </style>
