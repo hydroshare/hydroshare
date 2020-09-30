@@ -340,7 +340,6 @@ export default {
   methods: {
     searchClick(paging) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
-      // const startd = new Date();
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', {
         params: {
@@ -365,7 +364,6 @@ export default {
           if (response) {
             try {
               this.resources = JSON.parse(response.data.resources);
-              // console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
               if (paging !== true) {
                 this.pagenum = 1;
               }
@@ -382,7 +380,6 @@ export default {
           }
         })
         .catch((error) => { // eslint-disable-line
-          // console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
           document.body.style.cursor = 'default';
         });
     },
@@ -406,11 +403,9 @@ export default {
         .then((response) => {
           if (response) {
             try {
-              // console.log(`/discoverapi/ filterbuilder call in: ${(new Date() - startd) / 1000} sec`);
               [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
                 this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
             } catch (e) {
-              // console.error(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }
@@ -438,7 +433,7 @@ export default {
         return [];
       }
       return [this.startdate !== '' ? this.startdate : new Date('1/1/1900').toISOString().split('T')[0],
-        this.enddate !== '' ? this.enddate : new Date().toISOString().split('T')[0]]
+        this.enddate !== '' ? this.enddate : new Date().toISOString().split('T')[0]];
     },
     ellip(input, size) {
       if (input && size) {

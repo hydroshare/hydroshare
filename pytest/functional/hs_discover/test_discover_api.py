@@ -2,6 +2,7 @@ import pytest
 import json
 import uuid
 
+
 @pytest.mark.django_db
 def test_search_term_found_in_title(admin_client, public_resource_with_metadata):
     """

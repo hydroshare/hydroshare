@@ -83,7 +83,7 @@ class SearchAPI(APIView):
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q)  # .boost('keyword', 2.0)
+            sqs = sqs.filter(content=q)
 
         try:
             qs = request.query_params
@@ -236,7 +236,6 @@ class SearchAPI(APIView):
             resources = sorted(resources, key=lambda k: k['title'].lower(), reverse=True)
 
         return JsonResponse({
-            # 'time': (time.time() - start),
             'resources': json.dumps(resources),
             'geodata': json.dumps(geodata),
             'rescount': p.count,
