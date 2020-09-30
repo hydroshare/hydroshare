@@ -108,8 +108,13 @@ class SearchAPI(APIView):
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
                                            end=datetime.datetime.strptime(filters['date'][1], '%Y-%m-%d'))
 
-                    # (datefilter.start < start_date < datefilter.end) or (start_date < datefilter.start)
+                    # restrict to entries with dates
+                    sqs = sqs.filter(start_date__gt=datetime.datetime.strptime('1900-01-01', '%Y-%m-%d'))\
+                        .filter(end_date__lte=datetime.datetime.strptime(datetime.date.today().isoformat(), '%Y-%m-%d'))
+
+                    # filter out entries that don't fall in specified range
                     sqs = sqs.exclude(start_date__gt=datefilter.end).exclude(end_date__lt=datefilter.start)
+
                 except ValueError as date_ex:
                     return JsonResponse({'message': 'Filter date parsing error expecting String %Y-%m-%d : {}'
                                         .format(str(date_ex)), 'received': request.query_params}, status=400)

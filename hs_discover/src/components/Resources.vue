@@ -356,8 +356,7 @@ export default {
             contributor: this.contributorFilter,
             type: this.typeFilter,
             availability: this.availabilityFilter,
-            date: [this.startdate !== '' ? this.startdate : new Date('1/1/1900').toISOString().split('T')[0],
-              this.enddate !== '' ? this.enddate : new Date().toISOString().split('T')[0]],
+            date: this.getDates(),
             geofilter: this.mapmode === 'display:block',
           },
         },
@@ -433,6 +432,13 @@ export default {
         return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
       }
       return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
+    },
+    getDates() {
+      if (this.startdate === '' && this.enddate === '') {
+        return [];
+      }
+      return [this.startdate !== '' ? this.startdate : new Date('1/1/1900').toISOString().split('T')[0],
+        this.enddate !== '' ? this.enddate : new Date().toISOString().split('T')[0]]
     },
     ellip(input, size) {
       if (input && size) {
