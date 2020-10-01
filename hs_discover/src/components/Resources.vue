@@ -186,7 +186,7 @@ to browse resources based on geographic location on the map. Regions are represe
             <div class="table-wrapper">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
               ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
-              availabilityFilter.length || searchtext !== '')"><i>No resource matches</i></p>
+              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
@@ -303,8 +303,8 @@ export default {
   watch: {
     resources() {
       this.resloaded = this.resources.length > 0;
+      this.setAllMarkers();
       if (this.mapmode === 'display:block' && this.resloaded) {
-        this.setAllMarkers();
         gotoBounds(); // eslint-disable-line
       }
     },
