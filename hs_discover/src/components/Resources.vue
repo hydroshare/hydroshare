@@ -1,8 +1,10 @@
 <template>
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="showMap">
-    <img id="info-icon" v-b-tooltip.hover title="" alt="info" src="/static/img/info.png" height="15" width="15">
+        v-on:click="showMap">
+    <img id="info-icon" v-b-tooltip.hover title="Open the map to view resources that contain Spatial Coverage. Use the paging feature
+to browse resources based on geographic location on the map. Regions are represented by their center points."
+         alt="info" src="/static/img/info.png" height="15" width="15">
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -233,7 +235,6 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
-      mapmessage: 'show first page of point locations and center markers of regions',
       mapmode: 'display:none',
       resloaded: false,
       resources: [],
@@ -374,7 +375,6 @@ export default {
               this.geodata = JSON.parse(response.data.geodata);
               document.body.style.cursor = 'default';
             } catch (e) {
-              // console.error(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }
@@ -394,7 +394,6 @@ export default {
       return [];
     },
     filterBuilder() {
-      // const startd = new Date();
       axios.get('/discoverapi/', {
         params: {
           filterbuilder: '1',
@@ -454,12 +453,10 @@ export default {
     showMap() {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
-        this.mapmessage = 'show first page of point locations and center markers of regions with current filters';
         this.mapmode = 'display:block';
         this.setAllMarkers();
         document.getElementById('map-mode-button').value = 'Hide Map';
       } else if (document.getElementById('map-view').style.display !== 'block') {
-        this.mapmessage = 'filters will remain selected and the resource list will update to show all resources';
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
@@ -478,9 +475,9 @@ export default {
         const pointlocs = [];
         pts.forEach((x) => {
           if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
-            console.error(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
+            // no action
           } else if (Math.abs(parseFloat(x.north)) > 90 || Math.abs(parseFloat(x.east)) > 180) {
-            console.error(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
+            // no action
           }
           const lat = Number.isNaN(parseFloat(x.north)) ? 0.0 : parseFloat(x.north);
           const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
