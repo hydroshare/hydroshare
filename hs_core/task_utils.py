@@ -53,7 +53,6 @@ def _retrieve_job_id(job_name, res_id):
             job_id = _retrieve_task_id(job_name, res_id, scheduled_jobs)
     return job_id
 
-
 def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
@@ -69,10 +68,12 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
                 obj.name = name
             if payload:
                 obj.payload = payload
-            obj.status = status
+            if obj.status == 'progress':
+                # only update status when it moves from progress, all others are finished states
+                obj.status = status
             obj.save()
 
-        if status == "progress":
+        if obj.status == "progress":
             if not task_exists(task_id):
                 obj.status = 'failed'
                 obj.save()

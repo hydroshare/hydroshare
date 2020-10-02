@@ -269,7 +269,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             task_dict = {
                 'id': datetime.datetime.today().isoformat(),
                 'name': "bag download",
-                'status': "Completed",
+                'status': "completed",
                 'payload': res.bag_url
             }
             return JsonResponse(task_dict)
