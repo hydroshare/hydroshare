@@ -372,16 +372,18 @@ class CompositeResource(BaseResource):
             if parent_aggr is not None:
                 parent_aggr.create_aggregation_xml_documents()
 
-    def create_model_program_meta_json_schema_files(self, path=''):
-        """ Creates metadata json schema file for any model program aggregations in the resource that has
+    def create_model_aggr_meta_json_schema_files(self, path=''):
+        """ Creates metadata json schema file for any model aggregations in the resource that has
         metadata schema
         :param  path: (optional) file or folder path for which metadata schema files need to be created for
-        all associated model program aggregations of that path
+        all associated model aggregations of that path
         """
 
         if not path:
-            # create metadata schema json file far all model program aggregations of this resource
-            for aggregation in self.modelprogramlogicalfile_set.exclude(mi_schema_json={}):
+            # create metadata schema json file far all model aggregations of this resource
+            for aggregation in self.modelprogramlogicalfile_set.exclude(metadata_schema_json={}):
+                aggregation.create_metadata_schema_json_file()
+            for aggregation in self.modelinstancelogicalfile_set.exclude(metadata_schema_json={}):
                 aggregation.create_metadata_schema_json_file()
 
         else:
@@ -390,20 +392,22 @@ class CompositeResource(BaseResource):
             is_path_a_folder = ext == ''
             try:
                 if is_path_a_folder:
-                    # need to create json files for all model program aggregations that exist under path
+                    # need to create json files for all model aggregations that exist under path
                     if path.startswith(self.file_path):
                         folder = path[len(self.file_path) + 1:]
                     else:
                         folder = path
                     mp_aggrs = self.modelprogramlogicalfile_set.filter(folder__startswith=folder).exclude(
-                        mi_schema_json={})
-                    for mp_aggr in mp_aggrs:
-                        mp_aggr.create_metadata_schema_json_file()
+                        metadata_schema_json={})
+                    mi_aggrs = self.modelinstancelogicalfile_set.filter(folder__startswith=folder).exclude(
+                        metadata_schema_json={})
+                    for model_aggr in mp_aggrs + mi_aggrs:
+                        model_aggr.create_metadata_schema_json_file()
                 else:
                     # path is a file path
                     aggregation = self.get_aggregation_by_name(path)
-                    # need to create json file only for this model program aggregation
-                    if aggregation.is_model_program:
+                    # need to create json file only for this model aggregation
+                    if aggregation.is_model_program or aggregation.is_model_instance:
                         aggregation.create_metadata_schema_json_file()
             except ObjectDoesNotExist:
                 # path representing a file path is not an aggregation - nothing to do

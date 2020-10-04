@@ -355,10 +355,10 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         if '/data/contents/' in input_path:
             short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
             res.create_aggregation_xml_documents(path=short_path)
-            res.create_model_program_meta_json_schema_files(path=short_path)
+            res.create_model_aggr_meta_json_schema_files(path=short_path)
         else:  # all metadata included, e.g., /data/*
             res.create_aggregation_xml_documents()
-            res.create_model_program_meta_json_schema_files()
+            res.create_model_aggr_meta_json_schema_files()
 
     try:
         if aggregation or sf_zip:
@@ -388,7 +388,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                     istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
                 except SessionException:
                     logger.error("cannot copy {}".format(aggregation.metadata_file_path))
-                if aggregation.is_model_program:
+                if aggregation.is_model_program or aggregation.is_model_instance:
                     try:
                         istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
                     except SessionException:

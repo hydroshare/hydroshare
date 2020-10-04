@@ -205,7 +205,7 @@ def create_bag_files(resource):
     # and map xml documents
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_xml_documents()
-        resource.create_model_program_meta_json_schema_files()
+        resource.create_model_aggr_meta_json_schema_files()
 
     res_coll = resource.root_path
     istorage.setAVU(res_coll, 'metadata_dirty', "false")
