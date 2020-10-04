@@ -894,6 +894,8 @@ class AbstractLogicalFile(models.Model):
         if file_id is not None:
             # user selected a file to set aggregation
             res_file = get_resource_file_by_id(resource, file_id)
+            if res_file is None or not res_file.exists:
+                raise ValidationError("File not found.")
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
             storage = resource.get_irods_storage()
@@ -923,10 +925,7 @@ class AbstractLogicalFile(models.Model):
                     raise ValidationError(msg)
 
         if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile']:
-            if res_file is None or not res_file.exists:
-                raise ValidationError("File not found.")
-
-            if res_file.has_logical_file:
+            if res_file is not None and res_file.has_logical_file:
                 if not res_file.logical_file.is_fileset and not res_file.logical_file.is_model_instance:
                     msg = "Selected {} {} is already part of an aggregation."
                     if not folder_path:
@@ -934,7 +933,11 @@ class AbstractLogicalFile(models.Model):
                     else:
                         msg = msg.format('folder', folder_path)
                     raise ValidationError(msg)
-
+        elif cls.__name__ == 'ModelProgramLogicalFile':
+            if res_file is not None and res_file.has_logical_file:
+                if res_file.logical_file.is_model_instance:
+                    msg = "Model program aggregation is not allowed within a model instance aggregation"
+                    raise ValidationError(msg)
         return res_file, folder_path
 
     @classmethod
