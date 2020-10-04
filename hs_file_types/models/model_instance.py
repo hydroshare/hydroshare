@@ -25,9 +25,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
     # url to a model program which was used to create a the model instance
     executed_by_url = models.URLField(blank=True, null=True)
 
-    # field to store the json schema from the associated model program aggregation
-    metadata_schema_json = JSONField(default=dict)
-
     # additional metadata in json format based on metadata schema of the related (executed_by)
     # model program aggregation
     metadata_json = JSONField(default=dict)
@@ -59,8 +56,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         metadata_json_div = dom_tags.div(cls="content-block")
         if self.metadata_json:
             metadata_schema = {}
-            if self.metadata_schema_json:
-                metadata_schema = self.metadata_schema_json
+            if self.logical_file.metadata_schema_json:
+                metadata_schema = self.logical_file.metadata_schema_json
             with metadata_json_div:
                 dom_tags.legend("Schema Based Metadata")
                 schema_properties_key = 'properties'
@@ -129,7 +126,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                    method="post", enctype="multipart/form-data"):
                     with dom_tags.fieldset():
                         dom_tags.legend("Schema Based Metadata")
-                        json_schema = json.dumps(self.metadata_schema_json)
+                        json_schema = json.dumps(self.logical_file.metadata_schema_json)
                         json_data = "{}"
                         if self.metadata_json:
                             json_data = json.dumps(self.metadata_json, indent=4)
@@ -167,17 +164,17 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 dom_tags.option(option, value=mp_aggr.id)
                         else:
                             dom_tags.option(option, value=mp_aggr.id)
-                if self.metadata_schema_json:
+                if self.logical_file.metadata_schema_json:
                     dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
                                     cls="btn btn-success btn-block",
                                     data_toggle="collapse", data_target="#meta-schema")
                     mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
                                                  style="margin-top:10px; padding-bottom: 20px;")
                     with mi_schema_div:
-                        json_schema = json.dumps(self.metadata_schema_json, indent=4)
+                        json_schema = json.dumps(self.logical_file.metadata_schema_json, indent=4)
                         dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;",
                                           cls="form-control")
-                if self.executed_by and not self.executed_by.mi_schema_json:
+                if self.executed_by and not self.executed_by.metadata_schema_json:
                     dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
 
                 with dom_tags.div(cls="control-group"):
@@ -247,11 +244,12 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                             style="display: none;", type="button")
 
                 invalid_metadata = False
-                if self.metadata_schema_json:
+                if self.logical_file.metadata_schema_json:
                     if self.metadata_json:
                         # validate metadata against the associated schema
                         try:
-                            jsonschema.Draft4Validator(self.metadata_schema_json).validate(self.metadata_json)
+                            jsonschema.Draft4Validator(self.logical_file.metadata_schema_json).validate(
+                                self.metadata_json)
                         except jsonschema.ValidationError:
                             invalid_metadata = True
 

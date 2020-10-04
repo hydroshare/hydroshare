@@ -50,8 +50,10 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         if executed_by:
             metadata.executed_by = executed_by
             metadata.executed_by_url = None
-            if not metadata.metadata_schema_json or not metadata.metadata_json:
-                metadata.metadata_schema_json = self.user_selected_mp_aggr.mi_schema_json
+            logical_file = metadata.logical_file
+            if not logical_file.metadata_schema_json or not metadata.metadata_json:
+                logical_file.metadata_schema_json = self.user_selected_mp_aggr.metadata_schema_json
+                logical_file.save()
         elif executed_by_url:
             metadata.executed_by = None
             metadata.executed_by_url = executed_by_url
@@ -71,7 +73,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     code_repository = forms.URLField(required=False, max_length=255)
     programming_languages = forms.CharField(required=False)
     operating_systems = forms.CharField(required=False)
-    mi_json_schema = forms.CharField(required=False)
+    metadata_json_schema = forms.CharField(required=False)
     mp_file_types = forms.CharField(max_length=255, required=False)
     mp_program_type = forms.CharField(max_length=255)
     # allow user to upload a json schema file
@@ -118,11 +120,11 @@ class ModelProgramMetadataValidationForm(forms.Form):
                     mp_file_types_dict[mp_file_type_lst[0]] = None
         return mp_file_types_dict
 
-    def clean_mi_json_schema(self):
-        json_schema_string = self.cleaned_data['mi_json_schema'].strip()
+    def clean_metadata_json_schema(self):
+        json_schema_string = self.cleaned_data['metadata_json_schema'].strip()
         json_schema = dict()
         if json_schema_string:
-            return self._validate_json_schema(schema_string=json_schema_string, field_name='mi_json_schema')
+            return self._validate_json_schema(schema_string=json_schema_string, field_name='metadata_json_schema')
 
         return json_schema
 
@@ -147,12 +149,12 @@ class ModelProgramMetadataValidationForm(forms.Form):
         logical_file = metadata.logical_file
 
         # if the user has uploaded json file for the metadata schema we will use the content
-        # of that file to populate the the mi_schema_json metadata field
+        # of that file to populate the the metadata_schema_json metadata field
         if self.cleaned_data['mi_json_schema_file']:
             # use the content from the uploaded json file to save in database
-            logical_file.mi_schema_json = self.cleaned_data['mi_json_schema_file']
+            logical_file.metadata_schema_json = self.cleaned_data['mi_json_schema_file']
         else:
-            logical_file.mi_schema_json = self.cleaned_data['mi_json_schema']
+            logical_file.metadata_schema_json = self.cleaned_data['metadata_json_schema']
 
         logical_file.model_program_type = self.cleaned_data['mp_program_type']
         logical_file.save()

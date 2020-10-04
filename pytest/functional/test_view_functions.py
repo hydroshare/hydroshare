@@ -161,10 +161,10 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
     with open(schema_file_path, 'r') as file_obj:
         json_schema = file_obj.read()
     assert len(json_schema) > 0
-    assert not mp_aggr.mi_schema_json
-    mp_aggr.mi_schema_json = json.loads(json_schema)
+    assert not mp_aggr.metadata_schema_json
+    mp_aggr.metadata_schema_json = json.loads(json_schema)
     mp_aggr.save()
-    assert mp_aggr.mi_schema_json
+    assert mp_aggr.metadata_schema_json
     assert mi_aggr.metadata.executed_by is None
     # set executed by to model program aggregation
     mi_aggr.metadata.executed_by = mp_aggr

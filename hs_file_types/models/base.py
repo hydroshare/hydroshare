@@ -1452,7 +1452,7 @@ class AbstractLogicalFile(models.Model):
             resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
 
         # if this is a model program, add the metadata schema json file
-        if self.is_model_program and self.mi_schema_json:
+        if self.is_model_program and self.metadata_schema_json:
             n = len(files)
             res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_short_path}'.format(
                 hs_url=current_site_url,

@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 from hs_file_types.models import AbstractLogicalFile
@@ -12,6 +13,10 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
     # folder becomes the name of the aggregation. Where folder is not set, the one file that is part
     # of this aggregation becomes the aggregation name
     folder = models.CharField(max_length=4096, null=True, blank=True)
+
+    # metadata schema (in json format) for model instance aggregation
+    # metadata for the model instance aggregation is validated based on this schema
+    metadata_schema_json = JSONField(default=dict)
 
     class Meta:
         abstract = True

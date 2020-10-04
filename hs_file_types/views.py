@@ -955,7 +955,7 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
 
     # validate json data against metadata schema:
     try:
-        metadata_json_schema = metadata.metadata_schema_json
+        metadata_json_schema = logical_file.metadata_schema_json
         jsonschema.Draft4Validator(metadata_json_schema).validate(metadata_json)
     except jsonschema.ValidationError as ex:
         msg = "JSON metadata is not valid as per the associated metadata schema {}".format(str(ex))

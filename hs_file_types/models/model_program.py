@@ -197,7 +197,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 dom_tags.p(self.programming_languages_as_string)
             html_string += pl_div.render()
 
-        json_schema = self.logical_file.mi_schema_json
+        json_schema = self.logical_file.metadata_schema_json
         if json_schema:
             mi_schema_div = dom_tags.div(cls="content-block")
             with mi_schema_div:
@@ -332,7 +332,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                    id="file_programming_languages", maxlength="250",
                                                    name="programming_languages", type="text")
                                 with dom_tags.div(cls="controls"):
-                                    json_schema = self.logical_file.mi_schema_json
+                                    json_schema = self.logical_file.metadata_schema_json
                                     if json_schema:
                                         json_schema = json.dumps(json_schema, indent=4)
                                     else:
@@ -354,7 +354,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                     dom_tags.textarea(json_schema,
                                                       cls="form-control input-sm textinput textInput",
                                                       id="mi-json-schema",
-                                                      name="mi_json_schema", rows="30", readonly="")
+                                                      name="metadata_json_schema", rows="30", readonly="")
 
                             with dom_tags.div(id="mp_content_files", cls="control-group"):
                                 with dom_tags.div(cls="controls"):
@@ -378,10 +378,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
     model_program_type = models.CharField(max_length=255, default="Unknown Model Program")
 
     metadata = models.OneToOneField(ModelProgramFileMetaData, related_name="logical_file")
-
-    # metadata schema (in json format) for model instance aggregation to which this aggregation
-    # can be related. metadata for the related model instance aggregation is validated based on this schema
-    mi_schema_json = JSONField(default=dict)
     data_type = "Model Program"
 
     @classmethod
@@ -532,7 +528,7 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         copy_of_logical_file.metadata.save()
 
         copy_of_logical_file.model_program_type = self.model_program_type
-        copy_of_logical_file.mi_schema_json = self.mi_schema_json
+        copy_of_logical_file.metadata_schema_json = self.metadata_schema_json
         copy_of_logical_file.folder = self.folder
         copy_of_logical_file.save()
         return copy_of_logical_file
