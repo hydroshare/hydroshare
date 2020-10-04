@@ -456,11 +456,7 @@ function updateSelectionMenuContext() {
                         // created based on a folder
                         uiActionStates.removeAggregation.disabled = true;
                         uiActionStates.removeAggregation.fileMenu.hidden = true;
-                    }
-                    if (logicalFileType === "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === "true") {
-                        uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
-                    }
-                    else if(logicalFileType === "ModelProgramLogicalFile" && fileHasModelProgramAggrFolder === "true") {
+                        // hide option to create model aggregation
                         uiActionStates.setModelInstanceFileType.fileMenu.hidden = true;
                         uiActionStates.setModelProgramFileType.fileMenu.hidden = true;
                     }
