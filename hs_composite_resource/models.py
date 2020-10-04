@@ -399,10 +399,13 @@ class CompositeResource(BaseResource):
                         folder = path
                     mp_aggrs = self.modelprogramlogicalfile_set.filter(folder__startswith=folder).exclude(
                         metadata_schema_json={})
+                    for mp_aggr in mp_aggrs:
+                        mp_aggr.create_metadata_schema_json_file()
+
                     mi_aggrs = self.modelinstancelogicalfile_set.filter(folder__startswith=folder).exclude(
                         metadata_schema_json={})
-                    for model_aggr in mp_aggrs + mi_aggrs:
-                        model_aggr.create_metadata_schema_json_file()
+                    for mi_aggr in mi_aggrs:
+                        mi_aggr.create_metadata_schema_json_file()
                 else:
                     # path is a file path
                     aggregation = self.get_aggregation_by_name(path)
