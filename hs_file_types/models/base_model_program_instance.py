@@ -1,11 +1,16 @@
+import json
 import logging
 import os
+import random
+import shutil
+from uuid import uuid4
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from hydroshare import settings
 
 from hs_file_types.models import AbstractLogicalFile
-from hs_file_types.models.base import FileTypeContext
+from hs_file_types.models.base import FileTypeContext, SCHEMA_JSON_FILE_ENDSWITH
 
 
 class AbstractModelLogicalFile(AbstractLogicalFile):
@@ -20,6 +25,34 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
     class Meta:
         abstract = True
+
+    @property
+    def schema_short_file_path(self):
+        """File path of the aggregation metadata schema file relative to {resource_id}/data/contents/
+        """
+
+        json_file_name = self.aggregation_name
+        if "/" in json_file_name:
+            json_file_name = os.path.basename(json_file_name)
+
+        json_file_name, _ = os.path.splitext(json_file_name)
+
+        json_file_name += SCHEMA_JSON_FILE_ENDSWITH
+
+        if self.folder:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
+        if file_folder:
+            json_file_name = os.path.join(file_folder, json_file_name)
+
+        return json_file_name
+
+    @property
+    def schema_file_path(self):
+        """Full path of the aggregation metadata schema json file starting with {resource_id}/data/contents/
+        """
+        return os.path.join(self.resource.file_path, self.schema_short_file_path)
 
     @classmethod
     def get_main_file_type(cls):
@@ -94,3 +127,35 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
                                                                             res_file.storage_path))
             ft_ctx.logical_file = logical_file
+
+    def create_metadata_schema_json_file(self):
+        """Creates aggregation metadata schema json file """
+
+        if not self.metadata_schema_json:
+            return
+
+        log = logging.getLogger()
+
+        # create a temp dir where the json file will be temporarily saved before copying to iRODS
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
+        istorage = self.resource.get_irods_storage()
+
+        if os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
+        os.makedirs(tmpdir)
+
+        # create json schema file for the aggregation
+        json_from_file_name = os.path.join(tmpdir, 'schema.json')
+        try:
+            with open(json_from_file_name, 'w') as out:
+                json_schema = json.dumps(self.metadata_schema_json, indent=4)
+                out.write(json_schema)
+            to_file_name = self.schema_file_path
+            istorage.saveFile(json_from_file_name, to_file_name, True)
+            log.debug("Model aggregation metadata json schema file:{} created".format(to_file_name))
+
+        except Exception as ex:
+            log.error("Failed to create model aggregation metadata schema json file. Error:{}".format(str(ex)))
+            raise ex
+        finally:
+            shutil.rmtree(tmpdir)
