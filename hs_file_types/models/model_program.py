@@ -1,20 +1,13 @@
 import json
-import logging
-import os
-import random
-import shutil
-from uuid import uuid4
 
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
 from lxml import etree
 
-from hydroshare import settings
 from hs_core.models import ResourceFile, CoreMetaData
-from .base import SCHEMA_JSON_FILE_ENDSWITH
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 
