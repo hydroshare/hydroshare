@@ -174,8 +174,12 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if is_zip_request:
         download_path = '/django_irods/download/' + output_path
         if use_async:
+            if request.user.is_authenticated():
+                user_id = request.user.username
+            else:
+                user_id = request.session.session_key
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request, download_path, request.user.username))
+                                                aggregation_name, is_sf_request, download_path, user_id))
             task_id = task.task_id
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
@@ -189,7 +193,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             else:
                 # return status to the task notification App AJAX call
                 task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
-                                                            username=request.user.username)
+                                                            username=user_id)
                 return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
