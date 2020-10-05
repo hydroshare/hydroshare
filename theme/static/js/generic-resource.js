@@ -545,7 +545,7 @@ $(document).ready(function () {
     $(window).bind('scroll', function () {
         let toolbar = $(".custom-btn-toolbar");
         if (toolbar.children().length == 0){
-            toolbar.css("display", None);
+            toolbar.css("display", 'None');
         }
         else if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());

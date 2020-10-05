@@ -239,22 +239,20 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 # object can be passed as parameters to a celery task
 
                 task_id = get_resource_bag_task(res_id)
+                if request.user.is_authenticated():
+                    user_id = request.user.username
+                else:
+                    user_id = request.session.session_key
                 if not task_id:
-                    task = create_bag_by_irods.apply_async((res_id, request.user.username))
+                    task = create_bag_by_irods.apply_async((res_id, user_id))
                     task_id = task.task_id
                     task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
-                                                                username=request.user.username)
+                                                                username=user_id)
                     return JsonResponse(task_dict)
                 else:
                     task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
-                                                                username=request.user.username)
+                                                                username=user_id)
                     return JsonResponse(task_dict)
-
-                if rest_call:
-                    return JsonResponse({'bag_status': 'Not ready',
-                                         'task_id': task_id})
-
-                return HttpResponseRedirect(res.get_absolute_url())
             else:
                 ret_status = create_bag_by_irods(res_id)
                 if not ret_status:

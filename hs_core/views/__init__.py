@@ -99,30 +99,46 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
-@login_required
 def get_tasks_by_user(request):
-    task_list = get_all_tasks(request.user.username)
+    if request.user.is_authenticated():
+        user_id = request.user.username
+    else:
+        user_id = request.session.session_key
+    task_list = get_all_tasks(user_id)
     return JsonResponse({'tasks': task_list})
 
 
-@login_required
 def get_task(request, task_id):
-    task_dict = get_or_create_task_notification(task_id)
-    return JsonResponse(task_dict)
-
-
-@login_required
-def abort_task(request, task_id):
-    if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
-        task_dict = revoke_task_by_id(task_id)
+    if request.user.is_authenticated():
+        task_dict = get_or_create_task_notification(task_id)
         return JsonResponse(task_dict)
+    else:
+        # need to verify task_id for anonoymous users to prevent creating junk task entries in the model
+        task_dict = get_or_create_task_notification(task_id, verify_task_id=True)
+        if task_dict['name'] and task_dict['status']:
+            return JsonResponse(task_dict)
+        else:
+            return JsonResponse({'error': 'not authorized to get the task'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+def abort_task(request, task_id):
+    if request.user.is_authenticated():
+        if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
+            task_dict = revoke_task_by_id(task_id)
+            return JsonResponse(task_dict)
+        else:
+            return JsonResponse({'error': 'not authorized to revoke the task'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
         return JsonResponse({'error': 'not authorized to revoke the task'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @login_required
 def dismiss_task(request, task_id):
-    if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
+    if request.user.is_authenticated():
+        user_id = request.user.username
+    else:
+        user_id = request.session.session_key
+    if TaskNotification.objects.filter(task_id=task_id, username=user_id).exists():
         task_dict = dismiss_task_by_id(task_id)
         if task_dict:
             return JsonResponse(task_dict)
@@ -132,10 +148,19 @@ def dismiss_task(request, task_id):
         return JsonResponse({'error': 'not authorized to dismiss the task'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-@login_required
 def set_task_delivered(request, task_id):
-    if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
-        task_dict = set_task_delivered_by_id(task_id)
+    if request.user.is_authenticated():
+        if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
+            task_dict = set_task_delivered_by_id(task_id)
+            if task_dict:
+                return JsonResponse(task_dict)
+            else:
+                return JsonResponse({'error': 'requested task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({'error': 'not authorized to deliver the task'}, status=status.HTTP_401_UNAUTHORIZED)
+    elif TaskNotification.objects.filter(task_id=task_id, username=request.session.session_key).exists():
+        # dismiss the task entry for delivered tasks for anonymous users
+        task_dict = dismiss_task_by_id(task_id)
         if task_dict:
             return JsonResponse(task_dict)
         else:

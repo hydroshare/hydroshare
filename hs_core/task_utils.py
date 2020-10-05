@@ -53,7 +53,28 @@ def _retrieve_job_id(job_name, res_id):
             job_id = _retrieve_task_id(job_name, res_id, scheduled_jobs)
     return job_id
 
-def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
+
+def get_or_create_task_notification(task_id, status='progress', name='', payload='', username='',
+                                    verify_task_id=False):
+    if verify_task_id:
+        filter_task = TaskNotification.objects.filter(task_id=task_id).first()
+        if filter_task:
+            task_dict = {
+                'id': task_id,
+                'name': filter_task.name,
+                'status': filter_task.status,
+                'payload': filter_task.payload
+            }
+            return task_dict
+        elif not task_exists(task_id):
+            # don't create task entry in the model if task does not exist when task id needs to be verified, e.g.,
+            # for anonymous users
+            return {
+                'id': task_id,
+                'name': '',
+                'status': '',
+                'payload': ''
+            }
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
                                                               defaults={'name': name,

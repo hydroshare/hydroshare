@@ -157,7 +157,7 @@ $(document).ready(function () {
                 }
             },
             canBeDelivered: function (task) {
-                return task.status === 'Completed'
+                return task.status === 'completed'
             },
             abortTask: function(task) {
                 let vue = this;
