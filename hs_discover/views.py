@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
+from haystack.inputs import Exact
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -98,7 +99,11 @@ class SearchAPI(APIView):
             if filters.get('contributor'):
                 sqs = sqs.filter(contributor__in=filters['contributor'])
             if filters.get('type'):
-                sqs = sqs.filter(resource_type__in=list(filters['type']))
+                for k, restype in enumerate(filters['type']):
+                    if k == 0 or k == len(filters['type']):
+                        sqs = sqs.filter(resource_type_exact=Exact(restype))
+                    else:
+                        sqs = sqs.filter_or(resource_type_exact=Exact(restype))
             if filters.get('availability'):
                 sqs = sqs.filter(availability__in=filters['availability'])
             if filters.get('geofilter'):

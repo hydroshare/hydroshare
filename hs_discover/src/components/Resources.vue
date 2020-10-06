@@ -454,7 +454,7 @@ export default {
         if (this.resloaded && this.resources.length > 0) {
           this.setAllMarkers();
         } else {
-          recenterMap();
+          recenterMap(); // eslint-disable-line
         }
         document.getElementById('map-mode-button').value = 'Hide Map';
       } else if (document.getElementById('map-view').style.display !== 'block') {
