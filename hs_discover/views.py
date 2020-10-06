@@ -91,13 +91,29 @@ class SearchAPI(APIView):
             filters = json.loads(qs.get('filter'))
             # filter values expect lists, for example discoverapi/?filter={"owner":["Firstname Lastname"]}
             if filters.get('author'):
-                sqs = sqs.filter(author__in=filters['author'])
+                for k, authortype in enumerate(filters['author']):
+                    if k == 0 or k == len(filters['author']):
+                        sqs = sqs.filter(author_exact=Exact(authortype))
+                    else:
+                        sqs = sqs.filter_or(author_exact=Exact(authortype))
             if filters.get('owner'):
-                sqs = sqs.filter(owner__in=filters['owner'])
+                for k, ownertype in enumerate(filters['owner']):
+                    if k == 0 or k == len(filters['owner']):
+                        sqs = sqs.filter(owner_exact=Exact(ownertype))
+                    else:
+                        sqs = sqs.filter_or(owner_exact=Exact(ownertype))
             if filters.get('subject'):
-                sqs = sqs.filter(subject__in=filters['subject'])
+                for k, subjtype in enumerate(filters['subject']):
+                    if k == 0 or k == len(filters['subject']):
+                        sqs = sqs.filter(subject_exact=Exact(subjtype))
+                    else:
+                        sqs = sqs.filter_or(subject_exact=Exact(subjtype))
             if filters.get('contributor'):
-                sqs = sqs.filter(contributor__in=filters['contributor'])
+                for k, contribtype in enumerate(filters['contributor']):
+                    if k == 0 or k == len(filters['contributor']):
+                        sqs = sqs.filter(contributor_exact=Exact(contribtype))
+                    else:
+                        sqs = sqs.filter_or(contributor_exact=Exact(contribtype))
             if filters.get('type'):
                 for k, restype in enumerate(filters['type']):
                     if k == 0 or k == len(filters['type']):
@@ -105,7 +121,11 @@ class SearchAPI(APIView):
                     else:
                         sqs = sqs.filter_or(resource_type_exact=Exact(restype))
             if filters.get('availability'):
-                sqs = sqs.filter(availability__in=filters['availability'])
+                for k, availtype in enumerate(filters['availability']):
+                    if k == 0 or k == len(filters['availability']):
+                        sqs = sqs.filter(availability_exact=Exact(availtype))
+                    else:
+                        sqs = sqs.filter_or(availability_exact=Exact(availtype))
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
             if filters.get('date'):
