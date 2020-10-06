@@ -1,5 +1,6 @@
 ((exports) => {
   const mapDefaultZoom = 4;
+  const mapCenter = { lat: 42, lng: -71 };
   // eslint-disable-next-line no-unused-vars
   let googMarkers = [];
   let markerCluster;
@@ -12,6 +13,10 @@
     if (markerCluster) {
       markerCluster.clearMarkers();
     }
+  };
+
+  const recenterMap = () => {
+    exports.map.panTo(mapCenter);
   };
 
   const createBatchMarkers = (locations, hsUid, labels) => {
@@ -48,10 +53,7 @@
   const initMap = () => {
     // eslint-disable-next-line no-param-reassign,no-undef
     exports.map = new google.maps.Map(document.getElementById('map'), {
-      center: {
-        lat: 42,
-        lng: -71,
-      },
+      center: mapCenter,
       zoom: mapDefaultZoom,
       gestureHandling: 'greedy',
       mapTypeId: google.maps.MapTypeId.TERRAIN, // eslint-disable-line
@@ -74,4 +76,5 @@
   exports.toggleMap = toggleMap; // eslint-disable-line
   exports.deleteMarkers = deleteMarkers; // eslint-disable-line
   exports.gotoBounds = gotoBounds; // eslint-disable-line
+  exports.recenterMap = recenterMap; //eslint-disable-line
 })(this.window = this.window || {});

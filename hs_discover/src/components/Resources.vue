@@ -442,9 +442,6 @@ export default {
     },
     nameList(names) {
       try {
-        if (names.includes('[')) {
-          return 'None';
-        }
         return names.join(' | ');
       } catch {
         return names;
@@ -454,7 +451,11 @@ export default {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
         this.mapmode = 'display:block';
-        this.setAllMarkers();
+        if (this.resloaded && this.resources.length > 0) {
+          this.setAllMarkers();
+        } else {
+          recenterMap();
+        }
         document.getElementById('map-mode-button').value = 'Hide Map';
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
