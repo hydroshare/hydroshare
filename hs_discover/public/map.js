@@ -19,6 +19,30 @@
     exports.map.panTo(mapCenter);
   };
 
+  // const createMarkers = (locations, hsUid, labels) => {
+  //   document.body.style.cursor = 'wait';
+  //   googMarkers = [];
+  //
+  //   locations.forEach((location) => {
+  //     const marker = new google.maps.Marker({ // eslint-disable-line
+  //       map: exports.map,
+  //       position: location,
+  //       hsUid: hsUid[k % hsUid.length],
+  //     });
+  //     const infowindow = new google.maps.InfoWindow(); // eslint-disable-line
+  //     infowindow.setContent(`<a href="/resource/${hsUid[k % hsUid.length]}" target="_blank">${labels[k % labels.length]}</a>
+  //       lat: ${location.lat.toFixed(2)} lng: ${location.lng.toFixed(2)}`);
+  //     marker.addListener('click', () => {
+  //       infowindow.open(exports.map, marker);
+  //     });
+  //     return marker;
+  //   });
+  //
+  //   markerCluster = new MarkerClusterer(exports.map, googMarkers, // eslint-disable-line
+  //     { imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m' });
+  //   document.body.style.cursor = 'default';
+  // };
+
   const createBatchMarkers = (locations, hsUid, labels) => {
     document.body.style.cursor = 'wait';
     googMarkers = locations.map((location, k) => {

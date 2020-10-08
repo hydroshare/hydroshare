@@ -1,10 +1,7 @@
 <template>
   <div>
-    <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
+    <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map View" :disabled="!geoloaded"
         v-on:click="showMap">
-    <img id="info-icon" v-b-tooltip.hover title="Open the map to view resources that contain Spatial Coverage. Use the paging feature
-to browse resources based on geographic location on the map. Regions are represented by their center points."
-         alt="info" src="/static/img/info.png" height="15" width="15">
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
@@ -14,9 +11,13 @@ to browse resources based on geographic location on the map. Regions are represe
     <div id="resources-main" class="row">
         <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
             <br/>
-            Page <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x"></i>
+            Page <input data-toggle="tooltip" title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
-              &nbsp;&nbsp;&nbsp;<b>\</b>&nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x"></i>
+                &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
              <br/>
         </div>
         <div class="col-xs-3" id="facets">
@@ -387,6 +388,10 @@ export default {
       this.searchtext = '';
       this.searchClick();
     },
+    paging(direction) {
+      this.pagenum += Number.parseInt(direction, 10);
+      this.searchClick(true);
+    },
     orderedFilter(items) {
       if (items.length > 0) {
         return Object.values(items).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()));
@@ -456,10 +461,10 @@ export default {
         } else {
           recenterMap(); // eslint-disable-line
         }
-        document.getElementById('map-mode-button').value = 'Hide Map';
+        document.getElementById('map-mode-button').value = 'Hide Map View';
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
-        document.getElementById('map-mode-button').value = 'Show Map';
+        document.getElementById('map-mode-button').value = 'Show Map View';
       }
       this.searchClick();
     },
@@ -562,11 +567,6 @@ export default {
         padding-top: 4px;
         padding-bottom: 4px;
     }
-    #info-icon {
-        opacity: .75;
-        margin-left: 10px;
-        margin-bottom: 5px;
-    }
     #resultsdisp {
         left: 300px;
     }
@@ -615,5 +615,17 @@ export default {
     .date-wrapper {
         display: block;
         width: 100%;
+    }
+    .pagination {
+      z-index: 1000;
+      margin: 0;
+      transform: translateY(4px);
+    }
+    .fa:hover {
+      color: LightBlue;
+      user-select: none; /* standard syntax */
+      -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+      -moz-user-select: none; /* mozilla browsers */
+      -ms-user-select: none; /* IE10+ */
     }
 </style>
