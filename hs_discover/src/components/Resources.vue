@@ -561,8 +561,8 @@ export default {
         min-width: 437px;
         max-width: 437px;
         width: 437px;
+        word-break: normal;
         word-wrap: break-word;
-        word-break: break-all;
         white-space: normal;
         padding-top: 4px;
         padding-bottom: 4px;
@@ -623,6 +623,7 @@ export default {
     }
     .fa:hover {
       color: LightBlue;
+      /* avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
       -moz-user-select: none; /* mozilla browsers */
