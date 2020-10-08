@@ -1,6 +1,6 @@
 <template>
   <div>
-    <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map View" :disabled="!geoloaded"
+    <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
@@ -461,10 +461,10 @@ export default {
         } else {
           recenterMap(); // eslint-disable-line
         }
-        document.getElementById('map-mode-button').value = 'Hide Map View';
+        document.getElementById('map-mode-button').value = 'Hide Map';
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
-        document.getElementById('map-mode-button').value = 'Show Map View';
+        document.getElementById('map-mode-button').value = 'Show Map';
       }
       this.searchClick();
     },
