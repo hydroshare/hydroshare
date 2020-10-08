@@ -187,6 +187,7 @@ class SearchAPI(APIView):
             owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
             creator = 'None'
+            author = 'None'
 
             if result.creator:
                 creator = result.creator
@@ -195,12 +196,16 @@ class SearchAPI(APIView):
                 author_link = result.author_url
                 author = str(result.author)
             else:
-                if result.authors:
-                    author = result.authors[0]
+                if creator != 'None':
+                    try:
+                        if creator[0]:
+                            author = creator[0]
+                        elif creator[1]:
+                            author = creator[1]
+                    except Exception as gen_creator_ex:
+                        pass  # look for nonempty first or second creator based on corrupted data in production
                 elif result.organization:
                     author = result.organization
-                else:
-                    author = 'None'
 
             if result.contributor is not None:
                 try:
@@ -256,9 +261,9 @@ class SearchAPI(APIView):
             })
 
         if sort == 'title':
-            resources = sorted(resources, key=lambda k: k['title'].lower())
+            resources = sorted(resources, key=lambda idx: idx['title'].lower())
         elif sort == '-title':
-            resources = sorted(resources, key=lambda k: k['title'].lower(), reverse=True)
+            resources = sorted(resources, key=lambda idx: idx['title'].lower(), reverse=True)
 
         return JsonResponse({
             'resources': json.dumps(resources),
