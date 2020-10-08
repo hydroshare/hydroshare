@@ -11,11 +11,11 @@
     <div id="resources-main" class="row">
         <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
             <br/>
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" title="Go back a page"
+            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x"></i>
-            Page <input data-toggle="tooltip" title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" title="Go forward a page"
+            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                     class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x"></i>
                 &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
              <br/>
@@ -389,7 +389,7 @@ export default {
       this.searchClick();
     },
     paging(direction) {
-      this.pagenum += Number.parseInt(direction, 10);
+      this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
       this.searchClick(true);
     },
     orderedFilter(items) {
