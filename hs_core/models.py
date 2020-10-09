@@ -3827,6 +3827,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
         graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        graph.add((subject, RDF.type, HSTERMS.resource))
         return graph
 
     @classmethod
