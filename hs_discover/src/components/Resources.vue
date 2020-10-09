@@ -1,6 +1,6 @@
 <template>
-  <div><input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"
-                v-on:click="displayMap"><!-- displayMap defined in map.js --><br/><br/>
+<!--  <div><input id="map-mode-button" type="button" class="mapdisp" value="Show Map" :disabled="!geoloaded"-->
+<!--                v-on:click="displayMap">&lt;!&ndash; displayMap defined in map.js &ndash;&gt;<br/><br/>-->
     <div id="search" @keyup.enter="searchClick" class="input-group">
 <!--        <input id="search-input" type="search" class="form-control" v-model="searchtext"-->
 <!--               placeholder="Search all Public and Discoverable Resources">-->
@@ -15,7 +15,7 @@
             @hit="selectedAddress = $event"
         />
       <br/>
-        <select v-model="searchcategory" @change="catsearch($event)" class="inside-right">
+        <select id="filterselect" v-model="searchcategory" @change="catsearch($event)" class="inside-right">
           <option>all</option>
           <option>abstract</option>
           <option>author</option>
@@ -36,29 +36,29 @@
       </div>
         <div class="col-xs-12" id="resultsdisp">
             <br/>
-            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">
-            Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"
-                min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}
-            | Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/>
+<!--            <input id="map-filter-button" type="button" style="display:none" class="mapdisp" value="Filter by Map View" :disabled="!geoloaded" v-on:click="liveMapFilter" data-toggle="tooltip" title="Show list of resources that are located in the current map view">-->
+<!--            Page: <input data-toggle="tooltip" title="Enter number or use Up and Down arrows" id="page-number" type="number"-->
+<!--                min="1" max="9999" v-model="pagenum"> of {{Math.ceil(filteredResources.length / perpage)}}-->
+<!--            | Showing: {{Math.min(perpage, resources.length, filteredResources.length)}} of {{filteredResources.length}} {{resgeotypes}}<br/>-->
         </div>
-        <div class="col-xs-3" id="facets">
-            <div id="filter-items">
-                <!-- filter by temporal overlap -->
-                <div id="faceting-temporal">
-                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made">
-                                Filter by Date
-                            </h4>
-                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
-                            <date-pick
-                                 v-model="startdate"
-                                 :displayFormat="'MM/DD/YYYY'"
-                            ></date-pick><br/>
-                            <date-pick
-                                 v-model="enddate"
-                                 :displayFormat="'MM/DD/YYYY'"
-                            ></date-pick>
-                        </div>
-                </div>
+<!--        <div class="col-xs-3" id="facets">-->
+<!--            <div id="filter-items">-->
+<!--                &lt;!&ndash; filter by temporal overlap &ndash;&gt;-->
+<!--                <div id="faceting-temporal">-->
+<!--                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made">-->
+<!--                                Filter by Date-->
+<!--                            </h4>-->
+<!--                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">-->
+<!--                            <date-pick-->
+<!--                                 v-model="startdate"-->
+<!--                                 :displayFormat="'MM/DD/YYYY'"-->
+<!--                            ></date-pick><br/>-->
+<!--                            <date-pick-->
+<!--                                 v-model="enddate"-->
+<!--                                 :displayFormat="'MM/DD/YYYY'"-->
+<!--                            ></date-pick>-->
+<!--                        </div>-->
+<!--                </div>-->
 <!--                &lt;!&ndash; filter by author &ndash;&gt;-->
 <!--                <div id="faceting-creator">-->
 <!--                    <div class="panel panel-default">-->
@@ -192,8 +192,8 @@
 <!--                    </div>-->
 <!--                </div>-->
 <!--                &lt;!&ndash; end facet panels &ndash;&gt;-->
-            </div>
-        </div>
+<!--            </div>-->
+<!--        </div>-->
         <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
@@ -251,7 +251,7 @@ export default {
   data() {
     return {
       autocomplete: [],
-      searchcategory: 'select',
+      searchcategory: 'all',
       resloaded: false,
       resources: [],
       searchtext: '',
@@ -757,11 +757,8 @@ export default {
     #wrapper > a {
         margin-left: 1em;
     }
-    #search input {
-        width: 100%;
-        min-width: 800px;
-        padding-left: 25px;
-        padding-right: 25px;
+    #search {
+        width: 850px;
         z-index: 1;
     }
     .inside-right {
@@ -775,5 +772,8 @@ export default {
         top: 10px;
         left: 10px;
         z-index: 2;
+    }
+    #filterselect {
+      z-index: 999;
     }
 </style>
