@@ -54,6 +54,14 @@ def _retrieve_job_id(job_name, res_id):
     return job_id
 
 
+def get_task_user_id(request):
+    if request.user.is_authenticated():
+        user_id = request.user.username
+    else:
+        user_id = request.session.session_key
+    return user_id
+
+
 def get_or_create_task_notification(task_id, status='progress', name='', payload='', username='',
                                     verify_task_id=False):
     if verify_task_id:

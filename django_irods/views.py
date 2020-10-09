@@ -14,7 +14,7 @@ from rest_framework import status
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
 from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification
+from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
@@ -174,10 +174,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if is_zip_request:
         download_path = '/django_irods/download/' + output_path
         if use_async:
-            if request.user.is_authenticated():
-                user_id = request.user.username
-            else:
-                user_id = request.session.session_key
+            user_id = get_task_user_id(request)
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
                                                 aggregation_name, is_sf_request, download_path, user_id))
             task_id = task.task_id
@@ -243,10 +240,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 # object can be passed as parameters to a celery task
 
                 task_id = get_resource_bag_task(res_id)
-                if request.user.is_authenticated():
-                    user_id = request.user.username
-                else:
-                    user_id = request.session.session_key
+                user_id = get_task_user_id(request)
                 if not task_id:
                     task = create_bag_by_irods.apply_async((res_id, user_id))
                     task_id = task.task_id

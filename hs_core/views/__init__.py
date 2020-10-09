@@ -1,4 +1,3 @@
-
 import json
 import datetime
 import pytz
@@ -48,7 +47,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
-    set_task_delivered_by_id, get_or_create_task_notification, get_resource_delete_task
+    set_task_delivered_by_id, get_or_create_task_notification, get_resource_delete_task, get_task_user_id
 from hs_core.tasks import delete_resource_task, copy_resource_task
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -100,10 +99,7 @@ def verify(request, *args, **kwargs):
 
 
 def get_tasks_by_user(request):
-    if request.user.is_authenticated():
-        user_id = request.user.username
-    else:
-        user_id = request.session.session_key
+    user_id = get_task_user_id(request)
     task_list = get_all_tasks(user_id)
     return JsonResponse({'tasks': task_list})
 
@@ -134,10 +130,7 @@ def abort_task(request, task_id):
 
 @login_required
 def dismiss_task(request, task_id):
-    if request.user.is_authenticated():
-        user_id = request.user.username
-    else:
-        user_id = request.session.session_key
+    user_id = get_task_user_id(request)
     if TaskNotification.objects.filter(task_id=task_id, username=user_id).exists():
         task_dict = dismiss_task_by_id(task_id)
         if task_dict:
