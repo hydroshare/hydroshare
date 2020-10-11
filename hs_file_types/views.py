@@ -975,6 +975,49 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
 
 @authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
 @login_required
+def update_model_instance_meta_schema(request, file_type_id, **kwargs):
+    """copies the metadata schema from the associated model program aggregation over to the model instance aggregation
+    """
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
+    metadata = logical_file.metadata
+    if not metadata.executed_by:
+        msg = "No associated model program was found"
+        error_response = {"status": "error", "message": msg}
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+    elif not metadata.executed_by.metadata_schema_json:
+        msg = "Associated model program has no metadata schema"
+        error_response = {"status": "error", "message": msg}
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+    logical_file.metadata_schema_json = metadata.executed_by.metadata_schema_json
+    if metadata.metadata_json:
+        # validate json data against metadata schema:
+        try:
+            metadata_json_schema = logical_file.metadata_schema_json
+            jsonschema.Draft4Validator(metadata_json_schema).validate(metadata.metadata_json)
+        except jsonschema.ValidationError as ex:
+            # delete existing invalid metadata
+            metadata.metadata_json = {}
+
+    logical_file.save()
+    metadata.is_dirty = True
+    metadata.save()
+    resource = logical_file.resource
+    resource_modified(resource, request.user, overwrite_bag=False)
+
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'element_name': 'metadata_schema_json', 'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
+@login_required
 def update_model_instance_metadata(request, file_type_id, **kwargs):
     """adds/update any/all of the following metadata attributes associated metadata object
     has_model_output

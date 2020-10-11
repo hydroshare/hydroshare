@@ -549,6 +549,39 @@ function update_netcdf_file_ajax_submit() {
         }
     });
 }
+function updateModelInstanceMetaSchema() {
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        Schema update was successful.\
+    </div>';
+
+    var url = $("#btn-mi-schema-update").attr("data-schema-update-url");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#btn-mi-schema-update").hide();
+                $("#div-invalid-schema-message").hide();
+                $("#fb-inner-controls").before($alert_success);
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
+                });
+                // refetch file metadata to show the updated information related to the schema
+                showFileTypeMetadata(false, "");
+            }
+            else {
+                display_error_message("Schema update failed.", json_response.message);
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Schema update failed', xhr.responseText);
+        }
+    });
+}
 
 function update_sqlite_file_ajax_submit() {
     var $alert_success = '<div class="alert alert-success" id="success-alert"> \

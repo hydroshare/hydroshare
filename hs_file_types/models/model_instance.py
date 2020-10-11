@@ -134,6 +134,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             dom_tags.div("Existing metadata is invalid as per the schema", cls="alert alert-danger")
                             dom_tags.textarea(json_data, rows=10, cols=50, readonly="readonly", cls="form-control")
                             json_data = "{}"
+
                         dom_tags.input(value=json_schema, id="id-json-schema", type="hidden")
                         dom_tags.input(value=json_data, id="id-metadata-json", name="metadata_json", type="hidden")
                         dom_tags.input(value="loading", id="id-json-editor-load-status", type="hidden")
@@ -147,6 +148,17 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             return schema_div
 
         def get_executed_by_form():
+            invalid_schema = False
+            if self.logical_file.metadata_schema_json:
+                if self.metadata_json:
+                    if self.executed_by and self.executed_by.metadata_schema_json:
+                        # validate metadata against the schema in the linked model program
+                        try:
+                            jsonschema.Draft4Validator(self.executed_by.metadata_schema_json).validate(
+                                self.metadata_json)
+                        except jsonschema.ValidationError:
+                            invalid_schema = True
+
             executed_by_div = dom_tags.div()
             with executed_by_div:
                 dom_tags.label('Select a Model Program', fr="id_executed_by",
@@ -164,6 +176,21 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 dom_tags.option(option, value=mp_aggr.id)
                         else:
                             dom_tags.option(option, value=mp_aggr.id)
+                if invalid_schema:
+                    dom_tags.div("Metadata schema in the associated model program fails to validate existing metadata. "
+                                 "Updating the schema from model program will lead to loss of all schema based "
+                                 "metadata in this model instance.",
+                                 cls="alert alert-danger", id="div-invalid-schema-message")
+                if self.executed_by and self.executed_by.metadata_schema_json:
+                    schema_update_url = "/hsapi/_internal/{}/update-modelinstance-meta-schema/"
+                    schema_update_url = schema_update_url.format(self.logical_file.id)
+                    if invalid_schema:
+                        btn_cls = "btn btn-danger btn-block btn-form-submit"
+                    else:
+                        btn_cls = "btn btn-primary btn-block btn-form-submit"
+                    dom_tags.button("Update Metadata Schema from Model Program", type="button",
+                                    id="btn-mi-schema-update", data_schema_update_url=schema_update_url,
+                                    cls=btn_cls)
                 if self.logical_file.metadata_schema_json:
                     dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
                                     cls="btn btn-success btn-block",
@@ -246,7 +273,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 invalid_metadata = False
                 if self.logical_file.metadata_schema_json:
                     if self.metadata_json:
-                        # validate metadata against the associated schema
+                        # validate metadata against the schema in model instance (self)
                         try:
                             jsonschema.Draft4Validator(self.logical_file.metadata_schema_json).validate(
                                 self.metadata_json)

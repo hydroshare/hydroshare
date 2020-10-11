@@ -1059,11 +1059,15 @@ function showFileTypeMetadata(file_type_time_series, url){
                       else {
                           $("#id_executed_by_url").removeAttr("readonly");
                       }
-                  })
+                  });
+                 $("#btn-mi-schema-update").click(function () {
+                    updateModelInstanceMetaSchema();
+                 });
              }
         }
     });
 }
+
 
 function setupModelProgramFileTypeUI() {
     // controls the UI for associating aggregation files to specific model program file type
