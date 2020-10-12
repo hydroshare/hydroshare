@@ -1522,7 +1522,7 @@ class AbstractLogicalFile(models.Model):
 
         if self.is_fileset:
             file_folder = self.folder
-        elif self.is_model_instance:
+        elif self.is_model_instance or self.is_model_instance:
             if self.folder is not None:
                 file_folder = self.folder
             else:

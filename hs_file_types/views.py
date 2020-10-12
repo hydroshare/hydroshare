@@ -279,6 +279,25 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
+    if tgt_path:
+        tgt_model_aggr = res.get_model_aggregation_in_path(tgt_path)
+        src_model_aggr = res.get_model_aggregation_in_path(aggregation.aggregation_name)
+        src_fileset_aggr = res.get_fileset_aggregation_in_path(aggregation.aggregation_name)
+        move_allowed = True
+        if tgt_model_aggr is not None:
+            if tgt_model_aggr.is_model_program:
+                move_allowed = False
+            if tgt_model_aggr.is_model_instance:
+                if src_model_aggr is not None and src_model_aggr.is_model_program:
+                    move_allowed = False
+                if src_fileset_aggr is not None:
+                    move_allowed = False
+
+            if not move_allowed:
+                err_msg = "This aggregation move is not allowed by the target."
+                response_data['message'] = err_msg
+                return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
     istorage = res.get_irods_storage()
     res_files = []
     res_files.extend(aggregation.files.all())
