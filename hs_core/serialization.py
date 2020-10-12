@@ -1216,7 +1216,7 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceRelation(object):
-        KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isHostedBy', 'isCopiedFrom', 'isCreatedBy',
+        KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isCopiedFrom', 'isCreatedBy',
                        'isPartOf', 'isVersionOf', 'isReplacedBy', 'isDataFor', 'cites'}
 
         def __str__(self):
