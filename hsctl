@@ -350,6 +350,7 @@ rebuild_hs() {
     if [ "$2" == "--db" ]; then
         loaddb_hs;
     fi
+    dis_build
     echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
     docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
     if [ "${USE_NGINX}" = true ]; then
@@ -417,6 +418,38 @@ reset_all_hs() {
     if [[ -f docker-compose.yml ]]; then rm -f docker-compose.yml; fi
     if [[ -f run-server ]]; then rm -f run-server; fi
     if [[ -f schema.xml ]]; then rm -f schema.xml; fi
+}
+
+dis_build() {
+# Start Docker container and Run build
+
+docker run -i -v ~/hydroshare:/hydroshare --name=nodejs node:latest /bin/bash << eof
+
+cd hydroshare
+cd hs_discover
+rm -rf static templates
+mkdir -p static templates/hs_discover
+npm install
+npm run build
+mkdir -p static/js
+mkdir -p static/css
+cp -rp templates/hs_discover/js static/
+cp -rp templates/hs_discover/css static/
+cp -p templates/hs_discover/map.js static/js/
+echo "----------------js--------------------"
+ls -l static/js
+echo "--------------------------------------"
+echo "----------------css-------------------"
+ls -l static/css
+echo "--------------------------------------"
+cd static/
+mv js/app.*.js js/app.js
+mv js/chunk-vendors.*.js js/chunk-vendors.js
+cd ..
+eof
+
+docker container rm nodejs
+sleep 1
 }
 
 ### Display usage if exactly one argument is not provided ###
