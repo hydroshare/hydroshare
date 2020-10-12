@@ -848,7 +848,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names, full_paths=full_paths,
                                                auto_aggregate=auto_aggregate)
-
+    resource.refresh_from_db()
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
