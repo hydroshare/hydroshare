@@ -319,13 +319,19 @@ class CompositeResource(BaseResource):
             # check the files in the target path
             files_in_path = ResourceFile.list_folder(self, folder=irods_path, sub_folders=True)
 
-            # if none of the resource files in the target path has logical file then we can set the folder
-            # to model program or model instance aggregation
             if files_in_path:
-                # if any of the resource files is part of aggregation other than fileset aggregation, the folder
-                # can't be set to model based aggregation
-                return not any(res_file.has_logical_file and not res_file.logical_file.is_fileset for
-                               res_file in files_in_path)
+                # if none of the resource files in the target path has logical file then we can set the folder
+                # to model program or model instance aggregation
+                if aggr_type == "ModelProgram":
+                    # if none of the resource files in the target path has logical file then we can set the folder
+                    # to model program aggregation
+                    return not any(res_file.has_logical_file for res_file in files_in_path)
+                else:
+                    # if any of the files is part of a model instance aggr or fileset - folder can't be
+                    # set to model instance
+                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
+                                                                  res_file.logical_file.is_fileset) for
+                                   res_file in files_in_path)
 
             # path has no files - can't set the folder to aggregation
             return False
