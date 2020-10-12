@@ -782,17 +782,25 @@ class CompositeResource(BaseResource):
             tgt_aggr_path = tgt_file_dir[len(self.file_path) + 1:]
             # check if this move would create a nested model program aggregation -
             # nested model program aggregation is NOT allowed
-            # model instance aggregation can contain model program aggregation
+            # model instance aggregation can't contain model program aggregation
             if src_aggr is not None and (src_aggr.is_model_program or src_aggr.is_model_instance):
                 # src_aggr is a model based aggregation
                 if is_moving_file or is_moving_folder:
                     src_model_aggr = src_aggr
-                    #  find if there is any model program/instance aggregation in the target path
+                    #  find if there is any folder based model program/instance aggregation in the target path
                     tgt_model_aggr = self.get_model_aggregation_in_path(tgt_aggr_path)
                     if tgt_model_aggr is not None:
+                        # tgt_model_aggr is a folder based aggregation
                         if src_model_aggr.folder is None:
                             # moving a file based model program/model instance aggregation
-                            return False
+                            if tgt_model_aggr.is_model_program:
+                                # aggregation nesting is not allowed for model program aggregation
+                                return False
+                            else:
+                                # target aggregation folder is a model instance aggregation
+                                if src_aggr.is_model_instance or src_aggr.is_model_program:
+                                    # not allowed to move a model instance/program to another model instance
+                                    return False
 
                         # moving a folder based model program/instance aggregation
                         # moving folder within the same model program/instance aggregation is allowed
