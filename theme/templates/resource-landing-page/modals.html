@@ -1364,7 +1364,10 @@
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                                <!-- citations work Oct 13 2020 remove isHostedBy from view only -->
+                                                {% if type_display != "The content of this resource is hosted by" %}
+                                                    <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                     </div>
