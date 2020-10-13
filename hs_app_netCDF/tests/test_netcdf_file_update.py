@@ -182,6 +182,11 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         res_metadata.is_dirty = False
         res_metadata.save()
 
+        element_1 = res_metadata.create_element('relation',
+                                                type='isHostedBy',
+                                                value='new host')
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
         element_2 = res_metadata.create_element('relation',
                                                 type='cites',
                                                 value='new reference')
@@ -190,6 +195,11 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
+
+        res_metadata.update_element('relation', element_1.id, type='isHostedBy',
+                                    value='update host')
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('relation', element_2.id, type='cites',
                                     value='update reference')
