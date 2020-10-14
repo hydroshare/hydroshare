@@ -192,20 +192,27 @@ class SearchAPI(APIView):
             if result.creator:
                 creator = result.creator
 
+            authors = creator  # there is no concept of authors in DataOne standard
+            # authors might be string 'None' here
+
             if result.author:
                 author_link = result.author_url
                 author = str(result.author)
+                if authors == 'None':
+                    authors = author  # author would override creator in
             else:
-                if creator != 'None':
-                    try:
-                        if creator[0]:
-                            author = creator[0]
-                        elif creator[1]:
-                            author = creator[1]
-                    except Exception as gen_creator_ex:
-                        pass  # look for nonempty first or second creator based on corrupted data in production
-                elif result.organization:
-                    author = result.organization
+                if result.organization:
+                    if isinstance(result.organization, list):
+                        author = str(result.organization[0])
+                    else:
+                        author = str(result.organization)
+
+                    author = author.replace('"', '')
+                    author = author.replace('[', '')
+                    author = author.replace(']', '').strip()
+
+                    if authors == 'None':
+                        authors = author
 
             if result.contributor is not None:
                 try:
@@ -248,7 +255,7 @@ class SearchAPI(APIView):
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
                 "author": author,
-                "authors": creator,
+                "authors": authors,
                 "contributor": contributor,
                 "author_link": author_link,
                 "owner": owner,
