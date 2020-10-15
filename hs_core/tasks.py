@@ -668,10 +668,10 @@ def update_task_notification(sender=None, task_id=None, state=None, retval=None,
     :return:
     """
     if state == states.SUCCESS:
-        get_or_create_task_notification(task_id, status="completed", payload=retval.lower())
+        get_or_create_task_notification(task_id, status="completed", payload=retval)
     elif state in states.EXCEPTION_STATES:
-        get_or_create_task_notification(task_id, status="failed", payload=retval.lower())
+        get_or_create_task_notification(task_id, status="failed", payload=retval)
     elif state == states.REVOKED:
-        get_or_create_task_notification(task_id, status="aborted", payload=retval.lower())
+        get_or_create_task_notification(task_id, status="aborted", payload=retval)
     else:
         logger.warning("Unhandled task state of {} for {}".format(state, task_id))
