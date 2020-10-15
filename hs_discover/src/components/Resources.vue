@@ -423,7 +423,7 @@ export default {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
         this.sortingBy = this.sortMap[key];
-        this.searchClick();
+        this.searchClick(true);
       }
     },
     sortStyling(key) {

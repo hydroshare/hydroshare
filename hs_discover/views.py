@@ -271,6 +271,10 @@ class SearchAPI(APIView):
             resources = sorted(resources, key=lambda idx: idx['title'].lower())
         elif sort == '-title':
             resources = sorted(resources, key=lambda idx: idx['title'].lower(), reverse=True)
+        elif sort == 'author':
+            resources = sorted(resources, key=lambda idx: idx['author'].lower())
+        elif sort == '-author':
+            resources = sorted(resources, key=lambda idx: idx['author'].lower(), reverse=True)
 
         return JsonResponse({
             'resources': json.dumps(resources),
