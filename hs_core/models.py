@@ -2253,8 +2253,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         # ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
         # repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
-                                 citation_date.start_date.year)
+        # date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
+        #                          citation_date.start_date.year)
         # if ref_rel:
         #     citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
         #         ref_rel_value=ref_rel.value,
