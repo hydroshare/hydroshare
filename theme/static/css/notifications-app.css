@@ -1,0 +1,71 @@
+#notifications-dropdown > a {
+	font-size: 20px;
+}
+
+#notifications-dropdown .dropdown-menu {
+    width: 350px;
+    max-height: 400px;
+    height: auto;
+}
+
+#notifications-dropdown .dropdown-menu > li {
+	max-height: 398px;
+    overflow-y: auto;
+}
+
+.notification--status {
+	display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 1em;
+}
+
+.notification--status span.fa, .notification--status span.glyphicon {
+	margin-right: 6px;
+}
+
+li.notifications {
+	text-transform: none;
+}
+
+li.notifications .task {
+	padding: 1em;
+	border-bottom: 1px solid #DDD;
+	display: flex;
+}
+
+li.notifications .task .notification--content {
+	flex-grow: 1;
+}
+
+li.notifications .task .notification--controls {
+	margin-left: 1em;
+	display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+li.notifications .task .notification--controls button {
+    outline: none;
+}
+
+li.notifications .task .notification--controls .glyphicon,
+li.notifications .task .notification--controls .fa {
+    font-size: 14px;
+}
+
+#notifications-dropdown .notifications--header {
+    padding: 1em;
+    border-bottom: 1px solid #DDD;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#notifications-dropdown .default-content {
+    padding: 1em;
+}
+
+#btn-notifications-clear {
+    cursor: pointer;
+}

@@ -680,7 +680,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new version of collection
-        new_collection = create_empty_resource(self.resCollection.short_id, self.user1)
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1.username)
 
         new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
 
@@ -708,7 +708,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new copy of collection
-        new_collection = create_empty_resource(self.resCollection.short_id, self.user1,
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1.username,
                                                action='copy')
 
         new_collection = copy_resource(self.resCollection, new_collection)
