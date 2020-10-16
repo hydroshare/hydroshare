@@ -399,10 +399,6 @@ export default {
       }
       return [];
     },
-    filterBuilder(filterdata) {
-      [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
-        this.countTypes, this.countAvailabilities] = filterdata;
-    },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
