@@ -143,10 +143,6 @@ class SearchAPI(APIView):
             sqs = sqs.order_by('author_exact')
         elif sort == '-author':
             sqs = sqs.order_by('-author_exact')
-        elif sort == 'title':
-            sqs = sqs.order_by('title_exact')
-        elif sort == '-title':
-            sqs = sqs.order_by('-title_exact')
         else:
             sqs = sqs.order_by(sort)
 
@@ -173,6 +169,14 @@ class SearchAPI(APIView):
         filterdata = [authors, owners, subjects, contributors, types, availability]
 
         resources = []
+
+        # TODO future release will add title and facilitate order_by title_exact
+        # convert sqs to list after facet operations to allow for Python sorting instead of Haystack order_by
+        sqs = list(sqs)
+        if sort == 'title':
+            sqs = sorted(sqs, key=lambda idx: idx.title.lower())
+        elif sort == '-title':
+            sqs = sorted(sqs, key=lambda idx: idx.title.lower(), reverse=True)
 
         p = Paginator(sqs, self.perpage)
 
