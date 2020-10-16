@@ -1,7 +1,6 @@
 import datetime
 import json
 import logging
-import time
 from collections import namedtuple
 
 from django.conf import settings
