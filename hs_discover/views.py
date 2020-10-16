@@ -158,7 +158,16 @@ class SearchAPI(APIView):
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
 
-        sqs = sqs.order_by(sort)
+        if sort == 'author':
+            sqs = sqs.order_by('author_exact')
+        elif sort == '-author':
+            sqs = sqs.order_by('-author_exact')
+        elif sort == 'title':
+            sqs = sqs.order_by('title_exact')
+        elif sort == '-title':
+            sqs = sqs.order_by('-title_exact')
+        else:
+            sqs = sqs.order_by(sort)
 
         resources = []
 
@@ -266,15 +275,6 @@ class SearchAPI(APIView):
                 "short_id": result.short_id,
                 "geo": pt
             })
-
-        if sort == 'title':
-            resources = sorted(resources, key=lambda idx: idx['title'].lower())
-        elif sort == '-title':
-            resources = sorted(resources, key=lambda idx: idx['title'].lower(), reverse=True)
-        elif sort == 'author':
-            resources = sorted(resources, key=lambda idx: idx['author'].lower())
-        elif sort == '-author':
-            resources = sorted(resources, key=lambda idx: idx['author'].lower(), reverse=True)
 
         return JsonResponse({
             'resources': json.dumps(resources),
