@@ -214,7 +214,7 @@
                         </td>
                         <td style=width:15%;>
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
-                               :title="`(AUTHORS): ${nameList(entry.authors)} (OWNER): ${entry.owner} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
+                               :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
                       <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
@@ -337,7 +337,6 @@ export default {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
     this.searchClick();
-    this.filterBuilder();
   },
   methods: {
     searchClick(paging) { // paging flag to skip the page reset after data retrieval
@@ -374,6 +373,8 @@ export default {
               this.perpage = response.data.perpage;
               this.pagedisp = this.pagenum;
               this.geodata = JSON.parse(response.data.geodata);
+              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
               document.body.style.cursor = 'default';
             } catch (e) {
               document.body.style.cursor = 'default';
@@ -398,26 +399,9 @@ export default {
       }
       return [];
     },
-    filterBuilder() {
-      axios.get('/discoverapi/', {
-        params: {
-          filterbuilder: '1',
-        },
-      })
-        .then((response) => {
-          if (response) {
-            try {
-              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
-                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
-            } catch (e) {
-              document.body.style.cursor = 'default';
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-          document.body.style.cursor = 'default';
-        });
+    filterBuilder(filterdata) {
+      [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+        this.countTypes, this.countAvailabilities] = filterdata;
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
