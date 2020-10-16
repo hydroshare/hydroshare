@@ -11,7 +11,6 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from haystack.inputs import Exact
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
@@ -50,8 +49,6 @@ class SearchAPI(APIView):
         "subject": list value, js will parse JSON as Array
         "coverage_type": list point, period, ...
         """
-        start = time.time()
-
         sqs = SearchQuerySet().all()
 
         asc = '-1'
