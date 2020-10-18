@@ -5,7 +5,7 @@ MAINTAINER Phuong Doan pdoan@cuahsi.org
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 # TODO: this install needs to be part of the hs_docker_base image
-RUN pip install pytest-cov
+RUN pip install pytest-cov deepdiff
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
