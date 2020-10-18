@@ -117,13 +117,14 @@ def update_collection(request, shortkey, *args, **kwargs):
                     = authorize(request, res_id_add,
                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-                # the resources being added should be 'Shareable' or 'Public'
+                # the resources being added should be 'Shareable', 'Discoverable' or 'Public'
                 # or is owned by current user
+                is_discoverable = res_to_add.raccess.discoverable
                 is_shareable = res_to_add.raccess.shareable
                 is_public = res_to_add.raccess.public
                 is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
-                if not is_shareable and not is_public and not is_owner:
-                    raise Exception('Only resource owner can add a non-shareable or private '
+                if not any([is_discoverable, is_shareable, is_public, is_owner]):
+                    raise Exception('Only resource owner can add a non-shareable, non-discoverable, or private '
                                     'resource to a collection ')
 
                 # add this new res to collection

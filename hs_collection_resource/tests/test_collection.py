@@ -465,6 +465,36 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # make resGen5 not discoverable
+        self.resGen5.raccess.discoverable = False
+        self.resGen5.raccess.save()
+        # remove all existing contained resources
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': []},
+                                        )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # trying to add resGen5 (for which user1 has vew permission) to the collection should fail as resGen5 is not
+        # discoverable
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "error")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # make resGen5 discoverable
+        self.resGen5.raccess.discoverable = True
+        self.resGen5.raccess.public = False
+        self.resGen5.raccess.save()
+        # trying to add resGen5 (resource discoverable but private) to the collection should be successful
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 1)
+
         # make resGen5 public
         self.resGen5.raccess.public = True
         self.resGen5.raccess.save()
