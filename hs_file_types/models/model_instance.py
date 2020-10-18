@@ -2,6 +2,7 @@ import json
 import os
 
 import jsonschema
+from deepdiff import DeepDiff
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import PermissionDenied
 from django.db import models
@@ -182,15 +183,16 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                  "metadata in this model instance.",
                                  cls="alert alert-danger", id="div-invalid-schema-message")
                 if self.executed_by and self.executed_by.metadata_schema_json:
-                    schema_update_url = "/hsapi/_internal/{}/update-modelinstance-meta-schema/"
-                    schema_update_url = schema_update_url.format(self.logical_file.id)
-                    if invalid_schema:
-                        btn_cls = "btn btn-danger btn-block btn-form-submit"
-                    else:
-                        btn_cls = "btn btn-primary btn-block btn-form-submit"
-                    dom_tags.button("Update Metadata Schema from Model Program", type="button",
-                                    id="btn-mi-schema-update", data_schema_update_url=schema_update_url,
-                                    cls=btn_cls)
+                    if DeepDiff(self.logical_file.metadata_schema_json, self.executed_by.metadata_schema_json):
+                        schema_update_url = "/hsapi/_internal/{}/update-modelinstance-meta-schema/"
+                        schema_update_url = schema_update_url.format(self.logical_file.id)
+                        if invalid_schema:
+                            btn_cls = "btn btn-danger btn-block btn-form-submit"
+                        else:
+                            btn_cls = "btn btn-primary btn-block btn-form-submit"
+                        dom_tags.button("Update Metadata Schema from Model Program", type="button",
+                                        id="btn-mi-schema-update", data_schema_update_url=schema_update_url,
+                                        cls=btn_cls)
                 if self.logical_file.metadata_schema_json:
                     dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
                                     cls="btn btn-success btn-block",
