@@ -336,8 +336,8 @@ export default {
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
-    this.searchClick();
-    this.filterBuilder();
+    this.searchClick(false, true);
+    // this.filterBuilder();
   },
   methods: {
     searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
@@ -404,11 +404,10 @@ export default {
       }
       return [];
     },
-    filterBuilder(counts) {
+    filterBuilder() {
       axios.get('/discoverapi/', {
         params: {
           filterbuilder: '1',
-          counts,
         },
       })
         .then((response) => {
