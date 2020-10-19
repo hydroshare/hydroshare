@@ -315,7 +315,7 @@ export default {
           this.enddate = '';
         }
       }
-      this.searchClick();
+      this.searchClick(false, true);
     },
     enddate() {
       if (this.startdate) {
@@ -323,7 +323,7 @@ export default {
           this.startdate = '';
         }
       }
-      this.searchClick();
+      this.searchClick(false, true);
     },
     pagenum() {
       if (this.pagenum) {
@@ -343,7 +343,6 @@ export default {
     searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
-      console.log(dofilters);
       axios.get('/discoverapi/', {
         params: {
           q: this.searchtext,
@@ -377,6 +376,10 @@ export default {
               this.perpage = response.data.perpage;
               this.pagedisp = this.pagenum;
               this.geodata = JSON.parse(response.data.geodata);
+              if (dofilters) {
+                [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+                  this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
+              }
               document.body.style.cursor = 'default';
             } catch (e) {
               document.body.style.cursor = 'default';
@@ -389,7 +392,7 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.searchClick();
+      this.searchClick(false, true);
     },
     paging(direction) {
       this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
@@ -470,7 +473,7 @@ export default {
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
-      this.searchClick();
+      this.searchClick(false, true);
     },
     setAllMarkers() {
       const all = false;

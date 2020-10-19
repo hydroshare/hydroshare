@@ -139,19 +139,20 @@ class SearchAPI(APIView):
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
 
+        filterdata = []
         if request.GET.get('filterbuilder'):
-            authors = sqs.facet('author').facet_counts()['fields']['author'][:self.filterlimit]
+            authors = sqs.facet('author').facet_counts()['fields']['author']
             # authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('owner')
-            owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('subject')
-            subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('contributor')
-            contributors = sqs.facet_counts()['fields']['contributor'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('resource_type')
-            types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('availability')
-            availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
+            # sqs = SearchQuerySet().facet('owner')
+            owners = sqs.facet('owner').facet_counts()['fields']['owner']
+            # sqs = SearchQuerySet().facet('subject')
+            subjects = sqs.facet('subject').facet_counts()['fields']['subject']
+            # sqs = SearchQuerySet().facet('contributor')
+            contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
+            # sqs = SearchQuerySet().facet('resource_type')
+            types = sqs.facet('resource_type').facet_counts()['fields']['resource_type']
+            # sqs = SearchQuerySet().facet('availability')
+            availability = sqs.facet('availability').facet_counts()['fields']['availability']
             if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]
                 owners = [x for x in owners if x[1] > 0]
@@ -159,11 +160,12 @@ class SearchAPI(APIView):
                 contributors = [x for x in contributors if x[1] > 0]
                 types = [x for x in types if x[1] > 0]
                 availability = [x for x in availability if x[1] > 0]
-
-            return Response({
-                'time': (time.time() - start),
-                'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
-            })
+            filterdata = [authors[:self.filterlimit], owners[:self.filterlimit], subjects[:self.filterlimit],
+                          contributors[:self.filterlimit], types[:self.filterlimit], availability[:self.filterlimit]]
+            # return Response({
+            #     'time': (time.time() - start),
+            #     'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
+            # })
 
         if sort == 'author':
             sqs = sqs.order_by('author_exact')
@@ -301,5 +303,6 @@ class SearchAPI(APIView):
             'geodata': json.dumps(geodata),
             'rescount': p.count,
             'pagecount': p.num_pages,
-            'perpage': self.perpage
+            'perpage': self.perpage,
+            'filterdata': json.dumps(filterdata),
         }, status=200)
