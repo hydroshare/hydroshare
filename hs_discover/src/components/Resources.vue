@@ -5,18 +5,18 @@
     <div id="search" @keyup.enter="searchClick" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>
+        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
         <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
             <br/>
             <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x"></i>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true, true)"
                 min="1" :max="pagecount"> of {{pagecount}}
             <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x"></i>
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
                 &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
              <br/>
         </div>
@@ -340,7 +340,7 @@ export default {
     this.filterBuilder();
   },
   methods: {
-    searchClick(paging) { // paging flag to skip the page reset after data retrieval
+    searchClick(paging, updatefilters) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', {
@@ -350,6 +350,7 @@ export default {
           asc: this.sortDir,
           cat: this.searchcategory,
           pnum: this.pagenum,
+          updatefilters,
           filter: {
             author: this.authorFilter,
             owner: this.ownerFilter,
@@ -429,9 +430,9 @@ export default {
     },
     sortStyling(key) {
       if (this.sortMap[key] === this.sortingBy) {
-        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
+        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc interactive' : 'fa fa-fw fa-sort-desc interactive';
       }
-      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
+      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort interactive';
     },
     getDates() {
       if (this.startdate === '' && this.enddate === '') {
@@ -622,7 +623,7 @@ export default {
       margin: 0;
       transform: translateY(4px);
     }
-    .fa:hover {
+    .interactive:hover {
       color: LightBlue;
       /* avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
