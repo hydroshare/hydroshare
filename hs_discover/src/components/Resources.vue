@@ -2,7 +2,7 @@
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick" class="input-group">
+    <div id="search" @keyup.enter="searchClick(false, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
         <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
@@ -13,7 +13,7 @@
             <br/>
             <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true, true)"
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
             <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                     class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
@@ -340,9 +340,10 @@ export default {
     this.filterBuilder();
   },
   methods: {
-    searchClick(paging, updatefilters) { // paging flag to skip the page reset after data retrieval
+    searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
+      console.log(dofilters);
       axios.get('/discoverapi/', {
         params: {
           q: this.searchtext,
@@ -350,7 +351,8 @@ export default {
           asc: this.sortDir,
           cat: this.searchcategory,
           pnum: this.pagenum,
-          updatefilters,
+          filterbuilder: dofilters,
+          updatefilters: dofilters,
           filter: {
             author: this.authorFilter,
             owner: this.ownerFilter,

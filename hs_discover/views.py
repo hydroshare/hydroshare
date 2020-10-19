@@ -140,8 +140,8 @@ class SearchAPI(APIView):
                                                         .format(type(gen_ex)))}, status=520)
 
         if request.GET.get('filterbuilder'):
-            sqs = SearchQuerySet().facet('author')
-            authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
+            authors = sqs.facet('author').facet_counts()['fields']['author'][:self.filterlimit]
+            # authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
             sqs = SearchQuerySet().facet('owner')
             owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
             sqs = SearchQuerySet().facet('subject')
@@ -152,7 +152,7 @@ class SearchAPI(APIView):
             types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
             sqs = SearchQuerySet().facet('availability')
             availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
-            if request.GET.get('counts'):
+            if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]
                 owners = [x for x in owners if x[1] > 0]
                 subjects = [x for x in subjects if x[1] > 0]
