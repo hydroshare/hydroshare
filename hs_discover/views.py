@@ -167,8 +167,8 @@ class SearchAPI(APIView):
 
         # TODO future release will add title and facilitate order_by title_exact
         # convert sqs to list after facet operations to allow for Python sorting instead of Haystack order_by
-        sqs = list(sqs)
         if sort == 'title':
+            sqs = list(sqs)
             sqs = sorted(sqs, key=lambda idx: idx.title.lower())
         elif sort == '-title':
             sqs = sorted(sqs, key=lambda idx: idx.title.lower(), reverse=True)
@@ -278,15 +278,6 @@ class SearchAPI(APIView):
                 "geo": pt
             })
 
-        if sort == 'title':
-            resources = sorted(resources, key=lambda idx: idx['title'].lower())
-        elif sort == '-title':
-            resources = sorted(resources, key=lambda idx: idx['title'].lower(), reverse=True)
-        elif sort == 'author':
-            resources = sorted(resources, key=lambda idx: idx['author'].lower())
-        elif sort == '-author':
-            resources = sorted(resources, key=lambda idx: idx['author'].lower(), reverse=True)
-
         return JsonResponse({
             'resources': json.dumps(resources),
             'geodata': json.dumps(geodata),
@@ -294,4 +285,5 @@ class SearchAPI(APIView):
             'pagecount': p.num_pages,
             'perpage': self.perpage,
             'filterdata': json.dumps(filterdata),
+            'time': (time.time() - start) / 1000
         }, status=200)
