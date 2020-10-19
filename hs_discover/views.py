@@ -54,25 +54,6 @@ class SearchAPI(APIView):
 
         sqs = SearchQuerySet().all()
 
-        if request.GET.get('filterbuilder'):
-            sqs = SearchQuerySet().facet('author')
-            authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('owner')
-            owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('subject')
-            subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('contributor')
-            contributors = sqs.facet_counts()['fields']['contributor'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('resource_type')
-            types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('availability')
-            availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
-
-            return Response({
-                'time': (time.time() - start),
-                'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
-            })
-
         asc = '-1'
         if request.GET.get('asc'):
             asc = request.GET.get('asc')
@@ -157,6 +138,32 @@ class SearchAPI(APIView):
             logger.warning('hs_discover API - {}: {}'.format(type(gen_ex), str(gen_ex)))
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
+
+        if request.GET.get('filterbuilder'):
+            sqs = SearchQuerySet().facet('author')
+            authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
+            sqs = SearchQuerySet().facet('owner')
+            owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
+            sqs = SearchQuerySet().facet('subject')
+            subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
+            sqs = SearchQuerySet().facet('contributor')
+            contributors = sqs.facet_counts()['fields']['contributor'][:self.filterlimit]
+            sqs = SearchQuerySet().facet('resource_type')
+            types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
+            sqs = SearchQuerySet().facet('availability')
+            availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
+            if request.GET.get('counts'):
+                authors = [x for x in authors if x[1] > 0]
+                owners = [x for x in owners if x[1] > 0]
+                subjects = [x for x in subjects if x[1] > 0]
+                contributors = [x for x in contributors if x[1] > 0]
+                types = [x for x in types if x[1] > 0]
+                availability = [x for x in availability if x[1] > 0]
+
+            return Response({
+                'time': (time.time() - start),
+                'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
+            })
 
         if sort == 'author':
             sqs = sqs.order_by('author_exact')
@@ -296,24 +303,3 @@ class SearchAPI(APIView):
             'pagecount': p.num_pages,
             'perpage': self.perpage
         }, status=200)
-
-        # sqs_author = sqs.facet('author')
-        # authors = sqs_author.facet_counts()['fields']['author'][:self.filterlimit]
-        # authors = [x for x in authors if x[1] > 0]
-        # sqs_owner = sqs.facet('owner')
-        # owners = sqs_owner.facet_counts()['fields']['owner'][:self.filterlimit]
-        # owners = [x for x in owners if x[1] > 0]
-        # sqs_subject = sqs.facet('subject')
-        # subjects = sqs_subject.facet_counts()['fields']['subject'][:self.filterlimit]
-        # subjects = [x for x in subjects if x[1] > 0]
-        # sqs_contributor = sqs.facet('contributor')
-        # contributors = sqs_contributor.facet_counts()['fields']['contributor'][:self.filterlimit]
-        # contributors = [x for x in contributors if x[1] > 0]
-        # sqs_type = sqs.facet('resource_type')
-        # types = sqs_type.facet_counts()['fields']['resource_type'][:self.filterlimit]
-        # types = [x for x in types if x[1] > 0]
-        # sqs_availability = sqs.facet('availability')
-        # availability = sqs_availability.facet_counts()['fields']['availability'][:self.filterlimit]
-        # availability = [x for x in availability if x[1] > 0]
-        #
-        # filterdata = [authors, owners, subjects, contributors, types, availability]

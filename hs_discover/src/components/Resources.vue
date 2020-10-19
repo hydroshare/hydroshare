@@ -398,10 +398,11 @@ export default {
       }
       return [];
     },
-    filterBuilder() {
+    filterBuilder(counts) {
       axios.get('/discoverapi/', {
         params: {
           filterbuilder: '1',
+          counts,
         },
       })
         .then((response) => {
