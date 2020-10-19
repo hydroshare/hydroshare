@@ -11,7 +11,6 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from haystack.inputs import Exact
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
@@ -142,16 +141,10 @@ class SearchAPI(APIView):
         filterdata = []
         if request.GET.get('filterbuilder'):
             authors = sqs.facet('author').facet_counts()['fields']['author']
-            # authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
-            # sqs = SearchQuerySet().facet('owner')
             owners = sqs.facet('owner').facet_counts()['fields']['owner']
-            # sqs = SearchQuerySet().facet('subject')
             subjects = sqs.facet('subject').facet_counts()['fields']['subject']
-            # sqs = SearchQuerySet().facet('contributor')
             contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
-            # sqs = SearchQuerySet().facet('resource_type')
             types = sqs.facet('resource_type').facet_counts()['fields']['resource_type']
-            # sqs = SearchQuerySet().facet('availability')
             availability = sqs.facet('availability').facet_counts()['fields']['availability']
             if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]
@@ -162,10 +155,6 @@ class SearchAPI(APIView):
                 availability = [x for x in availability if x[1] > 0]
             filterdata = [authors[:self.filterlimit], owners[:self.filterlimit], subjects[:self.filterlimit],
                           contributors[:self.filterlimit], types[:self.filterlimit], availability[:self.filterlimit]]
-            # return Response({
-            #     'time': (time.time() - start),
-            #     'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
-            # })
 
         if sort == 'author':
             sqs = sqs.order_by('author_exact')
