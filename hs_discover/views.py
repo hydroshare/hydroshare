@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import time
 from collections import namedtuple
 
 from django.conf import settings
@@ -48,6 +49,8 @@ class SearchAPI(APIView):
         "subject": list value, js will parse JSON as Array
         "coverage_type": list point, period, ...
         """
+        start = time.time()
+
         sqs = SearchQuerySet().all()
 
         asc = '-1'
@@ -135,6 +138,24 @@ class SearchAPI(APIView):
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
 
+        filterdata = []
+        if request.GET.get('filterbuilder'):
+            authors = sqs.facet('author').facet_counts()['fields']['author']
+            owners = sqs.facet('owner').facet_counts()['fields']['owner']
+            subjects = sqs.facet('subject').facet_counts()['fields']['subject']
+            contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
+            types = sqs.facet('resource_type').facet_counts()['fields']['resource_type']
+            availability = sqs.facet('availability').facet_counts()['fields']['availability']
+            if request.GET.get('updatefilters'):
+                authors = [x for x in authors if x[1] > 0]
+                owners = [x for x in owners if x[1] > 0]
+                subjects = [x for x in subjects if x[1] > 0]
+                contributors = [x for x in contributors if x[1] > 0]
+                types = [x for x in types if x[1] > 0]
+                availability = [x for x in availability if x[1] > 0]
+            filterdata = [authors[:self.filterlimit], owners[:self.filterlimit], subjects[:self.filterlimit],
+                          contributors[:self.filterlimit], types[:self.filterlimit], availability[:self.filterlimit]]
+
         if sort == 'author':
             sqs = sqs.order_by('author_exact')
         elif sort == '-author':
@@ -142,34 +163,12 @@ class SearchAPI(APIView):
         else:
             sqs = sqs.order_by(sort)
 
-        # Return counts for filter integers beside checkboxes
-        sqs_author = sqs.facet('author')
-        authors = sqs_author.facet_counts()['fields']['author'][:self.filterlimit]
-        authors = [x for x in authors if x[1] > 0]
-        sqs_owner = sqs.facet('owner')
-        owners = sqs_owner.facet_counts()['fields']['owner'][:self.filterlimit]
-        owners = [x for x in owners if x[1] > 0]
-        sqs_subject = sqs.facet('subject')
-        subjects = sqs_subject.facet_counts()['fields']['subject'][:self.filterlimit]
-        subjects = [x for x in subjects if x[1] > 0]
-        sqs_contributor = sqs.facet('contributor')
-        contributors = sqs_contributor.facet_counts()['fields']['contributor'][:self.filterlimit]
-        contributors = [x for x in contributors if x[1] > 0]
-        sqs_type = sqs.facet('resource_type')
-        types = sqs_type.facet_counts()['fields']['resource_type'][:self.filterlimit]
-        types = [x for x in types if x[1] > 0]
-        sqs_availability = sqs.facet('availability')
-        availability = sqs_availability.facet_counts()['fields']['availability'][:self.filterlimit]
-        availability = [x for x in availability if x[1] > 0]
-
-        filterdata = [authors, owners, subjects, contributors, types, availability]
-
         resources = []
 
         # TODO future release will add title and facilitate order_by title_exact
         # convert sqs to list after facet operations to allow for Python sorting instead of Haystack order_by
-        sqs = list(sqs)
         if sort == 'title':
+            sqs = list(sqs)
             sqs = sorted(sqs, key=lambda idx: idx.title.lower())
         elif sort == '-title':
             sqs = sorted(sqs, key=lambda idx: idx.title.lower(), reverse=True)
@@ -280,10 +279,11 @@ class SearchAPI(APIView):
             })
 
         return JsonResponse({
-            "filterdata": json.dumps(filterdata),
             'resources': json.dumps(resources),
             'geodata': json.dumps(geodata),
             'rescount': p.count,
             'pagecount': p.num_pages,
-            'perpage': self.perpage
+            'perpage': self.perpage,
+            'filterdata': json.dumps(filterdata),
+            'time': (time.time() - start) / 1000
         }, status=200)

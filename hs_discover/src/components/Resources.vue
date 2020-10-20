@@ -2,21 +2,21 @@
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick" class="input-group">
+    <div id="search" @keyup.enter="searchClick(false, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right"></i>
+        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
         <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
             <br/>
             <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x"></i>
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
             Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
             <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x"></i>
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
                 &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
              <br/>
         </div>
@@ -315,7 +315,7 @@ export default {
           this.enddate = '';
         }
       }
-      this.searchClick();
+      this.searchClick(false, true);
     },
     enddate() {
       if (this.startdate) {
@@ -323,7 +323,7 @@ export default {
           this.startdate = '';
         }
       }
-      this.searchClick();
+      this.searchClick(false, true);
     },
     pagenum() {
       if (this.pagenum) {
@@ -336,10 +336,11 @@ export default {
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
-    this.searchClick();
+    this.searchClick(false, true);
+    // this.filterBuilder();
   },
   methods: {
-    searchClick(paging) { // paging flag to skip the page reset after data retrieval
+    searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
       axios.get('/discoverapi/', {
@@ -349,6 +350,8 @@ export default {
           asc: this.sortDir,
           cat: this.searchcategory,
           pnum: this.pagenum,
+          filterbuilder: dofilters,
+          updatefilters: dofilters,
           filter: {
             author: this.authorFilter,
             owner: this.ownerFilter,
@@ -373,8 +376,10 @@ export default {
               this.perpage = response.data.perpage;
               this.pagedisp = this.pagenum;
               this.geodata = JSON.parse(response.data.geodata);
-              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
-                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
+              if (dofilters) {
+                [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+                  this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
+              }
               document.body.style.cursor = 'default';
             } catch (e) {
               document.body.style.cursor = 'default';
@@ -387,7 +392,7 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.searchClick();
+      this.searchClick(false, true);
     },
     paging(direction) {
       this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
@@ -399,6 +404,27 @@ export default {
       }
       return [];
     },
+    filterBuilder() {
+      axios.get('/discoverapi/', {
+        params: {
+          filterbuilder: '1',
+        },
+      })
+        .then((response) => {
+          if (response) {
+            try {
+              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
+            } catch (e) {
+              document.body.style.cursor = 'default';
+            }
+          }
+        })
+        .catch((error) => {
+          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+          document.body.style.cursor = 'default';
+        });
+    },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
@@ -408,9 +434,9 @@ export default {
     },
     sortStyling(key) {
       if (this.sortMap[key] === this.sortingBy) {
-        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
+        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc interactive' : 'fa fa-fw fa-sort-desc interactive';
       }
-      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
+      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort interactive';
     },
     getDates() {
       if (this.startdate === '' && this.enddate === '') {
@@ -446,7 +472,7 @@ export default {
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
       }
-      this.searchClick();
+      this.searchClick(false, true);
     },
     setAllMarkers() {
       const all = false;
@@ -601,7 +627,7 @@ export default {
       margin: 0;
       transform: translateY(4px);
     }
-    .fa:hover {
+    .interactive:hover {
       color: LightBlue;
       /* avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
