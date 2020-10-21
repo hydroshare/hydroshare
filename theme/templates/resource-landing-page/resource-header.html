@@ -11,8 +11,9 @@
                         <a v-for="(author, index) in authors" data-toggle="modal"
                            @click="selectAuthor(author, index)"
                            data-target="#view-author-modal">
-                            <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                            <template v-else>${ author.organization }</template>
+                            <template v-if="author.name && author.name != ', '">${ author.name | nameWithoutCommas }</template>
+                            <template v-else-if="author.organization">${ author.organization }</template>
+                            <template v-else>${ author.email }</template>
                         </a>
                     </td>
 
@@ -27,8 +28,9 @@
                             <span v-for="(author, index) in authors" :data-id="author.id">
                                 <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
                                    @click="selectAuthor(author, index)" data-target="#edit-author-modal">
-                                    <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                                    <template v-else>${ author.organization }</template>
+                                    <template v-if="author.name && author.name != ', '">${ author.name | nameWithoutCommas }</template>
+                                    <template v-else-if="author.organization">${ author.organization }</template>
+                                    <template v-else>${ author.email }</template>
                                 </a>
                             </span>
                         </span>

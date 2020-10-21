@@ -555,15 +555,22 @@ let leftHeaderApp = new Vue({
     },
     filters: {
         nameWithoutCommas: function (name) {
-            if (!name) return '';
-            name = name.toString();
+            if (!name) return null;
+            name = name.toString().trim();
 
             if (name.indexOf(',') >= 0) {
                 let  fullName = name.split(',');
                 if (fullName.length == 2) {
                     let firstNames = fullName[1].trim();
                     let lastNames = fullName[0].trim();
-                    return firstNames + " " + lastNames;
+                    if (firstNames && lastNames)
+                        return firstNames + " " + lastNames;
+                    else if (firstNames)
+                        return firstNames;
+                    else if (lastNames)
+                        return lastNames;
+                    else
+                        return null;
                 }
             }
             return name;    // default
