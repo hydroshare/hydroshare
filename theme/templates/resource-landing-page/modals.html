@@ -266,14 +266,13 @@
                         <div class="form-group">
                             <fieldset>
                                 {# NAME #}
-                                <div v-if="is_person" class="control-group">
+                                <div class="control-group">
                                     <label for="creator-name" class="control-label requiredField">Name<span
                                         class="asteriskField">*</span>
                                     </label>
 
                                     <div class="controls">
-                                        <input v-model="author.name"
-                                               :required="is_person ? 'required' : 'false'"
+                                        <input v-model="author.name == ', ' ? '' : author.name"
                                                id="creator-name"
                                                placeholder="e.g. 'Smith, John Arnold'"
                                                class="form-control input-sm textinput textInput"
