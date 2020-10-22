@@ -2,7 +2,7 @@
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick(false, false, true)" class="input-group">
+    <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
         <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
@@ -399,7 +399,7 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.searchClick(false, false);
+      this.searchClick(false, true, true);
     },
     paging(direction) {
       this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
