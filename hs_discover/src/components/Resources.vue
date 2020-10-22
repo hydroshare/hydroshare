@@ -337,7 +337,6 @@ export default {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
     this.searchClick(false, true);
-    // this.filterBuilder();
   },
   methods: {
     searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
@@ -403,27 +402,6 @@ export default {
         return Object.values(items).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()));
       }
       return [];
-    },
-    filterBuilder() {
-      axios.get('/discoverapi/', {
-        params: {
-          filterbuilder: '1',
-        },
-      })
-        .then((response) => {
-          if (response) {
-            try {
-              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
-                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
-            } catch (e) {
-              document.body.style.cursor = 'default';
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-          document.body.style.cursor = 'default';
-        });
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
@@ -542,7 +520,7 @@ export default {
         text-decoration:none;
     }
     #filter-items {
-        /* ensure collapse without overlap */
+        /* Ensure collapse without overlap */
         width: 235px;
     }
     .table-wrapper {
@@ -552,7 +530,7 @@ export default {
         margin-top: 0;
     }
     .checkbox {
-        /*override older version of bootstrap styling*/
+        /* Override older version of bootstrap styling */
     }
     .mapdisp {
         right: 0;
@@ -629,7 +607,7 @@ export default {
     }
     .interactive:hover {
       color: LightBlue;
-      /* avoid double-click selection during rapid clicking: */
+      /* Avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
       -moz-user-select: none; /* mozilla browsers */
