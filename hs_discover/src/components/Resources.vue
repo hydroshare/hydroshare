@@ -5,11 +5,11 @@
     <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
+        <i id="search-clear" v-b-tooltip.hover title="Clear search input and checkbox filters" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
-        <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
+        <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
             <br/>
             <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
@@ -237,7 +237,6 @@ export default {
   data() {
     return {
       mapmode: 'display:none',
-      resloaded: false,
       resources: [],
       searchtext: '',
       geodata: [],
@@ -303,9 +302,8 @@ export default {
   },
   watch: {
     resources() {
-      this.resloaded = this.resources.length > 0;
       this.setAllMarkers();
-      if (this.mapmode === 'display:block' && this.resloaded) {
+      if (this.mapmode === 'display:block' && this.resources.length > 0) {
         gotoBounds(); // eslint-disable-line
       }
     },
@@ -315,7 +313,7 @@ export default {
           this.enddate = '';
         }
       }
-      this.searchClick(false, true);
+      this.searchClick(false, false, false);
     },
     enddate() {
       if (this.startdate) {
@@ -323,7 +321,7 @@ export default {
           this.startdate = '';
         }
       }
-      this.searchClick(false, true);
+      this.searchClick(false, false, false);
     },
     pagenum() {
       if (this.pagenum) {
@@ -448,7 +446,8 @@ export default {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
         this.mapmode = 'display:block';
-        if (this.resloaded && this.resources.length > 0) {
+        if (this.resources.length > 0) {
+          this.searchClick(false, false, false);
           this.setAllMarkers();
         } else {
           recenterMap(); // eslint-disable-line
@@ -457,8 +456,8 @@ export default {
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
+        this.searchClick(false, false, false);
       }
-      this.searchClick(false, true);
     },
     setAllMarkers() {
       const all = false;
