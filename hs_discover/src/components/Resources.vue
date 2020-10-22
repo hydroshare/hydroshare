@@ -2,7 +2,7 @@
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick(false, true)" class="input-group">
+    <div id="search" @keyup.enter="searchClick(false, false, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
         <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
@@ -339,9 +339,17 @@ export default {
     this.searchClick(false, true);
   },
   methods: {
-    searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
+    searchClick(paging, dofilters, reset) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
+      if (reset) {
+        this.authorFilter = [];
+        this.ownerFilter = [];
+        this.subjectFilter = [];
+        this.contributorFilter = [];
+        this.typeFilter = [];
+        this.availabilityFilter = [];
+      }
       axios.get('/discoverapi/', {
         params: {
           q: this.searchtext,
@@ -391,7 +399,7 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.searchClick(false, true);
+      this.searchClick(false, false);
     },
     paging(direction) {
       this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
