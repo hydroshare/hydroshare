@@ -668,6 +668,32 @@ class Description(AbstractMetaDataElement):
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
+class Citation(AbstractMetaDataElement):
+    """Define Citation metadata element model."""
+
+    term = 'Citation'
+    value = models.CharField(max_length=500)
+
+    def __unicode__(self):
+        """Return value field for unicode representation."""
+        return self.value
+
+    class Meta:
+        """Define meta properties for Citation class."""
+
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Call parent update function for Citation class."""
+        super(Citation, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def remove(cls, element_id):
+        """Define custom remove function for Citation class."""
+        raise ValidationError("Citation element of a resource can't be deleted.")
+
+
 class Title(AbstractMetaDataElement):
     """Define Title metadata element model."""
 
