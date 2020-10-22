@@ -5,7 +5,7 @@
     <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" v-b-tooltip.hover title="Clear search input and checkbox filters" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
+        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
@@ -341,6 +341,8 @@ export default {
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
       if (reset) {
+        this.startdate = '';
+        this.enddate = '';
         this.authorFilter = [];
         this.ownerFilter = [];
         this.subjectFilter = [];
