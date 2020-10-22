@@ -13,7 +13,7 @@
                             <tr v-if="is_person">
                                 <td class="text-center"><i class="fa fa-user" aria-hidden="true"></i></td>
                                 <th>Name: </th>
-                                <td>${author.name}</td>
+                                <td>${author.name == ', ' ? '' : author.name}</td>
                             </tr>
                             <tr v-if="is_person && author.profileUrl">
                                 <td class="text-center"><i class="fa fa-user-circle" aria-hidden="true"></i></td>
