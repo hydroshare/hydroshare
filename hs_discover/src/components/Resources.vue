@@ -2,14 +2,14 @@
   <div>
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick(false, true)" class="input-group">
+    <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
+        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
-        <div v-if="resloaded" class="col-xs-12" id="resultsdisp">
+        <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
             <br/>
             <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
@@ -237,7 +237,6 @@ export default {
   data() {
     return {
       mapmode: 'display:none',
-      resloaded: false,
       resources: [],
       searchtext: '',
       geodata: [],
@@ -303,9 +302,8 @@ export default {
   },
   watch: {
     resources() {
-      this.resloaded = this.resources.length > 0;
       this.setAllMarkers();
-      if (this.mapmode === 'display:block' && this.resloaded) {
+      if (this.mapmode === 'display:block' && this.resources.length > 0) {
         gotoBounds(); // eslint-disable-line
       }
     },
@@ -315,7 +313,7 @@ export default {
           this.enddate = '';
         }
       }
-      this.searchClick(false, true);
+      this.searchClick(false, false, false);
     },
     enddate() {
       if (this.startdate) {
@@ -323,7 +321,7 @@ export default {
           this.startdate = '';
         }
       }
-      this.searchClick(false, true);
+      this.searchClick(false, false, false);
     },
     pagenum() {
       if (this.pagenum) {
@@ -337,12 +335,21 @@ export default {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
     this.searchClick(false, true);
-    // this.filterBuilder();
   },
   methods: {
-    searchClick(paging, dofilters) { // paging flag to skip the page reset after data retrieval
+    searchClick(paging, dofilters, reset) { // paging flag to skip the page reset after data retrieval
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
+      if (reset) {
+        this.startdate = '';
+        this.enddate = '';
+        this.authorFilter = [];
+        this.ownerFilter = [];
+        this.subjectFilter = [];
+        this.contributorFilter = [];
+        this.typeFilter = [];
+        this.availabilityFilter = [];
+      }
       axios.get('/discoverapi/', {
         params: {
           q: this.searchtext,
@@ -392,7 +399,7 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.searchClick(false, true);
+      this.searchClick(false, true, true);
     },
     paging(direction) {
       this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
@@ -403,27 +410,6 @@ export default {
         return Object.values(items).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()));
       }
       return [];
-    },
-    filterBuilder() {
-      axios.get('/discoverapi/', {
-        params: {
-          filterbuilder: '1',
-        },
-      })
-        .then((response) => {
-          if (response) {
-            try {
-              [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
-                this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
-            } catch (e) {
-              document.body.style.cursor = 'default';
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-          document.body.style.cursor = 'default';
-        });
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
@@ -462,7 +448,8 @@ export default {
       toggleMap(); // eslint-disable-line
       if (document.getElementById('map-view').style.display === 'block') {
         this.mapmode = 'display:block';
-        if (this.resloaded && this.resources.length > 0) {
+        if (this.resources.length > 0) {
+          this.searchClick(false, false, false);
           this.setAllMarkers();
         } else {
           recenterMap(); // eslint-disable-line
@@ -471,8 +458,8 @@ export default {
       } else if (document.getElementById('map-view').style.display !== 'block') {
         this.mapmode = 'display:none';
         document.getElementById('map-mode-button').value = 'Show Map';
+        this.searchClick(false, false, false);
       }
-      this.searchClick(false, true);
     },
     setAllMarkers() {
       const all = false;
@@ -542,7 +529,7 @@ export default {
         text-decoration:none;
     }
     #filter-items {
-        /* ensure collapse without overlap */
+        /* Ensure collapse without overlap */
         width: 235px;
     }
     .table-wrapper {
@@ -552,7 +539,7 @@ export default {
         margin-top: 0;
     }
     .checkbox {
-        /*override older version of bootstrap styling*/
+        /* Override older version of bootstrap styling */
     }
     .mapdisp {
         right: 0;
@@ -629,7 +616,7 @@ export default {
     }
     .interactive:hover {
       color: LightBlue;
-      /* avoid double-click selection during rapid clicking: */
+      /* Avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
       -moz-user-select: none; /* mozilla browsers */

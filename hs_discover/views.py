@@ -168,7 +168,6 @@ class SearchAPI(APIView):
         # TODO future release will add title and facilitate order_by title_exact
         # convert sqs to list after facet operations to allow for Python sorting instead of Haystack order_by
         if sort == 'title':
-            sqs = list(sqs)
             sqs = sorted(sqs, key=lambda idx: idx.title.lower())
         elif sort == '-title':
             sqs = sorted(sqs, key=lambda idx: idx.title.lower(), reverse=True)
