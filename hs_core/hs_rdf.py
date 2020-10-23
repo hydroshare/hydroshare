@@ -29,6 +29,9 @@ class RDF_MetaData_Mixin(object):
     def rdf_subject(self):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_subject")
 
+    def rdf_metadata_subject(self):
+        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_metadata_subject")
+
     @classmethod
     def rdf_subject_from_graph(cls, graph):
         """Derive the root subject of an rdflib Graph by returning the subject in the triple with predicate DC.title"""
@@ -65,8 +68,9 @@ class RDF_MetaData_Mixin(object):
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this metadata"""
-
+        ORE = Namespace("http://www.openarchives.org/ore/terms/")
         g = self.get_rdf_graph()
+        g.add((self.rdf_metadata_subject(), ORE.describes, self.rdf_subject()))
         return g.serialize(format='hydro-xml').decode()
 
 

@@ -3799,6 +3799,10 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         from .hydroshare import current_site_url
         return URIRef("{}/resource/{}".format(current_site_url(), self.resource.short_id))
 
+    def rdf_metadata_subject(self):
+        from .hydroshare import current_site_url
+        return URIRef("{}/resource/{}/data/resourcemetadata.xml".format(current_site_url(), self.resource.short_id))
+
     def ingest_metadata(self, graph):
         super(CoreMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)
