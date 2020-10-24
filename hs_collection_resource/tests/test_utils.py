@@ -98,3 +98,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.res_1_user_2.raccess.shareable = False
         self.res_1_user_2.raccess.save()
         self.assertEqual(get_collectable_resources(self.user1, self.resCollection).all().count(), 2)
+
+        # turn on discoverable to validate the claimed resource is included with the collectable result
+        self.res_1_user_2.raccess.discoverable = True
+        self.res_1_user_2.raccess.save()
+        self.assertEqual(get_collectable_resources(self.user1, self.resCollection).all().count(), 3)
