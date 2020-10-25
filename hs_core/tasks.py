@@ -487,6 +487,9 @@ def delete_resource_task(resource_id, request_username=None):
              raise an exception if there were errors.
     """
     res = utils.get_resource_by_shortkey(resource_id)
+    if res.raccess.published:
+        raise ValidationError("This is a published resource which can't be deleted")
+
     res_title = res.metadata.title
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
