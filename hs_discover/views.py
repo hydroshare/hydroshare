@@ -11,7 +11,6 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet
 from haystack.inputs import Exact
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
@@ -53,25 +52,6 @@ class SearchAPI(APIView):
         start = time.time()
 
         sqs = SearchQuerySet().all()
-
-        if request.GET.get('filterbuilder'):
-            sqs = SearchQuerySet().facet('author')
-            authors = sqs.facet_counts()['fields']['author'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('owner')
-            owners = sqs.facet_counts()['fields']['owner'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('subject')
-            subjects = sqs.facet_counts()['fields']['subject'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('contributor')
-            contributors = sqs.facet_counts()['fields']['contributor'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('resource_type')
-            types = sqs.facet_counts()['fields']['resource_type'][:self.filterlimit]
-            sqs = SearchQuerySet().facet('availability')
-            availability = sqs.facet_counts()['fields']['availability'][:self.filterlimit]
-
-            return Response({
-                'time': (time.time() - start),
-                'filterdata': json.dumps([authors, owners, subjects, contributors, types, availability])
-            })
 
         asc = '-1'
         if request.GET.get('asc'):
@@ -158,9 +138,39 @@ class SearchAPI(APIView):
             return JsonResponse({'message': '{}'.format('{}: query error. Contact a server administrator.'
                                                         .format(type(gen_ex)))}, status=520)
 
-        sqs = sqs.order_by(sort)
+        filterdata = []
+        if request.GET.get('filterbuilder'):
+            authors = sqs.facet('author').facet_counts()['fields']['author']
+            owners = sqs.facet('owner').facet_counts()['fields']['owner']
+            subjects = sqs.facet('subject').facet_counts()['fields']['subject']
+            contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
+            types = sqs.facet('resource_type').facet_counts()['fields']['resource_type']
+            availability = sqs.facet('availability').facet_counts()['fields']['availability']
+            if request.GET.get('updatefilters'):
+                authors = [x for x in authors if x[1] > 0]
+                owners = [x for x in owners if x[1] > 0]
+                subjects = [x for x in subjects if x[1] > 0]
+                contributors = [x for x in contributors if x[1] > 0]
+                types = [x for x in types if x[1] > 0]
+                availability = [x for x in availability if x[1] > 0]
+            filterdata = [authors[:self.filterlimit], owners[:self.filterlimit], subjects[:self.filterlimit],
+                          contributors[:self.filterlimit], types[:self.filterlimit], availability[:self.filterlimit]]
+
+        if sort == 'author':
+            sqs = sqs.order_by('author_exact')
+        elif sort == '-author':
+            sqs = sqs.order_by('-author_exact')
+        else:
+            sqs = sqs.order_by(sort)
 
         resources = []
+
+        # TODO future release will add title and facilitate order_by title_exact
+        # convert sqs to list after facet operations to allow for Python sorting instead of Haystack order_by
+        if sort == 'title':
+            sqs = sorted(sqs, key=lambda idx: idx.title.lower())
+        elif sort == '-title':
+            sqs = sorted(sqs, key=lambda idx: idx.title.lower(), reverse=True)
 
         p = Paginator(sqs, self.perpage)
 
@@ -192,20 +202,27 @@ class SearchAPI(APIView):
             if result.creator:
                 creator = result.creator
 
+            authors = creator  # there is no concept of authors in DataOne standard
+            # authors might be string 'None' here
+
             if result.author:
                 author_link = result.author_url
                 author = str(result.author)
+                if authors == 'None':
+                    authors = author  # author would override creator in
             else:
-                if creator != 'None':
-                    try:
-                        if creator[0]:
-                            author = creator[0]
-                        elif creator[1]:
-                            author = creator[1]
-                    except Exception as gen_creator_ex:
-                        pass  # look for nonempty first or second creator based on corrupted data in production
-                elif result.organization:
-                    author = result.organization
+                if result.organization:
+                    if isinstance(result.organization, list):
+                        author = str(result.organization[0])
+                    else:
+                        author = str(result.organization)
+
+                    author = author.replace('"', '')
+                    author = author.replace('[', '')
+                    author = author.replace(']', '').strip()
+
+                    if authors == 'None':
+                        authors = author
 
             if result.contributor is not None:
                 try:
@@ -248,7 +265,7 @@ class SearchAPI(APIView):
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type_exact,
                 "author": author,
-                "authors": creator,
+                "authors": authors,
                 "contributor": contributor,
                 "author_link": author_link,
                 "owner": owner,
@@ -260,15 +277,12 @@ class SearchAPI(APIView):
                 "geo": pt
             })
 
-        if sort == 'title':
-            resources = sorted(resources, key=lambda idx: idx['title'].lower())
-        elif sort == '-title':
-            resources = sorted(resources, key=lambda idx: idx['title'].lower(), reverse=True)
-
         return JsonResponse({
             'resources': json.dumps(resources),
             'geodata': json.dumps(geodata),
             'rescount': p.count,
             'pagecount': p.num_pages,
-            'perpage': self.perpage
+            'perpage': self.perpage,
+            'filterdata': json.dumps(filterdata),
+            'time': (time.time() - start) / 1000
         }, status=200)
