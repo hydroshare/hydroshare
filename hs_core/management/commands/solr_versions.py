@@ -3,6 +3,73 @@
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
+from pprint import pprint
+
+
+def check_displayed(resource, isreplacedby, replaces):
+    uri = 'http://www.hydroshare.org/resource/'+resource.short_id
+    print("resource {} (show={}, disc={}) '{}':".format(resource.short_id,
+                                                        resource.show_in_discover,
+                                                        resource.raccess.discoverable, 
+                                                        resource.title))
+    if resource.short_id in replaces: 
+        repl = replaces[resource.short_id];  # things that resource.short_id replaces 
+        for rid in repl:
+            try:
+                r = get_resource_by_shortkey(rid, or_404=False)
+            except BaseResource.DoesNotExist:
+                r = None
+            if r is not None:
+                print("    replaces {} (show={}, disc={}) '{}'".format(r.short_id,
+                                                                       r.show_in_discover,
+                                                                       r.raccess.discoverable,
+                                                                       r.title))
+            else:
+                print("    replaces {} (DELETED)".format(rid))
+    if resource.short_id in isreplacedby: 
+        repl = isreplacedby[resource.short_id]  # things that are replaced by resource.short_id 
+        for rid in repl:
+            try:
+                r = get_resource_by_shortkey(rid, or_404=False)
+            except BaseResource.DoesNotExist:
+                r = None
+            if r is not None:
+                print("    is replaced by {} (show={}, disc={}) '{}'".format(r.short_id,
+                                                                             r.show_in_discover,
+                                                                             r.raccess.discoverable,
+                                                                             r.title))
+            else:
+                print("    is replaced by {} (DELETED)".format(rid))
+
+
+def map_replacements():
+    
+    isreplacedby = {}  # isreplacedby[x] is the number of things that are replaced by x
+    replaces = {}  # replaces[x] are the number of things that x replaces. 
+    for r in BaseResource.objects.all():
+        if r.metadata and r.metadata.relations:
+            stuff = []
+            for s in r.metadata.relations.filter(type='isReplacedBy'):
+                uri = s.value
+                if uri.startswith('http://www.hydroshare.org/resource/'):
+                    rid = uri[-32:]
+                    # r.short_id "is replaced by" rid
+                    if r.short_id in isreplacedby:
+                        isreplacedby[r.short_id].append(rid)
+                    else:
+                        isreplacedby[r.short_id] = [rid]
+
+                    # rid "replaces" r.short_id: 
+                    # replaces[rid] is the things rid replaces. 
+                    if rid in replaces: 
+                        replaces[rid].append(r.short_id)
+                    else:
+                        replaces[rid] = [r.short_id]
+    # print("isreplacedby")
+    # pprint(isreplacedby)
+    # print("replaces")
+    # pprint(replaces)
+    return isreplacedby, replaces
 
 
 def check_versions(resource):
@@ -64,11 +131,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # check versions on listed resources
+        isreplacedby, replaces = map_replacements()
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    resource = get_resource_by_shortkey(rid, or_404=False)
-                    check_versions(resource)
+                    r = get_resource_by_shortkey(rid, or_404=False)
+                    check_displayed(r, isreplacedby, replaces)
                 except BaseResource.DoesNotExist:
                     msg = "resource {} not found".format(rid)
                     print(msg)
@@ -76,14 +144,7 @@ class Command(BaseCommand):
 
         else:  # check all resources
             print("CHECKING ALL RESOURCES")
+            isreplacedby, replaces = map_replacements()
             available = BaseResource.objects.filter(raccess__discoverable=True)
-            validated = [x.short_id for x in available if x.show_in_discover]
-            queryset = BaseResource.objects.filter(short_id__in=validated)
-            for r in queryset:
-                try:
-                    resource = get_resource_by_shortkey(r.short_id, or_404=False)
-                    check_versions(resource)
-                except BaseResource.DoesNotExist:
-                    msg = "resource {} not found".format(r.short_id)
-                    print(msg)
-                    continue
+            for r in available:
+                check_displayed(r, isreplacedby, replaces)
