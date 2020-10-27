@@ -3519,7 +3519,7 @@ class BaseResource(Page, AbstractResource):
             return self.raccess.discoverable  # exhibit if at least discoverable
         for r in replacedby:
             replacement = r.value
-            if replacement.startswith("http://www.hydroshare.org/self/"):
+            if replacement.startswith("http://www.hydroshare.org/resource/"):
                 replacement = replacement[-32:]  # strip header
                 try:
                     rv = get_resource_by_shortkey(replacement, or_404=False)

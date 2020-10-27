@@ -3,52 +3,55 @@
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-from pprint import pprint
 
 
 def check_displayed(resource, isreplacedby, replaces):
-    uri = 'http://www.hydroshare.org/resource/'+resource.short_id
-    print("resource {} (show={}, disc={}) '{}':".format(resource.short_id,
-                                                        resource.show_in_discover,
-                                                        resource.raccess.discoverable, 
-                                                        resource.title))
-    if resource.short_id in replaces: 
-        repl = replaces[resource.short_id];  # things that resource.short_id replaces 
+    print("resource {} (show={}, disc={}, created={}) '{}':"
+          .format(resource.short_id,
+                  resource.show_in_discover,
+                  resource.raccess.discoverable,
+                  resource.created.strftime("%Y-%m-%d %H:%M:%S"),
+                  resource.title))
+    if resource.short_id in replaces:
+        repl = replaces[resource.short_id]  # things that resource.short_id replaces
         for rid in repl:
             try:
                 r = get_resource_by_shortkey(rid, or_404=False)
             except BaseResource.DoesNotExist:
                 r = None
             if r is not None:
-                print("    replaces {} (show={}, disc={}) '{}'".format(r.short_id,
-                                                                       r.show_in_discover,
-                                                                       r.raccess.discoverable,
-                                                                       r.title))
+                print("    replaces {} (show={}, disc={}, created={}) '{}'"
+                      .format(r.short_id,
+                              r.show_in_discover,
+                              r.raccess.discoverable,
+                              r.created.strftime("%Y-%m-%d %H:%M:%S"),
+                              r.title))
             else:
                 print("    replaces {} (DELETED)".format(rid))
-    if resource.short_id in isreplacedby: 
-        repl = isreplacedby[resource.short_id]  # things that are replaced by resource.short_id 
+    if resource.short_id in isreplacedby:
+        repl = isreplacedby[resource.short_id]  # things that are replaced by resource.short_id
         for rid in repl:
             try:
                 r = get_resource_by_shortkey(rid, or_404=False)
             except BaseResource.DoesNotExist:
                 r = None
             if r is not None:
-                print("    is replaced by {} (show={}, disc={}) '{}'".format(r.short_id,
-                                                                             r.show_in_discover,
-                                                                             r.raccess.discoverable,
-                                                                             r.title))
+                print("    is replaced by {} (show={}, disc={}, created={}) '{}'"
+                      .format(r.short_id,
+                              r.show_in_discover,
+                              r.raccess.discoverable,
+                              r.created.strftime("%Y-%m-%d %H:%M:%S"),
+                              r.title))
             else:
                 print("    is replaced by {} (DELETED)".format(rid))
 
 
 def map_replacements():
-    
+
     isreplacedby = {}  # isreplacedby[x] is the number of things that are replaced by x
-    replaces = {}  # replaces[x] are the number of things that x replaces. 
+    replaces = {}  # replaces[x] are the number of things that x replaces.
     for r in BaseResource.objects.all():
         if r.metadata and r.metadata.relations:
-            stuff = []
             for s in r.metadata.relations.filter(type='isReplacedBy'):
                 uri = s.value
                 if uri.startswith('http://www.hydroshare.org/resource/'):
@@ -59,16 +62,12 @@ def map_replacements():
                     else:
                         isreplacedby[r.short_id] = [rid]
 
-                    # rid "replaces" r.short_id: 
-                    # replaces[rid] is the things rid replaces. 
-                    if rid in replaces: 
+                    # rid "replaces" r.short_id:
+                    # replaces[rid] is the things rid replaces.
+                    if rid in replaces:
                         replaces[rid].append(r.short_id)
                     else:
                         replaces[rid] = [r.short_id]
-    # print("isreplacedby")
-    # pprint(isreplacedby)
-    # print("replaces")
-    # pprint(replaces)
     return isreplacedby, replaces
 
 
