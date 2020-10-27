@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0051_tasknotification'),
+        ('hs_core', '0052_tasknotification_username'),
     ]
 
     operations = [
