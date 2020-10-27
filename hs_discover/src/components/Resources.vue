@@ -197,10 +197,11 @@
         <div id="resource-rows" class="col-lg-9">
             <br/>
             <div class="table-wrapper">
-                <p id="map-message" style="display:none">Select area of interest on the map then click 'Filter by Map View'</p>
-                <p v-if="(!filteredResources.length) && resloaded">Too many filter selections: no resources match those restrictions</p>
+              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
+              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
+              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
-                    class="table-hover table-striped resource-custom-table">
+                    class="table-hover table-striped resource-custom-table main-table">
                     <thead>
                         <tr>
                             <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
@@ -211,27 +212,25 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td>
-                            <img :src="resIconName[entry.type]" data-toggle="tooltip" style="cursor:pointer"
-                                :title="entry.type" :alt="entry.type">
-                            <img :src="entry.availabilityurl" data-toggle="tooltip" style="cursor:pointer"
+                        <td style=width:15%;>
+                          <span id="img-icons">
+                            <img :src="resIconName[entry.type]" v-b-tooltip.hover
+                                :title="entry.type" :alt="entry.type" height="30" width="30">
+                            <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
+                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            </span>
                         </td>
-                        <td>
-                          <a :href="entry.link" target="_blank" style="cursor:pointer" data-placement="top" data-toggle="tooltip"  :title="ellip(entry.abstract)" >{{entry.title}}</a>
+                        <td style="width:60%;" class="title-span">
+                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 250)}}</a>
                         </td>
-                        <td>
-                            <a :href="entry.author_link" data-toggle="tooltip" target="_blank" style="cursor:pointer"
-                               :title="`Author: ${entry.author}
-
-Owner: ${entry.owner}
-
-Contributor: ${entry.contributor}`">{{entry.author}}</a>
-<!-- Ensure the literal line above is not spaced or those spaces will appear in the tooltip -->
+                        <td style=width:15%;>
+                            <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
+                               :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                        <td style="cursor:pointer" data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</td>
-                        <td style="cursor:pointer" data-toggle="tooltip" :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</td>
+                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
+                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
                     </tr>
                     </tbody>
                 </table>
@@ -252,19 +251,20 @@ export default {
     return {
       autocomplete: [],
       searchcategory: 'all',
-      resloaded: false,
+      mapmode: 'display:none',
       resources: [],
       searchtext: '',
-      filterlimit: 10, // Minimum threshold for filter item to display with checkbox
       geodata: [],
       geopoints: [],
-      startdate: 'Start Date',
-      enddate: 'End Date',
+      startdate: '',
+      enddate: '',
       filteredcount: 0,
-      perpage: 40, // resources per page
+      rescount: 0,
       pagenum: 1, // initial page number to show
-      geoloaded: false, // searchjson endpoint called and retrieved geo data
-      resgeotypes: '',
+      pagedisp: 1, // page being displayed
+      perpage: 0,
+      pagecount: 0,
+      geoloaded: true, // endpoint called and retrieved geo data for all resources
       googMarkers: [],
       uidFilter: [],
       countAuthors: {},
@@ -299,11 +299,10 @@ export default {
       sortMap: {
         'First Author': 'author',
         Owner: 'owner',
-        Creator: 'creator', // contributor is stored as creator
+        Creator: 'contributor',
         Title: 'title',
         Type: 'type',
         Subject: 'subject',
-        Abstract: 'abstract',
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
@@ -317,147 +316,101 @@ export default {
     VueBootstrapTypeahead,
   },
   computed: {
-    filteredResources() {
-      // this routine typically completes in thousandths or hundredths of seconds with 3000 resources in Chrome
-      let resfiltered = this.resources;
-      if (this.uidFilter.length === 0 && this.authorFilter.length === 0 && this.ownerFilter.length === 0
-          && this.subjectFilter.length === 0 && this.availabilityFilter.length === 0 && this.contributorFilter.length
-          === 0 && this.typeFilter.length === 0) {
-        // do nothing
-      } else {
-        // Filters should be most restrictive when two conflicting states are selected
-        if (this.uidFilter.length > 0) {
-          const resUids = resfiltered.filter(element => this.uidFilter.indexOf(element.short_id) > -1);
-          resfiltered = resUids;
-        }
-        if (this.authorFilter.length > 0) {
-          const resAuthors = resfiltered.filter(element => this.authorFilter.indexOf(element.author) > -1);
-          resfiltered = resAuthors;
-        }
-        if (this.ownerFilter.length > 0) {
-          const resOwners = resfiltered.filter(res => res.owner.filter(val => this.ownerFilter.includes(val))
-            .length > 0);
-          resfiltered = resOwners;
-        }
-        if (this.subjectFilter.length > 0) {
-          const resSubjects = resfiltered.filter(res => res.subject.filter(val => this.subjectFilter.includes(val))
-            .length > 0);
-          resfiltered = resSubjects;
-        }
-        if (this.availabilityFilter.length > 0) {
-          const resAvailabilities = resfiltered.filter(res => res.availability
-            .filter(val => this.availabilityFilter.includes(val)).length > 0);
-          resfiltered = resAvailabilities;
-        }
-        if (this.contributorFilter.length > 0) {
-          const resContributors = resfiltered.filter(res => res.contributor.filter(val => this.contributorFilter.includes(val))
-            .length > 0);
-          resfiltered = resContributors;
-        }
-
-        if (this.typeFilter.length > 0) {
-          const resTypes = resfiltered.filter(element => this.typeFilter.indexOf(element.type) > -1);
-          resfiltered = resTypes;
-        }
-      }
-      // if (this.startdate !== 'Start Date' && this.startdate !== '' && this.enddate !== 'End Date' && this.enddate !== '') {
-      //   const resDate = [];
-      //   resfiltered.forEach((item) => {
-      //     if (item.start_date && item.end_date) {
-      //       if (this.dateOverlap(item.start_date, item.end_date)) {
-      //         resDate.push(item);
-      //       }
-      //     }
-      //   });
-      //   resfiltered = resDate;
-      // }
-      // resfiltered = this.columnSort(resfiltered);
-      return resfiltered;
-    },
   },
   watch: {
     resources() {
-      this.populateFilters();
-      if (this.resources.length > 0) {
-        this.resloaded = true;
-      } else {
-        this.resloaded = false;
-      }
-    },
-    geodata() {
-      if (this.geodata.length > 0) {
-        this.geoloaded = true;
+      this.setAllMarkers();
+      if (this.mapmode === 'display:block' && this.resources.length > 0) {
+        gotoBounds(); // eslint-disable-line
       }
     },
     startdate() {
-      this.setAllMarkers();
+      if (this.enddate) {
+        if (new Date(this.startdate) >= new Date(this.enddate)) {
+          this.enddate = '';
+        }
+      }
+      this.searchClick(false, false, false);
     },
     enddate() {
-      this.setAllMarkers();
+      if (this.startdate) {
+        if (new Date(this.startdate) >= new Date(this.enddate)) {
+          this.startdate = '';
+        }
+      }
+      this.searchClick(false, false, false);
+    },
+    pagenum() {
+      if (this.pagenum) {
+        this.pagenum = Math.max(1, this.pagenum);
+        this.pagenum = Math.min(this.pagenum, this.pagecount);
+      }
     },
   },
   mounted() {
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
     }
-    this.searchClick();
-    if (document.getElementById('map-view').style.display === 'block') {
-      document.getElementById('map-filter-button').style.display = 'block';
-    }
-    this.experimentalGeo();
+    this.searchClick(false, true);
   },
   methods: {
-    populateFilters() {
-      this.countAuthors = this.filterBuilder(this.resources, 'author', this.filterlimit);
-      this.countTypes = this.filterBuilder(this.resources, 'type');
-
-      // this.countSubjects = this.filterMultiBuilder(this.resources, 'subject', this.filterlimit);
-      let subjectbox = [];
-      this.resources.forEach((res) => {
-        subjectbox = subjectbox.concat(this.enumMulti(res.subject));
-      });
-      const csubjects = new this.Counter(subjectbox);
-      this.countSubjects = Object.fromEntries(Object.entries(csubjects).filter(([v]) => v > this.filterlimit));
-
-      let ownerbox = [];
-      this.resources.forEach((res) => {
-        ownerbox = ownerbox.concat(this.enumMulti(res.owner));
-      });
-      const cowners = new this.Counter(ownerbox);
-      this.countOwners = Object.fromEntries(Object.entries(cowners).filter(([v]) => v > this.filterlimit));
-
-      let contributorbox = [];
-      this.resources.forEach((res) => {
-        contributorbox = contributorbox.concat(this.enumMulti(res.contributor));
-      });
-      const ccontributors = new this.Counter(contributorbox);
-      this.countContributors = Object.fromEntries(Object.entries(ccontributors).filter(([k, v]) => v > this.filterlimit));
-
-      let availabilitybox = [];
-      this.resources.forEach((res) => {
-        availabilitybox = availabilitybox.concat(this.enumMulti(res.availability));
-      });
-      this.countAvailabilities = new this.Counter(availabilitybox);
-    },
-    searchClick() {
-      const startd = new Date();
+    searchClick(paging, dofilters, reset) { // paging flag to skip the page reset after data retrieval
+      if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { q: this.searchtext, sort: this.sortingBy, asc: this.sortDir, cat: this.searchcategory } })
+      if (reset) {
+        this.startdate = '';
+        this.enddate = '';
+        this.authorFilter = [];
+        this.ownerFilter = [];
+        this.subjectFilter = [];
+        this.contributorFilter = [];
+        this.typeFilter = [];
+        this.availabilityFilter = [];
+      }
+      axios.get('/discoverapi/', {
+        params: {
+          q: this.searchtext,
+          sort: this.sortingBy,
+          asc: this.sortDir,
+          cat: this.searchcategory,
+          pnum: this.pagenum,
+          filterbuilder: dofilters,
+          updatefilters: dofilters,
+          filter: {
+            author: this.authorFilter,
+            owner: this.ownerFilter,
+            subject: this.subjectFilter,
+            contributor: this.contributorFilter,
+            type: this.typeFilter,
+            availability: this.availabilityFilter,
+            date: this.getDates(),
+            geofilter: this.mapmode === 'display:block',
+          },
+        },
+      })
         .then((response) => {
           if (response) {
             try {
               this.resources = JSON.parse(response.data.resources);
-              console.log(`/discoverapi/ call in: ${(new Date() - startd) / 1000} sec`);
-              this.setAllMarkers();
+              if (paging !== true) {
+                this.pagenum = 1;
+              }
+              this.pagecount = response.data.pagecount;
+              this.rescount = response.data.rescount;
+              this.perpage = response.data.perpage;
+              this.pagedisp = this.pagenum;
+              this.geodata = JSON.parse(response.data.geodata);
+              if (dofilters) {
+                [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
+                  this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
+              }
               document.body.style.cursor = 'default';
             } catch (e) {
-              console.log(`Error parsing discoverapi JSON: ${e}`);
               document.body.style.cursor = 'default';
             }
           }
         })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
+        .catch((error) => { // eslint-disable-line
           document.body.style.cursor = 'default';
         });
       this.pagenum = 1;
@@ -482,175 +435,84 @@ export default {
     },
     clearSearch() {
       this.searchtext = '';
-      this.cacheLoad();
+      this.searchClick(false, true, true);
     },
-    experimentalGeo() {
-      const startd = new Date();
-      document.body.style.cursor = 'wait';
-      axios.get('/discoverapi/', { params: { geo: 'load' } })
-        .then((response) => {
-          if (response) {
-            try {
-              this.geodata = JSON.parse(response.data.geo);
-              console.log(`/discoverapi/ geo call in: ${(new Date() - startd) / 1000} sec`);
-              this.setAllMarkers();
-              this.geoloaded = true;
-              document.body.style.cursor = 'default';
-            } catch (e) {
-              console.log(`Error parsing discoverapi JSON: ${e}`);
-              this.geoloaded = false;
-              document.body.style.cursor = 'default';
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(`server /discoverapi/ error: ${error}`); // eslint-disable-line
-          this.geoloaded = false;
-          document.body.style.cursor = 'default';
-        });
-      this.pagenum = 1;
+    paging(direction) {
+      this.pagenum = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
+      this.searchClick(true);
     },
-    loadgeo() {
-      const startd = new Date();
-      const geodata = [];
-      axios.get('/searchjson/', { params: { data: {} } })
-        .then((response) => {
-          if (response.status === 200) {
-            console.log(`/searchjson/ call in: ${(new Date() - startd) / 1000} sec`);
-            response.data.forEach((item) => {
-              const val = JSON.parse(item);
-              if (val.coverage_type) {
-                geodata.push(val);
-              }
-            });
-            this.geodata = geodata;
-          } else {
-            console.log(`Error: ${response.statusText}`);
-          }
-        })
-        .catch((error) => {
-          console.error(`server /searchjson/ error: ${error}`); // eslint-disable-line
-          this.geoloaded = false;
-        });
-    },
-    filterBuilder(resources, thing, limit) {
-      const box = [];
-
-      try {
-        resources.forEach(res => box.push(res[thing]));
-      } catch (err) {
-        console.log(`Type ${thing} not found when building filter: ${err}`);
+    orderedFilter(items) {
+      if (items.length > 0) {
+        return Object.values(items).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()));
       }
-      const c = new this.Counter(box);
-      if (limit) {
-        try {
-          return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
-        } catch (err) {
-          console.log(`Could not truncate ${thing}: ${err}`);
-          return c;
-        }
-      }
-      return c;
-    },
-    filterMultiBuilder(resources, attribute, limit) {
-      let box = [];
-      resources.forEach((res) => {
-        box = box.concat(this.enumMulti(res[attribute]));
-      });
-      const c = new this.Counter(box);
-      if (limit) {
-        return Object.fromEntries(Object.entries(c).filter(([v]) => v > limit));
-      }
-      return c;
-    },
-    columnSort(res) {
-      if (this.sortingBy === 'created' || this.sortingBy === 'modified') {
-        const datesorted = res.sort((a, b) => new Date(b[this.sortingBy]) - new Date(a[this.sortingBy]));
-        return this.sortDir === -1 ? datesorted : datesorted.reverse();
-      }
-      Object.keys(res).forEach(key => (!res[key] ? delete res[key] : {})); // eslint-disable-line
-      return res.sort((a, b) => ((a[this.sortingBy].toLowerCase() > b[this.sortingBy]
-        .toLowerCase()) ? this.sortDir : -1 * this.sortDir));
+      return [];
     },
     sortBy(key) {
       if (this.sortMap[key] !== 'type') {
         this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
         this.sortingBy = this.sortMap[key];
-        this.pagenum = 1;
-        this.searchClick();
+        this.searchClick(true);
       }
     },
     sortStyling(key) {
       if (this.sortMap[key] === this.sortingBy) {
-        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc' : 'fa fa-fw fa-sort-desc';
+        return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc interactive' : 'fa fa-fw fa-sort-desc interactive';
       }
-      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort';
+      return this.sortMap[key] === 'type' ? '' : 'fa fa-fw fa-sort interactive';
     },
-    Counter(array) {
-      // eslint-disable-next-line no-return-assign
-      array.forEach(val => this[val] = (this[val] || 0) + 1);
-    },
-    doPager(res) {
-      // return res.slice(0, this.perpage);
-      const startx = (this.pagenum - 1) * this.perpage;
-      return res.slice(startx, startx + this.perpage);
-    },
-    enumMulti(a) {
-      let c = [];
-      if (a) {
-        c = Object.values(a);
+    getDates() {
+      if (this.startdate === '' && this.enddate === '') {
+        return [];
       }
-      return c;
+      return [this.startdate !== '' ? this.startdate : new Date('1/1/1900').toISOString().split('T')[0],
+        this.enddate !== '' ? this.enddate : new Date().toISOString().split('T')[0]];
     },
-    ellip(input) {
-      if (input) {
-        return input.length > 500 ? `${input.substring(0, 500)}...` : input;
+    ellip(input, size) {
+      if (input && size) {
+        return input.length > size ? `${input.substring(0, size)}...` : input;
       }
       return '';
     },
-    dateOverlap(dtstart, dtend) {
-      // eslint-disable-next-line no-mixed-operators
-      const ol = (Date.parse(dtstart) > Date.parse(this.startdate) && Date.parse(dtstart) < Date.parse(this.enddate) || Date.parse(this.startdate) > Date.parse(dtstart) && Date.parse(this.startdate) < Date.parse(dtend));
-      console.log(`${dtstart} ${dtend} : ${this.startdate} ${this.enddate} : ${ol}`);
-      return ol;
-    },
-    displayMap() {
-      toggleMap(); // eslint-disable-line
-      if (this.geoloaded) {
-        this.setAllMarkers();
+    nameList(names) {
+      try {
+        return names.join(' | ');
+      } catch {
+        return names;
       }
-      if (document.getElementById('map-view').style.display !== 'block') {
-        this.uidFilter = [];
-        document.getElementById('map-filter-button').style.display = 'none';
-        document.getElementById('items-discovered').style.display = 'block';
-        document.getElementById('map-message').style.display = 'none';
-        document.getElementById('map-mode-button').value = 'Show Map';
-        this.resgeotypes = '';
-      } else if (document.getElementById('map-view').style.display === 'block') {
-        document.getElementById('map-filter-button').style.display = 'block';
-        document.getElementById('items-discovered').style.display = 'none';
-        document.getElementById('map-message').style.display = 'block';
+    },
+    showMap() {
+      toggleMap(); // eslint-disable-line
+      if (document.getElementById('map-view').style.display === 'block') {
+        this.mapmode = 'display:block';
+        if (this.resources.length > 0) {
+          this.searchClick(false, false, false);
+          this.setAllMarkers();
+        } else {
+          recenterMap(); // eslint-disable-line
+        }
         document.getElementById('map-mode-button').value = 'Hide Map';
+      } else if (document.getElementById('map-view').style.display !== 'block') {
+        this.mapmode = 'display:none';
+        document.getElementById('map-mode-button').value = 'Show Map';
+        this.searchClick(false, false, false);
       }
     },
     setAllMarkers() {
+      const all = false;
       if (document.getElementById('map-view').style.display === 'block') {
-        console.log('Rendering all markers');
         deleteMarkers(); // eslint-disable-line
-
-        // TODO this code if we allow filtering in search to affect markers
-        // const shids = this.filteredResources.map(x => x.short_id);
-        // const geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
-        // TODO for now just showing all geo
-        const geocoords = this.geodata;
-
+        let geocoords = this.geodata;
+        if (!all) {
+          const shids = this.resources.map(x => x.short_id);
+          geocoords = this.geodata.filter(element => shids.indexOf(element.short_id) > -1);
+        }
         let pts = geocoords.filter(x => x.coverage_type === 'point');
         const pointlocs = [];
         pts.forEach((x) => {
           if (!x.north || !x.east || Number.isNaN(parseFloat(x.north)) || Number.isNaN(parseFloat(x.east))) {
-            console.log(`Bad geodata format ${x.short_id} ${x.north} ${x.east}`);
+            // no action
           } else if (Math.abs(parseFloat(x.north)) > 90 || Math.abs(parseFloat(x.east)) > 180) {
-            console.log(`Bad geodata value ${x.short_id} ${x.north} ${x.east}`);
+            // no action
           }
           const lat = Number.isNaN(parseFloat(x.north)) ? 0.0 : parseFloat(x.north);
           const lng = Number.isNaN(parseFloat(x.east)) ? 0.0 : parseFloat(x.east);
@@ -659,7 +521,7 @@ export default {
         const pointuids = pts.map(x => x.short_id);
         const pointlbls = pts.map(x => x.title);
 
-        pts = geocoords.filter(x => x.coverage_type === 'region');
+        pts = geocoords.filter(x => x.coverage_type === 'box');
         const regionlocs = [];
         pts.forEach((x) => {
           const eastlim = Number.isNaN(parseFloat(x.eastlimit)) ? 0.0 : parseFloat(x.eastlimit);
@@ -678,44 +540,14 @@ export default {
         createBatchMarkers(pointlocs.concat(regionlocs), pointuids.concat(regionuids), pointlbls.concat(regionlbls)); // eslint-disable-line
       }
     },
-    liveMapFilter() {
-      if (document.getElementById('map-view').style.display === 'block') {
-        this.uidFilter = window.visMarkers;
-        document.getElementById('items-discovered').style.display = 'block';
-        document.getElementById('map-message').style.display = 'none';
-        this.resgeotypes = 'with geographic coordinates';
-      }
-    },
-    showHighlighter(hsid) {
-      if (document.getElementById('map-view').style.display === 'block') {
-        document.getElementById('topcontrol').click();
-        highlightMarker(hsid); // eslint-disable-line
-      }
-    },
-    renderMapSingle(pts) {
-      pts.forEach((pt) => {
-        if (pt.coverage_type === 'point') {
-          createMarker({ lat: pt.north, lng: pt.east }, pt.title); // eslint-disable-line
-        } else if (pt.coverage_type === 'box') {
-          const lat = (parseInt(pt.northlimit, 10) + parseInt(pt.southlimit, 10)) / 2;
-          const lng = (parseInt(pt.eastlimit, 10) + parseInt(pt.westlimit, 10)) / 2;
-          console.log(pt.northlimit, pt.southlimit, pt.eastlimit, pt.westlimit);
-          createMarker({ lat, lng }, pt.title); // eslint-disable-line
-        }
-      });
-    },
   },
 };
 </script>
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
-    #map-message {
-       position: absolute;
-       left: 110px;
-    }
-    #map-filter-button {
-        margin-bottom: 12px;
+    .main-table {
+        width: 100%;
     }
     .panel-title > a:before {
         float: left !important;
@@ -733,20 +565,39 @@ export default {
         text-decoration:none;
     }
     #filter-items {
-        /* ensure collapse without overlap */
+        /* Ensure collapse without overlap */
         width: 235px;
     }
     .table-wrapper {
-        margin-top: 0px;
+        margin-top: 0;
     }
     .table-hover {
-        margin-top: 0px;
+        margin-top: 0;
     }
     .checkbox {
-
+        /* Override older version of bootstrap styling */
     }
     .mapdisp {
-        right: 0px;
+        right: 0;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    .table-message {
+        position: absolute;
+        left: 100px;
+    }
+    .title-span {
+        min-width: 437px;
+        max-width: 437px;
+        width: 437px;
+        word-break: normal;
+        word-wrap: break-word;
+        white-space: normal;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    #resultsdisp {
+        left: 300px;
     }
     #page-number {
         width: 60px;
@@ -757,9 +608,16 @@ export default {
     #wrapper > a {
         margin-left: 1em;
     }
-    #search {
-        width: 850px;
+    #search input {
+        width: 100%;
+        min-width: 800px;
+        padding-left: 25px;
+        padding-right: 25px;
         z-index: 1;
+    }
+    #img-icons {
+        min-width: 85px;
+        white-space: nowrap;
     }
     .inside-right {
         position: absolute;
@@ -772,6 +630,37 @@ export default {
         top: 10px;
         left: 10px;
         z-index: 2;
+    }
+    .btn.focus {
+        /* Remove unwanted outline behavior */
+        outline: 0;
+        box-shadow: None;
+    }
+    .btn:focus {
+        /* Remove unwanted outline behavior */
+        outline: 0;
+        box-shadow: None;
+    }
+    .date-wrapper {
+        display: block;
+        width: 100%;
+    }
+    .pagination {
+      z-index: 1000;
+      margin: 0;
+      transform: translateY(4px);
+    }
+    .interactive:hover {
+      color: LightBlue;
+      /* Avoid double-click selection during rapid clicking: */
+      user-select: none; /* standard syntax */
+      -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+      -moz-user-select: none; /* mozilla browsers */
+      -ms-user-select: none; /* IE10+ */
+    }
+    #search {
+        width: 850px;
+        z-index: 1;
     }
     #filterselect {
       z-index: 999;
