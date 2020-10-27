@@ -1588,8 +1588,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <a type="button" class="btn btn-danger"
-                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                                    <button id="btn-delete-resource" class="btn btn-danger">Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -1629,8 +1628,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-success" id="copy-btn"
-                                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/" disabled>Copy this resource</a>
+                                <button id="copy-btn" class="btn btn-success" disabled>Copy this resource</button>
                             </div>
                         </div>
                     </div>
@@ -1667,8 +1665,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-success" id="download-bag-btn"
-                   href="{{ cm.bag_url }}" disabled>Download</a>
+                <button type="button" class="btn btn-success" id="download-bag-btn"
+                   data-bag-url="{{ cm.bag_url }}" disabled>Download</button>
             </div>
         </div>
     </div>
