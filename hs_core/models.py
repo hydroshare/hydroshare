@@ -3504,6 +3504,30 @@ class BaseResource(Page, AbstractResource):
 
         return hs_term_dict
 
+    def show_in_discover(self):
+        """
+        return True if a resource should be exhibited
+        A resource should be exhibited if it is at least discoverable
+        and not replaced by anything that exists and is at least discoverable.
+        """
+        from hs_core.hydroshare import get_resource_by_shortkey   # prevent import loop
+        if not self.raccess.discoverable:
+            return False  # not exhibitable
+        replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
+        if replacedby.count() == 0:
+            return self.raccess.discoverable  # exhibit if at least discoverable
+        for r in replacedby:
+            replacement = r.value
+            if replacement.startswith("http://www.hydroshare.org/self/"):
+                replacement = replacement[-32:]  # strip header
+                try:
+                    rv = get_resource_by_shortkey(replacement, or_404=False)
+                except BaseResource.DoesNotExist:
+                    rv = None
+                if rv is not None and rv.raccess.discoverable:
+                    return False
+        return True  # no reason not to show it
+
 
 # TODO Deprecated
 class GenericResource(BaseResource):

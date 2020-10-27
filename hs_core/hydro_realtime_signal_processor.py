@@ -37,19 +37,24 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 using_backends = self.connection_router.for_write(instance=newinstance)
                 for using in using_backends:
                     # if object is public/discoverable or becoming public/discoverable, index it 
-                    if instance.raccess.public or instance.raccess.discoverable: 
+                    # test whether the object should be exposed. 
+                    if instance.show_in_discover(): 
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.", str(type(instance)), newinstance.short_id)
+                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.", 
+                                             str(type(instance)), newinstance.short_id)
+
+
                     # if object is private or becoming private, delete from index
-                    else:
+                    else:  # not to be shown in discover
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.remove_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: delete of %s with short_id %s failed.", str(type(instance)), newinstance.short_id)
+                            logger.exception("Failure: delete of %s with short_id %s failed.", 
+                                             str(type(instance)), newinstance.short_id)
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
