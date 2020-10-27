@@ -38,7 +38,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 for using in using_backends:
                     # if object is public/discoverable or becoming public/discoverable, index it 
                     # test whether the object should be exposed. 
-                    if instance.show_in_discover(): 
+                    if instance.show_in_discover: 
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newinstance, using=using)

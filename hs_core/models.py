@@ -3504,6 +3504,7 @@ class BaseResource(Page, AbstractResource):
 
         return hs_term_dict
 
+    @property
     def show_in_discover(self):
         """
         return True if a resource should be exhibited

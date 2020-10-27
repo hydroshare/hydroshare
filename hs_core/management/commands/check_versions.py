@@ -4,25 +4,13 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 
-class discoverable_resources: 
-    def __iter__(self): 
-        self.available = iter(BaseResource.objects.filter(raccess__discoverable=True))
-        return self
-    def __next__(self): 
-        nextone = next(self.available)
-        while not nextone.show_in_discover(): 
-            nextone = next(self.available)
-        if nextone is not None: 
-            return nextone
-        raise StopIteration
-        
 
 def check_versions(resource):
     if resource.metadata is not None and resource.metadata.relations is not None:
         versions = resource.metadata.relations.all().filter(type='isVersionOf')
         if versions.count() > 0:
             print("checking isVersionOf for {} '{}'".format(resource.short_id,
-                                                         resource.title))
+                                                            resource.title))
             for v in versions:
                 version = v.value
                 if version.startswith("http://www.hydroshare.org/resource/"):
@@ -36,14 +24,14 @@ def check_versions(resource):
                                                          rv.raccess.discoverable,
                                                          rv.raccess.public,
                                                          rv.title))
-                    else: 
+                    else:
                         print("    {} VERSON DELETED".format(version))
                 else:
                     print("    NONSTANDARD VERSION {}".format(version))
         replaces = resource.metadata.relations.all().filter(type='isReplacedBy')
         if replaces.count() > 0:
             print("checking isReplacedBy for {} '{}'".format(resource.short_id,
-                                                         resource.title))
+                                                             resource.title))
             for r in replaces:
                 replacement = r.value
                 if replacement.startswith("http://www.hydroshare.org/resource/"):
@@ -61,7 +49,7 @@ def check_versions(resource):
                         print("    {} REPLACEMENT DELETED".format(replacement))
                 else:
                     print("    NONSTANDARD REPLACEMENT {}".format(replacement))
-        if (resource.raccess.discoverable and not resource.show_in_discover()):
+        if (resource.raccess.discoverable and not resource.show_in_discover):
             print("resource {} exhibit=False".format(resource.short_id))
     else:
         print("no metadata for {}".format(resource.short_id))
@@ -88,7 +76,10 @@ class Command(BaseCommand):
 
         else:  # check all resources
             print("CHECKING ALL RESOURCES")
-            for r in discoverable_resources(): 
+            available = BaseResource.objects.filter(raccess__discoverable=True)
+            validated = [x.short_id for x in available if x.show_in_discover]
+            queryset = BaseResource.objects.filter(short_id__in=validated)
+            for r in queryset:
                 try:
                     resource = get_resource_by_shortkey(r.short_id, or_404=False)
                     check_versions(resource)

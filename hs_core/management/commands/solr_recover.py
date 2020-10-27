@@ -39,7 +39,7 @@ def repair_solr(short_id):
     using_backends = connection_router.for_write(instance=baseinstance)
     for using in using_backends:
         # if object is public/discoverable or becoming public/discoverable, index it
-        if instance.raccess.public or instance.raccess.discoverable:
+        if instance.show_in_discover:
             try:
                 index = connections[using].get_unified_index().get_index(basesender)
                 index.update_object(baseinstance, using=using)
