@@ -3504,19 +3504,11 @@ class BaseResource(Page, AbstractResource):
 
         return hs_term_dict
 
-    @property
-    def show_in_discover(self):
-        """
-        return True if a resource should be exhibited
-        A resource should be exhibited if it is at least discoverable
-        and not replaced by anything that exists and is at least discoverable.
-        """
+    def replaced_by(self):
+        """ return a list or resources that replaced this one """
         from hs_core.hydroshare import get_resource_by_shortkey   # prevent import loop
-        if not self.raccess.discoverable:
-            return False  # not exhibitable
         replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
-        if replacedby.count() == 0:
-            return self.raccess.discoverable  # exhibit if at least discoverable
+        rlist = []
         for r in replacedby:
             replacement = r.value
             if replacement.startswith("http://www.hydroshare.org/resource/"):
@@ -3525,8 +3517,39 @@ class BaseResource(Page, AbstractResource):
                     rv = get_resource_by_shortkey(replacement, or_404=False)
                 except BaseResource.DoesNotExist:
                     rv = None
-                if rv is not None and rv.raccess.discoverable:
-                    return False
+                if rv is not None:
+                    rlist.append(rv)
+        return rlist
+
+    @property
+    def show_in_discover(self):
+        """
+        return True if a resource should be exhibited
+        A resource should be exhibited if it is at least discoverable
+        and not replaced by anything that exists and is at least discoverable.
+
+        A resource is hidden if there is any descendant (according to isReplacedBy)
+        that is discoverable. The descendent tree is searched via breadth-first search
+        with cycle elimination.  Thus the search always terminates regardless of the
+        complexity of descendents.
+        """
+        if not self.raccess.discoverable:
+            return False  # not exhibitable
+        replacedby = self.replaced_by()
+        visited = {}
+        visited[self.short_id] = True
+
+        from pprint import pprint
+        pprint(replacedby)
+
+        # breadth-first replacement search, first discoverable replacement wins
+        for r in replacedby:
+            pprint(r)
+            if r.raccess.discoverable:
+                return False
+            if r.short_id not in visited:
+                replacedby.extend(r.replaced_by())
+                visited[r.short_id] = True
         return True  # no reason not to show it
 
 
