@@ -78,7 +78,7 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
         owner=user,
         title=title,
         metadata=metadata,
-        files=(open('pytest.ini', 'rb'),)
+        # files=(open('pytest.ini', 'rb'),)
     )
     return _res
 
@@ -116,6 +116,16 @@ def public_resource_with_metadata():
 def private_resource_with_metadata(sample_user):
     resource = base_sample_resource(username=sample_user.username)
     resource.keywords_string = str(uuid.uuid4())
+    resource.raccess.save()
+    resource.save()
+    yield resource
+    resource.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def resource_for_citation(sample_user):
+    resource = base_sample_resource(username=sample_user.username)
     resource.raccess.save()
     resource.save()
     yield resource
