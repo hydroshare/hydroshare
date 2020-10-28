@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Debug discovery code on actual resources.
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
@@ -6,6 +7,9 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 def check_displayed(resource, isreplacedby, replaces):
+    """ create a depiction of what is displayed and what is not displayed according
+        to resource.show_in_discover
+    """
     print("resource {} (show={}, disc={}, created={}) '{}':"
           .format(resource.short_id,
                   resource.show_in_discover,
@@ -47,7 +51,7 @@ def check_displayed(resource, isreplacedby, replaces):
 
 
 def map_replacements():
-
+    """ create a map of what resources are replaced by others. This is a tree. """
     isreplacedby = {}  # isreplacedby[x] is the number of things that are replaced by x
     replaces = {}  # replaces[x] are the number of things that x replaces.
     for r in BaseResource.objects.all():
@@ -69,56 +73,6 @@ def map_replacements():
                     else:
                         replaces[rid] = [r.short_id]
     return isreplacedby, replaces
-
-
-def check_versions(resource):
-    if resource.metadata is not None and resource.metadata.relations is not None:
-        versions = resource.metadata.relations.all().filter(type='isVersionOf')
-        if versions.count() > 0:
-            print("checking isVersionOf for {} '{}'".format(resource.short_id,
-                                                            resource.title))
-            for v in versions:
-                version = v.value
-                if version.startswith("http://www.hydroshare.org/resource/"):
-                    version = version[-32:]  # strip header
-                    try:
-                        rv = get_resource_by_shortkey(version, or_404=False)
-                    except BaseResource.DoesNotExist:
-                        rv = None
-                    if rv is not None:
-                        print("    {} {} {} '{}'".format(version,
-                                                         rv.raccess.discoverable,
-                                                         rv.raccess.public,
-                                                         rv.title))
-                    else:
-                        print("    {} VERSON DELETED".format(version))
-                else:
-                    print("    NONSTANDARD VERSION {}".format(version))
-        replaces = resource.metadata.relations.all().filter(type='isReplacedBy')
-        if replaces.count() > 0:
-            print("checking isReplacedBy for {} '{}'".format(resource.short_id,
-                                                             resource.title))
-            for r in replaces:
-                replacement = r.value
-                if replacement.startswith("http://www.hydroshare.org/resource/"):
-                    replacement = replacement[-32:]
-                    try:
-                        rv = get_resource_by_shortkey(replacement, or_404=False)
-                    except BaseResource.DoesNotExist:
-                        rv = None
-                    if rv is not None:
-                        print("    {} {} {} '{}'".format(replacement,
-                                                         rv.raccess.discoverable,
-                                                         rv.raccess.public,
-                                                         rv.title))
-                    else:
-                        print("    {} REPLACEMENT DELETED".format(replacement))
-                else:
-                    print("    NONSTANDARD REPLACEMENT {}".format(replacement))
-        if (resource.raccess.discoverable and not resource.show_in_discover):
-            print("resource {} exhibit=False".format(resource.short_id))
-    else:
-        print("no metadata for {}".format(resource.short_id))
 
 
 class Command(BaseCommand):
