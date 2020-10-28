@@ -3539,12 +3539,8 @@ class BaseResource(Page, AbstractResource):
         visited = {}
         visited[self.short_id] = True
 
-        from pprint import pprint
-        pprint(replacedby)
-
         # breadth-first replacement search, first discoverable replacement wins
         for r in replacedby:
-            pprint(r)
             if r.raccess.discoverable:
                 return False
             if r.short_id not in visited:
