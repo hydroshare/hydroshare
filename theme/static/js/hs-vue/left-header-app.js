@@ -212,6 +212,13 @@ Vue.component('add-author-modal', {
             let vue = this;
             // Transform the identifier field back into an object
             let author = $.extend(true, {}, this.author);
+
+            vue.addAuthorError = null;
+            if (!author.name) {
+                vue.addAuthorError = "Name is required. Please input the name of the author to add.";
+                return;
+            }
+
             let identifiers = {};
 
             this.author.identifiers.map(function (el) {
