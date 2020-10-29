@@ -27,6 +27,7 @@
         <div class="form-group half">
           {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
           {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
+          <small class="text-muted">Names may be omitted if you do not wish to provide them.</small>
         </div>
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.email inline_label=True %}

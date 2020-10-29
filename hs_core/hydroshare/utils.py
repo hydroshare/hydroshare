@@ -798,16 +798,14 @@ def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
 
-    if user_profile.middle_name:
-        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                        user_profile.middle_name)
+    if user.last_name and user.first_name:
+        if user_profile.middle_name:
+            party_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                            user_profile.middle_name)
+        else:
+            party_name = '%s, %s' % (user.last_name, user.first_name)
     else:
-        user_full_name = '%s, %s' % (user.last_name, user.first_name)
-
-    if user_full_name:
-        party_name = user_full_name
-    else:
-        party_name = user.username
+        party_name = ''
 
     party_data['name'] = party_name
     party_data['email'] = user.email
