@@ -1399,7 +1399,7 @@
          aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
+                <form action="/hsapi/_internal/{{ cm.short_id }}/citation/add-metadata/"
                       method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input name="resource-mode" type="hidden" value="edit">
@@ -1414,21 +1414,9 @@
                         <div class="form-group">
                             {% csrf_token %}
                             <fieldset>
-                                <div id="div_id_9999" class="control-group space-bottom">
-                                    <label for="id_type" class="control-label requiredField">
-                                    Type of relationship<span class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <select class="form-control input-sm select" id="id_type00033" name="type">
-                                            {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }}>{{ type_display }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
                                 <div id="div_id_value2345345" class="control-group">
-                                    <label for="id_related_to_input" class="control-label requiredField">
-                                        Full text citation, URL link for, or description of the related resource
+                                    <label for="id_related_to_input345345" class="control-label requiredField">
+                                        Full text citation
                                         <span class="asteriskField">*</span>
                                     </label>
 
