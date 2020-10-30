@@ -301,6 +301,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     def rdf_metadata_subject(self):
         return URIRef("{}/resource/{}#".format(current_site_url(), self.logical_file.metadata_file_path))
 
+    def rdf_type(self):
+        return getattr(HSTERMS, self.logical_file.get_aggregation_type_name)
+
     def ingest_metadata(self, graph):
         super(AbstractFileMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)

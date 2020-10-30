@@ -32,6 +32,9 @@ class RDF_MetaData_Mixin(object):
     def rdf_metadata_subject(self):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_metadata_subject")
 
+    def rdf_type(self):
+        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_type")
+
     @classmethod
     def rdf_subject_from_graph(cls, graph):
         """Derive the root subject of an rdflib Graph by returning the subject in the triple with predicate DC.title"""
@@ -58,7 +61,7 @@ class RDF_MetaData_Mixin(object):
         graph.namespace_manager = NAMESPACE_MANAGER
 
         subject = self.rdf_subject()
-
+        graph.add((subject, RDF.type, self.rdf_type()))
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
             for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
