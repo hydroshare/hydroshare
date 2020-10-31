@@ -12,13 +12,13 @@
         {% with profile_user.userprofile as profile %}
         <input type="hidden" id="url-create-irods-account" value="{% url 'create_irods_account' %}">
         <input type="hidden" id="url-delete-irods-account" value="{% url 'delete_irods_account' %}">
-        {% if profile_user.id == user.id %}
-        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
+        {% if profile_user.id == user.id or user.is_superuser %}
+        <form id="profile-form" action="{% url 'update_profile' profile_user.id %}" class="account-form" method="post"
               enctype="multipart/form-data" onsubmit="return validateForm()">
         {% csrf_token %}
         {% endif %}
             <div class="row">
-                {% if profile_user.id == user.id %}
+                {% if profile_user.id == user.id or user.is_superuser %}
                     <div data-page-mode="edit" class="alert alert-info" role="alert">
                         Information entered here may be publicly visible. Do not enter information that you want to keep
                         private.
@@ -27,7 +27,7 @@
 
                 <div class="col-sm-12">
                     <div class="row">
-                        {% if profile_user.id == user.id %}
+                        {% if profile_user.id == user.id or user.is_superuser %}
                             <div class="col-xs-12 col-sm-3 height-fix pull-right">
                                 <span data-page-mode="view" id="btn-edit-profile" data-toggle="tooltip"
                                       data-placement="left"
@@ -54,7 +54,7 @@
                             </div>
 
                             {#        Profile picture upload controls       #}
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                                 <div data-page-mode="edit" class="text-center" id="photo-control">
                                 {% if profile.picture and profile.picture.url %}
                                     <div class="btn-file btn-update-picture">
@@ -76,7 +76,7 @@
                             {% endif %}
 
                             {#        Password      #}
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
@@ -132,7 +132,7 @@
                                     </table>
                                 {% endif %}
                             </div>
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                             <div data-page-mode="edit">
                                 <div class="row">
                                     {# First name #}
@@ -222,7 +222,7 @@
                             {% endif %}
 
                             {#        CV       #}
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                                 <div data-page-mode="edit">
                                     <div>
                                         {% if profile.cv and profile.cv.url %}
@@ -386,7 +386,7 @@
                                                 </tr>
                                                 </tbody>
                                             </table>
-                                            {% if profile_user.id == user.id %}
+                                            {% if profile_user.id == user.id or user.is_superuser %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
                                                     <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
@@ -397,7 +397,7 @@
                                             {% endif %}
                                         </div>
 
-                                        {% if profile_user.id == user.id %}
+                                        {% if profile_user.id == user.id or user.is_superuser %}
                                         <div data-page-mode="edit">
                                             {# Title #}
                                             <fieldset>
@@ -426,7 +426,7 @@
                                 {% endif %}
 
                                 {#  CONTACT #}
-                                {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
+                                {% if profile.public or user.is_superuser or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
                                         <h3 class="panel-title"><span
@@ -487,7 +487,7 @@
                                             </tbody>
                                         </table>
 
-                                        {% if profile_user.id == user.id %}
+                                        {% if profile_user.id == user.id or user.is_superuser %}
                                         <div class="row" data-page-mode="edit">
                                             <fieldset>
                                                 <div class="col-sm-12"><label>Phone 1</label></div>
@@ -586,7 +586,7 @@
                                     </div>
                                 </div>
 
-                                {% if profile_user.id == user.id %}
+                                {% if profile_user.id == user.id or user.is_superuser %}
                                 <div class="panel panel-default"  data-page-mode="edit">
                                     <div class="panel-heading">
                                         <h3 class="panel-title"><span
@@ -778,7 +778,7 @@
                 </div>
             </div>
 
-        {% if profile_user.id == user.id %}
+        {% if profile_user.id == user.id or user.is_superuser %}
             <div class="col-xs-12 col-sm-3 height-fix pull-right">
             <button type="submit" class="btn btn-primary pull-right
                 btn-save-profile" data-page-mode="edit">

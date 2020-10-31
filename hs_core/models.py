@@ -4228,7 +4228,7 @@ class CoreMetaData(models.Model):
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
 
-            hsterms_name.text = name_without_commas(person.name)
+            hsterms_name.text = person.name
 
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
