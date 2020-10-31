@@ -186,6 +186,9 @@ HSWS_ACTIVATED = False
 
 # HydroShare Data Services
 HS_GEOSERVER = "https://geoserver.hydroshare.org/geoserver"
+HS_GEOSERVER_ESCAPE = {
+    '/': ' '
+}
 
 # Uncomment the following code if you want to suppress some warnings on a local laptop
 # TIME_ZONE = 'Etc/UTC'

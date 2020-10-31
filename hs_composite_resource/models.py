@@ -1,6 +1,7 @@
 import os
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -578,6 +579,67 @@ class CompositeResource(BaseResource):
                 metadata_missing_info.append({'file_path': lfo.aggregation_name,
                                               'missing_elements': missing_elements})
         return metadata_missing_info
+
+    def get_data_services_urls(self):
+        """
+        Generates data services URLs for the resource.
+
+        If the resource contains any GeoFeature or GeoRaster content, and if it's public,
+        generate data service endpoints.
+        """
+
+        if self.raccess.public is True:
+            resource_data_types = [lf.data_type for lf in self.logical_files]
+
+            if any(
+                data_type in [
+                    'GeographicFeature', 'GeographicRaster'
+                ] for data_type in resource_data_types
+            ):
+                wms_url = (
+                    f'{settings.HS_GEOSERVER}/wms?'
+                    f'service=WMS&'
+                    f'version=1.3.0&'
+                    f'request=GetCapabilities&'
+                    f'namespace=HS-{self.short_id}'
+                )
+            else:
+                wms_url = None
+
+            if 'GeographicFeature' in resource_data_types:
+                wfs_url = (
+                    f'{settings.HS_GEOSERVER}/wfs?'
+                    f'service=WFS&'
+                    f'version=1.1.0&'
+                    f'request=GetCapabilities&'
+                    f'namespace=HS-{self.short_id}'
+                )
+            else:
+                wfs_url = None
+
+            if 'GeographicRaster' in resource_data_types:
+                wcs_url = (
+                    f'{settings.HS_GEOSERVER}/wcs?'
+                    f'service=WCS&'
+                    f'version=1.1.0&'
+                    f'request=GetCapabilities&'
+                    f'namespace=HS-{self.short_id}'
+                )
+            else:
+                wcs_url = None
+
+        else:
+            wms_url = None
+            wfs_url = None
+            wcs_url = None
+
+        data_services_urls = {
+            'wms_url': wms_url,
+            'wfs_url': wfs_url,
+            'wcs_url': wcs_url
+        }
+
+        return data_services_urls
 
     def delete_coverage(self, coverage_type):
         """Deletes coverage data for the resource

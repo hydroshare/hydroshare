@@ -14,7 +14,7 @@ from django.db import models, transaction
 from django.utils.html import strip_tags
 from django.template import Template, Context
 
-from dominate.tags import legend, table, tbody, tr, th, td, div, a, button, span, i, p
+from dominate.tags import legend, table, tbody, tr, th, div
 
 from hs_core.models import Title, CoreMetaData
 from hs_core.hydroshare import utils
@@ -60,7 +60,6 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             html_string += self.temporal_coverage.get_html()
 
         html_string += self._get_field_informations_html()
-        html_string += self._get_data_services_html()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
@@ -79,77 +78,6 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
                     for field_info in self.fieldinformations.all():
                         field_info.get_html(pretty=False)
-
-        return root_div.render()
-
-    def _getGeoServerServiceURL(self, service):
-        resId = '46847666941c43fbbafb27922861a2e5' 
-        return (
-            f'{settings.HS_GEOSERVER}/HS-{resId}/'
-            f'{service}?request=GetCapabilities&service={service.upper()}'
-        )
-
-    def _getPreviewDataURL(self, service):
-        # We need to URI encode each part of the URL
-
-        # TODO: access resource id
-        resId = quote('bee3e6d857fd48d6be60f95997b2eb14')
-        
-        extent = str(self.spatial_coverage.value['westlimit']) \
-        + "," + str(self.spatial_coverage.value['southlimit']) \
-        + "," + str(self.spatial_coverage.value['eastlimit']) \
-        + "," + str(self.spatial_coverage.value['northlimit'])
-        extent = quote(extent)
-        # TODO: prepend dataset path to dataset name
-        datasetName = quote(self.logical_file.dataset_name.encode("utf-8"))
-        width = 800
-        height = 600
-        
-        # Get the last 9 characters of the string to parse the EPSG string
-        # i.e: 'WGS 84 EPSG:4326' => 'EPSG:4326'
-        srs=quote(self.spatial_coverage.value['projection'][-9:])
-
-        return (
-            f'{settings.HS_GEOSERVER}/HS-{resId}/'
-            f'{service}?service={service.upper()}'
-            f'&version=1.1.0&request=GetMap&layers=HS-{resId}:{datasetName}'
-            f'&bbox={extent}'
-            f'&width={width}&height={height}&srs={srs}'
-            f'&format=application/openlayers'
-        )
-
-    def _get_data_services_html(self):
-        root_div = div(cls="content-block")
-        with root_div:
-            legend('Data Services')
-            with table(cls='info-table'):
-                with tbody():
-                    with tr(cls='row'):
-                        with th():
-                            a('Web Mapping Service (WMS)', href=self._getGeoServerServiceURL('wms'), 
-                            target='_blank')
-                            span(self._getGeoServerServiceURL('wms'), 
-                            id='link-wms', style='display: none;')
-                        with td():
-                            with button(type='button', cls='btn btn-default clipboard-copy', 
-                            data_target='link-wms', style='border-radius: 4px;'):
-                                i(cls='fa fa-clipboard')
-                                span('Copy Service URL')
-                    with tr(cls='row'):
-                        with th():
-                            a('Web Feature Service (WFS)', href=self._getGeoServerServiceURL('wfs'), 
-                            target='_blank')
-                            span(self._getGeoServerServiceURL('wfs'), id='link-wfs', style='display: none;')
-                        with td():
-                            with button(type='button', cls='btn btn-default clipboard-copy', 
-                            data_target='link-wfs', style='border-radius: 4px;'):
-                                i(cls='fa fa-clipboard')
-                                span('Copy Service URL')
-            a('Preview Data', cls='btn btn-primary', href=self._getPreviewDataURL('wms'), target='_blank')
-            with p(cls='space-top'):
-                span('Please refer to ') 
-                a("HydroShare's Help documentation", href='https://help.hydroshare.org/', target='_blank')
-                span(' for examples of how to use these services')
 
         return root_div.render()
 
@@ -231,6 +159,39 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print).decode()
+
+    def get_preview_data_url(self, resource, folder_path):
+        """Generate a GeoServer layer preview link."""
+
+        geoserver_url = settings.HS_GEOSERVER
+        resource_id = resource.short_id
+        layer_id = '.'.join('/'.join(folder_path.split('/')[2:]).split('.')[:-1])
+
+        for k, v in settings.HS_GEOSERVER_ESCAPE.items():
+            layer_id = layer_id.replace(k, v)
+
+        layer_id = quote(f'HS-{resource_id}:{layer_id}')
+
+        extent = quote(','.join((
+            str(self.spatial_coverage.value['westlimit']),
+            str(self.spatial_coverage.value['southlimit']),
+            str(self.spatial_coverage.value['eastlimit']),
+            str(self.spatial_coverage.value['northlimit']),
+        )))
+
+        layer_srs = quote(self.spatial_coverage.value['projection'][-9:])
+
+        preview_data_url = (
+            f'{geoserver_url}/HS-{resource_id}/wms'
+            f'?service=WMS&version=1.1&request=GetMap'
+            f'&layers={layer_id}'
+            f'&bbox={extent}'
+            f'&width=800&height=500'
+            f'&srs={layer_srs}'
+            f'&format=application/openlayers'
+        )
+
+        return preview_data_url
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):

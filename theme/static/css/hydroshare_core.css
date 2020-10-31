@@ -1756,6 +1756,21 @@ body > .main-container {
 	margin-left: -1px;
 }
 
+.data-services-link {
+	display: inline-block;
+	width: calc(100% - 65px);
+	min-height: 30px;
+	background: #EEE;
+	border: 1px solid #CCC;
+	border-radius: 0;
+	padding: 4px;
+	cursor: default;
+	line-height: 24px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .flex {
 	display: flex;
 }
@@ -4391,7 +4406,7 @@ ul#fb-files-container .hs-upload-indicator {
     outline: none;
 }
 
-#fb-files-container.fb-view-grid .fb-file-type, #fb-files-container.fb-view-grid .fb-file-size, #fb-files-container.fb-view-grid .fb-logical-file-type {
+#fb-files-container.fb-view-grid .fb-file-type, #fb-files-container.fb-view-grid .fb-file-size, #fb-files-container.fb-view-grid .fb-logical-file-type, #fb-files-container.fb-view-grid .fb-preview-data-url, #fb-files-container.fb-view-list .fb-preview-data-url {
     display: none
 }
 
