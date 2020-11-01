@@ -814,7 +814,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return res_files[0] if res_files else None
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(RefTimeseriesLogicalFile, cls)._validate_set_file_type_inputs(
             resource, file_id, folder_path)
         if not res_file.file_name.lower().endswith('.refts.json'):
@@ -823,7 +823,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return res_file, folder_path
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.refts.json)
         """
 

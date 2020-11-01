@@ -1116,7 +1116,6 @@ function onSort() {
     sort(method, order);
 }
 
-
 function onOpenFile() {
     // Check to see if it is .url web referenced file, if yes, do redirect rather than download
     var file = $("#fb-files-container li.ui-selected");
@@ -1152,30 +1151,28 @@ function previewData() {
     window.open(previewDataURL, '_blank');
 }
 
-function startDownload(zipped) {
-    if (zipped === undefined) {
-        zipped = false;
-    }
-
-    var downloadList = $("#fb-files-container li.ui-selected");
-
-    // Remove previous temporary download frames
-    $(".temp-download-frame").remove();
+function startDownload(zipFiles) {
+    zipFiles = zipFiles || false;
+    const downloadList = $("#fb-files-container li.ui-selected");
 
     if (downloadList.length) {
-        // Workaround for Firefox and IE
+        // Remove previous temporary download frames
+        $(".temp-download-frame").remove();
+
         for (var i = 0; i < downloadList.length; i++) {
-            let item = $(downloadList[i]);
+            const item = $(downloadList[i]);
             let url = item.attr("data-url");
-            let fileName = item.children(".fb-file-name").text();
-            let itemIsVirtualFolder = isVirtualFolder(item.first());
+
+            const fileName = item.children(".fb-file-name").text();
+            const itemIsVirtualFolder = isVirtualFolder(item.first());
+            const isFolder = item.hasClass("fb-folder");
             let parameters = [];
 
             if (fileName.toUpperCase().endsWith(".URL")) {
                 parameters.push('url_download=true');
             }
 
-            if (zipped === true) {
+            if (zipFiles === true) {
                 parameters.push("zipped=true");
             }
 
@@ -1187,9 +1184,25 @@ function startDownload(zipped) {
                 url += "?" + parameters.join("&");
             }
 
-            let frameID = "download-frame-" + i;
-            $("body").append("<iframe class='temp-download-frame' id='"
-                + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+            if (zipFiles || isFolder) {
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (task) {
+                        notificationsApp.registerTask(task);
+                        notificationsApp.show();
+                    },
+                    error: function (xhr, errmsg, err) {
+                        display_error_message('Failed to zip files', xhr.responseText);
+                    }
+                });
+            }
+            else {
+                let frameID = "download-frame-" + i;
+                console.log(url);
+                $("body").append("<iframe class='temp-download-frame' id='"
+                    + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+            }
         }
     }
 }
@@ -2096,24 +2109,13 @@ $(document).ready(function () {
     });
 
     // Zip method
-    $("#btn-confirm-zip").click(function () {
+    $("#btn-confirm-zip").click(async function () {
         if ($("#txtZipName").val().trim() !== "") {
-            let folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-            let fileName = $("#txtZipName").val() + ".zip";
-
-            let calls = [];
-            let path = getCurrentPath().path.concat(folderName);
-
-            calls.push(zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName));
-
-            // Wait for the asynchronous calls to finish to get new folder structure
-            $.when.apply($, calls).done(function () {
-                refreshFileBrowser();
-            });
-
-            $.when.apply($, calls).fail(function () {
-                refreshFileBrowser();
-            });
+            const folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+            const fileName = $("#txtZipName").val() + ".zip";
+            const path = getCurrentPath().path.concat(folderName);
+            await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+            refreshFileBrowser();
         }
     });
 
@@ -2134,6 +2136,26 @@ $(document).ready(function () {
 
         $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
+        });
+    });
+
+    // Download All method
+    $("#btn-download-all, #download-bag-btn").click(function (event) {
+        $(event.currentTarget).toggleClass("disabled", true);
+        const bagUrl = event.currentTarget.dataset ? event.currentTarget.dataset.bagUrl : null;
+
+        if (!bagUrl) {
+            return; // If no url, it means download will be triggered from Agreement modal
+        }
+
+        $.ajax({
+            type: "GET",
+            url: bagUrl,
+            success: function (task) {
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+                $(event.currentTarget).toggleClass("disabled", false);
+            }
         });
     });
 

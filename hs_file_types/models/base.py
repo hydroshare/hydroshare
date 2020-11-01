@@ -706,7 +706,7 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def create_aggregation(cls, dataset_name, resource, res_files=None, new_files_to_upload=None,
-                           folder_path=None):
+                           folder_path=''):
         """Creates an aggregation
         :param  dataset_name  a value for setting the dataset_name attribute of the new aggregation
         :param  resource  an instance of CompositeResource in which the aggregation to be created
@@ -804,7 +804,7 @@ class AbstractLogicalFile(models.Model):
         return ""
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Sub classes must implement this method to create specific logical file (aggregation) type
         :param resource: an instance of resource type CompositeResource
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
@@ -817,7 +817,7 @@ class AbstractLogicalFile(models.Model):
         raise NotImplementedError()
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         """Validation of *file_id* and *folder_path* for creating file type (aggregation)
 
         :param resource: an instance of resource type CompositeResource
@@ -830,11 +830,11 @@ class AbstractLogicalFile(models.Model):
         :return an instance of ResourceFile if validation is successful and the folder_path
         """
 
-        if file_id is None and folder_path is None:
+        if file_id is None and not folder_path:
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
 
-        if cls.__name__ == 'FileSetLogicalFile' and folder_path is None:
+        if cls.__name__ == 'FileSetLogicalFile' and not folder_path:
             raise ValueError("Must specify path of the folder to set as a "
                              "fileset aggregation type")
 
@@ -869,7 +869,7 @@ class AbstractLogicalFile(models.Model):
 
             if res_file.has_logical_file and not res_file.logical_file.is_fileset:
                 msg = "Selected {} {} is already part of an aggregation."
-                if folder_path is None:
+                if not folder_path:
                     msg = msg.format('file', res_file.file_name)
                 else:
                     msg = msg.format('folder', folder_path)
@@ -1110,7 +1110,7 @@ class AbstractLogicalFile(models.Model):
         :return: computed new folder path
         """
         current_folder_path = 'data/contents'
-        if file_folder is not None:
+        if file_folder:
             current_folder_path = os.path.join(current_folder_path, file_folder)
 
         new_folder_path = os.path.join(current_folder_path, file_name)
@@ -1411,7 +1411,7 @@ class AbstractLogicalFile(models.Model):
             file_folder = self.folder
         else:
             file_folder = self.files.first().file_folder
-        if file_folder is not None:
+        if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
 
@@ -1429,7 +1429,7 @@ class FileTypeContext(object):
     :param  is_temp_file if True resource file specified by file_id will be retrieved from
     irods to temp directory
     """
-    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path=None,
+    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path='',
                  post_aggr_signal=None, is_temp_file=True):
 
         self.aggr_cls = aggr_cls

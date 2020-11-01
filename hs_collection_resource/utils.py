@@ -5,9 +5,12 @@ import shutil
 import logging
 
 from django.core.files.uploadedfile import UploadedFile
+from django.db.models import Q
 
 from hs_core.hydroshare.utils import resource_modified, current_site_url
 from hs_core.hydroshare.resource import delete_resource_file_only, add_resource_files
+from hs_core.views.utils import get_my_resources_list
+from hs_access_control.models import PrivilegeCodes
 
 logger = logging.getLogger(__name__)
 RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
@@ -119,6 +122,21 @@ def update_collection_list_csv(collection_obj):
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
         return csv_content_list
+
+
+def get_collectable_resources(user, coll_resource):
+    my_resources = get_my_resources_list(user)
+
+    # resource is collectable if
+    # 1) Shareable=True
+    # 2) Discoverable=True
+    # 3) OR, current user is a owner of it
+    # 4) exclude this resource as well as resources already in the collection
+    return my_resources \
+        .exclude(short_id=coll_resource.short_id) \
+        .exclude(id__in=coll_resource.resources.values_list("id", flat=True)) \
+        .filter(Q(raccess__shareable=True) | Q(raccess__discoverable=True) |
+                (Q(r2urp__user=user) & Q(r2urp__privilege=PrivilegeCodes.OWNER)))
 
 
 def _get_owners_string(owners_list):

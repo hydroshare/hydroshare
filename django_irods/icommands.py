@@ -162,7 +162,7 @@ class Session(object):
 
         cmdStr = os.path.join(self.icommands_path, icommand)
         argList = [cmdStr]
-        uargs = [x.encode() for x in args]
+        uargs = [str(x) for x in args]
         argList.extend(uargs)
 
         stdin = None

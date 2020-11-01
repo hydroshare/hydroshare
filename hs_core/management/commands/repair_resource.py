@@ -47,42 +47,25 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 try:
                     resource = get_resource_by_shortkey(rid)
+                    repair_resource(resource, logger,
+                                    echo_errors=echo_errors,
+                                    log_errors=log_errors,
+                                    return_errors=False)
                 except BaseResource.NotFoundException:
                     msg = "resource {} not found".format(rid)
                     print(msg)
                     continue
-                _, count = repair_resource(resource,
-                                           echo_errors=echo_errors,
-                                           log_errors=log_errors,
-                                           return_errors=False)
-                if count:
-                    msg = "... affected resource {} has type {}, title '{}'"\
-                          .format(resource.short_id, resource.resource_type,
-                                  resource.title)
-                    if log_errors:
-                        logger.info(msg)
-                    if echo_errors:
-                        print(msg)
 
         else:  # check all resources
             print("REPAIRING ALL RESOURCES")
             for r in BaseResource.objects.all():
                 try:
                     resource = get_resource_by_shortkey(r.short_id)
+                    repair_resource(resource, logger,
+                                    echo_errors=echo_errors,
+                                    log_errors=log_errors,
+                                    return_errors=False)
                 except BaseResource.NotFoundException:
-                    msg = "resource {} not found".format(rid)
+                    msg = "resource {} not found".format(r.short_id)
                     print(msg)
                     continue
-
-                _, count = repair_resource(resource,
-                                           echo_errors=echo_errors,
-                                           log_errors=log_errors,
-                                           return_errors=False)
-                if count:
-                    msg = "... affected resource {} has type {}, title '{}'"\
-                          .format(resource.short_id, resource.resource_type,
-                                  resource.title)
-                    if log_errors:
-                        logger.info(msg)
-                    if echo_errors:
-                        print(msg)

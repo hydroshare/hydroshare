@@ -282,7 +282,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             return ""
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file """
 
         log = logging.getLogger()
@@ -346,10 +346,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 raise ValidationError(msg)
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(GeoFeatureLogicalFile, cls)._validate_set_file_type_inputs(
             resource, file_id, folder_path)
-        if folder_path is None and res_file.extension.lower() not in ('.zip', '.shp'):
+        if not folder_path and res_file.extension.lower() not in ('.zip', '.shp'):
             # when a file is specified by the user for creating this file type it must be a
             # zip or shp file
             raise ValidationError("Not a valid geographic feature file.")

@@ -9,8 +9,6 @@ from django.contrib.auth.models import Group
 from django.db import transaction
 from django.utils.http import int_to_base36
 
-from mezzanine.utils.email import default_token_generator
-
 from rest_framework import status
 
 from hs_core import hydroshare
@@ -19,6 +17,7 @@ from hs_core.views import create_user_group, update_user_group, share_group_with
     unshare_resource_with_group, delete_user_group, restore_user_group
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 from hs_access_control.models import PrivilegeCodes
+from theme.backends import without_login_date_token_generator
 
 
 class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
@@ -708,7 +707,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         membership_request = self.john.uaccess.create_group_membership_request(new_group, self.mike)
         # create the link that mike should find in his email
         uidb36 = int_to_base36(self.mike.id)
-        token = default_token_generator.make_token(self.mike)
+        token = without_login_date_token_generator.make_token(self.mike)
         url_params = {"uidb36": uidb36, "token": token, "membership_request_id": membership_request.id}
         url = reverse('group_membership', kwargs=url_params)
         # due to session requirement of the view being tested, using the Client class
@@ -732,7 +731,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         membership_request = self.mike.uaccess.create_group_membership_request(new_group)
         # create the link that john should find in his email
         uidb36 = int_to_base36(self.john.id)
-        token = default_token_generator.make_token(self.john)
+        token = without_login_date_token_generator.make_token(self.john)
         url_params = {"uidb36": uidb36, "token": token, "membership_request_id": membership_request.id}
         url = reverse('group_membership', kwargs=url_params)
         # let john click the link

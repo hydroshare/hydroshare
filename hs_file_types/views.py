@@ -49,7 +49,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
     """
 
     response_data = {'status': 'error'}
-    folder_path = None
+    folder_path = ''
     if file_id is None:
         folder_path = request.POST.get('folder_path', "")
         if not folder_path:
@@ -76,7 +76,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         resource_modified(res, request.user, overwrite_bag=False)
 
         msg = "{} was successfully set to the selected aggregation type."
-        if folder_path is None:
+        if not folder_path:
             msg = msg.format("Selected file")
         else:
             msg = msg.format("Selected folder")

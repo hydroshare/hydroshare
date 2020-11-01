@@ -76,7 +76,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # determine where that file should live
         shortpath = os.path.join(self.res.short_id, "data", "contents", "file1.txt")
 
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         self.assertTrue(resfile.path_is_acceptable(shortpath))

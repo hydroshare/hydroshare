@@ -13,7 +13,7 @@ from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, Ge
 
 class CompositeResourceTestMixin(object):
 
-    def add_file_to_resource(self, file_to_add, upload_folder=None):
+    def add_file_to_resource(self, file_to_add, upload_folder=''):
         file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
                                       name=os.path.basename(file_to_add))
 
@@ -22,7 +22,7 @@ class CompositeResourceTestMixin(object):
         )
         return new_res_file
 
-    def add_files_to_resource(self, files_to_add, upload_folder=None):
+    def add_files_to_resource(self, files_to_add, upload_folder=''):
         files_to_upload = []
         for fl in files_to_add:
             file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
@@ -31,7 +31,7 @@ class CompositeResourceTestMixin(object):
                                                   *files_to_upload, folder=upload_folder)
         return added_resource_files
 
-    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=None):
+    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=''):
         if isinstance(file_to_upload, str):
             file_to_upload = [file_to_upload]
         files = []
@@ -153,7 +153,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.files.count(), 2)
     # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
-        if aggr_folder is not None:
+        if aggr_folder:
             expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path,
                                                       aggr_folder, res_file.file_name)
         else:
@@ -437,7 +437,7 @@ def assert_ref_time_series_file_type_metadata(self):
     self.assertEqual(len(logical_file.metadata.web_services), 2)
     web_urls = [web.url for web in logical_file.metadata.web_services]
     self.assertIn("http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL", web_urls)
-    self.assertIn("http://data.iutahepscor.org/ProvoRiverWOF/cuahsi_1_1.asmx?WSDL", web_urls)
+    self.assertIn("http://www.google.com", web_urls)
     web_service_types = [web.service_type for web in logical_file.metadata.web_services]
     self.assertIn("SOAP", web_service_types)
     self.assertEqual(len(set(web_service_types)), 1)

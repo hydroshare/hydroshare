@@ -20,7 +20,7 @@ class AppLaunch(TemplateView):
         # get the query parameters and remove the redirect url b/c
         # we don't need to log this.
         querydict = dict(request.GET)
-        url = querydict.pop('url')[0]
+        url = querydict.pop('url', [None])[0]
 
         if not authentic_redirect_url(url):
             return HttpResponseForbidden()

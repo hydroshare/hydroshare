@@ -1,5 +1,3 @@
-
-
 import errno
 import json
 import logging
@@ -17,7 +15,7 @@ from dateutil import parser
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
@@ -27,10 +25,10 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.utils.http import int_to_base36
 from mezzanine.conf import settings
-from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -44,6 +42,7 @@ from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResourc
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_file_types.utils import set_logical_file_type
+from theme.backends import without_login_date_token_generator
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -232,7 +231,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     if curr_path != prefix_path and curr_path.startswith(prefix_path):
         curr_path = curr_path[len(prefix_path) + 1:]
     if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        folder = None
+        folder = ''
     else:
         folder = curr_path[len(prefix_path) + 1:]
 
@@ -364,7 +363,6 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     """
     authorized = False
     user = get_user(request)
-
     try:
         res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
     except ObjectDoesNotExist:
@@ -394,7 +392,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         authorized = res.raccess.public
 
     if raises_exception and not authorized:
-        raise PermissionDenied()
+        raise PermissionDenied
     else:
         return res, authorized, user
 
@@ -653,7 +651,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to),
+            "token": without_login_date_token_generator.make_token(email_to),
             "membership_request_id": membership_request.id
         }) + "?next=" + (next_url(request) or "/")
 
@@ -664,7 +662,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to)
+            "token": without_login_date_token_generator.make_token(email_to)
         }) + "?next=" + (next_url(request) or "/")
 
     context['action_url'] = action_url
@@ -807,7 +805,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         res_file_obj.set_storage_path(tgt_name)
         # if the file is getting moved into a folder that represents a FileSet or to a folder
         # inside a fileset folder, then make the file part of that FileSet
-        if file_move and res_file_obj.file_folder is not None and \
+        if file_move and res_file_obj.file_folder and \
                 resource.resource_type == 'CompositeResource':
             aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
             if aggregation is not None and not res_file_obj.has_logical_file:

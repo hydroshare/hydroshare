@@ -529,7 +529,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a TimeSeriesLogicalFile (aggregation) from a sqlite or a csv resource file, or
         a folder
         """
@@ -621,10 +621,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return res_files[0] if res_files else None
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(TimeSeriesLogicalFile, cls)._validate_set_file_type_inputs(
             resource, file_id, folder_path)
-        if folder_path is None and res_file.extension.lower() not in ('.sqlite', '.csv'):
+        if not folder_path and res_file.extension.lower() not in ('.sqlite', '.csv'):
             # when a file is specified by the user for creating this file type it must be a
             # sqlite or csv file
             raise ValidationError("Not a valid timeseries file.")
@@ -1722,7 +1722,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
     if not is_file_type:
         # adding the blank sqlite file is necessary only in case of TimeSeriesResource
         if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
-            add_blank_sqlite_file(instance, upload_folder=None)
+            add_blank_sqlite_file(instance, upload_folder='')
         # instance.add_blank_sqlite_file(user)
 
     log = logging.getLogger()

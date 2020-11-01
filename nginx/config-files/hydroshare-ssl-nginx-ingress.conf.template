@@ -24,7 +24,11 @@ server {
 server {
     listen          443 ssl;
     server_name     FQDN_OR_IP;
-    root            /system/static/; 
+    root            /system/static/;
+    
+    if ($http_host != "FQDN_OR_IP") {
+        rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+    }
 
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log debug;

@@ -41,14 +41,23 @@ generateBagIt {
   *NEWBAGITDATA = "*BAGITDATA" ++ "/data";
   *ContInxOld = 1;
   *Condition = "COLL_NAME like '*NEWBAGITDATA%%'";
-  msiMakeGenQuery("DATA_ID, DATA_NAME, COLL_NAME, DATA_CHECKSUM", *Condition, *GenQInp);
+  msiMakeGenQuery("DATA_ID, DATA_NAME, COLL_NAME", *Condition, *GenQInp);
   msiExecGenQuery(*GenQInp, *GenQOut);
   msiGetContInxFromGenQueryOut(*GenQOut, *ContInxNew);
   while(*ContInxOld > 0) {
     foreach(*GenQOut) {
+      msiGetValByKey(*GenQOut, "DATA_ID", *objID);
       msiGetValByKey(*GenQOut, "DATA_NAME", *Object);
       msiGetValByKey(*GenQOut, "COLL_NAME", *Coll);
-      msiGetValByKey(*GenQOut, "DATA_CHECKSUM", *CHKSUM);
+      ### query if checksum is already computed for the data object
+      *CHKSUM = '';
+      *checksumCondition = "COLL_NAME = '*Coll' AND DATA_ID = '*objID' AND DATA_CHECKSUM != ''";
+      msiMakeGenQuery("DATA_CHECKSUM", *checksumCondition, *checksumGenQInp);
+      msiExecGenQuery(*checksumGenQInp, *checksumGenQOut);
+      foreach(*checksumGenQOut) {
+          msiGetValByKey(*checksumGenQOut, "DATA_CHECKSUM", *CHKSUM);
+          break;
+      }
       ### - only recalculate checksum when the checksum retrieved from iCAT
       ### - is empty or not MD5, but sha256 prefixed which is the default hash scheme
       ### - to accommodate the case that the checksum stored in iCAT might

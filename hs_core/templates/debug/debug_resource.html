@@ -1,59 +1,138 @@
-<h1>Debugging information for resource <a href='/resource/{{ shortkey}}/'>{{ shortkey }}</a></h1>
+<h1>Debugging information for resource <a href='/resource/{{ shortkey }}/'>{{ shortkey }}</a></h1>
 
 <ul>
-<li> Title: <b>{{ resource.metadata.title.value }}</b> </li>
-<li> Creator:
-{% if creator.first_name %}
-    <a href='/user/{{ creator.pk }}/'
-        target="_blank">{{ creator.first_name }} {{ creator.last_name }}
-                        ({{ creator.username }}) </a>
-{% else %}
-    <a href='/user/{{ creator.pk }}/' target="_blank">{{ creator.username }}</a>
-{% endif %}
-</li>
-<li> Owners:
-<ul>
-{% for owner in owners %}
-    <li> 
-    {% if owner.first_name %}
-        <a href='/user/{{ owner.pk }}/'
-            target="_blank">{{ owner.first_name }} {{ owner.last_name }}
-                            ({{ owner.username }}) </a>
+  <li> Title: <b>{{ resource.metadata.title.value }}</b></li>
+  <li> Creator:
+    {% if creator.first_name %}
+      <a href='/user/{{ creator.pk }}/'
+         target="_blank">{{ creator.first_name }} {{ creator.last_name }}
+        ({{ creator.username }}) </a>
     {% else %}
-        <a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a>
+      <a href='/user/{{ creator.pk }}/' target="_blank">{{ creator.username }}</a>
     {% endif %}
-    </li> 
-{% endfor %}
-
-</li>
+  </li>
+  <li> Owners:
+    <ul>
+      {% for owner in owners %}
+        <li>
+          {% if owner.first_name %}
+            <a href='/user/{{ owner.pk }}/'
+               target="_blank">{{ owner.first_name }} {{ owner.last_name }}
+              ({{ owner.username }}) </a>
+          {% else %}
+            <a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+      </li>
+    </ul>
 </ul>
-</ul>
 
-<h2>Resource flags</h2> 
+<h2>Resource flags</h2>
 <table border='1'>
-<tbody> 
-<tr><th colspan='2'>Resource Flags</th><th colspan='2'>iRODs AVUs</th></tr> 
-<tr><td>resource_type</td><td>{{ resource.resource_type }}</td>
-    <td>resourceType</td><td>{{ type_AVU }}</td></tr>
-<tr><td>public</td><td>{{ raccess.public }}</td>
-    <td>isPublic</td><td>{{ public_AVU }}</td></tr>
-<tr><th colspan='2'>Resource Flags</th>
-    <th colspan='2'>iRODs AVUs</th></tr> 
-<tr><td>discoverable</td><td>{{ raccess.discoverable }}</td>
-    <td>bag_modified</td><td>{{ modified_AVU }}</td></tr>
-<tr><td>immutable</td><td>{{ raccess.immutable }}</td>
-    <td>quotaUserName</td><td>{{ quota_AVU }}</td></tr>
-<tr><td>published</td><td>{{ raccess.published }}</td></tr>
-</tbody> 
+  <tbody>
+  <tr>
+    <th colspan='2'>Resource Flags</th>
+    <th colspan='2'>iRODs AVUs</th>
+  </tr>
+  <tr>
+    <td>resource_type</td>
+    <td>{{ resource.resource_type }}</td>
+    <td>resourceType</td>
+    <td>{{ type_AVU }}</td>
+  </tr>
+  <tr>
+    <td>public</td>
+    <td>{{ raccess.public }}</td>
+    <td>isPublic</td>
+    <td>{{ public_AVU }}</td>
+  </tr>
+  <tr>
+    <th colspan='2'>Resource Flags</th>
+    <th colspan='2'>iRODs AVUs</th>
+  </tr>
+  <tr>
+    <td>discoverable</td>
+    <td>{{ raccess.discoverable }}</td>
+    <td>bag_modified</td>
+    <td>{{ modified_AVU }}</td>
+  </tr>
+  <tr>
+    <td>immutable</td>
+    <td>{{ raccess.immutable }}</td>
+    <td>quotaUserName</td>
+    <td>{{ quota_AVU }}</td>
+  </tr>
+  <tr>
+    <td>published</td>
+    <td>{{ raccess.published }}</td>
+  </tr>
+  </tbody>
 </table>
 
-{% if irods_issues %}
-    <h2>iRODs issues found</h2>
-    <ul>
-    {% for issue in irods_issues %}
-        <li><code>{{ issue }}</code></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <h2>No irods issues found.</h2>
-{% endif %}
+<div id="irods-issues">
+  <h2>iRODs issues</h2>
+  <p class="loading">Debugging. Please wait...</p>
+</div>
+
+<script>
+  // Load async data for iRODs issues found
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      let response = JSON.parse(this.responseText);
+      let irodsIssuesDiv = document.getElementById("irods-issues");
+      if (response.status === "SUCCESS") {
+        if (response.irods_issues.length) {
+          let title = document.createElement("p");
+          let titleText = document.createTextNode("iRODs issues found: ");
+          title.appendChild(titleText);
+          irodsIssuesDiv.appendChild(title);
+
+          let list = document.createElement("UL");
+
+          for (let i = 0; i < response.irods_issues.length; i++) {
+            let listItem = document.createElement("LI");
+            let code = document.createElement("CODE");
+            let itemText = document.createTextNode(response.irods_issues[i]);
+            code.appendChild(itemText);
+            listItem.appendChild(code);
+            list.appendChild(listItem);
+          }
+          irodsIssuesDiv.appendChild(list);
+          // Remove loading indicator
+          document.querySelector("#irods-issues > .loading").remove();
+        }
+        else {
+          // No issues found
+          let title = document.createElement("P");
+          let titleText = document.createTextNode("No iRODs issues found.");
+          title.appendChild(titleText);
+          irodsIssuesDiv.appendChild(title);
+          // Remove loading indicator
+          document.querySelector("#irods-issues > .loading").remove();
+        }
+      }
+      else if (response.status === null) {
+        // Resend the request
+        let url = this.responseURL;
+        setTimeout(function () {
+          console.log("Resending...");
+          xhttp.open("GET", url, true);
+          xhttp.send();
+        }, 1000);
+      }
+      else {
+        // Failed to retrieve data
+        let title = document.createElement("P");
+        let titleText = document.createTextNode("Failed to debug resource.");
+        title.appendChild(titleText);
+        irodsIssuesDiv.appendChild(title);
+        // Remove loading indicator
+        document.querySelector("#irods-issues > .loading").remove();
+      }
+    }
+  };
+  xhttp.open("GET", "irods-issues/", true);
+  xhttp.send();
+</script>

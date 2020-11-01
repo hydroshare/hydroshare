@@ -135,31 +135,24 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
-                if not istorage.exists(lf.metadata_file_path):
-                    ecount += 1
-                    msg = "check_irods_files: logical metadata file {} does not exist in iRODS"\
-                        .format(lf.metadata_file_path)
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-                if not istorage.exists(lf.map_file_path):
-                    ecount += 1
-                    msg = "check_irods_files: logical map file {} does not exist in iRODS"\
-                        .format(lf.map_file_path)
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-
+                    for f in lf.files.all():
+                        try:
+                            f.resource_file.size
+                        except:
+                            ecount += 1
+                            msg = "check_resource: file {} does not exist on irods" \
+                                .format(f.storage_path.encode('ascii', 'replace'))
+                            print(msg)
+                            if clean_django:
+                                f.delete()
+                            if echo_errors:
+                                print(msg)
+                            if log_errors:
+                                logger.error(msg)
+                            if return_errors:
+                                errors.append(msg)
+                            if stop_on_error:
+                                raise ValidationError(msg)
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
@@ -404,7 +397,7 @@ def __ingest_irods_directory(resource,
 
                 # Create required logical files as necessary
                 if resource.resource_type == "CompositeResource":
-                    file_type = get_logical_file_type(res=resource, user=None,
+                    file_type = get_logical_file_type(res=resource,
                                                       file_id=res_file.pk, fail_feedback=False)
                     if not res_file.has_logical_file and file_type is not None:
                         msg = "ingest_irods_files: setting required logical file for {}"\
@@ -647,7 +640,7 @@ class CheckResource(object):
         if self.resource.resource_type == 'CompositeResource':
             logical_issues = []
             for res_file in self.resource.files.all():
-                file_type = get_logical_file_type(res=self.resource, user=None,
+                file_type = get_logical_file_type(res=self.resource,
                                                   file_id=res_file.pk, fail_feedback=False)
                 if not res_file.has_logical_file and file_type is not None:
                     msg = "check_resource: file {} does not have required logical file {}"\

@@ -169,14 +169,14 @@ class CompositeResource(BaseResource):
             if parent_fs is not None:
                 parent_fs.create_aggregation_xml_documents()
 
-    def create_aggregation_xml_documents(self, path=None):
+    def create_aggregation_xml_documents(self, path=''):
         """Creates aggregation map and metadata xml files for each of the contained aggregations
 
         :param  path: (optional) file or folder path for which xml documents need to be created for
         all associated aggregations of that path
         """
 
-        if path is None:
+        if not path:
             # create xml docs far all aggregation of this resource
             for aggregation in self.logical_files:
                 if aggregation.metadata.is_dirty:
@@ -310,8 +310,6 @@ class CompositeResource(BaseResource):
             return aggregation
         else:
             folder, base = os.path.split(name)
-            if folder == '':
-                folder = None
             res_file = ResourceFile.get(self, file=base, folder=folder)
             if res_file.has_logical_file:
                 return res_file.logical_file

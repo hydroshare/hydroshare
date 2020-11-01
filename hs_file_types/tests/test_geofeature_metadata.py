@@ -78,7 +78,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test file type and file type metadata
-        assert_geofeature_file_type_metadata(self, expected_folder_name=None)
+        assert_geofeature_file_type_metadata(self, expected_folder_name='')
 
         # there should not be any file level keywords
         res_file = self.composite_resource.files.first()
@@ -210,11 +210,11 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # add the 3 required files to the resource at the above folder
         res_file = self.add_file_to_resource(file_to_add=self.states_shp_file)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         res_file = self.add_file_to_resource(file_to_add=self.states_shx_file)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         res_file = self.composite_resource.files.first()

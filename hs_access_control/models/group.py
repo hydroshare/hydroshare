@@ -34,6 +34,7 @@ class GroupMembershipRequest(models.Model):
     invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+    redeemed = models.BooleanField(default=False)
 
 
 class GroupAccess(models.Model):
@@ -252,7 +253,8 @@ class GroupAccess(models.Model):
         """
 
         return GroupMembershipRequest.objects.filter(group_to_join=self.group,
-                                                     group_to_join__gaccess__active=True)
+                                                     group_to_join__gaccess__active=True,
+                                                     redeemed=False)
 
     def get_resources_with_explicit_access(self, this_privilege):
         """

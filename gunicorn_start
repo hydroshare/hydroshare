@@ -15,6 +15,7 @@ DJANGO_WSGI_MODULE=hydroshare.wsgi                  # WSGI module name
 GUNICORN_LOG=/hydroshare/log/gunicorn.log           # path to logfile
 TIMEOUT_PERIOD=300                                  # timeout period in seconds
 MAX_REQUESTS=1000                                   # maximum number of requests a worker will process before restarting
+THREADS=1000
 
 ### Do not edit below this line ###
 echo "Starting $NAME as `whoami`"
@@ -30,6 +31,7 @@ exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --name $NAME \
   --workers $NUM_WORKERS \
   --worker-class gevent \
+  --worker-connections $THREADS \
   --user $USER \
   --group $GROUP \
   --bind unix:$SOCKFILE \

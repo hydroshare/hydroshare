@@ -33,16 +33,26 @@ class IrodsStorage(Storage):
         return os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     @staticmethod
-    def get_absolute_path(path):
+    def get_absolute_path_query(path, parent=False):
         """
-        Get absolute path of the input path for the HydroShare iRODS data zone, which is useful for iquest
+        Get iquest query string that needs absolute path of the input path for the HydroShare iRODS data zone
         :param path: input path to be converted to absolute path if needed
-        :return: absolute logical path of the input path
+        :param parent: indicating whether query string should be checking COLL_PARENT_NAME rather than COLL_NAME
+        :return: iquest query string that has the logical path of the input path as input
         """
+
+        # iquest has a bug that cannot handle collection name containing single quote as reported here
+        # https://github.com/irods/irods/issues/4887. This is a work around and can be removed after the bug is fixed
+        if "'" in path:
+            path = path.replace("'", "%")
+            qry_str = "COLL_PARENT_NAME like '{}'" if parent else "COLL_NAME like '{}'"
+        else:
+            qry_str = "COLL_PARENT_NAME = '{}'" if parent else "COLL_NAME = '{}'"
+
         if os.path.isabs(path):
             # iRODS federated logical path which is already absolute path
-            return path
-        return os.path.join(settings.IRODS_HOME_COLLECTION, path)
+            return qry_str.format(path)
+        return qry_str.format(os.path.join(settings.IRODS_HOME_COLLECTION, path))
 
     def set_user_session(self, username=None, password=None, host=settings.IRODS_HOST,
                          port=settings.IRODS_PORT, def_res=None, zone=settings.IRODS_ZONE,
@@ -119,7 +129,7 @@ class IrodsStorage(Storage):
         # SessionException will be raised from run() in icommands.py
         self.session.run("ibun", None, '-cDzip', '-f', out_name, in_name)
 
-    def unzip(self, zip_file_path, unzipped_folder=None):
+    def unzip(self, zip_file_path, unzipped_folder=''):
         """
         run iRODS ibun command to unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped
@@ -302,8 +312,8 @@ class IrodsStorage(Storage):
 
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
-        qrystr = "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' AND " \
-                 "COLL_NAME = '{}'".format(IrodsStorage.get_absolute_path(path))
+        qrystr = "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' " \
+                 "AND {}".format(IrodsStorage.get_absolute_path_query(path))
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s",
                                   qrystr)[0].split("\n")
 
@@ -326,7 +336,7 @@ class IrodsStorage(Storage):
         # the query below returns name of all sub-collections/sub-directories
         # under the path collection/directory
 
-        qrystr = "select COLL_NAME where COLL_PARENT_NAME = '{}'".format(IrodsStorage.get_absolute_path(path))
+        qrystr = "select COLL_NAME where {}".format(IrodsStorage.get_absolute_path_query(path, parent=True))
         stdout = self.session.run("iquest", None, "--no-page", "%s",
                                   qrystr)[0].split("\n")
         for i in range(len(stdout)):
@@ -355,7 +365,7 @@ class IrodsStorage(Storage):
 
         # check first whether the path is an iRODS collection/directory or not, and if not, need
         # to raise SessionException, and if yes, can proceed to get files and sub-dirs under it
-        qrystr = "select COLL_NAME where COLL_NAME = '{}'".format(IrodsStorage.get_absolute_path(path))
+        qrystr = "select COLL_NAME where {}".format(IrodsStorage.get_absolute_path_query(path))
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise SessionException(-1, '', 'folder {} does not exist'.format(path))
@@ -381,16 +391,15 @@ class IrodsStorage(Storage):
         coll_name = file_info[0]
         file_name = file_info[1]
         qrystr = "select DATA_SIZE where DATA_REPL_STATUS != '0' AND " \
-                 "COLL_NAME = '{}' AND DATA_NAME = '{}'".format(IrodsStorage.get_absolute_path(coll_name), file_name)
-        stdout = self.session.run("iquest", None, "%s",
-                                  qrystr)[0]
+                 "{} AND DATA_NAME = '{}'".format(IrodsStorage.get_absolute_path_query(coll_name), file_name)
+        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
 
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "file size".format(name))
         return int(float(stdout))
 
-    def checksum(self, full_name):
+    def checksum(self, full_name, force_compute=True):
         """
         Compute/Update checksum of file object and return the checksum
         :param full_name: the data object name with full collection path in order to locate data object from current
@@ -398,24 +407,31 @@ class IrodsStorage(Storage):
         :return: checksum of the file object
         """
         # first force checksum (re)computation
-        self.session.run("ichksum", None, "-f", full_name)
+        if force_compute:
+            self.session.run("ichksum", None, "-f", full_name)
         # retrieve checksum using iquest
         # get data object name only from the full_name input parameter to be used by iquest
         if '/' in full_name:
             file_info = full_name.rsplit('/', 1)
-            coll_name = IrodsStorage.get_absolute_path(file_info[0])
+            coll_name_query = IrodsStorage.get_absolute_path_query(file_info[0])
             obj_name = file_info[1]
         else:
-            coll_name = settings.IRODS_HOME_COLLECTION
+            coll_name_query = "COLL_NAME = '{}'".format(settings.IRODS_HOME_COLLECTION)
             obj_name = full_name
 
-        qrystr = "SELECT DATA_CHECKSUM WHERE COLL_NAME = '{}' AND DATA_NAME = '{}'".format(coll_name, obj_name)
+        qrystr = "SELECT DATA_CHECKSUM WHERE {} AND DATA_NAME = '{}'".format(coll_name_query, obj_name)
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "checksum".format(obj_name))
         # remove potential '\n' from stdout
-        return stdout.rstrip('\n')
+        checksum = stdout.strip('\n')
+        if not checksum:
+            if force_compute:
+                raise ValidationError("checksum for {} cannot be found in iRODS".format(obj_name))
+            # checksum hasn't been computed, so force the checksum computation
+            return self.checksum(full_name, force_compute=True)
+        return checksum
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse('django_irods_download', kwargs={'path': name})
@@ -439,12 +455,12 @@ class IrodsStorage(Storage):
         """
         if '/' in name:
             file_info = name.rsplit('/', 1)
-            coll_name = IrodsStorage.get_absolute_path(file_info[0])
+            coll_name_query = IrodsStorage.get_absolute_path_query(file_info[0])
             obj_name = file_info[1]
         else:
-            coll_name = settings.IRODS_HOME_COLLECTION
+            coll_name_query = "COLL_NAME = '{}'".format(settings.IRODS_HOME_COLLECTION)
             obj_name = name
-        qrystr = "SELECT DATA_MODIFY_TIME WHERE COLL_NAME = '{}' AND DATA_NAME = '{}'".format(coll_name, obj_name)
+        qrystr = "SELECT DATA_MODIFY_TIME WHERE {} AND DATA_NAME = '{}'".format(coll_name_query, obj_name)
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
         if "CAT_NO_ROWS_FOUND" in stdout:
             raise ValidationError("{} cannot be found in iRODS".format(name))

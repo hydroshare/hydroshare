@@ -837,7 +837,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create aggregation from the nc file
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertNotEqual(res_file.file_folder, '')
 
         # add a file to the resource which will try to move into the aggregation folder
         res_file_to_move = self.add_file_to_resource(file_to_add=self.netcdf_invalid_file)
@@ -863,7 +863,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create aggregation from the nc file
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertNotEqual(res_file.file_folder, '')
 
         # add a file to the resource at the aggregation folder
         self.add_file_to_resource(file_to_add=self.netcdf_invalid_file,
