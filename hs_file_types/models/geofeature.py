@@ -29,6 +29,7 @@ from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 UNKNOWN_STR = "unknown"
 
+
 class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaData):
     # the metadata element models are from the geographic feature resource type app
     model_app_label = 'hs_geographic_feature_resource'

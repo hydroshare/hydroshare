@@ -19,7 +19,7 @@ from django.core.exceptions import ValidationError
 from django.forms.models import formset_factory
 from django.template import Template, Context
 
-from dominate.tags import legend, table, tbody, tr, th, div
+from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -75,13 +75,6 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         template = Template(html_string)
         context = Context({})
         return template.render(context)
-
-    def _getGeoServerServiceURL(self, service):
-        resId = '46847666941c43fbbafb27922861a2e5' 
-        return (
-            f'{settings.HS_GEOSERVER}/HS-{resId}/'
-            f'{service}?request=GetCapabilities&service={service.upper()}'
-        )
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function to generate html needed for metadata editing"""
