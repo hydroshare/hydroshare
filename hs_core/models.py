@@ -672,7 +672,7 @@ class Citation(AbstractMetaDataElement):
     """Define Citation metadata element model."""
 
     term = 'Citation'
-    value = models.CharField(max_length=500)
+    value = models.CharField(max_length=500)  # TODO make varchar(max)
 
     def __unicode__(self):
         """Return value field for unicode representation."""
@@ -3586,6 +3586,7 @@ class CoreMetaData(models.Model):
     _title = GenericRelation(Title)
     creators = GenericRelation(Creator)
     contributors = GenericRelation(Contributor)
+    citation = GenericRelation(Citation)
     dates = GenericRelation(Date)
     coverages = GenericRelation(Coverage)
     formats = GenericRelation(Format)
@@ -3722,6 +3723,7 @@ class CoreMetaData(models.Model):
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
         return ['Description',
+                'Citation',
                 'Creator',
                 'Contributor',
                 'Coverage',

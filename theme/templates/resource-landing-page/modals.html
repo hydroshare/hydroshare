@@ -1393,52 +1393,36 @@
         </div>
     </div>
 
-
-<!-- TODO CLEAN UP IDS -->
+<!-- TODO WORK IN PROGRESS -->
+{% if page.perms.change and resource_edit_mode %}
     <div class="modal fade" id="customize-citation-dialog" tabindex="-1" role="dialog" aria-labelledby="customize-citation"
          aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/citation/add-metadata/"
-                      method="POST" enctype="multipart/form-data">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/citation/add-metadata/" method="POST"
+                    enctype="multipart/form-data">
                     {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit">
-
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="customize-citation"> Customize Citation </h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="customize-citation">Customize Citation</h4>
                     </div>
                     <div class="modal-body">
-                        {% csrf_token %}
 
                         <div class="form-group">
-                            {% csrf_token %}
-                            <fieldset>
-                                <div id="div_id_value2345345" class="control-group">
-                                    <label for="id_related_to_input345345" class="control-label requiredField">
-                                        Full text citation
-                                        <span class="asteriskField">*</span>
-                                    </label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_related_to_input345345" maxlength="500" name="value" required="required"
-                                               type="text">
-                                    </div>
-                                </div>
-                            </fieldset>
+                            <label for="custom-citation-input">Citation text:</label>
+                            <textarea class="form-control" name="content" id="custom-citation-input" cols="30"
+                                      rows="10"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-
+{% endif %}
 
     <div class="modal fade in" id="remove-aggregation-dialog" tabindex="-1" role="dialog"
          aria-labelledby="remove-aggregation" aria-hidden="false">

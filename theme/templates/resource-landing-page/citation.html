@@ -2,14 +2,14 @@
 
 <div class="col-sm-12 content-block">
     <span id="citation" class="page-anchor"></span>
-    <h3>How to Cite</h3>
-
-        {% if relations %}
+    <h3>How to Cite
+        {% if relations and resource_edit_mode %}
         <a id="customize-citation" class="btn btn-success btn-xs" data-toggle="modal" title="Customize Citation
 Click this button to create a custom citation." data-target="#customize-citation-dialog">
-                <i class="fa fa-plus"></i>
-            </a>
+            <i class="fa fa-plus"></i>
+        </a>
     {% endif %}
+    </h3>
 
 
     <div class="row">
@@ -78,9 +78,9 @@ Click this button to create a custom citation." data-target="#customize-citation
                         <fieldset>
                             <div class="col-md-6">
                                 <span for="select_license"> Select a license </span>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                              class="glyphicon glyphicon-info-sign text-muted"></span>
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                        title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                        class="glyphicon glyphicon-info-sign text-muted"></span>
                                 <select id="select_license" class="form-control">
                                     <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
                                     <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
@@ -143,15 +143,15 @@ Click this button to create a custom citation." data-target="#customize-citation
                     {% csrf_token %}
 
                     <input name="flag" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
-                           {% else %}value="make_require_lic_agreement"{% endif %}/>
+                        {% else %}value="make_require_lic_agreement"{% endif %}/>
 
                     <br>
                     <div class="input-group" data-toggle="tooltip" title="When checked, users need to agree before they can download any content files or resource bag.">
-                      <span class="input-group-addon">
-                        <input id="btn-lic-agreement" type="checkbox"
-                                      {% if cm.raccess.require_download_agreement %}checked{% endif %}>
-                      </span>
-                      <span class="form-control">Require agreement to rights statement before downloading</span>
+                        <span class="input-group-addon">
+                            <input id="btn-lic-agreement" type="checkbox"
+                            {% if cm.raccess.require_download_agreement %}checked{% endif %}>
+                        </span>
+                        <span class="form-control">Require agreement to rights statement before downloading</span>
                     </div><!-- /input-group -->
                 </form>
             {% else %}
