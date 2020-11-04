@@ -214,7 +214,7 @@ Vue.component('add-author-modal', {
             let author = $.extend(true, {}, this.author);
 
             vue.addAuthorError = null;
-            if (!author.name) {
+            if (vue.authorType === vue.authorTypes.OTHER_PERSON && !author.name) {
                 vue.addAuthorError = "Name is required. Please input the name of the author to add.";
                 return;
             }

@@ -5,12 +5,17 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-def remove_comma_from_creator_for_empty_author_name(apps, schema_editor):
+def remove_comma_from_creator_contributor_for_empty_author_name(apps, schema_editor):
     Creator = apps.get_model('hs_core', 'Creator')
     for creator in Creator.objects.all():
         if creator.name == ', ':
             creator.name = ''
             creator.save()
+    Contributor = apps.get_model('hs_core', 'Contributor')
+    for contributor in Contributor.objects.all():
+        if contributor.name == ', ':
+            contributor.name = ''
+            contributor.save()
 
 
 class Migration(migrations.Migration):
@@ -20,5 +25,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(remove_comma_from_creator_for_empty_author_name),
+        migrations.RunPython(remove_comma_from_creator_contributor_for_empty_author_name),
     ]
