@@ -44,6 +44,41 @@
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.password2 inline_label=True %}
         </div>
+        <div class="form-group">
+          <fieldset>
+            <small class="text-muted">Specify user type *</small>
+            <select name="user_type" class="form-control form-required" id="selectUserType">
+                <option value=""></option>
+                <option value="University Faculty">University Faculty</option>
+                <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                <option value="University Graduate Student">University Graduate Student</option>
+                <option value="University Undergraduate Student">University Undergraduate Student</option>
+                <option value="Commercial/Professional">Commercial/Professional</option>
+                <option value="Government Official">Government Official</option>
+                <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                <option value="Other">Other</option>
+            </select>
+          </fieldset>
+
+          {#        User Type - Other       #}
+          <fieldset id="user-type-other">
+              <small class="text-muted">Specify other user type: *</small>
+              <input name="user_type" class="form-control">
+          </fieldset>
+
+          {#        Country       #}
+          <fieldset>
+              <small class="text-muted">Country *</small>
+              <select id="id_country" name="country" class="form-control form-required input-medium bfh-countries" data-country=""></select>
+          </fieldset>
+
+          {#        State       #}
+          <div class="form-group">
+            <input id="id_state" class="form-control form-required" name="state" placeholder="State/Province *">
+          </div>
+        </div>
     </div>
     <div class="row">
       <script src='https://www.google.com/recaptcha/api.js'></script>
@@ -54,9 +89,25 @@
 </form>
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
          $('input[type="button"]').prop('disabled', false);
+         $("#selectUserType").change(function () {
+             var inputOther = $("#user-type-other input");
+             if ($(this).val() == "Other") {
+                 $("#user-type-other").show();
+                 $("#selectUserType").removeAttr("name");
+                 inputOther.attr("name", "user_type");
+                 inputOther.addClass("form-required");
+             }
+             else {
+                 $("#user-type-other").hide();
+                 inputOther.removeAttr("name");
+                 inputOther.removeClass("form-required");
+                 $("#selectUserType").attr("name", "user_type");
+             }
+         });
          // remove the content of the 'missing-data-div' upon data editing in any of the
         // form fields
          var fieldsToCheck = ["#id_first_name", "#id_last_name", "#id_username", "#id_email",
@@ -97,12 +148,24 @@
             var pwconfirm = $("#id_password2").val();
             // These are the required form fields
             var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
-                "#id_password2",  "[name='organization']"];
-            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', "Organization"];
+                "#id_password2",  "[name='organization']", "#id_country", "#id_state"];
+            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', "Organization",
+                "Country", "State/Province"];
             var empty = false;
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
             var j;
+            if($("#selectUserType").val() == 'Other' && $("#user-type-other  input").val() == '') {
+                empty = true;
+                missingFields += " " + 'User type Other';
+                missingFieldCount++;
+            }
+            else if ($("#selectUserType").val() == '') {
+                empty = true;
+                missingFields += " " + 'User type';
+                missingFieldCount++;
+            }
+
             for(j=0; j< requiredFieldsToCheck.length; j++) {
                 if ($(requiredFieldsToCheck[j]).val() == '') {
                     empty = true;
@@ -115,6 +178,7 @@
                     missingFieldCount++;
                 }
            }
+
            // validate username to make sure username not only passes django username validation
            // but also passed iRODS username validation
            var username_valid = validateUserName();

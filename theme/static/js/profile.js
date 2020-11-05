@@ -245,11 +245,6 @@ function getUrlVars()
 }
 
 $(document).ready(function () {
-    // Change country first empty option to 'Unspecified'
-    var option = $("select[name='country'] option:first-child");
-    option.val("Unspecified");
-    option.text("Unspecified");
-
     $("#btn-create-irods-account").click(create_irods_account);
     $("#btn-delete-irods-account").click(delete_irods_account);
 
