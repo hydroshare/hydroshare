@@ -179,6 +179,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
+                   'custom_citation': content_model.get_custom_citation(),
                    'title': title,
                    'readme': readme,
                    'abstract': abstract,
@@ -275,6 +276,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         g.is_user_member = user in g.gaccess.members
         if g.is_user_member:
             grps_member_of.append(g)
+    try:
+        citation_id = content_model.metadata.citation.all()[0].id
+    except:
+        citation_id = None
 
     context = {
                'cm': content_model,
@@ -293,6 +298,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
+               'custom_citation': content_model.get_custom_citation(),
+               'citation_id': citation_id,
                'rights': content_model.metadata.rights,
                'bag_url': bag_url,
                'current_user': user,

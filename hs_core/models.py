@@ -672,7 +672,7 @@ class Citation(AbstractMetaDataElement):
     """Define Citation metadata element model."""
 
     term = 'Citation'
-    value = models.CharField(max_length=500)  # TODO make varchar(max)
+    value = models.CharField(max_length=500)  # TODO make 1000
 
     def __unicode__(self):
         """Return value field for unicode representation."""
@@ -690,8 +690,8 @@ class Citation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        """Define custom remove function for Citation class."""
-        raise ValidationError("Citation element of a resource can't be deleted.")
+        """Call parent delete function for Citation class."""
+        pass
 
 
 class Title(AbstractMetaDataElement):
@@ -2232,8 +2232,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         return author_name + ", "
 
+    def get_custom_citation(self):
+        """Get custom citation"""
+        try:
+            return str(self.metadata.citation.all()[0]).strip()
+        except:
+            pass
+
     def get_citation(self):
         """Get citation or citations from resource metadata."""
+
         citation_str_lst = []
 
         CITATION_ERROR = "Failed to generate citation."
@@ -3828,6 +3836,8 @@ class CoreMetaData(models.Model):
             self.publisher.delete()
         if self.type:
             self.type.delete()
+        if self.citation:
+            self.citation.delete()
 
         self.creators.all().delete()
         self.contributors.all().delete()

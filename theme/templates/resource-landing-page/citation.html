@@ -15,10 +15,16 @@ Click this button to create a custom citation." data-target="#customize-citation
     <div class="row">
         <div class="col-xs-12">
             <div class="flex">
-                <div id="citation-text">{{ citation|urlize }}</div>
-
-                <button class="btn btn-default clipboard-copy" data-target="citation-text"
-                        type="button">
+                {% if custom_citation and relations %}
+                    <div id="citation-text">{{ custom_citation|urlize }}</div>
+                {% else %}
+                    <div id="citation-text">{{ citation|urlize }}</div>
+                {% endif %}
+                <br />
+                {% if resource_edit_mode and relations %}
+                    <a data-toggle="modal" data-target="#customize-citation-dialog">Edit</a>
+                {% endif %}
+                <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
             </div>
