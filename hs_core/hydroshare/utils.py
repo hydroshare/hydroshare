@@ -807,7 +807,7 @@ def get_user_party_name(user):
     elif user.first_name:
         party_name = user.first_name
     elif user_profile.middle_name:
-       party_name = user_profile.middle_name
+        party_name = user_profile.middle_name
     else:
         party_name = ''
     return party_name
