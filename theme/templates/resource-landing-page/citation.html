@@ -10,8 +10,6 @@ Click this button to create a custom citation." data-target="#customize-citation
         </a>
     {% endif %}
     </h3>
-
-
     <div class="row">
         <div class="col-xs-12">
             <div class="flex">
@@ -20,18 +18,18 @@ Click this button to create a custom citation." data-target="#customize-citation
                 {% else %}
                     <div id="citation-text">{{ citation|urlize }}</div>
                 {% endif %}
-                <br />
-                {% if resource_edit_mode and relations %}
-                    <a data-toggle="modal" data-target="#customize-citation-dialog">Edit</a>
-                {% endif %}
                 <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
             </div>
+            <div class="flex">
+                {% if resource_edit_mode and relations and custom_citation %}
+                    <a data-toggle="modal" class="citation-edit" data-target="#customize-citation-dialog">Edit</a>
+                {% endif %}
+            </div>
 
             {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
             <br />
-
             <div class="citation-description">
                 <em>
                     When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be

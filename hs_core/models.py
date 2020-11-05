@@ -672,7 +672,7 @@ class Citation(AbstractMetaDataElement):
     """Define Citation metadata element model."""
 
     term = 'Citation'
-    value = models.CharField(max_length=500)  # TODO make 1000
+    value = models.CharField(max_length=750)
 
     def __unicode__(self):
         """Return value field for unicode representation."""
@@ -3836,8 +3836,6 @@ class CoreMetaData(models.Model):
             self.publisher.delete()
         if self.type:
             self.type.delete()
-        if self.citation:
-            self.citation.delete()
 
         self.creators.all().delete()
         self.contributors.all().delete()
