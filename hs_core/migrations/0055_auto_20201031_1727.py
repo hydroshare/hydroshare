@@ -13,7 +13,7 @@ def remove_comma_from_creator_contributor_for_empty_author_name(apps, schema_edi
             creator.save()
     Contributor = apps.get_model('hs_core', 'Contributor')
     for contributor in Contributor.objects.all():
-        if contributor.name == ', ':
+        if contributor.name == ',' or contributor.name == ', ':
             contributor.name = ''
             contributor.save()
 
