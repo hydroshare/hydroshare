@@ -962,8 +962,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
         for folder in listfolders(istorage, unzip_path):
             destination_folder = os.path.join(working_dir, folder)
             destination_folders.append(destination_folder)
+        from hs_file_types.utils import identify_metadata_files
+        res_files, meta_files = identify_metadata_files(unzipped_files)
         # walk through each unzipped file, delete aggregations if they exist
-        for file in unzipped_files:
+        for file in res_files:
             destination_file = _get_destination_filename(file, unzipped_foldername)
             if (istorage.exists(destination_file)):
                 if resource.resource_type == "CompositeResource":
@@ -977,12 +979,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 else:
                     istorage.delete(destination_file)
         # now move each file to the destination
-        for file in unzipped_files:
+        for file in res_files:
             destination_file = _get_destination_filename(file, unzipped_foldername)
             istorage.moveFile(file, destination_file)
         # and now link them to the resource
-        from hs_file_types.utils import identify_metadata_files
-        res_files, meta_files = identify_metadata_files(unzipped_files)
         for file in res_files:
             destination_file = _get_destination_filename(file, unzipped_foldername)
             destination_file = destination_file.replace(res_id + "/", "")

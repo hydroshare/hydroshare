@@ -265,7 +265,7 @@ def ingest_metadata_files(resource, meta_files):
         elif is_aggregation_metadata_file(f):
             ingest_logical_file_metadata(f, resource)
     if resource_metadata_file:
-        graph = Graph().parse(data=f.read())
+        graph = Graph().parse(data=resource_metadata_file.read())
         try:
             with transaction.atomic():
                 resource.metadata.delete_all_elements()
