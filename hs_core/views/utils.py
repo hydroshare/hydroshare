@@ -952,57 +952,49 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     unzip_path = None
     try:
 
-        if overwrite:
-            # irods doesn't allow overwrite, so we have to check if a file exists, delete it and
-            # then write the new file. Aggregations are treated as single objects.  If one file is
-            # overwritten in an aggregation, the whole aggregation is deleted.
-
-            # unzip to a temporary folder
-            unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
-            # list all files to be moved into the resource
-            unzipped_files = listfiles_recursively(istorage, unzip_path)
-            unzipped_foldername = os.path.basename(unzip_path)
-            destination_folders = []
-            # list all folders to be written into the resource
-            for folder in listfolders(istorage, unzip_path):
-                destination_folder = os.path.join(working_dir, folder)
-                destination_folders.append(destination_folder)
-            # walk through each unzipped file, delete aggregations if they exist
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                if (istorage.exists(destination_file)):
-                    if resource.resource_type == "CompositeResource":
-                        aggregation_object = resource.get_file_aggregation_object(
-                            destination_file)
-                        if aggregation_object:
-                            aggregation_object.logical_delete(user)
-                        else:
-                            logger.error("No aggregation object found for " + destination_file)
-                            istorage.delete(destination_file)
+        # unzip to a temporary folder
+        unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+        # list all files to be moved into the resource
+        unzipped_files = listfiles_recursively(istorage, unzip_path)
+        unzipped_foldername = os.path.basename(unzip_path)
+        destination_folders = []
+        # list all folders to be written into the resource
+        for folder in listfolders(istorage, unzip_path):
+            destination_folder = os.path.join(working_dir, folder)
+            destination_folders.append(destination_folder)
+        # walk through each unzipped file, delete aggregations if they exist
+        for file in unzipped_files:
+            destination_file = _get_destination_filename(file, unzipped_foldername)
+            if (istorage.exists(destination_file)):
+                if resource.resource_type == "CompositeResource":
+                    aggregation_object = resource.get_file_aggregation_object(
+                        destination_file)
+                    if aggregation_object:
+                        aggregation_object.logical_delete(user)
                     else:
+                        logger.error("No aggregation object found for " + destination_file)
                         istorage.delete(destination_file)
-            # now move each file to the destination
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                istorage.moveFile(file, destination_file)
-            # and now link them to the resource
-            from hs_file_types.utils import identify_metadata_files
-            res_files, metadata_files = identify_metadata_files(unzipped_files)
-            for file in res_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                destination_file = destination_file.replace(res_id + "/", "")
-                destination_file = resource.get_irods_path(destination_file)
-                res_file = link_irods_file_to_django(resource, destination_file)
-                res_files.append(res_file)
+                else:
+                    istorage.delete(destination_file)
+        # now move each file to the destination
+        for file in unzipped_files:
+            destination_file = _get_destination_filename(file, unzipped_foldername)
+            istorage.moveFile(file, destination_file)
+        # and now link them to the resource
+        from hs_file_types.utils import identify_metadata_files
+        res_files, metadata_files = identify_metadata_files(unzipped_files)
+        for file in res_files:
+            destination_file = _get_destination_filename(file, unzipped_foldername)
+            destination_file = destination_file.replace(res_id + "/", "")
+            destination_file = resource.get_irods_path(destination_file)
+            res_file = link_irods_file_to_django(resource, destination_file)
+            res_files.append(res_file)
 
-            # scan for aggregations
-            check_aggregations(resource, res_files)
-            from hs_file_types.utils import ingest_metadata_files
-            ingest_metadata_files(resource, meta_files)
-            istorage.delete(unzip_path)
-        else:
-            unzip_path = istorage.unzip(zip_with_full_path)
-            link_irods_folder_to_django(resource, istorage, unzip_path)
+        # scan for aggregations
+        check_aggregations(resource, res_files)
+        from hs_file_types.utils import ingest_metadata_files
+        ingest_metadata_files(resource, meta_files)
+        istorage.delete(unzip_path)
 
     except Exception:
         logger.exception("failed to unzip")
