@@ -4223,7 +4223,7 @@ class CoreMetaData(models.Model):
         dc_person_rdf_Description = etree.SubElement(dc_person,
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
 
-        if person.name:
+        if person.name.strip():
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
 
