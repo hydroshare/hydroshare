@@ -256,6 +256,8 @@ def is_resource_metadata_file(file):
 
 
 def ingest_metadata_files(resource, meta_files):
+    # refresh to pick up any new possible aggregations
+    resource.refresh_from_db()
     resource_metadata_file = None
     for f in meta_files:
         if is_resource_metadata_file(f):

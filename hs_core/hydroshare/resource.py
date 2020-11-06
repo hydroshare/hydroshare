@@ -786,13 +786,13 @@ def add_resource_files(pk, *files, **kwargs):
         ret.append(utils.add_file_to_resource(resource, None,
                                               folder=folder,
                                               source_name=ifname))
-    new_lfs = []
+
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
-            new_lfs = utils.check_aggregations(resource, ret)
+            utils.check_aggregations(resource, ret)
     from hs_file_types.utils import ingest_metadata_files
     ingest_metadata_files(resource, metadata_files)
 

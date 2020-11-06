@@ -982,7 +982,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             istorage.moveFile(file, destination_file)
         # and now link them to the resource
         from hs_file_types.utils import identify_metadata_files
-        res_files, metadata_files = identify_metadata_files(unzipped_files)
+        res_files, meta_files = identify_metadata_files(unzipped_files)
         for file in res_files:
             destination_file = _get_destination_filename(file, unzipped_foldername)
             destination_file = destination_file.replace(res_id + "/", "")
