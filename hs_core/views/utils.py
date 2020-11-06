@@ -41,7 +41,7 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_file_types.utils import set_logical_file_type
+from hs_file_types.utils import set_logical_file_type, ingest_logical_file_metadata
 from theme.backends import without_login_date_token_generator
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
@@ -986,8 +986,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                 destination_file = _get_destination_filename(file, unzipped_foldername)
                 istorage.moveFile(file, destination_file)
             # and now link them to the resource
-            res_files = []
-            for file in unzipped_files:
+            from hs_file_types.utils import identify_metadata_files
+            res_files, metadata_files = identify_metadata_files(unzipped_files)
+            for file in res_files:
                 destination_file = _get_destination_filename(file, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
                 destination_file = resource.get_irods_path(destination_file)
@@ -996,6 +997,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
             # scan for aggregations
             check_aggregations(resource, res_files)
+            from hs_file_types.utils import ingest_metadata_files
+            ingest_metadata_files(resource, meta_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)

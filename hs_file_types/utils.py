@@ -243,7 +243,52 @@ def get_logical_file(agg_type_name):
     return file_type_map[agg_type_name]
 
 
-def ingest_logical_file_metadata(metadata_file, resource, new_lfs):
+def is_aggregation_metadata_file(file):
+    return file.name.endswith('_meta.xml')
+
+
+def is_map_file(file):
+    return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
+
+
+def is_resource_metadata_file(file):
+    return file.name == 'resourcemetadata.xml'
+
+
+def ingest_metadata_files(resource, meta_files):
+    resource_metadata_file = None
+    for f in meta_files:
+        if is_resource_metadata_file(f):
+            resource_metadata_file = f
+        elif is_aggregation_metadata_file(f):
+            ingest_logical_file_metadata(f, resource)
+    if resource_metadata_file:
+        graph = Graph().parse(data=f.read())
+        try:
+            with transaction.atomic():
+                resource.metadata.delete_all_elements()
+                resource.metadata.ingest_metadata(graph)
+        except:
+            # logger.exception("Error processing resource metadata file")
+            raise
+
+
+def identify_metadata_files(files):
+
+    res_files = []
+    meta_files = []
+    for f in files:
+        if is_resource_metadata_file(f) or is_aggregation_metadata_file(f):
+            meta_files.append(f)
+        elif is_map_file(f):
+            pass
+        else:
+            res_files.append(f)
+    return res_files, meta_files
+
+
+def ingest_logical_file_metadata(metadata_file, resource):
+    resource.refresh_from_db()
     graph = Graph()
     graph = graph.parse(data=metadata_file.read())
     agg_type_name = None
@@ -262,10 +307,7 @@ def ingest_logical_file_metadata(metadata_file, resource, new_lfs):
     from hs_file_types.utils import get_logical_file
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
-    if not lf:
-        for logical_file in new_lfs:
-            if logical_file.map_short_file_path in subject:
-                lf = logical_file
+
     if not lf:
         # see if the files exist and create it
         res_file = None

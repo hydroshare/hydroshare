@@ -770,24 +770,17 @@ def add_resource_files(pk, *files, **kwargs):
         base_dir = folder[len(prefix_path) + 1:]
     else:
         base_dir = folder
-    metadata_files = []
-    resource_metadata_file = None
-    for f in files:
-        if is_resource_metadata_file(f):
-            resource_metadata_file = f
-        elif is_aggregation_metadata_file(f):
-            metadata_files.append(f)
-        elif is_map_file(f):
-            pass
-        else:
-            full_dir = base_dir
-            if f in full_paths:
-                # TODO, put this in it's own method?
-                full_path = full_paths[f]
-                dir_name = os.path.dirname(full_path)
-                # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
-                full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-            ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+    from hs_file_types.utils import identify_metadata_files
+    res_files, metadata_files = identify_metadata_files(files)
+    for f in res_files:
+        full_dir = base_dir
+        if f in full_paths:
+            # TODO, put this in it's own method?
+            full_path = full_paths[f]
+            dir_name = os.path.dirname(full_path)
+            # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
+            full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
     for ifname in source_names:
         ret.append(utils.add_file_to_resource(resource, None,
@@ -800,33 +793,10 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             new_lfs = utils.check_aggregations(resource, ret)
-    from hs_file_types.utils import ingest_logical_file_metadata
-    for md in metadata_files:
-        ingest_logical_file_metadata(md, resource, new_lfs)
-    if resource_metadata_file:
-        graph = Graph()
-        graph = graph.parse(data=resource_metadata_file.read())
-        try:
-            with transaction.atomic():
-                resource.metadata.delete_all_elements()
-                resource.metadata.ingest_metadata(graph)
-        except:
-            logger.exception("Error processing resource metadata file")
-            raise
+    from hs_file_types.utils import ingest_metadata_files
+    ingest_metadata_files(resource, metadata_files)
 
     return ret
-
-
-def is_aggregation_metadata_file(file):
-    return file.name.endswith('_meta.xml')
-
-
-def is_map_file(file):
-    return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
-
-
-def is_resource_metadata_file(file):
-    return file.name == 'resourcemetadata.xml'
 
 
 def update_science_metadata(pk, metadata, user):
