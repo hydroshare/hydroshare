@@ -924,6 +924,20 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
+class IrodsFile:
+
+    def __init__(self, name, istorage):
+        self._name = name
+        self._istorage = istorage
+
+    @property
+    def name(self):
+        return self._name
+
+    def read(self):
+        return self._istorage.download(self._name).read().decode()
+
+
 def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
@@ -962,11 +976,15 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
         for folder in listfolders(istorage, unzip_path):
             destination_folder = os.path.join(working_dir, folder)
             destination_folders.append(destination_folder)
+
+        irods_files = []
+        for unzipped_file in unzipped_files:
+            irods_files.append(IrodsFile(unzipped_file, istorage))
         from hs_file_types.utils import identify_metadata_files
-        res_files, meta_files = identify_metadata_files(unzipped_files)
+        res_files, meta_files = identify_metadata_files(irods_files)
         # walk through each unzipped file, delete aggregations if they exist
         for file in res_files:
-            destination_file = _get_destination_filename(file, unzipped_foldername)
+            destination_file = _get_destination_filename(file.name, unzipped_foldername)
             if (istorage.exists(destination_file)):
                 if resource.resource_type == "CompositeResource":
                     aggregation_object = resource.get_file_aggregation_object(
@@ -980,18 +998,19 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                     istorage.delete(destination_file)
         # now move each file to the destination
         for file in res_files:
-            destination_file = _get_destination_filename(file, unzipped_foldername)
-            istorage.moveFile(file, destination_file)
+            destination_file = _get_destination_filename(file.name, unzipped_foldername)
+            istorage.moveFile(file.name, destination_file)
         # and now link them to the resource
+        added_resource_files = []
         for file in res_files:
-            destination_file = _get_destination_filename(file, unzipped_foldername)
+            destination_file = _get_destination_filename(file.name, unzipped_foldername)
             destination_file = destination_file.replace(res_id + "/", "")
             destination_file = resource.get_irods_path(destination_file)
             res_file = link_irods_file_to_django(resource, destination_file)
-            res_files.append(res_file)
+            added_resource_files.append(res_file)
 
         # scan for aggregations
-        check_aggregations(resource, res_files)
+        check_aggregations(resource, added_resource_files)
         from hs_file_types.utils import ingest_metadata_files
         ingest_metadata_files(resource, meta_files)
         istorage.delete(unzip_path)
