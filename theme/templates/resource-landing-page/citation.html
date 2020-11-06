@@ -3,7 +3,7 @@
 <div class="col-sm-12 content-block">
     <span id="citation" class="page-anchor"></span>
     <h3>How to Cite
-        {% if relations and resource_edit_mode %}
+        {% if relations and resource_edit_mode and not custom_citation %}
         <a id="customize-citation" class="btn btn-success btn-xs" data-toggle="modal" title="Customize Citation
 Click this button to create a custom citation." data-target="#customize-citation-dialog">
             <i class="fa fa-plus"></i>
