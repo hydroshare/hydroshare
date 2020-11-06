@@ -243,69 +243,68 @@ def get_logical_file(agg_type_name):
     return file_type_map[agg_type_name]
 
 
-def filename(file_or_filename):
-    if not isinstance(file_or_filename, str):
-        return file_or_filename.name
-    return file_or_filename
-
-
 def is_aggregation_metadata_file(file):
-    return filename(file).endswith('_meta.xml')
+    return file.name.endswith('_meta.xml')
 
 
 def is_map_file(file):
-    return filename(file).endswith('_resmap.xml') or file.name == 'resourcemap.xml'
+    return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
 
 
 def is_resource_metadata_file(file):
-    return filename(file) == 'resourcemetadata.xml'
+    return file.name == 'resourcemetadata.xml'
 
 
-def ingest_resource_metadata(resource, meta_file_str):
+def ingest_metadata_files(resource, meta_files):
     # refresh to pick up any new possible aggregations
     resource.refresh_from_db()
-    graph = Graph().parse(data=meta_file_str)
-    try:
-        with transaction.atomic():
-            resource.metadata.delete_all_elements()
-            resource.metadata.ingest_metadata(graph)
-    except:
-        # logger.exception("Error processing resource metadata file")
-        raise
+    resource_metadata_file = None
+    for f in meta_files:
+        if is_resource_metadata_file(f):
+            resource_metadata_file = f
+        elif is_aggregation_metadata_file(f):
+            ingest_logical_file_metadata(f, resource)
+    if resource_metadata_file:
+        graph = Graph().parse(data=resource_metadata_file.read())
+        try:
+            with transaction.atomic():
+                resource.metadata.delete_all_elements()
+                resource.metadata.ingest_metadata(graph)
+        except:
+            # logger.exception("Error processing resource metadata file")
+            raise
 
 
 def identify_metadata_files(files):
 
     res_files = []
     meta_files = []
-    res_meta_file = None
     for f in files:
-        if is_resource_metadata_file(f):
-            res_meta_file = f
-        elif is_aggregation_metadata_file(f):
+        if is_resource_metadata_file(f) or is_aggregation_metadata_file(f):
             meta_files.append(f)
         elif is_map_file(f):
             pass
         else:
             res_files.append(f)
-    return res_files, meta_files, res_meta_file
+    return res_files, meta_files
 
 
-def ingest_logical_file_metadata(resource, metadata_file_name, metadata_file_str):
+def ingest_logical_file_metadata(metadata_file, resource):
+    resource.refresh_from_db()
     graph = Graph()
-    graph = graph.parse(data=metadata_file_str)
+    graph = graph.parse(data=metadata_file.read())
     agg_type_name = None
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
-        raise Exception("Could not derive aggregation type from {}".format(metadata_file_name))
+        raise Exception("Could not derive aggregation type from {}".format(metadata_file))
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
-        raise Exception("Could not derive aggregation path from {}".format(metadata_file_name))
+        raise Exception("Could not derive aggregation path from {}".format(metadata_file))
 
     from hs_file_types.utils import get_logical_file
     logical_file_class = get_logical_file(agg_type_name)
@@ -345,9 +344,9 @@ def ingest_logical_file_metadata(resource, metadata_file_name, metadata_file_str
             res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
-            raise Exception("Could not find aggregation for {}".format(metadata_file_name))
+            raise Exception("Could not find aggregation for {}".format(metadata_file))
         if not lf:
-            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file_name))
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file))
 
     with transaction.atomic():
         lf.metadata.delete_all_elements()

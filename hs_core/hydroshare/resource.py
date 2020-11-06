@@ -771,7 +771,7 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         base_dir = folder
     from hs_file_types.utils import identify_metadata_files
-    res_files, metadata_files, res_meta_file = identify_metadata_files(files)
+    res_files, metadata_files = identify_metadata_files(files)
     for f in res_files:
         full_dir = base_dir
         if f in full_paths:
@@ -793,13 +793,7 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
-    from hs_file_types.utils import ingest_logical_file_metadata, ingest_resource_metadata
-    resource.refresh_from_db()
-    for file in metadata_files:
-        ingest_logical_file_metadata(resource, file.name, file.read())
-    if res_meta_file:
-        ingest_resource_metadata(resource, res_meta_file.read())
-
+    from hs_file_types.utils import ingest_metadata_files
     ingest_metadata_files(resource, metadata_files)
 
     return ret
