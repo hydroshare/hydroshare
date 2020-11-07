@@ -403,7 +403,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 for file in resource.files.filter(file_folder=folder_path):
                     fname = os.path.basename(file.resource_file.name)
                     if fname in dump_file_name:
-                        file.resource_file.delete()
+                        file.delete()
                         break
                 dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 file_folder = res_file.file_folder

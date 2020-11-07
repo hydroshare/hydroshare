@@ -985,20 +985,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
         # walk through each unzipped file, delete aggregations if they exist
         for file in res_files:
             destination_file = _get_destination_filename(file.name, unzipped_foldername)
-            if (istorage.exists(destination_file)):
-                if resource.resource_type == "CompositeResource":
-                    aggregation_object = resource.get_file_aggregation_object(
-                        destination_file)
-                    if aggregation_object:
-                        aggregation_object.logical_delete(user)
-                    else:
-                        logger.error("No aggregation object found for " + destination_file)
-                        istorage.delete(destination_file)
-                else:
-                    istorage.delete(destination_file)
-        # now move each file to the destination
-        for file in res_files:
-            destination_file = _get_destination_filename(file.name, unzipped_foldername)
+            if istorage.exists(destination_file):
+                istorage.delete(destination_file)
             istorage.moveFile(file.name, destination_file)
         # and now link them to the resource
         added_resource_files = []
@@ -1017,7 +1005,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
 
     except Exception:
         logger.exception("failed to unzip")
-        if unzip_path and istorage.exists:
+        if unzip_path and istorage.exists(unzip_path):
             istorage.delete(unzip_path)
         raise
 
