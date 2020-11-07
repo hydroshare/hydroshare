@@ -125,16 +125,18 @@ def update_collection_list_csv(collection_obj):
 
 
 def get_collectable_resources(user, coll_resource):
-    get_my_resources_list(user)
+    my_resources = get_my_resources_list(user)
 
     # resource is collectable if
     # 1) Shareable=True
-    # 2) OR, current user is a owner of it
-    # 3) exclude this resource as well as resources already in the collection
-    return get_my_resources_list(user) \
+    # 2) Discoverable=True
+    # 3) OR, current user is a owner of it
+    # 4) exclude this resource as well as resources already in the collection
+    return my_resources \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True)) \
-        .filter(Q(raccess__shareable=True) | (Q(r2urp__user=user) & Q(r2urp__privilege=PrivilegeCodes.OWNER)))
+        .filter(Q(raccess__shareable=True) | Q(raccess__discoverable=True) |
+                (Q(r2urp__user=user) & Q(r2urp__privilege=PrivilegeCodes.OWNER)))
 
 
 def _get_owners_string(owners_list):

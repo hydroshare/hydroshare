@@ -33,16 +33,6 @@
             {% endif %}
         {% endblock %}
 
-        {%  if task_id and download_path %}
-            <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
-            <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-            <div class="col-sm-12">
-                <div id='download-status-info' class="alert alert-success">
-                    Please wait for the download to be prepared<span id="loading">.</span>
-                </div>
-            </div>
-        {% endif %}
-
         {# Needs to be included first so it's available before other instances initialize #}
         {% include "includes/profile-card.html" %}
 
@@ -612,17 +602,18 @@
                                                 </a>
                                             {% endif %}
 
-                                            <a id="btn-download-all" type="button"
-                                               title="Download all content as Zipped BagIt Archive"
-                                                    {% if cm.raccess.require_download_agreement %}
-                                               data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                               data-placement="auto"
-                                               {% else %}href="{{ cm.bag_url }}"{% endif %}>
+                                            <button id="btn-download-all"
+                                                title="Download all content as Zipped BagIt Archive"
+                                                {% if cm.raccess.require_download_agreement %}
+                                                data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                data-placement="auto"
+                                                {% else %}
+                                                data-bag-url="{{ cm.bag_url }}"
+                                                {% endif %}>
                                                 <span class="fa fa-briefcase icon-blue"></span>
-                                            </a>
+                                            </button>
                                             <a class="small" target="_blank"
                                                href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
-
                                         </div>
                                     </div>
                                 </div>
@@ -878,7 +869,6 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>

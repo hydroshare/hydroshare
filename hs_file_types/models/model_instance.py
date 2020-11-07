@@ -295,11 +295,21 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         # get the xml root element and the xml element to which contains all other elements
         RDF_ROOT, container_to_add_to = super(ModelInstanceFileMetaData, self)._get_xml_containers()
 
+        model_specific_metadata = etree.SubElement(container_to_add_to, 'modelSpecificMetadata')
+        model_specific_metadata_desc = etree.SubElement(model_specific_metadata,
+                                                        '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
+        model_title_node = etree.SubElement(model_specific_metadata_desc,
+                                            '{%s}title' % CoreMetaData.NAMESPACES['dc'])
+        model_title = ""
+        if self.logical_file.metadata_schema_json:
+            model_title = self.logical_file.metadata_schema_json.get('title', "")
+        model_title_node.text = model_title
+
         if self.has_model_output:
             includes_output = 'Yes'
         else:
             includes_output = 'No'
-        model_output = etree.SubElement(container_to_add_to,
+        model_output = etree.SubElement(model_specific_metadata_desc,
                                         '{%s}includesModelOutput' % CoreMetaData.NAMESPACES['hsterms'])
         model_output.text = includes_output
         if self.executed_by or self.executed_by_url:
@@ -309,14 +319,14 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
                 aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
                 attrib = {"resource": aggr_url}
-                etree.SubElement(container_to_add_to, executed_by, attrib=attrib)
+                etree.SubElement(model_specific_metadata_desc, executed_by, attrib=attrib)
             else:
                 attrib = {"resource": self.executed_by_url}
-                etree.SubElement(container_to_add_to, executed_by, attrib=attrib)
+                etree.SubElement(model_specific_metadata_desc, executed_by, attrib=attrib)
 
         if self.metadata_json:
             metadata_dict = self.metadata_json
-            model_properties = etree.SubElement(container_to_add_to, 'modelProperties')
+            model_properties = etree.SubElement(model_specific_metadata_desc, 'modelProperties')
             model_properties_desc = etree.SubElement(model_properties,
                                                      '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
 
