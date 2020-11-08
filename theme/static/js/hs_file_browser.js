@@ -379,6 +379,10 @@ function updateSelectionMenuContext() {
                     uiActionStates.subMenuSetContentType.disabled = true;
                     uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
                 }
+                else if (logicalFileType === "ModelInstanceLogicalFile"){
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
             }
 
             if (!fileName.toUpperCase().endsWith(".TIF") && !fileName.toUpperCase().endsWith(".TIFF") ||
