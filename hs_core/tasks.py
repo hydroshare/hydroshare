@@ -375,6 +375,16 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
         out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
         istorage.copyFiles(input_path, out_with_folder)
+        if not aggregation:
+            if '/data/contents/' in input_path:
+                short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
+            else:
+                short_path = input_path
+            try:
+                aggregation = res.get_aggregation_by_name(short_path)
+            except ObjectDoesNotExist:
+                pass
+
         if aggregation:
             try:
                 istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
