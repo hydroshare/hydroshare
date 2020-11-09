@@ -1,7 +1,6 @@
 {% load crispy_forms_tags hydroshare_tags %}
 
 <input id="resID" type="hidden" value="{{ cm.short_id }}"/>
-
 {% if page.perms.change and resource_edit_mode %}
     <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
          aria-hidden="true">
@@ -29,6 +28,7 @@
             </div>
         </div>
     </div>
+
 
     <script id="add-author-modal-template" type="text/x-template">
         <div class="modal fade" id="add-author-modal" tabindex="-1" role="dialog"
@@ -1364,7 +1364,9 @@
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% if type_display != "The content of this resource is hosted by" %}
+                                                    <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% endif %}}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1394,8 +1396,8 @@
     </div>
 
 <!-- TODO WORK IN PROGRESS -->
-<!--TODO MARK ENSURE ADD CODE FOR HANDLING DELETE OF PARENT RESOURCE AND THAT EVERYTHING FLOWS PROPERLY-->
 <!--{% if page.perms.change and resource_edit_mode %}-->
+
     <div class="modal fade" id="customize-citation-dialog" tabindex="-1" role="dialog" aria-labelledby="customize-citation"
          aria-hidden="true">
         <div class="modal-dialog">
@@ -1419,8 +1421,16 @@
                                       rows="10">{% if custom_citation %}{{ custom_citation }}{% endif %}</textarea>
                         </div>
                     </div>
+                        <script language="JavaScript">
+                          function AsyncRevertCitation() {
+                            $.ajax({
+                              type: "POST",
+                              url: '/hsapi/_internal/'+'{{cm.short_id}}'+'/citation/'+'{{citation_id}}'+'/delete-metadata/',
+                            }); // TODO PROMISE THEN RETURN MESSAGE TO UI AND REFRESH PAGE
+                          }
+                        </script>
                         {% if custom_citation %}
-                        <a href="asdf">Remove Custom Citation</a>
+                        <a href="javascript:AsyncRevertCitation()">Remove Custom Citation</a>
                         {% endif %}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

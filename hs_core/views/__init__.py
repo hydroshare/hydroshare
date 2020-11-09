@@ -681,6 +681,8 @@ def file_download_url_mapper(request, shortkey):
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     num_relations = len(res.metadata.relations.all())  # TODO HERE
+    if num_relations == 1:  # custom citation should be removed and user notified
+        pass
     res.metadata.delete_element(element_name, element_id)
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
