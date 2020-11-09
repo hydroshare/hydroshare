@@ -1395,9 +1395,6 @@
         </div>
     </div>
 
-<!-- TODO WORK IN PROGRESS -->
-<!--{% if page.perms.change and resource_edit_mode %}-->
-
     <div class="modal fade" id="customize-citation-dialog" tabindex="-1" role="dialog" aria-labelledby="customize-citation"
          aria-hidden="true">
         <div class="modal-dialog">
@@ -1423,10 +1420,15 @@
                     </div>
                         <script language="JavaScript">
                           function AsyncRevertCitation() {
+                            document.body.style.cursor = 'wait';
                             $.ajax({
                               type: "POST",
                               url: '/hsapi/_internal/'+'{{cm.short_id}}'+'/citation/'+'{{citation_id}}'+'/delete-metadata/',
-                            }); // TODO PROMISE THEN RETURN MESSAGE TO UI AND REFRESH PAGE
+                            }).done(function() {
+                              location.reload();
+                            }).complete(function() {
+                              document.body.style.cursor = 'default';
+                            });
                           }
                         </script>
                         {% if custom_citation %}
@@ -1440,7 +1442,6 @@
             </div>
         </div>
     </div>
-<!--{% endif %}-->
 
     <div class="modal fade in" id="remove-aggregation-dialog" tabindex="-1" role="dialog"
          aria-labelledby="remove-aggregation" aria-hidden="false">

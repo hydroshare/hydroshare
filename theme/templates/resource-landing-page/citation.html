@@ -3,12 +3,7 @@
 <div class="col-sm-12 content-block">
     <span id="citation" class="page-anchor"></span>
     <h3>How to Cite
-        {% if relations and resource_edit_mode and not custom_citation %}
-        <a id="customize-citation" class="btn btn-success btn-xs" data-toggle="modal" title="Customize Citation
-Click this button to create a custom citation." data-target="#customize-citation-dialog">
-            <i class="fa fa-plus"></i>
-        </a>
-    {% endif %}
+
     </h3>
     <div class="row">
         <div class="col-xs-12">
@@ -23,11 +18,12 @@ Click this button to create a custom citation." data-target="#customize-citation
                 </button>
             </div>
             <div class="flex">
-                {% if resource_edit_mode and relations and custom_citation %}
-                    <a data-toggle="modal" class="citation-edit" data-target="#customize-citation-dialog">Edit</a>
-                {% endif %}
+            {% if relations and resource_edit_mode %}
+                <span data-toggle="modal" data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                      title="Edit citation" data-target="#customize-citation-dialog">
+                </span>
+            {% endif %}
             </div>
-
             {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
             <br />
             <div class="citation-description">
