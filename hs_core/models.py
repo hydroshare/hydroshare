@@ -4251,7 +4251,6 @@ class CoreMetaData(models.Model):
         """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
         from .hydroshare.utils import current_site_url
-        from hs_core.templatetags.hydroshare_tags import name_without_commas
 
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
@@ -4261,11 +4260,11 @@ class CoreMetaData(models.Model):
         dc_person_rdf_Description = etree.SubElement(dc_person,
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
 
-        if person.name:
+        if person.name.strip():
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
 
-            hsterms_name.text = name_without_commas(person.name)
+            hsterms_name.text = person.name
 
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],

@@ -794,20 +794,29 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
         metadata.append({'creator': creator_data})
 
 
+def get_user_party_name(user):
+    user_profile = get_profile(user)
+    if user.last_name and user.first_name:
+        if user_profile.middle_name:
+            party_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                            user_profile.middle_name)
+        else:
+            party_name = '%s, %s' % (user.last_name, user.first_name)
+    elif user.last_name:
+        party_name = user.last_name
+    elif user.first_name:
+        party_name = user.first_name
+    elif user_profile.middle_name:
+        party_name = user_profile.middle_name
+    else:
+        party_name = ''
+    return party_name
+
+
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
-
-    if user_profile.middle_name:
-        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                        user_profile.middle_name)
-    else:
-        user_full_name = '%s, %s' % (user.last_name, user.first_name)
-
-    if user_full_name:
-        party_name = user_full_name
-    else:
-        party_name = user.username
+    party_name = get_user_party_name(user)
 
     party_data['name'] = party_name
     party_data['email'] = user.email

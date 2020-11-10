@@ -308,15 +308,11 @@ class UserForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data['first_name']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("First name is a required field.")
-        return data
+        return data.strip()
 
     def clean_last_name(self):
         data = self.cleaned_data['last_name']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Last name is a required field.")
-        return data
+        return data.strip()
 
     def clean_email(self):
         data = self.cleaned_data['email']

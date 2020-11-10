@@ -1629,13 +1629,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
     user_data = {}
     if is_group == 'false':
         user = utils.user_from_id(user_or_group_id)
-
-        if user.userprofile.middle_name:
-            user_name = "{}, {} {}".format(user.last_name, user.first_name, user.userprofile.middle_name)
-        else:
-            user_name = "{}, {}".format(user.last_name, user.first_name)
-
-        user_data['name'] = user_name
+        user_data['name'] = utils.get_user_party_name(user)
         user_data['email'] = user.email
         user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
         if user.userprofile.phone_1:

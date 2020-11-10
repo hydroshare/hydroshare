@@ -212,6 +212,13 @@ Vue.component('add-author-modal', {
             let vue = this;
             // Transform the identifier field back into an object
             let author = $.extend(true, {}, this.author);
+
+            vue.addAuthorError = null;
+            if (vue.authorType === vue.authorTypes.OTHER_PERSON && !author.name) {
+                vue.addAuthorError = "Name is required. Please input the name of the author to add.";
+                return;
+            }
+
             let identifiers = {};
 
             this.author.identifiers.map(function (el) {
@@ -555,15 +562,22 @@ let leftHeaderApp = new Vue({
     },
     filters: {
         nameWithoutCommas: function (name) {
-            if (!name) return '';
-            name = name.toString();
+            if (!name) return null;
+            name = name.toString().trim();
 
             if (name.indexOf(',') >= 0) {
                 let  fullName = name.split(',');
                 if (fullName.length == 2) {
                     let firstNames = fullName[1].trim();
                     let lastNames = fullName[0].trim();
-                    return firstNames + " " + lastNames;
+                    if (firstNames && lastNames)
+                        return firstNames + " " + lastNames;
+                    else if (firstNames)
+                        return firstNames;
+                    else if (lastNames)
+                        return lastNames;
+                    else
+                        return null;
                 }
             }
             return name;    // default

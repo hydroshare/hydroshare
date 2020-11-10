@@ -46,7 +46,7 @@ urlpatterns = i18n_patterns(
     url(r'^comment/$', theme.comment),
     url(r'^comment/delete/(?P<id>.*)/$', delete_resource_comment, name='delete_resource_comment'),
     url(r'^rating/$', theme.rating),
-    url(r'^profile/$', theme.update_user_profile, name='update_profile'),
+    url(r'^profile/(?P<profile_user_id>.*)/$', theme.update_user_profile, name='update_profile'),
     url(r'^update_password/$', theme.update_user_password, name='update_password'),
     url(r'^resend_verification_email/(?P<email>.*)/', theme.resend_verification_email,
         name='resend_verification_email'),
