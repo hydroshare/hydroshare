@@ -681,8 +681,6 @@ class Citation(AbstractMetaDataElement):
     class Meta:
         """Define meta properties for Citation class."""
 
-        unique_together = ("content_type", "object_id")
-
     @classmethod
     def update(cls, element_id, **kwargs):
         """Call parent update function for Citation class."""
@@ -690,7 +688,7 @@ class Citation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        """Call parent delete function for Citation class."""
+        """Call delete function for Citation class."""
         element = cls.objects.get(id=element_id)
         element.delete()
 
@@ -3837,8 +3835,6 @@ class CoreMetaData(models.Model):
             self.publisher.delete()
         if self.type:
             self.type.delete()
-        if self.citation:
-            self.citation.delete()
 
         self.creators.all().delete()
         self.contributors.all().delete()
