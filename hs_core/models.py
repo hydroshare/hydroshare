@@ -3837,6 +3837,8 @@ class CoreMetaData(models.Model):
             self.publisher.delete()
         if self.type:
             self.type.delete()
+        if self.citation:
+            self.citation.delete()
 
         self.creators.all().delete()
         self.contributors.all().delete()
