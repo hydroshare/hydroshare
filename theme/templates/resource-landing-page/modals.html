@@ -1409,13 +1409,14 @@
                     {% csrf_token %}
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="customize-citation">Customize Citation</h4>
+                        <h4 class="modal-title" id="customize-citation">Custom Citation</h4>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label for="custom-citation-input">Citation text:</label>
+                            <label for="custom-citation-input">Provide the full text of how you would like this resource to be cited:</label>
                             <textarea class="form-control" name="content" id="custom-citation-input" cols="30"
                                       rows="10">{% if custom_citation %}{{ custom_citation }}{% endif %}</textarea>
+                            Suggested Format: Creator(s) (Publication Year). Title,  Version, Publisher, Resource Type, Identifier (preferably encoded as a URL)
                         </div>
                     </div>
                         <script language="JavaScript">
