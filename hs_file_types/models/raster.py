@@ -215,11 +215,11 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         """Generate a GeoServer layer preview link."""
 
         if resource.raccess.public is True:
-            geoserver_url = settings.HS_GEOSERVER
+            geoserver_url = settings.HSWS_GEOSERVER_URL
             resource_id = resource.short_id
             layer_id = '.'.join('/'.join(folder_path.split('/')[2:]).split('.')[:-1])
 
-            for k, v in settings.HS_GEOSERVER_ESCAPE.items():
+            for k, v in settings.HSWS_GEOSERVER_ESCAPE.items():
                 layer_id = layer_id.replace(k, v)
 
             layer_id = quote(f'HS-{resource_id}:{layer_id}')

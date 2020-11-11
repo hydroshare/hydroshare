@@ -690,7 +690,17 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
+# HydroShare web services settings
+HSWS_URL = "http://10.37.142.23:8060/his/services/update"
+HSWS_API_TOKEN = "d1caabf3059ef7ffd99d890aba57100da2e0efc8"
+HSWS_TIMEOUT = 3
+HSWS_PUBLISH_URLS = False
 HSWS_ACTIVATED = False
+
+HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
+HSWS_GEOSERVER_ESCAPE = {
+    '/': ' '
+}
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 

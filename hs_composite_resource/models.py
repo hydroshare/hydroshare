@@ -595,7 +595,7 @@ class CompositeResource(BaseResource):
                 ] for data_type in resource_data_types
             ):
                 wms_url = (
-                    f'{settings.HS_GEOSERVER}/wms?'
+                    f'{settings.HSWS_GEOSERVER_URL}/wms?'
                     f'service=WMS&'
                     f'version=1.3.0&'
                     f'request=GetCapabilities&'
@@ -606,7 +606,7 @@ class CompositeResource(BaseResource):
 
             if 'GeographicFeature' in resource_data_types:
                 wfs_url = (
-                    f'{settings.HS_GEOSERVER}/wfs?'
+                    f'{settings.HSWS_GEOSERVER_URL}/wfs?'
                     f'service=WFS&'
                     f'version=1.1.0&'
                     f'request=GetCapabilities&'
@@ -617,7 +617,7 @@ class CompositeResource(BaseResource):
 
             if 'GeographicRaster' in resource_data_types:
                 wcs_url = (
-                    f'{settings.HS_GEOSERVER}/wcs?'
+                    f'{settings.HSWS_GEOSERVER_URL}/wcs?'
                     f'service=WCS&'
                     f'version=1.1.0&'
                     f'request=GetCapabilities&'
