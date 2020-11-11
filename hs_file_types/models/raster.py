@@ -3,7 +3,6 @@ import logging
 import shutil
 import subprocess
 import zipfile
-from urllib.parse import quote
 
 import xml.etree.ElementTree as ET
 from lxml import etree
@@ -14,7 +13,6 @@ from gdalconst import GA_ReadOnly
 from functools import partial, wraps
 
 from django.db import models, transaction
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms.models import formset_factory
 from django.template import Template, Context
@@ -212,39 +210,13 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                                                                pretty_print=pretty_print).decode()
 
     def get_preview_data_url(self, resource, folder_path):
-        """Generate a GeoServer layer preview link."""
+        """Get a GeoServer layer preview link."""
 
-        if resource.raccess.public is True:
-            geoserver_url = settings.HSWS_GEOSERVER_URL
-            resource_id = resource.short_id
-            layer_id = '.'.join('/'.join(folder_path.split('/')[2:]).split('.')[:-1])
-
-            for k, v in settings.HSWS_GEOSERVER_ESCAPE.items():
-                layer_id = layer_id.replace(k, v)
-
-            layer_id = quote(f'HS-{resource_id}:{layer_id}')
-
-            extent = quote(','.join((
-                str(self.spatial_coverage.value['westlimit']),
-                str(self.spatial_coverage.value['southlimit']),
-                str(self.spatial_coverage.value['eastlimit']),
-                str(self.spatial_coverage.value['northlimit']),
-            )))
-
-            layer_srs = quote(self.spatial_coverage.value['projection'][-9:])
-
-            preview_data_url = (
-                f'{geoserver_url}/HS-{resource_id}/wms'
-                f'?service=WMS&version=1.1&request=GetMap'
-                f'&layers={layer_id}'
-                f'&bbox={extent}'
-                f'&width=800&height=500'
-                f'&srs={layer_srs}'
-                f'&format=application/openlayers'
-            )
-
-        else:
-            preview_data_url = None
+        preview_data_url = utils.build_preview_data_url(
+            resource=resource,
+            folder_path=folder_path,
+            spatial_coverage=self.spatial_coverage.value
+        )
 
         return preview_data_url
 

@@ -5,6 +5,7 @@ import logging
 import shutil
 import copy
 from uuid import uuid4
+from urllib.parse import quote
 import errno
 
 from django.apps import apps
@@ -1074,3 +1075,42 @@ def check_aggregations(resource, res_files):
                 # create aggregation from file 'res_file'
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       fail_feedback=False)
+
+
+def build_preview_data_url(resource, folder_path, spatial_coverage):
+    """Get a GeoServer layer preview link."""
+
+    if resource.raccess.public is True:
+        geoserver_url = settings.HSWS_GEOSERVER_URL
+        resource_id = resource.short_id
+        layer_id = '.'.join('/'.join(folder_path.split('/')[2:]).split('.')[:-1])
+
+        for k, v in settings.HSWS_GEOSERVER_ESCAPE.items():
+            layer_id = layer_id.replace(k, v)
+
+        layer_id = quote(f'HS-{resource_id}:{layer_id}')
+
+        extent = quote(','.join((
+            str(spatial_coverage['westlimit']),
+            str(spatial_coverage['southlimit']),
+            str(spatial_coverage['eastlimit']),
+            str(spatial_coverage['northlimit']),
+        )))
+
+        layer_srs = quote(spatial_coverage['projection'][-9:])
+
+        preview_data_url = (
+            f'{geoserver_url}/HS-{resource_id}/wms'
+            f'?service=WMS&version=1.1&request=GetMap'
+            f'&layers={layer_id}'
+            f'&bbox={extent}'
+            f'&width=800&height=500'
+            f'&srs={layer_srs}'
+            f'&format=application/openlayers'
+        )
+
+    else:
+        preview_data_url = None
+
+    return preview_data_url
+
