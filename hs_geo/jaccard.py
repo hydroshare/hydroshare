@@ -8,17 +8,18 @@ box coverage negative longitude: cd8bc1c38b254031854b8b8aaee08a05
 # from hs_core.hydroshare.utils import get_resource_by_shortkey
 from pprint import pprint
 
+
 def geo_normalized_coverage(resource):
-    if resource.metadata is not None: 
+    if resource.metadata is not None:
         c = resource.metadata.spatial_coverage
         pprint(c)
-        if c is not None: 
+        if c is not None:
             cc = c.value
 
             if c.type == 'point':
-                if isinstance(cc['east'], str): 
+                if isinstance(cc['east'], str):
                     cc['east'] = float(cc['east'])
-                if isinstance(cc['east'], str): 
+                if isinstance(cc['east'], str):
                     cc['north'] = float(cc['north'])
 
                 if cc['east'] < 0:  # convert to east Longitude
@@ -27,13 +28,13 @@ def geo_normalized_coverage(resource):
                 return cc
 
             if c.type == 'box':
-                if isinstance(cc['eastlimit'], str): 
+                if isinstance(cc['eastlimit'], str):
                     cc['eastlimit'] = float(cc['eastlimit'])
-                if isinstance(cc['westlimit'], str): 
+                if isinstance(cc['westlimit'], str):
                     cc['westlimit'] = float(cc['westlimit'])
-                if isinstance(cc['northlimit'], str): 
+                if isinstance(cc['northlimit'], str):
                     cc['northlimit'] = float(cc['northlimit'])
-                if isinstance(cc['southlimit'], str): 
+                if isinstance(cc['southlimit'], str):
                     cc['southlimit'] = float(cc['southlimit'])
 
                 if cc['eastlimit'] < 0:  # convert to east Longitude
@@ -44,7 +45,7 @@ def geo_normalized_coverage(resource):
 
             return cc
     return None
-   
+
 
 def geo_one_degree(rc, sc):
     if abs(rc['east']-sc['east']) <= 1.0 and \
@@ -67,11 +68,8 @@ def geo_inside(rc, sc):
 
 
 def geo_area_union(rc, sc):
-    west = min(rc['westlimit'], sc['westlimit'])
-    east = max(rc['eastlimit'], sc['eastlimit'])
-    south = min(rc['southlimit'], sc['southlimit'])
-    north = max(rc['northlimit'], sc['northlimit'])
-    return (east - west) * (north - south)
+    return (rc['eastlimit'] - rc['westlimit']) * (rc['northlimit'] - rc['southlimit']) + \
+           (sc['eastlimit'] - sc['westlimit']) * (sc['northlimit'] - sc['southlimit'])
 
 
 def geo_area_intersection(rc, sc):
@@ -90,7 +88,7 @@ def geo_area_intersection(rc, sc):
 def geo_jaccard(r, s):
     rc = geo_normalized_coverage(r)
     sc = geo_normalized_coverage(s)
-    if rc is None or sc is None: 
+    if rc is None or sc is None:
         return 0.0
     return geo_jaccard_internal(rc, sc)
 
