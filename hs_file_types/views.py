@@ -93,7 +93,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def get_file_id(pk, file_path):
+def get_res_file(pk, file_path):
 
     # get id of the file from the file_path to map to the internal api call
     file_rel_path = str(file_path).strip()
@@ -119,7 +119,7 @@ def get_file_id(pk, file_path):
 
     res_file = ResourceFile.get(resource, file_name, folder)
 
-    return res_file.id
+    return res_file
 
 
 @api_view(['POST'])
@@ -136,7 +136,7 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
     :return:
     """
 
-    file_id = get_file_id(pk, file_path)
+    file_id = get_res_file(pk, file_path).id
 
     # call the internal api for setting the file type
     json_response = set_file_type(request=request, resource_id=pk, file_id=file_id,
@@ -152,7 +152,7 @@ def remove_aggregation_public(request, resource_id, hs_file_type, file_path, **k
     """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
     However, it doesn't delete resource files associated with the aggregation.
     """
-    file_id = get_file_id(resource_id, file_path)
+    file_id = get_res_file(resource_id, file_path).logical_file.id
     if isinstance(file_id, Response):
         return file_id
     return remove_aggregation(request, resource_id, hs_file_type, file_id, **kwargs)
@@ -162,7 +162,7 @@ def remove_aggregation_public(request, resource_id, hs_file_type, file_path, **k
 def delete_aggregation_public(request, resource_id, hs_file_type, file_path, **kwargs):
     """Deletes all files associated with an aggregation and all the associated metadata.
     """
-    file_id = get_file_id(resource_id, file_path)
+    file_id = get_res_file(resource_id, file_path).logical_file.id
     if isinstance(file_id, Response):
         return file_id
     return delete_aggregation(request, resource_id, hs_file_type, file_id, **kwargs)
@@ -172,7 +172,7 @@ def delete_aggregation_public(request, resource_id, hs_file_type, file_path, **k
 def move_aggregation_public(request, resource_id, hs_file_type, file_path, tgt_path="", **kwargs):
     """moves all files associated with an aggregation and all the associated metadata.
     """
-    file_id = get_file_id(resource_id, file_path)
+    file_id = get_res_file(resource_id, file_path).logical_file.id
     if isinstance(file_id, Response):
         return file_id
     return move_aggregation(request, resource_id, hs_file_type, file_id, tgt_path, **kwargs)

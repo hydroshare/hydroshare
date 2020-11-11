@@ -1170,6 +1170,9 @@ class AbstractLogicalFile(models.Model):
             res_files=self.files.all()
         )
 
+        self.resource.setAVU("bag_modified", True)
+        self.resource.setAVU('metadata_dirty', 'true')
+
     def get_parent(self):
         """Find the parent fileset aggregation of this aggregation
         :return a fileset aggregation if found, otherwise None
