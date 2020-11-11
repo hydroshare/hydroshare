@@ -270,7 +270,6 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
 
     except hydroshare.utils.ResourceFileSizeException as ex:
         msg = {'file_size_error': str(ex)}
-        logger.exception("error")
         return JsonResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:

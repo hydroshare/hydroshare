@@ -975,10 +975,6 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-def ingest_aggregation(request, hs_file_type, file_type_id):
-    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
-
-
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     """
     Gets metadata html for the logical file type

@@ -10,7 +10,6 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from rdflib import Graph
 from django.contrib.auth.models import User
 
 from rest_framework import status
@@ -770,9 +769,7 @@ def add_resource_files(pk, *files, **kwargs):
         base_dir = folder[len(prefix_path) + 1:]
     else:
         base_dir = folder
-    from hs_file_types.utils import identify_metadata_files
-    res_files, metadata_files = identify_metadata_files(files)
-    for f in res_files:
+    for f in files:
         full_dir = base_dir
         if f in full_paths:
             # TODO, put this in it's own method?
@@ -793,8 +790,6 @@ def add_resource_files(pk, *files, **kwargs):
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
-    from hs_file_types.utils import ingest_metadata_files
-    ingest_metadata_files(resource, metadata_files)
 
     return ret
 
