@@ -1098,11 +1098,45 @@
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                     <h4 class="modal-title" id="delete-relation">Delete metadata element</h4></div>
                 <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+                {% if relations|length == 1 and custom_citation %}
+                <strong>This is the last relation. The current custom citation will be automatically reverted
+                    to the stock format.</strong>
+                {% endif %}
                 </div>
                 <div class="modal-footer">
+                    <script language="JavaScript">
+                       function AsyncDeleteRelation() {
+                        $.ajax({
+                          // delete the relation
+                          type: "POST",
+                          url: '/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/',
+                        }).done(function () {
+                          location.reload();
+                        }).complete(function () {
+                          document.body.style.cursor = 'default';
+                        });
+                       }
+
+                       function AsyncRemoveRelation() {
+                          document.body.style.cursor = 'wait';
+                          if (Number.parseInt('{{relations|length}}', 10) === 1) {
+                            $.ajax({
+                              // a custom citation should be removed before the last relation is deleted
+                              type: "POST",
+                              url: '/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/',
+                            }).done(function () {
+                              AsyncDeleteRelation();
+                            });
+                          } else {
+                            AsyncDeleteRelation();
+                          }
+                       }
+                    </script>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger btn-disable-after"
-                       href="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/">Delete</a>
+                    <a id="delete-relation-confirm" class="btn btn-danger btn-disable-after"
+                       href="javascript:AsyncRemoveRelation()">Delete</a>
+<!--                    <a type="button" class="btn btn-danger btn-disable-after"-->
+<!--                       href="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/">Delete</a>-->
                 </div>
             </div>
         </div>
@@ -1423,8 +1457,9 @@
                           function AsyncRevertCitation() {
                             document.body.style.cursor = 'wait';
                             $.ajax({
-                              type: "POST",
-                              url: '/hsapi/_internal/'+'{{cm.short_id}}'+'/citation/'+'{{citation_id}}'+'/delete-metadata/',
+
+                              // type: "POST",
+                              // url: '/hsapi/_internal/'+'{{cm.short_id}}'+'/citation/'+'{{citation_id}}'+'/delete-metadata/',
                             }).done(function() {
                               location.reload();
                             }).complete(function() {
@@ -1433,7 +1468,7 @@
                           }
                         </script>
                         {% if custom_citation %}
-                        <a href="javascript:AsyncRevertCitation()">Remove Custom Citation</a>
+                        <a id="remove-citation-link" href="javascript:AsyncRevertCitation()">Remove Custom Citation</a>
                         {% endif %}
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

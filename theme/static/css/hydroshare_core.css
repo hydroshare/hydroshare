@@ -206,6 +206,14 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     border-radius: 4px;
 }
 
+#remove-citation-link {
+	margin-left: 2em;
+}
+
+#edit-citation-control {
+	margin-top: 4px;
+}
+
 .recaptchatable {
     width: 100%;
 }
