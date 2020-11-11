@@ -1456,14 +1456,13 @@
                                       rows="10">{% if custom_citation %}{{ custom_citation }}{% endif %}</textarea>
                             Suggested Format: Creator(s) (Publication Year). Title,  Version, Publisher, Resource Type, Identifier (preferably encoded as a URL)
                         </div>
-                    </div>
+                        {% if custom_citation %}
                         <script language="JavaScript">
                           function AsyncRevertCitation() {
                             document.body.style.cursor = 'wait';
                             $.ajax({
-
-                              // type: "POST",
-                              // url: '/hsapi/_internal/'+'{{cm.short_id}}'+'/citation/'+'{{citation_id}}'+'/delete-metadata/',
+                              type: "POST",
+                              url: '/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/',
                             }).done(function() {
                               location.reload();
                             }).complete(function() {
@@ -1471,9 +1470,9 @@
                             });
                           }
                         </script>
-                        {% if custom_citation %}
                         <a id="remove-citation-link" href="javascript:AsyncRevertCitation()">Remove Custom Citation</a>
                         {% endif %}
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save changes</button>
