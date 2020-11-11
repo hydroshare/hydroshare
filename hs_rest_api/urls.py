@@ -154,6 +154,21 @@ urlpatterns = [
         file_type_views.set_file_type_public,
         name="set_file_type_public"),
 
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/functions/remove-file-type/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/$',
+        file_type_views.remove_aggregation_public,
+        name="remove_aggregation_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/functions/delete-file-type/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/$',
+        file_type_views.delete_aggregation_public,
+        name="delete_aggregation_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/functions/move-file-type/(?P<tgt_path>.*)$',
+        file_type_views.move_aggregation_public,
+        name="move_aggregation_public"),
+
     # DEPRECATED: use form above instead. Added unused POST for simplicity
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
