@@ -162,11 +162,14 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
     def get_preview_data_url(self, resource, folder_path):
         """Get a GeoServer layer preview link."""
 
-        preview_data_url = utils.build_preview_data_url(
-            resource=resource,
-            folder_path=folder_path,
-            spatial_coverage=self.spatial_coverage.value
-        )
+        if self.spatial_coverage:
+            preview_data_url = utils.build_preview_data_url(
+                resource=resource,
+                folder_path=folder_path,
+                spatial_coverage=self.spatial_coverage.value
+            )
+        else:
+            preview_data_url = None
 
         return preview_data_url
 
