@@ -61,7 +61,7 @@ class RDF_MetaData_Mixin(object):
         graph.namespace_manager = NAMESPACE_MANAGER
 
         subject = self.rdf_subject()
-        graph.add((subject, RDF.type, self.rdf_type()))
+        # graph.add((subject, RDF.type, self.rdf_type()))
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
             for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
