@@ -78,6 +78,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         unzip_file(self.user, res.short_id, "data/contents/test_resource_metadata_files.zip", True,
                    overwrite=True, auto_aggregate=True, ingest_metadata=True)
+
         def compare_metadatas(new_metadata_str, original_metadata_file):
             original_graph = Graph()
             with open(os.path.join(self.extracted_directory, original_metadata_file), "r") as f:
