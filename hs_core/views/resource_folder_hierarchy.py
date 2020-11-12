@@ -8,12 +8,14 @@ from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
+from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import unzip_task
+from hs_core.views import utils as view_utils
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
@@ -335,6 +337,18 @@ def data_store_folder_unzip_public(request, pk, pathname):
     """
 
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
+
+
+@api_view(['POST'])
+def ingest_metadata_files(request, pk):
+    resource, _, _ = view_utils.authorize(request, pk,
+                                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    resource_files = list(request.FILES.values())[0]
+    from hs_file_types.utils import identify_metadata_files
+    res_files, meta_files = identify_metadata_files(resource_files)
+    from hs_file_types.utils import ingest_metadata_files
+    ingest_metadata_files(resource, meta_files)
+    return Response(status=204)
 
 
 @api_view(['POST'])

@@ -955,7 +955,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
 
-    if metadata_ingestion:
+    if ingest_metadata:
         if not auto_aggregate:
             raise ValidationError("auto_aggregate must be on when metadata_ingestion is on.")
         if not overwrite:
