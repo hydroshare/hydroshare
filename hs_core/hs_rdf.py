@@ -71,9 +71,9 @@ class RDF_MetaData_Mixin(object):
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this metadata"""
-        ORE = Namespace("http://www.openarchives.org/ore/terms/")
+        # ORE = Namespace("http://www.openarchives.org/ore/terms/")
         g = self.get_rdf_graph()
-        g.add((self.rdf_metadata_subject(), ORE.describes, self.rdf_subject()))
+        # g.add((self.rdf_metadata_subject(), ORE.describes, self.rdf_subject()))
         return g.serialize(format='hydro-xml').decode()
 
 
@@ -115,7 +115,7 @@ class RDF_Term_MixIn(object):
                 continue
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value is not None and field_value != 'None':
+            if field_value and field_value is not None and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
                     field_value = URIRef(field_value)

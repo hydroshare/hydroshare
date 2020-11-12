@@ -343,11 +343,9 @@ def data_store_folder_unzip_public(request, pk, pathname):
 def ingest_metadata_files(request, pk):
     resource, _, _ = view_utils.authorize(request, pk,
                                           needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    resource_files = list(request.FILES.values())[0]
-    from hs_file_types.utils import identify_metadata_files
-    res_files, meta_files = identify_metadata_files(resource_files)
-    from hs_file_types.utils import ingest_metadata_files
-    ingest_metadata_files(resource, meta_files)
+    resource_files = list(request.FILES.values())
+    from hs_file_types.utils import identify_and_ingest_metadata_files
+    identify_and_ingest_metadata_files(resource, resource_files)
     return Response(status=204)
 
 

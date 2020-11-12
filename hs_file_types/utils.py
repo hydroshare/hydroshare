@@ -255,6 +255,13 @@ def is_resource_metadata_file(file):
     return os.path.basename(file.name) == 'resourcemetadata.xml'
 
 
+def identify_and_ingest_metadata_files(resource, files):
+    from hs_file_types.utils import identify_metadata_files
+    res_files, meta_files = identify_metadata_files(files)
+    from hs_file_types.utils import ingest_metadata_files
+    ingest_metadata_files(resource, meta_files)
+
+
 def ingest_metadata_files(resource, meta_files):
     # refresh to pick up any new possible aggregations
     resource_metadata_file = None
@@ -273,6 +280,7 @@ def ingest_metadata_files(resource, meta_files):
         except:
             # logger.exception("Error processing resource metadata file")
             raise
+    resource.setAVU('metadata_dirty', 'true')
 
 
 def identify_metadata_files(files):

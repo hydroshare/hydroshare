@@ -933,7 +933,7 @@ class IrodsFile:
         return self._name
 
     def read(self):
-        return self._istorage.download(self._name).read().decode()
+        return self._istorage.download(self._name).read()
 
 
 def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
@@ -1027,7 +1027,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         delete_resource_file(res_id, zip_fname, user)
 
     # TODO: should check can_be_public_or_discoverable here
-
+    resource.refresh_from_db()
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 

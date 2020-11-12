@@ -7,8 +7,9 @@ from unittest import TestCase
 
 from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import UploadedFile
-from rdflib import Graph
+from rdflib import Graph, URIRef
 from rdflib.compare import _squashed_graphs_triples
+from rdflib.namespace import DCTERMS, RDF
 
 from hs_composite_resource.models import CompositeResource
 from hs_core.hydroshare import resource, add_resource_files, current_site_url
@@ -39,7 +40,6 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         with zipfile.ZipFile(self.test_bag_path, 'r') as zip_ref:
             zip_ref.extractall(self.extracted_directory)
-        self.extracted_directory = os.path.join(self.extracted_directory, 'test_resource_metadata_files')
 
     def tearDown(self):
         super(TestCreateResource, self).tearDown()
@@ -69,27 +69,30 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             self.user,
             'My Test Resource'
             )
-        files_to_upload = []
         full_paths = {}
-        # prepare files and metadata files to add to new resource
-        for fd in os.listdir(self.extracted_directory):
-            if os.path.isdir(os.path.join(self.extracted_directory, fd)):
-                for f in os.listdir(os.path.join(self.extracted_directory, fd)):
-                    file_to_upload = UploadedFile(file=open(os.path.join(self.extracted_directory, fd, f), 'rb'),
-                                                  name=f)
-                    files_to_upload.append(file_to_upload)
-                    full_paths[file_to_upload] = os.path.join(fd, f)
-            else:
-                file_to_upload = UploadedFile(file=open(os.path.join(self.extracted_directory, fd), 'rb'), name=fd)
-                files_to_upload.append(file_to_upload)
-        add_resource_files(res.short_id, *files_to_upload, full_paths=full_paths)
 
+        files_to_upload = [UploadedFile(file=open(self.test_bag_path, 'rb'),
+                                        name="test_resource_metadata_files.zip")]
+        add_resource_files(res.short_id, *files_to_upload, full_paths=full_paths)
+        from hs_core.views.utils import unzip_file
+
+        unzip_file(self.user, res.short_id, "data/contents/test_resource_metadata_files.zip", True,
+                   overwrite=True, auto_aggregate=True, ingest_metadata=True)
         def compare_metadatas(new_metadata_str, original_metadata_file):
             original_graph = Graph()
             with open(os.path.join(self.extracted_directory, original_metadata_file), "r") as f:
                 original_graph = original_graph.parse(data=f.read())
             new_graph = Graph()
             new_graph = new_graph.parse(data=normalize_metadata(new_metadata_str))
+
+            # remove modified date, they'll never match
+            subject = new_graph.value(predicate=RDF.type, object=DCTERMS.modified)
+            new_graph.remove((subject, None, None))
+            # remove RDF.type for resource, this was newly added
+            new_graph.remove((None, RDF.type, URIRef("http://hydroshare.org/terms/resource")))
+            subject = original_graph.value(predicate=RDF.type, object=DCTERMS.modified)
+            original_graph.remove((subject, None, None))
+
             for (new_triple, original_triple) in _squashed_graphs_triples(new_graph, original_graph):
                 self.assertEquals(new_triple, original_triple, "Ingested resource metadata does not match original")
 
