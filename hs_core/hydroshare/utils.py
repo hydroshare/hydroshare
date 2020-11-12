@@ -1118,4 +1118,3 @@ def build_preview_data_url(resource, folder_path, spatial_coverage):
         preview_data_url = None
 
     return preview_data_url
-
