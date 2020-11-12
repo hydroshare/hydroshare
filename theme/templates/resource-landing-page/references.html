@@ -1,7 +1,7 @@
 {% load hydroshare_tags crispy_forms_tags %}
 
 {% if not resource_edit_mode %}
-    {% if sources or show_relations_section %}
+    {% if sources or show_relations_section or belongs_to_collections %}
         <div class="col-xs-12 content-block">
             <h3>References</h3>
         </div>
