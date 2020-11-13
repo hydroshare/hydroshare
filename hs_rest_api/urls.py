@@ -114,7 +114,7 @@ urlpatterns = [
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/ingest_metadata/$',
         ingest_metadata_files,
-        name='list_create_resource_file'),
+        name='ingest_metadata_files'),
 
     url(r'^resource/data-store-add-reference/$',
         data_store_add_reference_public),
