@@ -42,7 +42,18 @@ server {
     # rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
     # This syntax is considered more efficient in nginx documentation
     # and does the same thing as the above:
+     
     return 301 https://$http_host/$request_uri;
+
+    #TEST# sendfile off; 
+    #TEST# # sendfile on;
+    #TEST# # sendfile_max_chunk 512k;
+    #TEST# aio threads;
+
+    #TEST# location /IRODS_DATA_URI/ {
+    #TEST#     alias IRODS_DATA_ROOT/;
+    #TEST# }
+
 }
 
 server {
@@ -70,6 +81,8 @@ server {
 
     sendfile on;
     sendfile_max_chunk 512k;
+    directio 4m;  
+    directio_alignment 512; 
     aio threads;
 
     access_log      /var/log/nginx/access.log combined;
