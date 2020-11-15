@@ -201,11 +201,10 @@ def create_bag_files(resource):
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
 
-    # if the resource is a composite resource generate aggregation metadata
-    # and map xml documents
+    # if the resource is a composite resource generate aggregation meta files (res map, metadata xml and schema json)
+    # files
     if resource.resource_type == "CompositeResource":
-        resource.create_aggregation_xml_documents()
-        resource.create_model_aggr_meta_json_schema_files()
+        resource.create_aggregation_meta_files()
 
     res_coll = resource.root_path
     istorage.setAVU(res_coll, 'metadata_dirty', "false")

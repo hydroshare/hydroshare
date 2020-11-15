@@ -307,8 +307,8 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         istorage.moveFile(file.storage_path, tgt_full_path)
         rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
     new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
-    res.recreate_aggregation_xml_docs(orig_path=orig_aggregation_name,
-                                      new_path=new_aggregation_name)
+    res.recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
+                                        new_path=new_aggregation_name)
     resource_modified(res, request.user, overwrite_bag=False)
     msg = "Aggregation was successfully moved to {}.".format(tgt_path)
     response_data['status'] = 'success'

@@ -361,11 +361,9 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
     if res.resource_type == "CompositeResource":
         if '/data/contents/' in input_path:
             short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
-            res.create_aggregation_xml_documents(path=short_path)
-            res.create_model_aggr_meta_json_schema_files(path=short_path)
+            res.create_aggregation_meta_files(path=short_path)
         else:  # all metadata included, e.g., /data/*
-            res.create_aggregation_xml_documents()
-            res.create_model_aggr_meta_json_schema_files()
+            res.create_aggregation_meta_files()
 
     if aggregation or sf_zip:
         # input path points to single file aggregation
