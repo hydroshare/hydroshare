@@ -304,8 +304,25 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     return None
             return element_value
 
+        valid_schema = False
+        resource = self.logical_file.resource
+        additional_namespaces = None
+        if self.metadata_json:
+            try:
+                jsonschema.Draft4Validator(self.logical_file.metadata_schema_json).validate(
+                    self.metadata_json)
+                valid_schema = True
+            except jsonschema.ValidationError:
+                valid_schema = False
+        if valid_schema:
+            # need to add this additional namespace for encoding the schema based metadata
+            # xmlns="http://hydroshare.org/resource/<resourceID>/"
+            res_xmlns = os.path.join(current_site_url(), 'resource', resource.short_id) + "/"
+            ns_prefix = None
+            additional_namespaces = [{ns_prefix: res_xmlns}]
         # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(ModelInstanceFileMetaData, self)._get_xml_containers()
+        RDF_ROOT, container_to_add_to = super(ModelInstanceFileMetaData, self)._get_xml_containers(
+            additional_namespaces=additional_namespaces)
 
         model_specific_metadata = etree.SubElement(container_to_add_to, 'modelSpecificMetadata')
         model_specific_metadata_desc = etree.SubElement(model_specific_metadata,
@@ -318,9 +335,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         model_title_node.text = model_title
 
         if self.has_model_output:
-            includes_output = 'Yes'
+            includes_output = 'true'
         else:
-            includes_output = 'No'
+            includes_output = 'false'
         model_output = etree.SubElement(model_specific_metadata_desc,
                                         '{%s}includesModelOutput' % CoreMetaData.NAMESPACES['hsterms'])
         model_output.text = includes_output
