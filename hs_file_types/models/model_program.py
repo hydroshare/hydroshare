@@ -398,6 +398,10 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         return 'Model Program Content: One or more files with specific metadata'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Model Program Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "ModelProgramAggregation"
 

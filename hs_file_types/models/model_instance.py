@@ -447,6 +447,10 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         return 'Model Instance Content: One or more files with specific metadata'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Model Instance Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "ModelInstanceAggregation"
 

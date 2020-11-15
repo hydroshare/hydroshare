@@ -203,6 +203,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                'shapefile'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Geographic Feature Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "GeographicFeatureAggregation"
 

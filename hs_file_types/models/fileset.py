@@ -34,6 +34,10 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         return 'File Set Content: One or more files with specific metadata'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "File Set Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "FileSetAggregation"
 

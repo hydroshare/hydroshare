@@ -782,6 +782,10 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                'from HydroServers outside of HydroShare in WaterML format'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Referenced Time Series Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "ReferencedTimeSeriesAggregation"
 

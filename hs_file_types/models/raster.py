@@ -236,6 +236,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                'tile (.vrt) file and one or more geotiff (.tif) files'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Geographic Raster Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "GeographicRasterAggregation"
 

@@ -444,7 +444,7 @@ class AbstractFileMetaData(models.Model):
                                       aggregation_term_uri)
         rdfs_label = etree.SubElement(rdf_Description_aggr_type, '{%s}label' %
                                       CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_label.text = self.logical_file.get_aggregation_display_name()
+        rdfs_label.text = self.logical_file.get_aggregation_term_label()
 
         rdfs_isDefinedBy = etree.SubElement(rdf_Description_aggr_type, '{%s}isDefinedBy' %
                                             CoreMetaData.NAMESPACES['rdfs1'])
@@ -965,6 +965,12 @@ class AbstractLogicalFile(models.Model):
         logical (aggregation) type used in UI"""
         raise NotImplementedError()
 
+    @staticmethod
+    def get_aggregation_term_label():
+        """Sub classes must implement this method to return the label for this
+        logical (aggregation) term used in aggregation xml metadata and resource map files"""
+        raise NotImplementedError()
+
     def get_aggregation_class_name(self):
         """Return the class name of the logical type (aggregation type)"""
         return self.__class__.__name__
@@ -1437,7 +1443,7 @@ class AbstractLogicalFile(models.Model):
         a._ore.isDescribedBy = res_map_url
 
         res_type_aggregation = AggregatedResource(agg_type_url)
-        res_type_aggregation._rdfs.label = self.get_aggregation_display_name()
+        res_type_aggregation._rdfs.label = self.get_aggregation_term_label()
         res_type_aggregation._rdfs.isDefinedBy = current_site_url + "/terms"
 
         a.add_resource(res_type_aggregation)

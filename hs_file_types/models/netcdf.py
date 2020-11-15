@@ -300,6 +300,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                'file (.nc) and text file giving its NetCDF header content'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Multidimensional Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "MultidimensionalAggregation"
 

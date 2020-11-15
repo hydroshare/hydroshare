@@ -197,6 +197,10 @@ class GenericLogicalFile(AbstractLogicalFile):
         return 'Single File Content: A single file with file specific metadata'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Single File Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "SingleFileAggregation"
 
