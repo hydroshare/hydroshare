@@ -4,7 +4,7 @@
 limit_req_zone $binary_remote_addr zone=applaunch:10m rate=5r/s;
  
 # limit ALL downloads (regardless of client) to a rate of 5/second. 
-limit_req_zone download zone=download:1k rate=5r/s;
+limit_req_zone download zone=download:1m rate=5r/s;
 
 upstream backend {
    server CURRENT_VM;
