@@ -383,11 +383,12 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, additional_namespaces=None):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
         # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(TimeSeriesFileMetaData, self)._get_xml_containers()
+        RDF_ROOT, container_to_add_to = super(TimeSeriesFileMetaData, self)._get_xml_containers(
+            additional_namespaces=additional_namespaces)
         NAMESPACES = CoreMetaData.NAMESPACES
         if self.abstract:
             dc_description = etree.SubElement(container_to_add_to,

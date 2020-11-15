@@ -100,11 +100,12 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         super(ModelProgramFileMetaData, self).delete()
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, additional_namespaces=None):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
         # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(ModelProgramFileMetaData, self)._get_xml_containers()
+        RDF_ROOT, container_to_add_to = super(ModelProgramFileMetaData, self)._get_xml_containers(
+            additional_namespaces=additional_namespaces)
         for mp_file_type in self.mp_file_types.all():
             mp_file_type.add_to_xml_container(xml_container=container_to_add_to)
 

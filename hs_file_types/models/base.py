@@ -358,11 +358,18 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def get_xml(self, pretty_print=True, additional_namespaces=None):
+        """Generates ORI+RDF xml for this aggregation metadata
+        :param pretty_print: True or False - used for formatting of generated xml string
+        :param additional_namespaces: a list of dicts - each dict containing a xml namespace
+        """
 
-        RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'],
-                                 nsmap=CoreMetaData.NAMESPACES)
+        NAMESPACES = CoreMetaData.NAMESPACES.copy()
+        if additional_namespaces is not None:
+            for namespace in additional_namespaces:
+                NAMESPACES.update(namespace)
+
+        RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'], nsmap=NAMESPACES)
         # create the Description element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' %
                                            CoreMetaData.NAMESPACES['rdf'])
@@ -446,11 +453,11 @@ class AbstractFileMetaData(models.Model):
         return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
                                                                pretty_print=pretty_print).decode()
 
-    def _get_xml_containers(self):
+    def _get_xml_containers(self, additional_namespaces=None):
         """Helper for the subclasses to get the xml containers element to which the sub classes
         can then add any additional elements for metadata xml generation"""
 
-        xml_string = super(type(self), self).get_xml(pretty_print=False)
+        xml_string = super(type(self), self).get_xml(pretty_print=False, additional_namespaces=additional_namespaces)
         RDF_ROOT = etree.fromstring(xml_string.encode('utf-8'))
 
         # get root 'Description' element that contains all other elements
