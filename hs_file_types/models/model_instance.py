@@ -289,14 +289,19 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         rendered_html = template.render(context)
         return rendered_html
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, additional_namespaces=None):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
         def find_schema_field_value(field_path, schema_dict):
             keys = field_path.split(".")
             element_value = schema_dict
             for key in keys:
-                element_value = element_value[key]
+                try:
+                    element_value = element_value[key]
+                except KeyError:
+                    if key != 'description':
+                        raise KeyError
+                    return None
             return element_value
 
         # get the xml root element and the xml element to which contains all other elements
@@ -331,95 +336,92 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 attrib = {"resource": self.executed_by_url}
                 etree.SubElement(model_specific_metadata_desc, executed_by, attrib=attrib)
 
-        if self.metadata_json:
-            try:
-                jsonschema.Draft4Validator(self.logical_file.metadata_schema_json).validate(
-                    self.metadata_json)
-                valid_schema = True
-            except jsonschema.ValidationError:
-                valid_schema = False
+        if valid_schema:
+            metadata_dict = self.metadata_json
+            model_properties = etree.SubElement(model_specific_metadata_desc, 'modelProperties')
+            model_properties_desc = etree.SubElement(model_properties,
+                                                     '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
 
-            if valid_schema:
-                metadata_dict = self.metadata_json
-                model_properties = etree.SubElement(model_specific_metadata_desc, 'modelProperties')
-                model_properties_desc = etree.SubElement(model_properties,
-                                                         '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
+            # since we don't allow nested objects in the schema, we are not expecting nested dict
+            # objects in metadata
+            meta_schema_dict = self.logical_file.metadata_schema_json
+            meta_schema_dict_properties = meta_schema_dict.get("properties")
+            for k, v in metadata_dict.items():
+                element_path_root = "{}".format(k)
+                k_obj_element = etree.SubElement(model_properties_desc, k)
+                k_obj_element_desc = etree.SubElement(
+                    k_obj_element, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
 
-                # since we don't allow nested objects in the schema, we are not expecting nested dict
-                # objects in metadata
-                meta_schema_dict = self.logical_file.metadata_schema_json
-                meta_schema_dict_properties = meta_schema_dict.get("properties")
-                for k, v in metadata_dict.items():
-                    element_path_root = "{}".format(k)
-                    k_obj_element = etree.SubElement(model_properties_desc, k)
-                    k_obj_element_desc = etree.SubElement(
-                        k_obj_element, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
+                k_obj_element_desc_title = etree.SubElement(
+                    k_obj_element_desc, "{{{ns}}}title".format(ns=CoreMetaData.NAMESPACES['dc']))
+                element_path_title = "{}.{}".format(element_path_root, 'title')
+                k_obj_element_desc_title.text = find_schema_field_value(field_path=element_path_title,
+                                                                        schema_dict=meta_schema_dict_properties)
 
-                    k_obj_element_desc_title = etree.SubElement(
-                        k_obj_element_desc, "{{{ns}}}title".format(ns=CoreMetaData.NAMESPACES['dc']))
-                    element_path_title = "{}.{}".format(element_path_root, 'title')
-                    k_obj_element_desc_title.text = find_schema_field_value(field_path=element_path_title,
-                                                                            schema_dict=meta_schema_dict_properties)
-
+                element_path_desc = "{}.{}".format(element_path_root, 'description')
+                k_obj_element_desc_desc_value = find_schema_field_value(field_path=element_path_desc,
+                                                                        schema_dict=meta_schema_dict_properties)
+                if k_obj_element_desc_desc_value is not None:
                     k_obj_element_desc_desc = etree.SubElement(
                         k_obj_element_desc, "{{{ns}}}description".format(ns=CoreMetaData.NAMESPACES['dc']))
-                    element_path_desc = "{}.{}".format(element_path_root, 'description')
-                    k_obj_element_desc_desc.text = find_schema_field_value(field_path=element_path_desc,
-                                                                           schema_dict=meta_schema_dict_properties)
-                    if isinstance(v, dict):
-                        k_obj_element_properties = etree.SubElement(k_obj_element_desc, "{}Properties".format(k))
-                        k_obj_element_properties_desc = etree.SubElement(
-                            k_obj_element_properties, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
-                        sub_element_path_root = "{}.properties".format(element_path_root)
-                        sub_field_added = False
-                        for k_sub, v_sub in v.items():
-                            field = etree.SubElement(k_obj_element_properties_desc, k_sub)
-                            field_desc = etree.SubElement(field,
-                                                          "{{{ns}}}Description".format(
-                                                              ns=CoreMetaData.NAMESPACES['rdf']))
-                            k_sub_desc_title = etree.SubElement(
-                                field_desc, "{{{ns}}}title".format(ns=CoreMetaData.NAMESPACES['dc']))
-                            k_sub_path_title = "{}.{}.{}".format(sub_element_path_root, k_sub, 'title')
-                            k_sub_desc_title.text = find_schema_field_value(field_path=k_sub_path_title,
-                                                                            schema_dict=meta_schema_dict_properties)
+                    k_obj_element_desc_desc.text = k_obj_element_desc_desc_value
 
+                if isinstance(v, dict):
+                    k_obj_element_properties = etree.SubElement(k_obj_element_desc, "{}Properties".format(k))
+                    k_obj_element_properties_desc = etree.SubElement(
+                        k_obj_element_properties, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
+                    sub_element_path_root = "{}.properties".format(element_path_root)
+                    sub_field_added = False
+                    for k_sub, v_sub in v.items():
+                        field = etree.SubElement(k_obj_element_properties_desc, k_sub)
+                        field_desc = etree.SubElement(field,
+                                                      "{{{ns}}}Description".format(
+                                                          ns=CoreMetaData.NAMESPACES['rdf']))
+                        k_sub_desc_title = etree.SubElement(
+                            field_desc, "{{{ns}}}title".format(ns=CoreMetaData.NAMESPACES['dc']))
+                        k_sub_path_title = "{}.{}.{}".format(sub_element_path_root, k_sub, 'title')
+                        k_sub_desc_title.text = find_schema_field_value(field_path=k_sub_path_title,
+                                                                        schema_dict=meta_schema_dict_properties)
+
+                        k_sub_path_desc = "{}.{}.{}".format(sub_element_path_root, k_sub, 'description')
+                        k_sub_desc_desc_value = find_schema_field_value(field_path=k_sub_path_desc,
+                                                                        schema_dict=meta_schema_dict_properties)
+                        if k_sub_desc_desc_value is not None:
                             k_sub_desc_desc = etree.SubElement(
                                 field_desc, "{{{ns}}}description".format(ns=CoreMetaData.NAMESPACES['dc']))
-                            k_sub_path_desc = "{}.{}.{}".format(sub_element_path_root, k_sub, 'description')
-                            k_sub_desc_desc.text = find_schema_field_value(field_path=k_sub_path_desc,
-                                                                           schema_dict=meta_schema_dict_properties)
+                            k_sub_desc_desc.text = k_sub_desc_desc_value
 
-                            k_sub_value = etree.SubElement(
-                                field_desc, "{{{ns}}}value".format(ns=CoreMetaData.NAMESPACES['rdf']))
-                            if isinstance(v_sub, list):
-                                if v_sub:
-                                    k_sub_value.text = ", ".join(v_sub)
-                            else:
-                                v_sub = str(v_sub)
-                                if len(v_sub.strip()) > 0:
-                                    k_sub_value.text = v_sub
-                            if not k_sub_value.text:
-                                k_obj_element_properties_desc.remove(field)
-                            else:
-                                sub_field_added = True
-
-                        if not sub_field_added:
-                            # remove the parent xml node since we don't have any child nodes
-                            model_properties_desc.remove(k_obj_element)
-                    else:
-                        k_obj_element_value = etree.SubElement(
-                            k_obj_element_desc, "{{{ns}}}value".format(ns=CoreMetaData.NAMESPACES['rdf']))
-                        if isinstance(v, list):
-                            if v:
-                                k_obj_element_value.text = ", ".join(v)
+                        k_sub_value = etree.SubElement(
+                            field_desc, "{{{ns}}}value".format(ns=CoreMetaData.NAMESPACES['rdf']))
+                        if isinstance(v_sub, list):
+                            if v_sub:
+                                k_sub_value.text = ", ".join(v_sub)
                         else:
-                            v = str(v)
-                            if len(v.strip()) > 0:
-                                k_obj_element_value.text = v
+                            v_sub = str(v_sub)
+                            if len(v_sub.strip()) > 0:
+                                k_sub_value.text = v_sub
+                        if not k_sub_value.text:
+                            k_obj_element_properties_desc.remove(field)
+                        else:
+                            sub_field_added = True
 
-                        if not k_obj_element_value.text:
-                            # remove xml node since there is no data for the node
-                            model_properties_desc.remove(k_obj_element)
+                    if not sub_field_added:
+                        # remove the parent xml node since we don't have any child nodes
+                        model_properties_desc.remove(k_obj_element)
+                else:
+                    k_obj_element_value = etree.SubElement(
+                        k_obj_element_desc, "{{{ns}}}value".format(ns=CoreMetaData.NAMESPACES['rdf']))
+                    if isinstance(v, list):
+                        if v:
+                            k_obj_element_value.text = ", ".join(v)
+                    else:
+                        v = str(v)
+                        if len(v.strip()) > 0:
+                            k_obj_element_value.text = v
+
+                    if not k_obj_element_value.text:
+                        # remove xml node since there is no data for the node
+                        model_properties_desc.remove(k_obj_element)
 
         xml_body = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
         xml_body = xml_body.replace('executedByModelProgram resource=', 'executedByModelProgram rdf:resource=')
