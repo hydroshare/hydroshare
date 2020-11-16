@@ -97,6 +97,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             for (new_triple, original_triple) in _squashed_graphs_triples(new_graph, original_graph):
                 self.assertEquals(new_triple, original_triple, "Ingested resource metadata does not match original")
 
+        res.refresh_from_db()
         compare_metadatas(res.metadata.get_xml(), "resourcemetadata.xml")
 
         compare_metadatas(res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
