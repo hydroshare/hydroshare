@@ -8,7 +8,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="flex">
-                {% if custom_citation and relations %}
+                {% if custom_citation %}
                     <div id="citation-text">{{ custom_citation|urlize }}</div>
                 {% else %}
                     <div id="citation-text">{{ citation|urlize }}</div>
@@ -16,13 +16,14 @@
                 <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
-            </div>
-            <div class="flex">
-            {% if relations and resource_edit_mode %}
-                <span id="edit-citation-control" data-toggle="modal" data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                <span id="edit-citation-control" style="display: none" data-toggle="modal" data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
                       title="Edit citation" data-target="#customize-citation-dialog">
                 </span>
-            {% endif %}
+                <script language="JavaScript">
+                    if (ext_link_count > 0 && RESOURCE_MODE === 'Edit') {
+                      document.getElementById('edit-citation-control').style.display = "block"
+                    }
+                </script>
             </div>
             {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
             <br />
@@ -35,8 +36,7 @@
                 </em>
             </div>
             {% endif %}
-
-            <br>
+            <br />
 
             {# ======= Sharing ======= #}
             {% if not resource_edit_mode %}

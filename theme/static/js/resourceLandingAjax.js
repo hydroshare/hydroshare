@@ -758,7 +758,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
 
             onSort();
-            bindFileBrowserItemEvents();
+            bindFileBrowserItemEvents(); // TODO OBRIEN RE-ENABLE AFTER TESTING CITATIONS
             pathLog[pathLogIndex] = store_path;
             $("#hs-file-browser").attr("data-res-id", res_id);
             setBreadCrumbs(jQuery.extend(true, {}, store_path));

@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.utils.decorators import method_decorator
+from django.utils.html import mark_safe, escapejs
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden

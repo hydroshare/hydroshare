@@ -285,6 +285,7 @@ class ContributorValidationForm(PartyValidationForm):
 
     pass
 
+
 class CitationValidationForm(PartyValidationForm):
     """Validate form for Citation models. Extends PartyValidationForm."""
 

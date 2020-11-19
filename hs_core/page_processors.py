@@ -47,6 +47,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 - split into two functions: get_readonly_page_context(...) and
                 get_editable_page_context(...)
     """
+    editing = request.GET.get('editing')
+    if editing:
+        resource_edit = True
+
     file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
@@ -319,7 +323,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'maps_key': maps_key,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
-               'odm2_terms': list(ODM2Variable.all())
+               'odm2_terms': list(ODM2Variable.all()),
+               'external_content': len([x.logical_file_content_type_id for x in content_model.files.all() if
+                                        x.logical_file_content_type_id == 203]),
+               # 'filepaths': mark_safe(escapejs(json.dumps([x.aggregation_name for x
+               #                                             in content_model.generic_logical_files])))
     }
 
     return context

@@ -329,8 +329,8 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="warnings-list">
-                                        <div>Consider saving a copy of the files before you delete it if it is
-                                            important to you.
+                                        <div>Consider downloading a copy of file(s) before deleting.
+                                            <p id="additional-citation-warning"></p>
                                         </div>
                                         <br>
                                     </div>
@@ -545,7 +545,7 @@
                                                 <button id="fb-delete" data-fb-action="delete"
                                                         class="disabled fb-space-right"
                                                         title="Delete" data-toggle="modal"
-                                                        data-target="#confirm-delete-dialog">
+                                                        data-target="#confirm-delete-dialog" onclick='javascript:warnExternalContent("{{ cm.short_id }}")'>
                                                     <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                 </button>
                                             {% endif %}
@@ -783,6 +783,10 @@
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      var ext_link_count = "{{ external_content }}";
+      var custom_citation = "{{ custom_citation }}";
+
+      const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";

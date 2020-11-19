@@ -8,6 +8,8 @@ var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
 var currentAggregations = [];
+var selectedFiles = [];
+var removeCitationIntent = false;
 
 var file_metadata_alert =
     '<div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">' +
@@ -557,9 +559,124 @@ function paste(destPath) {
     });
 }
 
-function bindFileBrowserItemEvents() {
-    var mode = $("#hs-file-browser").attr("data-mode");
+function warnExternalContent(shortId) {
+    let filePaths = [];
+    selectedFiles = [];
 
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    function sameOrigin(url) {
+        // test that a given url is a same-origin URL
+        // url could be relative or scheme relative or absolute
+        var host = document.location.host; // host + port
+        var protocol = document.location.protocol;
+        var sr_origin = '//' + host;
+        var origin = protocol + sr_origin;
+        // Allow absolute or scheme relative URLs to same origin
+        return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+            (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+            // or any other URL that isn't scheme relative or absolute i.e relative.
+            !(/^(\/\/|http:|https:).*/.test(url));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+                // Send the token to same-origin, relative URLs only.
+                // Send the token only if the method warrants CSRF protection
+                // Using the CSRFToken value acquired earlier
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        }
+    });
+    $.ajax({
+        type: "GET",
+        url: '/hsapi/resource/' + shortId + '/file_list/',
+    }).complete(function(res) {
+        filePaths = [];
+        if (res.responseText) {
+            let pathObjs = JSON.parse(res.responseText).results
+
+            for (const [k, v] of Object.entries(pathObjs)) {
+                if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
+                    filePaths.push(v.url)
+                }
+            }
+            let topFolders = {}
+            filePaths.forEach(function(path) {
+                let ele_full = path.split('contents').reverse()[0] // for example /testfolder/extcontent.url
+                let ele = ele_full.split('/')[1] // for example testfolder
+                if (topFolders[ele]) {
+                    topFolders[ele] = topFolders[ele] + 1
+                } else {
+                    topFolders[ele] = 1
+                }
+            })
+        }
+    })
+
+    let numSubs = 0;
+
+    $("#fb-files-container li.ui-selected").each(function(i, el) {
+        if (this.title.includes('Type: File Folder')) {
+            numSubs ++;
+        }
+        console.log(this.innerText)
+        if (this.innerText.toLowerCase().includes('.url')) {
+            selectedFiles.push(this.innerText);
+        }
+    });
+    try {
+        var external_links = Number.parseInt(ext_link_count);
+    }
+    catch {
+        var external_links = 0;
+    }
+    console.log('num subs '+numSubs)
+    if (selectedFiles.length > 0 && selectedFiles.length + numSubs >= external_links && custom_citation !== 'None') {
+        $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
+          'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
+          'and custom citation?')
+        removeCitationIntent = true;
+    } else {
+        $('#additional-citation-warning').text('')
+        removeCitationIntent = false;
+    }
+}
+
+const debounce = (func, wait) => {
+  let timeout;
+
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+function bindFileBrowserItemEvents() {
+
+    var mode = $("#hs-file-browser").attr("data-mode");
     // Drop
     if (mode === "edit") {
         $(".droppable").droppable({
@@ -626,11 +743,11 @@ function bindFileBrowserItemEvents() {
         }
 
         // Handle selecting multiple elements with Shift + Click
-        if (!e.shiftKey) {
+        if (!e.shiftKey) { // shift key not engaged
             $("#fb-files-container li").removeClass("ui-last-selected");
             $(this).addClass("ui-last-selected");
         }
-        else {
+        else { // shift key is engaged
             var lastSelected = $("#fb-files-container").find(".ui-last-selected").index();
             var range = $(this).index();
 
@@ -646,9 +763,8 @@ function bindFileBrowserItemEvents() {
                 }
             }
         }
-
         updateSelectionMenuContext();
-    });
+    })
 
     // Drag method
     if (mode === "edit") {
@@ -660,7 +776,8 @@ function bindFileBrowserItemEvents() {
                 },
                 stop: function (event, ui) {
                     $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
-                    $('#fb-files-container li').animate({top: 0, left: 0}, 200);    // Custom revert to handle multiple selection
+                    // Custom revert to handle multiple selection
+                    $('#fb-files-container li').animate({top: 0, left: 0}, 200);
                     isDragging = false;
                 },
                 drag: function (event, ui) {
@@ -1277,8 +1394,23 @@ function refreshFileBrowser(name) {
                 }
             }
         }
-
         updateSelectionMenuContext();
+        $.ajax({
+            type: "GET",
+            url: '/hsapi/resource/' + SHORT_ID + '/file_list/',
+        }).complete(function(res) {
+            let jsFbContextExternalContent = 0
+            let pathObjs = JSON.parse(res.responseText).results
+            for (const [k, v] of Object.entries(pathObjs)) {
+                if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
+                    jsFbContextExternalContent++;
+                }
+            }
+            if (jsFbContextExternalContent > 0 && custom_citation) {
+                document.getElementById('edit-citation-control').style.display = 'block'
+                ext_link_count = jsFbContextExternalContent
+            }
+        })
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1748,6 +1880,7 @@ $(document).ready(function () {
                 refreshFileBrowser();
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+                ext_link_count++;
             }
 
             $.when.apply($, calls).done(afterRequest);
@@ -1891,6 +2024,14 @@ $(document).ready(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
+        if (removeCitationIntent) {
+            $.ajax({
+              type: "POST",
+              url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
+            })
+        }
+
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
