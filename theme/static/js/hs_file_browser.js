@@ -1244,15 +1244,34 @@ function updateNavigationState() {
     $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
-function countExternalFiles(fullPaths) {
+function anyExternalFiles(fullPaths) {
+    /*
+    Look for any .url files.
+
+    param: fullPaths array of file path strings to parse top level folders and file extensions from
+     */
+    let filePathsContainingUrl = [];
+
+    for (const [k, v] of Object.entries(fullPaths)) {
+        if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
+            filePathsContainingUrl.push(v.url)
+        }
+    }
+
+    return filePathsContainingUrl.length > 0
+}
+
+function countSelectedExternalFiles(fullPaths) {
     /*
     Based on full file paths enumerate .url files from subfolders and implied current path from Content manager.
     Comparison from selections is based on the selections in the Content manager at the time this function is invoked.
     Parent folders are not counted.
+
+    param: fullPaths array of file path strings to parse top level folders and file extensions from
      */
     let filePathsContainingUrl = [];
-    let selectedFiles = [];
     let topFolders = {};
+    let selectedFiles = [];
     let numUrlWithinSubs = 0;
 
     for (const [k, v] of Object.entries(fullPaths)) {
@@ -1272,7 +1291,6 @@ function countExternalFiles(fullPaths) {
         }
     })
 
-    // assess selected files in the content manager browser
     $("#fb-files-container li.ui-selected").each(function(i, el) {
         if (this.title.includes('Type: File Folder')) { // review subfolder info
             if (topFolders[this.innerText]) {
@@ -1285,6 +1303,8 @@ function countExternalFiles(fullPaths) {
             selectedFiles.push(this.innerText);
         }
     });
+    let amt = selectedFiles.length + numUrlWithinSubs
+    console.log('number selected '+  amt)
     return selectedFiles.length + numUrlWithinSubs;
 }
 
@@ -1328,17 +1348,14 @@ function refreshFileBrowser(name) {
             url: '/hsapi/resource/' + SHORT_ID + '/file_list/',
         }).complete(function(res) {
             let pathObjs = JSON.parse(res.responseText).results
-            try {
-                var external_links = Number.parseInt(ext_link_count);
-            }
-            catch {
-                var external_links = 0;
-            }
-            
-            let fcount = countExternalFiles(pathObjs)
-            if (fcount > 0 && custom_citation && RESOURCE_MODE === 'Edit') {
-                document.getElementById('edit-citation-control').style.display = 'block'
-                ext_link_count = fcount
+
+            // conditionally render edit pencil control
+            if (RESOURCE_MODE === 'Edit') {
+                if (anyExternalFiles(pathObjs)) {
+                    document.getElementById('edit-citation-control').style.display = 'block'
+                } else {
+                    document.getElementById('edit-citation-control').style.display = 'none'
+                }
             }
         })
     });
@@ -1352,6 +1369,14 @@ function refreshFileBrowser(name) {
 }
 
 function warnExternalContent(shortId) {
+    /*
+    Conditionally update the delete modal to include a warning if the last .url file is being deleted as a part of this
+    action and inform the user that the custom Citation will be reverted to the standard one.
+    Local cookie will be read for the CSRF POST, since this is happening outside the Django template/form/modal
+    pattern.
+
+    param: shortId HydroShare short_id GUID from server
+     */
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie != '') {
@@ -1406,14 +1431,14 @@ function warnExternalContent(shortId) {
             catch {
                 var external_links = 0;
             }
-            if (custom_citation !== 'None' && external_links > 0 && countExternalFiles(pathObjs) >= external_links) {
+            if (custom_citation !== 'None' && external_links > 0 && countSelectedExternalFiles(pathObjs) >= external_links) {
+                removeCitationIntent = true;
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
                   'and custom citation?')
-                removeCitationIntent = true;
             } else {
-                $('#additional-citation-warning').text('')
                 removeCitationIntent = false;
+                $('#additional-citation-warning').text('')
             }
         }
     })
@@ -2023,13 +2048,6 @@ $(document).ready(function () {
         var filesToDelete = "";
         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
-        if (removeCitationIntent) {
-            $.ajax({
-              type: "POST",
-              url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
-            })
-        }
-
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
@@ -2065,6 +2083,19 @@ $(document).ready(function () {
                 }
                 else {
                     refreshFileBrowser();
+                }
+                if (removeCitationIntent) {
+                    $.ajax({
+                      type: "POST",
+                      url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
+                    }).complete(function() {
+                        document.body.style.cursor = 'default';
+                        if (window.location.href.includes('editing=True')) {
+                            location.reload();
+                        } else {
+                            window.location.href = window.location.href + '?editing=True';
+                        }
+                    });
                 }
             });
 
