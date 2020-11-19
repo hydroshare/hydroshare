@@ -8,7 +8,6 @@ var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
 var currentAggregations = [];
-var selectedFiles = [];
 var removeCitationIntent = false;
 
 var file_metadata_alert =
@@ -558,121 +557,6 @@ function paste(destPath) {
         clearSourcePaths();
     });
 }
-
-function warnExternalContent(shortId) {
-    let filePaths = [];
-    selectedFiles = [];
-
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-    function sameOrigin(url) {
-        // test that a given url is a same-origin URL
-        // url could be relative or scheme relative or absolute
-        var host = document.location.host; // host + port
-        var protocol = document.location.protocol;
-        var sr_origin = '//' + host;
-        var origin = protocol + sr_origin;
-        // Allow absolute or scheme relative URLs to same origin
-        return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
-            (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
-            // or any other URL that isn't scheme relative or absolute i.e relative.
-            !(/^(\/\/|http:|https:).*/.test(url));
-    }
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
-                // Send the token to same-origin, relative URLs only.
-                // Send the token only if the method warrants CSRF protection
-                // Using the CSRFToken value acquired earlier
-                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-            }
-        }
-    });
-    $.ajax({
-        type: "GET",
-        url: '/hsapi/resource/' + shortId + '/file_list/',
-    }).complete(function(res) {
-        filePaths = [];
-        if (res.responseText) {
-            let pathObjs = JSON.parse(res.responseText).results
-
-            for (const [k, v] of Object.entries(pathObjs)) {
-                if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
-                    filePaths.push(v.url)
-                }
-            }
-            let topFolders = {}
-            filePaths.forEach(function(path) {
-                let ele_full = path.split('contents').reverse()[0] // for example /testfolder/extcontent.url
-                let ele = ele_full.split('/')[1] // for example testfolder
-                if (topFolders[ele]) {
-                    topFolders[ele] = topFolders[ele] + 1
-                } else {
-                    topFolders[ele] = 1
-                }
-            })
-        }
-    })
-
-    let numSubs = 0;
-
-    $("#fb-files-container li.ui-selected").each(function(i, el) {
-        if (this.title.includes('Type: File Folder')) {
-            numSubs ++;
-        }
-        console.log(this.innerText)
-        if (this.innerText.toLowerCase().includes('.url')) {
-            selectedFiles.push(this.innerText);
-        }
-    });
-    try {
-        var external_links = Number.parseInt(ext_link_count);
-    }
-    catch {
-        var external_links = 0;
-    }
-    console.log('num subs '+numSubs)
-    if (selectedFiles.length > 0 && selectedFiles.length + numSubs >= external_links && custom_citation !== 'None') {
-        $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
-          'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
-          'and custom citation?')
-        removeCitationIntent = true;
-    } else {
-        $('#additional-citation-warning').text('')
-        removeCitationIntent = false;
-    }
-}
-
-const debounce = (func, wait) => {
-  let timeout;
-
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
 
 function bindFileBrowserItemEvents() {
 
@@ -1360,6 +1244,50 @@ function updateNavigationState() {
     $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
+function countExternalFiles(fullPaths) {
+    /*
+    Based on full file paths enumerate .url files from subfolders and implied current path from Content manager.
+    Comparison from selections is based on the selections in the Content manager at the time this function is invoked.
+    Parent folders are not counted.
+     */
+    let filePathsContainingUrl = [];
+    let selectedFiles = [];
+    let topFolders = {};
+    let numUrlWithinSubs = 0;
+
+    for (const [k, v] of Object.entries(fullPaths)) {
+        if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
+            filePathsContainingUrl.push(v.url)
+        }
+    }
+
+    // enumerate external links in subfolders
+    filePathsContainingUrl.forEach(function(path) {
+        let ele_full = path.split('contents').reverse()[0] // for example /testfolder/extcontent.url
+        let ele = ele_full.split('/')[1] // for example testfolder
+        if (topFolders[ele]) {
+            topFolders[ele] = topFolders[ele] + 1
+        } else {
+            topFolders[ele] = 1
+        }
+    })
+
+    // assess selected files in the content manager browser
+    $("#fb-files-container li.ui-selected").each(function(i, el) {
+        if (this.title.includes('Type: File Folder')) { // review subfolder info
+            if (topFolders[this.innerText]) {
+                numUrlWithinSubs += topFolders[this.innerText];
+            }
+        }
+
+        // look at current directory
+        if (this.innerText.toLowerCase().includes('.url')) {
+            selectedFiles.push(this.innerText);
+        }
+    });
+    return selectedFiles.length + numUrlWithinSubs;
+}
+
 // Reload the current folder structure
 // Optional argument: file name or folder name to select after reload
 function refreshFileBrowser(name) {
@@ -1399,16 +1327,18 @@ function refreshFileBrowser(name) {
             type: "GET",
             url: '/hsapi/resource/' + SHORT_ID + '/file_list/',
         }).complete(function(res) {
-            let jsFbContextExternalContent = 0
             let pathObjs = JSON.parse(res.responseText).results
-            for (const [k, v] of Object.entries(pathObjs)) {
-                if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
-                    jsFbContextExternalContent++;
-                }
+            try {
+                var external_links = Number.parseInt(ext_link_count);
             }
-            if (jsFbContextExternalContent > 0 && custom_citation) {
+            catch {
+                var external_links = 0;
+            }
+            
+            let fcount = countExternalFiles(pathObjs)
+            if (fcount > 0 && custom_citation && RESOURCE_MODE === 'Edit') {
                 document.getElementById('edit-citation-control').style.display = 'block'
-                ext_link_count = jsFbContextExternalContent
+                ext_link_count = fcount
             }
         })
     });
@@ -1419,6 +1349,74 @@ function refreshFileBrowser(name) {
         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         updateSelectionMenuContext();
     });
+}
+
+function warnExternalContent(shortId) {
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    function sameOrigin(url) {
+        // test that a given url is a same-origin URL
+        // url could be relative or scheme relative or absolute
+        var host = document.location.host; // host + port
+        var protocol = document.location.protocol;
+        var sr_origin = '//' + host;
+        var origin = protocol + sr_origin;
+        // Allow absolute or scheme relative URLs to same origin
+        return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+            (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+            // or any other URL that isn't scheme relative or absolute i.e relative.
+            !(/^(\/\/|http:|https:).*/.test(url));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+                // Send the token to same-origin, relative URLs only.
+                // Send the token only if the method warrants CSRF protection
+                // Using the CSRFToken value acquired earlier
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        }
+    });
+    $.ajax({
+        type: "GET",
+        url: '/hsapi/resource/' + shortId + '/file_list/',
+    }).complete(function(res) {
+        if (res.responseText) {
+            let pathObjs = JSON.parse(res.responseText).results
+            try {
+                var external_links = Number.parseInt(ext_link_count);
+            }
+            catch {
+                var external_links = 0;
+            }
+            if (custom_citation !== 'None' && external_links > 0 && countExternalFiles(pathObjs) >= external_links) {
+                $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
+                  'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
+                  'and custom citation?')
+                removeCitationIntent = true;
+            } else {
+                $('#additional-citation-warning').text('')
+                removeCitationIntent = false;
+            }
+        }
+    })
 }
 
 function onUploadSuccess(file, response) {
