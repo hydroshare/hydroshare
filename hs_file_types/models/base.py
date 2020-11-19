@@ -1240,6 +1240,11 @@ class AbstractLogicalFile(models.Model):
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
 
+        # delete schema json file if this a model aggregation
+        if self.is_model_program or self.is_model_instance:
+            if istorage.exists(self.schema_file_path):
+                istorage.delete(self.schema_file_path)
+
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
@@ -1277,6 +1282,11 @@ class AbstractLogicalFile(models.Model):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
+
+        # delete schema json file if this a model aggregation
+        if self.is_model_program or self.is_model_instance:
+            if istorage.exists(self.schema_file_path):
+                istorage.delete(self.schema_file_path)
 
         # find if there is a parent aggregation - files in this (self) aggregation
         # need to be added to parent if exists
