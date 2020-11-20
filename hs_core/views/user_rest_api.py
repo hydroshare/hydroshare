@@ -26,10 +26,10 @@ class UserInfo(APIView):
             user_info['title'] = user_profile.title
         if user_profile.organization:
             user_info['organization'] = user_profile.organization
-        if user_profile.state.strip() and user_profile.state != 'Unspecified':
+        if user_profile.state and user_profile.state.strip() and user_profile.state != 'Unspecified':
             user_info['state'] = user_profile.state.strip()
         if user_profile.country and user_profile.country != 'Unspecified':
             user_info['country'] = user_profile.country
-        if user_profile.user_type.strip() and user_profile.user_type != 'Unspecified':
+        if user_profile.user_type and user_profile.user_type.strip() and user_profile.user_type != 'Unspecified':
             user_info['user_type'] = user_profile.user_type.strip()
         return Response(user_info)
