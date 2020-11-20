@@ -1303,8 +1303,6 @@ function countSelectedExternalFiles(fullPaths) {
             selectedFiles.push(this.innerText);
         }
     });
-    let amt = selectedFiles.length + numUrlWithinSubs
-    console.log('number selected '+  amt)
     return selectedFiles.length + numUrlWithinSubs;
 }
 
