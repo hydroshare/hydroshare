@@ -4,7 +4,7 @@
 limit_req_zone $binary_remote_addr zone=applaunch:10m rate=5r/s;
  
 # limit ALL downloads (regardless of client) to a rate of 5/second. 
-limit_req_zone download zone=download:1m rate=5r/s;
+# limit_req_zone download zone=download:1m rate=5r/s;
 
 upstream backend {
    server CURRENT_VM;
@@ -56,7 +56,7 @@ server {
         if (-f $document_root/maintenance_on.html) {
             return 503;  # invoke error handling as defined below
         }
-        limit_req zone=download burst=150;  # choke django requests to 5/second with a total queue of 150
+        # limit_req zone=download burst=150;  # choke django requests to 5/second with a total queue of 150
 	proxy_pass https://CURRENT_VM;  # needed for server switching code. 
     } 
 
