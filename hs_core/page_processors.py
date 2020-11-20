@@ -325,9 +325,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all()),
                'external_content': len([x.logical_file_content_type_id for x in content_model.files.all() if
-                                        x.logical_file_content_type_id == 203]),
-               # 'filepaths': mark_safe(escapejs(json.dumps([x.aggregation_name for x
-               #                                             in content_model.generic_logical_files])))
+                                        x.logical_file_content_type_id == 203]),  # 203 .url external reference
     }
 
     return context
