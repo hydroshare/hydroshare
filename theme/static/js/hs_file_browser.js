@@ -1419,6 +1419,8 @@ function warnExternalContent(shortId) {
             }
         }
     });
+    $('#btn-confirm-delete').prop('disabled', true)
+    $('#additional-citation-warning').text('Analyzing files . . .')
     $.ajax({
         type: "GET",
         url: '/hsapi/resource/' + shortId + '/file_list/',
@@ -1441,6 +1443,7 @@ function warnExternalContent(shortId) {
                 $('#additional-citation-warning').text('')
             }
         }
+        $('#btn-confirm-delete').prop('disabled', false)
     })
 }
 
