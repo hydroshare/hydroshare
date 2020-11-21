@@ -74,7 +74,9 @@ def authorise_for_aggregation_edit(f=None, file_type=None):
             kwargs['logical_file'] = logical_file
             kwargs['error_response'] = ajax_response_data
             return view_func(request, *args, **kwargs)
+
         return wrapper
+
     if f is None:
         return real_decorator
     return real_decorator(f)
@@ -938,7 +940,8 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     mp_validation_form.update_metadata(metadata)
-    refresh_metadata = len(mp_validation_form.cleaned_data['mi_json_schema_file']) > 0
+    refresh_metadata = len(mp_validation_form.cleaned_data['mi_json_schema_file']) > 0 \
+                       or len(mp_validation_form.cleaned_data['mi_json_schema_template']) > 0
 
     resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)

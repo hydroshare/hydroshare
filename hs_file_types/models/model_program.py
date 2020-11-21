@@ -1,3 +1,5 @@
+import os
+import glob
 import json
 
 from django.contrib.postgres.fields import ArrayField
@@ -344,6 +346,13 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                     with dom_tags.div(cls="form-group"):
                                         dom_tags.input(type="file", accept=".json",
                                                        name='mi_json_schema_file', id='mi-json-schema-file')
+                                        with dom_tags.select(cls="form-control", name='mi_json_schema_template',
+                                                             style="margin-top:10px;"):
+                                            dom_tags.option("Select a schema template", value="")
+                                            template_path = "hs_file_types/model_meta_schema_templates/*.json"
+                                            for schema_template in glob.glob(template_path):
+                                                template_file_name = os.path.basename(schema_template)
+                                                dom_tags.option(template_file_name, value=schema_template)
 
                                     dom_tags.textarea(json_schema,
                                                       cls="form-control input-sm textinput textInput",

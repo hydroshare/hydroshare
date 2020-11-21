@@ -73,11 +73,12 @@ class ModelProgramMetadataValidationForm(forms.Form):
     code_repository = forms.URLField(required=False, max_length=255)
     programming_languages = forms.CharField(required=False)
     operating_systems = forms.CharField(required=False)
-    metadata_json_schema = forms.CharField(required=False)
     mp_file_types = forms.CharField(max_length=255, required=False)
     mp_program_type = forms.CharField(max_length=255)
     # allow user to upload a json schema file
     mi_json_schema_file = forms.FileField(required=False)
+    # allow user to select one of the existing schema templates
+    mi_json_schema_template = forms.CharField(max_length=255, required=False)
 
     def clean_version(self):
         version = self.cleaned_data['version'].strip()
@@ -120,14 +121,6 @@ class ModelProgramMetadataValidationForm(forms.Form):
                     mp_file_types_dict[mp_file_type_lst[0]] = None
         return mp_file_types_dict
 
-    def clean_metadata_json_schema(self):
-        json_schema_string = self.cleaned_data['metadata_json_schema'].strip()
-        json_schema = dict()
-        if json_schema_string:
-            return self._validate_json_schema(schema_string=json_schema_string, field_name='metadata_json_schema')
-
-        return json_schema
-
     def clean_mi_json_schema_file(self):
         json_schema = dict()
         json_schema_file = self.cleaned_data['mi_json_schema_file']
@@ -135,6 +128,16 @@ class ModelProgramMetadataValidationForm(forms.Form):
             schema_data = json_schema_file.read().decode("utf-8")
             if schema_data:
                 return self._validate_json_schema(schema_string=schema_data, field_name='mi_json_schema_file')
+        return json_schema
+
+    def clean_mi_json_schema_template(self):
+        json_schema = dict()
+        json_schema_template_path = self.cleaned_data['mi_json_schema_template']
+        if json_schema_template_path:
+            with open(json_schema_template_path) as file_obj:
+                schema_data = file_obj.read()
+                json_schema = json.loads(schema_data)
+
         return json_schema
 
     def update_metadata(self, metadata):
@@ -148,13 +151,14 @@ class ModelProgramMetadataValidationForm(forms.Form):
         metadata.save()
         logical_file = metadata.logical_file
 
-        # if the user has uploaded json file for the metadata schema we will use the content
-        # of that file to populate the the metadata_schema_json metadata field
-        if self.cleaned_data['mi_json_schema_file']:
+        # check for user uploaded schema json file or selected schema template
+        # we will use the content of that file/template to populate the the metadata_schema_json metadata field
+        if self.cleaned_data['mi_json_schema_template']:
+            # use the content from the selected schema template file to save in database
+            logical_file.metadata_schema_json = self.cleaned_data['mi_json_schema_template']
+        elif self.cleaned_data['mi_json_schema_file']:
             # use the content from the uploaded json file to save in database
             logical_file.metadata_schema_json = self.cleaned_data['mi_json_schema_file']
-        else:
-            logical_file.metadata_schema_json = self.cleaned_data['metadata_json_schema']
 
         logical_file.model_program_type = self.cleaned_data['mp_program_type']
         logical_file.save()
