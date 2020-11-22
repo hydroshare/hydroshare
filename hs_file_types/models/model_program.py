@@ -354,11 +354,16 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                 template_file_name = os.path.basename(schema_template)
                                                 dom_tags.option(template_file_name, value=schema_template)
 
-                                    dom_tags.textarea(json_schema,
-                                                      cls="form-control input-sm textinput textInput",
-                                                      id="mi-json-schema",
-                                                      name="metadata_json_schema", rows="30", readonly="")
-
+                                    if json_schema:
+                                        dom_tags.textarea(json_schema,
+                                                          cls="form-control input-sm textinput textInput",
+                                                          id="mi-json-schema",
+                                                          name="metadata_json_schema", rows="30", readonly="")
+                                    else:
+                                        dom_tags.div(
+                                            "Metadata schema is missing. You can either upload a schema JSON file or "
+                                            "select one the existing schema JSON templates.",
+                                            cls="alert alert-danger", id="div-missing-schema-message")
                             with dom_tags.div(id="mp_content_files", cls="control-group"):
                                 with dom_tags.div(cls="controls"):
                                     dom_tags.legend('Content Files')
