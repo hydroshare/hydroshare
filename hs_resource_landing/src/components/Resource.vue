@@ -1,33 +1,40 @@
 <template>
   <div>
     <h2>Resource Name</h2>
-    <h3>Content</h3>
     <h3>Abstract</h3>
       <textarea id="id_abstract" class="form-control input-sm textarea" cols="40" rows="10"></textarea>
     <h3>Subject Keywords</h3>
     <h3>Coverage</h3>
+          <div id="common-components">
+        <manage-access>
+        </manage-access>
+      </div>
     <h3>Content</h3>
+      <div id="file-manager">
+        <!-- TODO key is probably what resets data reactive reload-->
+        <file-manager :key="1234"
+                      :sample_prop="sample_props">
+        </file-manager>
+      </div>
     <h3>Additional Metadata</h3>
     <h3>References</h3>
     <h3>Credits</h3>
     <h3>How to Cite</h3>
     <h3>Comments</h3>
-    <div id="file-manager">
-        <file-manager :key="data"
-                      :sample_prop="sample_props">
-        </file-manager>
-    </div>
   </div>
 </template>
 
 <script>
 // import DatePick from 'vue-date-pick';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'vue-date-pick/dist/vueDatePick.css';
 // import axios from 'axios';
 import Filemanager from './Filemanager.vue';
+import Access from './Access.vue';
 
 export default {
-  name: 'Search',
+  name: 'Resource',
   data() {
     return {
       data: { first: 'asdf' },
@@ -36,6 +43,7 @@ export default {
   },
   components: {
     fileManager: Filemanager,
+    manageAccess: Access,
   },
   mounted() {
   },

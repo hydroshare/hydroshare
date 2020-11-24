@@ -17,6 +17,7 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
+from hs_resource_landing import views as hs_resource_landing_views
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
@@ -86,7 +87,8 @@ urlpatterns = i18n_patterns(
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
-    url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps")
+    url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"),
+    url(r'^resource/(?P<resource_id>[A-z0-9\-_]+)', hs_resource_landing_views.ResourceLandingAPI.as_view(), name='ResourceLandingAPI'),
 )
 
 # Filebrowser admin media library.
