@@ -13,12 +13,12 @@
                 {% else %}
                     <div id="citation-text">{{ citation|urlize }}</div>
                 {% endif %}
-                <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
-                    <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
-                </button>
                 <span id="edit-citation-control" style="display: none" data-toggle="modal" data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
                       title="Edit citation" data-target="#customize-citation-dialog">
                 </span>
+                <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
+                    <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
+                </button>
                 <script language="JavaScript">
                     if (ext_link_count > 0 && RESOURCE_MODE === 'Edit') {
                       document.getElementById('edit-citation-control').style.display = "block"
