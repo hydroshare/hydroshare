@@ -401,6 +401,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # create the ncdump text file
                 dump_file_name = nc_file_name + "_header_info.txt"
                 for file in resource.files.filter(file_folder=folder_path):
+                    # look for and delete an existing header_file before creating it below.
                     fname = os.path.basename(file.resource_file.name)
                     if fname in dump_file_name:
                         file.delete()

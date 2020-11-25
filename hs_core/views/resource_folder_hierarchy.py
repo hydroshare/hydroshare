@@ -292,7 +292,7 @@ def data_store_folder_unzip(request, **kwargs):
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
-    auto_aggregate = request.POST.get('auto_aggregate', 'true').lower() == 'true'  # False by default
+    auto_aggregate = request.POST.get('auto_aggregate', 'true').lower() == 'true'  # True by default
     ingest_metadata = request.POST.get('ingest_metadata', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
 
@@ -341,10 +341,10 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 @api_view(['POST'])
 def ingest_metadata_files(request, pk):
+    from hs_file_types.utils import identify_and_ingest_metadata_files
     resource, _, _ = view_utils.authorize(request, pk,
                                           needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     resource_files = list(request.FILES.values())
-    from hs_file_types.utils import identify_and_ingest_metadata_files
     identify_and_ingest_metadata_files(resource, resource_files)
     return Response(status=204)
 

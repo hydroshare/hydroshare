@@ -923,7 +923,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
 
 class IrodsFile:
-
+    """Mimics an uploaded file to allow use of the ingestion logic which expects an uploaded file, rather than a file
+    on irods."""
     def __init__(self, name, istorage):
         self._name = name
         self._istorage = istorage
@@ -952,6 +953,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     :param bool ingest_metadata: a bool indicating whether to look for and ingest resource/aggregation metadata files
     :return:
     """
+    from hs_file_types.utils import identify_metadata_files
+
     if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
 
@@ -987,7 +990,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             irods_files = []
             for unzipped_file in unzipped_files:
                 irods_files.append(IrodsFile(unzipped_file, istorage))
-            from hs_file_types.utils import identify_metadata_files
             res_files = irods_files
             meta_files = []
             if ingest_metadata:

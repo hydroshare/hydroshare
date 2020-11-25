@@ -33,7 +33,8 @@ class RDF_MetaData_Mixin(object):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_metadata_subject")
 
     def rdf_type(self):
-        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_type")
+        raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_type. "
+                                  "https://www.w3.org/TR/rdf-schema/#ch_type")
 
     @classmethod
     def rdf_subject_from_graph(cls, graph):
@@ -64,16 +65,16 @@ class RDF_MetaData_Mixin(object):
         # graph.add((subject, RDF.type, self.rdf_type()))
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
-            for f in getattr(self, getattr(generic_relation, 'name', None), None).all():
+            gr_name = generic_relation.name
+            gr = getattr(self, gr_name)
+            for f in gr.all():
                 f.rdf_triples(subject, graph)
 
         return graph
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         """Generates ORI+RDF xml for this metadata"""
-        # ORE = Namespace("http://www.openarchives.org/ore/terms/")
         g = self.get_rdf_graph()
-        # g.add((self.rdf_metadata_subject(), ORE.describes, self.rdf_subject()))
         return g.serialize(format='hydro-xml').decode()
 
 
@@ -110,12 +111,10 @@ class RDF_Term_MixIn(object):
         """Method that returns the field terms and field values on an object"""
         term_values = []
         extra_ignored_fields.extend(self.ignored_fields)
-        for field in self._meta.fields:
-            if field.name in extra_ignored_fields:
-                continue
+        for field in [field for field in self._meta.fields if field.name not in extra_ignored_fields]:
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value and field_value is not None and field_value != 'None':
+            if field_value and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
                     field_value = URIRef(field_value)
@@ -127,7 +126,7 @@ class RDF_Term_MixIn(object):
     @classmethod
     def get_class_term(cls):
         """
-        return a term mapped by the @rdf_terms decorator or if the deocorator is not provided, create an
+        return a term mapped by the @rdf_terms decorator or if the decorator is not provided, create an
         HSTERMS.{cls.__name__}
         """
         return cls.rdf_term if hasattr(cls, 'rdf_term') else getattr(HSTERMS, cls.__name__)
@@ -167,7 +166,7 @@ class RDF_Term_MixIn(object):
 
 def rdf_terms(class_term, **field_terms):
     """
-    Deocorator for mapping a class and fields to RDF terms.  The first parameter maps the class to your specified
+    Decorator for mapping a class and fields to RDF terms.  The first parameter maps the class to your specified
     term.  field_terms are key/values with the key matching a class's field and the value being the mapped term.
 
     :raises ValidationError when a field_term key does not match a field on the class"""

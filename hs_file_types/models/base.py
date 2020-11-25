@@ -1379,8 +1379,7 @@ class AbstractLogicalFile(models.Model):
 
     def read_metadata_file(self):
         istorage = self.resource.get_irods_storage()
-        with istorage.open(self.metadata_file_path, mode='r') as f:
-            return f.read()
+        return istorage.download(self.metadata_file_path).read()
 
     def read_metadata_as_rdf(self):
         g = Graph()

@@ -46,17 +46,11 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         shutil.rmtree(self.tmp_dir)
 
-        self.user.uaccess.delete()
-        self.user.delete()
-        self.hs_group.delete()
-
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        CompositeResource.objects.all().delete()
-
         shutil.rmtree(self.extracted_directory)
 
     def test_bag_ingestion(self):
+        from hs_core.views.utils import unzip_file
+
         def normalize_metadata(metadata_str):
             """Prepares metadata string to match resource id and hydroshare url of original"""
             return metadata_str\
@@ -74,7 +68,6 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         files_to_upload = [UploadedFile(file=open(self.test_bag_path, 'rb'),
                                         name="test_resource_metadata_files.zip")]
         add_resource_files(res.short_id, *files_to_upload, full_paths=full_paths)
-        from hs_core.views.utils import unzip_file
 
         unzip_file(self.user, res.short_id, "data/contents/test_resource_metadata_files.zip", True,
                    overwrite=True, auto_aggregate=True, ingest_metadata=True)

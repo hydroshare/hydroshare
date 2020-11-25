@@ -3825,7 +3825,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         # add any key/value metadata items
         if len(self.resource.extra_metadata) > 0:
-            for key, value in list(self.resource.extra_metadata.items()):
+            for key, value in self.resource.extra_metadata.items():
                 extendedMetadata = BNode()
                 graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
