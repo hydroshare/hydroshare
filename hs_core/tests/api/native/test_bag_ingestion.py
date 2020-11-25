@@ -5,13 +5,12 @@ import zipfile
 import shutil
 from unittest import TestCase
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from rdflib import Graph, URIRef
 from rdflib.compare import _squashed_graphs_triples
 from rdflib.namespace import DCTERMS, RDF
 
-from hs_composite_resource.models import CompositeResource
 from hs_core.hydroshare import resource, add_resource_files, current_site_url
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
