@@ -2,301 +2,494 @@
     "type": "object",
     "title": "MODFLOW Model Instance Metadata Schema",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "required": [
-        "modelObjective"
-    ],
     "properties": {
-        "modelInput": {
+        "studyArea": {
             "type": "object",
-            "title": "Model Inputs",
+            "title": "Study Area",
             "properties": {
-                "demSourceURL": {
-                    "type": "string",
-                    "title": "DEM Source URL",
-                    "default": "",
-                    "description": "URL of the source of dem used in creating this model instance.",
-                    "propertyOrder": 13
-                },
-                "numberOfHRUs": {
+                "totalLength": {
                     "type": "number",
-                    "title": "Number of HRUs",
-                    "default": 1,
-                    "description": "Number of HRUs used in creating this model instance.",
-                    "propertyOrder": 10
-                },
-                "demResolution": {
-                    "type": "number",
-                    "title": "DEM Resolution (in meters)",
-                    "default": 10,
-                    "description": "DEM resolution used in creating this model instance.",
-                    "propertyOrder": 11
-                },
-                "demSourceName": {
-                    "type": "string",
-                    "title": "DEM Source Name",
-                    "default": "",
-                    "description": "Source name of the DEM used in creating this model instance.",
-                    "propertyOrder": 12
-                },
-                "watershedArea": {
-                    "type": "number",
-                    "title": "Watershed Area (in square killometers)",
+                    "title": "Total Length (in meters)",
                     "default": 0,
-                    "description": "Area of the watershed used in creating this model instance.",
-                    "propertyOrder": 8
-                },
-                "numberOfSubbasins": {
-                    "type": "number",
-                    "title": "Number of Sub-basins",
-                    "default": 1,
-                    "description": "Number of sub-basins used in creating this model instance.",
-                    "propertyOrder": 9
-                },
-                "soilDataSourceURL": {
-                    "type": "string",
-                    "title": "Soil Data Source URL",
-                    "default": "",
-                    "description": "URL of the soil data used used in creating this model instance.",
-                    "propertyOrder": 17
-                },
-                "warmupPeriodValue": {
-                    "type": "number",
-                    "title": "Warmup Period in Years",
-                    "default": 0,
-                    "description": "Warmup period in years used in creating this model instance.",
+                    "description": "Total length of the study area used in creating this model instance.",
                     "propertyOrder": 1
                 },
-                "soilDataSourceName": {
-                    "type": "string",
-                    "title": "Soil Data Source Name",
-                    "default": "",
-                    "description": "Source name of the soil data used in creating this model instance.",
-                    "propertyOrder": 16
-                },
-                "routingTimeStepType": {
-                    "enum": [
-                        "Daily",
-                        "Hourly"
-                    ],
-                    "type": "string",
-                    "title": "Routing Time Step Type",
-                    "default": "",
-                    "description": "Routing time step type used in creating this model instance.",
-                    "propertyOrder": 4
-                },
-                "landUseDataSourceURL": {
-                    "type": "string",
-                    "title": "Land Use Data Source URL",
-                    "default": "",
-                    "description": "URL of the land data used used in creating this model instance.",
-                    "propertyOrder": 15
-                },
-                "rainFallTimeStepType": {
-                    "enum": [
-                        "Daily",
-                        "Sub-hourly"
-                    ],
-                    "type": "string",
-                    "title": "Rainfall Time Step Type",
-                    "default": "",
-                    "description": "Rainfall time step type used in creating this model instance.",
+                "totalWidth": {
+                    "type": "number",
+                    "title": "Total Width (in meters)",
+                    "default": 0,
+                    "description": "Total width  of the study area used in creating this model instance.",
                     "propertyOrder": 2
                 },
-                "routingTimeStepValue": {
+                "maximumElevation": {
                     "type": "number",
-                    "title": "Routing Time Step Value",
+                    "title": "Maximum Elevation (in meters)",
                     "default": 0,
-                    "description": "Routing time step value used in creating this model instance.",
-                    "propertyOrder": 5
-                },
-                "landUseDataSourceName": {
-                    "type": "string",
-                    "title": "Land Use Data Source Name",
-                    "default": "",
-                    "description": "Source name of the land used in creating this model instance.",
-                    "propertyOrder": 14
-                },
-                "rainFallTimeStepValue": {
-                    "type": "number",
-                    "title": "Rainfall Time Step Value",
-                    "default": 0,
-                    "description": "Rainfall time step value used in creating this model instance.",
+                    "description": "Maximum elevation  of the study area used in creating this model instance.",
                     "propertyOrder": 3
                 },
-                "simulationTimeStepType": {
+                "minimumRlevation": {
+                    "type": "number",
+                    "title": "Minimum Elevation (in meters)",
+                    "default": 0,
+                    "description": "Minimum elevation  of the study area used in creating this model instance.",
+                    "propertyOrder": 4
+                }
+            },
+            "description": "The dimentions of the study area used in creating this model instance.",
+            "propertyOrder": 8,
+            "additionalProperties": false
+        },
+        "modelSolver": {
+            "enum": [
+                "DE4",
+                "GMG",
+                "LMG",
+                "PCG",
+                "PCGN",
+                "SIP",
+                "SOR",
+                "NWT"
+            ],
+            "type": "string",
+            "title": "Model Solver",
+            "default": "",
+            "description": "Model solver used in creating this model instance.",
+            "propertyOrder": 5
+        },
+        "stressPeriod": {
+            "type": "object",
+            "title": "Stress Periods",
+            "properties": {
+                "type": {
                     "enum": [
-                        "Annual",
+                        "Steady",
+                        "Transient",
+                        "Steady and Transient"
+                    ],
+                    "type": "string",
+                    "title": "Type",
+                    "default": "",
+                    "description": "Type of stress period useds in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "lengthOfSteadyStateStressPeriod": {
+                    "type": "number",
+                    "title": "Length of Steady State Stress Periods",
+                    "default": 1,
+                    "description": "Length of steady state stress periods used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "TypeOfTransientStateStressPeriod": {
+                    "enum": [
+                        "Annullay",
                         "Monthly",
                         "Daily",
-                        "Hourly"
+                        "Hourly",
+                        "Other"
                     ],
                     "type": "string",
-                    "title": "Simulation Time Step Type",
+                    "title": "Type of Transient State Stress Periods",
                     "default": "",
-                    "description": "Simulation time step type used in creating this model instance.",
-                    "propertyOrder": 6
+                    "description": "Type of transient state stress periods used in creating this model instance.",
+                    "propertyOrder": 1
                 },
-                "simulationTimeStepValue": {
+                "lengthOfTransientStateStressPeriod": {
                     "type": "number",
-                    "title": "Simulation Time Step Value",
+                    "title": "Length of Transient State Stress Periods",
                     "default": 1,
-                    "description": "Simulation time step value used in creating this model instance.",
-                    "propertyOrder": 7
-                }
-            },
-            "description": "Various inputs used in creating this model instance.",
-            "propertyOrder": 5,
-            "additionalProperties": false
-        },
-        "modelMethod": {
-            "type": "object",
-            "title": "Model Method",
-            "properties": {
-                "flowRoutingMethod": {
-                    "type": "string",
-                    "title": "Flow Routing Method",
-                    "default": "",
-                    "description": "Flow routing method used in creating this model instance.",
-                    "propertyOrder": 2
-                },
-                "petEstimationMethod": {
-                    "type": "string",
-                    "title": "PET Estimation Method",
-                    "default": "",
-                    "description": "Potential evapotranspiration estimation method used in creating this model instance.",
-                    "propertyOrder": 3
-                },
-                "runoffCalculationMethod": {
-                    "type": "string",
-                    "title": "Runoff Calculation Method",
-                    "default": "",
-                    "description": "Runoff calculation method used in creating this model instance.",
-                    "propertyOrder": 1
-                }
-            },
-            "description": "Various methods used in creating this model instance.",
-            "propertyOrder": 3,
-            "additionalProperties": false
-        },
-        "modelObjective": {
-            "type": "object",
-            "title": "Model Objectives",
-            "properties": {
-                "BMPs": {
-                    "type": "boolean",
-                    "title": "BMPs",
-                    "format": "checkbox",
-                    "description": "Best Management Practices",
-                    "propertyOrder": 3
-                },
-                "hydrology": {
-                    "type": "boolean",
-                    "title": "Hydrology",
-                    "format": "checkbox",
-                    "description": "Hydrology",
-                    "propertyOrder": 1
-                },
-                "waterQuality": {
-                    "type": "boolean",
-                    "title": "Water Quality",
-                    "format": "checkbox",
-                    "description": "Water Quality",
-                    "propertyOrder": 2
-                },
-                "OtherObjectives": {
-                    "type": "string",
-                    "title": "Other objectives",
-                    "description": "Other objectives",
-                    "propertyOrder": 5
-                },
-                "climatelanduseChange": {
-                    "type": "boolean",
-                    "title": "Climate/Landuse Change",
-                    "format": "checkbox",
-                    "description": "Climate / Landuse Change",
+                    "description": "Length of transient state stress periods used in creating this model instance.",
                     "propertyOrder": 4
                 }
             },
-            "description": "Objectives of this SWAT model instance.",
-            "propertyOrder": 1,
+            "description": "Stress periods used in creating this model instance.",
+            "propertyOrder": 10,
+            "additionalProperties": false
+        },
+        "gridDimensions": {
+            "type": "object",
+            "title": "Grid Dimensions",
+            "properties": {
+                "typeOfRows": {
+                    "enum": [
+                        "Regular",
+                        "Irregular"
+                    ],
+                    "type": "string",
+                    "title": "Type of Rows",
+                    "default": "",
+                    "description": "Type of rows used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "NumberOfRows": {
+                    "type": "number",
+                    "title": "Number of Rows",
+                    "default": 1,
+                    "description": "Number of rows used in creating this model instance.",
+                    "propertyOrder": 3
+                },
+                "typeOfColumns": {
+                    "enum": [
+                        "Regular",
+                        "Irregular"
+                    ],
+                    "type": "string",
+                    "title": "Type of Columns",
+                    "default": "",
+                    "description": "Type of rows used in creating this model instance.",
+                    "propertyOrder": 3
+                },
+                "numberOfLayers": {
+                    "type": "number",
+                    "title": "Number of Layers",
+                    "default": 1,
+                    "description": "Number of layers used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "NumberOfColumns": {
+                    "type": "number",
+                    "title": "Number of Columns",
+                    "default": 1,
+                    "description": "Number of columns used in creating this model instance.",
+                    "propertyOrder": 4
+                }
+            },
+            "description": "Grid dimensions used in creating this model instance.",
+            "propertyOrder": 9,
             "additionalProperties": false
         },
         "modelParameter": {
-            "type": "object",
+            "type": "string",
             "title": "Model Parameters",
+            "default": "",
+            "description": "Model parameters used in creating this model instance.",
+            "propertyOrder": 4
+        },
+        "groundwaterFlow": {
+            "type": "object",
+            "title": "Groundwater Flow",
             "properties": {
-                "fertilizer": {
-                    "type": "boolean",
-                    "title": "Fertilizer",
-                    "format": "checkbox",
-                    "description": "Fertilizer",
-                    "propertyOrder": 4
-                },
-                "pointSource": {
-                    "type": "boolean",
-                    "title": "Point source",
-                    "format": "checkbox",
-                    "description": "Point source",
-                    "propertyOrder": 3
-                },
-                "cropRotation": {
-                    "type": "boolean",
-                    "title": "Crop rotation",
-                    "format": "checkbox",
-                    "description": "Crop rotation",
+                "flowPackage": {
+                    "enum": [
+                        "BCF6",
+                        "LPF",
+                        "HUF2",
+                        "UPW"
+                    ],
+                    "type": "string",
+                    "title": "Flow Package",
+                    "default": "",
+                    "description": "Flow package useds in creating this model instance.",
                     "propertyOrder": 1
                 },
-                "tileDrainage": {
-                    "type": "boolean",
-                    "title": "Tile drainage",
-                    "format": "checkbox",
-                    "description": "Tile drainage",
-                    "propertyOrder": 2
-                },
-                "OtherParameters": {
+                "flowParameter": {
+                    "enum": [
+                        "Hydraulic Conductivity",
+                        "Transmissivity"
+                    ],
                     "type": "string",
-                    "title": "Other parameters",
-                    "description": "Other parameters",
-                    "propertyOrder": 8
-                },
-                "tillageOperation": {
-                    "type": "boolean",
-                    "title": "Tillage operation",
-                    "format": "checkbox",
-                    "description": "Tillage operation",
+                    "title": "Flow Parameter",
+                    "default": "",
+                    "description": "Flow parameter useds in creating this model instance.",
                     "propertyOrder": 5
                 },
-                "irrigationOperation": {
+                "IncludesUnsaturatedZonePackage": {
                     "type": "boolean",
-                    "title": "Irrigation operation",
+                    "title": "Includes Unsaturated Zone Package (UZF)",
                     "format": "checkbox",
-                    "description": "Irrigation operation",
-                    "propertyOrder": 7
+                    "propertyOrder": 2
                 },
-                "inletOfDrainingWatershed": {
+                "IncludesSeawaterIntrusionPackage": {
                     "type": "boolean",
-                    "title": "Inlet of draining watershed",
+                    "title": "Includes Seawater Intrusion package (SWI2)",
                     "format": "checkbox",
-                    "description": "Inlet of draining watershed",
-                    "propertyOrder": 6
+                    "propertyOrder": 4
+                },
+                "IncludesHorizontalFlowBarrierPackage": {
+                    "type": "boolean",
+                    "title": "Includes Horizontal Flow Barrier package (HFB6)",
+                    "format": "checkbox",
+                    "propertyOrder": 3
                 }
             },
-            "description": "Various model paramters used in this model instance.",
+            "description": "Groundwater flow used in creating this model instance.",
+            "propertyOrder": 11,
+            "additionalProperties": false
+        },
+        "modelCalibration": {
+            "type": "object",
+            "title": "Model Calibration",
+            "properties": {
+                "observationType": {
+                    "type": "string",
+                    "title": "Observation Types",
+                    "default": "",
+                    "description": "Observation types used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "calibrationMethod": {
+                    "type": "string",
+                    "title": "Calibration Methods",
+                    "default": "",
+                    "description": "Calibration methods used in creating this model instance.",
+                    "propertyOrder": 4
+                },
+                "calibratedParameter": {
+                    "type": "string",
+                    "title": "Calibrated Parameters",
+                    "default": "",
+                    "description": "Calibrated parameters used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "observationProcessPackage": {
+                    "enum": [
+                        "ADV2",
+                        "CHOB",
+                        "DROB",
+                        "DTOB",
+                        "GBOB",
+                        "HOB",
+                        "OBS",
+                        "RVOB",
+                        "STOB"
+                    ],
+                    "type": "string",
+                    "title": "Observation Process Packages",
+                    "default": "",
+                    "description": "Type of transient state stress periods used in creating this model instance.",
+                    "propertyOrder": 3
+                }
+            },
+            "description": "Model calibration used in creating this model instance.",
+            "propertyOrder": 12,
+            "additionalProperties": false
+        },
+        "subsidencePackage": {
+            "enum": [
+                "IBS",
+                "SUB",
+                "SWT"
+            ],
+            "type": "string",
+            "title": "Subsidence Package",
+            "default": "",
+            "description": "Subsidence package used in creating this model instance.",
+            "propertyOrder": 7
+        },
+        "outputControlPackage": {
+            "type": "object",
+            "title": "Output Control Packages",
+            "properties": {
+                "OC": {
+                    "type": "boolean",
+                    "title": "OC",
+                    "format": "checkbox",
+                    "propertyOrder": 5
+                },
+                "HYD": {
+                    "type": "boolean",
+                    "title": "HYD",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "GAGE": {
+                    "type": "boolean",
+                    "title": "GAGE",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "LMT6": {
+                    "type": "boolean",
+                    "title": "LMT6",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "MNWI": {
+                    "type": "boolean",
+                    "title": "MNWI",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                }
+            },
+            "description": "Output control packages used in creating this model instance.",
+            "propertyOrder": 6,
+            "additionalProperties": false
+        },
+        "specifiedFluxBoundaryPackages": {
+            "type": "object",
+            "title": "Specified Flux Boundary Packages",
+            "properties": {
+                "FHB": {
+                    "type": "boolean",
+                    "title": "FHB",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "RCH": {
+                    "type": "boolean",
+                    "title": "RCH",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "WEL": {
+                    "type": "boolean",
+                    "title": "WEL",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "OtherPackages": {
+                    "type": "string",
+                    "title": "Other packages",
+                    "propertyOrder": 4
+                }
+            },
+            "description": "Specified flux boundary packages used in creating this model instance.",
+            "propertyOrder": 2,
+            "additionalProperties": false
+        },
+        "specifiedHeadBoundaryPackages": {
+            "type": "object",
+            "title": "Specified Head Boundary Packages",
+            "properties": {
+                "BFH": {
+                    "type": "boolean",
+                    "title": "BFH",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "CHD": {
+                    "type": "boolean",
+                    "title": "CHD",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "FHB": {
+                    "type": "boolean",
+                    "title": "FHB",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "OtherPackages": {
+                    "type": "string",
+                    "title": "Other packages",
+                    "propertyOrder": 4
+                }
+            },
+            "description": "Specified head boundary packages used in creating this model instance.",
             "propertyOrder": 1,
             "additionalProperties": false
         },
-        "simulationType": {
-            "enum": [
-                "Normal Simulation",
-                "Sensitivity Analysis",
-                "Auto Calibration"
-            ],
-            "type": "string",
-            "title": "Simulation Type",
-            "description": "Type of simulation used.",
-            "propertyOrder": 2
+        "headDependentFluxBoundaryPackages": {
+            "type": "object",
+            "title": "Head Dependent Flux Boundary Packages",
+            "properties": {
+                "DAF": {
+                    "type": "boolean",
+                    "title": "DAF",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "DRN": {
+                    "type": "boolean",
+                    "title": "DRN",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "DRT": {
+                    "type": "boolean",
+                    "title": "DRT",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                },
+                "ETS": {
+                    "type": "boolean",
+                    "title": "ETS",
+                    "format": "checkbox",
+                    "propertyOrder": 5
+                },
+                "EVT": {
+                    "type": "boolean",
+                    "title": "EVT",
+                    "format": "checkbox",
+                    "propertyOrder": 6
+                },
+                "GHB": {
+                    "type": "boolean",
+                    "title": "GHB",
+                    "format": "checkbox",
+                    "propertyOrder": 7
+                },
+                "LAK": {
+                    "type": "boolean",
+                    "title": "LAK",
+                    "format": "checkbox",
+                    "propertyOrder": 8
+                },
+                "RES": {
+                    "type": "boolean",
+                    "title": "RES",
+                    "format": "checkbox",
+                    "propertyOrder": 11
+                },
+                "RIP": {
+                    "type": "boolean",
+                    "title": "RIP",
+                    "format": "checkbox",
+                    "propertyOrder": 12
+                },
+                "RIV": {
+                    "type": "boolean",
+                    "title": "RIV",
+                    "format": "checkbox",
+                    "propertyOrder": 13
+                },
+                "SFR": {
+                    "type": "boolean",
+                    "title": "SFR",
+                    "format": "checkbox",
+                    "propertyOrder": 14
+                },
+                "STR": {
+                    "type": "boolean",
+                    "title": "STR",
+                    "format": "checkbox",
+                    "propertyOrder": 15
+                },
+                "UZF": {
+                    "type": "boolean",
+                    "title": "UZF",
+                    "format": "checkbox",
+                    "propertyOrder": 16
+                },
+                "DAFG": {
+                    "type": "boolean",
+                    "title": "DAFG",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "MNW1": {
+                    "type": "boolean",
+                    "title": "MNW1",
+                    "format": "checkbox",
+                    "propertyOrder": 9
+                },
+                "MNW2": {
+                    "type": "boolean",
+                    "title": "MNW2",
+                    "format": "checkbox",
+                    "propertyOrder": 10
+                },
+                "OtherPackages": {
+                    "type": "string",
+                    "title": "Other packages",
+                    "propertyOrder": 17
+                }
+            },
+            "description": "Head dependent flux boundary packages used in creating this model instance.",
+            "propertyOrder": 3,
+            "additionalProperties": false
         }
     },
-    "description": "A sample schema for SWAT model instance metadata.",
+    "description": "A sample schema for MODFLOW model instance metadata.",
     "additionalProperties": false
 }
