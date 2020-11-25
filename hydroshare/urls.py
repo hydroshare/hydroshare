@@ -88,7 +88,7 @@ urlpatterns = i18n_patterns(
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"),
-    url(r'^resource/(?P<resource_id>[A-z0-9\-_]+)', hs_resource_landing_views.ResourceLandingAPI.as_view(), name='ResourceLandingAPI'),
+    url(r'^resourceapi/(?P<resource_id>[A-z0-9\-_]+)', hs_resource_landing_views.ResourceLandingAPI.as_view(), name='ResourceLandingAPI'),
 )
 
 # Filebrowser admin media library.

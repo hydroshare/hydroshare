@@ -2,16 +2,13 @@
   <div>
     <h2>Resource Name</h2>
     <h3>Debug</h3>
-    {{res.shortId}}
-    {{res.keywords}}
-    {{res.resourceAccess}}
+    {{res.owner}}
     <h3>Abstract</h3>
     <label for="id_abstract"></label><textarea id="id_abstract" class="form-control input-sm textarea" cols="40" rows="10"></textarea>
     <h3>Subject Keywords</h3>
     <h3>Coverage</h3>
       <div id="common-components">
-        <!-- https://vuejs.org/v2/guide/components-custom-events.html#Binding-Native-Events-to-Components-->
-<!--        <manage-access></manage-access>-->
+        <manage-access></manage-access>
       </div>
     <h3>Content</h3>
       <div id="file-manager">
@@ -33,7 +30,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'vue-date-pick/dist/vueDatePick.css';
 // import axios from 'axios';
 import Filemanager from './Filemanager.vue';
-// import Access from './Access.vue';
+import Access from './Access.vue';
 
 export default {
   name: 'Resource',
@@ -42,6 +39,7 @@ export default {
       res: {
         shortId: '7ada0db58127435c97075a9516b4912b',
         keywords: 'diatoms',
+        owners: [],
         resourceAccess: {
           isPublic: true,
           isDiscoverable: true,
@@ -75,7 +73,7 @@ export default {
   },
   components: {
     fileManager: Filemanager,
-    // manageAccess: Access,
+    manageAccess: Access,
   },
   mounted() {
   },

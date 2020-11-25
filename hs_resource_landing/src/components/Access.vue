@@ -13,18 +13,14 @@
 
 
       <div class="modal-body" slot="body">
+        <div>
         <div class="alert alert-info" role="alert">
-          <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse"
-                   data-target="#usage-info">&nbsp;</span>
+          <p>
             Use this window to share your resource with specific HydroShare users or set its sharing status (Public,
             Discoverable, Private, Shareable).
             You can give other users the ability to view or edit this resource. You can also add additional owners who
             will have full permissions.</p>
-          <br>
-
-          <div id="usage-info" class="collapse">
-            <ul>
-              <li>
+          <br />
                 <p><strong>Owners</strong> can perform all operations on a resource and set whether
                   a resource is Public,
                   Discoverable, or Private and Shareable. Resources that are Public have all their
@@ -33,23 +29,15 @@
                   public.
                   Resources that are private are only accessible to specific users or groups that
                   they have been shared with.</p>
-              </li>
-              <li>
                 <p><strong>Editors</strong> can edit resource metadata and add and delete resource
                   content files. If the resource
                   is Shareable editors can use manage access to extend editing or viewing access
                   to other users.</p>
-              </li>
-              <li><p><strong>Viewers</strong> can view resource metadata and download resource content
+            <p><strong>Viewers</strong> can view resource metadata and download resource content
                 files. If the resource is
                 Shareable viewers can use manage access to extend viewing access to other users.</p>
-              </li>
-            </ul>
           </div>
-          <div data-toggle="collapse" data-target="#usage-info"
-               class="btn-show-more btn btn-default btn-xs">Show More
-          </div>
-          <br>
+
         </div>
       </div>
 
@@ -190,7 +178,7 @@
                     <button class="btn btn-default dropdown-toggle" type="button"
                             id="roles_list" data-toggle="dropdown"
                             aria-haspopup="true">
-                      <span id="selected_role" data-role="view">${accessStr[selectedAccess]}</span>
+                      <span id="selected_role" data-role="view">asdf</span>
                       <span class="caret"></span>
                     </button>
 
@@ -330,73 +318,70 @@
           </div>
         </div>
 
-<!--         Change quota holder -->
+        <!--         Change quota holder -->
         <div v-if="selfAccessLevel === 'owner'" class="panel panel-default">
-    <div class="panel-heading">
-        <h3 class="panel-title">Storage</h3>
-    </div>
-    <div class="panel-body">
-        <span>The quota holder of this resource is: </span>
-        <span>
+          <div class="panel-heading">
+            <h3 class="panel-title">Storage</h3>
+          </div>
+          <div class="panel-body">
+            <span>The quota holder of this resource is: </span>
+            <span>
             <profile-link v-on:load-card="onLoadQuotaHolderCard($event)" :user="quotaHolder"></profile-link>
             <profile-card :user="quotaHolder" :position="cardPosition"></profile-card>
         </span>
 
-        <button v-show="!hasOnlyOneOwner"
-                id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
-                style="margin-left: 5px;"
-                data-toggle="collapse" data-target="#form-quota-holder">
-            Change
-        </button>
+            <button v-show="!hasOnlyOneOwner"
+                    id="btn-change-quota-holder" type="button" class="btn btn-default btn-xs"
+                    style="margin-left: 5px;"
+                    data-toggle="collapse" data-target="#form-quota-holder">
+              Change
+            </button>
 
-        <div v-show="!hasOnlyOneOwner" id="form-quota-holder" class="collapse">
-            <hr>
-            <div class="form-group">
+            <div v-show="!hasOnlyOneOwner" id="form-quota-holder" class="collapse">
+              <hr>
+              <div class="form-group">
                 <fieldset>
-                    <div class="control-group">
-                        <label for="new_holder_username" class="control-label requiredField">
-                            Change quota holder to another owner</label>
+                  <div class="control-group">
+                    <label for="new_holder_username" class="control-label requiredField">
+                      Change quota holder to another owner</label>
 
-                        <div class="controls">
-                            <select ref="newHolder" class="form-control input-sm select"
-                                    id="new_holder_username"
-                                    name="new_holder_username">
-                                <option v-for="user in users"
-                                        v-if="user.user_type === 'user' && user.access === 'owner' && user.id !== quotaHolder"
-                                        :value="user.user_name">${user.best_name}
-                                </option>
-                            </select>
+                    <div class="controls">
+                      <select ref="newHolder" class="form-control input-sm select"
+                              id="new_holder_username"
+                              name="new_holder_username">
+<!--                        <option v-for="user in users"-->
+<!--                                v-if="user.user_type === 'user' && user.access === 'owner' && user.id !== quotaHolder"-->
+<!--                                :value="user.user_name">${user.best_name}-->
+<!--                        </option>-->
+                      </select>
 
-                            <div v-if="quotaError" class='alert alert-danger space-top small'>
-                                <strong>Error: </strong>${ quotaError }
-                            </div>
-                        </div>
+                      <div v-if="quotaError" class='alert alert-danger space-top small'>
+                        <strong>Error: </strong>${ quotaError }
+                      </div>
                     </div>
+                  </div>
                 </fieldset>
+              </div>
+
+              <button
+                  :class="{disabled: isChangingQuotaHolder}"
+                  class="btn btn-default space-right" data-toggle="collapse"
+                  type="button"
+                  data-target="#form-quota-holder">Cancel
+              </button>
+
+              <button @click="setQuotaHolder($refs.newHolder.value)"
+                      :class="{disabled: isChangingQuotaHolder}"
+                      class="btn btn-primary"
+                      type="button">${isChangingQuotaHolder ? "Saving Changes..." : "Save Changes"}
+              </button>
             </div>
-
-            <button
-                :class="{disabled: isChangingQuotaHolder}"
-                class="btn btn-default space-right" data-toggle="collapse"
-                type="button"
-                data-target="#form-quota-holder">Cancel
-            </button>
-
-            <button @click="setQuotaHolder($refs.newHolder.value)"
-                    :class="{disabled: isChangingQuotaHolder}"
-                    class="btn btn-primary"
-                    type="button">${isChangingQuotaHolder ? "Saving Changes..." : "Save Changes"}
-            </button>
+            <hr>
+            <p>The size of this resource is <strong>{{ cm.size|filesizeformat }}</strong>.</p>
+          </div>
         </div>
-        <hr>
-        <p>The size of this resource is <strong>{{ cm.size|filesizeformat }}</strong>.</p>
-    </div>
-</div>
       </div>
 
-      <div class="modal-footer">
-        <a type="button" data-dismiss="modal" class="btn btn-default">Close</a>
-      </div>
 
     </modal>
   </div>
@@ -408,7 +393,7 @@ import Modal from './Modal.vue';
 
 export default {
   name: 'Access',
-  props: ['currentUserId', 'shortId'],
+  props: ['currentUserId', 'shortId', 'owners'],
   data() {
     return {
       QUOTA_HOLDER_PK: {},
@@ -444,6 +429,9 @@ export default {
         edit: 'Can edit',
         owner: 'Is owner',
       },
+      showModal: false,
+      canChangeResourceFlags: false,
+      selfAccessLevel: '',
       error: '',
       quotaError: '',
       sharingError: '',
@@ -483,14 +471,16 @@ export default {
       //   .text(accessStr); // Update highlight sharing status
     },
     users() {
-      leftHeaderApp.$data.owners = this.users.filter(user => user.access === 'owner');
+      // TODO PROBABLY UPDATING THE OWNERS IN SOME EXTERNAL PART OF RLP
+      // TODO FOR NOW JUST UPDATE THE PARENT
+      // leftHeaderApp.$data.owners = this.users.filter(user => user.access === 'owner');
+      this.$emit('update:owners', this.users.filter(user => user.access === 'owner'));
     },
   },
   computed: {
     hasOnlyOneOwner() {
       return this.users.filter(user => user.access === 'owner').length === 1;
-    }
-    ,
+    },
   },
   methods: {
     onChangeAccess(user, index, accessToGrant) {
@@ -502,35 +492,29 @@ export default {
     },
     changeAccess(user, index, accessToGrant) {
       this.error = '';
-      // user.loading = true;
-      this.isProcessing = true;
       this.users.splice(index, 1, user);
-
-      $.post(`/hsapi/_internal/${this.shortId}/share-resource-with-${user.user_type}/${
-        accessToGrant}/${user.id}/`, (result) => {
-        let resp;
-        try {
-          resp = JSON.parse(result);
-        } catch (error) {
-          console.log(error);
-          // vue.isProcessing = false;
-          return;
-        }
-
-        if (resp.status == 'success') {
-          user = resp.user;
-          if (vue.currentUserId === user.id) {
-            vue.selfAccessLevel = user.access;
-          }
-        } else {
+      // for example http://dev-hs-7.cuahsi.org/hsapi/_internal/ca5082ab7f024d598a8c9bc935a11eef/share-resource-with-user/edit/10/
+      axios.post(`/hsapi/_internal/${this.shortId}/share-resource-with-${user.user_type}/${accessToGrant}/${user.id}/`,
+        {
+          params: {
+            asdf: 'asdf',
+          },
+        })
+        .then((resp) => {
           console.log(resp);
-          this.error = resp.error_msg;
-        }
-
-        // user.loading = false;
-        vue.users.splice(index, 1, user);
-        // vue.isProcessing = false;
-      });
+          try {
+            const u = JSON.parse(resp).user;
+            if (this.currentUserId === u.id) {
+              this.selfAccessLevel = u.access;
+            }
+            this.users.splice(index, 1, u);
+          } catch (e) {
+            // do nothing
+          }
+        })
+        .catch((error) => {
+            console.log(`error undo share resource: ${error}`); // eslint-disable-line
+        });
     },
     getUserDropdownItemClass(user, accessToGrant) {
       let ddClass = {
@@ -557,6 +541,7 @@ export default {
 
       // eslint-disable-next-line no-mixed-operators
       ddClass.disabled = !ddClass.active && (ddClass.disabled || user.access === 'owner'
+          // eslint-disable-next-line no-mixed-operators
           && this.hasOnlyOneOwner || user.user_type === 'user' && user.id === this.quotaHolder.id);
 
       return ddClass;
@@ -649,234 +634,234 @@ export default {
       //     });
     },
     undoAccess(user, index) {
-      this.error = '';
-      // user.loading = true;
-      vue.users.splice(index, 1, user); // TODO SHOULD THIS BE REPEATED BELOW?
-
-      axios.post(`/hsapi/_internal/${this.shortId}/undo-share-resource-with-${user.user_type}/${user.id}/`,
-        {
-          params: {
-            asdf: 'asdf',
-          },
-        })
-        .then((resp) => {
-          if (resp.status === 'success') {
-            try {
-              user.access = resp[`undo_${user.user_type}_privilege`];
-              user.can_undo = false;
-              if (user.access === 'none') {
-                vue.users.splice(index, 1); // The entry was removed
-                return;
-              }
-              vue.users.splice(index, 1, user);
-            } catch (e) {
-              // do nothing
-            }
-          } else {
-            this.error = resp.error_msg;
-            console.log(resp);
-          }
-        })
-        .catch((error) => {
-            console.log(`error undo share resource: ${error}`); // eslint-disable-line
-        })
-        .then(() => {
-          // user.loading = false;
-          vue.users.splice(index, 1, user); // TODO IS THIS REPEATED FROM A BAD COPY PASTE? TEST
-          this.isProcessing = false;
-        });
+      console.log(user, index);
+      //   this.error = '';
+      //   // user.loading = true;
+      //   this.users.splice(index, 1, user); // TODO SHOULD THIS BE REPEATED BELOW?
+      //
+      //   axios.post(`/hsapi/_internal/${this.shortId}/undo-share-resource-with-${user.user_type}/${user.id}/`,
+      //     {
+      //       params: {
+      //         asdf: 'asdf',
+      //       },
+      //     })
+      //     .then((resp) => {
+      //       if (resp.status === 'success') {
+      //         try {
+      //           user.access = resp[`undo_${user.user_type}_privilege`];
+      //           user.can_undo = false;
+      //           if (user.access === 'none') {
+      //             this.users.splice(index, 1); // The entry was removed
+      //             return;
+      //           }
+      //           this.users.splice(index, 1, user);
+      //         } catch (e) {
+      //           // do nothing
+      //         }
+      //       } else {
+      //         this.error = resp.error_msg;
+      //         console.log(resp);
+      //       }
+      //     })
+      //     .catch((error) => {
+      //         console.log(`error undo share resource: ${error}`); // eslint-disable-line
+      //     })
+      //     .then(() => {
+      //       // user.loading = false;
+      //       this.users.splice(index, 1, user); // TODO IS THIS REPEATED FROM A BAD COPY PASTE? TEST
+      //     });
+      // },
     },
-  },
-  grantAccess() {
-    let targetUserId;
-
-    if (this.isInviteUsers) {
-      if ($('#user-deck > .hilight').length > 0) {
-        targetUserId = parseInt($('#user-deck > .hilight')[0].getAttribute('data-value'), 10);
-      } else {
-        return false; // No user selected
-      }
-    } else if ($('#id_group-deck > .hilight').length > 0) {
-      targetUserId = parseInt($('#id_group-deck > .hilight')[0].getAttribute('data-value'), 10);
-    } else {
-      return false; // No group selected
-    }
-
-    $('.hilight > span')
-      .click(); // Clear the autocomplete
-    this.error = '';
-    const vue = this;
-
-    let index = -1;
-    const user = this.users.filter((u, i) => {
-      const answer = u.id === targetUserId;
-      if (answer) {
-        index = i;
-      }
-      return u.id === targetUserId;
-    })[0];
-
-    if (index >= 0) {
-      if (user.access === this.selectedAccess) {
-        return; // The user already has this access
-      }
-
+    grantAccess() {
+      // let targetUserId;
+      //
+      // if (this.isInviteUsers) {
+      //   if ($('#user-deck > .hilight').length > 0) {
+      //     targetUserId = parseInt($('#user-deck > .hilight')[0].getAttribute('data-value'), 10);
+      //   } else {
+      //     return false; // No user selected
+      //   }
+      // } else if ($('#id_group-deck > .hilight').length > 0) {
+      //   targetUserId = parseInt($('#id_group-deck > .hilight')[0].getAttribute('data-value'), 10);
+      // } else {
+      //   return false; // No group selected
+      // }
+      //
+      // $('.hilight > span')
+      //   .click(); // Clear the autocomplete
+      // this.error = '';
+      // const vue = this;
+      //
+      // let index = -1;
+      // const user = this.users.filter((u, i) => {
+      //   const answer = u.id === targetUserId;
+      //   if (answer) {
+      //     index = i;
+      //   }
+      //   return u.id === targetUserId;
+      // })[0];
+      //
+      // if (index >= 0) {
+      //   if (user.access === this.selectedAccess) {
+      //     return; // The user already has this access
+      //   }
+      //
+      //   // user.loading = true;
+      //   this.users.splice(index, 1, user);
+      // }
+      //
+      // $.post(`/hsapi/_internal/${this.shortId}/share-resource-with-${
+      //   this.isInviteUsers ? 'user' : 'group'}/${this.selectedAccess}/${
+      //   targetUserId}/`, (result) => {
+      //   let resp;
+      //   try {
+      //     resp = JSON.parse(result);
+      //   } catch (error) {
+      //     console.log(error);
+      //     this.error = 'Failed to change permission';
+      //     return;
+      //   }
+      //
+      //   if (resp.status === 'success') {
+      //     if (index >= 0) {
+      //       // An entry was found, update the data
+      //       user.access = resp.user.access;
+      //       // user.loading = false;
+      //       vue.users.splice(index, 1, user);
+      //       if (vue.currentUserId === user.id) {
+      //         vue.selfAccessLevel = user.access;
+      //       }
+      //     } else {
+      //       // No entry found. Push new data
+      //       const newUserAccess = resp.user;
+      //       newUserAccess.loading = false;
+      //       this.users.push(newUserAccess);
+      //     }
+      //   } else {
+      //     vue.error = resp.error_msg;
+      //     if (index >= 0) {
+      //       // user.loading = false;
+      //       this.users.splice(index, 1, user);
+      //     }
+      //   }
+      // });
+    },
+    removeAccess(user, index) {
+      console.log(user, index);
       // user.loading = true;
-      this.users.splice(index, 1, user);
-    }
-    this.isProcessing = true;
-
-    $.post(`/hsapi/_internal/${this.shortId}/share-resource-with-${
-      this.isInviteUsers ? 'user' : 'group'}/${this.selectedAccess}/${
-      targetUserId}/`, (result) => {
-      let resp;
-      try {
-        resp = JSON.parse(result);
-      } catch (error) {
-        console.log(error);
-        vue.error = 'Failed to change permission';
-        vue.isProcessing = false;
-        return;
-      }
-
-      if (resp.status === 'success') {
-        if (index >= 0) {
-          // An entry was found, update the data
-          user.access = resp.user.access;
-          // user.loading = false;
-          vue.users.splice(index, 1, user);
-          if (vue.currentUserId === user.id) {
-            vue.selfAccessLevel = user.access;
-          }
-        } else {
-          // No entry found. Push new data
-          const newUserAccess = resp.user;
-          newUserAccess.loading = false;
-          vue.users.push(newUserAccess);
-        }
-      } else {
-        vue.error = resp.error_msg;
-        if (index >= 0) {
-          // user.loading = false;
-          vue.users.splice(index, 1, user);
-        }
-      }
-      vue.isProcessing = false;
-    });
-  },
-  removeAccess(user, index) {
-    // user.loading = true;
-    this.users.splice(index, 1, user);
-    const vue = this;
-    vue.error = '';
-    this.isProcessing = true;
-
-    $.post(`/hsapi/_internal/${this.shortId}/unshare-resource-with-${
-      user.user_type}/${user.id}/`, (resp) => {
-      if (resp.status === 'success') {
-        vue.users.splice(index, 1);
-        vue.isProcessing = false;
-        if (resp.hasOwnProperty('redirect_to')) {
-          window.location.href = resp.redirect_to;
-        }
-      } else {
-        // user.loading = false;
-        vue.users.splice(index, 1, user);
-        vue.error = resp.message;
-        vue.isProcessing = false;
-        console.log(resp);
-      }
-    });
-  },
-  setResourceAccess(action) {
-    this.isProcessingAccess = true;
-    $.post(`/hsapi/_internal/${this.shortId}/set-resource-flag/`,
-      {
-        flag: action,
-        'resource-mode': this.resourceMode,
-      }, (resp) => {
-        if (resp.status === 'success') {
-          if (action === 'make_public') {
-            this.resAccess = {
-              isPublic: true,
-              isDiscoverable: true,
-              isShareable: this.resAccess.isShareable,
-            };
-          } else if (action === 'make_discoverable') {
-            this.resAccess = {
-              isPublic: false,
-              isDiscoverable: true,
-              isShareable: this.resAccess.isShareable,
-            };
-          } else if (action === 'make_private') {
-            this.resAccess = {
-              isPublic: false,
-              isDiscoverable: false,
-              isShareable: this.resAccess.isShareable,
-            };
-          }
-        }
-        this.isProcessingAccess = false;
-      });
-  },
-  setShareable(action) {
-    this.isProcessingShareable = true;
-    this.sharingError = '';
-    $.post(`/hsapi/_internal/${this.shortId}/set-resource-flag/`,
-      {
-        flag: action,
-        'resource-mode': this.resourceMode,
-      }, (resp) => {
-        if (resp.status === 'error') {
-          this.sharingError = resp.message;
-        }
-        this.isProcessingShareable = false;
-      });
-  },
-  setQuotaHolder(username) {
-    this.quotaError = '';
-    this.isChangingQuotaHolder = true;
-
-    $.post(`/hsapi/_internal/${this.shortId}/change-quota-holder/`,
-      { new_holder_username: username }, (resp) => {
-        if (resp.status === 'success') {
-          let newHolder;
-          let index;
-
-          for (let i = 0; i < vue.users.length; i++) {
-            if (vue.users[i].user_name === username) {
-              newHolder = vue.users[i];
-              index = i;
-              break;
-            }
-          }
-
-          newHolder.can_undo = false;
-          vue.users.splice(index, 1, newHolder);
-
-          // Changing quota holder can't be undone
-          this.quotaHolder = newHolder;
-        } else {
-          this.quotaError = resp.message;
-        }
-        this.isChangingQuotaHolder = false;
-      });
-  },
-  onMetadataInsufficient() {
-    // Set the resource access to private
-    this.resAccess = {
-      isPublic: false,
-      isDiscoverable: false,
-      isShareable: this.resAccess.isShareable,
-    };
-    // The metadata is insufficient
-    this.canBePublicDiscoverable = false;
-  },
-  onLoadQuotaHolderCard(data) {
-    const el = $(data.event.target);
-    const cardWidth = 350;
-    this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
-    this.cardPosition.top = el.position().top + 30;
+      // this.users.splice(index, 1, user);
+      // const vue = this;
+      // this.error = '';
+      //
+      // $.post(`/hsapi/_internal/${this.shortId}/unshare-resource-with-${
+      //   user.user_type}/${user.id}/`, (resp) => {
+      //   if (resp.status === 'success') {
+      //     vue.users.splice(index, 1);
+      //     if (resp.hasOwnProperty('redirect_to')) {
+      //       window.location.href = resp.redirect_to;
+      //     }
+      //   } else {
+      //     // user.loading = false;
+      //     vue.users.splice(index, 1, user);
+      //     vue.error = resp.message;
+      //     console.log(resp);
+      //   }
+      // });
+    },
+    setResourceAccess(action) {
+      console.log(action);
+      // this.isProcessingAccess = true;
+      // $.post(`/hsapi/_internal/${this.shortId}/set-resource-flag/`,
+      //   {
+      //     flag: action,
+      //     'resource-mode': this.resourceMode,
+      //   }, (resp) => {
+      //     if (resp.status === 'success') {
+      //       if (action === 'make_public') {
+      //         this.resAccess = {
+      //           isPublic: true,
+      //           isDiscoverable: true,
+      //           isShareable: this.resAccess.isShareable,
+      //         };
+      //       } else if (action === 'make_discoverable') {
+      //         this.resAccess = {
+      //           isPublic: false,
+      //           isDiscoverable: true,
+      //           isShareable: this.resAccess.isShareable,
+      //         };
+      //       } else if (action === 'make_private') {
+      //         this.resAccess = {
+      //           isPublic: false,
+      //           isDiscoverable: false,
+      //           isShareable: this.resAccess.isShareable,
+      //         };
+      //       }
+      //     }
+      //     this.isProcessingAccess = false;
+      //   });
+    },
+    setShareable(action) {
+      console.log(action);
+      // this.isProcessingShareable = true;
+      // this.sharingError = '';
+      // $.post(`/hsapi/_internal/${this.shortId}/set-resource-flag/`,
+      //   {
+      //     flag: action,
+      //     'resource-mode': this.resourceMode,
+      //   }, (resp) => {
+      //     if (resp.status === 'error') {
+      //       this.sharingError = resp.message;
+      //     }
+      //     this.isProcessingShareable = false;
+      //   });
+    },
+    setQuotaHolder(username) {
+      console.log(username);
+      // this.quotaError = '';
+      // this.isChangingQuotaHolder = true;
+      //
+      // $.post(`/hsapi/_internal/${this.shortId}/change-quota-holder/`,
+      //   { new_holder_username: username }, (resp) => {
+      //     if (resp.status === 'success') {
+      //       let newHolder;
+      //       let index;
+      //
+      //       for (let i = 0; i < this.users.length; i++) {
+      //         if (this.users[i].user_name === username) {
+      //           newHolder = this.users[i];
+      //           index = i;
+      //           break;
+      //         }
+      //       }
+      //
+      //       newHolder.can_undo = false;
+      //       this.users.splice(index, 1, newHolder);
+      //
+      //       // Changing quota holder can't be undone
+      //       this.quotaHolder = newHolder;
+      //     } else {
+      //       this.quotaError = resp.message;
+      //     }
+      //     this.isChangingQuotaHolder = false;
+      //   });
+    },
+    onMetadataInsufficient() {
+      // Set the resource access to private
+      this.resAccess = {
+        isPublic: false,
+        isDiscoverable: false,
+        isShareable: this.resAccess.isShareable,
+      };
+      // The metadata is insufficient
+      this.canBePublicDiscoverable = false;
+    },
+    onLoadQuotaHolderCard(data) {
+      console.log(data);
+      // const el = $(data.event.target);
+      // const cardWidth = 350;
+      // this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
+      // this.cardPosition.top = el.position().top + 30;
+    },
   },
 };
 </script>
