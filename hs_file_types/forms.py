@@ -216,7 +216,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
 
         if is_schema_valid:
             # custom validation - hydroshare requirements
-            # this custom validation requiring additional attributes are needed for making the jsoneditor form
+            # this custom validation requiring additional attributes are needed for making the json-editor form
             # generation at the front-end to work
             if 'additionalProperties' not in json_schema:
                 is_schema_valid = False
@@ -231,17 +231,31 @@ class ModelProgramMetadataValidationForm(forms.Form):
 
             def validate_schema(schema_dict):
                 for k, v in schema_dict.items():
+                    # key must not have whitespaces - required for xml encoding of metadata
+                    if k != k.strip():
+                        msg = "Not a valid metadata schema. Attribute '{}' has leading or trailing whitespaces"
+                        msg = msg.format(k)
+                        self.add_error(field_name, msg)
+                    # key must consists of alphanumeric characters only - required for xml encoding of metadata
+                    if not k.isalnum():
+                        msg = "Not a valid metadata schema. Attribute '{}' has non-alphanumeric characters"
+                        msg = msg.format(k)
+                        self.add_error(field_name, msg)
+                    # key must start with a alphabet character - required for xml encoding of metadata
+                    if not k[0].isalpha():
+                        msg = "Not a valid metadata schema. Attribute '{}' starts with a non-alphabet character"
+                        msg = msg.format(k)
+                        self.add_error(field_name, msg)
+
                     if isinstance(v, dict):
                         if k not in ('properties', 'items'):
                             # we need a title to use as label for the form field
                             if 'title' not in v:
                                 msg = "Not a valid metadata schema. Attribute 'title' is missing for {}".format(k)
                                 self.add_error(field_name, msg)
-                                break
                             elif len(v['title'].strip()) == 0:
                                 msg = "Not a valid metadata schema. Attribute 'title' has no value for {}".format(k)
                                 self.add_error(field_name, msg)
-                                break
                             if v['type'] == 'array':
                                 # we need format attribute set to 'table' in order for the jsoneditor to allow
                                 # editing array type field
@@ -249,31 +263,27 @@ class ModelProgramMetadataValidationForm(forms.Form):
                                     msg = "Not a valid metadata schema. Attribute 'format' is missing for {}"
                                     msg = msg.format(k)
                                     self.add_error(field_name, msg)
-                                    break
                                 elif v['format'] != 'table':
                                     msg = "Not a valid metadata schema. Attribute 'format' should be set " \
                                           "to table for {}"
                                     msg = msg.format(k)
                                     self.add_error(field_name, msg)
-                                    break
                         if 'type' in v and v['type'] == 'object':
                             # we requiring "additionalProperties": false so that we don't allow user to add new
-                            # form fields using the jsoneditor form
+                            # form fields using the json-editor form
                             if 'additionalProperties' not in v:
                                 msg = "Not a valid metadata schema. Attribute 'additionalProperties' is " \
                                       "missing for {}"
                                 msg = msg.format(k)
                                 self.add_error(field_name, msg)
-                                break
                             elif v['additionalProperties']:
                                 msg = "Not a valid metadata schema. Attribute 'additionalProperties' must " \
                                       "be set to false for {}"
                                 msg = msg.format(k)
                                 self.add_error(field_name, msg)
-                                break
 
                         # check for nested objects - we are not allowing nested objects to keep the form
-                        # generated from the schema by jsoneditor to not get complicated/broken
+                        # generated from the schema by json-editor to not get complicated
                         nested_object_found = False
                         for k_child, v_child in v.items():
                             if isinstance(v_child, dict):
@@ -283,7 +293,6 @@ class ModelProgramMetadataValidationForm(forms.Form):
                                     msg = msg.format(k_child)
                                     self.add_error(field_name, msg)
                                     nested_object_found = True
-                                    break
                         if not nested_object_found:
                             validate_schema(v)
 
