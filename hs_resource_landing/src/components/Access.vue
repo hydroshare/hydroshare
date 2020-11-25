@@ -80,7 +80,7 @@
                       </div>
                       <div class="user-username-content">${user.user_name}</div>
                       <div>
-                        <span v-if="user.id === currentUser" class="badge you-flag">You</span>
+                        <span v-if="user.id === currentUserId" class="badge you-flag">You</span>
                         <span v-if="user.id === quotaHolder.id" class="badge you-flag">
                             <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
                         </span>
@@ -139,8 +139,8 @@
               </td>
 
               <td class="user-actions">
-        <span @click="user.id === currentUser ? showDeleteSelfDialog(user, index) : removeAccess(user, index)"
-              v-if="!(user.access === 'owner' && hasOnlyOneOwner) && user.id !== quotaHolder.id && (selfAccessLevel === 'owner' || user.id === currentUser)"
+        <span @click="user.id === currentUserId ? showDeleteSelfDialog(user, index) : removeAccess(user, index)"
+              v-if="!(user.access === 'owner' && hasOnlyOneOwner) && user.id !== quotaHolder.id && (selfAccessLevel === 'owner' || user.id === currentUserId)"
               :id="'form-remove-' + user.user_type + '-' + user.id"
               class="glyphicon glyphicon-remove btn-remove-row"
               data-toggle="tooltip" title="Remove">
@@ -408,6 +408,7 @@ import Modal from './Modal.vue';
 
 export default {
   name: 'Access',
+  props: ['currentUserId', 'shortId'],
   data() {
     return {
       QUOTA_HOLDER_PK: {},
@@ -427,19 +428,15 @@ export default {
       FILE_COUNT: 4,
       SUPPORTED_FILE_TYPES: 'asdf',
       ALLLOW_MULTIPLE_FILE_UPLOAD: true,
-      CURRENT_USER_ID: 12,
       AUTHORS: 'kjuh',
       USERS_JSON: {},
       users: [],
-      currentUser: CURRENT_USER_ID,
-      selfAccessLevel: SELF_ACCESS_LEVEL,
-      quotaHolder: USERS_JSON.find(user => user.id === QUOTA_HOLDER_PK),
-      resType: RES_TYPE,
-      resShortId: SHORT_ID,
-      canChangeResourceFlags: CAN_CHANGE_RESOURCE_FLAGS,
-      groupImageDefaultUrl: GROUP_IMAGE_DEFAULT_URL,
-      resourceMode: RESOURCE_MODE,
-      canBePublicDiscoverable: CAN_BE_PUBLIC_OR_DISCOVERABLE,
+      // selfAccessLevel: SELF_ACCESS_LEVEL,
+      // quotaHolder: USERS_JSON.find(user => user.id === QUOTA_HOLDER_PK),
+      // resType: RES_TYPE,
+      // canChangeResourceFlags: CAN_CHANGE_RESOURCE_FLAGS,
+      // groupImageDefaultUrl: GROUP_IMAGE_DEFAULT_URL,
+      // canBePublicDiscoverable: CAN_BE_PUBLIC_OR_DISCOVERABLE,
       isInviteUsers: true,
       selectedAccess: 'view',
       accessStr: {
@@ -465,6 +462,7 @@ export default {
   },
   watch: {
     resAccess(newAccess, oldAccess) {
+      console.log(oldAccess);
       // TODO: move to Highlight's component once it's ready
       // $('#publish')
       //     .toggleClass('disabled', !newAccess.isPublic);
@@ -480,6 +478,7 @@ export default {
       } else if (!newAccess.isPublic && newAccess.isDiscoverable) {
         accessStr = 'Discoverable';
       }
+      console.log(accessStr);
       // $('#hl-sharing-status')
       //   .text(accessStr); // Update highlight sharing status
     },
@@ -495,7 +494,7 @@ export default {
   },
   methods: {
     onChangeAccess(user, index, accessToGrant) {
-      if (this.currentUser === user.id && user.access === 'owner') {
+      if (this.currentUserId === user.id && user.access === 'owner') {
         this.showPermissionDialog(user, index, accessToGrant);
       } else {
         this.changeAccess(user, index, accessToGrant);
@@ -507,7 +506,7 @@ export default {
       this.isProcessing = true;
       this.users.splice(index, 1, user);
 
-      $.post(`/hsapi/_internal/${this.resShortId}/share-resource-with-${user.user_type}/${
+      $.post(`/hsapi/_internal/${this.shortId}/share-resource-with-${user.user_type}/${
         accessToGrant}/${user.id}/`, (result) => {
         let resp;
         try {
@@ -520,7 +519,7 @@ export default {
 
         if (resp.status == 'success') {
           user = resp.user;
-          if (vue.currentUser === user.id) {
+          if (vue.currentUserId === user.id) {
             vue.selfAccessLevel = user.access;
           }
         } else {
@@ -539,70 +538,72 @@ export default {
         disabled: true,
       };
 
-      if (accessToGrant == 'view') {
+      if (accessToGrant === 'view') {
         ddClass = {
           active: user.access === 'view',
           disabled: user.access === 'none',
         };
-      } else if (accessToGrant == 'edit') {
+      } else if (accessToGrant === 'edit') {
         ddClass = {
           active: user.access === 'edit',
           disabled: this.selfAccessLevel !== 'owner' && this.selfAccessLevel !== 'edit',
         };
-      } else if (accessToGrant == 'owner') {
+      } else if (accessToGrant === 'owner') {
         ddClass = {
           active: user.access === 'owner',
           disabled: !this.canChangeResourceFlags || this.selfAccessLevel !== 'owner',
         };
       }
 
+      // eslint-disable-next-line no-mixed-operators
       ddClass.disabled = !ddClass.active && (ddClass.disabled || user.access === 'owner'
           && this.hasOnlyOneOwner || user.user_type === 'user' && user.id === this.quotaHolder.id);
 
       return ddClass;
     },
     showPermissionDialog(user, index, accessToGrant) {
+      console.log(user, index, accessToGrant);
       // close the manage access panel (modal)
-      $('#manage-access')
-        .modal('hide');
+      // $('#manage-access')
+      //   .modal('hide');
 
       // display change share permission confirmation dialog
-      $('#dialog-confirm-change-share-permission')
-        .dialog({
-          resizable: false,
-          draggable: false,
-          height: 'auto',
-          width: 500,
-          modal: true,
-          dialogClass: 'noclose',
-          buttons: {
-            Cancel() {
-              $(this)
-                .dialog('close');
-              // show manage access control panel again
-              $('#manage-access')
-                .modal('show');
-            },
-            Confirm() {
-              $(this)
-                .dialog('close');
-              $('#manage-access')
-                .modal('show');
-              vue.changeAccess(user, index, accessToGrant);
-            },
-          },
-          open() {
-            // $(this)
-            //   .closest('.ui-dialog')
-            //   .find('.ui-dialog-buttonset button:first') // the first button
-            //   .addClass('btn btn-default');
-
-            // $(this)
-            //     .closest('.ui-dialog')
-            //     .find('.ui-dialog-buttonset button:nth-child(2)') // the first button
-            //     .addClass('btn btn-danger');
-          },
-        });
+      // $('#dialog-confirm-change-share-permission')
+      //   .dialog({
+      //     resizable: false,
+      //     draggable: false,
+      //     height: 'auto',
+      //     width: 500,
+      //     modal: true,
+      //     dialogClass: 'noclose',
+      //     buttons: {
+      //       Cancel() {
+      //         $(this)
+      //           .dialog('close');
+      //         // show manage access control panel again
+      //         $('#manage-access')
+      //           .modal('show');
+      //       },
+      //       Confirm() {
+      //         $(this)
+      //           .dialog('close');
+      //         $('#manage-access')
+      //           .modal('show');
+      //         vue.changeAccess(user, index, accessToGrant);
+      //       },
+      //     },
+      //     open() {
+      //        $(this)
+      //          .closest('.ui-dialog')
+      //          .find('.ui-dialog-buttonset button:first') // the first button
+      //          .addClass('btn btn-default');
+      //
+      //        $(this)
+      //            .closest('.ui-dialog')
+      //            .find('.ui-dialog-buttonset button:nth-child(2)') // the first button
+      //            .addClass('btn btn-danger');
+      //      },
+      //    });
     },
     showDeleteSelfDialog(user, index) {
       console.log(user, index);
@@ -648,12 +649,11 @@ export default {
       //     });
     },
     undoAccess(user, index) {
-      const vue = this;
-      vue.error = '';
+      this.error = '';
       // user.loading = true;
       vue.users.splice(index, 1, user); // TODO SHOULD THIS BE REPEATED BELOW?
 
-      axios.post(`/hsapi/_internal/${this.resShortId}/undo-share-resource-with-${user.user_type}/${user.id}/`,
+      axios.post(`/hsapi/_internal/${this.shortId}/undo-share-resource-with-${user.user_type}/${user.id}/`,
         {
           params: {
             asdf: 'asdf',
@@ -673,7 +673,7 @@ export default {
               // do nothing
             }
           } else {
-            vue.error = resp.error_msg;
+            this.error = resp.error_msg;
             console.log(resp);
           }
         })
@@ -692,12 +692,12 @@ export default {
 
     if (this.isInviteUsers) {
       if ($('#user-deck > .hilight').length > 0) {
-        targetUserId = parseInt($('#user-deck > .hilight')[0].getAttribute('data-value'));
+        targetUserId = parseInt($('#user-deck > .hilight')[0].getAttribute('data-value'), 10);
       } else {
         return false; // No user selected
       }
     } else if ($('#id_group-deck > .hilight').length > 0) {
-      targetUserId = parseInt($('#id_group-deck > .hilight')[0].getAttribute('data-value'));
+      targetUserId = parseInt($('#id_group-deck > .hilight')[0].getAttribute('data-value'), 10);
     } else {
       return false; // No group selected
     }
@@ -709,11 +709,11 @@ export default {
 
     let index = -1;
     const user = this.users.filter((u, i) => {
-      const answer = u.id == targetUserId;
+      const answer = u.id === targetUserId;
       if (answer) {
         index = i;
       }
-      return u.id == targetUserId;
+      return u.id === targetUserId;
     })[0];
 
     if (index >= 0) {
@@ -726,7 +726,7 @@ export default {
     }
     this.isProcessing = true;
 
-    $.post(`/hsapi/_internal/${this.resShortId}/share-resource-with-${
+    $.post(`/hsapi/_internal/${this.shortId}/share-resource-with-${
       this.isInviteUsers ? 'user' : 'group'}/${this.selectedAccess}/${
       targetUserId}/`, (result) => {
       let resp;
@@ -745,7 +745,7 @@ export default {
           user.access = resp.user.access;
           // user.loading = false;
           vue.users.splice(index, 1, user);
-          if (vue.currentUser === user.id) {
+          if (vue.currentUserId === user.id) {
             vue.selfAccessLevel = user.access;
           }
         } else {
@@ -771,7 +771,7 @@ export default {
     vue.error = '';
     this.isProcessing = true;
 
-    $.post(`/hsapi/_internal/${this.resShortId}/unshare-resource-with-${
+    $.post(`/hsapi/_internal/${this.shortId}/unshare-resource-with-${
       user.user_type}/${user.id}/`, (resp) => {
       if (resp.status === 'success') {
         vue.users.splice(index, 1);
@@ -789,59 +789,55 @@ export default {
     });
   },
   setResourceAccess(action) {
-    const vue = this;
-    vue.isProcessingAccess = true;
-    $.post(`/hsapi/_internal/${this.resShortId}/set-resource-flag/`,
+    this.isProcessingAccess = true;
+    $.post(`/hsapi/_internal/${this.shortId}/set-resource-flag/`,
       {
         flag: action,
         'resource-mode': this.resourceMode,
       }, (resp) => {
         if (resp.status === 'success') {
           if (action === 'make_public') {
-            vue.resAccess = {
+            this.resAccess = {
               isPublic: true,
               isDiscoverable: true,
-              isShareable: vue.resAccess.isShareable,
+              isShareable: this.resAccess.isShareable,
             };
           } else if (action === 'make_discoverable') {
-            vue.resAccess = {
+            this.resAccess = {
               isPublic: false,
               isDiscoverable: true,
-              isShareable: vue.resAccess.isShareable,
+              isShareable: this.resAccess.isShareable,
             };
           } else if (action === 'make_private') {
-            vue.resAccess = {
+            this.resAccess = {
               isPublic: false,
               isDiscoverable: false,
-              isShareable: vue.resAccess.isShareable,
+              isShareable: this.resAccess.isShareable,
             };
           }
         }
-
-        vue.isProcessingAccess = false;
+        this.isProcessingAccess = false;
       });
   },
   setShareable(action) {
-    const vue = this;
-    vue.isProcessingShareable = true;
-    vue.sharingError = '';
-    $.post(`/hsapi/_internal/${this.resShortId}/set-resource-flag/`,
+    this.isProcessingShareable = true;
+    this.sharingError = '';
+    $.post(`/hsapi/_internal/${this.shortId}/set-resource-flag/`,
       {
         flag: action,
         'resource-mode': this.resourceMode,
       }, (resp) => {
         if (resp.status === 'error') {
-          vue.sharingError = resp.message;
+          this.sharingError = resp.message;
         }
-        vue.isProcessingShareable = false;
+        this.isProcessingShareable = false;
       });
   },
   setQuotaHolder(username) {
-    const vue = this;
-    vue.quotaError = '';
-    vue.isChangingQuotaHolder = true;
+    this.quotaError = '';
+    this.isChangingQuotaHolder = true;
 
-    $.post(`/hsapi/_internal/${this.resShortId}/change-quota-holder/`,
+    $.post(`/hsapi/_internal/${this.shortId}/change-quota-holder/`,
       { new_holder_username: username }, (resp) => {
         if (resp.status === 'success') {
           let newHolder;
@@ -859,11 +855,11 @@ export default {
           vue.users.splice(index, 1, newHolder);
 
           // Changing quota holder can't be undone
-          vue.quotaHolder = newHolder;
+          this.quotaHolder = newHolder;
         } else {
-          vue.quotaError = resp.message;
+          this.quotaError = resp.message;
         }
-        vue.isChangingQuotaHolder = false;
+        this.isChangingQuotaHolder = false;
       });
   },
   onMetadataInsufficient() {

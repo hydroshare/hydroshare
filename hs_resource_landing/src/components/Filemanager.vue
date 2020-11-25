@@ -1,22 +1,19 @@
 <template>
   <div>
-    Hello Resources
-    {{ somedata }}
+    Modify keywords
+    <input :value="keywords" @input="$emit('update:keywords', $event.target.value)" />
   </div>
 </template>
 
 <script>
-
-
 export default {
   data() {
     return {
-      somedata: 'some sample data',
+      ddd: 'some sample data',
     };
   },
   name: 'Filemanager',
-  props:
-  ['sample_prop'],
+  props: ['shortId', 'keywords', 'resourceAccess'],
   components: {
   },
   computed: {
@@ -25,10 +22,10 @@ export default {
 
   },
   mounted() {
-    // eslint-disable-next-line
-    console.log('mounted filemanager');
   },
   methods: {
+    testFunc() {
+    },
   },
 };
 </script>
