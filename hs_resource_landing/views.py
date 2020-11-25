@@ -36,7 +36,7 @@ class ResourceLandingAPI(APIView):
         Description
         """
         start = time.time()
-        resources = GenericResource.objects.all()
+        # resources = GenericResource.objects.all()
         user = User.objects.get(pk=self.request.user.id)
 
         grps_member_of = []

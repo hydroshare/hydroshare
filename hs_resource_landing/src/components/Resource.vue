@@ -2,12 +2,12 @@
   <div>
     <h2>Resource Name</h2>
     <h3>Abstract</h3>
-      <textarea id="id_abstract" class="form-control input-sm textarea" cols="40" rows="10"></textarea>
+    <label for="id_abstract"></label><textarea id="id_abstract" class="form-control input-sm textarea" cols="40" rows="10"></textarea>
     <h3>Subject Keywords</h3>
     <h3>Coverage</h3>
-          <div id="common-components">
-        <manage-access>
-        </manage-access>
+      <div id="common-components">
+        <!-- https://vuejs.org/v2/guide/components-custom-events.html#Binding-Native-Events-to-Components-->
+        <manage-access v-bind:resource.sync="res"></manage-access>
       </div>
     <h3>Content</h3>
       <div id="file-manager">
@@ -37,7 +37,7 @@ export default {
   name: 'Resource',
   data() {
     return {
-      data: { first: 'asdf' },
+      resource: {},
       sample_props: ['prop1', 'prop2'],
     };
   },
