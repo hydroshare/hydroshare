@@ -1,3 +1,4 @@
+import glob
 import os
 from dateutil import parser
 import pytest
@@ -190,6 +191,21 @@ def test_metadata_schema_json_valid(mock_irods):
     form_data = {"mp_program_type": "Test Model Program", "mi_json_schema": json_schema}
     metadata_validation_form = ModelProgramMetadataValidationForm(data=form_data)
     assert metadata_validation_form.is_valid()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_metadata_schema_json_templates(mock_irods):
+    """test that the schema templates stored as part of hydroshare are valid JSON schemas"""
+
+    template_path = "hs_file_types/model_meta_schema_templates/*.json"
+    template_exists = False
+    for schema_template in glob.glob(template_path):
+        template_exists = True
+        form_data = {"mp_program_type": "Test Model Program", "mi_json_schema_template": schema_template}
+        metadata_validation_form = ModelProgramMetadataValidationForm(data=form_data)
+        assert metadata_validation_form.is_valid()
+    if not template_exists:
+        pytest.fail("No metadata schema templates found")
 
 
 @pytest.mark.django_db(transaction=True)
