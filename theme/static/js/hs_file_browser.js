@@ -1135,7 +1135,7 @@ function setupModelInstanceTypeUI() {
             disable_edit_json: true,
             disable_array_add: false,
             disable_array_delete: false,
-            // TODO: optional fields are not displayed by default in JSONEditor form for editing
+            // optional fields are not displayed by default in JSONEditor form for editing
             // user needs to select any optional properties to make it available for editing
             display_required_only: false,
             required_by_default: true,
@@ -1148,6 +1148,8 @@ function setupModelInstanceTypeUI() {
             // set the form field with the form data
             $("#id-schema-based-form").find("#id-metadata-json").val(jsonDataString);
         });
+        // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
+        $(".property-selector").removeAttr("style");
     }
 }
 
