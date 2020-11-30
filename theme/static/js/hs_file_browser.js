@@ -1293,8 +1293,9 @@ function countSelectedExternalFiles(fullPaths) {
 
     $("#fb-files-container li.ui-selected").each(function(i, el) {
         if (this.title.includes('Type: File Folder')) { // review subfolder info
-            if (topFolders[this.innerText]) {
-                numUrlWithinSubs += topFolders[this.innerText];
+            let ele = String(this.innerText).trim();
+            if (topFolders[ele]) {
+                numUrlWithinSubs += topFolders[ele];
             }
         }
 
