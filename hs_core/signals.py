@@ -17,12 +17,8 @@ pre_download_file = django.dispatch.Signal(providing_args=['sender','request','r
 
 pre_check_bag_flag = django.dispatch.Signal(providing_args=['resource'])
 
-pre_delete_resource = django.dispatch.Signal(providing_args=['request', 'user', 'shortkey', 'resource',
-                                                             'resource_type'])
-
-# post_delete_resource signal is sent from within a celery task with JSON serialization, so there should not be any
-# objects included in providing_args
-post_delete_resource = django.dispatch.Signal(providing_args=['username', 'resource_id', 'resource_title'])
+post_delete_resource = django.dispatch.Signal(providing_args=['request', 'user', 'shortkey', 'resource',
+                                                             'resource_title', 'resource_type'])
 
 pre_move_or_rename_file_or_folder = django.dispatch.Signal(providing_args=['resource',
                                                                            'src_full_path',
