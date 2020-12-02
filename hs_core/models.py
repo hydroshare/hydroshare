@@ -3804,7 +3804,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         return URIRef("{}/resource/{}/data/resourcemetadata.xml".format(current_site_url(), self.resource.short_id))
 
     def rdf_type(self):
-        return HSTERMS.CompositeResource
+        return getattr(HSTERMS, self.resource.resource_type)
 
     def ignored_generic_relations(self):
         """Override to exclude generic relations from the rdf/xml.  This is built specifically for Format, which is the
