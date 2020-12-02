@@ -338,11 +338,12 @@ def ingest_logical_file_metadata(metadata_file, resource):
             else:
                 file_name = file_path
                 file_path = ''
+            res_file = None
             for file in resource.files.filter(file_folder=file_path):
                 if file.file_name.startswith(file_name):
                     res_file = file
                     break
-            else:
+            if not res_file:
                 res_file = get_resource_file(resource.short_id, file_path)
             if res_file:
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
