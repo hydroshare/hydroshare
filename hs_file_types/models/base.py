@@ -1347,7 +1347,7 @@ class AbstractLogicalFile(models.Model):
         # Fetch the serialization
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
-        # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
+        # <ore:aggregates rdf:resource="https://www.hydroshare.org/terms/[aggregation name]"/>
         xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string

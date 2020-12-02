@@ -10,7 +10,7 @@ from rdflib.serializer import Serializer
 from rdflib.term import Literal, URIRef
 from rdflib.util import first
 
-HSTERMS = Namespace("http://hydroshare.org/terms/")
+HSTERMS = Namespace("https://www.hydroshare.org/terms/")
 RDFS1 = Namespace("http://www.w3.org/2000/01/rdf-schema#")
 
 NAMESPACE_MANAGER = NamespaceManager(Graph())
@@ -36,6 +36,12 @@ class RDF_MetaData_Mixin(object):
         raise NotImplementedError("RDF_Metadata_Mixin implementations must implement rdf_type. "
                                   "https://www.w3.org/TR/rdf-schema/#ch_type")
 
+    def ignored_generic_relations(self):
+        """Override to exclude generic relations from the rdf/xml.  This is built specifically for Format, which is the
+        only AbstractMetadataElement that is on a metadata model and not included in the rdf/xml.  Returns a list
+        of classes to be ignored"""
+        return []
+
     @classmethod
     def rdf_subject_from_graph(cls, graph):
         """Derive the root subject of an rdflib Graph by returning the subject in the triple with predicate DC.title"""
@@ -53,7 +59,9 @@ class RDF_MetaData_Mixin(object):
 
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
-            generic_relation.related_model.ingest_rdf(graph, subject, self)
+            if generic_relation.related_model not in self.ignored_generic_relations():
+                getattr(self, generic_relation.name).all().delete()
+                generic_relation.related_model.ingest_rdf(graph, subject, self)
         self.save()
 
     def get_rdf_graph(self):
@@ -62,13 +70,14 @@ class RDF_MetaData_Mixin(object):
         graph.namespace_manager = NAMESPACE_MANAGER
 
         subject = self.rdf_subject()
-        # graph.add((subject, RDF.type, self.rdf_type()))
+        graph.add((subject, RDF.type, self.rdf_type()))
         generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
         for generic_relation in generic_relations:
-            gr_name = generic_relation.name
-            gr = getattr(self, gr_name)
-            for f in gr.all():
-                f.rdf_triples(subject, graph)
+            if generic_relation.related_model not in self.ignored_generic_relations():
+                gr_name = generic_relation.name
+                gr = getattr(self, gr_name)
+                for f in gr.all():
+                    f.rdf_triples(subject, graph)
 
         return graph
 

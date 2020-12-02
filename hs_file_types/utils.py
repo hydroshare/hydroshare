@@ -275,7 +275,6 @@ def ingest_metadata_files(resource, meta_files):
         graph = Graph().parse(data=resource_metadata_file.read())
         try:
             with transaction.atomic():
-                resource.metadata.delete_all_elements()
                 resource.metadata.ingest_metadata(graph)
         except:
             # logger.exception("Error processing resource metadata file")

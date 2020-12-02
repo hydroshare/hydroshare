@@ -118,7 +118,7 @@ class SciMetaTestCase(HSRESTTestCase):
           'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
           'dc': "http://purl.org/dc/elements/1.1/",
           'dcterms': "http://purl.org/dc/terms/",
-          'hsterms': "http://hydroshare.org/terms/"}
+          'hsterms': "https://www.hydroshare.org/terms/"}
 
     RESOURCE_URL_TEMPLATE = "http://" + Site.objects.first().domain + "/resource/{0}"
 
@@ -250,7 +250,7 @@ class ResMapTestCase(HSRESTTestCase):
           'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
           'dc': "http://purl.org/dc/elements/1.1/",
           'dcterms': "http://purl.org/dc/terms/",
-          'hsterms': "http://hydroshare.org/terms/"}
+          'hsterms': "https://www.hydroshare.org/terms/"}
 
     RESOURCE_URL_TEMPLATE = "http://example.com/resource/{0}"
 

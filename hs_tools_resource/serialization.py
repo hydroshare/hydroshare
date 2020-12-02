@@ -33,7 +33,7 @@ class ToolResourceMeta(GenericResourceMeta):
 
         print("--- ToolResource ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get RequestUrlBase
         for s, p, o in self._rmeta_graph.triples((None, hsterms.RequestUrlBase, None)):

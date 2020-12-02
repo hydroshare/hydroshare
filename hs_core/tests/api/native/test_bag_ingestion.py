@@ -82,7 +82,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             subject = new_graph.value(predicate=RDF.type, object=DCTERMS.modified)
             new_graph.remove((subject, None, None))
             # remove RDF.type for resource, this was newly added
-            new_graph.remove((None, RDF.type, URIRef("http://hydroshare.org/terms/resource")))
+            new_graph.remove((None, RDF.type, URIRef("https://www.hydroshare.org/terms/resource")))
             subject = original_graph.value(predicate=RDF.type, object=DCTERMS.modified)
             original_graph.remove((subject, None, None))
 

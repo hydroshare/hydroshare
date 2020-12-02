@@ -3715,7 +3715,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                   'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",
                   'dc': "http://purl.org/dc/elements/1.1/",
                   'dcterms': "http://purl.org/dc/terms/",
-                  'hsterms': "http://hydroshare.org/terms/"}
+                  'hsterms': "https://www.hydroshare.org/terms/"}
 
     id = models.AutoField(primary_key=True)
 
@@ -3804,7 +3804,13 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         return URIRef("{}/resource/{}/data/resourcemetadata.xml".format(current_site_url(), self.resource.short_id))
 
     def rdf_type(self):
-        return HSTERMS.resource
+        return HSTERMS.CompositeResource
+
+    def ignored_generic_relations(self):
+        """Override to exclude generic relations from the rdf/xml.  This is built specifically for Format, which is the
+        only AbstractMetadataElement that is on a metadata model and not included in the rdf/xml.  Returns a list
+        of classes to be ignored"""
+        return [Format]
 
     def ingest_metadata(self, graph):
         super(CoreMetaData, self).ingest_metadata(graph)
