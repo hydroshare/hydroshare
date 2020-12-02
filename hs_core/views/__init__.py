@@ -304,7 +304,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     }
 
     return JsonResponse(data=response_data, status=200)
-    
+
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -795,6 +795,14 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
 
 
+def list_referenced_content(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    # subfolders could be named contents
+    return JsonResponse({'filenames': [x.url.split('contents', 1)[-1] for x in list(res.logical_files)
+                                       if 'url' in x.extra_data]})
+
+
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -1263,7 +1271,7 @@ def add_generic_context(request, page):
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
+        # Reuse the same class AddGroupForm() leads to duplicated IDs.
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1879,7 +1887,7 @@ class GroupView(TemplateView):
                 'profile_user': u
             }
         else:
-            public_group_resources = [r for r in group_resources 
+            public_group_resources = [r for r in group_resources
                                       if r.raccess.public or r.raccess.discoverable]
 
             return {

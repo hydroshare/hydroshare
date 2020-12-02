@@ -1261,27 +1261,92 @@ function anyExternalFiles(fullPaths) {
     return filePathsContainingUrl.length > 0
 }
 
-function countSelectedExternalFiles(fullPaths) {
-    /*
-    Based on full file paths enumerate .url files from subfolders and implied current path from Content manager.
-    Comparison from selections is based on the selections in the Content manager at the time this function is invoked.
-    Parent folders are not counted.
+function isSelected(fullPaths) {
 
-    param: fullPaths array of file path strings to parse top level folders and file extensions from
+    const deleteList = $("#fb-files-container li.ui-selected");
+
+    // const filesToDelete = deleteList.map(function(item) {
+    //     return $(item).attr("data-url")
+    // })
+
+    let filesToDelete = []
+
+    if (deleteList.length) {
+        const item = $(deleteList[i]);
+        for (let i = 0; i < deleteList.length; i++) {
+            const respath = item.attr("data-url");
+            const pk = item.attr("data-pk");
+            if (respath && pk) {
+                filesToDelete.push(respath.split("contents")[respath.split("contents").length-1])
+            } else {
+                if (isVirtualFolder(item.first())) {
+                    // Item is a virtual folder
+                    let hs_file_type = item.find(".fb-logical-file-type")
+                      .attr("data-logical-file-type");
+                    let file_type_id = item.attr("data-logical-file-id");
+                    // console.log(hs_file_type, file_type_id);
+                } else {
+                    // Item is a regular folder
+                    let folderName = item.children(".fb-file-name")
+                      .text();
+                    let folder_path = getCurrentPath()
+                      .path
+                      .concat(folderName);
+                    // console.log(SHORT_ID, folder_path.join('/'));
+                }
+            }
+        }
+        console.log(filesToDelete)
+    }
+    // const selectedFolders = [];
+    // const selectedFiles = [];
+    //
+    //
+    // fullPaths.each(function(item) {
+    //
+    // })
+
+    // const topFolders = fullPaths.map(function(item) {
+    //     if (item.split('/').length > 2) {
+    //         return item.split('/')[1]
+    //     }
+    // }).filter(function(item) {
+    //     return typeof item !== 'undefined';
+    // })
+    // console.log(topFolders)
+    //
+    // $("#fb-files-container li.ui-selected").each(function() {
+    //     if (this.title.includes('Type: File Folder')) {
+    //         // if matches top folder in fullpaths count it
+    //
+    //         if (topFolders[ele]) {
+    //             topFolders[ele] = topFolders[ele] + 1
+    //         } else {
+    //             topFolders[ele] = 1
+    //         }
+    //         selectedFolders.push(String(this.innerText).trim())
+    //     } else {
+    //         selectedFiles.push(String(this.innerText).trim())
+    //     }
+    // });
+    // console.log('folders ' + selectedFolders + ' files ' + selectedFiles)
+    // console.log(fullPaths)
+    // console.log($("#fb-files-container li.ui-selected"))
+}
+
+function countSelectedExternalReferences(fullPaths) {
+    /*
+    Find intersection of selected files and files that contain external references, return that count.
+    param: fullPaths: list of external reference files fullpath format
      */
-    let filePathsContainingUrl = [];
     let topFolders = {};
     let selectedFiles = [];
     let numUrlWithinSubs = 0;
 
-    for (const [k, v] of Object.entries(fullPaths)) {
-        if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
-            filePathsContainingUrl.push(v.url)
-        }
-    }
-
     // enumerate external links in subfolders
-    filePathsContainingUrl.forEach(function(path) {
+    // subfolder/file1.url
+    // file1.url
+    fullPaths.forEach(function(path) {
         let ele_full = path.split('contents').reverse()[0] // for example /testfolder/extcontent.url
         let ele = ele_full.split('/')[1] // for example testfolder
         if (topFolders[ele]) {
@@ -1304,6 +1369,7 @@ function countSelectedExternalFiles(fullPaths) {
             selectedFiles.push(this.innerText);
         }
     });
+
     return selectedFiles.length + numUrlWithinSubs;
 }
 
@@ -1422,17 +1488,17 @@ function warnExternalContent(shortId) {
     $('#additional-citation-warning').text('Analyzing files . . .')
     $.ajax({
         type: "GET",
-        url: '/hsapi/resource/' + shortId + '/file_list/',
+        url: '/hsapi/_internal/' + shortId + '/list-referenced-content/',
     }).complete(function(res) {
         if (res.responseText) {
-            let pathObjs = JSON.parse(res.responseText).results
+            let extRefs = JSON.parse(res.responseText).filenames
             try {
                 var external_links = Number.parseInt(ext_link_count);
             }
             catch {
                 var external_links = 0;
             }
-            if (custom_citation !== 'None' && external_links > 0 && countSelectedExternalFiles(pathObjs) >= external_links) {
+            if (custom_citation !== 'None' && external_links > 0 && isSelected(extRefs) >= external_links) {
                 removeCitationIntent = true;
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +

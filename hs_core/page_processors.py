@@ -324,7 +324,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all()),
-               'external_content': len([x.file_name for x in content_model.files.all() if '.url' in x.file_name])
+               'external_content': len([x.file_name for x in content_model.files.all() if '.url' in x.file_name])  # TODO lowercase
     }
 
     return context
