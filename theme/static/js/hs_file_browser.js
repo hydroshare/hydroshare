@@ -1289,9 +1289,21 @@ function isSelected(fullPaths) {
                 }
             }
         }
-        return fullPaths.filter(function(idx) {
-            return filesToDelete.indexOf(idx) !== -1;
-        });
+
+        // let ret = fullPaths.filter(function(idx) {
+        //     return filesToDelete.indexOf(idx) !== -1;
+        // });
+
+        // maximum matches with duplicates (based on parent folder match or top level filename match)
+        let matches = fullPaths.map(function(i1) {
+            return filesToDelete.filter(function(i2) {
+                if (i1.split('/')[1] === i2.split('/')[1]) {
+                    return i2
+                }
+            })
+        }).flat()
+        return matches
+        // return Array.from(new Set(matches))
     }
 }
 
@@ -1369,15 +1381,14 @@ function refreshFileBrowser(name) {
             }
         }
         updateSelectionMenuContext();
+
         $.ajax({
             type: "GET",
-            url: '/hsapi/resource/' + SHORT_ID + '/file_list/',
+            url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
         }).complete(function(res) {
-            let pathObjs = JSON.parse(res.responseText).results
-
-            // conditionally render edit pencil control
-            if (RESOURCE_MODE === 'Edit') {
-                if (anyExternalFiles(pathObjs)) {
+            if (res.responseText) {
+                let extRefs = JSON.parse(res.responseText).filenames
+                if (extRefs.length && RESOURCE_MODE === 'Edit') {
                     document.getElementById('edit-citation-control').style.display = 'block'
                 } else {
                     document.getElementById('edit-citation-control').style.display = 'none'
@@ -1455,15 +1466,17 @@ function warnExternalContent(shortId) {
         if (res.responseText) {
             let extRefs = JSON.parse(res.responseText).filenames
 
+            // capture external refs within subfolders as just the folder names
             extRefs = extRefs.map(function(ref) {
                 return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
             })
+
             // TODO SHOULD NOT SEE REMOVE CONSOLE
             console.log('External agg refs from endpoint: ' + extRefs)
             console.log('Intersect of selected and ext agg refs: ' + isSelected(extRefs))
 
             const sel = isSelected(extRefs)
-            if (custom_citation !== 'None' && sel > 0 && sel === extRefs.length) {
+            if (global_custom_citation !== 'None' && sel.length === extRefs.length && extRefs.length > 0) {
                 removeCitationIntent = true;
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
@@ -1628,7 +1641,7 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");
+                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");  // TODO assess for bugs
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);

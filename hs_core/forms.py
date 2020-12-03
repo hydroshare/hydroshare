@@ -286,12 +286,6 @@ class ContributorValidationForm(PartyValidationForm):
     pass
 
 
-class CitationValidationForm(PartyValidationForm):
-    """Validate form for Citation models. Extends PartyValidationForm."""
-
-    pass
-
-
 class BaseCreatorFormSet(BaseFormSet):
     """Render BaseFormSet for working with Creator models."""
 

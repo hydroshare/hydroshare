@@ -672,7 +672,7 @@ class Citation(AbstractMetaDataElement):
     """Define Citation metadata element model."""
 
     term = 'Citation'
-    value = models.CharField(max_length=750)
+    value = models.TextField()
 
     def __unicode__(self):
         """Return value field for unicode representation."""
