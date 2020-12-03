@@ -783,9 +783,6 @@
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
-      var ext_link_count = "{{ external_content }}";
-      var custom_citation = "{{ custom_citation }}";
-
       const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
@@ -854,6 +851,17 @@
           };
       {% endif %}
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
+      var global_num_ext_refs = 0;
+      var custom_citation = "{{ custom_citation }}";
+
+      $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+      }).complete(function(res) {
+        if (res.responseText) {
+          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
+        }
+      });
     </script>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>

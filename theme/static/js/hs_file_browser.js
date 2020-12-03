@@ -1264,21 +1264,15 @@ function anyExternalFiles(fullPaths) {
 function isSelected(fullPaths) {
 
     const deleteList = $("#fb-files-container li.ui-selected");
-
-    // const filesToDelete = deleteList.map(function(item) {
-    //     return $(item).attr("data-url")
-    // })
-
     let filesToDelete = [];
 
     if (deleteList.length) {
-
         for (let i = 0; i < deleteList.length; i++) {
             const item = $(deleteList[i]);
             const respath = item.attr("data-url");
             const pk = item.attr("data-pk");
             if (respath && pk) {
-                filesToDelete.push(respath.split("contents")[respath.split("contents").length-1]) //TODO folder could be named contents
+                filesToDelete.push(respath.split("contents")[respath.split("contents").length-1]) // TODO folder could be named contents
             } else {
                 if (isVirtualFolder(item.first())) {
                     // Item is a virtual folder
@@ -1295,44 +1289,10 @@ function isSelected(fullPaths) {
                 }
             }
         }
-        return filteredArray = fullPaths.filter(function(idx) {
+        return fullPaths.filter(function(idx) {
             return filesToDelete.indexOf(idx) !== -1;
         });
     }
-    // const selectedFolders = [];
-    // const selectedFiles = [];
-    //
-    //
-    // fullPaths.each(function(item) {
-    //
-    // })
-
-    // const topFolders = fullPaths.map(function(item) {
-    //     if (item.split('/').length > 2) {
-    //         return item.split('/')[1]
-    //     }
-    // }).filter(function(item) {
-    //     return typeof item !== 'undefined';
-    // })
-    // console.log(topFolders)
-    //
-    // $("#fb-files-container li.ui-selected").each(function() {
-    //     if (this.title.includes('Type: File Folder')) {
-    //         // if matches top folder in fullpaths count it
-    //
-    //         if (topFolders[ele]) {
-    //             topFolders[ele] = topFolders[ele] + 1
-    //         } else {
-    //             topFolders[ele] = 1
-    //         }
-    //         selectedFolders.push(String(this.innerText).trim())
-    //     } else {
-    //         selectedFiles.push(String(this.innerText).trim())
-    //     }
-    // });
-    // console.log('folders ' + selectedFolders + ' files ' + selectedFiles)
-    // console.log(fullPaths)
-    // console.log($("#fb-files-container li.ui-selected"))
 }
 
 function countSelectedExternalReferences(fullPaths) {
@@ -1494,18 +1454,14 @@ function warnExternalContent(shortId) {
     }).complete(function(res) {
         if (res.responseText) {
             let extRefs = JSON.parse(res.responseText).filenames
-            try {
-                var external_links = Number.parseInt(ext_link_count);
-            }
-            catch {
-                var external_links = 0;
-            }
 
             extRefs = extRefs.map(function(ref) {
                 return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
             })
-            console.log(extRefs)
-            console.log(isSelected(extRefs))
+            // TODO SHOULD NOT SEE REMOVE CONSOLE
+            console.log('External agg refs from endpoint: ' + extRefs)
+            console.log('Intersect of selected and ext agg refs: ' + isSelected(extRefs))
+
             const sel = isSelected(extRefs)
             if (custom_citation !== 'None' && sel > 0 && sel === extRefs.length) {
                 removeCitationIntent = true;
@@ -1980,7 +1936,6 @@ $(document).ready(function () {
                 refreshFileBrowser();
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
-                ext_link_count++;
             }
 
             $.when.apply($, calls).done(afterRequest);
