@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('object_id', models.PositiveIntegerField()),
-                ('value', models.CharField(max_length=750)),
+                ('value', models.TextField()),
                 ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='hs_core_citation_related', to='contenttypes.ContentType')),
             ],
         ),
