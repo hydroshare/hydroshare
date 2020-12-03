@@ -13,9 +13,11 @@ CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 
 # Read hydroshare-config.yaml into environment
 sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
-echo "HS_SERVICE_UID=`id -u`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
-echo "HS_SERVICE_GID=`id -g`" >> $CONFIG_DIRECTORY/hydroshare-config.sh
+sed -i 's/HS_SERVICE_UID=1000/HS_SERVICE_UID='$HS_UID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
+sed -i 's/HS_SERVICE_GID=1000/HS_SERVICE_GID='$HS_GID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
+
+### Add color scheme to text | result output
 
 function blue() {
     local TEXT="$1"
@@ -46,6 +48,7 @@ function getImageID() {
     docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
+### Clean-up | Setup hydroshare environment
 
 REMOVE_CONTAINER=YES
 REMOVE_VOLUME=YES
