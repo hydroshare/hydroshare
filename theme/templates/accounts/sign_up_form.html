@@ -27,6 +27,7 @@
         <div class="form-group half">
           {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
           {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
+          <small class="text-muted">Names may be omitted if you do not wish to provide them or are creating an Organization user account.</small>
         </div>
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.email inline_label=True %}
@@ -58,6 +59,7 @@
                 <option value="Government Official">Government Official</option>
                 <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
                 <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                <option value="Organization">Organization</option>
                 <option value="Other">Other</option>
             </select>
           </fieldset>
@@ -155,7 +157,7 @@
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
             var j;
-            if($("#selectUserType").val() == 'Other' && $("#user-type-other  input").val() == '') {
+            if($("#selectUserType").val() == 'Other' && $("#user-type-other  input").val().trim() == '') {
                 empty = true;
                 missingFields += " " + 'User type Other';
                 missingFieldCount++;
@@ -167,7 +169,7 @@
             }
 
             for(j=0; j< requiredFieldsToCheck.length; j++) {
-                if ($(requiredFieldsToCheck[j]).val() == '') {
+                if ($(requiredFieldsToCheck[j]).val().trim() == '') {
                     empty = true;
                     if (missingFieldCount == 0){
                         missingFields += " " + fieldNames[j];
