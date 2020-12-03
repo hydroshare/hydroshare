@@ -1269,15 +1269,16 @@ function isSelected(fullPaths) {
     //     return $(item).attr("data-url")
     // })
 
-    let filesToDelete = []
+    let filesToDelete = [];
 
     if (deleteList.length) {
-        const item = $(deleteList[i]);
+
         for (let i = 0; i < deleteList.length; i++) {
+            const item = $(deleteList[i]);
             const respath = item.attr("data-url");
             const pk = item.attr("data-pk");
             if (respath && pk) {
-                filesToDelete.push(respath.split("contents")[respath.split("contents").length-1])
+                filesToDelete.push(respath.split("contents")[respath.split("contents").length-1]) //TODO folder could be named contents
             } else {
                 if (isVirtualFolder(item.first())) {
                     // Item is a virtual folder
@@ -1285,18 +1286,18 @@ function isSelected(fullPaths) {
                       .attr("data-logical-file-type");
                     let file_type_id = item.attr("data-logical-file-id");
                     // console.log(hs_file_type, file_type_id);
+                    // TODO investigate
                 } else {
                     // Item is a regular folder
-                    let folderName = item.children(".fb-file-name")
-                      .text();
-                    let folder_path = getCurrentPath()
-                      .path
-                      .concat(folderName);
-                    // console.log(SHORT_ID, folder_path.join('/'));
+                    let folderName = item.children(".fb-file-name").text();
+                    let folder_path = getCurrentPath().path.concat(folderName);
+                    filesToDelete.push('/' + folder_path.join('/'))
                 }
             }
         }
-        console.log(filesToDelete)
+        return filteredArray = fullPaths.filter(function(idx) {
+            return filesToDelete.indexOf(idx) !== -1;
+        });
     }
     // const selectedFolders = [];
     // const selectedFiles = [];
@@ -1484,6 +1485,7 @@ function warnExternalContent(shortId) {
             }
         }
     });
+
     $('#btn-confirm-delete').prop('disabled', true)
     $('#additional-citation-warning').text('Analyzing files . . .')
     $.ajax({
@@ -1498,7 +1500,14 @@ function warnExternalContent(shortId) {
             catch {
                 var external_links = 0;
             }
-            if (custom_citation !== 'None' && external_links > 0 && isSelected(extRefs) >= external_links) {
+
+            extRefs = extRefs.map(function(ref) {
+                return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
+            })
+            console.log(extRefs)
+            console.log(isSelected(extRefs))
+            const sel = isSelected(extRefs)
+            if (custom_citation !== 'None' && sel > 0 && sel === extRefs.length) {
                 removeCitationIntent = true;
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
