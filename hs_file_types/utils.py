@@ -256,9 +256,7 @@ def is_resource_metadata_file(file):
 
 
 def identify_and_ingest_metadata_files(resource, files):
-    from hs_file_types.utils import identify_metadata_files
     res_files, meta_files = identify_metadata_files(files)
-    from hs_file_types.utils import ingest_metadata_files
     ingest_metadata_files(resource, meta_files)
 
 
@@ -270,6 +268,7 @@ def ingest_metadata_files(resource, meta_files):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
             ingest_logical_file_metadata(f, resource)
+    # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
         graph = Graph().parse(data=resource_metadata_file.read())
@@ -313,7 +312,6 @@ def ingest_logical_file_metadata(metadata_file, resource):
     if not subject:
         raise Exception("Could not derive aggregation path from {}".format(metadata_file.name))
 
-    from hs_file_types.utils import get_logical_file
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
 

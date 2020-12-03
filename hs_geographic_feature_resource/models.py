@@ -33,7 +33,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
             value = graph.value(subject=cov, predicate=RDF.value)
             value_dict = {}
-            for key_value in value.split("; "):
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
                 k, v = key_value.split("=")
                 if k == 'units':
                     value_dict['unit'] = v

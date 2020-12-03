@@ -56,7 +56,8 @@ class OriginalCoverage(AbstractMetaDataElement):
             value_dict = {}
             datum = ''
             projection_string_text = ''
-            for key_value in value.split("; "):
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
                 k, v = key_value.split("=")
                 if k == 'datum':
                     datum = v

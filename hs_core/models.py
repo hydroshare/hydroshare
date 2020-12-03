@@ -1496,7 +1496,8 @@ class Coverage(AbstractMetaDataElement):
             value = graph.value(subject=cov, predicate=RDF.value)
             type = type.split('/')[-1]
             value_dict = {}
-            for key_value in value.split("; "):
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
                 k, v = key_value.split("=")
                 if k in ['start', 'end']:
                     v = parser.parse(v).strftime("%Y/%m/%d")
