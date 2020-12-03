@@ -1537,10 +1537,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # check the content of the metadata xml string
         RDF_ROOT = etree.XML(self.res.metadata.get_xml().encode())
 
-        # check root 'Description' element
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.res.metadata.NAMESPACES)
+        # check root 'hsterms' element
+        container = RDF_ROOT.find('hsterms:GenericResource', namespaces=self.res.metadata.NAMESPACES)
 
-        self.assertNotEqual(container, None, msg="Root 'Description' element was not found.")
+        self.assertNotEqual(container, None, msg="Root 'hsterms:GenericResource' element was not found.")
         #res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
         res_uri = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
 
