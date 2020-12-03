@@ -6,9 +6,9 @@ from django.contrib.auth.models import Group
 from hs_core import hydroshare
 
 
-class TestNewVersionResource(TestCase):
+class TestHideOldVersions(TestCase):
     def setUp(self):
-        super(TestNewVersionResource, self).setUp()
+        super(TestHideOldVersions, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
         # create a user who is the owner of the resource to be versioned
@@ -45,7 +45,7 @@ class TestNewVersionResource(TestCase):
         self.version2 = hydroshare.create_new_version_resource(self.version1, self.version2, self.owner)
 
     def tearDown(self):
-        super(TestNewVersionResource, self).tearDown()
+        super(TestHideOldVersions, self).tearDown()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
