@@ -7,7 +7,7 @@ from unittest import TestCase
 
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
-from rdflib import Graph, URIRef
+from rdflib import Graph
 from rdflib.compare import _squashed_graphs_triples
 from rdflib.namespace import DCTERMS, RDF
 
