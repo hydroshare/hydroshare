@@ -993,7 +993,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             res_files = irods_files
             meta_files = []
             if ingest_metadata:
-                res_files, meta_files = identify_metadata_files(irods_files)
+                res_files, meta_files, map_files = identify_metadata_files(irods_files)
             # walk through each unzipped file, delete aggregations if they exist
             for file in res_files:
                 destination_file = _get_destination_filename(file.name, unzipped_foldername)
@@ -1025,7 +1025,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 check_aggregations(resource, added_resource_files)
             if ingest_metadata:
                 from hs_file_types.utils import ingest_metadata_files
-                ingest_metadata_files(resource, meta_files)
+                ingest_metadata_files(resource, meta_files, map_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)

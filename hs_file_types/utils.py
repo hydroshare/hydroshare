@@ -5,7 +5,7 @@ from operator import lt, gt
 
 from django.db import transaction
 from rdflib import RDFS, Graph
-from rdflib.namespace import DC
+from rdflib.namespace import DC, Namespace
 
 from hs_core.hydroshare import utils, get_resource_file
 
@@ -260,14 +260,14 @@ def identify_and_ingest_metadata_files(resource, files):
     ingest_metadata_files(resource, meta_files)
 
 
-def ingest_metadata_files(resource, meta_files):
+def ingest_metadata_files(resource, meta_files, map_files):
     # refresh to pick up any new possible aggregations
     resource_metadata_file = None
     for f in meta_files:
         if is_resource_metadata_file(f):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
-            ingest_logical_file_metadata(f, resource)
+            ingest_logical_file_metadata(f, resource, map_files)
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
@@ -285,17 +285,18 @@ def identify_metadata_files(files):
 
     res_files = []
     meta_files = []
+    map_files = []
     for f in files:
         if is_resource_metadata_file(f) or is_aggregation_metadata_file(f):
             meta_files.append(f)
         elif is_map_file(f):
-            pass
+            map_files.append(f)
         else:
             res_files.append(f)
-    return res_files, meta_files
+    return res_files, meta_files, map_files
 
 
-def ingest_logical_file_metadata(metadata_file, resource):
+def ingest_logical_file_metadata(metadata_file, resource, map_files):
     resource.refresh_from_db()
     graph = Graph()
     graph = graph.parse(data=metadata_file.read())
@@ -325,24 +326,20 @@ def ingest_logical_file_metadata(metadata_file, resource):
             if res_file:
                 FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
         elif logical_file_class is GenericLogicalFile:
-            aggregation_main_file_with_path = subject.split('_resmap.xml')[0]
-            file_path = aggregation_main_file_with_path.split('data/contents/', 1)[1]
-            # single file logical files have a potential name clash, so we have to guess what the file is
-            # the name clash is a larger problem than just here and we should work to resolve it
-            if '/' in file_path:
-                parts = file_path.rsplit('/', 1)
-                file_path = parts[0]
-                file_name = parts[1] + "."
-            else:
-                file_name = file_path
-                file_path = ''
-            res_file = None
-            for file in resource.files.filter(file_folder=file_path):
-                if file.file_name.startswith(file_name):
-                    res_file = file
-                    break
-            if not res_file:
-                res_file = get_resource_file(resource.short_id, file_path)
+            map_name = subject.split('data/contents/', 1)[1]
+            map_name = map_name.split('#', 1)[0]
+            for map_file in map_files:
+                if map_file.name.endswith(map_name):
+                    ORE = Namespace("http://www.openarchives.org/ore/terms/")
+                    map_graph = Graph().parse(data=map_file.read())
+                    for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
+                        if not str(o).endswith("_meta.xml"):
+                            file_path = str(o)
+                            break
+            if not file_path:
+                raise Exception("Could not determine the generic logical file name")
+            file_path = file_path.split('data/contents/', 1)[1]
+            res_file = get_resource_file(resource.short_id, file_path)
             if res_file:
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       logical_file_type_class=logical_file_class, fail_feedback=True)
