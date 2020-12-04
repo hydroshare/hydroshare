@@ -136,7 +136,7 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, pk):
         # only resource owners are allowed to delete
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
-        hydroshare.delete_resource(pk, request_username=request.user.username)
+        hydroshare.delete_resource(pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

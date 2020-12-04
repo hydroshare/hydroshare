@@ -296,23 +296,6 @@ $(document).ready(function () {
         })
     });
 
-    $("#btn-delete-resource").on('click', function(e) {
-        e.stopImmediatePropagation();
-        $.ajax({
-            type: "POST",
-            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/",
-            success: function (task) {
-                $('#delete-resource-dialog').modal('hide');
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-            },
-            error: function (xhr, errmsg, err) {
-                display_error_message('Failed to delete the resource', xhr.responseText);
-                $('#delete-resource-dialog').modal('hide');
-            }
-        })
-    });
-
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
     inputElementToAdd = inputElementToAdd.replace('mode_to_replace', RESOURCE_MODE.toLowerCase());
