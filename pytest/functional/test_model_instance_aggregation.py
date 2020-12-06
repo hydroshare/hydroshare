@@ -99,44 +99,6 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
 
 
 @pytest.mark.django_db(transaction=True)
-def test_model_instance_on_model_program_resource_delete(composite_resource_with_mi_aggregation,
-                                                         composite_resource_2_with_mp_aggregation, mock_irods):
-    """Test that when we delete a resource containing a model program aggregation linked to a model
-    instance aggregation, the model instance aggregation doesn't get deleted"""
-
-    mi_res, mi_user = composite_resource_with_mi_aggregation
-    mp_res, mp_user = composite_resource_2_with_mp_aggregation
-    assert mi_res != mp_res
-    assert mi_user != mp_user
-
-    authorized = mi_user.uaccess.can_change_resource(mi_res)
-    assert authorized
-    assert ModelInstanceLogicalFile.objects.count() == 1
-    mi_aggr = ModelInstanceLogicalFile.objects.first()
-    assert ModelProgramLogicalFile.objects.count() == 1
-    mp_aggr = ModelProgramLogicalFile.objects.first()
-    # check that mi_aggr is not related to any model program aggregation
-    assert mi_aggr.metadata.executed_by is None
-    # give mi_user view access to mp_res
-    mp_user.uaccess.share_resource_with_user(mp_res, mi_user, PrivilegeCodes.VIEW)
-    authorized = mi_user.uaccess.can_view_resource(mp_res)
-    assert authorized
-    # now we should be able to link model instance aggregation to model program aggregation
-    mi_aggr.set_link_to_model_program(user=mi_user, model_prog_aggr=mp_aggr)
-    mi_aggr = ModelInstanceLogicalFile.objects.first()
-    # check that mi_aggr is related to model program aggregation
-    assert mi_aggr.metadata.executed_by is not None
-    assert mi_aggr.metadata.is_dirty is False
-    # delete mp_resource
-    mp_res.delete()
-    assert ModelProgramLogicalFile.objects.count() == 0
-    # check that mi_aggr is not related to any model program aggregation
-    mi_aggr = ModelInstanceLogicalFile.objects.first()
-    assert mi_aggr.metadata.executed_by is None
-    assert mi_aggr.metadata.is_dirty is True
-
-
-@pytest.mark.django_db(transaction=True)
 def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_aggregation, mock_irods):
     """Test that when we rename a file that represents a model program aggregation then the linked model instance
     aggregation metadata is set to dirty"""
