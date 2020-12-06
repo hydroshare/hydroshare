@@ -449,27 +449,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """
         return self.model_program_type
 
-    def set_res_file_as_mp_file_type(self, res_file, mp_file_type):
-        """Creates an instance of ModelProgramResourceFileType using the specified resource file *res_file*
-        :param  res_file: An instance of ResourceFile that is already part of this aggregation
-        :param  mp_file_type: Model program file type to set. Valid values are: software, engine, release notes,
-        documentation
-        """
-
-        # check that the resource file is part of this aggregation
-        if res_file not in self.files.all():
-            raise ValidationError("Res file is not part of the aggregation")
-        # check that the res_file is not already set to a model program file type
-        if self.metadata.mp_file_types.filter(res_file=res_file).exists():
-            raise ValidationError("Res file is already set to model program file type")
-        # validate mp_file_type
-        mp_file_type = ModelProgramResourceFileType.type_from_string(mp_file_type)
-        if mp_file_type is None:
-            raise ValidationError("Not a valid model program file type")
-        # create an instance of ModelProgramResourceFileType
-        ModelProgramResourceFileType.objects.create(file_type=mp_file_type, res_file=res_file,
-                                                    mp_metadata=self.metadata)
-
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
