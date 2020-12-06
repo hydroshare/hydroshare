@@ -1,6 +1,6 @@
-import os
 import glob
 import json
+import os
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -30,7 +30,30 @@ class ModelProgramResourceFileType(models.Model):
     mp_metadata = models.ForeignKey('ModelProgramFileMetaData', on_delete=models.CASCADE, related_name='mp_file_types')
 
     @classmethod
+    def create(cls, **kwargs):
+        """custom method to create an instance of this class"""
+        mp_metadata = kwargs['mp_metadata']
+        logical_file = mp_metadata.logical_file
+        mp_file_type = kwargs['file_type']
+        res_file = kwargs['res_file']
+        # check that the resource file is part of this aggregation
+        if res_file not in logical_file.files.all():
+            raise ValidationError("Resource file is not part of the aggregation")
+        # check that the res_file is not already set to a model program file type
+        if mp_metadata.mp_file_types.filter(res_file=res_file).exists():
+            raise ValidationError("Resource file is already set to model program file type")
+        # validate mp_file_type
+        mp_file_type = ModelProgramResourceFileType.type_from_string(mp_file_type)
+        if mp_file_type is None:
+            raise ValidationError("Not a valid model program file type")
+        kwargs['file_type'] = mp_file_type
+        return cls.objects.create(**kwargs)
+
+    @classmethod
     def type_from_string(cls, type_string):
+        """gets model program file type value as stored in DB for a given file type name
+        :param type_string: name of the file type
+        """
         type_map = {'release notes': cls.RELEASE_NOTES, 'documentation': cls.DOCUMENTATION,
                     'software': cls.SOFTWARE, 'computational engine': cls.ENGINE}
 
@@ -39,7 +62,7 @@ class ModelProgramResourceFileType(models.Model):
 
     @classmethod
     def type_name_from_type(cls, type_number):
-        """Gets model program file type name for the specified file type number
+        """gets model program file type name for the specified file type number
         :param  type_number: a number between 1 and 4
         """
         type_map = dict(cls.CHOICES)
@@ -57,27 +80,27 @@ class ModelProgramResourceFileType(models.Model):
 
 
 class ModelProgramFileMetaData(GenericFileMetaDataMixin):
-    # version
+    # version of model program
     version = models.CharField(verbose_name='Version', null=True, blank=True, max_length=255,
                                help_text='The software version or build number of the model')
 
-    # program language
+    # program language used in developing the model program
     programming_languages = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list,
                                        help_text="The programming language(s) that the model is written in")
 
-    # operating system
+    # operating system in which the model program can be executed
     operating_systems = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=list,
                                    help_text="Compatible operating systems to setup and run the model")
 
-    # release date
+    # release date - date on which the model program was releases
     release_date = models.DateField(verbose_name='Release Date', null=True, blank=True,
                                     help_text='The date that this version of the model was released')
 
-    # web page
+    # website where more information can be found for the model program
     website = models.URLField(verbose_name='Website', null=True, blank=True, max_length=255,
                               help_text='A URL to the website maintained by the model developers')
 
-    # repository
+    # url for the code repository for the model program code
     code_repository = models.URLField(verbose_name='Software Repository', null=True,
                                       blank=True, max_length=255,
                                       help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
@@ -105,7 +128,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     def get_xml(self, pretty_print=True, additional_namespaces=None):
         """Generates ORI+RDF xml for this aggregation metadata"""
 
-        # get the xml root element and the xml element to which contains all other elements
+        # get the xml root element, and the xml element that needs to contain all xml elements to encode metadata
+        # for this aggregation
         RDF_ROOT, container_to_add_to = super(ModelProgramFileMetaData, self)._get_xml_containers(
             additional_namespaces=additional_namespaces)
         for mp_file_type in self.mp_file_types.all():
@@ -144,6 +168,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                pretty_print=pretty_print).decode()
 
     def get_html(self, include_extra_metadata=True, **kwargs):
+        """generates html code to display aggregation metadata in view mode"""
+
         html_string = super(ModelProgramFileMetaData, self).get_html(skip_coverage=True)
         mp_program_type_div = dom_tags.div()
         with mp_program_type_div:
@@ -221,11 +247,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         return template.render(context)
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
-        """This generates html form code to add/update the following metadata attributes
-        version
-        release_date
+        """generates html form code to edit metadata for this aggregation"""
 
-        """
         form_action = "/hsapi/_internal/{}/update-modelprogram-metadata/"
         form_action = form_action.format(self.logical_file.id)
         root_div = dom_tags.div("{% load crispy_forms_tags %}")
