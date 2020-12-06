@@ -173,8 +173,8 @@ class ModelProgramMetadataValidationForm(forms.Form):
                     mp_file_type = mp_file_types_dict[res_file.short_path]
                     # if mp_file_type is None it means user has removed model file type assignment for the res_file
                     if mp_file_type is not None:
-                        ModelProgramResourceFileType.objects.create(file_type=mp_file_type, res_file=res_file,
-                                                                    mp_metadata=metadata)
+                        ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=res_file,
+                                                            mp_metadata=metadata)
 
     def _validate_json_schema(self, schema_string, field_name):
         """helper to validate json schema for model instance metadata

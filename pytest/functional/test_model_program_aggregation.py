@@ -8,8 +8,8 @@ from rest_framework.exceptions import ValidationError as RF_ValidationError
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder
-from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile, ModelInstanceLogicalFile
-from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
+from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile, ModelInstanceLogicalFile, \
+    ModelProgramResourceFileType
 from hs_file_types.forms import ModelProgramMetadataValidationForm
 
 
@@ -34,15 +34,16 @@ def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_irods):
     # set file to model program aggregation type
     ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
     res_file = res.files.first()
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
     mp_aggregation = ModelProgramLogicalFile.objects.first()
     # set the res_file as software for this aggregation
-    mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file, mp_file_type=mp_type)
+    ModelProgramResourceFileType.create(file_type=mp_type, res_file=res_file,
+                                        mp_metadata=mp_aggregation.metadata)
 
-    assert MPResFileType.objects.count() == 1
-    mp_res_file_type = MPResFileType.objects.first()
+    assert ModelProgramResourceFileType.objects.count() == 1
+    mp_res_file_type = ModelProgramResourceFileType.objects.first()
     assert mp_res_file_type.res_file.short_path == res_file.short_path
-    assert mp_res_file_type.file_type == MPResFileType.type_from_string(mp_type)
+    assert mp_res_file_type.file_type == ModelProgramResourceFileType.type_from_string(mp_type)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -75,15 +76,17 @@ def test_mark_multiple_res_files_as_mp_file_type(composite_resource, mock_irods)
     ModelProgramLogicalFile.set_file_type(res, user, folder_path=upload_folder)
     assert ModelProgramLogicalFile.objects.count() == 1
 
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
     mp_aggregation = ModelProgramLogicalFile.objects.first()
     mp_type = 'software'
     # set the txt file as software for this aggregation
-    mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file_txt, mp_file_type=mp_type)
-    assert MPResFileType.objects.count() == 1
+    ModelProgramResourceFileType.create(file_type=mp_type, res_file=res_file_txt,
+                                        mp_metadata=mp_aggregation.metadata)
+    assert ModelProgramResourceFileType.objects.count() == 1
     # set the vrt file as software for this aggregation
-    mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file_vrt, mp_file_type=mp_type)
-    assert MPResFileType.objects.count() == 2
+    ModelProgramResourceFileType.create(file_type=mp_type, res_file=res_file_vrt,
+                                        mp_metadata=mp_aggregation.metadata)
+    assert ModelProgramResourceFileType.objects.count() == 2
 
 
 @pytest.mark.django_db(transaction=True)
@@ -106,20 +109,22 @@ def test_mark_res_file_as_mp_file_type_failure_1(composite_resource, mock_irods)
     # set file to model program aggregation type
     ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
     res_file = res.files.first()
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
     mp_aggregation = ModelProgramLogicalFile.objects.first()
     # set the res_file as software for this aggregation
-    mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file, mp_file_type='software')
+    ModelProgramResourceFileType.create(file_type='software', res_file=res_file,
+                                        mp_metadata=mp_aggregation.metadata)
 
-    assert MPResFileType.objects.count() == 1
-    mp_res_file_type = MPResFileType.objects.first()
+    assert ModelProgramResourceFileType.objects.count() == 1
+    mp_res_file_type = ModelProgramResourceFileType.objects.first()
     assert mp_res_file_type.res_file.short_path == res_file.short_path
-    assert mp_res_file_type.file_type == MPResFileType.type_from_string('software')
+    assert mp_res_file_type.file_type == ModelProgramResourceFileType.type_from_string('software')
     # trying to set the same file again as mp file type should fail
     with pytest.raises(ValidationError):
-        mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file, mp_file_type='engine')
+        ModelProgramResourceFileType.create(file_type='engine', res_file=res_file,
+                                            mp_metadata=mp_aggregation.metadata)
 
-    assert MPResFileType.objects.count() == 1
+    assert ModelProgramResourceFileType.objects.count() == 1
 
 
 @pytest.mark.django_db(transaction=True)
@@ -150,14 +155,15 @@ def test_mark_res_file_as_mp_file_type_failure_2(composite_resource, mock_irods)
     # set the txt file to model program aggregation type
     ModelProgramLogicalFile.set_file_type(res, user, res_file_txt.id)
 
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
     mp_aggregation = ModelProgramLogicalFile.objects.first()
     # trying set the vrt file as engine for this aggregation should fail as the vrt file is not part of
     # the aggregation
     with pytest.raises(ValidationError):
-        mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file_vrt, mp_file_type='engine')
+        ModelProgramResourceFileType.create(file_type='engine', res_file=res_file_vrt,
+                                            mp_metadata=mp_aggregation.metadata)
 
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
 
 
 @pytest.mark.django_db(transaction=True)
@@ -169,15 +175,16 @@ def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggre
     mp_aggr = next(res.logical_files)
     assert isinstance(mp_aggr, ModelProgramLogicalFile)
     res_file = res.files.first()
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
     mp_aggregation = ModelProgramLogicalFile.objects.first()
     # set the res_file as software for this aggregation
-    mp_aggregation.set_res_file_as_mp_file_type(res_file=res_file, mp_file_type='software')
-    assert MPResFileType.objects.count() == 1
+    ModelProgramResourceFileType.create(file_type='software', res_file=res_file,
+                                        mp_metadata=mp_aggregation.metadata)
+    assert ModelProgramResourceFileType.objects.count() == 1
     # delete res_file
     res_file.delete()
     # mp program file type got deleted
-    assert MPResFileType.objects.count() == 0
+    assert ModelProgramResourceFileType.objects.count() == 0
 
 
 @pytest.mark.django_db(transaction=True)

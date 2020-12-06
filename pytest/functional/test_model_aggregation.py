@@ -10,8 +10,8 @@ from rest_framework.exceptions import ValidationError as RF_ValidationError
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder
-from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile, FileSetLogicalFile
-from hs_file_types.models import ModelProgramResourceFileType as MPResFileType
+from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile, FileSetLogicalFile, \
+    ModelProgramResourceFileType
 
 
 @pytest.mark.django_db(transaction=True)
@@ -654,8 +654,9 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
     assert mp_mi_aggregation.files.count() == 1
     if aggr_cls == ModelProgramLogicalFile:
         # set the res file as one of the model program file types
-        mp_mi_aggregation.set_res_file_as_mp_file_type(res_file=res_file, mp_file_type='documentation')
-        assert MPResFileType.objects.count() == 1
+        ModelProgramResourceFileType.create(file_type='documentation', res_file=res_file,
+                                            mp_metadata=mp_mi_aggregation.metadata)
+        assert ModelProgramResourceFileType.objects.count() == 1
 
     # moving the generic file to into another folder
     another_folder = 'another_folder'
@@ -672,7 +673,7 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
     assert not res_file.has_logical_file
     if aggr_cls == ModelProgramLogicalFile:
         # model program res file type object should have been deleted
-        assert MPResFileType.objects.count() == 0
+        assert ModelProgramResourceFileType.objects.count() == 0
 
 
 @pytest.mark.django_db(transaction=True)
@@ -705,8 +706,9 @@ def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods)
 
     # set the res file as one of the model program file types
     if aggr_cls == ModelProgramLogicalFile:
-        mp_mi_aggregation.set_res_file_as_mp_file_type(res_file=res_file, mp_file_type='documentation')
-        assert MPResFileType.objects.count() == 1
+        ModelProgramResourceFileType.create(file_type='documentation', res_file=res_file,
+                                            mp_metadata=mp_mi_aggregation.metadata)
+        assert ModelProgramResourceFileType.objects.count() == 1
 
     # moving the generic file to into the child folder
     child_mp_mi_folder = '{}/child_mp_mi_folder'.format(parent_mp_mi_folder)
@@ -723,7 +725,7 @@ def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods)
     assert res_file.has_logical_file
     # model program res file type object should not have been deleted
     if aggr_cls == ModelProgramLogicalFile:
-        assert MPResFileType.objects.count() == 1
+        assert ModelProgramResourceFileType.objects.count() == 1
 
 
 @pytest.mark.django_db(transaction=True)
