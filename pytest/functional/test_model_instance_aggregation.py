@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import UploadedFile
 from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare import add_file_to_resource, ResourceFile, add_resource_files
 from hs_core.views.utils import move_or_rename_file_or_folder
+from hs_file_types.forms import ModelInstanceMetadataValidationForm
 from hs_file_types.models import (
     ModelInstanceLogicalFile,
     ModelProgramLogicalFile,
@@ -45,7 +46,9 @@ def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggreg
     assert ModelProgramLogicalFile.objects.count() == 1
     mp_aggr = ModelProgramLogicalFile.objects.first()
     # link model instance aggregation to model program aggregation
-    mi_aggr.set_link_to_model_program(user=user, model_prog_aggr=mp_aggr)
+    mi_validation_form = ModelInstanceMetadataValidationForm(data={"executed_by": mp_aggr.id}, user=user, resource=res)
+    assert mi_validation_form.is_valid()
+    mi_validation_form.update_metadata(metadata=mi_aggr.metadata)
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
@@ -77,11 +80,13 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
     assert ModelProgramLogicalFile.objects.count() == 1
     mp_aggr = ModelProgramLogicalFile.objects.first()
     # link model instance aggregation to model program aggregation
-    mi_aggr.set_link_to_model_program(user=user, model_prog_aggr=mp_aggr)
+    mi_validation_form = ModelInstanceMetadataValidationForm(data={"executed_by": mp_aggr.id}, user=user, resource=res)
+    assert mi_validation_form.is_valid()
+    mi_validation_form.update_metadata(metadata=mi_aggr.metadata)
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
-    assert mi_aggr.metadata.is_dirty is False
+    assert mi_aggr.metadata.is_dirty is True
     # remove/delete mp_aggregation
     mp_aggr.remove_aggregation()
     assert ModelProgramLogicalFile.objects.count() == 0
@@ -157,11 +162,13 @@ def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_agg
     assert ModelProgramLogicalFile.objects.count() == 1
     mp_aggr = ModelProgramLogicalFile.objects.first()
     # link model instance aggregation to model program aggregation
-    mi_aggr.set_link_to_model_program(user=user, model_prog_aggr=mp_aggr)
+    mi_validation_form = ModelInstanceMetadataValidationForm(data={"executed_by": mp_aggr.id}, user=user, resource=res)
+    assert mi_validation_form.is_valid()
+    mi_validation_form.update_metadata(metadata=mi_aggr.metadata)
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
-    assert mi_aggr.metadata.is_dirty is False
+    assert mi_aggr.metadata.is_dirty is True
     # rename the model program file name
     src_path = 'data/contents/{}'.format(res_file.file_name)
     tgt_path = 'data/contents/{}'.format("logan_1.vrt")
@@ -200,11 +207,13 @@ def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_agg
     assert ModelProgramLogicalFile.objects.count() == 1
     mp_aggr = ModelProgramLogicalFile.objects.first()
     # link model instance aggregation to model program aggregation
-    mi_aggr.set_link_to_model_program(user=user, model_prog_aggr=mp_aggr)
+    mi_validation_form = ModelInstanceMetadataValidationForm(data={"executed_by": mp_aggr.id}, user=user, resource=res)
+    assert mi_validation_form.is_valid()
+    mi_validation_form.update_metadata(metadata=mi_aggr.metadata)
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
-    assert mi_aggr.metadata.is_dirty is False
+    assert mi_aggr.metadata.is_dirty is True
     # rename the model program file name
     src_path = 'data/contents/{}'.format(mp_folder)
     tgt_path = 'data/contents/{}'.format("{}_1".format(mp_folder))

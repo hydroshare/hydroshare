@@ -107,11 +107,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         return template.render(context)
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
-        """This generates html form code to add/update the following metadata attributes
-        has_model_output
-        executed_by
-        metadata_json
-        """
+        """generates html form code to edit metadata for this aggregation"""
 
         form_action = "/hsapi/_internal/{}/update-modelinstance-metadata/"
         form_action = form_action.format(self.logical_file.id)
@@ -320,7 +316,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             res_xmlns = os.path.join(current_site_url(), 'resource', resource.short_id) + "/"
             ns_prefix = None
             additional_namespaces = [{ns_prefix: res_xmlns}]
-        # get the xml root element and the xml element to which contains all other elements
+        # get the xml root element, and the xml element which needs to contain all other elements
         RDF_ROOT, container_to_add_to = super(ModelInstanceFileMetaData, self)._get_xml_containers(
             additional_namespaces=additional_namespaces)
 
@@ -479,31 +475,6 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         This must agree between Composite Types and native types).
         """
         return self.model_instance_type
-
-    def set_link_to_model_program(self, user, model_prog_aggr):
-        """Creates a link to the specified model program aggregation *model_prog_aggr* using the
-        executed_by metadata field.
-
-        :param  user: user who is associating this (self) model instance aggregation to a model program aggregation
-        :param  model_prog_aggr: an instance of ModelProgramLogicalFile to be associated with
-        :raises PermissionDenied exception if the user does not have edit permission for the resource to which this
-        model instance aggregation belongs or doesn't have view permission for the resource that contains the model
-        program aggregation.
-        """
-
-        # check if user has edit permission for the resources
-        mi_res = self.resource
-        mp_res = model_prog_aggr.resource
-        authorized = user.uaccess.can_change_resource(mi_res)
-        if not authorized:
-            raise PermissionDenied("You don't have permission to edit resource(ID:{})".format(mi_res.short_id))
-        if mi_res.short_id != mp_res.short_id:
-            authorized = user.uaccess.can_view_resource(mp_res)
-            if not authorized:
-                raise PermissionDenied("You don't have permission to view resource(ID:{})".format(mp_res.short_id))
-
-        self.metadata.executed_by = model_prog_aggr
-        self.metadata.save()
 
     def add_resource_files_in_folder(self, resource, folder):
         """
