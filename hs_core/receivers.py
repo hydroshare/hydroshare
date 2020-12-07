@@ -98,7 +98,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     elif element_name == "fundingagency":
         element_form = FundingAgencyValidationForm(request.POST)
     elif element_name == "citation":
-        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content')}}
+        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
     elif element_name in repeatable_elements:
         # since element_name is a repeatable element (e.g creator) and data for the element
         # is displayed on the landing page using formset, the data coming from a single element

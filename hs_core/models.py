@@ -2232,11 +2232,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return author_name + ", "
 
     def get_custom_citation(self):
-        """Get custom citation"""
-        try:
-            return str(self.metadata.citation.all()[0]).strip()
-        except:
-            pass
+        """Get custom citation."""
+        if self.metadata.citation.first() is None:
+            return ''
+        return str(self.metadata.citation.first())
 
     def get_citation(self):
         """Get citation or citations from resource metadata."""

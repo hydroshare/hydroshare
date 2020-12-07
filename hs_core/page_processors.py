@@ -281,7 +281,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if g.is_user_member:
             grps_member_of.append(g)
     try:
-        citation_id = content_model.metadata.citation.all()[0].id
+        citation_id = content_model.metadata.citation.all()[0].id  # TODO SHOULD NOT SEE OBRIEN USE FIRST()
     except:
         citation_id = None
 
