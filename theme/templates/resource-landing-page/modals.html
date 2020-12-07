@@ -1430,7 +1430,7 @@
                             document.body.style.cursor = 'wait';
                             $.ajax({
                               type: "POST",
-                              url: '/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/',
+                              url: "/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/",
                             }).complete(function() {
                               document.body.style.cursor = 'default';
                               if (window.location.href.includes('editing=True')) {

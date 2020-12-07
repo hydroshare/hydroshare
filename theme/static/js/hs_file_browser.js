@@ -1271,8 +1271,8 @@ function isSelected(fullPaths) {
             const respath = item.attr("data-url");
             const pk = item.attr("data-pk");
             if (respath && pk) {
-                const parsed = respath.split("/contents(.+)/")
-                filesToDelete.push(parsed[parsed.length-1])
+                const parsed_path = respath.split(/contents(.+)/).filter(function(el){return el})
+                filesToDelete.push(parsed_path[parsed_path.length-1])
             } else {
                 if (isVirtualFolder(item.first())) {
                     // Item is a virtual folder
