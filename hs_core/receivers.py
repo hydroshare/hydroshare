@@ -44,7 +44,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = ContributorValidationForm(post_data_dict)
 
     elif element_name == "citation":
-        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content')}}
+        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
 
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
