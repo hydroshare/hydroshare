@@ -1244,23 +1244,6 @@ function updateNavigationState() {
     $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
-function anyExternalFiles(fullPaths) {
-    /*
-    Look for any .url files.
-
-    param: fullPaths array of file path strings to parse top level folders and file extensions from
-     */
-    let filePathsContainingUrl = [];
-
-    for (const [k, v] of Object.entries(fullPaths)) {
-        if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
-            filePathsContainingUrl.push(v.url)
-        }
-    }
-
-    return filePathsContainingUrl.length > 0
-}
-
 function isSelected(fullPaths) {
     const deleteList = $("#fb-files-container li.ui-selected");
     let filesToDelete = [];
@@ -1274,15 +1257,7 @@ function isSelected(fullPaths) {
                 const parsed_path = respath.split(/contents(.+)/).filter(function(el){return el})
                 filesToDelete.push(parsed_path[parsed_path.length-1])
             } else {
-                if (isVirtualFolder(item.first())) {
-                    // Item is a virtual folder
-                    let hs_file_type = item.find(".fb-logical-file-type")
-                      .attr("data-logical-file-type");
-                    let file_type_id = item.attr("data-logical-file-id");
-                    console.log('virtual folder ' + hs_file_type, file_type_id);
-                    // TODO investigate
-                } else {
-                    // Item is a regular folder
+                if (!isVirtualFolder(item.first())) { // Item is a regular folder
                     let folderName = item.children(".fb-file-name").text();
                     let folder_path = getCurrentPath().path.concat(folderName);
                     filesToDelete.push('/' + folder_path.join('/'))
