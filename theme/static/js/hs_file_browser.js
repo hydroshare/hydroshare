@@ -648,7 +648,7 @@ function bindFileBrowserItemEvents() {
             }
         }
         updateSelectionMenuContext();
-    })
+    });
 
     // Drag method
     if (mode === "edit") {
