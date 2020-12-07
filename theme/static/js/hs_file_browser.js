@@ -1262,7 +1262,6 @@ function anyExternalFiles(fullPaths) {
 }
 
 function isSelected(fullPaths) {
-
     const deleteList = $("#fb-files-container li.ui-selected");
     let filesToDelete = [];
 
@@ -1272,14 +1271,15 @@ function isSelected(fullPaths) {
             const respath = item.attr("data-url");
             const pk = item.attr("data-pk");
             if (respath && pk) {
-                filesToDelete.push(respath.split("contents")[respath.split("contents").length-1]) // TODO folder could be named contents
+                const parsed = respath.split("/contents(.+)/")
+                filesToDelete.push(parsed[parsed.length-1])
             } else {
                 if (isVirtualFolder(item.first())) {
                     // Item is a virtual folder
                     let hs_file_type = item.find(".fb-logical-file-type")
                       .attr("data-logical-file-type");
                     let file_type_id = item.attr("data-logical-file-id");
-                    // console.log(hs_file_type, file_type_id);
+                    console.log('virtual folder ' + hs_file_type, file_type_id);
                     // TODO investigate
                 } else {
                     // Item is a regular folder
@@ -1290,10 +1290,6 @@ function isSelected(fullPaths) {
             }
         }
 
-        // let ret = fullPaths.filter(function(idx) {
-        //     return filesToDelete.indexOf(idx) !== -1;
-        // });
-
         // maximum matches with duplicates (based on parent folder match or top level filename match)
         let matches = fullPaths.map(function(i1) {
             return filesToDelete.filter(function(i2) {
@@ -1303,7 +1299,6 @@ function isSelected(fullPaths) {
             })
         }).flat()
         return matches
-        // return Array.from(new Set(matches))
     }
 }
 
@@ -1470,10 +1465,6 @@ function warnExternalContent(shortId) {
             extRefs = extRefs.map(function(ref) {
                 return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
             })
-
-            // TODO SHOULD NOT SEE REMOVE CONSOLE
-            console.log('External agg refs from endpoint: ' + extRefs)
-            console.log('Intersect of selected and ext agg refs: ' + isSelected(extRefs))
 
             const sel = isSelected(extRefs)
             if (global_custom_citation !== 'None' && sel.length === extRefs.length && extRefs.length > 0) {
