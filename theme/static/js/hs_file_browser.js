@@ -1442,7 +1442,7 @@ function warnExternalContent(shortId) {
             })
 
             const sel = isSelected(extRefs)
-            if (global_custom_citation !== 'None' && global_custom_citation !== '' && sel.length === extRefs.length && extRefs.length > 0) {
+            if (global_custom_citation !== 'None' && global_custom_citation !== '' && global_custom_citation !== '' && sel.length === extRefs.length && extRefs.length > 0) {
                 removeCitationIntent = true;
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
