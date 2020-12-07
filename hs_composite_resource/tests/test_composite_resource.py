@@ -974,9 +974,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         - when the resource contains one model instance aggregation and is linked to a model program aggregation
         within the same resource
           In this case resource can be published
-        - when the resource contains one model instance aggregation and is linked to a model program aggregation
-        in another resource
-          In this case resource can't be published
         - when the resource contains one model instance aggregation and is linked to an external model program via a
         non-DOI type url
           In this case resource can't be published
@@ -1026,37 +1023,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # since the 2 linked model aggregations are in the same resource it should be possible
         # to publish this resource
         self.assertTrue(resource.can_be_published)
-        # create another composite resource
-        resource_2 = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Composite Resource -2',
-            metadata=[],
-            files=()
-        )
-
-        # create a model program aggregation within the 2nd resource and link it to model instance
-        file_to_upload = UploadedFile(file=open(self.zip_file, 'rb'),
-                                      name=os.path.basename(self.zip_file))
-
-        res_file = add_file_to_resource(
-            resource_2, file_to_upload, folder=upload_folder, check_target_folder=True
-        )
-
-        # set file to model program aggregation type
-        ModelProgramLogicalFile.set_file_type(resource_2, self.user, res_file.id)
-        self.assertEqual(ModelProgramLogicalFile.objects.count(), 2)
-        res_2_file = resource_2.files.first()
-        self.assertTrue(res_2_file.has_logical_file)
-        self.assertTrue(isinstance(res_2_file.logical_file, ModelProgramLogicalFile))
-        mp_aggr = res_2_file.logical_file
-        # link model instance to model program in the 2nd resource
-        mi_aggr.metadata.executed_by = mp_aggr
-        mi_aggr.metadata.save()
-        # since the linked model program aggregations in a different resource which has not been published
-        # the 1st resource can't be published
-        self.assertFalse(resource_2.raccess.published)
-        self.assertFalse(resource.can_be_published)
 
         # test linking with external model program via url
         mi_aggr.metadata.executed_by = None

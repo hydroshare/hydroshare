@@ -69,17 +69,6 @@ class CompositeResource(BaseResource):
             # check for model instance linked to model program
             if lf.is_model_instance:
                 mi_aggr = lf
-                mp_aggr = mi_aggr.metadata.executed_by
-                if mp_aggr is not None:
-                    if mp_aggr.resource.short_id != mi_aggr.resource.short_id:
-                        # model instance aggregation and model program aggregations are not in the same resource
-                        # the other resource containing the linked model program must have been published
-                        # before this resource can be published
-                        if not mp_aggr.resource.raccess.published:
-                            return False
-                    else:
-                        # model program aggregation and the linked model instance aggregations are in the same resource
-                        continue
                 model_program_url = mi_aggr.metadata.executed_by_url
                 if model_program_url:
                     # external linked model program url must be a DOI url for this resource to be published
@@ -90,8 +79,7 @@ class CompositeResource(BaseResource):
         return True
 
     def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder):
-        """removes association with aggregation (fileset or model program) from this
-        moved resource file
+        """removes association with aggregation (fileset or model program) from a resource file that has been moved
         :param  moved_res_file: an instance of a ResourceFile which has been moved to a different folder
         :param  src_folder: folder from which the file got moved from
         :param  tgt_folder: folder to which the file got moved into
@@ -124,7 +112,7 @@ class CompositeResource(BaseResource):
     def add_file_to_aggregation(self, moved_res_file):
         """adds the moved file to the aggregation (fileset or model program/instance) into which the file has been moved
         :param  moved_res_file: an instance of ResourceFile which has been moved into a folder that represents
-        a fileset or a model program or a model instance aggregation
+        a fileset, a model program, or a model instance aggregation
         """
         if moved_res_file.file_folder and not moved_res_file.has_logical_file:
             # first check for model program/instance aggregation
@@ -359,7 +347,7 @@ class CompositeResource(BaseResource):
         aggregations that exist under the path 'folder'
         as well as for any parent fileset/model instance that may exist relative to path 'folder'
         :param  folder: folder path containing nested aggregations
-        :param nested_aggr: can be either 'fileset' or 'modelinstance'
+        :param nested_aggr: can either be 'fileset' or 'modelinstance'
         """
         if __debug__:
             assert(nested_aggr in ('fileset', 'modelinstance'))
