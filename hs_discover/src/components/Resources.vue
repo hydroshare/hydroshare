@@ -452,6 +452,7 @@ export default {
           this.searchClick(false, false, false);
           this.setAllMarkers();
         } else {
+          this.setAllMarkers();
           recenterMap(); // eslint-disable-line
         }
         document.getElementById('map-mode-button').value = 'Hide Map';
