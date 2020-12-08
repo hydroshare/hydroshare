@@ -1433,10 +1433,10 @@
                               url: "/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/",
                             }).complete(function() {
                               document.body.style.cursor = 'default';
-                              if (window.location.href.includes('editing=True')) {
+                              if (window.location.href.includes('?resource-mode=edit')) {
                                 location.reload();
                               } else {
-                                window.location.href = window.location.href + '?editing=True';
+                                window.location.href = window.location.href + '?resource-mode=edit';
                               }
                             });
                           }

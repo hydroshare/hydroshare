@@ -2101,10 +2101,10 @@ $(document).ready(function () {
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
                         document.body.style.cursor = 'default';
-                        if (window.location.href.includes('editing=True')) {
+                        if (window.location.href.includes('?resource-mode=edit')) {
                             location.reload();
                         } else {
-                            window.location.href = window.location.href + '?editing=True';
+                            window.location.href = window.location.href + '?resource-mode=edit';
                         }
                     });
                 }

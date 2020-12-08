@@ -47,10 +47,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 - split into two functions: get_readonly_page_context(...) and
                 get_editable_page_context(...)
     """
-    editing = request.GET.get('editing')
-    if editing:
-        resource_edit = True
-
     file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
