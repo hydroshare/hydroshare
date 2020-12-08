@@ -168,7 +168,7 @@ class RDF_Term_MixIn(object):
                 field_term = cls.get_field_term(field.name)
                 val = graph.value(metadata_node, field_term)
                 if val is not None:
-                    value_dict[field.name] = str(val)
+                    value_dict[field.name] = str(val.toPython())
             if value_dict:
                 cls.create(content_object=content_object, **value_dict)
 
