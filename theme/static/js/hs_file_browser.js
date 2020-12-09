@@ -1447,9 +1447,11 @@ function warnExternalContent(shortId) {
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
                   'and custom citation?')
+                $('#additional-citation-warning').css("color", "red");
             } else {
                 removeCitationIntent = false;
                 $('#additional-citation-warning').text('')
+                $('#additional-citation-warning').css("color", "black");
             }
         }
         $('#btn-confirm-delete').prop('disabled', false)

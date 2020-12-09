@@ -8,14 +8,17 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="flex">
+                <div id="citation-text">
                 {% if custom_citation %}
-                    <div id="citation-text">{{ custom_citation|urlize }}</div>
+                    {{ custom_citation|urlize }}
                 {% else %}
-                    <div id="citation-text">{{ citation|urlize }}</div>
+                    {{ citation|urlize }}
                 {% endif %}
-                <span id="edit-citation-control" style="display: none" data-toggle="modal" data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
-                      title="Edit citation" data-target="#customize-citation-dialog">
-                </span>
+                </div>
+                <button id="edit-citation-control" style="display: none" class="btn btn-default clipboard-copy"
+                        data-toggle="modal" data-placement="auto" data-target="#customize-citation-dialog" type="button">
+                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;Edit
+                </button>
                 <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
