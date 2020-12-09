@@ -1427,6 +1427,7 @@
                         {% if custom_citation %}
                         <script language="JavaScript">
                           function AsyncRevertCitation() {
+                            $('#customize-citation-dialog').toggle();
                             document.body.style.cursor = 'wait';
                             $.ajax({
                               type: "POST",
