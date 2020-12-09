@@ -219,6 +219,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	float: left;
 }
 
+#edit-citation-control {
+	padding-top: 8px;
+}
+
 .recaptchatable {
     width: 100%;
 }
