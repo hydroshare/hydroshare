@@ -9,15 +9,23 @@
         <div class="col-xs-12">
             <div class="flex">
                 <div id="citation-text">
-                {% if custom_citation %}
-                    {{ custom_citation|urlize }}
-                {% else %}
-                    {{ citation|urlize }}
-                {% endif %}
+                    <table>
+                        <tbody>
+                        <tr><td style="width:100%">
+                            {% if custom_citation %}
+                                {{ custom_citation|urlize }}
+                            {% else %}
+                                {{ citation|urlize }}
+                            {% endif %}
+                        </td><td style="min-width:25px;">
+                            <span id="edit-citation-control" style="display: none" data-toggle="modal"
+                                  data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                                    title="Edit citation" data-target="#customize-citation-dialog">
+                            </span>
+                        </td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <span id="edit-citation-control" style="display: none" data-toggle="modal" data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
-                      title="Edit citation" data-target="#customize-citation-dialog">
-                </span>
                 <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
