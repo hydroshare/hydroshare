@@ -70,6 +70,8 @@ server {
 
     sendfile on;
     sendfile_max_chunk 512k;
+    directio 4m;  
+    directio_alignment 512; 
     aio threads;
 
     access_log      /var/log/nginx/access.log combined;
