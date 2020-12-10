@@ -127,8 +127,9 @@ class OriginalCoverage(AbstractMetaDataElement):
         if value_str:
             value_str = value_str.value
             value_dict = {}
-            for p in value_str.split('; '):
-                k, v = p.split('=')
+            for key_value in value_str.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
                 value_dict[k] = v
             OriginalCoverage.create(value=value_dict, content_object=content_object)
 
