@@ -70,7 +70,7 @@ function validateForm() {
 function validateRequiredElements() {
     var requiredElements = $(".form-required");
     for (var i = 0; i < requiredElements.length; i++) {
-        if (!$(requiredElements[i]).val()) {
+        if (!$(requiredElements[i]).val().trim()) {
             $(requiredElements[i]).addClass("form-invalid");
             $(requiredElements[i]).parent().find(".error-label").remove();
             $(requiredElements[i]).parent().append(errorLabel("This field is required."));
@@ -109,7 +109,7 @@ function setEditMode() {
         $(this).addClass("blured-out");
     });
 
-    var userTypeValue = $("#db-user-type").text();
+    var userTypeValue = $("#db-user-type").text().trim();
     var selectedUserType = $('#selectUserType option[value="' + userTypeValue + '"]');
 
     if (selectedUserType.length > 0) {
@@ -148,7 +148,7 @@ $(document).on('change', '#cv-custom-upload :file', function () {
 });
 
 function onFormRequiredChange() {
-    if ($(this).val()) {
+    if ($(this).val().trim()) {
         $(this).removeClass("form-invalid");
         $(this).parent().find(".error-label").remove();
     }
@@ -245,11 +245,6 @@ function getUrlVars()
 }
 
 $(document).ready(function () {
-    // Change country first empty option to 'Unspecified'
-    var option = $("select[name='country'] option:first-child");
-    option.val("Unspecified");
-    option.text("Unspecified");
-
     $("#btn-create-irods-account").click(create_irods_account);
     $("#btn-delete-irods-account").click(delete_irods_account);
 

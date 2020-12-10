@@ -231,6 +231,9 @@ class SignupForm(forms.ModelForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
     organization = forms.CharField(required=True)
+    user_type = forms.CharField(required=True)
+    country = forms.CharField(label='Country', required=True)
+    state = forms.CharField(label='State/Province', required=True)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -263,6 +266,24 @@ class SignupForm(forms.ModelForm):
         else:
             raise forms.ValidationError("Password must be confirmed")
 
+    def clean_user_type(self):
+        data = self.cleaned_data['user_type']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("User type is a required field.")
+        return data
+
+    def clean_country(self):
+        data = self.cleaned_data['country']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Country is a required field.")
+        return data
+
+    def clean_state(self):
+        data = self.cleaned_data['state']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("State is a required field.")
+        return data
+
     def save(self, *args, **kwargs):
         data = self.cleaned_data
         return create_account(
@@ -273,6 +294,9 @@ class SignupForm(forms.ModelForm):
             last_name=data['last_name'],
             superuser=False,
             password=data['password'],
+            user_type=data['user_type'],
+            country=data['country'],
+            state=data['state'],
             active=False,
         )
 
@@ -284,15 +308,11 @@ class UserForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data['first_name']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("First name is a required field.")
-        return data
+        return data.strip()
 
     def clean_last_name(self):
         data = self.cleaned_data['last_name']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Last name is a required field.")
-        return data
+        return data.strip()
 
     def clean_email(self):
         data = self.cleaned_data['email']

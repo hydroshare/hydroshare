@@ -1,15 +1,10 @@
-# This is the configuration of the outer switch that selects which
-# instance of hydroshare to run. 
-#
-# This file should be named hydroshare-ssl-nginx.conf on that switch, 
-# in the directory /home/hydro/hydroshare/nginx/config-files 
-#
-# Request chokes are implemented here rather than on the hydroshare instance, 
-# so that this host is protected. Recent high-volume attacks against the
-# switch have brought the switch down.  April 16, 2020 -- Alva Couch
+# hydroshare-ssl-nginx.conf
 
-# put a limit on the rate of requests made from one ip address. 
+# limit app launches to 5/second per client. 
 limit_req_zone $binary_remote_addr zone=applaunch:10m rate=5r/s;
+ 
+# limit ALL downloads (regardless of client) to a rate of 5/second. 
+# limit_req_zone download zone=download:1m rate=5r/s;
 
 upstream backend {
    server CURRENT_VM;
@@ -26,12 +21,18 @@ server {
     server_name     FQDN_OR_IP;
     root            /system/static/; 
 
+    if ($http_host != "FQDN_OR_IP") {
+        rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+    }
+
     access_log      /var/log/nginx/access.log combined;
-    error_log       /var/log/nginx/error.log debug;
+    error_log       /var/log/nginx/error.log error;
 
     sendfile off;
     proxy_request_buffering off; 
     proxy_buffering off; 
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
 
     charset         utf-8;
     client_max_body_size 4096m;  # limit uploads to 4 GiB. 
@@ -39,26 +40,31 @@ server {
     ssl_certificate         /hs-certs/SSL_CERT_FILE;
     ssl_certificate_key     /hs-certs/SSL_KEY_FILE;
 
-    # This limits the number of app launches that can be made from a single IP address. 
-    # At most 5 per second can be made, with a burst limit of 50 queued requests 
-    # to be addressed at 5 per second. This allows classes that are using apps 
-    # to simultaneously launch 50 instances, even if the class is using the same 
-    # request IP address due to network address translation (common). 
+    location /goaccess/ {
+        try_files $uri /goaccess/report.html;
+    }
+
     location /tracking/applaunch/ {
         if (-f $document_root/maintenance_on.html) {
             return 503;
         }
-        limit_req zone=applaunch burst=50;
+        limit_req zone=applaunch burst=50;  # choke django requests to 5/second with a total queue of 50
         proxy_pass https://CURRENT_VM; 
     }
 
-    # all other url
+    location /django_irods/download { 
+        if (-f $document_root/maintenance_on.html) {
+            return 503;  # invoke error handling as defined below
+        }
+        # limit_req zone=download burst=150;  # choke django requests to 5/second with a total queue of 150
+	proxy_pass https://CURRENT_VM;  # needed for server switching code. 
+    } 
+
     location / {
         if (-f $document_root/maintenance_on.html) {
             return 503;  # invoke error handling as defined below
         }
-	proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
+        # This is unrestricted by rate chokes. 
 	proxy_pass https://CURRENT_VM;  # needed for server switching code. 
     }
 

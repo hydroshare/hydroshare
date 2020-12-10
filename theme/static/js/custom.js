@@ -136,6 +136,11 @@ $(document).ready(function () {
         return false;
     });
 
+    // Prevents nav dropdowns from closing when clicking on elements inside
+    $('#hs-nav-bar .dropdown-menu').on('click', function (e) {
+        e.stopPropagation();
+    });
+
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
 
@@ -217,23 +222,37 @@ $(document).ready(function () {
         });
     }
 
+    function popup_profile_alert(uid, fields) {
+        if ($("#publish").length) {
+                $("#publish").toggleClass("disabled", true);
+                $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
+                $("#publish > [data-toggle='tooltip']").attr("data-original-title",
+                    "Your profile information must be complete before you can formally publish resources.");
+            }
+            missing_field_str = fields.join(', ')
+
+            var message = 'Your profile is nearly complete. Please fill in the '
+                + '<strong>' + missing_field_str + '</strong> fields'
+                + ' on the <a href="/user/' + uid + '/">User Profile</a> page';
+
+            customAlert("Profile", message, "info", 10000);
+    }
+
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
-            if(!user.organization) {
+            var missing_profile_fields = [];
+            if(!user.organization)
+                missing_profile_fields.push('Organization')
+            if(!user.state)
+                missing_profile_fields.push('State')
+            if(!user.country)
+                missing_profile_fields.push('Country')
+            if(!user.user_type)
+                missing_profile_fields.push('User Type')
+            if(missing_profile_fields.length) {
                 // Disable publishing resources
-                if ($("#publish").length) {
-                    $("#publish").toggleClass("disabled", true);
-                    $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
-                    $("#publish > [data-toggle='tooltip']").attr("data-original-title",
-                        "Your profile information must be complete before you can formally publish resources.");
-                }
-
-                var message = 'Your profile is nearly complete. Please fill in the '
-                    + '<strong>Organization</strong> field'
-                    + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
-
-                customAlert("Profile", message, "info", 10000);
+                popup_profile_alert(user.id, missing_profile_fields)
             }
         },
         error: function(response) {

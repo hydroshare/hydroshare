@@ -17,8 +17,8 @@ pre_download_file = django.dispatch.Signal(providing_args=['sender','request','r
 
 pre_check_bag_flag = django.dispatch.Signal(providing_args=['resource'])
 
-post_delete_resource = django.dispatch.Signal(providing_args=['request', 'user', 'shortkey',
-                                                              'resource', 'resource_title', 'resource_type'])
+post_delete_resource = django.dispatch.Signal(providing_args=['request', 'user', 'shortkey', 'resource',
+                                                             'resource_title', 'resource_type'])
 
 pre_move_or_rename_file_or_folder = django.dispatch.Signal(providing_args=['resource',
                                                                            'src_full_path',

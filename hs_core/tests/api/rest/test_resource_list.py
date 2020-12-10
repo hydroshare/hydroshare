@@ -340,3 +340,34 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content.decode())
         self.assertEqual(content['count'], 0)
+
+    def test_resource_list_paging(self):
+        gen_res_one = resource.create_resource('CompositeResource', self.user, 'Resource 1',
+                                               metadata=[{"rights": {"statement": "mystatement",
+                                                                     "url": "http://www.google.com"}},
+                                                         {"description": {"abstract": "myabstract"}}])
+        gen_res_two = resource.create_resource('CompositeResource', self.user, 'Resource 2',
+                                               metadata=[{"rights": {"statement": "mystatement",
+                                                                     "url": "http://www.google.com"}},
+                                                         {"description": {"abstract": "myabstract"}}])
+        gen_res_three = resource.create_resource('CompositeResource', self.user, 'Resource 3',
+                                                 metadata=[{"rights": {"statement": "mystatement",
+                                                                       "url": "http://www.google.com"}},
+                                                           {"description": {"abstract": "myabstract"}}])
+        gen_res_four = resource.create_resource('CompositeResource', self.user, 'Resource 2',
+                                                metadata=[{"rights": {"statement": "mystatement",
+                                                                      "url": "http://www.google.com"}},
+                                                          {"description": {"abstract": "myabstract"}}])
+
+        self.resources_to_delete.append(gen_res_one.short_id)
+        self.resources_to_delete.append(gen_res_two.short_id)
+        self.resources_to_delete.append(gen_res_three.short_id)
+        self.resources_to_delete.append(gen_res_four.short_id)
+
+        response = self.client.get('/hsapi/resource/', {'page': 2, 'count': 1}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content.decode())
+        self.assertEqual(content['count'], 4)
+        self.assertEqual(len(content['results']), 1)
+        self.assertIsNotNone(content['next'])
+        self.assertIsNotNone(content['previous'])
