@@ -54,62 +54,39 @@ class TestHideOldVersions(TestCase):
     def test_show_discoverable(self):
         self.version0.raccess.discoverable = True
         self.version0.raccess.save()
-        print("{} {} {}:{} {} {}".format(self.version0.raccess.discoverable,
-                                         self.version1.raccess.discoverable,
-                                         self.version2.raccess.discoverable,
-                                         self.version0.show_in_discover,
-                                         self.version1.show_in_discover,
-                                         self.version2.show_in_discover))
         self.assertTrue(self.version0.show_in_discover)
         self.assertFalse(self.version1.show_in_discover)
         self.assertFalse(self.version2.show_in_discover)
 
         self.version1.raccess.discoverable = True
         self.version1.raccess.save()
-        print("{} {} {}:{} {} {}".format(self.version0.raccess.discoverable,
-                                         self.version1.raccess.discoverable,
-                                         self.version2.raccess.discoverable,
-                                         self.version0.show_in_discover,
-                                         self.version1.show_in_discover,
-                                         self.version2.show_in_discover))
         self.assertFalse(self.version0.show_in_discover)
         self.assertTrue(self.version1.show_in_discover)
         self.assertFalse(self.version2.show_in_discover)
 
         self.version2.raccess.discoverable = True
         self.version2.raccess.save()
-        print("{} {} {}:{} {} {}".format(self.version0.raccess.discoverable,
-                                         self.version1.raccess.discoverable,
-                                         self.version2.raccess.discoverable,
-                                         self.version0.show_in_discover,
-                                         self.version1.show_in_discover,
-                                         self.version2.show_in_discover))
         self.assertFalse(self.version0.show_in_discover)
         self.assertFalse(self.version1.show_in_discover)
         self.assertTrue(self.version2.show_in_discover)
 
-        # test chaining: if 0,2 are True, 1 is False, then show 2
-        self.version1.raccess.discoverable = False
-        self.version1.raccess.save()
-        print("{} {} {}:{} {} {}".format(self.version0.raccess.discoverable,
-                                         self.version1.raccess.discoverable,
-                                         self.version2.raccess.discoverable,
-                                         self.version0.show_in_discover,
-                                         self.version1.show_in_discover,
-                                         self.version2.show_in_discover))
-        self.assertFalse(self.version0.show_in_discover)
-        self.assertFalse(self.version1.show_in_discover)
-        self.assertTrue(self.version2.show_in_discover)
-
-        # if 0 is True and 1,2 are False, then show 0
-        self.version2.raccess.discoverable = False
+    def test_show_discoverable_2(self):
+        self.version2.raccess.discoverable = True
         self.version2.raccess.save()
-        print("{} {} {}:{} {} {}".format(self.version0.raccess.discoverable,
-                                         self.version1.raccess.discoverable,
-                                         self.version2.raccess.discoverable,
-                                         self.version0.show_in_discover,
-                                         self.version1.show_in_discover,
-                                         self.version2.show_in_discover))
-        self.assertTrue(self.version0.show_in_discover)
+        self.assertFalse(self.version0.show_in_discover)
         self.assertFalse(self.version1.show_in_discover)
-        self.assertFalse(self.version2.show_in_discover)
+        self.assertTrue(self.version2.show_in_discover)
+
+        # test chaining: if 1,2 are True, then show 2
+        self.version1.raccess.discoverable = True
+        self.version1.raccess.save()
+        self.assertFalse(self.version0.show_in_discover)
+        self.assertFalse(self.version1.show_in_discover)
+        self.assertTrue(self.version2.show_in_discover)
+
+        # if 0,1,2 are True, then show 2
+        self.version0.raccess.discoverable = True
+        self.version0.raccess.save()
+        self.assertFalse(self.version0.show_in_discover)
+        self.assertFalse(self.version1.show_in_discover)
+        self.assertTrue(self.version2.show_in_discover)

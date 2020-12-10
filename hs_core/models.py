@@ -3506,18 +3506,24 @@ class BaseResource(Page, AbstractResource):
 
     def replaced_by(self):
         """ return a list or resources that replaced this one """
-        from hs_core.hydroshare import get_resource_by_shortkey   # prevent import loop
+        from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
+        print("replacements for {}:".format(self.short_id))
         replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
         rlist = []
         for r in replacedby:
             replacement = r.value
-            if replacement.startswith("http://www.hydroshare.org/resource/"):
+            print("   {}:".format(replacement))
+            # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
+            if replacement.startswith(current_site_url() + "/resource/"):
                 replacement = replacement[-32:]  # strip header
+                print(" ->{}:".format(replacement))
                 try:
                     rv = get_resource_by_shortkey(replacement, or_404=False)
                 except BaseResource.DoesNotExist:
+                    print("   does not exist")
                     rv = None
                 if rv is not None:
+                    print("   exists")
                     rlist.append(rv)
         return rlist
 
@@ -3542,6 +3548,7 @@ class BaseResource(Page, AbstractResource):
         # breadth-first replacement search, first discoverable replacement wins
         for r in replacedby:
             if r.raccess.discoverable:
+                print("self {} replaced by {} is discoverable".format(self.short_id, r.short_id))
                 return False
             if r.short_id not in visited:
                 replacedby.extend(r.replaced_by())
