@@ -256,8 +256,8 @@ def is_resource_metadata_file(file):
 
 
 def identify_and_ingest_metadata_files(resource, files):
-    res_files, meta_files = identify_metadata_files(files)
-    ingest_metadata_files(resource, meta_files)
+    res_files, meta_files, map_files = identify_metadata_files(files)
+    ingest_metadata_files(resource, meta_files, map_files)
 
 
 def ingest_metadata_files(resource, meta_files, map_files):
@@ -354,6 +354,7 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
     with transaction.atomic():
         lf.metadata.delete_all_elements()
         lf.metadata.ingest_metadata(graph)
+        lf.create_aggregation_xml_documents()
 
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
