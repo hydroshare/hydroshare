@@ -1277,45 +1277,6 @@ function isSelected(fullPaths) {
     }
 }
 
-function countSelectedExternalReferences(fullPaths) {
-    /*
-    Find intersection of selected files and files that contain external references, return that count.
-    param: fullPaths: list of external reference files fullpath format
-     */
-    let topFolders = {};
-    let selectedFiles = [];
-    let numUrlWithinSubs = 0;
-
-    // enumerate external links in subfolders
-    // subfolder/file1.url
-    // file1.url
-    fullPaths.forEach(function(path) {
-        let ele_full = path.split('contents').reverse()[0] // for example /testfolder/extcontent.url
-        let ele = ele_full.split('/')[1] // for example testfolder
-        if (topFolders[ele]) {
-            topFolders[ele] = topFolders[ele] + 1
-        } else {
-            topFolders[ele] = 1
-        }
-    })
-
-    $("#fb-files-container li.ui-selected").each(function(i, el) {
-        if (this.title.includes('Type: File Folder')) { // review subfolder info
-            let ele = String(this.innerText).trim();
-            if (topFolders[ele]) {
-                numUrlWithinSubs += topFolders[ele];
-            }
-        }
-
-        // look at current directory
-        if (this.innerText.toLowerCase().includes('.url')) {
-            selectedFiles.push(this.innerText);
-        }
-    });
-
-    return selectedFiles.length + numUrlWithinSubs;
-}
-
 // Reload the current folder structure
 // Optional argument: file name or folder name to select after reload
 function refreshFileBrowser(name) {
