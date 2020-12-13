@@ -137,7 +137,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         if self.logical_file.model_program_type:
             model_type_name = etree.SubElement(container_to_add_to,
-                                               '{%s}modelProgramType' % CoreMetaData.NAMESPACES['hsterms'])
+                                               '{%s}modelProgramName' % CoreMetaData.NAMESPACES['hsterms'])
             model_type_name.text = self.logical_file.model_program_type
         if self.version:
             model_version = etree.SubElement(container_to_add_to,
@@ -173,7 +173,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         html_string = super(ModelProgramFileMetaData, self).get_html(skip_coverage=True)
         mp_program_type_div = dom_tags.div()
         with mp_program_type_div:
-            dom_tags.legend("Model Program Type")
+            dom_tags.legend("Name")
             dom_tags.p(self.logical_file.model_program_type)
         html_string += mp_program_type_div.render()
 
@@ -223,7 +223,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         if json_schema:
             mi_schema_div = dom_tags.div(cls="content-block")
             with mi_schema_div:
-                dom_tags.legend("Model Instance Metadata JSON Schema")
+                dom_tags.legend("Model Instance Metadata Schema")
                 json_schema = json.dumps(json_schema, indent=4)
                 dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;", cls="form-control")
             html_string += mi_schema_div.render()
@@ -290,10 +290,15 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                         with dom_tags.div(cls="form-group"):
                             with dom_tags.div(cls="control-group"):
                                 with dom_tags.div(id="mp-program-type"):
-                                    dom_tags.label('Model Program Type*', fr="id_mp_program_type", cls="control-label")
+                                    dom_tags.label('Name*', fr="id_mp_program_type", cls="control-label")
+                                    dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted", data_toggle="tooltip",
+                                                  data_placement="auto",
+                                                  data_original_title="Provide the name of your model "
+                                                                      "program (e.g., SWAT, MODFLOW, etc.)")
                                     dom_tags.input(type="text", id="id_mp_program_type", name="mp_program_type",
                                                    cls="form-control input-sm textinput",
                                                    value=self.logical_file.model_program_type)
+
                                 dom_tags.label('Version', cls="control-label", fr="file_version")
                                 with dom_tags.div(cls="controls"):
                                     if self.version:
@@ -356,14 +361,13 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                         json_schema = json.dumps(json_schema, indent=4)
                                     else:
                                         json_schema = ''
-                                    dom_tags.label("Model Instance Metadata JSON Schema", fr="mi-json-schema",
+                                    dom_tags.label("Model Instance Metadata Schema", fr="mi-json-schema",
                                                    cls="control-label")
                                     dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted", data_toggle="tooltip",
                                                   data_placement="auto",
-                                                  data_original_title="Upload a JSON file containing the schema. "
-                                                                      "Uploaded file will not be saved as part of "
-                                                                      "the resource. Schema data from the uploaded "
-                                                                      "file will be used to populate the field below.")
+                                                  data_original_title="Upload/select a JSON file containing the schema."
+                                                                      " The content of the file will be shown below "
+                                                                      "when you save metadata.")
 
                                     # give an option to upload a json file for the metadata schema
                                     with dom_tags.div(cls="form-group"):
@@ -371,7 +375,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                        name='mi_json_schema_file', id='mi-json-schema-file')
                                         with dom_tags.select(cls="form-control", name='mi_json_schema_template',
                                                              style="margin-top:10px;"):
-                                            dom_tags.option("Select a schema template", value="")
+                                            dom_tags.option("Select a schema", value="")
                                             template_path = "hs_file_types/model_meta_schema_templates/*.json"
                                             for schema_template in glob.glob(template_path):
                                                 template_file_name = os.path.basename(schema_template)
@@ -385,7 +389,9 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                     else:
                                         dom_tags.div(
                                             "Metadata schema is missing. You can either upload a schema JSON file or "
-                                            "select one the existing schema JSON templates.",
+                                            "select one of the existing schema JSON files. Save changes using the "
+                                            "button below to make the uploaded/selected schema JSON file part of "
+                                            "the model program aggregation.",
                                             cls="alert alert-danger", id="div-missing-schema-message")
                             with dom_tags.div(id="mp_content_files", cls="control-group"):
                                 with dom_tags.div(cls="controls"):
