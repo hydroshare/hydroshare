@@ -66,15 +66,6 @@ class CompositeResource(BaseResource):
             # url file cannot be published
             if 'url' in lf.extra_data:
                 return False
-            # check for model instance linked to model program
-            if lf.is_model_instance:
-                mi_aggr = lf
-                model_program_url = mi_aggr.metadata.executed_by_url
-                if model_program_url:
-                    # external linked model program url must be a DOI url for this resource to be published
-                    if not model_program_url.startswith("https://doi.org") and \
-                            not model_program_url.startswith("http://doi.org"):
-                        return False
 
         return True
 

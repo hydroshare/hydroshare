@@ -16,7 +16,6 @@ class ModelInstanceMetadataValidationForm(forms.Form):
 
     has_model_output = forms.BooleanField(required=False)
     executed_by = forms.IntegerField(required=False)
-    executed_by_url = forms.URLField(required=False)
     user_selected_mp_aggr = None
 
     def clean_executed_by(self):
@@ -33,33 +32,16 @@ class ModelInstanceMetadataValidationForm(forms.Form):
                 self.add_error("executed_by", "Selected model program aggregation must be from the same resource")
         return selected_mp_aggr
 
-    def clean_executed_by_url(self):
-        executed_by_url = self.cleaned_data['executed_by_url']
-        if executed_by_url:
-            # check that it's an active url
-            url = Request(executed_by_url)
-            try:
-                urlopen(url)
-            except (URLError, HTTPError):
-                self.add_error("executed_by_url", "Provided URL seems like a broken URL")
-        return executed_by_url
-
     def update_metadata(self, metadata):
         executed_by = self.cleaned_data['executed_by']
-        executed_by_url = self.cleaned_data['executed_by_url']
         if executed_by:
             metadata.executed_by = executed_by
-            metadata.executed_by_url = None
             logical_file = metadata.logical_file
             if not logical_file.metadata_schema_json or not metadata.metadata_json:
                 logical_file.metadata_schema_json = self.user_selected_mp_aggr.metadata_schema_json
                 logical_file.save()
-        elif executed_by_url:
-            metadata.executed_by = None
-            metadata.executed_by_url = executed_by_url
         else:
             metadata.executed_by = None
-            metadata.executed_by_url = None
 
         metadata.has_model_output = self.cleaned_data['has_model_output']
         metadata.is_dirty = True
@@ -108,6 +90,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
         if mp_file_types_string:
             mp_file_types = mp_file_types_string.split(";")
             for mp_file_type_string in mp_file_types:
+                # format of 'mp_file_type_string' is as 'resource file short path':'mp file type name'
                 mp_file_type_lst = mp_file_type_string.split(":")
                 if len(mp_file_type_lst) != 2:
                     self.add_error("mp_file_types", "Model program file type input data invalid")
@@ -116,7 +99,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
                     if mp_file_type is None:
                         self.add_error("mp_file_types", "Not a valid model program file type")
 
-                    mp_file_types_dict[mp_file_type_lst[0]] = mp_file_type
+                    mp_file_types_dict[mp_file_type_lst[0]] = mp_file_type_lst[1]
                 else:
                     mp_file_types_dict[mp_file_type_lst[0]] = None
         return mp_file_types_dict
