@@ -4,7 +4,6 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare import add_file_to_resource, ResourceFile, add_resource_files
 from hs_core.views.utils import move_or_rename_file_or_folder
 from hs_file_types.forms import ModelInstanceMetadataValidationForm

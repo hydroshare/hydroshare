@@ -1,6 +1,4 @@
 import json
-from urllib.error import URLError, HTTPError
-from urllib.request import Request, urlopen
 
 import jsonschema
 from django import forms

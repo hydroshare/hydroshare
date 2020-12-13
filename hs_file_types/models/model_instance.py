@@ -4,7 +4,6 @@ import os
 import jsonschema
 from deepdiff import DeepDiff
 from django.contrib.postgres.fields import JSONField
-from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
