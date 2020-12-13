@@ -124,11 +124,10 @@ def test_update_model_instance_metadata(composite_resource_with_mi_aggregation, 
     mi_aggr = next(res.logical_files)
     assert isinstance(mi_aggr, ModelInstanceLogicalFile)
     assert mi_aggr.metadata.has_model_output is False
-    assert not mi_aggr.metadata.executed_by_url
 
     url_params = {'file_type_id': mi_aggr.id}
     url = reverse('update_modelinstance_metadata', kwargs=url_params)
-    post_data = {"has_model_output": True, "executed_by_url": "https://github.com/hydroshare"}
+    post_data = {"has_model_output": True}
     factory = RequestFactory()
     request = factory.post(url, data=post_data)
     request.user = user
@@ -137,7 +136,6 @@ def test_update_model_instance_metadata(composite_resource_with_mi_aggregation, 
     assert response.status_code == status.HTTP_200_OK
     mi_aggr.metadata.refresh_from_db()
     assert mi_aggr.metadata.has_model_output is True
-    assert mi_aggr.metadata.executed_by_url
 
 
 @pytest.mark.django_db(transaction=True)

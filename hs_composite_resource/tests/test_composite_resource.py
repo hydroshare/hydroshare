@@ -974,12 +974,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         - when the resource contains one model instance aggregation and is linked to a model program aggregation
         within the same resource
           In this case resource can be published
-        - when the resource contains one model instance aggregation and is linked to an external model program via a
-        non-DOI type url
-          In this case resource can't be published
-        - when the resource contains one model instance aggregation and is linked to an external model program via a
-        DOI type url
-          In this case resource can be published
         """
 
         self.create_composite_resource()
@@ -1022,21 +1016,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         mi_aggr.metadata.save()
         # since the 2 linked model aggregations are in the same resource it should be possible
         # to publish this resource
-        self.assertTrue(resource.can_be_published)
-
-        # test linking with external model program via url
-        mi_aggr.metadata.executed_by = None
-        mi_aggr.metadata.save()
-        # setting the external model program URL as non-DOI url
-        mi_aggr.metadata.executed_by_url = "https://github.com/hydroshare"
-        mi_aggr.metadata.save()
-        # shouldn't be able to publish this resource when linked to a external model program with non-DOI url
-        self.assertFalse(resource.can_be_published)
-
-        # setting the external model program URL as DOI url
-        mi_aggr.metadata.executed_by_url = "https://doi.org/10.4211/hs.7507a464b96f49139a5c446c827ee9d3"
-        mi_aggr.metadata.save()
-        # should be able to publish this resource when linked to a external model program with DOI url
         self.assertTrue(resource.can_be_published)
 
     def test_supports_folder_creation_non_aggregation_folder(self):
