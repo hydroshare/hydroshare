@@ -1053,17 +1053,6 @@ function showFileTypeMetadata(file_type_time_series, url){
              }
              if (logical_type === "ModelInstanceLogicalFile") {
                   setupModelInstanceTypeUI();
-                  $("#id_executed_by").change(function () {
-                      console.log(this);
-                      var $option = $(this).find('option:selected');
-                      var value = $option.val();
-                      if(value !== "0"){
-                          $("#id_executed_by_url").attr("readonly", "readonly");
-                      }
-                      else {
-                          $("#id_executed_by_url").removeAttr("readonly");
-                      }
-                  });
                  $("#btn-mi-schema-update").click(function () {
                     updateModelInstanceMetaSchema();
                  });
