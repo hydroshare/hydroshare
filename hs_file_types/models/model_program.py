@@ -355,6 +355,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                    cls="form-control input-sm textinput textInput",
                                                    id="file_programming_languages", maxlength="250",
                                                    name="programming_languages", type="text")
+
                                 with dom_tags.div(cls="controls"):
                                     json_schema = self.logical_file.metadata_schema_json
                                     if json_schema:
@@ -382,10 +383,16 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                 dom_tags.option(template_file_name, value=schema_template)
 
                                     if json_schema:
-                                        dom_tags.textarea(json_schema,
-                                                          cls="form-control input-sm textinput textInput",
-                                                          id="mi-json-schema",
-                                                          name="metadata_json_schema", rows="30", readonly="")
+                                        dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                                                        cls="btn btn-success btn-block",
+                                                        data_toggle="collapse", data_target="#meta-schema")
+                                        mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
+                                                                     style="margin-top:10px; padding-bottom: 20px;")
+                                        with mi_schema_div:
+                                            dom_tags.textarea(json_schema,
+                                                              cls="form-control input-sm textinput textInput",
+                                                              id="mi-json-schema",
+                                                              name="metadata_json_schema", rows="30", readonly="")
                                     else:
                                         dom_tags.div(
                                             "Metadata schema is missing. You can either upload a schema JSON file or "
