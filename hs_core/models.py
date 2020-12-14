@@ -681,6 +681,8 @@ class Citation(AbstractMetaDataElement):
     class Meta:
         """Define meta properties for Citation class."""
 
+        unique_together = ("content_type", "object_id")
+
     @classmethod
     def update(cls, element_id, **kwargs):
         """Call parent update function for Citation class."""
