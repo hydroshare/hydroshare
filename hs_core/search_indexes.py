@@ -147,14 +147,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True, stored=False)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True, stored=False)
-    author = indexes.CharField(faceted=True)  # normalized to last, first, middle
+    author = indexes.FacetCharField()  # normalized to last, first, middle
     author_url = indexes.CharField(indexed=False, null=True)
     title = indexes.CharField()
     abstract = indexes.CharField()
-    creator = indexes.MultiValueField(faceted=True)
-    contributor = indexes.MultiValueField(faceted=True)
-    subject = indexes.MultiValueField(faceted=True)
-    availability = indexes.MultiValueField(faceted=True)
+    creator = indexes.FacetMultiValueField()
+    contributor = indexes.FacetMultiValueField()
+    subject = indexes.FacetMultiValueField()
+    availability = indexes.FacetMultiValueField()
     shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField(stored=False)
@@ -185,11 +185,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     language = indexes.CharField(stored=False)
     source = indexes.MultiValueField(stored=False)
     relation = indexes.MultiValueField(stored=False)
-    resource_type = indexes.CharField(faceted=True)
-    content_type = indexes.MultiValueField(faceted=True)
+    resource_type = indexes.FacetCharField()
+    content_type = indexes.FacetMultiValueField()
     comment = indexes.MultiValueField(stored=False)
     owner_login = indexes.MultiValueField(stored=False)
-    owner = indexes.MultiValueField(faceted=True)
+    owner = indexes.FacetMultiValueField()
     person = indexes.MultiValueField(stored=False)
 
     # non-core metadata
