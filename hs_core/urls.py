@@ -32,6 +32,8 @@ urlpatterns = [
         views.create_new_version_resource, name='create_resource_version'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/copy-resource/$', views.copy_resource,
         name='copy_resource'),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/list-referenced-content/$', views.list_referenced_content,
+        name='list_referenced_content'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/rep-res-bag-to-irods-user-zone/$',
         views.rep_res_bag_to_irods_user_zone, name='replicate_bag_user_zone'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/set-resource-flag/$',
