@@ -13,6 +13,10 @@ from django.template import Template, Context
 
 from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
     textarea, span
+from rdflib import Literal, URIRef, BNode
+from rdflib.namespace import DC, Namespace
+
+from hs_core.hs_rdf import HSTERMS, RDFS1
 
 from hs_core.hydroshare import utils
 from hs_core.signals import post_add_timeseries_aggregation
@@ -380,6 +384,63 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
+
+    def ingest_metadata(self, graph):
+        super(AbstractFileMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
+
+        title = graph.value(subject=subject, predicate=DC.title)
+        if title:
+            self.logical_file.dataset_name = title
+            self.logical_file.save()
+        for object in graph.objects(subject=subject, predicate=DC.subject):
+            self.keywords.append(object.value)
+        extra_metadata = {}
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            extra_metadata[key] = value
+        self.extra_metadata = copy.deepcopy(extra_metadata)
+        self.save()
+
+    def get_rdf_graph(self):
+        graph = super(AbstractFileMetaData, self).get_rdf_graph()
+
+        subject = self.rdf_subject()
+
+        def copy_into_result(term, result_id):
+            for _, _, term_node in graph.triples((subject, term, None)):
+                for _, _, term_series_ids in graph.triples((term_node, HSTERMS.series_ids, None)):
+                    if term_series_ids:
+                        term_series_ids = term_series_ids.strip('][').split(', ')
+                        if result_id in term_series_ids:
+                            result_term_node = BNode()
+                            graph.add((result_node, term, result_term_node))
+                            for _, term_pred, term_obj in graph.triples((term_node, None, None)):
+                                if term_pred != HSTERMS.series_id:
+                                    graph.add((result_term_node, term_pred, term_obj))
+
+        def remove_term(term):
+            for _, _, term_node in graph.triples((subject, term, None)):
+                for _, pred, obj in graph.triples((term_node, None, None)):
+                    graph.remove((term_node, pred, obj))
+
+
+        for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+            result_series_id = graph.value(subject=result_node, predicate=HSTERMS.series_id)
+            if result_series_id:
+                result_series_id = result_series_id.strip('][').split(', ')[0]
+                copy_into_result(HSTERMS.Site, result_series_id)
+                copy_into_result(HSTERMS.Variable, result_series_id)
+                copy_into_result(HSTERMS.Method, result_series_id)
+                copy_into_result(HSTERMS.ProcessingLevel, result_series_id)
+
+        remove_term(HSTERMS.Site)
+        remove_term(HSTERMS.Variable)
+        remove_term(HSTERMS.Method)
+        remove_term(HSTERMS.ProcessingLevel)
+
+        return graph
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
