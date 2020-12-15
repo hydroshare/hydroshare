@@ -10,7 +10,6 @@ from mezzanine.pages.views import page
 
 from autocomplete_light import shortcuts as autocomplete_light
 
-from hs_core.views.discovery_json_view import DiscoveryJsonView
 from hs_core.views.oauth2_view import GroupAuthorizationView
 from hs_sitemap.views import sitemap
 from theme import views as theme
@@ -73,7 +72,6 @@ urlpatterns = i18n_patterns(
     url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
     url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
-    url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),
