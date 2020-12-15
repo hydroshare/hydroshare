@@ -114,31 +114,36 @@ def get_content_types(res):
     resource = res.get_content_model()  # enable full logical file interface
 
     types = set([res.discovery_content_type])  # accumulate high-level content types.
-    exts = set()  # track individual file extensions
+    missing_exts = set()  # track unmapped file extensions
+    all_exts = set()  # track all file extensions
 
     # categorize logical files by type, and files without a logical file by extension.
     for f in resource.files.all():
+        # collect extensions of files
+        path = f.short_path
+        path = path.split(".")  # determine last extension
+        if len(path) > 1:
+            ext = path[len(path)-1]
+            if len(ext) <= 5:  # skip obviously non-MIME extensions
+                all_exts.add(ext.lower())
+
         if f.has_logical_file:
             candidate_type = type(f.logical_file).get_discovery_content_type()
             types.add(candidate_type)
-        else:  # collect extensions of files not corresponding to logical metadata
-            path = f.short_path
-            path = path.split(".")  # determine last extension
-            if len(path) > 1:
-                ext = path[len(path)-1]
-                if len(ext) <= 5:  # skip obviously non-MIME extensions
-                    exts.add(ext.lower())
+        else:
+            if len(ext) <= 5:  # skip obviously non-MIME extensions
+                missing_exts.add(ext.lower())
 
     # categorize common extensions that are not part of logical files.
     for ext_type in settings.DISCOVERY_EXTENSION_CONTENT_TYPES:
-        if exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
+        if missing_exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
             types.add(ext_type)
-            exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
+            missing_exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
 
-    if exts:  # if there is anything left over, then mark as Generic
+    if missing_exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
 
-    return (types, exts)
+    return (types, missing_exts, all_exts)
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -189,6 +194,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     relation = indexes.MultiValueField(stored=False)
     resource_type = indexes.FacetCharField()
     content_type = indexes.FacetMultiValueField()
+    content_exts = indexes.FacetMultiValueField()
     comment = indexes.MultiValueField(stored=False)
     owner_login = indexes.MultiValueField(stored=False)
     owner = indexes.FacetMultiValueField()
@@ -639,6 +645,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return list(output)
         else:
             return [obj.discovery_content_type]
+
+    def prepare_content_exts(self, obj):
+        """ index by file extension """
+        output = get_content_types(obj)[2]
+        return output
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
