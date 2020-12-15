@@ -126,12 +126,16 @@ def get_content_types(res):
             ext = path[len(path)-1]
             if len(ext) <= 5:  # skip obviously non-MIME extensions
                 all_exts.add(ext.lower())
+            else:
+                ext = None
+        else:
+            ext = None
 
         if f.has_logical_file:
             candidate_type = type(f.logical_file).get_discovery_content_type()
             types.add(candidate_type)
         else:
-            if len(ext) <= 5:  # skip obviously non-MIME extensions
+            if ext is not None:
                 missing_exts.add(ext.lower())
 
     # categorize common extensions that are not part of logical files.
