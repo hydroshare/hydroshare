@@ -148,8 +148,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True, stored=False)
     author = indexes.FacetCharField()  # normalized to last, first, middle
+    author_lower = indexes.FacetCharField()  # normalized to last, first, middle in lower case
     author_url = indexes.CharField(indexed=False, null=True)
-    title = indexes.CharField()
+    title = indexes.FacetCharField()  # so that sorting isn't tokenized
+    title_lower = indexes.FacetCharField()  # so that sorting isn't tokenized
     abstract = indexes.CharField()
     creator = indexes.FacetMultiValueField()
     contributor = indexes.FacetMultiValueField()
@@ -238,6 +240,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
+    def prepare_title_lower(self, obj):
+        result = self.prepare_title(obj)
+        return result.lower()
+
     def prepare_abstract(self, obj):
         """Return metadata abstract if exists, otherwise return None."""
         if hasattr(obj, 'metadata') and \
@@ -270,6 +276,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return 'none'
         else:
             return 'none'
+
+    def prepare_author_lower(self, obj):
+        result = self.prepare_author(obj)
+        return result.lower()
 
     def prepare_author_url(self, obj):
         """
