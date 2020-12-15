@@ -192,7 +192,7 @@
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
-                        <tr>
+                        <tr><th><!-- placeholder --></th>
                             <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
                                 @click="sortBy(key)">
                                 <i :class="sortStyling(key)"></i>{{key}}
