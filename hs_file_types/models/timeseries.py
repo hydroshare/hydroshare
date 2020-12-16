@@ -418,7 +418,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             for term_entry, result_uuids in flipped.items():
                 term_node = BNode()
                 graph.add((subject, term, term_node))
-                graph.add((term_node, HSTERMS.series_ids, Literal(result_uuids)))
+                graph.add((term_node, HSTERMS.timeSeriesResultUUID, Literal(result_uuids)))
                 for key, value in term_entry.items():
                     graph.add((term_node, key, value))
 
@@ -433,11 +433,23 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         copy_out_of_result(HSTERMS.Variable)
         copy_out_of_result(HSTERMS.Method)
         copy_out_of_result(HSTERMS.ProcessingLevel)
+        copy_out_of_result(HSTERMS.UTCOffSet)
 
-        for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
-            result_uuid = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
-            graph.add((result_node, HSTERMS.series_ids, result_uuid))
-            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, result_uuid))
+        # pull units from unit section
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            unit = graph.value(subject=result_node, predicate=HSTERMS.unit)
+            if unit:
+                for _, unit_term, unit_value in graph.triples((unit, None, None)):
+                    graph.add((result_node, unit_term, unit_value))
+                    graph.remove((unit, unit_term, unit_value))
+                graph.remove((result_node, HSTERMS.unit, unit))
+
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
+            graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal([str(series_id)])))
+
+        rdf_string = graph.serialize(format='hydro-xml').decode()
 
         super(TimeSeriesFileMetaData, self).ingest_metadata(graph)
 
@@ -448,14 +460,14 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         def copy_into_result(term, result_id):
             for _, _, term_node in graph.triples((subject, term, None)):
-                for _, _, term_series_ids in graph.triples((term_node, HSTERMS.series_ids, None)):
+                for _, _, term_series_ids in graph.triples((term_node, HSTERMS.timeSeriesResultUUID, None)):
                     if term_series_ids:
                         term_series_ids = term_series_ids.strip('][').split(', ')
                         if result_id in term_series_ids:
                             result_term_node = BNode()
                             graph.add((result_node, term, result_term_node))
                             for _, term_pred, term_obj in graph.triples((term_node, None, None)):
-                                if term_pred != HSTERMS.series_ids:
+                                if term_pred != HSTERMS.timeSeriesResultUUID:
                                     graph.add((result_term_node, term_pred, term_obj))
 
         def remove_term(term):
@@ -465,14 +477,15 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 graph.remove((subject, term, term_node))
 
         for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
-            result_series_id = graph.value(subject=result_node, predicate=HSTERMS.series_ids)
+            result_series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
             if result_series_id:
                 result_series_id = result_series_id.strip('][').split(', ')[0]
                 copy_into_result(HSTERMS.Site, result_series_id)
                 copy_into_result(HSTERMS.Variable, result_series_id)
                 copy_into_result(HSTERMS.Method, result_series_id)
                 copy_into_result(HSTERMS.ProcessingLevel, result_series_id)
-                graph.remove((result_node, HSTERMS.series_ids, None))
+                copy_into_result(HSTERMS.UTCOffSet, result_series_id)
+                graph.remove((result_node, HSTERMS.timeSeriesResultUUID, None))
                 result_series_id = result_series_id.replace("'", "")
                 graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(result_series_id)))
 
@@ -480,6 +493,32 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         remove_term(HSTERMS.Variable)
         remove_term(HSTERMS.Method)
         remove_term(HSTERMS.ProcessingLevel)
+        remove_term(HSTERMS.UTCOffSet)
+
+        # correct series_id entry from list cast to string
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
+            series_id = series_id.replace("['", "").replace("']", "")
+            graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(series_id)))
+
+        # push unit values into units section
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            units_type = graph.value(subject=result_node, predicate=HSTERMS.UnitsType)
+            units_name = graph.value(subject=result_node, predicate=HSTERMS.UnitsName)
+            units_abbreviation = graph.value(subject=result_node, predicate=HSTERMS.UnitsAbbreviation)
+            if units_type or units_name or units_abbreviation:
+                unit_node = BNode()
+                graph.add((result_node, HSTERMS.unit, unit_node))
+                if units_type:
+                    graph.add((unit_node, HSTERMS.UnitsType, units_type))
+                    graph.remove((result_node, HSTERMS.UnitsType, units_type))
+                if units_name:
+                    graph.add((unit_node, HSTERMS.UnitsName, units_name))
+                    graph.remove((result_node, HSTERMS.UnitsName, units_name))
+                if units_abbreviation:
+                    graph.add((unit_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
+                    graph.remove((result_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
 
         return graph
 
