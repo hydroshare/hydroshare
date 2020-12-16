@@ -16,6 +16,7 @@ from django.db import models
 from django.utils.timezone import now
 
 from dominate.tags import table, tbody, tr, td, th, a
+from hs_core.hs_rdf import HSTERMS
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -106,6 +107,29 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
             # by the series_ids
             series_ids = element_data_dict.get('series_ids', [])
         return series_ids
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        """Parses series_ids"""
+        term = cls.get_class_term()
+        if not term:
+            metadata_nodes = [subject]
+        else:
+            metadata_nodes = graph.objects(subject=subject, predicate=term)
+        for metadata_node in metadata_nodes:
+            value_dict = {}
+            for field in cls._meta.fields:
+                if cls.ignored_fields and field.name in cls.ignored_fields:
+                    continue
+                field_term = cls.get_field_term(field.name)
+                val = graph.value(metadata_node, field_term)
+                if field_term == HSTERMS.series_ids:
+                    if val is not None:
+                        value_dict[field.name] = [v.replace("'", "") for v in val.strip('][').split(', ')]
+                elif val is not None:
+                    value_dict[field.name] = str(val.toPython())
+            if value_dict:
+                cls.create(content_object=content_object, **value_dict)
 
     class Meta:
         abstract = True
