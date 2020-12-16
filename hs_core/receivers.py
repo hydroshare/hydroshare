@@ -42,6 +42,10 @@ def metadata_element_pre_create_handler(sender, **kwargs):
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": {"identifiers": [str(ex)]}}
         element_form = ContributorValidationForm(post_data_dict)
+
+    elif element_name == "citation":
+        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
+
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
     elif element_name == 'source':
@@ -93,6 +97,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = AbstractValidationForm(request.POST)
     elif element_name == "fundingagency":
         element_form = FundingAgencyValidationForm(request.POST)
+    elif element_name == "citation":
+        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
     elif element_name in repeatable_elements:
         # since element_name is a repeatable element (e.g creator) and data for the element
         # is displayed on the landing page using formset, the data coming from a single element
