@@ -15,7 +15,7 @@ from hs_core.hydroshare import resource, add_resource_files, current_site_url
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
-    NetCDFLogicalFile, RefTimeseriesLogicalFile
+    NetCDFLogicalFile, RefTimeseriesLogicalFile, TimeSeriesLogicalFile
 
 
 class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
@@ -102,3 +102,5 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                           "SWE_time_meta.xml")
         compare_metadatas(res.get_logical_files(RefTimeseriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "msf_version.refts_meta.xml")
+        compare_metadatas(res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
+                          "ODM2_Multi_Site_One_Variable_meta.xml")

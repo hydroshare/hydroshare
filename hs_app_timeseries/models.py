@@ -16,6 +16,7 @@ from django.db import models
 from django.utils.timezone import now
 
 from dominate.tags import table, tbody, tr, td, th, a
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -107,10 +108,36 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
             series_ids = element_data_dict.get('series_ids', [])
         return series_ids
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        """Parses series_ids"""
+        term = cls.get_class_term()
+        if not term:
+            metadata_nodes = [subject]
+        else:
+            metadata_nodes = graph.objects(subject=subject, predicate=term)
+        for metadata_node in metadata_nodes:
+            value_dict = {}
+            for field in cls._meta.fields:
+                if cls.ignored_fields and field.name in cls.ignored_fields:
+                    continue
+                field_term = cls.get_field_term(field.name)
+                val = graph.value(metadata_node, field_term)
+                if field_term == HSTERMS.timeSeriesResultUUID:
+                    if val is not None:
+                        value_dict[field.name] = [v.replace("'", "") for v in val.strip('][').split(', ')]
+                elif val is not None:
+                    value_dict[field.name] = str(val.toPython())
+            if value_dict:
+                cls.create(content_object=content_object, **value_dict)
+
     class Meta:
         abstract = True
 
 
+@rdf_terms(HSTERMS.site, series_ids=HSTERMS.timeSeriesResultUUID, site_code=HSTERMS.SiteCode,
+           site_name=HSTERMS.SiteName, elevation_m=HSTERMS.Elevation_m, elevation_datum=HSTERMS.ElevationDatum,
+           site_type=HSTERMS.SiteType, latitude=HSTERMS.Latitude, longitude=HSTERMS.Longitude)
 class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
     site_code = models.CharField(max_length=200)
@@ -228,6 +255,9 @@ class Site(TimeSeriesAbstractMetaDataElement):
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
 
+@rdf_terms(HSTERMS.variable, series_ids=HSTERMS.timeSeriesResultUUID, variable_code=HSTERMS.VariableCode,
+           variable_name=HSTERMS.VariableName, variable_type=HSTERMS.VariableType, no_data_value=HSTERMS.NoDataValue,
+           variable_definition=HSTERMS.VariableDefinition, speciation=HSTERMS.Speciation)
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
     variable_code = models.CharField(max_length=50)
@@ -332,6 +362,9 @@ class Variable(TimeSeriesAbstractMetaDataElement):
         return html_table.render(pretty=pretty)
 
 
+@rdf_terms(HSTERMS.method, series_ids=HSTERMS.timeSeriesResultUUID, method_code=HSTERMS.MethodCode,
+           method_name=HSTERMS.MethodName, method_type=HSTERMS.MethodType, method_description=HSTERMS.MethodDescription,
+           method_link=HSTERMS.MethodLink)
 class Method(TimeSeriesAbstractMetaDataElement):
     term = 'Method'
     method_code = models.CharField(max_length=50)
@@ -449,6 +482,9 @@ class Method(TimeSeriesAbstractMetaDataElement):
         return html_table.render(pretty=pretty)
 
 
+@rdf_terms(HSTERMS.processingLevel, series_ids=HSTERMS.timeSeriesResultUUID,
+           processing_level_code=HSTERMS.ProcessingLevelCode, definition=HSTERMS.Definition,
+           explanation=HSTERMS.Explanation)
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
     processing_level_code = models.CharField(max_length=50)
@@ -541,6 +577,10 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
         return html_table.render(pretty=pretty)
 
 
+@rdf_terms(HSTERMS.timeSeriesResult, series_ids=HSTERMS.timeSeriesResultUUID, units_type=HSTERMS.UnitsType,
+           units_name=HSTERMS.UnitsName, units_abbreviation=HSTERMS.UnitsAbbreviation,
+           status=HSTERMS.Status, sample_medium=HSTERMS.SampleMedium, value_count=HSTERMS.ValueCount,
+           aggregation_statistics=HSTERMS.AggregationStatistic, series_label=HSTERMS.SeriesLabel)
 class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     term = 'TimeSeriesResult'
     units_type = models.CharField(max_length=255)
@@ -639,6 +679,7 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         return html_table.render(pretty=pretty)
 
 
+@rdf_terms(HSTERMS.UTCOffSet, series_ids=HSTERMS.timeSeriesResultUUID)
 class UTCOffSet(TimeSeriesAbstractMetaDataElement):
     # this element is not part of the science metadata
     term = 'UTCOffSet'

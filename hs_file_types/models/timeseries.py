@@ -13,6 +13,9 @@ from django.template import Template, Context
 
 from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
     textarea, span
+from rdflib import BNode, Literal
+
+from hs_core.hs_rdf import HSTERMS
 
 from hs_core.hydroshare import utils
 from hs_core.signals import post_add_timeseries_aggregation
@@ -380,6 +383,142 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
+
+    def ingest_metadata(self, graph):
+        subject = self.rdf_subject_from_graph(graph)
+
+        def copy_out_of_result(term):
+            class HashableDict(dict):
+                def __hash__(self):
+                    s = sorted(self.items())
+                    t = tuple(s)
+                    h = hash(t)
+                    return h
+            # extract all term_entries
+            terms_by_id = {}
+            for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+                term_entry = HashableDict()
+                term_node = graph.value(subject=result_node, predicate=term)
+                result_uuid = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+                result_uuid = str(result_uuid)
+                if term_node:
+                    for _, terms_term, term_value in graph.triples((term_node, None, None)):
+                        term_entry[terms_term] = term_value
+                    terms_by_id[result_uuid] = term_entry
+
+            # group common term_entries
+            flipped = {}
+            for key, value in terms_by_id.items():
+                if value not in flipped:
+                    flipped[value] = [key]
+                else:
+                    flipped[value].append(key)
+
+            # update the graph
+            for term_entry, result_uuids in flipped.items():
+                term_node = BNode()
+                graph.add((subject, term, term_node))
+                graph.add((term_node, HSTERMS.timeSeriesResultUUID, Literal(result_uuids)))
+                for key, value in term_entry.items():
+                    graph.add((term_node, key, value))
+
+            # remove nested entry of term
+            for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+                for _, _, term_node in graph.triples((result_node, term, None)):
+                    for _, pred, obj in graph.triples((term_node, None, None)):
+                        graph.remove((term_node, pred, obj))
+                    graph.remove((result_node, term, term_node))
+
+        copy_out_of_result(HSTERMS.Site)
+        copy_out_of_result(HSTERMS.Variable)
+        copy_out_of_result(HSTERMS.Method)
+        copy_out_of_result(HSTERMS.ProcessingLevel)
+        copy_out_of_result(HSTERMS.UTCOffSet)
+
+        # pull units from unit section
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            unit = graph.value(subject=result_node, predicate=HSTERMS.unit)
+            if unit:
+                for _, unit_term, unit_value in graph.triples((unit, None, None)):
+                    graph.add((result_node, unit_term, unit_value))
+                    graph.remove((unit, unit_term, unit_value))
+                graph.remove((result_node, HSTERMS.unit, unit))
+
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
+            graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal([str(series_id)])))
+
+        super(TimeSeriesFileMetaData, self).ingest_metadata(graph)
+
+    def get_rdf_graph(self):
+        graph = super(TimeSeriesFileMetaData, self).get_rdf_graph()
+
+        subject = self.rdf_subject()
+
+        def copy_into_result(term, result_id):
+            for _, _, term_node in graph.triples((subject, term, None)):
+                for _, _, term_series_ids in graph.triples((term_node, HSTERMS.timeSeriesResultUUID, None)):
+                    if term_series_ids:
+                        term_series_ids = term_series_ids.strip('][').split(', ')
+                        if result_id in term_series_ids:
+                            result_term_node = BNode()
+                            graph.add((result_node, term, result_term_node))
+                            for _, term_pred, term_obj in graph.triples((term_node, None, None)):
+                                if term_pred != HSTERMS.timeSeriesResultUUID:
+                                    graph.add((result_term_node, term_pred, term_obj))
+
+        def remove_term(term):
+            for _, _, term_node in graph.triples((subject, term, None)):
+                for _, pred, obj in graph.triples((term_node, None, None)):
+                    graph.remove((term_node, pred, obj))
+                graph.remove((subject, term, term_node))
+
+        for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+            result_series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            if result_series_id:
+                result_series_id = result_series_id.strip('][').split(', ')[0]
+                copy_into_result(HSTERMS.Site, result_series_id)
+                copy_into_result(HSTERMS.Variable, result_series_id)
+                copy_into_result(HSTERMS.Method, result_series_id)
+                copy_into_result(HSTERMS.ProcessingLevel, result_series_id)
+                copy_into_result(HSTERMS.UTCOffSet, result_series_id)
+                graph.remove((result_node, HSTERMS.timeSeriesResultUUID, None))
+                result_series_id = result_series_id.replace("'", "")
+                graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(result_series_id)))
+
+        remove_term(HSTERMS.Site)
+        remove_term(HSTERMS.Variable)
+        remove_term(HSTERMS.Method)
+        remove_term(HSTERMS.ProcessingLevel)
+        remove_term(HSTERMS.UTCOffSet)
+
+        # correct series_id entry from list cast to string
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
+            graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
+            series_id = series_id.replace("['", "").replace("']", "")
+            graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(series_id)))
+
+        # push unit values into units section
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
+            units_type = graph.value(subject=result_node, predicate=HSTERMS.UnitsType)
+            units_name = graph.value(subject=result_node, predicate=HSTERMS.UnitsName)
+            units_abbreviation = graph.value(subject=result_node, predicate=HSTERMS.UnitsAbbreviation)
+            if units_type or units_name or units_abbreviation:
+                unit_node = BNode()
+                graph.add((result_node, HSTERMS.unit, unit_node))
+                if units_type:
+                    graph.add((unit_node, HSTERMS.UnitsType, units_type))
+                    graph.remove((result_node, HSTERMS.UnitsType, units_type))
+                if units_name:
+                    graph.add((unit_node, HSTERMS.UnitsName, units_name))
+                    graph.remove((result_node, HSTERMS.UnitsName, units_name))
+                if units_abbreviation:
+                    graph.add((unit_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
+                    graph.remove((result_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
+
+        return graph
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):

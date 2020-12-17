@@ -4,6 +4,7 @@ import os.path
 import json
 import arrow
 import logging
+import re
 from uuid import uuid4
 
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
@@ -701,6 +702,7 @@ class Description(AbstractMetaDataElement):
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
+@rdf_terms(DCTERMS.bibliographicCitation)
 class Citation(AbstractMetaDataElement):
     """Define Citation metadata element model."""
 
@@ -726,6 +728,15 @@ class Citation(AbstractMetaDataElement):
         """Call delete function for Citation class."""
         element = cls.objects.get(id=element_id)
         element.delete()
+
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        citation = graph.value(subject=subject, predicate=cls.get_class_term())
+        if citation:
+            Citation.create(value=citation.value, content_object=content_object)
 
 
 @rdf_terms(DC.title)
@@ -3844,6 +3855,13 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             extra_metadata[key] = value
         res = self.resource
         res.extra_metadata = copy.deepcopy(extra_metadata)
+
+        # delete ingested default citation
+        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")
+        ingested_citation = self.citation.first()
+        if ingested_citation and citation_regex.match(ingested_citation.value):
+            self.citation.first().delete()
+
         res.save()
 
     def get_rdf_graph(self):
@@ -3858,6 +3876,11 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
                 graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
                 graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
+
+        # if custom citation does not exist, use the default citation
+        if not self.citation.first():
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation())))
+
         from .hydroshare import current_site_url
         TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
         graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
