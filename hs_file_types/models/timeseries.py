@@ -449,8 +449,6 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
             graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal([str(series_id)])))
 
-        rdf_string = graph.serialize(format='hydro-xml').decode()
-
         super(TimeSeriesFileMetaData, self).ingest_metadata(graph)
 
     def get_rdf_graph(self):
