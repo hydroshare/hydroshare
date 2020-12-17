@@ -396,7 +396,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                     return h
             # extract all term_entries
             terms_by_id = {}
-            for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+            for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
                 term_entry = HashableDict()
                 term_node = graph.value(subject=result_node, predicate=term)
                 result_uuid = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
@@ -423,16 +423,16 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                     graph.add((term_node, key, value))
 
             # remove nested entry of term
-            for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+            for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
                 for _, _, term_node in graph.triples((result_node, term, None)):
                     for _, pred, obj in graph.triples((term_node, None, None)):
                         graph.remove((term_node, pred, obj))
                     graph.remove((result_node, term, term_node))
 
-        copy_out_of_result(HSTERMS.Site)
-        copy_out_of_result(HSTERMS.Variable)
-        copy_out_of_result(HSTERMS.Method)
-        copy_out_of_result(HSTERMS.ProcessingLevel)
+        copy_out_of_result(HSTERMS.site)
+        copy_out_of_result(HSTERMS.variable)
+        copy_out_of_result(HSTERMS.method)
+        copy_out_of_result(HSTERMS.processingLevel)
         copy_out_of_result(HSTERMS.UTCOffSet)
 
         # pull units from unit section
@@ -474,23 +474,23 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                     graph.remove((term_node, pred, obj))
                 graph.remove((subject, term, term_node))
 
-        for _, _, result_node in graph.triples((subject, HSTERMS.TimeSeriesResult, None)):
+        for _, _, result_node in graph.triples((subject, HSTERMS.timeSeriesResult, None)):
             result_series_id = graph.value(subject=result_node, predicate=HSTERMS.timeSeriesResultUUID)
             if result_series_id:
                 result_series_id = result_series_id.strip('][').split(', ')[0]
-                copy_into_result(HSTERMS.Site, result_series_id)
-                copy_into_result(HSTERMS.Variable, result_series_id)
-                copy_into_result(HSTERMS.Method, result_series_id)
-                copy_into_result(HSTERMS.ProcessingLevel, result_series_id)
+                copy_into_result(HSTERMS.site, result_series_id)
+                copy_into_result(HSTERMS.variable, result_series_id)
+                copy_into_result(HSTERMS.method, result_series_id)
+                copy_into_result(HSTERMS.processingLevel, result_series_id)
                 copy_into_result(HSTERMS.UTCOffSet, result_series_id)
                 graph.remove((result_node, HSTERMS.timeSeriesResultUUID, None))
                 result_series_id = result_series_id.replace("'", "")
                 graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal(result_series_id)))
 
-        remove_term(HSTERMS.Site)
-        remove_term(HSTERMS.Variable)
-        remove_term(HSTERMS.Method)
-        remove_term(HSTERMS.ProcessingLevel)
+        remove_term(HSTERMS.site)
+        remove_term(HSTERMS.variable)
+        remove_term(HSTERMS.method)
+        remove_term(HSTERMS.processingLevel)
         remove_term(HSTERMS.UTCOffSet)
 
         # correct series_id entry from list cast to string
