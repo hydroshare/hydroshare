@@ -701,6 +701,33 @@ class Description(AbstractMetaDataElement):
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
+class Citation(AbstractMetaDataElement):
+    """Define Citation metadata element model."""
+
+    term = 'Citation'
+    value = models.TextField()
+
+    def __unicode__(self):
+        """Return value field for unicode representation."""
+        return self.value
+
+    class Meta:
+        """Define meta properties for Citation class."""
+
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Call parent update function for Citation class."""
+        super(Citation, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def remove(cls, element_id):
+        """Call delete function for Citation class."""
+        element = cls.objects.get(id=element_id)
+        element.delete()
+
+
 @rdf_terms(DC.title)
 class Title(AbstractMetaDataElement):
     """Define Title metadata element model."""
@@ -2370,8 +2397,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         return author_name + ", "
 
+    def get_custom_citation(self):
+        """Get custom citation."""
+        if self.metadata.citation.first() is None:
+            return ''
+        return str(self.metadata.citation.first())
+
     def get_citation(self):
         """Get citation or citations from resource metadata."""
+
         citation_str_lst = []
 
         CITATION_ERROR = "Failed to generate citation."
@@ -2415,21 +2449,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return CITATION_ERROR
 
-        ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
-        repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
-                                 citation_date.start_date.year)
-        if ref_rel:
-            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
-                ref_rel_value=ref_rel.value,
-                creation_date=date_str))
-        elif repl_rel:
-            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    "HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                   creation_date=date_str,
-                                                                   url=hs_identifier.url))
-        else:
-            citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
         if isPendingActivation:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
@@ -3724,6 +3744,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     _title = GenericRelation(Title)
     creators = GenericRelation(Creator)
     contributors = GenericRelation(Contributor)
+    citation = GenericRelation(Citation)
     dates = GenericRelation(Date)
     coverages = GenericRelation(Coverage)
     formats = GenericRelation(Format)
@@ -3907,6 +3928,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
         return ['Description',
+                'Citation',
                 'Creator',
                 'Contributor',
                 'Coverage',

@@ -8,6 +8,7 @@ var pathLogIndex = 0;
 var isDragging = false;
 var isDownloadZipped = false;
 var currentAggregations = [];
+var removeCitationIntent = false;
 
 var file_metadata_alert =
     '<div id="#fb-metadata-default" class="alert alert-info text-center" role="alert">' +
@@ -558,8 +559,8 @@ function paste(destPath) {
 }
 
 function bindFileBrowserItemEvents() {
-    var mode = $("#hs-file-browser").attr("data-mode");
 
+    var mode = $("#hs-file-browser").attr("data-mode");
     // Drop
     if (mode === "edit") {
         $(".droppable").droppable({
@@ -626,11 +627,11 @@ function bindFileBrowserItemEvents() {
         }
 
         // Handle selecting multiple elements with Shift + Click
-        if (!e.shiftKey) {
+        if (!e.shiftKey) { // shift key not engaged
             $("#fb-files-container li").removeClass("ui-last-selected");
             $(this).addClass("ui-last-selected");
         }
-        else {
+        else { // shift key is engaged
             var lastSelected = $("#fb-files-container").find(".ui-last-selected").index();
             var range = $(this).index();
 
@@ -646,7 +647,6 @@ function bindFileBrowserItemEvents() {
                 }
             }
         }
-
         updateSelectionMenuContext();
     });
 
@@ -660,7 +660,8 @@ function bindFileBrowserItemEvents() {
                 },
                 stop: function (event, ui) {
                     $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
-                    $('#fb-files-container li').animate({top: 0, left: 0}, 200);    // Custom revert to handle multiple selection
+                    // Custom revert to handle multiple selection
+                    $('#fb-files-container li').animate({top: 0, left: 0}, 200);
                     isDragging = false;
                 },
                 drag: function (event, ui) {
@@ -1243,6 +1244,39 @@ function updateNavigationState() {
     $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
+function isSelected(fullPaths) {
+    const deleteList = $("#fb-files-container li.ui-selected");
+    let filesToDelete = [];
+
+    if (deleteList.length) {
+        for (let i = 0; i < deleteList.length; i++) {
+            const item = $(deleteList[i]);
+            const respath = item.attr("data-url");
+            const pk = item.attr("data-pk");
+            if (respath && pk) {
+                const parsed_path = respath.split(/contents(.+)/).filter(function(el){return el})
+                filesToDelete.push(parsed_path[parsed_path.length-1])
+            } else {
+                if (!isVirtualFolder(item.first())) { // Item is a regular folder
+                    let folderName = item.children(".fb-file-name").text();
+                    let folder_path = getCurrentPath().path.concat(folderName);
+                    filesToDelete.push('/' + folder_path.join('/'))
+                }
+            }
+        }
+
+        // maximum matches with duplicates (based on parent folder match or top level filename match)
+        let matches = fullPaths.map(function(i1) {
+            return filesToDelete.filter(function(i2) {
+                if (i1.split('/')[1] === i2.split('/')[1]) {
+                    return i2
+                }
+            })
+        }).flat()
+        return matches
+    }
+}
+
 // Reload the current folder structure
 // Optional argument: file name or folder name to select after reload
 function refreshFileBrowser(name) {
@@ -1277,8 +1311,21 @@ function refreshFileBrowser(name) {
                 }
             }
         }
-
         updateSelectionMenuContext();
+
+        $.ajax({
+            type: "GET",
+            url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+        }).complete(function(res) {
+            if (res.responseText) {
+                let extRefs = JSON.parse(res.responseText).filenames
+                if (extRefs.length && RESOURCE_MODE === 'Edit') {
+                    document.getElementById('edit-citation-control').style.display = 'block'
+                } else {
+                    document.getElementById('edit-citation-control').style.display = 'none'
+                }
+            }
+        })
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1287,6 +1334,89 @@ function refreshFileBrowser(name) {
         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         updateSelectionMenuContext();
     });
+}
+
+function warnExternalContent(shortId) {
+    /*
+    Conditionally update the delete modal to include a warning if the last .url file is being deleted as a part of this
+    action and inform the user that the custom Citation will be reverted to the standard one.
+    Local cookie will be read for the CSRF POST, since this is happening outside the Django template/form/modal
+    pattern.
+
+    param: shortId HydroShare short_id GUID from server
+     */
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    function sameOrigin(url) {
+        // test that a given url is a same-origin URL
+        // url could be relative or scheme relative or absolute
+        var host = document.location.host; // host + port
+        var protocol = document.location.protocol;
+        var sr_origin = '//' + host;
+        var origin = protocol + sr_origin;
+        // Allow absolute or scheme relative URLs to same origin
+        return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+            (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+            // or any other URL that isn't scheme relative or absolute i.e relative.
+            !(/^(\/\/|http:|https:).*/.test(url));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+                // Send the token to same-origin, relative URLs only.
+                // Send the token only if the method warrants CSRF protection
+                // Using the CSRFToken value acquired earlier
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        }
+    });
+
+    $('#btn-confirm-delete').prop('disabled', true)
+    $('#additional-citation-warning').text('Analyzing files . . .')
+    $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + shortId + '/list-referenced-content/',
+    }).complete(function(res) {
+        if (res.responseText) {
+            let extRefs = JSON.parse(res.responseText).filenames
+
+            // capture external refs within subfolders as just the folder names
+            extRefs = extRefs.map(function(ref) {
+                return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
+            })
+
+            const sel = isSelected(extRefs)
+            if (global_custom_citation !== 'None' && global_custom_citation !== '' && global_custom_citation !== '' && sel.length === extRefs.length && extRefs.length > 0) {
+                removeCitationIntent = true;
+                $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
+                  'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
+                  'and custom citation?')
+                $('#additional-citation-warning').css("color", "red");
+            } else {
+                removeCitationIntent = false;
+                $('#additional-citation-warning').text('')
+                $('#additional-citation-warning').css("color", "black");
+            }
+        }
+        $('#btn-confirm-delete').prop('disabled', false)
+    })
 }
 
 function onUploadSuccess(file, response) {
@@ -1440,7 +1570,7 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");
+                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");  // TODO assess for bugs
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -1891,6 +2021,7 @@ $(document).ready(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var filesToDelete = "";
         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
@@ -1926,6 +2057,19 @@ $(document).ready(function () {
                 }
                 else {
                     refreshFileBrowser();
+                }
+                if (removeCitationIntent) {
+                    $.ajax({
+                      type: "POST",
+                      url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
+                    }).complete(function() {
+                        document.body.style.cursor = 'default';
+                        if (window.location.href.includes('?resource-mode=edit')) {
+                            location.reload();
+                        } else {
+                            window.location.href = window.location.href + '?resource-mode=edit';
+                        }
+                    });
                 }
             });
 
