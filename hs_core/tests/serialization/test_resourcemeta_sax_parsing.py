@@ -13,7 +13,7 @@ class TestGenericResourceMetaSax(unittest.TestCase):
         self.parse_sample = """<?xml version="1.0"?>
         <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
         "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">
-        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="http://hydroshare.org/terms/">
+        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="https://www.hydroshare.org/terms/">
           <rdf:Description rdf:about="http://localhost:8000/resource/dc52e6aa93154521af08522de27ec276">
             <dc:contributor>
               <rdf:Description rdf:about="http://localhost:8000/user/1/">
@@ -77,7 +77,7 @@ class TestRasterResourceMetaSax(unittest.TestCase):
         self.parse_sample = """<?xml version="1.0"?>
         <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
         "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">
-        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="http://hydroshare.org/terms/">
+        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="https://www.hydroshare.org/terms/">
           <rdf:Description rdf:about="http://localhost:8000/resource/dc52e6aa93154521af08522de27ec276">
             <hsterms:BandInformation>
               <rdf:Description>
@@ -142,7 +142,7 @@ class TestNetcdfResourceMetaSax(unittest.TestCase):
         self.parse_sample = """<?xml version="1.0"?>
         <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
         "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">
-        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="http://hydroshare.org/terms/">
+        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:hsterms="https://www.hydroshare.org/terms/">
           <rdf:Description rdf:about="http://localhost:8000/resource/dc52e6aa93154521af08522de27ec276">
             <hsterms:netcdfVariable>
               <rdf:Description>

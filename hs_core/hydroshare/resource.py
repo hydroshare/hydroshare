@@ -779,17 +779,18 @@ def add_resource_files(pk, *files, **kwargs):
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
         ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
-    if len(source_names) > 0:
-        for ifname in source_names:
-            ret.append(utils.add_file_to_resource(resource, None,
-                                                  folder=folder,
-                                                  source_name=ifname))
+    for ifname in source_names:
+        ret.append(utils.add_file_to_resource(resource, None,
+                                              folder=folder,
+                                              source_name=ifname))
+
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
+
     return ret
 
 
