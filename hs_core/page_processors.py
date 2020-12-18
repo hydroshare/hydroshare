@@ -47,10 +47,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 - split into two functions: get_readonly_page_context(...) and
                 get_editable_page_context(...)
     """
-    editing = request.GET.get('editing')
-    if editing:
-        resource_edit = True
-
     file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
@@ -281,7 +277,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if g.is_user_member:
             grps_member_of.append(g)
     try:
-        citation_id = content_model.metadata.citation.all()[0].id
+        citation_id = content_model.metadata.citation.first().id
     except:
         citation_id = None
 
@@ -324,8 +320,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all()),
-               'external_content': len([x.logical_file_content_type_id for x in content_model.files.all() if
-                                        x.logical_file_content_type_id == 203]),  # 203 .url external reference
     }
 
     return context

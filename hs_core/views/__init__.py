@@ -12,7 +12,6 @@ from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.utils.decorators import method_decorator
-from django.utils.html import mark_safe, escapejs
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
@@ -48,8 +47,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
-    set_task_delivered_by_id, get_or_create_task_notification, get_resource_delete_task, get_task_user_id
-from hs_core.tasks import delete_resource_task, copy_resource_task
+    set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id
+from hs_core.tasks import copy_resource_task
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -65,6 +64,7 @@ from hs_core.hydroshare import utils
 
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
+from hs_collection_resource.models import CollectionDeletedResource
 
 
 logger = logging.getLogger(__name__)
@@ -304,7 +304,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     }
 
     return JsonResponse(data=response_data, status=200)
-    
+
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -731,23 +731,45 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
-    if request.is_ajax():
-        task_id = get_resource_delete_task(shortkey)
-        if not task_id:
-            pre_delete_resource.send(sender=type(res), request=request, user=user, resource_shortkey=shortkey,
-                                     resource=res, resource_type=res.resource_type, **kwargs)
-            task = delete_resource_task.apply_async((shortkey, user.username))
-            task_id = task.task_id
-        task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
-                                                    username=user.username)
-        return JsonResponse(task_dict)
-    else:
-        try:
-            hydroshare.delete_resource(shortkey, request_username=user.username)
-            return HttpResponseRedirect('/my-resources/')
-        except ValidationError as ex:
+    res_title = res.metadata.title
+    res_id = shortkey
+    res_type = res.resource_type
+    resource_related_collections = [col for col in res.collections.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
+    ajax_response_data = {'status': 'success'}
+
+    try:
+        hydroshare.delete_resource(shortkey)
+    except ValidationError as ex:
+        if request.is_ajax():
+            ajax_response_data['status'] = 'error'
+            ajax_response_data['message'] = str(ex)
+            return JsonResponse(ajax_response_data)
+        else:
             request.session['validation_error'] = str(ex)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    # if the deleted resource is part of any collection resource, then for each of those collection
+    # create a CollectionDeletedResource object which can then be used to list collection deleted
+    # resources on collection resource landing page
+    for collection_res in resource_related_collections:
+        o = CollectionDeletedResource.objects.create(
+            resource_title=res_title,
+            deleted_by=user,
+            resource_id=res_id,
+            resource_type=res_type,
+            collection=collection_res
+        )
+        o.resource_owners.add(*owners_list)
+
+    post_delete_resource.send(sender=type(res), request=request, user=user,
+                              resource_shortkey=shortkey, resource=res,
+                              resource_title=res_title, resource_type=res_type, **kwargs)
+
+    if request.is_ajax():
+        return JsonResponse(ajax_response_data)
+    else:
+        return HttpResponseRedirect('/my-resources/')
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
@@ -793,6 +815,14 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             json.dumps({"error": str(ex)}),
             content_type="application/json"
         )
+
+
+def list_referenced_content(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    # subfolders could be named contents
+    return JsonResponse({'filenames': [x.url.split('contents', 1)[-1] for x in list(res.logical_files)
+                                       if 'url' in x.extra_data]})
 
 
 def copy_resource(request, shortkey, *args, **kwargs):
@@ -1263,7 +1293,7 @@ def add_generic_context(request, page):
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
+        # Reuse the same class AddGroupForm() leads to duplicated IDs.
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1879,7 +1909,7 @@ class GroupView(TemplateView):
                 'profile_user': u
             }
         else:
-            public_group_resources = [r for r in group_resources 
+            public_group_resources = [r for r in group_resources
                                       if r.raccess.public or r.raccess.discoverable]
 
             return {

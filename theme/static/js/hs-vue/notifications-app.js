@@ -54,15 +54,6 @@ $(document).ready(function () {
                         "delivered": "Download delivered"
                     }
                 },
-                "resource delete": {
-                    title: "Resource delete",
-                    status: {
-                        "progress": "In progress...",
-                        "completed": "Completed",
-                        "failed": "Failed",
-                        "delivered": "Delivered"
-                    }
-                },
                 "resource copy": {
                     title: "Resource copy",
                     status: {
@@ -265,11 +256,6 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource copy":
-                        if (task.status === "completed" && task.payload) {
-                            vue.deliverTask(task);
-                        }
-                        break;
-                    case "resource delete":
                         if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
                         }

@@ -1427,16 +1427,17 @@
                         {% if custom_citation %}
                         <script language="JavaScript">
                           function AsyncRevertCitation() {
+                            $('#customize-citation-dialog').toggle();
                             document.body.style.cursor = 'wait';
                             $.ajax({
                               type: "POST",
-                              url: '/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/',
+                              url: "/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/",
                             }).complete(function() {
                               document.body.style.cursor = 'default';
-                              if (window.location.href.includes('editing=True')) {
+                              if (window.location.href.includes('?resource-mode=edit')) {
                                 location.reload();
                               } else {
-                                window.location.href = window.location.href + '?editing=True';
+                                window.location.href = window.location.href + '?resource-mode=edit';
                               }
                             });
                           }
@@ -1643,7 +1644,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <button id="btn-delete-resource" class="btn btn-danger">Delete</button>
+                                    <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
                                 </div>
                             </div>
                         </div>

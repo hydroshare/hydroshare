@@ -672,7 +672,7 @@ class Citation(AbstractMetaDataElement):
     """Define Citation metadata element model."""
 
     term = 'Citation'
-    value = models.CharField(max_length=750)
+    value = models.TextField()
 
     def __unicode__(self):
         """Return value field for unicode representation."""
@@ -680,6 +680,8 @@ class Citation(AbstractMetaDataElement):
 
     class Meta:
         """Define meta properties for Citation class."""
+
+        unique_together = ("content_type", "object_id")
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -2232,11 +2234,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return author_name + ", "
 
     def get_custom_citation(self):
-        """Get custom citation"""
-        try:
-            return str(self.metadata.citation.all()[0]).strip()
-        except:
-            pass
+        """Get custom citation."""
+        if self.metadata.citation.first() is None:
+            return ''
+        return str(self.metadata.citation.first())
 
     def get_citation(self):
         """Get citation or citations from resource metadata."""

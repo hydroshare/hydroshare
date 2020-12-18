@@ -648,7 +648,7 @@ function bindFileBrowserItemEvents() {
             }
         }
         updateSelectionMenuContext();
-    })
+    });
 
     // Drag method
     if (mode === "edit") {
@@ -1244,66 +1244,37 @@ function updateNavigationState() {
     $("#fb-move-up").toggleClass("disabled", !(getCurrentPath().path.length || getCurrentPath().hasOwnProperty("aggregation")));    // The root path is an empty string
 }
 
-function anyExternalFiles(fullPaths) {
-    /*
-    Look for any .url files.
+function isSelected(fullPaths) {
+    const deleteList = $("#fb-files-container li.ui-selected");
+    let filesToDelete = [];
 
-    param: fullPaths array of file path strings to parse top level folders and file extensions from
-     */
-    let filePathsContainingUrl = [];
-
-    for (const [k, v] of Object.entries(fullPaths)) {
-        if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
-            filePathsContainingUrl.push(v.url)
-        }
-    }
-
-    return filePathsContainingUrl.length > 0
-}
-
-function countSelectedExternalFiles(fullPaths) {
-    /*
-    Based on full file paths enumerate .url files from subfolders and implied current path from Content manager.
-    Comparison from selections is based on the selections in the Content manager at the time this function is invoked.
-    Parent folders are not counted.
-
-    param: fullPaths array of file path strings to parse top level folders and file extensions from
-     */
-    let filePathsContainingUrl = [];
-    let topFolders = {};
-    let selectedFiles = [];
-    let numUrlWithinSubs = 0;
-
-    for (const [k, v] of Object.entries(fullPaths)) {
-        if (v.file_name.split('.').reverse()[0].toLowerCase() === ('url')) {
-            filePathsContainingUrl.push(v.url)
-        }
-    }
-
-    // enumerate external links in subfolders
-    filePathsContainingUrl.forEach(function(path) {
-        let ele_full = path.split('contents').reverse()[0] // for example /testfolder/extcontent.url
-        let ele = ele_full.split('/')[1] // for example testfolder
-        if (topFolders[ele]) {
-            topFolders[ele] = topFolders[ele] + 1
-        } else {
-            topFolders[ele] = 1
-        }
-    })
-
-    $("#fb-files-container li.ui-selected").each(function(i, el) {
-        if (this.title.includes('Type: File Folder')) { // review subfolder info
-            if (topFolders[this.innerText]) {
-                numUrlWithinSubs += topFolders[this.innerText];
+    if (deleteList.length) {
+        for (let i = 0; i < deleteList.length; i++) {
+            const item = $(deleteList[i]);
+            const respath = item.attr("data-url");
+            const pk = item.attr("data-pk");
+            if (respath && pk) {
+                const parsed_path = respath.split(/contents(.+)/).filter(function(el){return el})
+                filesToDelete.push(parsed_path[parsed_path.length-1])
+            } else {
+                if (!isVirtualFolder(item.first())) { // Item is a regular folder
+                    let folderName = item.children(".fb-file-name").text();
+                    let folder_path = getCurrentPath().path.concat(folderName);
+                    filesToDelete.push('/' + folder_path.join('/'))
+                }
             }
         }
 
-        // look at current directory
-        if (this.innerText.toLowerCase().includes('.url')) {
-            selectedFiles.push(this.innerText);
-        }
-    });
-    return selectedFiles.length + numUrlWithinSubs;
+        // maximum matches with duplicates (based on parent folder match or top level filename match)
+        let matches = fullPaths.map(function(i1) {
+            return filesToDelete.filter(function(i2) {
+                if (i1.split('/')[1] === i2.split('/')[1]) {
+                    return i2
+                }
+            })
+        }).flat()
+        return matches
+    }
 }
 
 // Reload the current folder structure
@@ -1341,15 +1312,14 @@ function refreshFileBrowser(name) {
             }
         }
         updateSelectionMenuContext();
+
         $.ajax({
             type: "GET",
-            url: '/hsapi/resource/' + SHORT_ID + '/file_list/',
+            url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
         }).complete(function(res) {
-            let pathObjs = JSON.parse(res.responseText).results
-
-            // conditionally render edit pencil control
-            if (RESOURCE_MODE === 'Edit') {
-                if (anyExternalFiles(pathObjs)) {
+            if (res.responseText) {
+                let extRefs = JSON.parse(res.responseText).filenames
+                if (extRefs.length && RESOURCE_MODE === 'Edit') {
                     document.getElementById('edit-citation-control').style.display = 'block'
                 } else {
                     document.getElementById('edit-citation-control').style.display = 'none'
@@ -1417,28 +1387,32 @@ function warnExternalContent(shortId) {
             }
         }
     });
+
     $('#btn-confirm-delete').prop('disabled', true)
     $('#additional-citation-warning').text('Analyzing files . . .')
     $.ajax({
         type: "GET",
-        url: '/hsapi/resource/' + shortId + '/file_list/',
+        url: '/hsapi/_internal/' + shortId + '/list-referenced-content/',
     }).complete(function(res) {
         if (res.responseText) {
-            let pathObjs = JSON.parse(res.responseText).results
-            try {
-                var external_links = Number.parseInt(ext_link_count);
-            }
-            catch {
-                var external_links = 0;
-            }
-            if (custom_citation !== 'None' && external_links > 0 && countSelectedExternalFiles(pathObjs) >= external_links) {
+            let extRefs = JSON.parse(res.responseText).filenames
+
+            // capture external refs within subfolders as just the folder names
+            extRefs = extRefs.map(function(ref) {
+                return ref.split('/').length === 2 ? ref : ref.substr(0, ref.lastIndexOf('/'))
+            })
+
+            const sel = isSelected(extRefs)
+            if (global_custom_citation !== 'None' && global_custom_citation !== '' && global_custom_citation !== '' && sel.length === extRefs.length && extRefs.length > 0) {
                 removeCitationIntent = true;
                 $('#additional-citation-warning').text('Removing all referenced content from this resource will also ' +
                   'remove the custom citation you have entered. Are you sure you want to remove this reference content ' +
                   'and custom citation?')
+                $('#additional-citation-warning').css("color", "red");
             } else {
                 removeCitationIntent = false;
                 $('#additional-citation-warning').text('')
+                $('#additional-citation-warning').css("color", "black");
             }
         }
         $('#btn-confirm-delete').prop('disabled', false)
@@ -1596,7 +1570,7 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");
+                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");  // TODO assess for bugs
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -1904,7 +1878,6 @@ $(document).ready(function () {
                 refreshFileBrowser();
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
-                ext_link_count++;
             }
 
             $.when.apply($, calls).done(afterRequest);
@@ -2091,10 +2064,10 @@ $(document).ready(function () {
                       url: '/hsapi/_internal/' + SHORT_ID + '/citation/' + CITATION_ID + '/delete-metadata/',
                     }).complete(function() {
                         document.body.style.cursor = 'default';
-                        if (window.location.href.includes('editing=True')) {
+                        if (window.location.href.includes('?resource-mode=edit')) {
                             location.reload();
                         } else {
-                            window.location.href = window.location.href + '?editing=True';
+                            window.location.href = window.location.href + '?resource-mode=edit';
                         }
                     });
                 }

@@ -157,7 +157,7 @@
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
             var j;
-            if($("#selectUserType").val() == 'Other' && $("#user-type-other  input").val() == '') {
+            if($("#selectUserType").val() == 'Other' && $("#user-type-other  input").val().trim() == '') {
                 empty = true;
                 missingFields += " " + 'User type Other';
                 missingFieldCount++;
@@ -169,7 +169,7 @@
             }
 
             for(j=0; j< requiredFieldsToCheck.length; j++) {
-                if ($(requiredFieldsToCheck[j]).val() == '') {
+                if ($(requiredFieldsToCheck[j]).val().trim() == '') {
                     empty = true;
                     if (missingFieldCount == 0){
                         missingFields += " " + fieldNames[j];
