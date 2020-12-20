@@ -362,44 +362,53 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                         json_schema = json.dumps(json_schema, indent=4)
                                     else:
                                         json_schema = ''
-                                    dom_tags.label("Model Instance Metadata Schema", fr="mi-json-schema",
-                                                   cls="control-label")
-                                    dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted", data_toggle="tooltip",
-                                                  data_placement="auto",
-                                                  data_original_title="Upload/select a JSON file containing the schema."
-                                                                      " The content of the file will be shown below "
-                                                                      "when you save metadata.")
 
-                                    # give an option to upload a json file for the metadata schema
-                                    with dom_tags.div(cls="form-group"):
-                                        dom_tags.input(type="file", accept=".json",
-                                                       name='mi_json_schema_file', id='mi-json-schema-file')
-                                        with dom_tags.select(cls="form-control", name='mi_json_schema_template',
-                                                             style="margin-top:10px;"):
-                                            dom_tags.option("Select a schema", value="")
-                                            template_path = "hs_file_types/model_meta_schema_templates/*.json"
-                                            for schema_template in glob.glob(template_path):
-                                                template_file_name = os.path.basename(schema_template)
-                                                dom_tags.option(template_file_name, value=schema_template)
+                                    with dom_tags.fieldset(cls="fieldset-border"):
+                                        with dom_tags.legend("Model Instance Metadata Schema", cls="legend-border",
+                                                             style="font-size: 14px; font-weight:bold;"):
+                                            dom_tags.span(cls="glyphicon glyphicon-info-sign text-muted",
+                                                          data_toggle="tooltip",
+                                                          data_placement="auto",
+                                                          data_original_title="Upload/select a JSON file containing "
+                                                                              "the schema. The content of the file "
+                                                                              "will be shown below when you "
+                                                                              "save metadata.")
 
-                                    if json_schema:
-                                        dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
-                                                        cls="btn btn-success btn-block",
-                                                        data_toggle="collapse", data_target="#meta-schema")
-                                        mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
-                                                                     style="margin-top:10px; padding-bottom: 20px;")
-                                        with mi_schema_div:
-                                            dom_tags.textarea(json_schema,
-                                                              cls="form-control input-sm textinput textInput",
-                                                              id="mi-json-schema",
-                                                              name="metadata_json_schema", rows="30", readonly="")
-                                    else:
-                                        dom_tags.div(
-                                            "Metadata schema is missing. You can either upload a schema JSON file or "
-                                            "select one of the existing schema JSON files. Save changes using the "
-                                            "button below to make the uploaded/selected schema JSON file part of "
-                                            "the model program aggregation.",
-                                            cls="alert alert-danger", id="div-missing-schema-message")
+                                        # give an option to upload/select a json file for the metadata schema
+                                        with dom_tags.div(cls="form-group"):
+                                            with dom_tags.select(cls="form-control", name='mi_json_schema_template',
+                                                                 style="margin-top:10px;"):
+                                                dom_tags.option("Select a schema", value="")
+                                                template_path = "hs_file_types/model_meta_schema_templates/*.json"
+                                                for schema_template in glob.glob(template_path):
+                                                    template_file_name = os.path.basename(schema_template)
+                                                    dom_tags.option(template_file_name, value=schema_template)
+                                            dom_tags.p("OR")
+                                            with dom_tags.div(cls="row file-row"):
+                                                with dom_tags.div(cls="col-md-12"):
+                                                    dom_tags.span("Upload a schema:")
+                                                    dom_tags.input(type="file", accept=".json",
+                                                                   name='mi_json_schema_file', id='mi-json-schema-file')
+
+                                        if json_schema:
+                                            dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                                                            cls="btn btn-success btn-block",
+                                                            data_toggle="collapse", data_target="#meta-schema")
+                                            mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
+                                                                         style="margin-top:10px; padding-bottom: 20px;")
+                                            with mi_schema_div:
+                                                dom_tags.textarea(json_schema,
+                                                                  cls="form-control input-sm textinput textInput",
+                                                                  id="mi-json-schema",
+                                                                  name="metadata_json_schema", rows="30", readonly="")
+                                        else:
+                                            dom_tags.div(
+                                                "Metadata schema is missing. You can either upload a schema "
+                                                "JSON file or select one of the existing schema JSON files. "
+                                                "Save changes using the button below to make the uploaded/selected "
+                                                "schema JSON file part of the model program aggregation.",
+                                                cls="alert alert-danger", id="div-missing-schema-message")
+
                             with dom_tags.div(id="mp_content_files", cls="control-group"):
                                 with dom_tags.div(cls="controls"):
                                     dom_tags.legend('Content Files')
