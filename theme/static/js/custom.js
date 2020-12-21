@@ -157,6 +157,7 @@ $(document).ready(function () {
         $(this).formatDate();
     });
 
+    // removing from template
     $("#universalMessage a").on('click', function() {
         $("#universalMessage").slideUp();
         return false
@@ -178,7 +179,7 @@ $(document).ready(function () {
 
         createResource(resourceType, title);
     });
-    
+
     function createResource(type, title) {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);

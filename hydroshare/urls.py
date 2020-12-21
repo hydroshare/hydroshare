@@ -17,10 +17,11 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-from hs_resource_landing import views as hs_resource_landing_views
+
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
+from hs_resource_landing.views import ResourceLandingView
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -73,6 +74,7 @@ urlpatterns = i18n_patterns(
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^discoverapi/$', SearchAPI.as_view(), name='DiscoverAPI'),
     url(r'^search/$', SearchView.as_view(), name='Discover'),
+    url(r'^resource/$', ResourceLandingView.as_view(), name='NewResource'),  # TODO OBRIEN OBRIEN
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
@@ -88,7 +90,6 @@ urlpatterns = i18n_patterns(
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"),
-    url(r'^resourceapi/(?P<resource_id>[A-z0-9\-_]+)', hs_resource_landing_views.ResourceLandingAPI.as_view(), name='ResourceLandingAPI'),
 )
 
 # Filebrowser admin media library.

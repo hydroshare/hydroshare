@@ -10,8 +10,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from rest_framework.views import APIView
-
-from hs_core.models import GenericResource
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
 
@@ -31,21 +30,58 @@ class ResourceLandingAPI(APIView):
     def __init__(self, **kwargs):
         super(ResourceLandingAPI, self).__init__(**kwargs)
 
-    def get(self, request, *args, **kwargs):
-        """
-        Description
-        """
+    def get(self, request, shortkey, *args, **kwargs):
+        res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         start = time.time()
-        # resources = GenericResource.objects.all()
-        user = User.objects.get(pk=self.request.user.id)
 
-        grps_member_of = []
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # for each group set group dynamic attributes
-        for g in groups:
-            g.is_user_member = user in g.gaccess.members
-            if g.is_user_member:
-                grps_member_of.append(g)
+        # 'cm': content_model,
+        # 'resource_edit_mode': resource_edit,
+        # 'metadata_form': None,
+        # 'citation': content_model.get_citation(),
+        # 'custom_citation': content_model.get_custom_citation(),
+        # 'title': title,
+        # 'readme': readme,
+        # 'abstract': abstract,
+        # 'creators': content_model.metadata.creators.all(),
+        # 'contributors': content_model.metadata.contributors.all(),
+        # 'temporal_coverage': temporal_coverage_data_dict,
+        # 'spatial_coverage': spatial_coverage_data_dict,
+        # 'keywords': keywords,
+        # 'language': language,
+        # 'rights': content_model.metadata.rights,
+        # 'sources': content_model.metadata.sources.all(),
+        # 'relations': content_model.metadata.relations.all(),
+        # 'show_relations_section': show_relations_section(content_model),
+        # 'fundingagencies': content_model.metadata.funding_agencies.all(),
+        # 'metadata_status': metadata_status,
+        # 'missing_metadata_elements': missing_metadata_elements,
+        # 'validation_error': validation_error if validation_error else None,
+        # 'resource_creation_error': create_resource_error,
+        # 'tool_homepage_url': tool_homepage_url,
+        # 'file_type_error': file_type_error,
+        # 'just_created': just_created,
+        # 'just_copied': just_copied,
+        # 'just_published': just_published,
+        # 'bag_url': bag_url,
+        # 'show_content_files': show_content_files,
+        # 'discoverable': discoverable,
+        # 'resource_is_mine': resource_is_mine,
+        # 'rights_allow_copy': rights_allow_copy,
+        # 'quota_holder': qholder,
+        # 'belongs_to_collections': belongs_to_collections,
+        # 'show_web_reference_note': has_web_ref,
+        # 'current_user': user,
+
+        # # resources = GenericResource.objects.all()
+        # user = User.objects.get(pk=self.request.user.id)
+        #
+        # grps_member_of = []
+        # groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        # # for each group set group dynamic attributes
+        # for g in groups:
+        #     g.is_user_member = user in g.gaccess.members
+        #     if g.is_user_member:
+        #         grps_member_of.append(g)
 
         # content_model = page.get_content_model()
         # whether the user has permission to view this resource
@@ -69,5 +105,6 @@ class ResourceLandingAPI(APIView):
 
         return JsonResponse({
             'data': 'Sample Test Data',
-            'time': (time.time() - start) / 1000
+            'time': (time.time() - start) / 1000,
+            'title': res.title,
         }, status=200)

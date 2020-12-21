@@ -1,14 +1,14 @@
 <template>
   <div>
+<!--    <navigation-bar></navigation-bar>-->
     <h2>Resource Name</h2>
     <h3>Debug</h3>
     {{res.owner}}
     <h3>Abstract</h3>
-    <label for="id_abstract"></label><textarea id="id_abstract" class="form-control input-sm textarea" cols="40" rows="10"></textarea>
-    <h3>Subject Keywords</h3>
+    <subject-keywords></subject-keywords>
     <h3>Coverage</h3>
       <div id="common-components">
-        <manage-access></manage-access>
+<!--        <manage-access></manage-access>-->
       </div>
     <h3>Content</h3>
       <div id="file-manager">
@@ -30,7 +30,9 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'vue-date-pick/dist/vueDatePick.css';
 // import axios from 'axios';
 import Filemanager from './Filemanager.vue';
-import Access from './Access.vue';
+// import Access from './Access.vue';
+// import Navbar from './Navbar.vue';
+import Subject from './Subject.vue';
 
 export default {
   name: 'Resource',
@@ -73,7 +75,9 @@ export default {
   },
   components: {
     fileManager: Filemanager,
-    manageAccess: Access,
+    // manageAccess: Access,
+    // navigationBar: Navbar,
+    subjectKeywords: Subject,
   },
   mounted() {
   },

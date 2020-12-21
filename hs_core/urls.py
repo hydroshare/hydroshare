@@ -1,6 +1,8 @@
 from django.conf.urls import url
+
 from hs_core import views
 from hs_core.views.autocomplete import autocomplete
+from hs_resource_landing import views as hs_resource_landing_views
 
 urlpatterns = [
     # internal API
@@ -36,6 +38,8 @@ urlpatterns = [
         name='list_referenced_content'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/rep-res-bag-to-irods-user-zone/$',
         views.rep_res_bag_to_irods_user_zone, name='replicate_bag_user_zone'),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/resourceapi/$', hs_resource_landing_views.ResourceLandingAPI.as_view(),
+        name='ResourceLandingAPI'),  # TODO OBRIEN WIP
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/set-resource-flag/$',
         views.set_resource_flag, name='set_resource_flag'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/share-resource-with-user/(?P<privilege>[a-z]+)/(?P<user_id>[0-9]+)/$',

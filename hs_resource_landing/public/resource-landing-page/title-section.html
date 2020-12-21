@@ -1,0 +1,485 @@
+{% load hydroshare_tags %}
+
+{# ======= Resource Publication just published notification =======#}
+{% if cm.raccess.published and just_published %}
+    <div class="col-xs-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your resource has been published. You will see the DOI in the citation for your resource below,
+                but it may take approximately one day for your DOI to become active.</span>
+        </div>
+    </div>
+{% endif %}
+
+{# ======= Resource new version just created notification =======#}
+{% if just_created and is_version_of %}
+    <div class="col-xs-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your new version has been created. A link to the older version has been added below the resource title. To modify this
+                new version or change the sharing status, click the Edit button. To share this new version with individual HydroShare users,
+                click the Manage Access button. Note that this new version is created as a private resource by default. If you want the new
+                version to be discoverable, you need to make it public or discoverable or publish it. </span>
+        </div>
+    </div>
+{% endif %}
+
+{# ======= Resource copy just created notification =======#}
+{% if just_created and just_copied %}
+    <div class="col-xs-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your new copy of the resource has been created. A <i>Derived From</i> Source metadata element has been added to this resource in
+                the <i>Related Resources</i> tab below that links to the original resource. Please respect the terms of the license of the original resource
+                and recognize the original authors as authors or contributors as appropriate in this derived resource.
+                Note that this new copy is created as a private resource by default. If you want the new
+                resource to be discoverable, you need to make it public or discoverable or publish it. </span>
+        </div>
+    </div>
+{% endif %}
+
+{# ======= Missing fields notification =======#}
+{% if page.perms.change and not is_replaced_by %}
+    {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
+        <div class="col-xs-12">
+            <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                {% if missing_metadata_elements %}
+                    {% if just_created %}
+                        This is the landing page for the resource you just created. Add files in the content area below
+                        and enter metadata where needed. The following metadata is required for your resource to be
+                        {% if cm.resource_type != 'ToolResource' %} published or{% endif %} made public:
+                    {% else %}
+                        <span>The following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
+                    {% endif %}
+                    <ul>
+                        {% for element in missing_metadata_elements %}
+                            <li>{{ element }}</li>
+                        {% endfor %}
+                        {% if title|stringformat:"s" == "Untitled resource" %}
+                           <li>Title: needs to be changed</li>
+                        {% endif %}
+                    </ul>
+                {%  endif %}
+                {%  if not cm.has_required_content_files %}
+                         <br>
+                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                {% endif %}
+                {%  if cm.resource_type|lower == "collectionresource" %}
+                    {% if not cm.has_resources%}
+                        <br>
+                        <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
+                    {% endif %}
+                {% endif %}
+                {% if not resource_edit_mode %}
+                    <hr>
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+{# ======= Missing file level metadata notification =======#}
+{% if cm.resource_type == "CompositeResource" %}
+    {% if file_type_missing_metadata %}
+        <div class="col-sm-12">
+            <div id="missing-metadata-file-type" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+                <span>The following aggregation level metadata are still required to
+                      make this resource public or discoverable:</span>
+                {% for item in file_type_missing_metadata %}
+                    <ul>
+                        <li>Aggregation name: {{ item.file_path }}
+                            <ul>
+                                {% for element in item.missing_elements %}
+                                    <li>{{ element }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </ul>
+                {% endfor %}
+
+                {% if not resource_edit_mode %}
+                    <hr>
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+{# ======= Check MODFLOW Model Instance content files =======#}
+{% if cm.resource_type == "MODFLOWModelInstanceResource" %}
+    {% if self_access_level == 'owner' or self_access_level == 'edit' %}
+        {% if cm.check_content_files %}
+            <div class="col-sm-12">
+                <div id="missing-metadata-or-file" role="alert"
+                     class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="false">&times;</span>
+                    </button>
+                    <br>
+                    {% if cm.check_content_files == 'multiple_nam' %}
+                        <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
+                        <ul>
+                            <li>Only one .nam or .mfn is allowed</li>
+                        </ul>
+                    </span>
+                    {% else %}
+                        <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
+                        <ul>{% for f in cm.check_content_files %}
+                            <li>{{ f }} </li>{% endfor %}</ul>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{# ======= Title ======= #}
+<div class="col-xs-12">
+    {% if not resource_edit_mode %}
+        <div class="flex">
+            <h2 id="resource-title">{{ title }}</h2>this is the resource title
+
+            {% if tool_homepage_url %}
+                <span id="apps-url">
+                    <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
+                </span>
+            {% endif %}
+
+            <span id="apps-dropdown" v-if="openWithTools.length">
+                <div v-if="!isLoading" class="btn-group">
+                    <button class="btn btn-primary dropdown-toggle"
+                            type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Open with... <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu pull-right">
+                        <li v-for="tool in openWithTools" :title="tool.title">
+                            <a :href="getResAppUrl(tool)"
+                               target="_blank">
+                                <img class="dropdown-user-webapp-icon" :src="tool.icon_url"/>
+                                <span>${tool.title}</span>
+                            </a>
+                        </li>
+                        <li v-if="isLoading" style="display: flex;justify-content: center;">
+                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                        </li>
+                     </ul>
+                </div>
+            </span>
+<!--            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>-->
+        </div>
+        <hr>
+    {% else %}
+        {# ======= Communities ======= #}
+        <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
+            <div class="modal-dialog" role="document">
+                <div id="title-assistant" class="modal-content">
+                    <div class="modal-body">
+                        <div>
+                            <textarea id="resource-title" class="title-builder-output" v-model="title" disabled rows="3"
+                                      placeholder="start selecting items to build title">
+                            </textarea>
+                            <select id="czselect" class="cz-select" v-model="regionSelected" @change="updateTitle()">
+                                <option disabled value="">Select Critical Zone Region</option>
+                                <option>BCCZO</option>
+                                <option>CCZO</option>
+                                <option>CJCZO</option>
+                                <option>CRBCZO</option>
+                                <option>ERCZO</option>
+                                <option>LCZO</option>
+                                <option>RCCZO</option>
+                                <option>SSCZO</option>
+                                <option>SSHCZO</option>
+                                <option>IMLCZO</option>
+                                <option>Cross-CZO</option>
+                            </select>
+<!--                            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"-->
+<!--                                   title-left="Available Topics" title-right="Selected Topics"-->
+<!--                                   moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>-->
+<!--                            </mover>-->
+                            <a style="cursor:help" title="To add Topics make a request to CriticalZoneOrg@gmail.com"
+                               href="mailto:CriticalZoneOrg@gmail.com?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
+                            <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
+                                   v-on:keyup="updateTitle()" size="51"
+                                   maxlength="50" placeholder="Optional Custom Text"/><br/>
+                            <input class="title-builder-input" id="title-location" v-model="location"
+                                   v-on:keyup="updateTitle()" size="51"
+                                   maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/><br/>
+                            <input type="text" size="8" maxlength="4" class="title-builder-input" id="start-year"
+                                   v-model="startYear" v-on:keyup="updateDate()" placeholder="Start Year"/>
+                            <input type="text" size="8" maxlength="7" class="title-builder-input" id="end-year"
+                                   v-model="endYear" v-on:keyup="updateEndDate()" placeholder="End Year"/>
+                            <input type="checkbox" id="end-date-ongoing" name="end-date-ongoing" v-model="yearOngoing"
+                                   true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <span class="inline-error">{% templatetag openvariable %}
+                                errmsg {% templatetag closevariable %}</span>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!--        <script type="application/javascript">-->
+<!--            // contents here are required by topics.js-->
+<!--            const topics_from_page = JSON.parse("{{ topics_json }}");-->
+<!--        </script>-->
+<!--        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>-->
+
+
+        <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
+              id="id-title" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_value" class="control-group">
+                    <div class="controls">
+                        <input class="form-control input-sm textinput textInput" id="txt-title"
+                                {% if czo_user %} onfocus="titleClick()" {% endif %}
+                               maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
+                    </div>
+                </div>
+                <div>
+                    <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
+                            style="display: none;">
+                        Save changes
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+    {% endif %}
+</div>
+
+{% if is_replaced_by %}
+    <div class="col-xs-12">
+        <div class="clear-fix"><i>A newer version of this resource <a
+                href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i>
+        </div>
+    </div>
+{% endif %}
+
+{% if is_version_of %}
+    {% if user.is_authenticated %}
+        {# right side toolbar buttons will be displayed after the resource version text #}
+        <div class="col-xs-12">
+    {% else %}
+        {# need to add space to the bottom as the right side toolbar buttons won't be displayed for unauthenticated user #}
+        <div class="col-xs-12 space-bottom">
+    {% endif %}
+        <div class="clear-fix">
+            <i>An older version of this resource <a
+                href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i>
+        </div>
+    </div>
+{% endif %}
+
+{% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
+    <div class="col-xs-12">
+        <div id="app-approved" class="flex" style="align-items: center">
+            <img src="/static/img/approved_app.png">
+            <span>This WebApp resource has been approved by HydroShare admin.</span>
+        </div>
+    </div>
+{% endif %}
+
+{% block extra_js %}
+<!--    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">-->
+<!--    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">-->
+
+    <style>
+        [v-cloak] {
+            display: none
+        }
+
+        .title-builder-input {
+            margin-top: 1em;
+        }
+    </style>
+    {#        vue-mover uses Sortable.min.js#}
+<!--    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>-->
+<!--    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>-->
+{% endblock %}
+
+{% if not page|is_debug %}
+{# ======= JSON-LD Structure ======= #}
+<script type="application/ld+json">
+{
+    "@context": {
+        "@vocab": "http://www.schema.org/",
+        "datacite": "http://purl.org/spar/datacite/"
+    },
+    {% if cm.raccess.published %}
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    {% else %}
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
+    "@type": "Dataset",
+    "additionalType": "{{ cm.metadata.type.url }}",
+    "name": "{{ title }}",
+    "description": "{{ cm.metadata.description | escapejs }}",
+    "keywords": {{ keywords|safe }},
+    {% if cm.raccess.published %}
+    "creativeWorkStatus": "Published",
+    {% elif cm.raccess.public %}
+    "creativeWorkStatus": "Public",
+    {% elif cm.raccess.discoverable %}
+    "creativeWorkStatus": "Discoverable",
+    {% elif is_replaced_by %}
+    "creativeWorkStatus": "Obsolete",
+    {% else %}
+    "creativeWorkStatus": "Private",
+    {% endif %}
+    "inLanguage": "en-US",
+    "identifier": {
+        "@type": [
+            "PropertyValue",
+            "datacite:ResourceIdentifier"
+        ],
+        {% if cm.raccess.published %}
+        "datacite:usesIdentifierScheme": {
+            "@id": "datacite:doi"
+        },
+        "propertyId": "DOI",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "value": "10.4211/hs.{{ cm.short_id }}"
+        {% else %}
+        "datacite:usesIdentifierScheme": {
+            "@id": "datacite:local-resource-identifier-scheme"
+        },
+        "propertyId": "UUID",
+        "value": "uuid:{{ cm.short_id }}"
+        {% endif %}
+    },
+    "creator": {{ creators | creator_json_ld_element | safe }},
+    {% if temporal_coverage %}
+    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% endif %}
+    {% if spatial_coverage.exists %}
+    "spatialCoverage": {
+        "@type": "Place",
+        {% if spatial_coverage.name %}
+        "name": "{{ spatial_coverage.name }}",
+        {% endif %}
+        "geo": {
+            {% if spatial_coverage.type == 'point' %}
+            "@type": "GeoCoordinates",
+            "latitude": {{ spatial_coverage.north|floatformat:"4" }},
+            "longitude": {{ spatial_coverage.east|floatformat:"4" }}
+            {% else %}
+            "@type": "GeoShape",
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }}, {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }}, {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            {% endif %}
+        }
+    },
+    {% endif %}
+    {% if cm.raccess.published %}
+    "publisher": {
+        "@id": "https://www.hydroshare.org"
+    },
+    {% endif %}
+    "provider": {
+        "@id": "https://www.hydroshare.org",
+        "@type": "Organization",
+        "name": "HydroShare",
+        "url": "https://www.hydroshare.org"
+    },
+    "includedInDataCatalog": {
+		"@type": "DataCatalog",
+		"name": "HydroShare",
+    	"url": "https://www.hydroshare.org/search/"
+	},
+	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	"license": {
+	    "@type": "CreativeWork",
+	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
+        "text": "{{ cm.metadata.rights.statement }}",
+        "url": "{{ cm.metadata.rights.url }}"
+        {% elif cm.metadata.rights.statement %}
+        "text": "{{ cm.metadata.rights.statement }}",
+        "name": "Customized license"
+        {% else %}
+        "url": "{{ cm.metadata.rights.url }}"
+        {% endif %}
+	},
+	{% endif %}
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    {% if relations %}
+    "citation": [
+    {% for relation in relations %}
+        "{{ relation.value }}"{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ],
+    {% endif %}
+    {% if fundingagencies %}
+    "funder": [
+    {% for agency in fundingagencies %}
+        {
+            "@type": "Organization",
+            "name": "{{ agency.agency_name }}",
+            "url": "{{ agency.agency_url }}"
+        }{%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    {% endif %}
+    "dateCreated": "{{ cm.created | date:"c" }}",
+    "dateModified": "{{ cm.last_updated | date:"c"}}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
+    "subjectOf": {
+        "@type": "CreativeWork",
+        "name": "Dublin Core Metadata Document Describing the Dataset",
+        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
+        "encodingFormat": "application/rdf+xml"
+    },
+    "distribution": {
+        "@type": "DataDownload",
+        "contentSize": "{{ cm.size|filesizeformat }}",
+        "encodingFormat": "application/zip",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "description": "Zipped BagIt Bag containing the HydroShare Resource",
+        "dateModified": "{{ cm.last_updated | date:"c" }}",
+        {% if cm.raccess.published %}
+        "identifier": [
+        {
+        {% else %}
+        "identifier": {
+        {% endif %}
+            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+            "datacite:usesIdentifierScheme": {
+                "@id": "datacite:local-resource-identifier-scheme"
+            },
+            "propertyId": "UUID",
+            "value": "uuid:{{ cm.short_id }}"
+        }{% if cm.raccess.published %},
+        {
+            "@type": "PropertyValue",
+            "additionalType": [
+                "http://www.wikidata.org/entity/Q185235",
+                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+            ],
+            "identifier": "md5:{{ cm.bag_checksum }}",
+            "propertyID": "MD5",
+            "value": "{{ cm.bag_checksum }}"
+        }
+        ]{% endif %}
+    }
+}
+</script>
+{% endif %}
