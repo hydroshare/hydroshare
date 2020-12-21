@@ -48,6 +48,57 @@ function getImageID() {
     docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
+dis_build() {
+
+HS_PATH=`pwd`
+#### Set version pin variable ####
+#n_ver="15.0.0"
+n_ver="14.14.0"
+
+echo "Starting Node Build .... "
+
+### Create Directory structure outside to maintain correct permissions
+cd hs_discover
+rm -rf static templates
+mkdir static templates
+mkdir templates/hs_discover
+mkdir static/js
+mkdir static/css
+
+# Start Docker container and Run build
+docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
+
+cd hydroshare
+cd hs_discover
+npm install
+npm run build
+mkdir -p static/js
+mkdir -p static/css
+cp -rp templates/hs_discover/js static/
+cp -rp templates/hs_discover/css static/
+cp -p templates/hs_discover/map.js static/js/
+echo "----------------js--------------------"
+ls -l static/js
+echo "--------------------------------------"
+echo "----------------css-------------------"
+ls -l static/css
+echo "--------------------------------------"
+cd static/
+mv js/app.*.js js/app.js
+mv js/chunk-vendors.*.js js/chunk-vendors.js
+cd ..
+eof
+
+echo "Node Build completed ..."
+echo
+echo "Removing node container"
+docker container rm nodejs
+cd $HS_PATH
+sleep 1
+
+}
+
+
 ### Clean-up | Setup hydroshare environment
 
 REMOVE_CONTAINER=YES
@@ -224,6 +275,7 @@ echo " Waiting for iRODS containers up"
 echo '########################################################################################################################'
 echo
 
+
 COUNT=0
 SECOND=0
 while [ $COUNT -lt 2 ]
@@ -301,7 +353,6 @@ echo '##########################################################################
 echo " Restarting hydroshare and defaultworker containers and wait them up for 10 seconds"
 echo '########################################################################################################################'
 echo
-
 docker restart hydroshare defaultworker
 
 COUNT=0
@@ -318,6 +369,8 @@ echo '##########################################################################
 echo " Migrating data"
 echo '########################################################################################################################'
 echo
+
+dis_build
 
 docker exec hydroshare bash scripts/chown-root-items
 
@@ -344,9 +397,13 @@ echo
 echo '########################################################################################################################'
 echo " Reindexing SOLR"
 echo '########################################################################################################################'
-echo
 
-echo "  - docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
+echo
+echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
+docker $DOCKER_PARAM exec solr bin/solr create -c collection1 -d basic_configs
+
+echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
 
@@ -354,6 +411,14 @@ echo
 echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
 echo
 docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
+
+echo
+echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
+docker $DOCKER_PARAM exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
+
+echo
+echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
+docker $DOCKER_PARAM exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
 
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
