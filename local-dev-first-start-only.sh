@@ -48,7 +48,9 @@ function getImageID() {
     docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-dis_build() {
+##nodejs build for discovery
+
+node_build() {
 
 HS_PATH=`pwd`
 #### Set version pin variable ####
@@ -366,11 +368,17 @@ echo
 
 echo
 echo '########################################################################################################################'
-echo " Migrating data"
+echo " Building Node for Discovery"
 echo '########################################################################################################################'
 echo
 
-dis_build
+node_build
+
+echo
+echo '########################################################################################################################'
+echo " Migrating data"
+echo '########################################################################################################################'
+echo
 
 docker exec hydroshare bash scripts/chown-root-items
 
