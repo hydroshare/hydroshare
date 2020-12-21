@@ -188,6 +188,9 @@ urlpatterns = [
     url(r'^userInfo/$',
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
+    url(r'^userDetails/(?P<user_or_group_id>[\d]+)/(?P<is_group>[a-z]+)/$',
+        core_views.hsapi_get_user_or_group_data, name='get_logged_in_user_info'),
+
     url(r'^dictionary/universities/$',
         dict_views.ListUniversities.as_view(), name="get_dictionary"),
 
