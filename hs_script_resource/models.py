@@ -1,5 +1,3 @@
-from lxml import etree
-
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
@@ -139,41 +137,5 @@ class ScriptMetaData(CoreMetaData):
                         self.update_non_repeatable_element(element_name, metadata,
                                                            element_property_name)
                         break
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-
-        # get the xml string for R Script
-        xml_string = super(ScriptMetaData, self).get_xml(pretty_print=pretty_print)
-
-        # create  etree element
-        RDF_ROOT = etree.fromstring(xml_string.encode())
-
-        # get the root 'Description' element, which contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.program:
-
-            if self.program.scriptReleaseDate:
-                script_release_date = etree.SubElement(container, '{%s}scriptReleaseDate' % self.NAMESPACES['hsterms'])
-                script_release_date.text = self.program.scriptReleaseDate.isoformat()
-
-            script_language = etree.SubElement(container, '{%s}scriptLanguage' % self.NAMESPACES['hsterms'])
-            script_language.text = self.program.scriptLanguage
-
-            language_version = etree.SubElement(container, '{%s}languageVersion' % self.NAMESPACES['hsterms'])
-            language_version.text = self.program.scriptVersion
-
-            script_version = etree.SubElement(container, '{%s}scriptVersion' % self.NAMESPACES['hsterms'])
-            script_version.text = self.program.scriptVersion
-
-            script_dependencies = etree.SubElement(container, '{%s}scriptDependencies' % self.NAMESPACES['hsterms'])
-            script_dependencies.text = self.program.scriptVersion
-
-            script_code_repository = etree.SubElement(container, '{%s}scriptCodeRepository' % self.NAMESPACES['hsterms'])
-            script_code_repository.text = self.program.scriptCodeRepository
-
-        xml_string = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
-
-        return xml_string
 
 from . import receivers # never delete this otherwise none of the receiver function will work

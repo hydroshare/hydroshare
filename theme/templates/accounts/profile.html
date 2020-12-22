@@ -12,13 +12,13 @@
         {% with profile_user.userprofile as profile %}
         <input type="hidden" id="url-create-irods-account" value="{% url 'create_irods_account' %}">
         <input type="hidden" id="url-delete-irods-account" value="{% url 'delete_irods_account' %}">
-        {% if profile_user.id == user.id %}
-        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
+        {% if profile_user.id == user.id or user.is_superuser %}
+        <form id="profile-form" action="{% url 'update_profile' profile_user.id %}" class="account-form" method="post"
               enctype="multipart/form-data" onsubmit="return validateForm()">
         {% csrf_token %}
         {% endif %}
             <div class="row">
-                {% if profile_user.id == user.id %}
+                {% if profile_user.id == user.id or user.is_superuser %}
                     <div data-page-mode="edit" class="alert alert-info" role="alert">
                         Information entered here may be publicly visible. Do not enter information that you want to keep
                         private.
@@ -27,7 +27,7 @@
 
                 <div class="col-sm-12">
                     <div class="row">
-                        {% if profile_user.id == user.id %}
+                        {% if profile_user.id == user.id or user.is_superuser %}
                             <div class="col-xs-12 col-sm-3 height-fix pull-right">
                                 <span data-page-mode="view" id="btn-edit-profile" data-toggle="tooltip"
                                       data-placement="left"
@@ -54,7 +54,7 @@
                             </div>
 
                             {#        Profile picture upload controls       #}
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                                 <div data-page-mode="edit" class="text-center" id="photo-control">
                                 {% if profile.picture and profile.picture.url %}
                                     <div class="btn-file btn-update-picture">
@@ -76,7 +76,7 @@
                             {% endif %}
 
                             {#        Password      #}
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
@@ -132,13 +132,13 @@
                                     </table>
                                 {% endif %}
                             </div>
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                             <div data-page-mode="edit">
                                 <div class="row">
                                     {# First name #}
                                     <fieldset class="col-sm-4">
-                                        <label>First name *</label>
-                                        <input class="form-control form-required" value="{{ profile_user.first_name }}" name="first_name">
+                                        <label>First name</label>
+                                        <input class="form-control" value="{{ profile_user.first_name }}" name="first_name">
                                     </fieldset>
 
                                     {# Middle name #}
@@ -149,8 +149,11 @@
 
                                     {# Last name #}
                                     <fieldset class="col-sm-4">
-                                        <label>Last name *</label>
-                                        <input class="form-control form-required" value="{{ profile_user.last_name }}" name="last_name">
+                                        <label>Last name</label>
+                                        <input class="form-control" value="{{ profile_user.last_name }}" name="last_name">
+                                    </fieldset>
+                                    <fieldset class="col-sm-12">
+                                        <small class="text-muted">If this user account is for an Organization, First name, Middle name, and Last name may be left blank. Any resources created by an Organization user will list the Organization as the resource author/creator.</small>
                                     </fieldset>
                                 </div>
 
@@ -162,13 +165,41 @@
                                         <br /><small class="text-muted">The names of the organizations you are associated with.</small><br />
                                     </fieldset>
 
-                                    {# Title #}
-                                    <fieldset class="col-sm-6">
-                                        <label>Title</label>
-                                        <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
-                                        <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
-                                            Professor, Software Developer.
-                                        </small>
+                                    {#        User Type       #}
+                                    <fieldset>
+                                        <label for="selectUserType">User type *</label>
+                                        <select name="user_type" class="form-control form-required" id="selectUserType">
+                                            <option disabled selected value>Select a user type</option>
+                                            <option value="University Faculty">University Faculty</option>
+                                            <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                                            <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                                            <option value="University Graduate Student">University Graduate Student</option>
+                                            <option value="University Undergraduate Student">University Undergraduate Student</option>
+                                            <option value="Commercial/Professional">Commercial/Professional</option>
+                                            <option value="Government Official">Government Official</option>
+                                            <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                                            <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                                            <option value="Organization">Organization</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </fieldset>
+
+                                    {#        User Type - Other       #}
+                                    <fieldset id="user-type-other">
+                                        <label>Specify: *</label>
+                                        <input name="user_type" class="form-control">
+                                    </fieldset>
+
+                                    {#        Country       #}
+                                    <fieldset>
+                                        <label>Country *</label>
+                                        <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                    </fieldset>
+
+                                    {#        State       #}
+                                    <fieldset>
+                                        <label>State/Province *</label>
+                                        <input name="state" class="form-control form-required" {% if  profile.state and profile.state != 'None' %} value="{{ profile.state }}" {% endif %}>
                                     </fieldset>
                                 </div>
 
@@ -196,7 +227,7 @@
                             {% endif %}
 
                             {#        CV       #}
-                            {% if profile_user.id == user.id %}
+                            {% if profile_user.id == user.id or user.is_superuser %}
                                 <div data-page-mode="edit">
                                     <div>
                                         {% if profile.cv and profile.cv.url %}
@@ -360,7 +391,7 @@
                                                 </tr>
                                                 </tbody>
                                             </table>
-                                            {% if profile_user.id == user.id %}
+                                            {% if profile_user.id == user.id or user.is_superuser %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
                                                     <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
@@ -371,50 +402,21 @@
                                             {% endif %}
                                         </div>
 
-                                        {% if profile_user.id == user.id %}
+                                        {% if profile_user.id == user.id or user.is_superuser %}
                                         <div data-page-mode="edit">
+                                            {# Title #}
+                                            <fieldset>
+                                                <label>Title</label>
+                                                <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
+                                                <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
+                                                    Professor, Software Developer.
+                                                </small>
+                                            </fieldset>
                                             {#        Description       #}
                                             <fieldset>
                                                 <label>Description</label>
                                                 <textarea class="form-control"
                                                           name="details" rows="4">{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
-                                            </fieldset>
-
-                                            <hr>
-
-                                            {#        User Type       #}
-                                            <fieldset>
-                                                <label for="selectUserType">User type *</label>
-                                                <select name="user_type" class="form-control form-required" id="selectUserType">
-                                                    <option value="University Faculty">University Faculty</option>
-                                                    <option value="University Professional or Research Staff">University Professional or Research Staff</option>
-                                                    <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
-                                                    <option value="University Graduate Student">University Graduate Student</option>
-                                                    <option value="University Undergraduate Student">University Undergraduate Student</option>
-                                                    <option value="Commercial/Professional">Commercial/Professional</option>
-                                                    <option value="Government Official">Government Official</option>
-                                                    <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
-                                                    <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                            </fieldset>
-
-                                            {#        User Type - Other       #}
-                                            <fieldset id="user-type-other">
-                                                <label>Specify: *</label>
-                                                <input name="user_type" class="form-control">
-                                            </fieldset>
-
-                                            {#        Country       #}
-                                            <fieldset>
-                                                <label>Country *</label>
-                                                <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
-                                            </fieldset>
-
-                                            {#        State       #}
-                                            <fieldset>
-                                                <label>State/Province *</label>
-                                                <input name="state" class="form-control form-required" {% if  profile.state and profile.state != 'None' %} value="{{ profile.state }}" {% endif %}>
                                             </fieldset>
 
                                             {#        Date Joined       #}
@@ -429,7 +431,7 @@
                                 {% endif %}
 
                                 {#  CONTACT #}
-                                {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
+                                {% if profile.public or user.is_superuser or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
                                         <h3 class="panel-title"><span
@@ -490,7 +492,7 @@
                                             </tbody>
                                         </table>
 
-                                        {% if profile_user.id == user.id %}
+                                        {% if profile_user.id == user.id or user.is_superuser %}
                                         <div class="row" data-page-mode="edit">
                                             <fieldset>
                                                 <div class="col-sm-12"><label>Phone 1</label></div>
@@ -589,7 +591,7 @@
                                     </div>
                                 </div>
 
-                                {% if profile_user.id == user.id %}
+                                {% if profile_user.id == user.id or user.is_superuser %}
                                 <div class="panel panel-default"  data-page-mode="edit">
                                     <div class="panel-heading">
                                         <h3 class="panel-title"><span
@@ -781,7 +783,7 @@
                 </div>
             </div>
 
-        {% if profile_user.id == user.id %}
+        {% if profile_user.id == user.id or user.is_superuser %}
             <div class="col-xs-12 col-sm-3 height-fix pull-right">
             <button type="submit" class="btn btn-primary pull-right
                 btn-save-profile" data-page-mode="edit">

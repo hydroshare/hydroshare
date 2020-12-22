@@ -447,7 +447,7 @@ class GenericResourceMeta(object):
         SAX_parse_results = GenericResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Warn if title does not match that from resource map
         title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)

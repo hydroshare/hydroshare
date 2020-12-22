@@ -263,6 +263,7 @@ class GenericLogicalFile(AbstractLogicalFile):
 
             ft_ctx.logical_file = logical_file
             log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+            return logical_file
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):

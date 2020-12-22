@@ -51,7 +51,7 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 
     # contributor
     con_name = contributor
-    con_org = "USU"
+    con_org = 'USU'
     con_email = 'mike.sundar@usu.edu'
     con_address = "11 River Drive, Logan UT-84321, USA"
     con_phone = '435-567-0989'
@@ -66,7 +66,7 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 
     # creator
     cr_name = creator
-    cr_org = "USU"
+    cr_org = 'USU'
     cr_email = 'jsmith@gmail.com'
     cr_address = "101 Clarson Ave, Provo UT-84321, USA"
     cr_phone = '801-567=9090'
@@ -107,7 +107,7 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
         owner=user,
         title=title,
         metadata=metadata,
-        files=(open('pytest.ini', 'rb'),)
+        # files=(open('file.ext', 'rb'),)  # use a file that will exist in all environments and containers
     )
     return _res
 
@@ -117,13 +117,13 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
 def sample_user():
     hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
     user = hydroshare.create_account(
-                '{}@noreply.org'.format(str(uuid.uuid4())),
-                username='{}'.format(str(uuid.uuid4())),
-                first_name='First',
-                last_name='Last',
-                superuser=False,
-                groups=[]
-            )
+        '{}@noreply.org'.format(str(uuid.uuid4())),
+        username='{}'.format(str(uuid.uuid4())),
+        first_name='First',
+        last_name='Last',
+        superuser=False,
+        groups=[]
+    )
     yield user
     user.delete()
 
@@ -311,3 +311,13 @@ def composite_resource_with_mi_mp_aggregation(composite_resource):
     # set file to model program aggregation type
     ModelProgramLogicalFile.set_file_type(res, user, res_file.id)
     yield res, user
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def resource_for_citation(sample_user):
+    resource = base_sample_resource(username=sample_user.username)
+    resource.raccess.save()
+    resource.save()
+    yield resource
+    resource.delete()

@@ -11,7 +11,6 @@ from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
 from dominate.tags import div, legend, form, button, p, textarea, _input
-from lxml import etree
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
@@ -21,7 +20,7 @@ from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCo
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
-from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.models import Creator, Contributor
 from hs_core.signals import post_add_netcdf_aggregation
 
 
@@ -259,21 +258,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    def get_xml(self, pretty_print=True, additional_namespaces=None):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(NetCDFFileMetaData, self)._get_xml_containers(
-            additional_namespaces=additional_namespaces)
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container_to_add_to)
-
-        for variable in self.variables.all():
-            variable.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
-
 
 class NetCDFLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
@@ -419,6 +403,13 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                      res_type_specific_meta, file_type_metadata, resource)
 
                 # create the ncdump text file
+                dump_file_name = nc_file_name + "_header_info.txt"
+                for file in resource.files.filter(file_folder=folder_path):
+                    # look for and delete an existing header_file before creating it below.
+                    fname = os.path.basename(file.resource_file.name)
+                    if fname in dump_file_name:
+                        file.delete()
+                        break
                 dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 file_folder = res_file.file_folder
                 upload_folder = file_folder
@@ -476,6 +467,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
                 if not file_type_success:
                     raise ValidationError(msg)
+                return logical_file
             else:
                 err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
                 log.error(err_msg)

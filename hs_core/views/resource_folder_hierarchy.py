@@ -4,21 +4,28 @@ import os
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
-from drf_yasg.utils import swagger_auto_schema
+
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
+from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import unzip_task
+from hs_core.views import utils as view_utils
+
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
+
 from hs_file_types.models import FileSetLogicalFile
+
+from drf_yasg.utils import swagger_auto_schema
+
 
 logger = logging.getLogger(__name__)
 
@@ -312,17 +319,20 @@ def data_store_folder_unzip(request, **kwargs):
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
+    auto_aggregate = request.POST.get('auto_aggregate', 'true').lower() == 'true'  # True by default
+    ingest_metadata = request.POST.get('ingest_metadata', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
 
     if request.is_ajax():
-        task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite))
+        task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
+                                       auto_aggregate, ingest_metadata))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='file unzip', username=request.user.username,
                                                     payload=resource.get_absolute_url())
         return JsonResponse(task_dict)
     else:
         try:
-            unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite)
+            unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate, ingest_metadata)
         except SessionException as ex:
             specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                            "protection from overwriting existing files. Unzip in a different " \
@@ -354,6 +364,16 @@ def data_store_folder_unzip_public(request, pk, pathname):
     """
 
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
+
+
+@api_view(['POST'])
+def ingest_metadata_files(request, pk):
+    from hs_file_types.utils import identify_and_ingest_metadata_files
+    resource, _, _ = view_utils.authorize(request, pk,
+                                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    resource_files = list(request.FILES.values())
+    identify_and_ingest_metadata_files(resource, resource_files)
+    return Response(status=204)
 
 
 @api_view(['POST'])

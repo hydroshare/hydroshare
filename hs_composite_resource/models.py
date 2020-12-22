@@ -1,6 +1,7 @@
 import os
 
 from django.core.exceptions import ObjectDoesNotExist
+
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
@@ -324,14 +325,6 @@ class CompositeResource(BaseResource):
     def supports_logical_file(self):
         """ if this resource allows associating resource file objects with logical file"""
         return True
-
-    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
-        # get resource level core metadata as xml string
-        # for composite resource we don't want the format elements at the resource level
-        # as they are included at the aggregation map xml document
-        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=True,
-                                                                     include_format_elements=False)
-        return xml_string
 
     def _recreate_nested_aggr_meta_files(self, folder, nested_aggr):
         """Recreates meta (xml metadata, xml resource map and schema json) files for all fileset or model instance
