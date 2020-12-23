@@ -1,15 +1,16 @@
+import json
 import logging
 import time
 from collections import namedtuple
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group, User
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from rest_framework.views import APIView
+
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
@@ -103,8 +104,45 @@ class ResourceLandingAPI(APIView):
         # discoverable = GenericResource.discoverable_resources.all()
         # public = GenericResource.public_resources.all()
 
-        return JsonResponse({
+        data = json.dumps({
             'data': 'Sample Test Data',
             'time': (time.time() - start) / 1000,
-            'title': res.title,
-        }, status=200)
+            'cm': 'content model',
+            'resource_edit_mode': False,
+            'metadata_form': None,
+            'abstract': 'This is an abstract',
+            'creators': ['Sierra, CZO'],
+            'title': 'Resource Title 1',
+            'keywords': '["keywd1"]',
+            'language': 'English',
+            'readme': '',
+            'contributors': [],
+            'relations': [],
+            'sources': [],
+            'fundingagencies': [],
+            'resource_creation_error': None,
+            'tool_homepage_url': None,
+            'file_type_error': None,
+            'temporal_coverage': {'test': 'test'},  # dict
+            'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
+                               'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
+            'metadata_status': 'Insufficient to publish or make public',
+            'missing_metadata_elements': ['Abstract', 'Keywords'],
+            'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
+            'custom_citation': '',
+            'citation_id': None,
+            'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
+            'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
+            'current_user': 'czo_sierra',
+            'show_content_files': True,
+            'validation_error': None,
+            'discoverable': False,
+            'resource_is_mine': False,
+            'quota_holder': 'czo_sierra',
+            'just_created': False,
+            'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
+            'show_web_reference_note': False,
+            'belongs_to_collections': [],
+        })
+
+        return JsonResponse(data, safe=False, status=200)
