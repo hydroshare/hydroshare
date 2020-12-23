@@ -83,7 +83,7 @@
     </style>
 
     <script>
-    const RESOURCE_MODE = 'View';
+    const RESOURCE_MODE = 'Edit';
     const CITATION_ID = '';
     const RES_KEYWORDS = '';
     const SELF_ACCESS_LEVEL = '';
@@ -109,14 +109,13 @@
     <script type="text/javascript" src="/static/js/bootstrap.3.0.2.min.js"></script> <!-- TODO OBRIEN custom.js remove popover dependency -->
     <script type="text/javascript" src="/static/js/bootstrap-extras.js"></script> <!-- TODO OBRIEN custom.js remove popover dependency -->
     <script type="text/javascript" src="/static/js/copyToClipboard.js"></script>
-    <script type="text/javascript" src="/static/js/coverageMap.js"></script>
-    <script type="text/javascript" src="/static/js/dropzone.js"></script>
-    <script type="text/javascript" src="/static/js/hs-file-icons.js"></script>
-    <script type="text/javascript" src="/static/js/hs_file_browser.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
-    <script type="text/javascript" src="/static/js/resourceLandingAjax.js"></script>
-    <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js" integrity="sha512-BKbSR+cfyxLdMAsE0naLReFSLg8/pjbgfxHh/k/kUC82Hy7r6HtR5hLhobaln2gcTvzkyyehrdREdjpsQwy2Jw==" crossorigin="anonymous"></script>
+<!--    <script type="text/javascript" src="/static/js/coverageMap.js"></script>-->
+<!--    <script type="text/javascript" src="/static/js/dropzone.js"></script>-->
+<!--    <script type="text/javascript" src="/static/js/hs-file-icons.js"></script>-->
+<!--    <script type="text/javascript" src="/static/js/hs_file_browser.js"></script>-->
+<!--    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>-->
+<!--    <script type="text/javascript" src="/static/js/resourceLandingAjax.js"></script>-->
+<!--    <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>-->
 
 <!--    TODO AUTOCOMPLETE LIGHT-->
     {% include 'autocomplete_light/static.html' %}
@@ -141,36 +140,9 @@
 </head>
 <body>
 
-    {% include 'hs_resource_landing/pages/navbar.html' %}
+{% include 'hs_resource_landing/pages/navbar.html' %}
+{% include "hs_resource_landing/resource-landing-page/title-section.html" %}
 
-    {# Needs to be included first so it's available before other instances initialize #}
-    {% include "includes/profile-card.html" %}
-
-    {%  block modal %}
-        {% include "resource-landing-page/modals.html" %}
-        {% include "includes/author-preview.html" %}
-        {% include "resource-landing-page/coordinates_picker.html" %}
-    {%  endblock %}
-
-    {# ======= Title ======= #}
-    {% include "resource-landing-page/title-section.html" %}
-
-    {# ======= Top-right buttons ======= #}
-    {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access %}
-
-    {# ======= Title and header content ======= #}
-    {% include "resource-landing-page/resource-header.html" %}
-
-    {# ======= Abstract ======= #}
-    {% include "resource-landing-page/abstract.html" %}
-
-    {# ======= Subject ======= #}
-    {% include "resource-landing-page/subject.html" %}
-
-    {# ======= Coverage ======= #}
-    {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or resource_edit_mode %}
-        {% include "resource-landing-page/coverage.html" %}
-    {% endif %}
 
 {% nevercache %}
     {% if messages %}
@@ -213,11 +185,10 @@
     {% endif %}
 {% endnevercache %}
 
+    <div class="main-container">
+        <div id="app"></div>
         {% include "hs_resource_landing/resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access %}
-
-<!--    <div class="main-container">-->
-<!--        <div id="app"></div>-->
-<!--    </div>-->
+    </div>
 
     {# ======= create modal =======#}
         <div class="modal fade" id="submit-title-dialog" tabindex="-1" role="dialog"
