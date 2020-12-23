@@ -971,7 +971,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    zip_fname = os.path.basename(zip_with_rel_path)
     working_dir = os.path.dirname(zip_with_full_path)
     unzip_path = None
     try:
@@ -1024,6 +1023,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             if auto_aggregate:
                 check_aggregations(resource, added_resource_files)
             if ingest_metadata:
+                # delete original zip to prevent from being pulled into an aggregation
+                zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+                delete_resource_file(res_id, zip_with_rel_path, user)
+
                 from hs_file_types.utils import ingest_metadata_files
                 ingest_metadata_files(resource, meta_files, map_files)
             istorage.delete(unzip_path)
@@ -1031,14 +1034,15 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             unzip_path = istorage.unzip(zip_with_full_path)
             link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
 
+            if bool_remove_original:
+                zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+                delete_resource_file(res_id, zip_with_rel_path, user)
+
     except Exception:
         logger.exception("failed to unzip")
         if unzip_path and istorage.exists(unzip_path):
             istorage.delete(unzip_path)
         raise
-
-    if bool_remove_original:
-        delete_resource_file(res_id, zip_fname, user)
 
     # TODO: should check can_be_public_or_discoverable here
     resource.refresh_from_db()
