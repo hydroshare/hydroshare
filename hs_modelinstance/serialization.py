@@ -35,7 +35,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
 
         print("--- ModelInstanceResource ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get ModelOutput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelOutput, None)):

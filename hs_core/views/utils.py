@@ -718,9 +718,10 @@ def link_irods_file_to_django(resource, filepath):
         return ret
 
 
-def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
-    res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
-    check_aggregations(resource, res_files)
+def link_irods_folder_to_django(resource, istorage, foldername, auto_aggregate=True):
+    res_files = _link_irods_folder_to_django(resource, istorage, foldername)
+    if auto_aggregate:
+        check_aggregations(resource, res_files)
 
 
 def listfolders_recursively(istorage, path):
@@ -733,7 +734,7 @@ def listfolders_recursively(istorage, path):
     return folders
 
 
-def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
+def _link_irods_folder_to_django(resource, istorage, foldername):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
     Database after iRODS file and folder operations to get Django and iRODS in sync
@@ -741,8 +742,6 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: REDUNDANT: IrodsStorage object
     :param foldername: the folder name, as a fully qualified path
-    :param exclude: UNUSED: a tuple that includes file names to be excluded from
-        linking under the folder;
     :return: List of ResourceFile of newly linked files
     """
     if __debug__:
@@ -755,15 +754,14 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         store = istorage.listdir(foldername)
         # add files into Django resource model
         for file in store[1]:
-            if file not in exclude:
-                file_path = os.path.join(foldername, file)
-                # This assumes that file_path is a full path
-                res_files.append(link_irods_file_to_django(resource, file_path))
+            file_path = os.path.join(foldername, file)
+            # This assumes that file_path is a full path
+            res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             res_files = res_files + \
                         _link_irods_folder_to_django(resource, istorage,
-                                                     os.path.join(foldername, folder), exclude)
+                                                     os.path.join(foldername, folder))
     return res_files
 
 
@@ -924,7 +922,23 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
+class IrodsFile:
+    """Mimics an uploaded file to allow use of the ingestion logic which expects an uploaded file, rather than a file
+    on irods."""
+    def __init__(self, name, istorage):
+        self._name = name
+        self._istorage = istorage
+
+    @property
+    def name(self):
+        return self._name
+
+    def read(self):
+        return self._istorage.download(self._name).read()
+
+
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
+               overwrite=False, auto_aggregate=True, ingest_metadata=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -935,10 +949,20 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     :param bool_remove_original: a bool indicating whether original zip file will be deleted
     after unzipping.
     :param bool overwrite: a bool indicating whether to overwrite files on unzip
+    :param bool auto_aggregate: a bool indicating whether to check for and aggregate recognized files
+    :param bool ingest_metadata: a bool indicating whether to look for and ingest resource/aggregation metadata files
     :return:
     """
+    from hs_file_types.utils import identify_metadata_files
+
     if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
+
+    if ingest_metadata:
+        if not auto_aggregate:
+            raise ValidationError("auto_aggregate must be on when metadata_ingestion is on.")
+        if not overwrite:
+            raise ValidationError("overwrite must be on when metadata_ingestion is on.")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -951,12 +975,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     working_dir = os.path.dirname(zip_with_full_path)
     unzip_path = None
     try:
-
         if overwrite:
-            # irods doesn't allow overwrite, so we have to check if a file exists, delete it and
-            # then write the new file. Aggregations are treated as single objects.  If one file is
-            # overwritten in an aggregation, the whole aggregation is deleted.
-
             # unzip to a temporary folder
             unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
             # list all files to be moved into the resource
@@ -967,9 +986,17 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             for folder in listfolders(istorage, unzip_path):
                 destination_folder = os.path.join(working_dir, folder)
                 destination_folders.append(destination_folder)
+
+            irods_files = []
+            for unzipped_file in unzipped_files:
+                irods_files.append(IrodsFile(unzipped_file, istorage))
+            res_files = irods_files
+            meta_files = []
+            if ingest_metadata:
+                res_files, meta_files, map_files = identify_metadata_files(irods_files)
             # walk through each unzipped file, delete aggregations if they exist
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 if (istorage.exists(destination_file)):
                     if resource.resource_type == "CompositeResource":
                         aggregation_object = resource.get_file_aggregation_object(
@@ -982,28 +1009,31 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                     else:
                         istorage.delete(destination_file)
             # now move each file to the destination
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                istorage.moveFile(file, destination_file)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
-            res_files = []
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
+            added_resource_files = []
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
-                res_files.append(res_file)
+                added_resource_files.append(res_file)
 
-            # scan for aggregations
-            check_aggregations(resource, res_files)
+            if auto_aggregate:
+                check_aggregations(resource, added_resource_files)
+            if ingest_metadata:
+                from hs_file_types.utils import ingest_metadata_files
+                ingest_metadata_files(resource, meta_files, map_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
-            link_irods_folder_to_django(resource, istorage, unzip_path)
+            link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
 
     except Exception:
         logger.exception("failed to unzip")
-        if unzip_path and istorage.exists:
+        if unzip_path and istorage.exists(unzip_path):
             istorage.delete(unzip_path)
         raise
 
@@ -1011,7 +1041,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
         delete_resource_file(res_id, zip_fname, user)
 
     # TODO: should check can_be_public_or_discoverable here
-
+    resource.refresh_from_db()
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 

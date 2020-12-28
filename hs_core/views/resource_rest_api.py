@@ -806,10 +806,13 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             error_msg = {'file': 'Adding file to resource failed. %s' % str(ex)}
             raise ValidationError(detail=error_msg)
 
-        # prepare response data
-        file_name = os.path.basename(res_file_objects[0].resource_file.name)
-        file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
-        response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
+        if len(res_file_objects) == 0:
+            # metadata ingestion
+            response_data = {'resource_id': pk}
+        else:
+            file_name = os.path.basename(res_file_objects[0].resource_file.name)
+            file_path = res_file_objects[0].resource_file.name.split('/data/contents/')[1]
+            response_data = {'resource_id': pk, 'file_name': file_name, 'file_path': file_path}
         resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
