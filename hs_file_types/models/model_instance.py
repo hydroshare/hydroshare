@@ -7,10 +7,12 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
-from lxml import etree
+from rdflib import BNode, Literal, URIRef, RDF
+from rdflib.namespace import Namespace, DC
 
+from hs_core.hs_rdf import NAMESPACE_MANAGER, HSTERMS
 from hs_core.hydroshare.utils import current_site_url
-from hs_core.models import CoreMetaData, ResourceFile
+from hs_core.models import ResourceFile
 from .base import NestedLogicalFileMixin
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
@@ -58,6 +60,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 schema_properties_key = 'properties'
                 for k, v in self.metadata_json.items():
                     if v:
+                        if isinstance(v, dict):
+                            if not _dict_has_value(v):
+                                continue
                         k_title = k
                         if metadata_schema:
                             root_properties_schema_node = metadata_schema[schema_properties_key]
@@ -65,34 +70,36 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 k_title = root_properties_schema_node[k]['title']
                         dom_tags.legend(k_title)
                     with dom_tags.div(cls="row"):
+                        def add_obj_field(field_name, field_value):
+                            value = ''
+                            if isinstance(field_value, list):
+                                if field_value:
+                                    value = ", ".join(field_value)
+                            elif isinstance(field_value, str):
+                                value = field_value.strip()
+                            else:
+                                value = field_value
+                            if value != '':
+                                with dom_tags.div(cls="col-md-6"):
+                                    dom_tags.p(field_name)
+                                with dom_tags.div(cls="col-md-6"):
+                                    dom_tags.p(value)
                         if v:
                             if isinstance(v, dict):
+                                if not _dict_has_value(v):
+                                    continue
                                 for child_k, child_v in v.items():
-                                    if child_v:
-                                        child_k_title = child_k
-                                        if metadata_schema:
-                                            child_properties_schema_node = root_properties_schema_node[k]
-                                            child_properties_schema_node = child_properties_schema_node[
-                                                schema_properties_key]
-                                            if child_k in child_properties_schema_node:
-                                                child_k_title = child_properties_schema_node[child_k]['title']
-                                        if isinstance(child_v, list):
-                                            value_string = ", ".join(child_v)
-                                        else:
-                                            value_string = child_v
-                                        with dom_tags.div(cls="col-md-6"):
-                                            dom_tags.p(child_k_title)
-                                        with dom_tags.div(cls="col-md-6"):
-                                            dom_tags.p(value_string)
+                                    child_k_title = child_k
+                                    if metadata_schema:
+                                        child_properties_schema_node = root_properties_schema_node[k]
+                                        child_properties_schema_node = child_properties_schema_node[
+                                            schema_properties_key]
+                                        if child_k in child_properties_schema_node:
+                                            child_k_title = child_properties_schema_node[child_k]['title']
+
+                                    add_obj_field(field_name=child_k_title, field_value=child_v)
                             else:
-                                if isinstance(v, list):
-                                    value_string = ", ".join(v)
-                                else:
-                                    value_string = v
-                                with dom_tags.div(cls="col-md-6"):
-                                    dom_tags.p(k_title)
-                                with dom_tags.div(cls="col-md-6"):
-                                    dom_tags.p(value_string)
+                                add_obj_field(field_name=k_title, field_value=v)
 
         html_string += executed_by_div.render()
         html_string += metadata_json_div.render()
@@ -265,8 +272,9 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         rendered_html = template.render(context)
         return rendered_html
 
-    def get_xml(self, pretty_print=True, additional_namespaces=None):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def get_rdf_graph(self):
+        graph = super(ModelInstanceFileMetaData, self).get_rdf_graph()
+        subject = self.rdf_subject()
 
         def find_schema_field_value(field_path, schema_dict):
             keys = field_path.split(".")
@@ -280,9 +288,24 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     return None
             return element_value
 
+        def add_sub_element(sub_element_node, sub_element_value):
+            """adds the element node only if the element has a value"""
+            sub_value = ''
+            if isinstance(sub_element_value, str):
+                if len(sub_element_value.strip()) > 0:
+                    sub_value = sub_element_value
+            elif isinstance(sub_element_value, list):
+                if sub_element_value:
+                    sub_value = ", ".join(sub_element_value)
+            else:
+                sub_value = sub_element_value
+            if sub_value != '':
+                graph.add((sub_element_node, RDF.value, Literal(sub_value)))
+                return True
+            return False
+
         valid_schema = False
         resource = self.logical_file.resource
-        additional_namespaces = None
         if self.metadata_json:
             try:
                 jsonschema.Draft4Validator(self.logical_file.metadata_schema_json).validate(
@@ -290,132 +313,97 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 valid_schema = True
             except jsonschema.ValidationError:
                 valid_schema = False
-        if valid_schema:
-            # need to add this additional namespace for encoding the schema based metadata
-            # xmlns="http://hydroshare.org/resource/<resourceID>/"
-            res_xmlns = os.path.join(current_site_url(), 'resource', resource.short_id) + "/"
-            ns_prefix = None
-            additional_namespaces = [{ns_prefix: res_xmlns}]
-        # get the xml root element, and the xml element which needs to contain all other elements
-        RDF_ROOT, container_to_add_to = super(ModelInstanceFileMetaData, self)._get_xml_containers(
-            additional_namespaces=additional_namespaces)
 
-        model_specific_metadata = etree.SubElement(container_to_add_to, 'modelSpecificMetadata')
-        model_specific_metadata_desc = etree.SubElement(model_specific_metadata,
-                                                        '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
-        model_title_node = etree.SubElement(model_specific_metadata_desc,
-                                            '{%s}title' % CoreMetaData.NAMESPACES['dc'])
+        # need to add this additional namespace for encoding the schema based metadata
+        # xmlns="http://hydroshare.org/resource/<resourceID>/"
+        res_xmlns = os.path.join(current_site_url(), 'resource', resource.short_id) + "/"
+        ns_prefix = None
+        NS_META_SCHEMA = Namespace(res_xmlns)
+        NAMESPACE_MANAGER.bind(prefix=ns_prefix, namespace=NS_META_SCHEMA, override=False)
+        graph.namespace_manager = NAMESPACE_MANAGER
+
+        model_meta_node = BNode()
+        graph.add((subject, NS_META_SCHEMA.modelSpecificMetadata, model_meta_node))
         model_title = ""
         if self.logical_file.metadata_schema_json:
             model_title = self.logical_file.metadata_schema_json.get('title', "")
-        model_title_node.text = model_title
-
+        graph.add((model_meta_node, DC.title, Literal(model_title)))
         if self.has_model_output:
             includes_output = 'true'
         else:
             includes_output = 'false'
-        model_output = etree.SubElement(model_specific_metadata_desc,
-                                        '{%s}includesModelOutput' % CoreMetaData.NAMESPACES['hsterms'])
-        model_output.text = includes_output
+        graph.add((model_meta_node, HSTERMS.includesModelOutput, Literal(includes_output)))
+
         if self.executed_by:
-            executed_by = '{%s}executedByModelProgram' % CoreMetaData.NAMESPACES['hsterms']
             if self.executed_by:
                 resource = self.logical_file.resource
                 hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
                 aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
-                attrib = {"resource": aggr_url}
-                etree.SubElement(model_specific_metadata_desc, executed_by, attrib=attrib)
+                graph.add((model_meta_node, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
 
         if valid_schema:
             metadata_dict = self.metadata_json
-            model_properties = etree.SubElement(model_specific_metadata_desc, 'modelProperties')
-            model_properties_desc = etree.SubElement(model_properties,
-                                                     '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
-
-            # since we don't allow nested objects in the schema, we are not expecting nested dict
-            # objects in metadata
+            model_prop_node = BNode()
+            graph.add((model_meta_node, NS_META_SCHEMA.modelProperties, model_prop_node))
             meta_schema_dict = self.logical_file.metadata_schema_json
             meta_schema_dict_properties = meta_schema_dict.get("properties")
             for k, v in metadata_dict.items():
+                # skip key (element) that is missing a valid value
+                if v:
+                    if isinstance(v, dict):
+                        if not _dict_has_value(v):
+                            continue
+                    elif isinstance(v, str):
+                        if str(v).strip() == '':
+                            continue
+                elif not isinstance(v, bool):
+                    continue
+
+                k_element_node = BNode()
+                k_predicate = NS_META_SCHEMA.term('{}'.format(k))
+                graph.add((model_prop_node, k_predicate, k_element_node))
                 element_path_root = "{}".format(k)
-                k_obj_element = etree.SubElement(model_properties_desc, k)
-                k_obj_element_desc = etree.SubElement(
-                    k_obj_element, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
-
-                k_obj_element_desc_title = etree.SubElement(
-                    k_obj_element_desc, "{{{ns}}}title".format(ns=CoreMetaData.NAMESPACES['dc']))
                 element_path_title = "{}.{}".format(element_path_root, 'title')
-                k_obj_element_desc_title.text = find_schema_field_value(field_path=element_path_title,
-                                                                        schema_dict=meta_schema_dict_properties)
-
+                element_title_value = find_schema_field_value(field_path=element_path_title,
+                                                              schema_dict=meta_schema_dict_properties)
+                graph.add((k_element_node, DC.title, Literal(element_title_value)))
                 element_path_desc = "{}.{}".format(element_path_root, 'description')
-                k_obj_element_desc_desc_value = find_schema_field_value(field_path=element_path_desc,
-                                                                        schema_dict=meta_schema_dict_properties)
-                if k_obj_element_desc_desc_value is not None:
-                    k_obj_element_desc_desc = etree.SubElement(
-                        k_obj_element_desc, "{{{ns}}}description".format(ns=CoreMetaData.NAMESPACES['dc']))
-                    k_obj_element_desc_desc.text = k_obj_element_desc_desc_value
+                element_desc_value = find_schema_field_value(field_path=element_path_desc,
+                                                             schema_dict=meta_schema_dict_properties)
+                if element_desc_value is not None:
+                    graph.add((k_element_node, DC.description, Literal(element_desc_value)))
 
-                if isinstance(v, dict):
-                    k_obj_element_properties = etree.SubElement(k_obj_element_desc, "{}Properties".format(k))
-                    k_obj_element_properties_desc = etree.SubElement(
-                        k_obj_element_properties, "{{{ns}}}Description".format(ns=CoreMetaData.NAMESPACES['rdf']))
+                if isinstance(v, dict) and v:
+                    k_element_prop_node = BNode()
+                    predicate = NS_META_SCHEMA.term('{}Properties'.format(k))
+                    graph.add((k_element_node, predicate, k_element_prop_node))
                     sub_element_path_root = "{}.properties".format(element_path_root)
-                    sub_field_added = False
                     for k_sub, v_sub in v.items():
-                        field = etree.SubElement(k_obj_element_properties_desc, k_sub)
-                        field_desc = etree.SubElement(field,
-                                                      "{{{ns}}}Description".format(
-                                                          ns=CoreMetaData.NAMESPACES['rdf']))
-                        k_sub_desc_title = etree.SubElement(
-                            field_desc, "{{{ns}}}title".format(ns=CoreMetaData.NAMESPACES['dc']))
+                        k_sub_element_node = BNode()
+                        k_sub_predicate = NS_META_SCHEMA.term('{}'.format(k_sub))
+                        graph.add((k_element_prop_node, k_sub_predicate, k_sub_element_node))
                         k_sub_path_title = "{}.{}.{}".format(sub_element_path_root, k_sub, 'title')
-                        k_sub_desc_title.text = find_schema_field_value(field_path=k_sub_path_title,
-                                                                        schema_dict=meta_schema_dict_properties)
-
+                        k_sub_title_value = find_schema_field_value(field_path=k_sub_path_title,
+                                                                    schema_dict=meta_schema_dict_properties)
+                        graph.add((k_sub_element_node, DC.title, Literal(k_sub_title_value)))
                         k_sub_path_desc = "{}.{}.{}".format(sub_element_path_root, k_sub, 'description')
-                        k_sub_desc_desc_value = find_schema_field_value(field_path=k_sub_path_desc,
-                                                                        schema_dict=meta_schema_dict_properties)
-                        if k_sub_desc_desc_value is not None:
-                            k_sub_desc_desc = etree.SubElement(
-                                field_desc, "{{{ns}}}description".format(ns=CoreMetaData.NAMESPACES['dc']))
-                            k_sub_desc_desc.text = k_sub_desc_desc_value
+                        k_sub_desc_value = find_schema_field_value(field_path=k_sub_path_desc,
+                                                                   schema_dict=meta_schema_dict_properties)
+                        if k_sub_desc_value is not None:
+                            graph.add((k_sub_element_node, DC.description, Literal(k_sub_desc_value)))
 
-                        k_sub_value = etree.SubElement(
-                            field_desc, "{{{ns}}}value".format(ns=CoreMetaData.NAMESPACES['rdf']))
-                        if isinstance(v_sub, list):
-                            if v_sub:
-                                k_sub_value.text = ", ".join(v_sub)
-                        else:
-                            v_sub = str(v_sub)
-                            if len(v_sub.strip()) > 0:
-                                k_sub_value.text = v_sub
-                        if not k_sub_value.text:
-                            k_obj_element_properties_desc.remove(field)
-                        else:
-                            sub_field_added = True
-
-                    if not sub_field_added:
-                        # remove the parent xml node since we don't have any child nodes
-                        model_properties_desc.remove(k_obj_element)
+                        added = add_sub_element(k_sub_element_node, v_sub)
+                        if not added:
+                            # remove the sub element node from the graph
+                            for _, pred, obj in graph.triples((k_sub_element_node, None, None)):
+                                graph.remove((k_sub_element_node, pred, obj))
+                            graph.remove((k_element_prop_node, None, k_sub_element_node))
                 else:
-                    k_obj_element_value = etree.SubElement(
-                        k_obj_element_desc, "{{{ns}}}value".format(ns=CoreMetaData.NAMESPACES['rdf']))
-                    if isinstance(v, list):
-                        if v:
-                            k_obj_element_value.text = ", ".join(v)
-                    else:
-                        v = str(v)
-                        if len(v.strip()) > 0:
-                            k_obj_element_value.text = v
+                    added = add_sub_element(k_element_node, v)
+                    if not added:
+                        graph.remove((model_prop_node, None, k_element_node))
 
-                    if not k_obj_element_value.text:
-                        # remove xml node since there is no data for the node
-                        model_properties_desc.remove(k_obj_element)
-
-        xml_body = etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
-        xml_body = xml_body.replace('executedByModelProgram resource=', 'executedByModelProgram rdf:resource=')
-        return CoreMetaData.XML_HEADER + '\n' + xml_body
+        return graph
 
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
@@ -514,3 +502,17 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
                         tgt_logical_file.metadata.executed_by = tgt_mp_logical_file
                         tgt_logical_file.metadata.save()
                         break
+
+
+def _dict_has_value(dct):
+    """helper to check if the dict contains at least one valid value"""
+    for val in dct.values():
+        if isinstance(val, str):
+            if val.strip() != '':
+                return True
+        elif isinstance(val, list):
+            if val:
+                return True
+        elif isinstance(val, dict):
+            return _dict_has_value(val)
+    return False
