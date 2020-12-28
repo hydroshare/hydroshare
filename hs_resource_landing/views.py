@@ -12,10 +12,83 @@ from django.views.generic import TemplateView
 from rest_framework.views import APIView
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+from dateutil import parser
+from django.conf import settings
+from django.contrib.auth.models import Group
+from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
+from django.utils.html import mark_safe, escapejs
+from mezzanine.pages.page_processors import processor_for
+
+from hs_core.forms import ExtendedMetadataForm
+from hs_communities.models import Topic
+from hs_core import languages_iso
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    res_has_web_reference
+from hs_core.models import GenericResource, Relation
+from hs_core.views.utils import show_relations_section, \
+    rights_allows_copy
+import json
+
+from hs_odm2.models import ODM2Variable
 
 logger = logging.getLogger(__name__)
 
 DateRange = namedtuple('DateRange', ['start', 'end'])
+
+
+# class NotUsedView(TemplateView):
+#
+#     def get(self, request, *args, **kwargs):
+#         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+#         shortkey = 'bd8ab9a69c2a46009cc63966bec68b5f'
+#         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+#         content_model = res.get_content_model()
+#
+#         start = time.time()
+#         context = {
+#             'data': 'Sample Test Data',
+#             'time': (time.time() - start) / 1000,
+#             'cm': content_model,
+#             'resource_edit_mode': False,
+#             'metadata_form': None,
+#             'abstract': 'This is an abstract',
+#             'creators': ['Sierra, CZO'],
+#             'title': 'Resource Title 1',
+#             'keywords': '["keywd1"]',
+#             'language': 'English',
+#             'readme': '',
+#             'contributors': [],
+#             'relations': [],
+#             'sources': [],
+#             'fundingagencies': [],
+#             'resource_creation_error': None,
+#             'tool_homepage_url': None,
+#             'file_type_error': None,
+#             'temporal_coverage': {'test': 'test'},  # dict
+#             'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
+#                                'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
+#             'metadata_status': 'Insufficient to publish or make public',
+#             'missing_metadata_elements': ['Abstract', 'Keywords'],
+#             'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
+#             'custom_citation': '',
+#             'citation_id': None,
+#             'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
+#             'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
+#             'current_user': 'czo_sierra',
+#             'show_content_files': True,
+#             'validation_error': None,
+#             'discoverable': False,
+#             'resource_is_mine': False,
+#             'quota_holder': 'czo_sierra',
+#             'just_created': False,
+#             'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
+#             'show_web_reference_note': False,
+#             'belongs_to_collections': [],
+#             'maps_key': maps_key
+#         }
+#
+#         return render(request, 'hs_resource_landing/index.html', context)
 
 
 class ResourceLandingView(TemplateView):
@@ -24,114 +97,38 @@ class ResourceLandingView(TemplateView):
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
         shortkey = 'bd8ab9a69c2a46009cc63966bec68b5f'
         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+
+        resource_edit = False
+        extended_metadata_layout = None
+
+        """Inject a crispy_form layout into the page to display extended metadata.
+    
+        :param page: which page to get the template context for
+        :param user: the user who is viewing the page
+        :param resource_edit: True if and only if the page should render in edit mode
+        :param extended_metadata_layout: layout information used to build an ExtendedMetadataForm
+        :param request: the Django request associated with the page load
+        :return: the basic template context (a python dict) used to render a resource page. can and
+        should be extended by page/resource-specific page_processors
+    
+        Resource type specific app needs to call this method to inject a crispy_form layout
+        object for displaying metadata UI for the extended metadata for their resource
+    
+        TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
+                    - split into two functions: get_readonly_page_context(...) and
+                    get_editable_page_context(...)
+        """
+        file_type_error = ''
+        if request:
+            file_type_error = request.session.get("file_type_error", None)
+            if file_type_error:
+                del request.session["file_type_error"]
+
+        # TODO discuss with devs
+        # content_model = page.get_content_model()
         content_model = res.get_content_model()
 
-        start = time.time()
-        context = {
-            'data': 'Sample Test Data',
-            'time': (time.time() - start) / 1000,
-            'cm': content_model,
-            'resource_edit_mode': False,
-            'metadata_form': None,
-            'abstract': 'This is an abstract',
-            'creators': ['Sierra, CZO'],
-            'title': 'Resource Title 1',
-            'keywords': '["keywd1"]',
-            'language': 'English',
-            'readme': '',
-            'contributors': [],
-            'relations': [],
-            'sources': [],
-            'fundingagencies': [],
-            'resource_creation_error': None,
-            'tool_homepage_url': None,
-            'file_type_error': None,
-            'temporal_coverage': {'test': 'test'},  # dict
-            'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
-                               'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
-            'metadata_status': 'Insufficient to publish or make public',
-            'missing_metadata_elements': ['Abstract', 'Keywords'],
-            'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
-            'custom_citation': '',
-            'citation_id': None,
-            'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
-            'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
-            'current_user': 'czo_sierra',
-            'show_content_files': True,
-            'validation_error': None,
-            'discoverable': False,
-            'resource_is_mine': False,
-            'quota_holder': 'czo_sierra',
-            'just_created': False,
-            'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
-            'show_web_reference_note': False,
-            'belongs_to_collections': [],
-            'maps_key': maps_key
-        }
-
-        return render(request, 'hs_resource_landing/index.html', context)
-
-
-@method_decorator(login_required, name='dispatch')
-class ResourceLandingAPI(APIView):
-
-    def __init__(self, **kwargs):
-        super(ResourceLandingAPI, self).__init__(**kwargs)
-
-    def get(self, request, shortkey, *args, **kwargs):
-        res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        start = time.time()
-
-        # 'cm': content_model,
-        # 'resource_edit_mode': resource_edit,
-        # 'metadata_form': None,
-        # 'citation': content_model.get_citation(),
-        # 'custom_citation': content_model.get_custom_citation(),
-        # 'title': title,
-        # 'readme': readme,
-        # 'abstract': abstract,
-        # 'creators': content_model.metadata.creators.all(),
-        # 'contributors': content_model.metadata.contributors.all(),
-        # 'temporal_coverage': temporal_coverage_data_dict,
-        # 'spatial_coverage': spatial_coverage_data_dict,
-        # 'keywords': keywords,
-        # 'language': language,
-        # 'rights': content_model.metadata.rights,
-        # 'sources': content_model.metadata.sources.all(),
-        # 'relations': content_model.metadata.relations.all(),
-        # 'show_relations_section': show_relations_section(content_model),
-        # 'fundingagencies': content_model.metadata.funding_agencies.all(),
-        # 'metadata_status': metadata_status,
-        # 'missing_metadata_elements': missing_metadata_elements,
-        # 'validation_error': validation_error if validation_error else None,
-        # 'resource_creation_error': create_resource_error,
-        # 'tool_homepage_url': tool_homepage_url,
-        # 'file_type_error': file_type_error,
-        # 'just_created': just_created,
-        # 'just_copied': just_copied,
-        # 'just_published': just_published,
-        # 'bag_url': bag_url,
-        # 'show_content_files': show_content_files,
-        # 'discoverable': discoverable,
-        # 'resource_is_mine': resource_is_mine,
-        # 'rights_allow_copy': rights_allow_copy,
-        # 'quota_holder': qholder,
-        # 'belongs_to_collections': belongs_to_collections,
-        # 'show_web_reference_note': has_web_ref,
-        # 'current_user': user,
-
-        # # resources = GenericResource.objects.all()
-        # user = User.objects.get(pk=self.request.user.id)
-        #
-        # grps_member_of = []
-        # groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-        # # for each group set group dynamic attributes
-        # for g in groups:
-        #     g.is_user_member = user in g.gaccess.members
-        #     if g.is_user_member:
-        #         grps_member_of.append(g)
-
-        # content_model = page.get_content_model()
+        # TODO FIX REDIRECT AND ENSURE ALREADY HANDLED BY THE AUTHORIZE FUNCTION CALL AT START
         # whether the user has permission to view this resource
         # can_view = content_model.can_view(request)
         # if not can_view:
@@ -139,58 +136,288 @@ class ResourceLandingAPI(APIView):
         #         raise PermissionDenied()
         #     return redirect_to_login(request.path)
 
-        # discoverable = content_model.raccess.discoverable
-        # validation_error = None
-        # resource_is_mine = False
-        # if user.is_authenticated():
-        #     resource_is_mine = content_model.rlabels.is_mine(user)
-        #
-        # metadata_status = _get_metadata_status(content_model)
-        #
-        # belongs_to_collections = content_model.collections.all()
-        # discoverable = GenericResource.discoverable_resources.all()
-        # public = GenericResource.public_resources.all()
-        content_model = res.get_content_model()
+        discoverable = content_model.raccess.discoverable
+        validation_error = None
+        resource_is_mine = False
+        if user.is_authenticated():
+            resource_is_mine = content_model.rlabels.is_mine(user)
 
-        data = json.dumps({
-            'data': 'Sample Test Data',
-            'time': (time.time() - start) / 1000,
-            'cm': content_model,
-            'resource_edit_mode': False,
-            'metadata_form': None,
-            'abstract': 'This is an abstract',
-            'creators': ['Sierra, CZO'],
-            'title': 'Resource Title 1',
-            'keywords': '["keywd1"]',
-            'language': 'English',
-            'readme': '',
-            'contributors': [],
-            'relations': [],
-            'sources': [],
-            'fundingagencies': [],
-            'resource_creation_error': None,
-            'tool_homepage_url': None,
-            'file_type_error': None,
-            'temporal_coverage': {'test': 'test'},  # dict
-            'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
-                               'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
-            'metadata_status': 'Insufficient to publish or make public',
-            'missing_metadata_elements': ['Abstract', 'Keywords'],
-            'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
-            'custom_citation': '',
-            'citation_id': None,
-            'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
-            'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
-            'current_user': 'czo_sierra',
-            'show_content_files': True,
-            'validation_error': None,
-            'discoverable': False,
-            'resource_is_mine': False,
-            'quota_holder': 'czo_sierra',
-            'just_created': False,
-            'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
-            'show_web_reference_note': False,
-            'belongs_to_collections': [],
-        })
+        metadata_status = self._get_metadata_status(content_model)
 
-        return JsonResponse(data, safe=False, status=200)
+        belongs_to_collections = content_model.collections.all()
+
+        tool_homepage_url = None
+        if not resource_edit:  # In view mode
+            landing_page_res_obj = content_model
+            landing_page_res_type_str = landing_page_res_obj.resource_type
+            if landing_page_res_type_str.lower() == "toolresource":
+                if landing_page_res_obj.metadata.app_home_page_url:
+                    tool_homepage_url = content_model.metadata.app_home_page_url.value
+
+        just_created = False
+        just_copied = False
+        create_resource_error = None
+        just_published = False
+        if request:
+            validation_error = self.check_for_validation(request)
+
+            just_created = request.session.get('just_created', False)
+            if 'just_created' in request.session:
+                del request.session['just_created']
+
+            just_copied = request.session.get('just_copied', False)
+            if 'just_copied' in request.session:
+                del request.session['just_copied']
+
+            create_resource_error = request.session.get('resource_creation_error', None)
+            if 'resource_creation_error' in request.session:
+                del request.session['resource_creation_error']
+
+            just_published = request.session.get('just_published', False)
+            if 'just_published' in request.session:
+                del request.session['just_published']
+
+        bag_url = content_model.bag_url
+
+        if user.is_authenticated():
+            show_content_files = user.uaccess.can_view_resource(content_model)
+        else:
+            # if anonymous user getting access to a private resource (since resource is discoverable),
+            # then don't show content files
+            show_content_files = content_model.raccess.public
+
+        rights_allow_copy = rights_allows_copy(content_model, user)
+
+        qholder = content_model.get_quota_holder()
+
+        readme = content_model.get_readme_file_content()
+        if readme is None:
+            readme = ''
+        has_web_ref = res_has_web_reference(content_model)
+
+        keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
+        topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+        topics = list(topics)  # force QuerySet evaluation
+
+        # user requested the resource in READONLY mode
+        if not resource_edit:
+            content_model.update_view_count(request)
+            temporal_coverage = content_model.metadata.temporal_coverage
+            temporal_coverage_data_dict = {}
+            if temporal_coverage:
+                start_date = parser.parse(temporal_coverage.value['start'])
+                end_date = parser.parse(temporal_coverage.value['end'])
+                temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
+                temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
+                temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
+
+            spatial_coverage = content_model.metadata.spatial_coverage
+            spatial_coverage_data_dict = {}
+            spatial_coverage_data_dict['default_units'] = \
+                content_model.metadata.spatial_coverage_default_units
+            spatial_coverage_data_dict['default_projection'] = \
+                content_model.metadata.spatial_coverage_default_projection
+            spatial_coverage_data_dict['exists'] = False
+            if spatial_coverage:
+                spatial_coverage_data_dict['exists'] = True
+                spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
+                spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
+                spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
+                spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection',
+                                                                                      None)
+                spatial_coverage_data_dict['type'] = spatial_coverage.type
+                if spatial_coverage.type == 'point':
+                    spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
+                    spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
+                    spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation',
+                                                                                         None)
+                else:
+                    spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
+                    spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                    spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
+                    spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
+                    spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
+                    spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit',
+                                                                                         None)
+            languages_dict = dict(languages_iso.languages)
+            language = languages_dict[content_model.metadata.language.code] if \
+                content_model.metadata.language else None
+            title = content_model.metadata.title.value if content_model.metadata.title else None
+            abstract = content_model.metadata.description.abstract if \
+                content_model.metadata.description else None
+
+            missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+            # maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+
+            context = {
+                       'cm': content_model,
+                       'resource_edit_mode': resource_edit,
+                       'metadata_form': None,
+                       'citation': content_model.get_citation(),
+                       'custom_citation': content_model.get_custom_citation(),
+                       'title': title,
+                       'readme': readme,
+                       'abstract': abstract,
+                       'creators': content_model.metadata.creators.all(),
+                       'contributors': content_model.metadata.contributors.all(),
+                       'temporal_coverage': temporal_coverage_data_dict,
+                       'spatial_coverage': spatial_coverage_data_dict,
+                       'keywords': keywords,
+                       'language': language,
+                       'rights': content_model.metadata.rights,
+                       'sources': content_model.metadata.sources.all(),
+                       'relations': content_model.metadata.relations.all(),
+                       'show_relations_section': show_relations_section(content_model),
+                       'fundingagencies': content_model.metadata.funding_agencies.all(),
+                       'metadata_status': metadata_status,
+                       'missing_metadata_elements': missing_metadata_elements,
+                       'validation_error': validation_error if validation_error else None,
+                       'resource_creation_error': create_resource_error,
+                       'tool_homepage_url': tool_homepage_url,
+                       'file_type_error': file_type_error,
+                       'just_created': just_created,
+                       'just_copied': just_copied,
+                       'just_published': just_published,
+                       'bag_url': bag_url,
+                       'show_content_files': show_content_files,
+                       'discoverable': discoverable,
+                       'resource_is_mine': resource_is_mine,
+                       'rights_allow_copy': rights_allow_copy,
+                       'quota_holder': qholder,
+                       'belongs_to_collections': belongs_to_collections,
+                       'show_web_reference_note': has_web_ref,
+                       'current_user': user,
+                       'maps_key': maps_key
+            }
+
+            return render(request, 'hs_resource_landing/index.html', context)
+
+        # user requested the resource in EDIT MODE
+
+        # TODO EVALUATE IF NECESSARY AND FIX IF IT IS
+        # whether the user has permission to change the model
+        # can_change = content_model.can_change(request)
+        # if not can_change:
+        #     raise PermissionDenied()
+
+        temporal_coverage = content_model.metadata.temporal_coverage
+        temporal_coverage_data_dict = {}
+        if temporal_coverage:
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
+            temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
+            temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
+            temporal_coverage_data_dict['id'] = temporal_coverage.id
+
+        spatial_coverage = content_model.metadata.spatial_coverage
+        spatial_coverage_data_dict = {'type': 'point'}
+        spatial_coverage_data_dict['default_units'] = \
+            content_model.metadata.spatial_coverage_default_units
+        spatial_coverage_data_dict['default_projection'] = \
+            content_model.metadata.spatial_coverage_default_projection
+        spatial_coverage_data_dict['exists'] = False
+        if spatial_coverage:
+            spatial_coverage_data_dict['exists'] = True
+            spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
+            spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
+            spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
+            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
+            spatial_coverage_data_dict['type'] = spatial_coverage.type
+            spatial_coverage_data_dict['id'] = spatial_coverage.id
+            if spatial_coverage.type == 'point':
+                spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
+                spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
+                spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation', None)
+            else:
+                spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
+                spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
+                spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
+                spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
+                spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
+
+        # TODO REPLICATE UNDER NEW STRUCTURE
+        # if extended_metadata_layout:
+        #     metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
+        #                                          extended_metadata_layout=extended_metadata_layout)
+        if extended_metadata_layout:
+            metadata_form = ExtendedMetadataForm(resource_mode='edit',
+                                                 extended_metadata_layout=extended_metadata_layout)
+        else:
+            metadata_form = None
+
+        # maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+
+        grps_member_of = []
+        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        # for each group set group dynamic attributes
+        for g in groups:
+            g.is_user_member = user in g.gaccess.members
+            if g.is_user_member:
+                grps_member_of.append(g)
+        try:
+            citation_id = content_model.metadata.citation.first().id
+        except:
+            citation_id = None
+
+        context = {
+                   'cm': content_model,
+                   'resource_edit_mode': resource_edit,
+                   'metadata_form': metadata_form,
+                   'creators': content_model.metadata.creators.all(),
+                   'title': content_model.metadata.title,
+                   'readme': readme,
+                   'contributors': content_model.metadata.contributors.all(),
+                   'relations': content_model.metadata.relations.all(),
+                   'sources': content_model.metadata.sources.all(),
+                   'fundingagencies': content_model.metadata.funding_agencies.all(),
+                   'temporal_coverage': temporal_coverage_data_dict,
+                   'spatial_coverage': spatial_coverage_data_dict,
+                   'keywords': keywords,
+                   'metadata_status': metadata_status,
+                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+                   'citation': content_model.get_citation(),
+                   'custom_citation': content_model.get_custom_citation(),
+                   'citation_id': citation_id,
+                   'rights': content_model.metadata.rights,
+                   'bag_url': bag_url,
+                   'current_user': user,
+                   'show_content_files': show_content_files,
+                   'validation_error': validation_error if validation_error else None,
+                   'discoverable': discoverable,
+                   'resource_is_mine': resource_is_mine,
+                   'quota_holder': qholder,
+                   'just_created': just_created,
+                   'relation_source_types': tuple((type_value, type_display)
+                                                  for type_value, type_display in Relation.SOURCE_TYPES
+                                                  if type_value != 'isReplacedBy' and
+                                                  type_value != 'isVersionOf' and
+                                                  type_value != 'hasPart'),
+                   'show_web_reference_note': has_web_ref,
+                   'belongs_to_collections': belongs_to_collections,
+                   'maps_key': maps_key,
+                   'topics_json': mark_safe(escapejs(json.dumps(topics))),
+                   'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
+                   'odm2_terms': list(ODM2Variable.all()),
+        }
+
+        return render(request, 'hs_resource_landing/index.html', context)
+
+    def check_for_validation(self, request):
+        """Check for validation error in request session."""
+        if request.method == "GET":
+            validation_error = request.session.get('validation_error', None)
+            if validation_error:
+                del request.session['validation_error']
+                return validation_error
+
+        return None
+
+    def _get_metadata_status(self, resource):
+        if resource.metadata.has_all_required_elements():
+            metadata_status = METADATA_STATUS_SUFFICIENT
+        else:
+            metadata_status = METADATA_STATUS_INSUFFICIENT
+
+        return metadata_status
