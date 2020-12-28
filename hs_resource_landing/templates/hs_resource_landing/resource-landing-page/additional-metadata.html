@@ -1,0 +1,46 @@
+<!-- ========= EXTRA METADATA TAB ========= -->
+{% if resource_edit_mode or cm.extra_metadata.items %}
+    <div class="col-xs-12 content-block">
+        <h3>Additional Metadata
+        {% if resource_edit_mode %}
+            <a id="btn-add-new-entry" type="button" class="btn btn-success btn-xs" title="Add New Entry">
+                <i class="fa fa-plus"></i>
+            </a>
+        {% endif %}
+        </h3>
+        <table id="extraMetaTable" class="hs-table table" width="100%">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+                {% if resource_edit_mode %}
+                    <th></th>
+                {% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for extra_meta_name, extra_meta_value in cm.extra_metadata.items %}
+                <tr id="{{ forloop.counter0 }}">
+                    <td>
+                        {{ extra_meta_name }}
+                    </td>
+                    <td>
+                        {{ extra_meta_value|urlize }}
+                    </td>
+                    {% if resource_edit_mode %}
+                        <td>
+                            <span data-loop-counter="{{ forloop.counter0 }}"
+                               class="glyphicon glyphicon-pencil icon-blue icon-button btn-edit-extra-metadata table-icon"
+                               title="Edit">
+                            </span>
+                            <span data-loop-counter="{{ forloop.counter0 }}"
+                                  class="glyphicon glyphicon-trash btn-remove icon-button btn-remove-extra-metadata table-icon"
+                                  title="Remove"></span>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

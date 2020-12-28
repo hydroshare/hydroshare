@@ -1,0 +1,13 @@
+<div class="readme">
+    <div class="readme-header">
+        <h4>
+            <i class="fa fa-file-o" aria-hidden="true"></i>
+            <span>{{ readme.file_name }}</span>
+        </h4>
+    </div>
+    {% if readme.file_type == 'md' %}
+        <div class="readme-content">{{ readme.content|safe }}</div>
+    {% else %}
+        <pre class="readme-content">{{ readme.content|safe }}</pre>
+    {% endif %}
+</div>

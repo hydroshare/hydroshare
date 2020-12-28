@@ -1,0 +1,52 @@
+<table id="table-stats" class="info-table">
+    <tr>
+        <th>Sharing Status:</th>
+        <td id="hl-sharing-status">
+            {% if cm.raccess.published %}
+                Published
+            {% elif cm.raccess.public %}
+                Public
+            {% elif cm.raccess.discoverable %}
+                Discoverable
+            {% else %}
+                Private
+            {% endif %}
+        </td>
+    </tr>
+    {% if cm.raccess.published %}
+        {% if "pending" in cm.doi or "failure" in cm.doi %}
+            <tr>
+                <th>Publication Status: </th>
+                <td>
+                    <div>Pending publication</div>
+                    <div class="small text-muted">
+                        Note that the DOI will not be available until it has been registered and activated.
+                    </div>
+                </td>
+            </tr>
+        {% endif %}
+    {% endif %}
+    <tr>
+        <th>Views: </th>
+        <td>{{ cm.view_count }}</td>
+    </tr>
+    <tr>
+        <th>Downloads: </th>
+        <td>{{ cm.download_count }}</td>
+    </tr>
+    <tr>
+        {% include "resource-landing-page/ratings.html" %}
+    </tr>
+    <tr>
+        <th>Comments: </th>
+        <td>
+            <a href="#resource-comments">
+                {% if cm.comments_count >= 1 %}
+                    {{ cm.comments_count }} comment{% if cm.comments_count > 1 %}s{% endif %}
+                {% else %}
+                    No comments (yet)
+                {% endif %}
+            </a>
+        </td>
+    </tr>
+</table>

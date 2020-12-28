@@ -1,0 +1,50 @@
+<div>NEW ABSTRACT INCLUDE</div>
+{% if not resource_edit_mode %}
+    {% if abstract %}
+        <div class="col-xs-12 content-block">
+            <h3>Abstract</h3>
+            <span class="abstract">{{ abstract|urlize|linebreaks }}</span>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="col-xs-12 content-block">
+        <h3>Abstract</h3>
+        {% if cm.metadata.description %}
+        <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
+              id="id-description" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_abstract" class="control-group">
+                    <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
+                                                    id="id_abstract" name="abstract"
+                                                    rows="10">{{ cm.metadata.description }}</textarea></div>
+                    <div style="margin-top:10px">
+                        <button id="btn-submit-abstract" type="button"
+                                class="btn btn-primary pull-right btn-form-submit"
+
+                                style="display: none;">Save changes
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+        {% else %}
+        <form action="/hsapi/_internal/{{ cm.short_id }}/description/add-metadata/"
+              id="id-description" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_abstract" class="control-group">
+                    <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
+                                                    id="id_abstract" name="abstract" rows="10"></textarea></div>
+                    <div style="margin-top:10px">
+                        <button type="button" class="btn btn-primary pull-right btn-form-submit"
+                                style="display: none;">Save changes
+                        </button>
+                    </div>
+                </div>
+
+            </fieldset>
+        </form>
+        {% endif %}
+    </div>
+{% endif %}

@@ -1,0 +1,169 @@
+<template>
+  <div class="col-xs-12 content-block" id="app-keyword">
+    <h3>Subject Keywords</h3>
+    <div class="row">
+      <div class="col-xs-12 col-sm-6">
+        {% if resource_edit_mode %}
+        {% csrf_token %}
+        {% endif %}
+        <div class="tags">
+          {% if resource_edit_mode %}
+            {% if czo_user %}
+            <!--         https://github.com/alexurquhart/vue-bootstrap-typeahead-->
+            <!--            Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19 -->
+            <div id="cv-add-keyword-wrapper1" class="input-group"
+                 @keyup.enter="addKeyword('{{ cm.short_id }}')">
+              <vue-bootstrap-typeahead
+                  :data="odm2_terms"
+                  v-model="newKeyword"
+                  ref="newKeyword"
+                  input-class="typeahead-search-input"
+                  @hit=addKeyword(error)
+                  placeholder="Examples: Hydrologic_modeling, USU, land use">
+              </vue-bootstrap-typeahead>
+              <span class="input-group-btn">
+                <button @click="addKeyword('{{ cm.short_id }}')"
+                        class="btn btn-success cv-add-button" type="button">Add</button>
+              </span>
+            </div>
+            {% else %}
+            <div id="cv-add-keyword-wrapper2" class="input-group">
+              <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
+                     ref="newKeyword"
+                     @keyup.enter="addKeyword('{{ cm.short_id }}')"
+                     placeholder="Examples: Hydrologic_modeling, USU, land use">
+              <span class="input-group-btn">
+                <button @click="addKeyword('{{ cm.short_id }}')" class="btn btn-success" type="button">Add</button>
+              </span>
+            </div>
+            {% endif %}
+          {% endif %}
+          <ul id="lst-tags" class="custom-well tag-list">
+            <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
+<!--            <li v-else v-for="k in resKeywords">-->
+<!--              {% if resource_edit_mode %}-->
+<!--              <span v-if="resKeywords.length" class="tag">${ k }<span-->
+<!--                  @click="removeKeyword('{{ cm.short_id }}', k )"-->
+<!--                  class="glyphicon glyphicon-remove-circle icon-remove"></span>-->
+<!--              </span>-->
+<!--              {% else %}-->
+<!--                <a class='tag' target="_blank" :href="'/search/?q=&selected_facets=subject_exact:' + k">${ k }</a>-->
+<!--              {% endif %}-->
+<!--            </li>-->
+          </ul>
+        </div>
+        <div>
+          <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+          <div v-if="error" class='alert alert-danger space-top small'>
+            <strong>Error: </strong>${ error }
+          </div>
+        </div>
+      </div>
+      <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
+          <span class="alert alert-warning group-title" role="alert">
+              <div class="flex">
+                  <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                  <em style="padding-right:20px;">
+                      Deleting all keywords will set the resource sharing status to <strong>private</strong>.
+                  </em>
+              </div>
+          </span>
+      </div>
+    </div>
+  </div>
+<!--<link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">-->
+<!--<script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>-->
+<!--<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>-->
+</template>
+<script>
+// import 'vue-bootstrap-typeahead.css';
+import VueBootstrapTypehead from 'vue-bootstrap-typeahead';
+
+export default {
+  name: 'Subject',
+  data() {
+    return {
+      odm2_terms: '',
+      newKeyword: '',
+      resMode: 'Edit',
+      resKeywords: '',
+      showIsDuplicate: false,
+      error: '',
+    };
+  },
+  components: {
+    vueBootstrapTypeahead: VueBootstrapTypehead,
+  },
+  mounted() {
+  },
+  methods: {
+    addKeyword(resIdShort) {
+      // Remove any empty keywords from the list
+      let newKeywords = this.newKeyword.split(',');
+      newKeywords = newKeywords.filter(a => a.trim() !== '');
+
+      // Update to cleaned up string
+      this.newKeyword = newKeywords.join(',').trim();
+      console.log(resIdShort);
+      if (this.newKeyword.trim() === '') {
+        return; // Empty string detected
+      }
+
+      const newVal = (this.resKeywords.join(',').length ? `${this.resKeywords.join(',')},` : '') + this.newKeyword;
+      this.error = '';
+      console.log(newVal);
+      // $.post('/hsapi/_internal/' + resIdShort + '/subject/add-metadata/', { value: newVal }, function (resp) {
+      //   if (resp.status === 'success') {
+      //     // Append new keywords to our data array
+      //     let newKeywordsArray = this.newKeyword.trim()
+      //         .split(',');
+      //
+      //     this.showIsDuplicate = false;  // Reset
+      //     for (let i = 0; i < newKeywordsArray.length; i++) {
+      //       if ($.inArray(newKeywordsArray[i].trim(), this.resKeywords) >= 0) {
+      //         this.showIsDuplicate = true;
+      //       } else {
+      //         this.resKeywords.push(newKeywordsArray[i].trim());
+      //         this.$refs.newKeyword.inputValue = '';  // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
+      //         this.$data.newKeyword = '';
+      //       }
+      //     }
+      //     // Reset input
+      //     // console.log(this.$data.newKeyword);
+      //     // this.$data.newKeyword = "";
+      //     // console.log(this.$data.newKeyword);
+      //   } else {
+      //     this.error = resp.message;
+      //     console.log(resp);
+      //   }
+      //   showCompletedMessage(resp);
+      // }.bind(this), 'json');
+    },
+    removeKeyword(resIdShort, keywordName) {
+      // TODO this feels sluggish in the UI. Consider removing in VueJS then handling the database. In the event of a failure, simply log. UX will be that keyword reappeared (rare case of failure or losing db conn)
+      // let newVal = this.resKeywords.slice(); // Get a copy
+      // newVal.splice($.inArray(keywordName, this.resKeywords), 1); // Remove the keyword
+
+      this.error = '';
+      console.log(resIdShort, keywordName);
+      // $.post('/hsapi/_internal/' + resIdShort + '/subject/add-metadata/',
+      //     { value: newVal.join(',') }, function (resp) {
+      //       if (resp.status === 'success') {
+      //         vue.resKeywords = newVal;
+      //         if (!newVal.length) {
+      //           // If no keywords, the metadata is no longer sufficient to make the resource public
+      //           manageAccessApp.onMetadataInsufficient();
+      //         }
+      //       } else {
+      //         vue.error = resp.message;
+      //         console.log(resp);
+      //       }
+      //     }, 'json');
+    },
+  },
+};
+</script>
+
+<style scoped>
+
+</style>
