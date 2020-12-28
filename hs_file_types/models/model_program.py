@@ -7,9 +7,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
-from lxml import etree
+from rdflib import Literal
 
-from hs_core.models import ResourceFile, CoreMetaData
+from hs_core.hs_rdf import HSTERMS
+from hs_core.models import ResourceFile
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 
@@ -68,15 +69,13 @@ class ModelProgramResourceFileType(models.Model):
         type_map = dict(cls.CHOICES)
         return type_map.get(type_number, None)
 
-    def add_to_xml_container(self, xml_container):
-        xml_name_map = {self.RELEASE_NOTES: 'modelReleaseNotes',
-                        self.DOCUMENTATION: "modelDocumentation",
-                        self.SOFTWARE: "modelSoftware",
-                        self.ENGINE: "modelEngine"
+    def get_xml_name(self):
+        xml_name_map = {self.RELEASE_NOTES: HSTERMS.modelReleaseNotes,
+                        self.DOCUMENTATION: HSTERMS.modelDocumentation,
+                        self.SOFTWARE: HSTERMS.modelSoftware,
+                        self.ENGINE: HSTERMS.modelEngine
                         }
-        element_xml_name = xml_name_map[self.file_type]
-        element = etree.SubElement(xml_container, '{%s}%s' % (CoreMetaData.NAMESPACES['hsterms'], element_xml_name))
-        element.text = self.res_file.short_path
+        return xml_name_map[self.file_type]
 
 
 class ModelProgramFileMetaData(GenericFileMetaDataMixin):
@@ -125,47 +124,32 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         super(ModelProgramFileMetaData, self).delete()
 
-    def get_xml(self, pretty_print=True, additional_namespaces=None):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def get_rdf_graph(self):
+        graph = super(ModelProgramFileMetaData, self).get_rdf_graph()
+        subject = self.rdf_subject()
 
-        # get the xml root element, and the xml element that needs to contain all xml elements to encode metadata
-        # for this aggregation
-        RDF_ROOT, container_to_add_to = super(ModelProgramFileMetaData, self)._get_xml_containers(
-            additional_namespaces=additional_namespaces)
         for mp_file_type in self.mp_file_types.all():
-            mp_file_type.add_to_xml_container(xml_container=container_to_add_to)
+            mp_file_type_xml_name = mp_file_type.get_xml_name()
+            graph.add((subject, mp_file_type_xml_name, Literal(mp_file_type.res_file.short_path)))
 
         if self.logical_file.model_program_type:
-            model_type_name = etree.SubElement(container_to_add_to,
-                                               '{%s}modelProgramName' % CoreMetaData.NAMESPACES['hsterms'])
-            model_type_name.text = self.logical_file.model_program_type
+            graph.add((subject, HSTERMS.modelProgramName, Literal(self.logical_file.model_program_type)))
         if self.version:
-            model_version = etree.SubElement(container_to_add_to,
-                                             '{%s}modelVersion' % CoreMetaData.NAMESPACES['hsterms'])
-            model_version.text = self.version
+            graph.add((subject, HSTERMS.modelVersion, Literal(self.version)))
         if self.release_date:
-            model_release_date = etree.SubElement(container_to_add_to,
-                                                  '{%s}modelReleaseDate' % CoreMetaData.NAMESPACES['hsterms'])
-            model_release_date.text = self.release_date.isoformat()
+            graph.add((subject, HSTERMS.modelReleaseDate, Literal(self.release_date.isoformat())))
         if self.website:
-            model_website = etree.SubElement(container_to_add_to,
-                                             '{%s}modelWebsite' % CoreMetaData.NAMESPACES['hsterms'])
-            model_website.text = self.website
+            graph.add((subject, HSTERMS.modelWebsite, Literal(self.website)))
         if self.code_repository:
-            model_code_repo = etree.SubElement(container_to_add_to,
-                                               '{%s}modelCodeRepository' % CoreMetaData.NAMESPACES['hsterms'])
-            model_code_repo.text = self.code_repository
+            graph.add((subject, HSTERMS.modelCodeRepository, Literal(self.code_repository)))
         if self.programming_languages:
-            model_program_language = etree.SubElement(container_to_add_to,
-                                                      '{%s}modelProgramLanguage' % CoreMetaData.NAMESPACES['hsterms'])
-            model_program_language.text = ", ".join(self.programming_languages)
+            model_program_languages = ", ".join(self.programming_languages)
+            graph.add((subject, HSTERMS.modelProgramLanguage, Literal(model_program_languages)))
         if self.operating_systems:
-            model_os = etree.SubElement(container_to_add_to,
-                                        '{%s}modelOperatingSystem' % CoreMetaData.NAMESPACES['hsterms'])
-            model_os.text = ", ".join(self.operating_systems)
+            model_os = ", ".join(self.operating_systems)
+            graph.add((subject, HSTERMS.modelOperatingSystem, Literal(model_os)))
 
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
+        return graph
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""
