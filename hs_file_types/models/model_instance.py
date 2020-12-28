@@ -59,10 +59,14 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 dom_tags.legend("Schema Based Metadata")
                 schema_properties_key = 'properties'
                 for k, v in self.metadata_json.items():
-                    if v:
+                    if type(v) not in (int, float, bool):
                         if isinstance(v, dict):
                             if not _dict_has_value(v):
                                 continue
+                        elif not v:
+                            # v is either a str or a list
+                            continue
+                            
                         k_title = k
                         if metadata_schema:
                             root_properties_schema_node = metadata_schema[schema_properties_key]
@@ -70,7 +74,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 k_title = root_properties_schema_node[k]['title']
                         dom_tags.legend(k_title)
                     with dom_tags.div(cls="row"):
-                        def add_obj_field(field_name, field_value):
+                        def display_json_meta_field(field_name, field_value):
                             value = ''
                             if isinstance(field_value, list):
                                 if field_value:
@@ -78,28 +82,27 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             elif isinstance(field_value, str):
                                 value = field_value.strip()
                             else:
+                                # field_value is either a bool or a number
                                 value = field_value
                             if value != '':
                                 with dom_tags.div(cls="col-md-6"):
                                     dom_tags.p(field_name)
                                 with dom_tags.div(cls="col-md-6"):
                                     dom_tags.p(value)
-                        if v:
-                            if isinstance(v, dict):
-                                if not _dict_has_value(v):
-                                    continue
-                                for child_k, child_v in v.items():
-                                    child_k_title = child_k
-                                    if metadata_schema:
-                                        child_properties_schema_node = root_properties_schema_node[k]
-                                        child_properties_schema_node = child_properties_schema_node[
-                                            schema_properties_key]
-                                        if child_k in child_properties_schema_node:
-                                            child_k_title = child_properties_schema_node[child_k]['title']
 
-                                    add_obj_field(field_name=child_k_title, field_value=child_v)
-                            else:
-                                add_obj_field(field_name=k_title, field_value=v)
+                        if isinstance(v, dict):
+                            for child_k, child_v in v.items():
+                                child_k_title = child_k
+                                if metadata_schema:
+                                    child_properties_schema_node = root_properties_schema_node[k]
+                                    child_properties_schema_node = child_properties_schema_node[
+                                        schema_properties_key]
+                                    if child_k in child_properties_schema_node:
+                                        child_k_title = child_properties_schema_node[child_k]['title']
+
+                                display_json_meta_field(field_name=child_k_title, field_value=child_v)
+                        else:
+                            display_json_meta_field(field_name=k_title, field_value=v)
 
         html_string += executed_by_div.render()
         html_string += metadata_json_div.render()
@@ -276,7 +279,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         graph = super(ModelInstanceFileMetaData, self).get_rdf_graph()
         subject = self.rdf_subject()
 
-        def find_schema_field_value(field_path, schema_dict):
+        def get_schema_field_value(field_path, schema_dict):
+            """gets the schema attribute/field value for the specified field path"""
             keys = field_path.split(".")
             element_value = schema_dict
             for key in keys:
@@ -288,8 +292,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     return None
             return element_value
 
-        def add_sub_element(sub_element_node, sub_element_value):
-            """adds the element node only if the element has a value"""
+        def add_sub_element_value_triple(sub_element_node, sub_element_value):
+            """adds the element value triplet to the graph only if the element has a value"""
             sub_value = ''
             if isinstance(sub_element_value, str):
                 if len(sub_element_value.strip()) > 0:
@@ -348,28 +352,26 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             meta_schema_dict = self.logical_file.metadata_schema_json
             meta_schema_dict_properties = meta_schema_dict.get("properties")
             for k, v in metadata_dict.items():
-                # skip key (element) that is missing a valid value
-                if v:
+                # skip key (element) that is missing a value
+                if type(v) not in (int, float, bool):
                     if isinstance(v, dict):
                         if not _dict_has_value(v):
                             continue
-                    elif isinstance(v, str):
-                        if str(v).strip() == '':
-                            continue
-                elif not isinstance(v, bool):
-                    continue
+                    elif not v:
+                        # v is either a str or a list
+                        continue
 
                 k_element_node = BNode()
                 k_predicate = NS_META_SCHEMA.term('{}'.format(k))
                 graph.add((model_prop_node, k_predicate, k_element_node))
                 element_path_root = "{}".format(k)
                 element_path_title = "{}.{}".format(element_path_root, 'title')
-                element_title_value = find_schema_field_value(field_path=element_path_title,
-                                                              schema_dict=meta_schema_dict_properties)
+                element_title_value = get_schema_field_value(field_path=element_path_title,
+                                                             schema_dict=meta_schema_dict_properties)
                 graph.add((k_element_node, DC.title, Literal(element_title_value)))
                 element_path_desc = "{}.{}".format(element_path_root, 'description')
-                element_desc_value = find_schema_field_value(field_path=element_path_desc,
-                                                             schema_dict=meta_schema_dict_properties)
+                element_desc_value = get_schema_field_value(field_path=element_path_desc,
+                                                            schema_dict=meta_schema_dict_properties)
                 if element_desc_value is not None:
                     graph.add((k_element_node, DC.description, Literal(element_desc_value)))
 
@@ -383,24 +385,25 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         k_sub_predicate = NS_META_SCHEMA.term('{}'.format(k_sub))
                         graph.add((k_element_prop_node, k_sub_predicate, k_sub_element_node))
                         k_sub_path_title = "{}.{}.{}".format(sub_element_path_root, k_sub, 'title')
-                        k_sub_title_value = find_schema_field_value(field_path=k_sub_path_title,
-                                                                    schema_dict=meta_schema_dict_properties)
+                        k_sub_title_value = get_schema_field_value(field_path=k_sub_path_title,
+                                                                   schema_dict=meta_schema_dict_properties)
                         graph.add((k_sub_element_node, DC.title, Literal(k_sub_title_value)))
                         k_sub_path_desc = "{}.{}.{}".format(sub_element_path_root, k_sub, 'description')
-                        k_sub_desc_value = find_schema_field_value(field_path=k_sub_path_desc,
-                                                                   schema_dict=meta_schema_dict_properties)
+                        k_sub_desc_value = get_schema_field_value(field_path=k_sub_path_desc,
+                                                                  schema_dict=meta_schema_dict_properties)
                         if k_sub_desc_value is not None:
                             graph.add((k_sub_element_node, DC.description, Literal(k_sub_desc_value)))
 
-                        added = add_sub_element(k_sub_element_node, v_sub)
-                        if not added:
+                        triple_added = add_sub_element_value_triple(k_sub_element_node, v_sub)
+                        if not triple_added:
                             # remove the sub element node from the graph
                             for _, pred, obj in graph.triples((k_sub_element_node, None, None)):
                                 graph.remove((k_sub_element_node, pred, obj))
                             graph.remove((k_element_prop_node, None, k_sub_element_node))
                 else:
-                    added = add_sub_element(k_element_node, v)
-                    if not added:
+                    triple_added = add_sub_element_value_triple(k_element_node, v)
+                    if not triple_added:
+                        # remove the element node from the graph
                         graph.remove((model_prop_node, None, k_element_node))
 
         return graph
