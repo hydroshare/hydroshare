@@ -13,7 +13,10 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% csrf_token %}
-
+<script>
+var SHORT_ID = "bd8ab9a69c2a46009cc63966bec68b5f";
+var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
+</script>
     <div class="container" onload="loadScroll()" onunload="saveScroll()">
         {% block error %}
             {%  if validation_error %}
@@ -43,7 +46,8 @@
         {% include "resource-landing-page/title-section.html" %}
 
         {# ======= Top-right buttons ======= #}
-        {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access %}
+<!--        TODO OBRIEN-->
+        {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=True %}
 
         {# ======= Title and header content ======= #}
         {% include "resource-landing-page/resource-header.html" %}
@@ -782,9 +786,9 @@
 {% block extra_js %}
     {{ block.super }}
     <script>
-      {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      // GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS
       // const SHORT_ID = "{{ cm.short_id }}";
-      const SHORT_ID = "bd8ab9a69c2a46009cc63966bec68b5f";
+
       var global_num_ext_refs = 0;
       var global_custom_citation = "{{ custom_citation }}";
 
@@ -796,38 +800,45 @@
           global_num_ext_refs = JSON.parse(res.responseText).filenames.length
         }
       });
-      const CITATION_ID = "{{ citation_id }}";
-      const RES_KEYWORDS = {{ keywords|safe }};
-      const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
-      const CAN_CHANGE = "{{ page.perms.change }}" === "True";
-      const RES_TYPE = "{{ cm|resource_type }}";
-      const FILE_COUNT = {{ cm.files.all.count }};
-      const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
-      const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
-      const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
-      const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const STATIC_URL = "{{ STATIC_URL }}";
-      const USERS_JSON = {{ users_json|safe }};
-      const AUTHORS = [
-          {% for author in creators %}
-              {
-                  "id": "{{ author.id }}",
-                  "name": "{{ author.name|default:"" }}",
-                  "email": "{{ author.email|default:"" }}",
-                  "organization": "{{ author.organization|default:"" }}",
-                  "identifiers": {
-                      {% for name, link in author.identifiers.items %}
-                          "{{ name }}": "{{ link }}",
-                      {% endfor %}
-                  },
-                  "address": "{{ author.address|default:"" }}",
-                  "phone": "{{ author.phone|default:"" }}",
-                  "homepage": "{{ author.homepage|default:"" }}",
-                  "profileUrl": "{{ author.description|default:"" }}",
-                  "order": "{{ author.order }}"
-              },
-          {% endfor %}
-      ];
+      // const CITATION_ID = "{{ citation_id }}";
+      // const RES_KEYWORDS = {{ keywords|safe }};
+      // const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      // const CAN_CHANGE = "{{ page.perms.change }}" === "True";
+      // const RES_TYPE = "{{ cm|resource_type }}";
+      // const FILE_COUNT = {{ cm.files.all.count }};
+      // const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
+      // const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
+      // const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      // const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      // const STATIC_URL = "{{ STATIC_URL }}";
+      //
+      // const RESOURCE_MODE = 'Edit';
+      // const RES_TYPE = 'Composite Resource';
+      // const FILE_COUNT = '';
+      // const SUPPORTE_FILE_TYPES = '';
+      // const ALLLOW_MULTIPLE_FILE_UPLOAD = '';
+      // const CURRENT_USER_ID = '123123';
+      //
+      // const AUTHORS = [
+      //     {% for author in creators %}
+      //         {
+      //             "id": "{{ author.id }}",
+      //             "name": "{{ author.name|default:"" }}",
+      //             "email": "{{ author.email|default:"" }}",
+      //             "organization": "{{ author.organization|default:"" }}",
+      //             "identifiers": {
+      //                 {% for name, link in author.identifiers.items %}
+      //                     "{{ name }}": "{{ link }}",
+      //                 {% endfor %}
+      //             },
+      //             "address": "{{ author.address|default:"" }}",
+      //             "phone": "{{ author.phone|default:"" }}",
+      //             "homepage": "{{ author.homepage|default:"" }}",
+      //             "profileUrl": "{{ author.description|default:"" }}",
+      //             "order": "{{ author.order }}"
+      //         },
+      //     {% endfor %}
+      // ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% with cm.last_changed_by as usr %}
@@ -877,4 +888,3 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
 
 {% endblock %}
-

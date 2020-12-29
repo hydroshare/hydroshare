@@ -138,7 +138,7 @@ class ResourceLandingView(TemplateView):
 
         discoverable = content_model.raccess.discoverable
         validation_error = None
-        resource_is_mine = False
+        resource_is_mine = True  # TODO OBRIEN
         if user.is_authenticated():
             resource_is_mine = content_model.rlabels.is_mine(user)
 
