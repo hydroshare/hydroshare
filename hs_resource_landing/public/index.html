@@ -839,41 +839,41 @@ var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
       //         },
       //     {% endfor %}
       // ];
-      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
-
-      {% with cm.last_changed_by as usr %}
-          const LAST_CHANGED_BY = {
-          "id": {{ usr.id }},
-          "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
-          "best_name": "{{ usr|best_name }}",
-          "email": "{{ usr.email|safe }}",
-          "organization": "{{ usr.userprofile.organization }}",
-          "title": "{{ usr.userprofile.title }}",
-          "contributions": "{{ usr.uaccess.owned_resources|length  }}",
-          "subject_areas": "{{ usr.userprofile.subject_areas }}",
-          "identifiers": {
-              {% for name, link in usr.userprofile.identifiers.items %}
-                  "{{ name }}": "{{ link }}",
-              {% endfor %}
-          },
-          "state": "{{ usr.userprofile.state }}",
-          "country": "{{ usr.userprofile.country }}",
-          "joined": "{{ usr.date_joined|date:"M d, Y" }}"
-      };
-      {% endwith %}
-
-      {% if show_manage_access %}
-          const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
-          const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
-          const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
-          const RESOURCE_ACCESS = {
-              isPublic: "{{ cm.raccess.public }}" === "True",
-              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
-              isShareable: "{{ cm.raccess.shareable }}" === "True"
-          };
-      {% endif %}
-      var spatial_coverage_type = "{{ spatial_coverage.type }}";
+      // const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
+      //
+      // {% with cm.last_changed_by as usr %}
+      //     const LAST_CHANGED_BY = {
+      //     "id": {{ usr.id }},
+      //     "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
+      //     "best_name": "{{ usr|best_name }}",
+      //     "email": "{{ usr.email|safe }}",
+      //     "organization": "{{ usr.userprofile.organization }}",
+      //     "title": "{{ usr.userprofile.title }}",
+      //     "contributions": "{{ usr.uaccess.owned_resources|length  }}",
+      //     "subject_areas": "{{ usr.userprofile.subject_areas }}",
+      //     "identifiers": {
+      //         {% for name, link in usr.userprofile.identifiers.items %}
+      //             "{{ name }}": "{{ link }}",
+      //         {% endfor %}
+      //     },
+      //     "state": "{{ usr.userprofile.state }}",
+      //     "country": "{{ usr.userprofile.country }}",
+      //     "joined": "{{ usr.date_joined|date:"M d, Y" }}"
+      // };
+      // {% endwith %}
+      //
+      // {% if show_manage_access %}
+      //     const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
+      //     const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
+      //     const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
+      //     const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
+      //     const RESOURCE_ACCESS = {
+      //         isPublic: "{{ cm.raccess.public }}" === "True",
+      //         isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+      //         isShareable: "{{ cm.raccess.shareable }}" === "True"
+      //     };
+      // {% endif %}
+      // var spatial_coverage_type = "{{ spatial_coverage.type }}";
 
     </script>
 
