@@ -1,3 +1,8 @@
+"""
+Minimally processed working version to help team visualize transition from the Mezz version.
+Easier to see how few things needed to change. The next version, called views.py will start to incorporate
+fixes that should happen now before the json / vue work. More importantly need to sync up with Scott.
+"""
 import json
 import logging
 import time
@@ -37,6 +42,60 @@ logger = logging.getLogger(__name__)
 DateRange = namedtuple('DateRange', ['start', 'end'])
 
 
+# class NotUsedView(TemplateView):
+#
+#     def get(self, request, *args, **kwargs):
+#         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
+#         shortkey = 'bd8ab9a69c2a46009cc63966bec68b5f'
+#         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+#         content_model = res.get_content_model()
+#
+#         start = time.time()
+#         context = {
+#             'data': 'Sample Test Data',
+#             'time': (time.time() - start) / 1000,
+#             'cm': content_model,
+#             'resource_edit_mode': False,
+#             'metadata_form': None,
+#             'abstract': 'This is an abstract',
+#             'creators': ['Sierra, CZO'],
+#             'title': 'Resource Title 1',
+#             'keywords': '["keywd1"]',
+#             'language': 'English',
+#             'readme': '',
+#             'contributors': [],
+#             'relations': [],
+#             'sources': [],
+#             'fundingagencies': [],
+#             'resource_creation_error': None,
+#             'tool_homepage_url': None,
+#             'file_type_error': None,
+#             'temporal_coverage': {'test': 'test'},  # dict
+#             'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
+#                                'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
+#             'metadata_status': 'Insufficient to publish or make public',
+#             'missing_metadata_elements': ['Abstract', 'Keywords'],
+#             'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
+#             'custom_citation': '',
+#             'citation_id': None,
+#             'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
+#             'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
+#             'current_user': 'czo_sierra',
+#             'show_content_files': True,
+#             'validation_error': None,
+#             'discoverable': False,
+#             'resource_is_mine': False,
+#             'quota_holder': 'czo_sierra',
+#             'just_created': False,
+#             'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
+#             'show_web_reference_note': False,
+#             'belongs_to_collections': [],
+#             'maps_key': maps_key
+#         }
+#
+#         return render(request, 'hs_resource_landing/index.html', context)
+
+
 class ResourceLandingView(TemplateView):
 
     def get(self, request, *args, **kwargs):
@@ -47,13 +106,31 @@ class ResourceLandingView(TemplateView):
         resource_edit = True
         extended_metadata_layout = None
 
+        """Inject a crispy_form layout into the page to display extended metadata.
+    
+        :param page: which page to get the template context for
+        :param user: the user who is viewing the page
+        :param resource_edit: True if and only if the page should render in edit mode
+        :param extended_metadata_layout: layout information used to build an ExtendedMetadataForm
+        :param request: the Django request associated with the page load
+        :return: the basic template context (a python dict) used to render a resource page. can and
+        should be extended by page/resource-specific page_processors
+    
+        Resource type specific app needs to call this method to inject a crispy_form layout
+        object for displaying metadata UI for the extended metadata for their resource
+    
+        TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
+                    - split into two functions: get_readonly_page_context(...) and
+                    get_editable_page_context(...)
+        """
         file_type_error = ''
-
         if request:
             file_type_error = request.session.get("file_type_error", None)
             if file_type_error:
                 del request.session["file_type_error"]
 
+        # TODO discuss with devs
+        # content_model = page.get_content_model()
         content_model = res.get_content_model()
 
         # TODO FIX REDIRECT AND ENSURE ALREADY HANDLED BY THE AUTHORIZE FUNCTION CALL AT START
@@ -127,57 +204,46 @@ class ResourceLandingView(TemplateView):
         topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
         topics = list(topics)  # force QuerySet evaluation
 
-        spatial_coverage = content_model.metadata.spatial_coverage
-        if not resource_edit:
-            spatial_coverage_data_dict = {}
-        else:
-            spatial_coverage_data_dict = {'type': 'point'}
-        spatial_coverage_data_dict['default_units'] = \
-            content_model.metadata.spatial_coverage_default_units
-        spatial_coverage_data_dict['default_projection'] = \
-            content_model.metadata.spatial_coverage_default_projection
-        spatial_coverage_data_dict['exists'] = False
-
-        if spatial_coverage:
-            spatial_coverage_data_dict['exists'] = True
-            spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
-            spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
-            spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
-            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
-            spatial_coverage_data_dict['type'] = spatial_coverage.type
-            spatial_coverage_data_dict['id'] = spatial_coverage.id
-            if spatial_coverage.type == 'point':
-                spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
-                spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
-                spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation', None)
-            else:
-                spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
-                spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
-                spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
-                spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
-                spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
-                spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
-
-        temporal_coverage = content_model.metadata.temporal_coverage
-        
-        if temporal_coverage:
-            start_date = parser.parse(temporal_coverage.value['start'])
-            end_date = parser.parse(temporal_coverage.value['end'])
-            temporal_coverage_data_dict = {}
-            if not resource_edit:
-                temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
-                temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
-                temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
-            else:
-                temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
-                temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
-                temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
-                temporal_coverage_data_dict['id'] = temporal_coverage.id
-
         # user requested the resource in READONLY mode
         if not resource_edit:
             content_model.update_view_count(request)
+            temporal_coverage = content_model.metadata.temporal_coverage
+            temporal_coverage_data_dict = {}
+            if temporal_coverage:
+                start_date = parser.parse(temporal_coverage.value['start'])
+                end_date = parser.parse(temporal_coverage.value['end'])
+                temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
+                temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
+                temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
 
+            spatial_coverage = content_model.metadata.spatial_coverage
+            spatial_coverage_data_dict = {}
+            spatial_coverage_data_dict['default_units'] = \
+                content_model.metadata.spatial_coverage_default_units
+            spatial_coverage_data_dict['default_projection'] = \
+                content_model.metadata.spatial_coverage_default_projection
+            spatial_coverage_data_dict['exists'] = False
+            if spatial_coverage:
+                spatial_coverage_data_dict['exists'] = True
+                spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
+                spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
+                spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
+                spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection',
+                                                                                      None)
+                spatial_coverage_data_dict['type'] = spatial_coverage.type
+                if spatial_coverage.type == 'point':
+                    spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
+                    spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
+                    spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation',
+                                                                                         None)
+                else:
+                    spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
+                    spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                    spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
+                    spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
+                    spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
+                    spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit',
+                                                                                         None)
             languages_dict = dict(languages_iso.languages)
             language = languages_dict[content_model.metadata.language.code] if \
                 content_model.metadata.language else None
@@ -237,6 +303,43 @@ class ResourceLandingView(TemplateView):
         # can_change = content_model.can_change(request)
         # if not can_change:
         #     raise PermissionDenied()
+
+        temporal_coverage = content_model.metadata.temporal_coverage
+        temporal_coverage_data_dict = {}
+        if temporal_coverage:
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
+            temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
+            temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
+            temporal_coverage_data_dict['id'] = temporal_coverage.id
+
+        spatial_coverage = content_model.metadata.spatial_coverage
+        spatial_coverage_data_dict = {'type': 'point'}
+        spatial_coverage_data_dict['default_units'] = \
+            content_model.metadata.spatial_coverage_default_units
+        spatial_coverage_data_dict['default_projection'] = \
+            content_model.metadata.spatial_coverage_default_projection
+        spatial_coverage_data_dict['exists'] = False
+        if spatial_coverage:
+            spatial_coverage_data_dict['exists'] = True
+            spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
+            spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
+            spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
+            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
+            spatial_coverage_data_dict['type'] = spatial_coverage.type
+            spatial_coverage_data_dict['id'] = spatial_coverage.id
+            if spatial_coverage.type == 'point':
+                spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
+                spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
+                spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation', None)
+            else:
+                spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
+                spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
+                spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
+                spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
+                spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
 
         # TODO REPLICATE UNDER NEW STRUCTURE
         # if extended_metadata_layout:
@@ -320,57 +423,3 @@ class ResourceLandingView(TemplateView):
             metadata_status = METADATA_STATUS_INSUFFICIENT
 
         return metadata_status
-
-
-class ResourceLandingAPIView(TemplateView):
-
-    def get(self, request, *args, **kwargs):
-        maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
-        shortkey = 'bd8ab9a69c2a46009cc63966bec68b5f'  # TODO OBRIEN
-        res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        content_model = res.get_content_model()
-
-        start = time.time()
-        context = {
-            'data': 'Sample Test Data',
-            'time': (time.time() - start) / 1000,
-            'cm': content_model,
-            'resource_edit_mode': False,
-            'metadata_form': None,
-            'abstract': 'This is an abstract',
-            'creators': ['Sierra, CZO'],
-            'title': 'Resource Title 1',
-            'keywords': '["keywd1"]',
-            'language': 'English',
-            'readme': '',
-            'contributors': [],
-            'relations': [],
-            'sources': [],
-            'fundingagencies': [],
-            'resource_creation_error': None,
-            'tool_homepage_url': None,
-            'file_type_error': None,
-            'temporal_coverage': {'test': 'test'},  # dict
-            'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
-                               'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
-            'metadata_status': 'Insufficient to publish or make public',
-            'missing_metadata_elements': ['Abstract', 'Keywords'],
-            'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
-            'custom_citation': '',
-            'citation_id': None,
-            'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
-            'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
-            'current_user': 'czo_sierra',
-            'show_content_files': True,
-            'validation_error': None,
-            'discoverable': False,
-            'resource_is_mine': False,
-            'quota_holder': 'czo_sierra',
-            'just_created': False,
-            'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
-            'show_web_reference_note': False,
-            'belongs_to_collections': [],
-            'maps_key': maps_key
-        }
-
-        return render(request, 'hs_resource_landing/index.html', context)
