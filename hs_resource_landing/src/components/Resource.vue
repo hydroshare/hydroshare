@@ -40,7 +40,7 @@ export default {
     return {
       res: {
         shortId: '7ada0db58127435c97075a9516b4912b',
-        keywords: 'diatoms',
+        keywords: 'javascriptdiatoms',
         owners: [],
         resourceAccess: {
           isPublic: true,

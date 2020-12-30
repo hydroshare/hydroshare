@@ -179,7 +179,7 @@
                      </ul>
                 </div>
             </span>
-<!--            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>-->
+            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
         </div>
         <hr>
     {% else %}
@@ -206,10 +206,10 @@
                                 <option>IMLCZO</option>
                                 <option>Cross-CZO</option>
                             </select>
-<!--                            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"-->
-<!--                                   title-left="Available Topics" title-right="Selected Topics"-->
-<!--                                   moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>-->
-<!--                            </mover>-->
+                            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
+                                   title-left="Available Topics" title-right="Selected Topics"
+                                   moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
+                            </mover>
                             <a style="cursor:help" title="To add Topics make a request to CriticalZoneOrg@gmail.com"
                                href="mailto:CriticalZoneOrg@gmail.com?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
                             <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
@@ -236,11 +236,11 @@
             </div>
         </div>
 
-<!--        <script type="application/javascript">-->
-<!--            // contents here are required by topics.js-->
-<!--            const topics_from_page = JSON.parse("{{ topics_json }}");-->
-<!--        </script>-->
-<!--        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>-->
+        <script type="application/javascript">
+            // contents here are required by topics.js
+            const topics_from_page = JSON.parse("{{ topics_json }}");
+        </script>
+        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
 
 
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
@@ -298,8 +298,8 @@
 {% endif %}
 
 {% block extra_js %}
-<!--    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">-->
-<!--    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">-->
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
 
     <style>
         [v-cloak] {
@@ -311,8 +311,8 @@
         }
     </style>
     {#        vue-mover uses Sortable.min.js#}
-<!--    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>-->
-<!--    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>-->
+    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
+    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
 {% endblock %}
 
 {% if not page|is_debug %}

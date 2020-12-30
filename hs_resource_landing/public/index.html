@@ -13,10 +13,6 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% csrf_token %}
-<script>
-var SHORT_ID = "bd8ab9a69c2a46009cc63966bec68b5f";
-var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
-</script>
     <div class="container" onload="loadScroll()" onunload="saveScroll()">
         {% block error %}
             {%  if validation_error %}
@@ -34,16 +30,17 @@ var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
         {% endblock %}
 
         {# Needs to be included first so it's available before other instances initialize #}
+<!--        TODO OBRIEN STOP USING THE OLD INCLUDES-->
         {% include "includes/profile-card.html" %}
 
         {%  block modal %}
             {% include "resource-landing-page/modals.html" %}
+<!--        TODO OBRIEN STOP USING THE OLD INCLUDES-->
             {% include "includes/author-preview.html" %}
             {% include "resource-landing-page/coordinates_picker.html" %}
         {%  endblock %}
 
-        {# ======= Title ======= #}
-        {% include "resource-landing-page/title-section.html" %}
+<!--TODO OBRIEN ADD TITLE SECTION INCLUDE BACK AFTER RESOLVING ITS TEMPLATE ERRORS LIKELY CAUSING CODE UPDATE-->
 
         {# ======= Top-right buttons ======= #}
 <!--        TODO OBRIEN-->
@@ -643,7 +640,7 @@ var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
                                             </li>
                                         </ul>
                                     </form>
-
+<!--TODO RECONSTRUCT PAGE.PERMS.CHANGE WITHOUT MEZZ CONTEXT-->
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         <div class="fb-upload-caption ">
                                             <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
@@ -781,102 +778,11 @@ var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
         {# ======= Comments ======= #}
         {% include "resource-landing-page/comments.html" %}
         </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <script>
-      // GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS
-      // const SHORT_ID = "{{ cm.short_id }}";
-
-      var global_num_ext_refs = 0;
-      var global_custom_citation = "{{ custom_citation }}";
-
-      $.ajax({
-        type: "GET",
-        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
-      }).complete(function(res) {
-        if (res.responseText) {
-          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
-        }
-      });
-      // const CITATION_ID = "{{ citation_id }}";
-      // const RES_KEYWORDS = {{ keywords|safe }};
-      // const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
-      // const CAN_CHANGE = "{{ page.perms.change }}" === "True";
-      // const RES_TYPE = "{{ cm|resource_type }}";
-      // const FILE_COUNT = {{ cm.files.all.count }};
-      // const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
-      // const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
-      // const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
-      // const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      // const STATIC_URL = "{{ STATIC_URL }}";
-      //
-      // const RESOURCE_MODE = 'Edit';
-      // const RES_TYPE = 'Composite Resource';
-      // const FILE_COUNT = '';
-      // const SUPPORTE_FILE_TYPES = '';
-      // const ALLLOW_MULTIPLE_FILE_UPLOAD = '';
-      // const CURRENT_USER_ID = '123123';
-      //
-      // const AUTHORS = [
-      //     {% for author in creators %}
-      //         {
-      //             "id": "{{ author.id }}",
-      //             "name": "{{ author.name|default:"" }}",
-      //             "email": "{{ author.email|default:"" }}",
-      //             "organization": "{{ author.organization|default:"" }}",
-      //             "identifiers": {
-      //                 {% for name, link in author.identifiers.items %}
-      //                     "{{ name }}": "{{ link }}",
-      //                 {% endfor %}
-      //             },
-      //             "address": "{{ author.address|default:"" }}",
-      //             "phone": "{{ author.phone|default:"" }}",
-      //             "homepage": "{{ author.homepage|default:"" }}",
-      //             "profileUrl": "{{ author.description|default:"" }}",
-      //             "order": "{{ author.order }}"
-      //         },
-      //     {% endfor %}
-      // ];
-      // const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
-      //
-      // {% with cm.last_changed_by as usr %}
-      //     const LAST_CHANGED_BY = {
-      //     "id": {{ usr.id }},
-      //     "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
-      //     "best_name": "{{ usr|best_name }}",
-      //     "email": "{{ usr.email|safe }}",
-      //     "organization": "{{ usr.userprofile.organization }}",
-      //     "title": "{{ usr.userprofile.title }}",
-      //     "contributions": "{{ usr.uaccess.owned_resources|length  }}",
-      //     "subject_areas": "{{ usr.userprofile.subject_areas }}",
-      //     "identifiers": {
-      //         {% for name, link in usr.userprofile.identifiers.items %}
-      //             "{{ name }}": "{{ link }}",
-      //         {% endfor %}
-      //     },
-      //     "state": "{{ usr.userprofile.state }}",
-      //     "country": "{{ usr.userprofile.country }}",
-      //     "joined": "{{ usr.date_joined|date:"M d, Y" }}"
-      // };
-      // {% endwith %}
-      //
-      // {% if show_manage_access %}
-      //     const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-      //     const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
-      //     const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
-      //     const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
-      //     const RESOURCE_ACCESS = {
-      //         isPublic: "{{ cm.raccess.public }}" === "True",
-      //         isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
-      //         isShareable: "{{ cm.raccess.shareable }}" === "True"
-      //     };
-      // {% endif %}
-      // var spatial_coverage_type = "{{ spatial_coverage.type }}";
-
-    </script>
-
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
@@ -886,5 +792,4 @@ var TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/"
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
-
 {% endblock %}

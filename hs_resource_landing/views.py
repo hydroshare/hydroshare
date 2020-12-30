@@ -91,7 +91,7 @@ class ResourceLandingView(TemplateView):
         belongs_to_collections = content_model.collections.all()
 
         tool_homepage_url = None
-        if not resource_edit:  # In view mode
+        if not resource_edit:  # view mode
             landing_page_res_obj = content_model
             landing_page_res_type_str = landing_page_res_obj.resource_type
             if landing_page_res_type_str.lower() == "toolresource":
@@ -142,8 +142,6 @@ class ResourceLandingView(TemplateView):
         has_web_ref = res_has_web_reference(content_model)
 
         keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
-        topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
-        topics = list(topics)  # force QuerySet evaluation
 
         spatial_coverage = content_model.metadata.spatial_coverage
         if not resource_edit:
@@ -232,9 +230,12 @@ class ResourceLandingView(TemplateView):
             languages_dict = dict(languages_iso.languages)
             language = languages_dict[content_model.metadata.language.code] if \
                 content_model.metadata.language else None
+
             title = content_model.metadata.title.value if content_model.metadata.title else None
+
             abstract = content_model.metadata.description.abstract if \
                 content_model.metadata.description else None
+
             context['title'] = title,
             context['file_type_error'] = file_type_error,
             context['just_copied'] = just_copied,
@@ -251,7 +252,7 @@ class ResourceLandingView(TemplateView):
 
             # EDIT MODE
 
-            can_change = content_model.can_change(request) # whether the user has permission to change the model
+            can_change = content_model.can_change(request)  # whether the user has permission to change the model
             if not can_change:
                 raise PermissionDenied()
 
@@ -262,6 +263,9 @@ class ResourceLandingView(TemplateView):
                 g.is_user_member = user in g.gaccess.members
                 if g.is_user_member:
                     grps_member_of.append(g)
+
+            topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+
             try:
                 citation_id = content_model.metadata.citation.first().id
             except:
@@ -272,7 +276,7 @@ class ResourceLandingView(TemplateView):
                                                                 extended_metadata_layout=extended_metadata_layout)
 
             context['title'] = content_model.metadata.title,
-            context['topics_json'] = mark_safe(escapejs(json.dumps(topics))),
+            context['topics_json'] = json.dumps(mark_safe(escapejs(list(topics)))),
             context['czo_user'] = any("CZO National" in x.name for x in user.uaccess.communities),
             context['odm2_terms'] = list(ODM2Variable.all()),
             context['citation_id'] = citation_id,

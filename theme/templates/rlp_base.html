@@ -3,7 +3,6 @@
 {% load mezzanine_tags theme_tags hydroshare_tags %}
 {% get_site_conf as siteconf %}
 <head>
-
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width">
     <meta name="keywords" content="{% block meta_keywords %}{% endblock %}">
@@ -81,22 +80,115 @@
 
     </style>
     {% block extra_css %}{% endblock %}
-<script>
-    const CITATION_ID = '';
-    const CAN_CHANGE = true;  // user has privs? Maybe to show the edit icons
-    const RES_KEYWORDS = ['Hardcoded keyword'];
-    const SELF_ACCESS_LEVEL = '';
-    const RES_TYPE = 'CompositeResource';
-    const FILE_COUNT = '';
-    const SUPPORTE_FILE_TYPES = '';
-    const ALLLOW_MULTIPLE_FILE_UPLOAD = '';
-    const CURRENT_USER_ID = '12341234';
-    const STATIC_URL = '{{ STATIC_URL }}';
-    const USERS_JSON = ['Person One', 'Another Person'];
-    const RESOURCE_MODE = 'View';
-    const AUTHORS = [];
-    const LAST_CHANGED_BY = '';
-</script>
+    <script>
+        const SHORT_ID = "{{ cm.short_id }}";
+        const TRACKING_APPLAUNCH_URL = "https://www.hydroshare.org/" // TODO PUT BACK TO ORIGINAL VALUE
+        const CITATION_ID = '';
+        const CAN_CHANGE = true;  // user has privs? Maybe to show the edit icons
+        const RES_KEYWORDS = ['Hardcoded keyword'];
+        const SELF_ACCESS_LEVEL = '';
+        const RES_TYPE = 'CompositeResource';
+        const FILE_COUNT = '';
+        const SUPPORTE_FILE_TYPES = '';
+        const ALLLOW_MULTIPLE_FILE_UPLOAD = '';
+        const CURRENT_USER_ID = '12341234';
+        const STATIC_URL = '{{ STATIC_URL }}';
+        const USERS_JSON = ['Person One', 'Another Person'];
+        const RESOURCE_MODE = 'View';
+        const AUTHORS = [];
+        const LAST_CHANGED_BY = '';
+    </script>
+    <script>
+    // TODO MOVED FROM INDEX.HTML (FORMERLY BASERESOURCE.HTML) AS PART OF CONSOLIDATION
+      // GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS
+      // const SHORT_ID = "{{ cm.short_id }}";
+
+      var global_num_ext_refs = 0;
+      var global_custom_citation = "{{ custom_citation }}";
+
+      $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+      }).complete(function(res) {
+        if (res.responseText) {
+          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
+        }
+      });
+      // const CITATION_ID = "{{ citation_id }}";
+      // const RES_KEYWORDS = {{ keywords|safe }};
+      // const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      // const CAN_CHANGE = "{{ page.perms.change }}" === "True";
+      // const RES_TYPE = "{{ cm|resource_type }}";
+      // const FILE_COUNT = {{ cm.files.all.count }};
+      // const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
+      // const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
+      // const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      // const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      // const STATIC_URL = "{{ STATIC_URL }}";
+      //
+      // const RESOURCE_MODE = 'Edit';
+      // const RES_TYPE = 'Composite Resource';
+      // const FILE_COUNT = '';
+      // const SUPPORTE_FILE_TYPES = '';
+      // const ALLLOW_MULTIPLE_FILE_UPLOAD = '';
+      // const CURRENT_USER_ID = '123123';
+      //
+      // const AUTHORS = [
+      //     {% for author in creators %}
+      //         {
+      //             "id": "{{ author.id }}",
+      //             "name": "{{ author.name|default:"" }}",
+      //             "email": "{{ author.email|default:"" }}",
+      //             "organization": "{{ author.organization|default:"" }}",
+      //             "identifiers": {
+      //                 {% for name, link in author.identifiers.items %}
+      //                     "{{ name }}": "{{ link }}",
+      //                 {% endfor %}
+      //             },
+      //             "address": "{{ author.address|default:"" }}",
+      //             "phone": "{{ author.phone|default:"" }}",
+      //             "homepage": "{{ author.homepage|default:"" }}",
+      //             "profileUrl": "{{ author.description|default:"" }}",
+      //             "order": "{{ author.order }}"
+      //         },
+      //     {% endfor %}
+      // ];
+      // const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
+      //
+      // {% with cm.last_changed_by as usr %}
+      //     const LAST_CHANGED_BY = {
+      //     "id": {{ usr.id }},
+      //     "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
+      //     "best_name": "{{ usr|best_name }}",
+      //     "email": "{{ usr.email|safe }}",
+      //     "organization": "{{ usr.userprofile.organization }}",
+      //     "title": "{{ usr.userprofile.title }}",
+      //     "contributions": "{{ usr.uaccess.owned_resources|length  }}",
+      //     "subject_areas": "{{ usr.userprofile.subject_areas }}",
+      //     "identifiers": {
+      //         {% for name, link in usr.userprofile.identifiers.items %}
+      //             "{{ name }}": "{{ link }}",
+      //         {% endfor %}
+      //     },
+      //     "state": "{{ usr.userprofile.state }}",
+      //     "country": "{{ usr.userprofile.country }}",
+      //     "joined": "{{ usr.date_joined|date:"M d, Y" }}"
+      // };
+      // {% endwith %}
+      //
+      // {% if show_manage_access %}
+      //     const LAST_CHANGED_BY = {{ quota_holder.pk  }};
+      //     const GROUP_IMAGE_DEFAULT_URL = "{{ STATIC_URL }}" + "img/home-page/step4.png";
+      //     const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
+      //     const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
+      //     const RESOURCE_ACCESS = {
+      //         isPublic: "{{ cm.raccess.public }}" === "True",
+      //         isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+      //         isShareable: "{{ cm.raccess.shareable }}" === "True"
+      //     };
+      // {% endif %}
+      // var spatial_coverage_type = "{{ spatial_coverage.type }}";
+    </script>
     <script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
     <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
     <script type="text/javascript" src="/static/js/coverageMap.js"></script>
