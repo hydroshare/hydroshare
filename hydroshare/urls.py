@@ -88,7 +88,7 @@ urlpatterns = i18n_patterns(
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
     url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps"),
-    url(r'^rlp/$', ResourceLandingView.as_view(), name='NewResource')  # TODO OBRIEN OBRIEN
+    url(r'^res/(?P<shortkey>[A-z0-9\-_]+)/$', ResourceLandingView.as_view(), name='NewResource')  # TODO OBRIEN WIP
 )
 
 # Filebrowser admin media library.

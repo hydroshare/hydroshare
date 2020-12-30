@@ -68,11 +68,13 @@
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': isInviteUsers, 'btn-default': !isInviteUsers}"
                                     @click="isInviteUsers = true"
-                                    data-value="users">Users</button>
+                                    data-value="users">Users
+                            </button>
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': !isInviteUsers, 'btn-default': isInviteUsers}"
-                                    @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
-                                    data-value="groups">Groups</button>
+                                    @click="isInviteUsers = false; selectedAccess === 'owner' ? selectedAccess = 'view' : 'owner'"
+                                    data-value="groups">Groups
+                            </button>
                         </div>
 
                         <div class="row">

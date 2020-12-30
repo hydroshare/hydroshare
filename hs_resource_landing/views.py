@@ -1,6 +1,4 @@
-import json
 import logging
-import time
 from collections import namedtuple
 
 from django.conf import settings
@@ -58,9 +56,9 @@ class ResourceLandingView(TemplateView):
 
         return metadata_status
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, shortkey=None, *args, **kwargs):
+        # TODO IF NOT LOGGED IN OR IF SHORTKEY NOT PROVIDED REDIRECT TO APPROPRIATE PAGES
 
-        shortkey = 'bd8ab9a69c2a46009cc63966bec68b5f'
         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         resource_edit = True
@@ -75,13 +73,12 @@ class ResourceLandingView(TemplateView):
 
         content_model = res.get_content_model()
 
-        # TODO FIX REDIRECT AND ENSURE ALREADY HANDLED BY THE AUTHORIZE FUNCTION CALL AT START
         # whether the user has permission to view this resource
-        # can_view = content_model.can_view(request)
-        # if not can_view:
-        #     if user.is_authenticated():
-        #         raise PermissionDenied()
-        #     return redirect_to_login(request.path)
+        can_view = content_model.can_view(request)
+        if not can_view:
+            if user.is_authenticated():
+                raise PermissionDenied()
+            return redirect_to_login(request.path)
 
         discoverable = content_model.raccess.discoverable
         validation_error = None
@@ -101,10 +98,12 @@ class ResourceLandingView(TemplateView):
                 if landing_page_res_obj.metadata.app_home_page_url:
                     tool_homepage_url = content_model.metadata.app_home_page_url.value
 
+        # TODO BLOCK OF REINTEGRATING OLD FLOW
         just_created = False
         just_copied = False
         create_resource_error = None
         just_published = False
+
         if request:
             validation_error = self.check_for_validation(request)
 
@@ -220,7 +219,8 @@ class ResourceLandingView(TemplateView):
             'just_created': just_created,
             'maps_key': settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else '',
             'show_web_reference_note': has_web_ref,
-            'belongs_to_collections': belongs_to_collections
+            'belongs_to_collections': belongs_to_collections,
+            'metadata_form': None
         }
 
         if not resource_edit:
@@ -236,7 +236,6 @@ class ResourceLandingView(TemplateView):
             abstract = content_model.metadata.description.abstract if \
                 content_model.metadata.description else None
             context['title'] = title,
-            context['metadata_form'] = None,
             context['file_type_error'] = file_type_error,
             context['just_copied'] = just_copied,
             context['just_published'] = just_published,
@@ -252,21 +251,9 @@ class ResourceLandingView(TemplateView):
 
             # EDIT MODE
 
-            # TODO REINSTATE can_change variable and review to see if it used to be passed to the template
-            # whether the user has permission to change the model
-            # can_change = content_model.can_change(request)
-            # if not can_change:
-            #     raise PermissionDenied()
-
-            # TODO REINSTATE if can_change conditional here which is hardcoded to edit for now
-            # if extended_metadata_layout:
-            #     metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
-            #                                          extended_metadata_layout=extended_metadata_layout)
-            if extended_metadata_layout:
-                edit_metadata_form = ExtendedMetadataForm(resource_mode='edit',
-                                                          extended_metadata_layout=extended_metadata_layout)
-            else:
-                edit_metadata_form = None
+            can_change = content_model.can_change(request) # whether the user has permission to change the model
+            if not can_change:
+                raise PermissionDenied()
 
             grps_member_of = []
             groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
@@ -280,71 +267,19 @@ class ResourceLandingView(TemplateView):
             except:
                 citation_id = None
 
-            context['title'] = content_model.metadata.title,
+            if extended_metadata_layout:  # default assignment of None handles the View mode case
+                context['metadata_form'] = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
+                                                                extended_metadata_layout=extended_metadata_layout)
 
+            context['title'] = content_model.metadata.title,
             context['topics_json'] = mark_safe(escapejs(json.dumps(topics))),
             context['czo_user'] = any("CZO National" in x.name for x in user.uaccess.communities),
             context['odm2_terms'] = list(ODM2Variable.all()),
             context['citation_id'] = citation_id,
             context['relation_source_types'] = tuple((type_value, type_display)
-                                           for type_value, type_display in Relation.SOURCE_TYPES
-                                           if type_value != 'isReplacedBy' and
-                                           type_value != 'isVersionOf' and
-                                           type_value != 'hasPart'),
-            context['metadata_form'] = edit_metadata_form,
+                                                     for type_value, type_display in Relation.SOURCE_TYPES
+                                                     if type_value != 'isReplacedBy' and
+                                                     type_value != 'isVersionOf' and
+                                                     type_value != 'hasPart'),
 
             return render(request, 'hs_resource_landing/index.html', context)
-
-
-# class ResourceLandingAPIView(TemplateView):
-#
-#     def get(self, request, *args, **kwargs):
-#         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
-#         shortkey = 'bd8ab9a69c2a46009cc63966bec68b5f'  # TODO OBRIEN
-#         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-#         content_model = res.get_content_model()
-#
-#         start = time.time()
-#         context = {
-#             'data': 'Sample Test Data',
-#             'time': (time.time() - start) / 1000,
-#             'cm': content_model,
-#             'resource_edit_mode': False,
-#             'metadata_form': None,
-#             'abstract': 'This is an abstract',
-#             'creators': ['Sierra, CZO'],
-#             'title': 'Resource Title 1',
-#             'keywords': '["keywd1"]',
-#             'language': 'English',
-#             'readme': '',
-#             'contributors': [],
-#             'relations': [],
-#             'sources': [],
-#             'fundingagencies': [],
-#             'resource_creation_error': None,
-#             'tool_homepage_url': None,
-#             'file_type_error': None,
-#             'temporal_coverage': {'test': 'test'},  # dict
-#             'spatial_coverage': {'type': 'point', 'default_units': 'Decimal degrees',
-#                                'default_projection': 'WGS 84 EPSG:4326', 'exists': False},
-#             'metadata_status': 'Insufficient to publish or make public',
-#             'missing_metadata_elements': ['Abstract', 'Keywords'],
-#             'citation': 'Sierra, C. s. (2020). sadf, HydroShare, http://localhost:8000/resource/3a77bccab2a24bf483ab5cd4f33c6921',
-#             'custom_citation': '',
-#             'citation_id': None,
-#             'rights': 'This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/',
-#             'bag_url': '/django_irods/download/bags/3a77bccab2a24bf483ab5cd4f33c6921.zip?url_download=False&zipped=False&aggregation=False',
-#             'current_user': 'czo_sierra',
-#             'show_content_files': True,
-#             'validation_error': None,
-#             'discoverable': False,
-#             'resource_is_mine': False,
-#             'quota_holder': 'czo_sierra',
-#             'just_created': False,
-#             'relation_source_types': ('isCopiedFrom', 'The content of this resource was copied from'),
-#             'show_web_reference_note': False,
-#             'belongs_to_collections': [],
-#             'maps_key': maps_key
-#         }
-#
-#         return render(request, 'hs_resource_landing/index.html', context)
