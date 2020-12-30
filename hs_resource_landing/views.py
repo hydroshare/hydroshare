@@ -1,32 +1,25 @@
+import json
 import logging
 from collections import namedtuple
 
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.utils.decorators import method_decorator
-from django.views.generic import TemplateView
-from rest_framework.views import APIView
-
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import render
 from django.utils.html import mark_safe, escapejs
+from django.views.generic import TemplateView
 
-from hs_core.forms import ExtendedMetadataForm
 from hs_communities.models import Topic
 from hs_core import languages_iso
+from hs_core.forms import ExtendedMetadataForm
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
 from hs_core.models import Relation
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
-import json
-
 from hs_odm2.models import ODM2Variable
 
 logger = logging.getLogger(__name__)
