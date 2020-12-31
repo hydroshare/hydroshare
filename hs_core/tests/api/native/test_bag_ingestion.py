@@ -135,7 +135,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         #         compare_metadatas(mi_lf.metadata.get_xml(), "mi-aggr-folder/mi-aggr-folder_meta.xml")
         #         break
         # else:
-        #     self.fail("Model instance aggregation not found for metadata file: mi-aggr-folder/mi-aggr-folder_meta.xml")
+        #    self.fail("Model instance aggregation not found for metadata file: mi-aggr-folder/mi-aggr-folder_meta.xml")
 
         mp_logical_files = res.get_logical_files(ModelProgramLogicalFile.type_name())
         for mp_lf in mp_logical_files:

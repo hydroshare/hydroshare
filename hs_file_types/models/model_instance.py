@@ -66,7 +66,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         elif not v:
                             # v is either a str or a list
                             continue
-                            
+
                         k_title = k
                         if metadata_schema:
                             root_properties_schema_node = metadata_schema[schema_properties_key]
