@@ -12,7 +12,10 @@
 
 {% block main %}
     {% keywords_for page as kws %}
+    <!-- TODO removed set_page_permissions page -->
     {% csrf_token %}
+    <!-- TODO SEE GENERICRESOURCE.HTML REMOVED PAGE.SET PERMISSIONS SINCE USING cm.can_change now -->
+    <!-- TODO csrf_token MOVED TO rlp_base.html -->
     <div class="container" onload="loadScroll()" onunload="saveScroll()">
         {% block error %}
             {%  if validation_error %}
@@ -34,30 +37,30 @@
         {% include "includes/profile-card.html" %}
 
         {%  block modal %}
-            {% include "resource-landing-page/modals.html" %}
+            {% include "hs_resource_landing/resource-landing-page/modals.html" %}
 <!--        TODO OBRIEN STOP USING THE OLD INCLUDES-->
             {% include "includes/author-preview.html" %}
-            {% include "resource-landing-page/coordinates_picker.html" %}
+            {% include "hs_resource_landing/resource-landing-page/coordinates_picker.html" %}
         {%  endblock %}
 
 <!--TODO OBRIEN ADD TITLE SECTION INCLUDE BACK AFTER RESOLVING ITS TEMPLATE ERRORS LIKELY CAUSING CODE UPDATE-->
 
         {# ======= Top-right buttons ======= #}
 <!--        TODO OBRIEN-->
-        {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=True %}
+        {% include "hs_resource_landing/resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=True %}
 
         {# ======= Title and header content ======= #}
-        {% include "resource-landing-page/resource-header.html" %}
+        {% include "hs_resource_landing/resource-landing-page/resource-header.html" %}
 
         {# ======= Abstract ======= #}
-        {% include "resource-landing-page/abstract.html" %}
+        {% include "hs_resource_landing/resource-landing-page/abstract.html" %}
 
         {# ======= Subject ======= #}
-        {% include "resource-landing-page/subject.html" %}
+        {% include "hs_resource_landing/resource-landing-page/subject.html" %}
 
         {# ======= Coverage ======= #}
         {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or resource_edit_mode %}
-            {% include "resource-landing-page/coverage.html" %}
+            {% include "hs_resource_landing/resource-landing-page/coverage.html" %}
         {% endif %}
 
         {% block content_block %}
@@ -214,7 +217,7 @@
 
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if page.perms.change and resource_edit_mode %}
+                {% if permissions.change and resource_edit_mode %}
                     {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
@@ -249,7 +252,7 @@
 
             <div class="col-xs-12 content-block">
                 <h3>Content</h3>
-                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                {% if permissions.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     <div class="alert alert-info alert-dismissible" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -282,7 +285,7 @@
                     </div>
                 </div>
 
-                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                {% if permissions.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     <div id="fb-alerts">
                         <div class="alert alert-warning alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -304,7 +307,7 @@
                     </div>
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode %}
+                {% if permissions.change and resource_edit_mode %}
                     {% if file_type_error %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button id="validation-error-close" type="button" class="close"
@@ -346,7 +349,7 @@
                     {# ======= Modal window ends =======#}
 
                     <div id="hs-file-browser" data-current-path=""
-                         {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
+                         {% if permissions.change and resource_edit_mode %}data-mode="edit"{% endif %}
                          data-supported-files="{{ cm.get_supported_upload_file_types }}"
                          data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                          {% if cm.raccess.require_download_agreement %}
@@ -441,7 +444,7 @@
                                     </div>
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
-                                            {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                            {% if permissions.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 <a type="button" data-fb-action="uploadFiles"
                                                    class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                     <i class="fa fa-plus"></i> Add files
@@ -485,7 +488,7 @@
                                                 </div>
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if permissions.change and resource_edit_mode %}
                                                 {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
@@ -539,7 +542,7 @@
                                                 {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if permissions.change and resource_edit_mode %}
                                                 <button id="fb-delete" data-fb-action="delete"
                                                         class="disabled fb-space-right"
                                                         title="Delete" data-toggle="modal"
@@ -615,7 +618,7 @@
                                     <div class="fb-dropzone-wrapper">
                                 {% endif %}
                                     <form id="hsDropzone"
-                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode %}dropzone{% endif %}"
+                                          class="files-container h-100 ui-widget-content {% if permissions.change and resource_edit_mode %}dropzone{% endif %}"
                                           action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
                                           method="POST">
                                         {% csrf_token %}
@@ -641,7 +644,7 @@
                                         </ul>
                                     </form>
 <!--TODO RECONSTRUCT PAGE.PERMS.CHANGE WITHOUT MEZZ CONTEXT-->
-                                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                    {% if permissions.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         <div class="fb-upload-caption ">
                                             <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
                                             smaller than 1GB in size by dragging & dropping, or click <a
@@ -679,7 +682,7 @@
                                 {% endif %}
                             </div>
 
-                            {% if page.perms.change and resource_edit_mode %}
+                            {% if permissions.change and resource_edit_mode %}
                                 <form id="fb-delete-files-form" class="hidden"
                                       action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
                                       method="POST" enctype="multipart/form-data">

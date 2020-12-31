@@ -4,22 +4,21 @@ from collections import namedtuple
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
+from django.template.context_processors import csrf
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
 
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.forms import ExtendedMetadataForm
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    res_has_web_reference
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, res_has_web_reference
 from hs_core.models import Relation
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.views.utils import show_relations_section, \
-    rights_allows_copy
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, show_relations_section, rights_allows_copy
 from hs_odm2.models import ODM2Variable
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 DateRange = namedtuple('DateRange', ['start', 'end'])
 
 
-class ResourceLandingView(TemplateView):
+class ResourceLandingView(LoginRequiredMixin, TemplateView):
 
     @staticmethod
     def check_for_validation(request):
@@ -49,23 +48,21 @@ class ResourceLandingView(TemplateView):
 
         return metadata_status
 
-    def get(self, request, shortkey=None, *args, **kwargs):
+    def get(self, request, shortkey=None, resource_edit=False, *args, **kwargs):
         # TODO IF NOT LOGGED IN OR IF SHORTKEY NOT PROVIDED REDIRECT TO APPROPRIATE PAGES
-
+# TODO original signature def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
+        #TODO research extended_metadata_layout workflow
         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-        resource_edit = True
         extended_metadata_layout = None
 
         file_type_error = ''
-
         if request:
             file_type_error = request.session.get("file_type_error", None)
             if file_type_error:
                 del request.session["file_type_error"]
 
         content_model = res.get_content_model()
-
         # whether the user has permission to view this resource
         can_view = content_model.can_view(request)
         if not can_view:
@@ -75,7 +72,7 @@ class ResourceLandingView(TemplateView):
 
         discoverable = content_model.raccess.discoverable
         validation_error = None
-        resource_is_mine = True  # TODO OBRIEN
+        resource_is_mine = False
         if user.is_authenticated():
             resource_is_mine = content_model.rlabels.is_mine(user)
 
@@ -91,12 +88,10 @@ class ResourceLandingView(TemplateView):
                 if landing_page_res_obj.metadata.app_home_page_url:
                     tool_homepage_url = content_model.metadata.app_home_page_url.value
 
-        # TODO BLOCK OF REINTEGRATING OLD FLOW
         just_created = False
         just_copied = False
         create_resource_error = None
         just_published = False
-
         if request:
             validation_error = self.check_for_validation(request)
 
@@ -117,9 +112,13 @@ class ResourceLandingView(TemplateView):
                 del request.session['just_published']
 
         bag_url = content_model.bag_url
+        permissions = {}
 
         if user.is_authenticated():
             show_content_files = user.uaccess.can_view_resource(content_model)
+            permissions['view'] = content_model.can_view(request)
+            permissions['change'] = content_model.can_change(request)
+            permissions['delete'] = content_model.can_delete(request)
         else:
             # if anonymous user getting access to a private resource (since resource is discoverable),
             # then don't show content files
@@ -185,6 +184,7 @@ class ResourceLandingView(TemplateView):
 
         context = {
             'cm': content_model,
+            'permissions': permissions,
             'resource_edit_mode': resource_edit,
             'citation': content_model.get_citation(),
             'custom_citation': content_model.get_custom_citation(),
@@ -213,6 +213,7 @@ class ResourceLandingView(TemplateView):
             'belongs_to_collections': belongs_to_collections,
             'metadata_form': None
         }
+        context.update(csrf(request))
 
         if not resource_edit:
 

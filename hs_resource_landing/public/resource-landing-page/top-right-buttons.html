@@ -1,4 +1,5 @@
 {% load hydroshare_tags %}
+<!-- TODO ALL OF THE page.perms. WERE CHANGED TO STOP USING PAGE REVIEW AGAINST OLDER VERSIONS OF THIS FILE WITH TEAM -->
 {#        ======= Top right buttons =======#}
 <div class="col-sm-12">
     <div class="custom-btn-toolbar">
@@ -87,7 +88,7 @@
                         {% endif %}
                     {% endif %}
                 {% endif %}
-                {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
+                {% if permissions.change or self_access_level == 'owner' and cm.raccess.published %}
                     <form action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
 
@@ -115,14 +116,14 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.change %}
+                        {% if permissions.change %}
                             <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="bottom"
                                     title="Edit this resource"
                                     class="glyphicon glyphicon-pencil icon-button icon-blue"></button>
                         {% endif %}
 
-                        {% if page.perms.delete %}
+                        {% if permissions.change %}
                             <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="bottom" title="Delete this resource"
                                       class="glyphicon glyphicon-trash icon-button btn-remove"></span>

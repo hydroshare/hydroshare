@@ -79,8 +79,11 @@
         }
 
     </style>
-    {% block extra_css %}{% endblock %}
-<!--    <script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script> -->
+    <!--    <script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script> -->
+
+    <input type="hidden" id="csrf_token" value='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+
+
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js" integrity="sha256-YcbK69I5IXQftf/mYD8WY0/KmEDCv1asggHpJk1trM8=" crossorigin="anonymous"></script>
     <script>
         // TODO MOVED FROM INDEX.HTML (FORMERLY BASERESOURCE.HTML) AS PART OF CONSOLIDATION
@@ -101,7 +104,9 @@
         const CITATION_ID = "{{ citation_id }}";
         const RES_KEYWORDS = {{ keywords|safe }};
         const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
-        const CAN_CHANGE = "{{ page.perms.change }}" === "True";
+        // const CAN_CHANGE = "{{ page.perms.change }}" === "True";
+        // TODO POTENTIAL MAJOR IMPLICATIONS REVIEW WITH TEAM
+        const CAN_CHANGE = "{{ permissions.change }}";
         const RES_TYPE = "{{ cm|resource_type }}";
         const FILE_COUNT = {{ cm.files.all.count }};
         const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
@@ -176,7 +181,7 @@
     <script type="text/javascript" src="/static/js/hs-file-icons.js"></script>
     <script type="text/javascript" src="/static/js/hs_file_browser.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
-    <script type="text/javascript" src="/static/js/resourceLandingAjax.js"></script>
+    <script type="text/javascript" src="/static/js/resourceLandingAjax.js"></script> <!-- TODO OBRIEN generic-resource.js remove the dependency -->
 
     <script type="text/javascript" src="/static/js/custom.js"></script>
     <script type="text/javascript" src="/static/js/scrolltopcontrol.js"></script><!-- Scroll to top javascript -->
@@ -184,29 +189,28 @@
     <script type="text/javascript" src="/static/js/jquery-ui.js"></script>
 
     <script type="text/javascript" src="/static/js/generic-resource.js"></script>
-    <script type="text/javascript" src="/static/js/resourceLandingAjax.js"></script> <!-- TODO OBRIEN generic-resource.js remove the dependency -->
     <script type="text/javascript" src="/static/js/jquery.dataTables.js"></script> <!-- TODO OBRIEN generic-resource.js remove datatables dependency -->
     <script type="text/javascript" src="/static/js/bootstrap.3.0.2.min.js"></script> <!-- TODO OBRIEN custom.js remove popover dependency -->
     <script type="text/javascript" src="/static/js/bootstrap-extras.js"></script> <!-- TODO OBRIEN custom.js remove popover dependency -->
     <script type="text/javascript" src="/static/js/copyToClipboard.js"></script>
+
     {% include 'autocomplete_light/static.html' %}
 
-    {% block extra_head %}{% endblock %}
-        <script type="text/javascript">
-            window.heap = window.heap || [], heap.load = function (e, t) {
-                window.heap.appid = e, window.heap.config = t = t || {};
-                var r = t.forceSSL || "https:" === document.location.protocol, a = document.createElement("script");
-                a.type = "text/javascript", a.async = !0, a.src = (r ? "https:" : "http:") + "//cdn.heapanalytics.com/js/heap-" + e + ".js";
-                var n = document.getElementsByTagName("script")[0];
-                n.parentNode.insertBefore(a, n);
-                for (var o = function (e) {
-                    return function () {
-                        heap.push([e].concat(Array.prototype.slice.call(arguments, 0)))
-                    }
-                }, p = ["addEventProperties", "addUserProperties", "clearEventProperties", "identify", "resetIdentity", "removeEventProperty", "setEventProperties", "track", "unsetEventProperty"], c = 0; c < p.length; c++) heap[p[c]] = o(p[c])
-            };
-            heap.load("1320547260");
-        </script>
+    <script type="text/javascript">
+        window.heap = window.heap || [], heap.load = function (e, t) {
+            window.heap.appid = e, window.heap.config = t = t || {};
+            var r = t.forceSSL || "https:" === document.location.protocol, a = document.createElement("script");
+            a.type = "text/javascript", a.async = !0, a.src = (r ? "https:" : "http:") + "//cdn.heapanalytics.com/js/heap-" + e + ".js";
+            var n = document.getElementsByTagName("script")[0];
+            n.parentNode.insertBefore(a, n);
+            for (var o = function (e) {
+                return function () {
+                    heap.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+                }
+            }, p = ["addEventProperties", "addUserProperties", "clearEventProperties", "identify", "resetIdentity", "removeEventProperty", "setEventProperties", "track", "unsetEventProperty"], c = 0; c < p.length; c++) heap[p[c]] = o(p[c])
+        };
+        heap.load("1320547260");
+    </script>
 </head>
 
 <body id="{% block body_id %}body{% endblock %}">
