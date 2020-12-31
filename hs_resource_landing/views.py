@@ -12,7 +12,9 @@ from django.shortcuts import render
 from django.template.context_processors import csrf
 from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
+from hs_core.templatetags.hydroshare_tags import best_name
 
+from hs_access_control.models.privilege import PrivilegeCodes
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.forms import ExtendedMetadataForm
@@ -24,6 +26,155 @@ from hs_odm2.models import ODM2Variable
 logger = logging.getLogger(__name__)
 
 DateRange = namedtuple('DateRange', ['start', 'end'])
+
+
+def get_access_object(user, user_type, user_access):
+    """ hs_core models.py """
+    # TODO EXCEPTION HANDLING AND LOGGING
+    access_object = None
+    picture = None
+
+    if user_type == "user":
+        if user.userprofile.picture:
+            picture = user.userprofile.picture.url
+
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": best_name(user),
+            "user_name": user.username,
+            "can_undo": user.can_undo,
+            # Data used to populate profile badge:
+            "email": user.email,
+            "organization": user.userprofile.organization,
+            "title": user.userprofile.title,
+            "contributions": len(user.uaccess.owned_resources),
+            "subject_areas": user.userprofile.subject_areas,
+            "identifiers": user.userprofile.identifiers,
+            "state": user.userprofile.state,
+            "country": user.userprofile.country,
+            "joined": user.date_joined.strftime("%d %b, %Y"),
+        }
+    elif user_type == "group":
+        if user.gaccess.picture:
+            picture = user.gaccess.picture.url
+
+        access_object = {
+            "user_type": user_type,
+            "access": user_access,
+            "id": user.id,
+            "pictureUrl": picture,
+            "best_name": user.name,
+            "user_name": None,
+            "can_undo": user.can_undo
+        }
+
+    return access_object
+
+
+def get_users_permissions(cm, user):
+    """ hs_core models.py """
+    # TODO EXCEPTION HANDLING AND LOGGING
+    can_change_resource_flags = False
+    self_access_level = None
+    if user.is_authenticated():
+        if user.uaccess.can_change_resource_flags(cm):
+            can_change_resource_flags = True
+
+        if cm.raccess.owners.filter(pk=user.pk).exists():
+            self_access_level = 'owner'
+        elif cm.raccess.edit_users.filter(pk=user.pk).exists():
+            self_access_level = 'edit'
+        elif cm.raccess.view_users.filter(pk=user.pk).exists():
+            self_access_level = 'view'
+
+    owners = cm.raccess.owners.all()
+    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE, include_group_granted_access=False)
+    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW, include_group_granted_access=False)
+    edit_groups = cm.raccess.edit_groups
+    view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
+
+    if user.is_authenticated():
+        for owner in owners:
+            owner.can_undo = user.uaccess.can_undo_share_resource_with_user(cm, owner)
+
+        for viewer in viewers:
+            viewer.can_undo = user.uaccess.can_undo_share_resource_with_user(cm, viewer)
+
+        for editor in editors:
+            editor.can_undo = user.uaccess.can_undo_share_resource_with_user(cm, editor)
+
+        for view_grp in view_groups:
+            view_grp.can_undo = user.uaccess.can_undo_share_resource_with_group(cm, view_grp)
+
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = user.uaccess.can_undo_share_resource_with_group(cm, edit_grp)
+    else:
+        for owner in owners:
+            owner.can_undo = False
+        for viewer in viewers:
+            viewer.can_undo = False
+        for editor in editors:
+            editor.can_undo = False
+        for view_grp in view_groups:
+            view_grp.can_undo = False
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = False
+
+    users_json = []
+
+    for usr in owners:
+        users_json.append(get_access_object(usr, "user", "owner"))
+
+    for usr in editors:
+        users_json.append(get_access_object(usr, "user", "edit"))
+
+    for usr in viewers:
+        users_json.append(get_access_object(usr, "user", "view"))
+
+    for usr in edit_groups:
+        users_json.append(get_access_object(usr, "group", "edit"))
+
+    for usr in view_groups:
+        users_json.append(get_access_object(usr, "group", "view"))
+
+    users_json = json.dumps(users_json)
+
+    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
+        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
+    else:
+        is_replaced_by = ''
+
+    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
+    else:
+        is_version_of = ''
+
+    permissions_allow_copy = False
+    if user.is_authenticated:
+        permissions_allow_copy = user.uaccess.can_view_resource(cm)
+
+    show_manage_access = False
+    is_owner = self_access_level == 'owner'
+    is_edit = self_access_level == 'edit'
+    is_view = self_access_level == 'view'
+    if not cm.raccess.published and \
+            (is_owner or (cm.raccess.shareable and (is_view or is_edit))):
+        show_manage_access = True
+
+    return {
+        'resource_type': cm._meta.verbose_name,
+        "users_json": users_json,
+        "owners": [x.username for x in owners],
+        "self_access_level": self_access_level,
+        "permissions_allow_copy": permissions_allow_copy,
+        "can_change_resource_flags": can_change_resource_flags,
+        "is_replaced_by": is_replaced_by,
+        "is_version_of": is_version_of,
+        "show_manage_access": show_manage_access
+    }
 
 
 class ResourceLandingView(LoginRequiredMixin, TemplateView):
@@ -50,7 +201,7 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, shortkey=None, resource_edit=False, *args, **kwargs):
         # TODO IF NOT LOGGED IN OR IF SHORTKEY NOT PROVIDED REDIRECT TO APPROPRIATE PAGES
-# TODO original signature def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
+        # TODO original signature def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
         #TODO research extended_metadata_layout workflow
         res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
@@ -63,6 +214,9 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
                 del request.session["file_type_error"]
 
         content_model = res.get_content_model()
+
+        users_json = get_users_permissions(content_model, user)
+
         # whether the user has permission to view this resource
         can_view = content_model.can_view(request)
         if not can_view:
@@ -211,7 +365,8 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
             'maps_key': settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else '',
             'show_web_reference_note': has_web_ref,
             'belongs_to_collections': belongs_to_collections,
-            'metadata_form': None
+            'metadata_form': None,
+            'users_json': json.dumps(users_json)
         }
         context.update(csrf(request))
 

@@ -100,7 +100,7 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.delete and cm.can_be_published %}
+                        {% if permissions.delete and cm.can_be_published %}
                             <a id="publish" {% if cm.raccess.public %}data-toggle="modal"{% endif %}
                                data-target="#submit-for-publication-dialog"
                                {% if not cm.raccess.public %}class="disabled"{% endif %}>

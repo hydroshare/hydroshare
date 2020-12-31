@@ -79,12 +79,12 @@
         }
 
     </style>
-    <!--    <script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script> -->
+
+    <script type="text/javascript" src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
+    <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js" integrity="sha256-YcbK69I5IXQftf/mYD8WY0/KmEDCv1asggHpJk1trM8=" crossorigin="anonymous"></script> -->
 
     <input type="hidden" id="csrf_token" value='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
 
-
-    <script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js" integrity="sha256-YcbK69I5IXQftf/mYD8WY0/KmEDCv1asggHpJk1trM8=" crossorigin="anonymous"></script>
     <script>
         // TODO MOVED FROM INDEX.HTML (FORMERLY BASERESOURCE.HTML) AS PART OF CONSOLIDATION
 
@@ -104,7 +104,6 @@
         const CITATION_ID = "{{ citation_id }}";
         const RES_KEYWORDS = {{ keywords|safe }};
         const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
-        // const CAN_CHANGE = "{{ page.perms.change }}" === "True";
         // TODO POTENTIAL MAJOR IMPLICATIONS REVIEW WITH TEAM
         const CAN_CHANGE = "{{ permissions.change }}";
         const RES_TYPE = "{{ cm|resource_type }}";
@@ -114,8 +113,7 @@
         const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
         const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
         const STATIC_URL = "{{ STATIC_URL }}";
-        //const USERS_JSON = {{ users_json|safe }};
-        const USERS_JSON = ['Usersjson 1', 'Usersjson 2']
+        const USERS_JSON = Array(JSON.parse('{{ users_json | escapejs }}')); // TODO pre-existing oddity left-header-app.js line 368 uses map on this list when would there be multiple
 
         const AUTHORS = [
           {% for author in creators %}
