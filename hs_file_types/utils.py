@@ -7,7 +7,7 @@ from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
 
-from hs_core.hydroshare import utils, get_resource_file
+from hs_core.hydroshare import utils, get_resource_file, ResourceFile
 
 from .models import (
     GenericLogicalFile,
@@ -251,6 +251,8 @@ def get_logical_file(agg_type_name):
                      "GeographicFeatureAggregation": GeoFeatureLogicalFile,
                      "ReferencedTimeSeriesAggregation": RefTimeseriesLogicalFile,
                      "TimeSeriesAggregation": TimeSeriesLogicalFile,
+                     "ModelProgramAggregation": ModelProgramLogicalFile,
+                     "ModelInstanceAggregation": ModelInstanceLogicalFile
                      }
     return file_type_map[agg_type_name]
 
@@ -319,7 +321,7 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
     if not agg_type_name:
         raise Exception("Could not derive aggregation type from {}".format(metadata_file.name))
     subject = None
-    for s, _, _ in graph.triples((None, DC.title, None)):
+    for s, _, _ in graph.triples((None, DC.type, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
@@ -327,46 +329,65 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
-
+    logical_files = {}
     if not lf:
         # see if the files exist and create it
-        res_file = None
-        if logical_file_class is FileSetLogicalFile:
+        res_files = []
+        folder_based_aggr_created = False
+        if logical_file_class is FileSetLogicalFile or logical_file_class is ModelInstanceLogicalFile or \
+                logical_file_class is ModelProgramLogicalFile:
             file_path = subject.rsplit('/', 1)[0]
-            file_path = file_path.split('data/contents/', 1)[1]
-            res_file = resource.files.get(file_folder=file_path)
-            if res_file:
-                FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
-        elif logical_file_class is GenericLogicalFile:
-            map_name = subject.split('data/contents/', 1)[1]
-            map_name = map_name.split('#', 1)[0]
-            for map_file in map_files:
-                if map_file.name.endswith(map_name):
-                    ORE = Namespace("http://www.openarchives.org/ore/terms/")
-                    map_graph = Graph().parse(data=map_file.read())
-                    for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
-                        if not str(o).endswith("_meta.xml"):
-                            file_path = str(o)
-                            break
-            if not file_path:
-                raise Exception("Could not determine the generic logical file name")
-            file_path = file_path.split('data/contents/', 1)[1]
-            res_file = get_resource_file(resource.short_id, file_path)
-            if res_file:
+            if not file_path.endswith('/data/contents'):
+                # it's a folder path
+                file_path = file_path.split('data/contents/', 1)[1]
+                res_files = ResourceFile.list_folder(resource=resource, folder=file_path)
+                logical_file_class.set_file_type(resource, None, folder_path=file_path)
+                folder_based_aggr_created = True
+        if not folder_based_aggr_created:
+            if logical_file_class is GenericLogicalFile or logical_file_class is ModelInstanceLogicalFile or \
+                    logical_file_class is ModelProgramLogicalFile:
+                map_name = subject.split('data/contents/', 1)[1]
+                map_name = map_name.split('#', 1)[0]
+                file_path = ''
+                for map_file in map_files:
+                    if map_file.name.endswith(map_name):
+                        ORE = Namespace("http://www.openarchives.org/ore/terms/")
+                        map_graph = Graph().parse(data=map_file.read())
+                        for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
+                            o = str(o)
+                            if not o.endswith("_meta.xml") and not o.endswith("_schema.json"):
+                                file_path = o
+                                break
+                if not file_path:
+                    if logical_file_class is GenericLogicalFile:
+                        aggr_name = 'generic'
+                    elif logical_file_class is ModelProgramLogicalFile:
+                        aggr_name = 'model program'
+                    else:
+                        aggr_name = 'model instance'
+                    raise Exception("Could not determine the {} logical file name".format(aggr_name))
+                file_path = file_path.split('data/contents/', 1)[1]
+                res_file = get_resource_file(resource.short_id, file_path)
+                res_files.append(res_file)
                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                       logical_file_type_class=logical_file_class, fail_feedback=True)
-        if res_file:
-            res_file.refresh_from_db()
-            lf = res_file.logical_file
+        if res_files:
+            for res_file in res_files:
+                res_file.refresh_from_db()
+                lf = res_file.logical_file
+                if lf.id not in logical_files:
+                    logical_files[lf.id] = lf
         else:
             raise Exception("Could not find aggregation for {}".format(metadata_file.name))
-        if not lf:
+
+        if not logical_files:
             raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
 
     with transaction.atomic():
-        lf.metadata.delete_all_elements()
-        lf.metadata.ingest_metadata(graph)
-        lf.create_aggregation_xml_documents()
+        for lf in logical_files.values():
+            lf.metadata.delete_all_elements()
+            lf.metadata.ingest_metadata(graph)
+            lf.create_aggregation_xml_documents()
 
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
