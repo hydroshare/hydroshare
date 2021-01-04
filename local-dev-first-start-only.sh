@@ -57,7 +57,9 @@ HS_PATH=`pwd`
 #n_ver="15.0.0"
 n_ver="14.14.0"
 
+echo '####################################################################################################'
 echo "Starting Node Build .... "
+echo '####################################################################################################'
 
 ### Create Directory structure outside to maintain correct permissions
 cd hs_discover
