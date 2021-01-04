@@ -170,7 +170,8 @@
                                     v-for="(availability) in orderedFilter(countAvailabilities)"
                                     v-bind:key="availability">
                                     <span class="badge">{{availability[1]}}</span>
-                                    <label class="checkbox noselect" :for="'avail-'+availability[0]">{{availability[0]}}
+                                    <label class="checkbox noselect" :for="'avail-'+availability[0]">
+                                      {{availability[0].charAt(0).toUpperCase()+availability[0].slice(1)}}
                                         <input type="checkbox" class="faceted-selections" :value=availability[0]
                                             v-model.lazy="availabilityFilter" :id="'avail-'+availability[0]" @change="searchClick">
                                     </label>
@@ -191,7 +192,7 @@
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
-                        <tr>
+                        <tr><th><!-- placeholder --></th>
                             <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
                                 @click="sortBy(key)">
                                 <i :class="sortStyling(key)"></i>{{key}}
@@ -452,6 +453,7 @@ export default {
           this.searchClick(false, false, false);
           this.setAllMarkers();
         } else {
+          this.setAllMarkers();
           recenterMap(); // eslint-disable-line
         }
         document.getElementById('map-mode-button').value = 'Hide Map';
