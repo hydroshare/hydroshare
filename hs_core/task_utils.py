@@ -8,6 +8,7 @@ import logging
 
 logger = logging.getLogger('django')
 
+celery_inspector = inspect()
 
 def _retrieve_task_id(job_name, res_id, job_dict):
     """
@@ -42,24 +43,21 @@ def _retrieve_job_id(job_name, res_id):
     :param res_id: resource id
     :return: job id
     """
-    i = inspect()
-    active_jobs = i.active()
+    active_jobs = celery_inspector.active()
     job_id = _retrieve_task_id(job_name, res_id, active_jobs)
     if not job_id:
-        reserved_jobs = i.reserved()
+        reserved_jobs = celery_inspector.reserved()
         job_id = _retrieve_task_id(job_name, res_id, reserved_jobs)
         if not job_id:
-            scheduled_jobs = i.scheduled()
+            scheduled_jobs = celery_inspector.scheduled()
             job_id = _retrieve_task_id(job_name, res_id, scheduled_jobs)
     return job_id
 
 
 def get_task_user_id(request):
     if request.user.is_authenticated():
-        user_id = request.user.username
-    else:
-        user_id = request.session.session_key
-    return user_id
+        return request.user.username
+    return ""
 
 
 def get_or_create_task_notification(task_id, status='progress', name='', payload='', username='',
@@ -121,12 +119,11 @@ def task_exists(task_id):
     :param username: the user to retrieve all tasks for
     :return: list of tasks where each task is a dict with id, name, and status keys
     """
-    i = inspect()
-    if task_id in str(i.active()):
+    if task_id in str(celery_inspector.active()):
         return True
-    if task_id in str(i.reserved()):
+    if task_id in str(celery_inspector.reserved()):
         return True
-    if task_id in str(i.scheduled()):
+    if task_id in str(celery_inspector.scheduled()):
         return True
     return False
 
