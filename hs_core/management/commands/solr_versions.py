@@ -7,8 +7,9 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 def check_displayed(resource, isreplacedby, replaces):
-    """ create a depiction of what is displayed and what is not displayed according
-        to resource.show_in_discover
+    """ create a depiction of what is displayed and what is not displayed in discover
+        according to resource.show_in_discover. These are the resources that will show
+        up on the discover page.
     """
     print("resource {} (show={}, disc={}, created={}) '{}':"
           .format(resource.short_id,

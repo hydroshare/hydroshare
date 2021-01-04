@@ -22,9 +22,9 @@ class TestHideOldVersions(TestCase):
         )
         # create a generic resource
         self.version0 = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.owner,
-            title='Test Generic Resource'
+            title='Test Composite Resource'
         )
         test_file1 = open('test1.txt', 'w')
         test_file1.write("Test text file in test1.txt")
