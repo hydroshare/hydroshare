@@ -92,7 +92,7 @@
                     <form action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
 
-                        {% if page.perms.delete or cm.raccess.published %}
+                        {% if permissions.delete or cm.raccess.published %}
                             <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="Create a new version of this resource"

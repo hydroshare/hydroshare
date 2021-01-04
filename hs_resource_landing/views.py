@@ -10,9 +10,7 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.template.context_processors import csrf
-from django.utils.html import mark_safe, escapejs
 from django.views.generic import TemplateView
-from hs_core.templatetags.hydroshare_tags import best_name
 
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_communities.models import Topic
@@ -20,6 +18,7 @@ from hs_core import languages_iso
 from hs_core.forms import ExtendedMetadataForm
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, res_has_web_reference
 from hs_core.models import Relation
+from hs_core.templatetags.hydroshare_tags import best_name
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, show_relations_section, rights_allows_copy
 from hs_odm2.models import ODM2Variable
 
@@ -167,7 +166,7 @@ def get_users_permissions(cm, user):
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
-        "owners": [x.username for x in owners],
+        "owners": owners,
         "self_access_level": self_access_level,
         "permissions_allow_copy": permissions_allow_copy,
         "can_change_resource_flags": can_change_resource_flags,
@@ -199,7 +198,7 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
 
         return metadata_status
 
-    def get(self, request, shortkey=None, resource_edit=False, *args, **kwargs):
+    def get(self, request, shortkey=None, resource_edit=True, *args, **kwargs):
         # TODO IF NOT LOGGED IN OR IF SHORTKEY NOT PROVIDED REDIRECT TO APPROPRIATE PAGES
         # TODO original signature def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
         #TODO research extended_metadata_layout workflow
@@ -215,7 +214,7 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
 
         content_model = res.get_content_model()
 
-        users_json = get_users_permissions(content_model, user)
+        extra = get_users_permissions(content_model, user)
 
         # whether the user has permission to view this resource
         can_view = content_model.can_view(request)
@@ -366,7 +365,14 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
             'show_web_reference_note': has_web_ref,
             'belongs_to_collections': belongs_to_collections,
             'metadata_form': None,
-            'users_json': json.dumps(users_json)
+            'users_json': extra['users_json'],  # TODO USE SAFER METHOD OR HAVE BACK/FRONT ERROR HANDLING
+            'owners': json.dumps({"id": x.username for x in extra['owners']}),
+            "self_access_level": extra['self_access_level'],
+            "permissions_allow_copy": extra['permissions_allow_copy'],
+            "can_change_resource_flags": extra['can_change_resource_flags'],
+            "is_replaced_by": extra['is_replaced_by'],
+            "is_version_of": extra['is_version_of'],
+            "show_manage_access": extra['show_manage_access']
         }
         context.update(csrf(request))
 
@@ -385,16 +391,16 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
             abstract = content_model.metadata.description.abstract if \
                 content_model.metadata.description else None
 
-            context['title'] = title,
-            context['file_type_error'] = file_type_error,
-            context['just_copied'] = just_copied,
-            context['just_published'] = just_published,
-            context['rights_allow_copy'] = rights_allow_copy,
-            context['abstract'] = abstract,
-            context['language'] = language,
-            context['show_relations_section'] = show_relations_section(content_model),
-            context['resource_creation_error'] = create_resource_error,
-            context['tool_homepage_url'] = tool_homepage_url,
+            context['title'] = title
+            context['file_type_error'] = file_type_error
+            context['just_copied'] = just_copied
+            context['just_published'] = just_published
+            context['rights_allow_copy'] = rights_allow_copy
+            context['abstract'] = abstract
+            context['language'] = language
+            context['show_relations_section'] = show_relations_section(content_model)
+            context['resource_creation_error'] = create_resource_error
+            context['tool_homepage_url'] = tool_homepage_url if tool_homepage_url else None
 
             return render(request, 'hs_resource_landing/index.html', context)
         else:
@@ -424,15 +430,15 @@ class ResourceLandingView(LoginRequiredMixin, TemplateView):
                 context['metadata_form'] = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
                                                                 extended_metadata_layout=extended_metadata_layout)
 
-            context['title'] = content_model.metadata.title,
-            context['topics_json'] = json.dumps(mark_safe(escapejs(list(topics)))),
-            context['czo_user'] = any("CZO National" in x.name for x in user.uaccess.communities),
-            context['odm2_terms'] = list(ODM2Variable.all()),
-            context['citation_id'] = citation_id,
+            context['title'] = content_model.metadata.title
+            context['topics_json'] = json.dumps(list(topics))
+            context['czo_user'] = any("CZO National" in x.name for x in user.uaccess.communities)
+            context['odm2_terms'] = list(ODM2Variable.all())
+            context['citation_id'] = citation_id
             context['relation_source_types'] = tuple((type_value, type_display)
                                                      for type_value, type_display in Relation.SOURCE_TYPES
                                                      if type_value != 'isReplacedBy' and
                                                      type_value != 'isVersionOf' and
-                                                     type_value != 'hasPart'),
+                                                     type_value != 'hasPart')
 
             return render(request, 'hs_resource_landing/index.html', context)

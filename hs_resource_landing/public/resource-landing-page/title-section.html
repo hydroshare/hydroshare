@@ -179,7 +179,7 @@
                      </ul>
                 </div>
             </span>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
+            <script type="text/javascript" src="/static/js/hs-vue/relevant-tools.js"></script>
         </div>
         <hr>
     {% else %}
@@ -238,9 +238,9 @@
 
         <script type="application/javascript">
             // contents here are required by topics.js
-            const topics_from_page = JSON.parse("{{ topics_json }}");
+            const topics_from_page = JSON.parse('{{ topics_json|escapejs }}');
         </script>
-        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+        <script src="/static/js/dual-listbox.js"></script>
 
 
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"

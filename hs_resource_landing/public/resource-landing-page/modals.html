@@ -1,7 +1,7 @@
 {% load crispy_forms_tags hydroshare_tags %}
 
 <input id="resID" type="hidden" value="{{ cm.short_id }}"/>
-{% if page.perms.change and resource_edit_mode %}
+{% if permissions.change and resource_edit_mode %}
     <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
          aria-hidden="true">
         <div class="modal-dialog">
@@ -1534,8 +1534,8 @@
 </div>
 
 {% if not resource_edit_mode and not is_replaced_by %}
-    {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
-        {% if page.perms.delete or cm.raccess.published %}
+    {% if permissions.change or self_access_level == 'owner' and cm.raccess.published %}
+        {% if permissions.delete or cm.raccess.published %}
             <div class="modal fade" id="new-version-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -1561,7 +1561,7 @@
             </div>
         {% endif %}
 
-        {% if page.perms.delete and cm.can_be_published %}
+        {% if permissions.delete and cm.can_be_published %}
             <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -1621,9 +1621,9 @@
             </div>
         {% endif %}
 
-        {% if page.perms.delete %}
+        {% if permissions.delete %}
             {% block modal_delete_resource %}
-                {% if page.perms.change %}
+                {% if permissions.change %}
                     <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="delete-resource-title"
                          aria-hidden="true">
                         <div class="modal-dialog">
