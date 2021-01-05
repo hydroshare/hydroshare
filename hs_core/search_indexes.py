@@ -9,7 +9,6 @@ from hs_geographic_feature_resource.models import GeographicFeatureMetaData
 from hs_app_netCDF.models import NetcdfMetaData
 from ref_ts.models import RefTSMetadata
 from hs_app_timeseries.models import TimeSeriesMetaData
-from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
@@ -231,8 +230,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return BaseResource
 
     def index_queryset(self, using=None):
-        """Return queryset including discoverable and public resources."""
-        return self.get_model().objects.filter(Q(raccess__discoverable=True)).distinct()
+        """Return queryset including discoverable (and public) resources."""
+        candidates = self.get_model().objects.filter(raccess__discoverable=True)
+        show = [x.short_id for x in candidates if x.show_in_discover]
+        # this must return a queryset; this inefficient method is the best I can do
+        return self.get_model().objects.filter(short_id__in=show)
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')

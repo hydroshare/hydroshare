@@ -1,0 +1,54 @@
+netcdf SWE_time {
+dimensions:
+	time = 2184 ;
+	y = 59 ;
+	x = 39 ;
+variables:
+	float time(time) ;
+		time:calendar = "standard" ;
+		time:units = "hours since 2008-10-1 0:0:00 UTC" ;
+		time:long_name = "time" ;
+	float y(y) ;
+		y:standard_name = "projection_y_coordinate" ;
+		y:units = "m" ;
+		y:long_name = "y coordinate of projection" ;
+	float x(x) ;
+		x:standard_name = "projection_x_coordinate" ;
+		x:units = "m" ;
+		x:long_name = "x coordinate of projection" ;
+	char transverse_mercator ;
+		transverse_mercator:longitude_of_central_meridian = -111. ;
+		transverse_mercator:inverse_flattening = 298.257222101 ;
+		transverse_mercator:longitude_of_prime_meridian = 0. ;
+		transverse_mercator:semi_major_axis = 6378137. ;
+		transverse_mercator:false_easting = 500000. ;
+		transverse_mercator:grid_mapping_name = "transverse_mercator" ;
+		transverse_mercator:scale_factor_at_central_meridian = 0.9996 ;
+		transverse_mercator:GeoTransform = "433570.9001397601 800 0 4663716.608805167 0 -800 " ;
+		transverse_mercator:spatial_ref = "PROJCS[\"NAD83 / UTM zone 12N\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.2572221010002,AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",-111],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"26912\"]]" ;
+		transverse_mercator:false_northing = 0. ;
+		transverse_mercator:latitude_of_projection_origin = 0. ;
+	float SWE(time, y, x) ;
+		SWE:_FillValue = -9999.f ;
+		SWE:grid_mapping = "transverse_mercator" ;
+		SWE:units = "m" ;
+		SWE:long_name = "Snow water equivalent " ;
+
+// global attributes:
+		:GDAL_DataType = "Generic" ;
+		:history = "Tue Sep 22 18:10:47 2015: GDAL CreateCopy( /home/ahmet/ciwater/usu_data_service/workspace/01d4f294ff0a4781b89d6e3fbac28aaf/watershed800.nc, ... )" ;
+		:Conventions = "CF-1.5" ;
+		:GDAL_AREA_OR_POINT = "Area" ;
+		:GDAL = "GDAL 1.11.1, released 2014/09/24" ;
+		:title = "UEB model simulation of snow water equivalent in Logan River watershed from 2008 to 2009" ;
+		:keywords = "Snow water equivalent,  UEB,  Logan River" ;
+		:time_coverage_start = "2008-10-01 00:00:00" ;
+		:time_coverage_end = "2009-06-30 21:00:00" ;
+		:geospatial_lat_min = "41.7032378809" ;
+		:geospatial_lat_max = "42.1191711845" ;
+		:geospatial_lon_min = "-111.798772614" ;
+		:geospatial_lon_max = "-111.428227139" ;
+		:summary = "This is the model simulation of snow water equivalent in Logan River watershed from 2008 to 2009. The model used is the Utah Energy Balance model which is a snowmelt model. The simulation result is used as the input data for SAC-SMA model to simulate the stream flow of the watershed." ;
+		:creator_name = "Tseganeh Z. Gichamo" ;
+		:license = "This resource is shared under the Creative Commons Attribution CC BY. http://creativecommons.org/licenses/by/4.0/" ;
+}

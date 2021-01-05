@@ -1,4 +1,4 @@
-<rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:hsterms="http://hydroshare.org/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:hsterms="https://www.hydroshare.org/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description rdf:about="http://www.hydroshare.org/resource/78b6a717c0654cd78fab8cf7e486f425">
     <dc:title>Flat River SWAT Instance</dc:title>
     <dc:type rdf:resource="http://www.hydroshare.org/terms/SWATModelInstanceResource"/>

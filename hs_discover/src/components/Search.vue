@@ -14,8 +14,8 @@ export default {
   name: 'Search',
   data() {
     return {
-      gridColumns: ['type', 'name', 'author', 'created', 'modified'],
-      gridColumnLabels: ['Type', 'Title', 'First Author', 'Date Created', 'Last Modified'],
+      gridColumns: ['name', 'author', 'created', 'modified'],
+      gridColumnLabels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
     };
   },
   components: {

@@ -434,7 +434,7 @@ class IrodsStorage(Storage):
         return checksum
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
-        reverse_url = reverse('django_irods_download', kwargs={'path': name})
+        reverse_url = reverse('rest_download', kwargs={'path': name})
         query_params = {'url_download': url_download, "zipped": zipped, 'aggregation': aggregation}
         return reverse_url + '?' + urlencode(query_params)
 

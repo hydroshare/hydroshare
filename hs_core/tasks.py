@@ -32,7 +32,7 @@ from theme.models import UserQuota, QuotaMessage, UserProfile, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, TaskNotification
 from theme.utils import get_quota_message
 
 
@@ -570,10 +570,11 @@ def resource_debug(resource_id):
 
 
 @shared_task
-def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
+def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
+               ingest_metadata=False):
     from hs_core.views.utils import unzip_file
     user = User.objects.get(pk=user_pk)
-    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite)
+    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
@@ -612,3 +613,12 @@ def update_task_notification(sender=None, task_id=None, state=None, retval=None,
         get_or_create_task_notification(task_id, status="aborted", payload=retval)
     else:
         logger.warning("Unhandled task state of {} for {}".format(state, task_id))
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+def task_notification_cleanup():
+    """
+    Delete expired task notifications each week
+    """
+    week_ago = datetime.today() - timedelta(days=7)
+    TaskNotification.objects.filter(created__lte=week_ago).delete()

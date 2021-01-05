@@ -1535,12 +1535,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
                                          agency_url="http://www.nsf.gov")
         # check the content of the metadata xml string
-        RDF_ROOT = etree.XML(self.res.metadata.get_xml())
+        RDF_ROOT = etree.XML(self.res.metadata.get_xml().encode())
 
-        # check root 'Description' element
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.res.metadata.NAMESPACES)
+        # check root 'hsterms' element
+        container = RDF_ROOT.find('hsterms:GenericResource', namespaces=self.res.metadata.NAMESPACES)
 
-        self.assertNotEqual(container, None, msg="Root 'Description' element was not found.")
+        self.assertNotEqual(container, None, msg="Root 'hsterms:GenericResource' element was not found.")
         #res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
         res_uri = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
 
@@ -1551,8 +1551,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(title_sub_element.text, self.res.metadata.title.value,
                          msg="'Title element attribute value did not match.")
 
-        type_sub_element = container.find('dc:type', namespaces=self.res.metadata.NAMESPACES)
-        self.assertEqual(type_sub_element.get('{%s}resource' % self.res.metadata.NAMESPACES['rdf']),
+        type_sub_element = container.find('dc:type', namespaces=self.res.metadata.NAMESPACES)[0]
+        self.assertEqual(type_sub_element.get('{%s}about' % self.res.metadata.NAMESPACES['rdf']),
                          self.res.metadata.type.url,
                          msg="'Resource type element url attribute value did not match.")
 

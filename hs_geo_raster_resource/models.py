@@ -1,5 +1,4 @@
 import json
-from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -8,11 +7,12 @@ from django.core.exceptions import ValidationError
 from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
+from rdflib import BNode, RDF, Literal
 
+from hs_core.hs_rdf import HSTERMS
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
-from hs_core.hydroshare.utils import add_metadata_element_to_xml, \
-    get_resource_file_name_and_extension
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 
 
 # extended metadata for raster resource type to store the original box type coverage
@@ -64,8 +64,8 @@ class OriginalCoverage(AbstractMetaDataElement):
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if value_item not in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for one or more "
-                                          "bounding box limits or 'units' is missing.")
+                    raise ValidationError("For coverage of type 'box' values for {} is missing. {}"
+                                          .format(value_item, value_arg_dict))
 
             value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
@@ -108,28 +108,30 @@ class OriginalCoverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
+    hsterms = ['spatialReference', 'box', ]
+    rdf = ['value']
 
-        NAMESPACES = CoreMetaData.NAMESPACES
-        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
-        cov_term = '{%s}' + 'box'
-        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
-        rdf_coverage_value = etree.SubElement(coverage_terms,
-                                              '{%s}value' % NAMESPACES['rdf'])
-        # raster original coverage is of box type
-        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                    % (self.value['northlimit'], self.value['eastlimit'],
-                       self.value['southlimit'], self.value['westlimit'],
-                       self.value['units'])
+    def rdf_triples(self, subject, graph):
+        original_coverage = BNode()
+        graph.add((subject, HSTERMS.spatialReference, original_coverage))
+        value = BNode()
+        graph.add((original_coverage, HSTERMS.box, value))
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
+        graph.add((value, RDF.value, Literal(value_string)))
 
-        for meta_element in self.value:
-            if meta_element == 'projection':
-                cov_value += '; projection_name={}'.format(self.value[meta_element])
-            if meta_element in ['projection_string', 'datum']:
-                cov_value += '; {}={}'.format(meta_element, self.value[meta_element])
-
-        rdf_coverage_value.text = cov_value
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
+        box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
+        value_str = graph.value(subject=box_object, predicate=RDF.value)
+        if value_str:
+            value_str = value_str.value
+            value_dict = {}
+            for key_value in value_str.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                value_dict[k] = v
+            OriginalCoverage.create(value=value_dict, content_object=content_object)
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
@@ -218,14 +220,6 @@ class BandInformation(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
-                           'maximumValue', 'minimumValue',
-                           'method', 'comment']
-        add_metadata_element_to_xml(container, self, bandinfo_fields)
-
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
@@ -289,13 +283,6 @@ class CellInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-
-        cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
-                           'cellDataType']
-        add_metadata_element_to_xml(container, self, cellinfo_fields)
 
     def get_html_form(self, resource):
         """Generates html form code for this metadata element so that this element can be edited"""
@@ -510,26 +497,3 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
                     err_string = self.get_form_errors_as_string(validation_form)
                     raise ValidationError(err_string)
                 self.update_element('bandinformation', band_element.id, **bandinfo_data)
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-        # get the xml string representation of the core metadata elements
-        xml_string = super(RasterMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        # inject raster resource specific metadata elements to container element
-        if self.cellInformation:
-            self.cellInformation.add_to_xml_container(container)
-
-        for band_info in self.bandInformations:
-            band_info.add_to_xml_container(container)
-
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container)
-
-        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()

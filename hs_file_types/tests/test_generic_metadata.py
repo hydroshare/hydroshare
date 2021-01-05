@@ -484,8 +484,8 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
-        self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file_type())
-        self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file)
+        self.assertEqual(".*", GenericLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(res_file, GenericLogicalFile.objects.first().get_main_file)
 
     def test_has_modified_metadata_no_change(self):
         self.create_composite_resource(self.generic_file)

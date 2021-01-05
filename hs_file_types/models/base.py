@@ -6,7 +6,6 @@ import random
 import logging
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-from rdflib import Namespace, URIRef
 
 from django.db import models
 from django.core.files.uploadedfile import UploadedFile
@@ -21,19 +20,20 @@ from mezzanine.conf import settings
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, _input, ul, li, p
 
-from lxml import etree
-
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
+from rdflib import Literal, Namespace, BNode, URIRef, Graph
+from rdflib.namespace import DC
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 
 
-class AbstractFileMetaData(models.Model):
+class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     """ base class for HydroShare file type metadata """
 
     # one temporal coverage and one spatial coverage
@@ -295,104 +295,69 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def rdf_subject(self):
+        return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
-        RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'],
-                                 nsmap=CoreMetaData.NAMESPACES)
-        # create the Description element
-        rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' %
-                                           CoreMetaData.NAMESPACES['rdf'])
+    def rdf_metadata_subject(self):
+        return URIRef("{}/resource/{}#".format(current_site_url(), self.logical_file.metadata_file_path))
+
+    def rdf_type(self):
+        return getattr(HSTERMS, self.logical_file.get_aggregation_type_name())
+
+    def ingest_metadata(self, graph):
+        super(AbstractFileMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
+
+        title = graph.value(subject=subject, predicate=DC.title)
+        if title:
+            self.logical_file.dataset_name = title
+            self.logical_file.save()
+        for object in graph.objects(subject=subject, predicate=DC.subject):
+            self.keywords.append(object.value)
+        extra_metadata = {}
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            extra_metadata[key] = value
+        self.extra_metadata = copy.deepcopy(extra_metadata)
+        self.save()
+
+    def get_rdf_graph(self):
+        graph = super(AbstractFileMetaData, self).get_rdf_graph()
 
         resource = self.logical_file.resource
-
-        aggregation_map_file_path = '{}#aggregation'.format(self.logical_file.map_file_path)
-        aggregation_map_uri = current_site_url() + "/resource/{}".format(aggregation_map_file_path)
-        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], aggregation_map_uri)
-
+        subject = self.rdf_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
-            dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' %
-                                            CoreMetaData.NAMESPACES['dc'])
-            dc_datatitle.text = self.logical_file.dataset_name
+            graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
-        aggregation_term_uri = current_site_url() + "/terms/{}"
-        aggregation_term_uri = aggregation_term_uri.format(
-            self.logical_file.get_aggregation_type_name())
-
-        dc_type = etree.SubElement(rdf_Description, '{%s}type' % CoreMetaData.NAMESPACES['dc'])
-        dc_type.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'], aggregation_term_uri)
+        aggregation_type = self.logical_file.get_aggregation_type_name()
+        hsterms_aggregation_type = getattr(HSTERMS, aggregation_type)
+        graph.add((subject, DC.type, hsterms_aggregation_type))
 
         # add lang element
-        dc_lang = etree.SubElement(rdf_Description, '{%s}language' % CoreMetaData.NAMESPACES['dc'])
-        dc_lang.text = resource.metadata.language.code
+        resource.metadata.language.rdf_triples(subject, graph)
 
         # add rights element
-        dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % CoreMetaData.NAMESPACES['dc'])
-        dc_rights_rdf_Description = etree.SubElement(dc_rights,
-                                                     '{%s}Description' %
-                                                     CoreMetaData.NAMESPACES['rdf'])
-        hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
-                                             '{%s}rightsStatement' %
-                                             CoreMetaData.NAMESPACES['hsterms'])
-        hsterms_statement.text = resource.metadata.rights.statement
-        if resource.metadata.rights.url:
-            hsterms_url = etree.SubElement(dc_rights_rdf_Description,
-                                           '{%s}URL' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_url.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'],
-                            resource.metadata.rights.url)
+        resource.metadata.rights.rdf_triples(subject, graph)
 
         # add keywords
         for kw in self.keywords:
-            dc_subject = etree.SubElement(rdf_Description, '{%s}subject' %
-                                          CoreMetaData.NAMESPACES['dc'])
-            dc_subject.text = kw
+            graph.add((subject, DC.subject, Literal(kw)))
 
         # add any key/value metadata items
-        for key, value in list(self.extra_metadata.items()):
-            hsterms_key_value = etree.SubElement(
-                rdf_Description, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(
-                hsterms_key_value, '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
-            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
-                                           '{%s}key' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
-                                             '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_value.text = value
+        if len(self.extra_metadata) > 0:
+            for key, value in list(self.extra_metadata.items()):
+                extendedMetadata = BNode()
+                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
-        # add coverages
-        for coverage in self.coverages.all():
-            coverage.add_to_xml_container(rdf_Description)
-
-        # create the Description element for aggregation type
-        rdf_Description_aggr_type = etree.SubElement(RDF_ROOT, '{%s}Description' %
-                                                     CoreMetaData.NAMESPACES['rdf'])
-
-        rdf_Description_aggr_type.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'],
-                                      aggregation_term_uri)
-        rdfs_label = etree.SubElement(rdf_Description_aggr_type, '{%s}label' %
-                                      CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_label.text = self.logical_file.get_aggregation_display_name()
-
-        rdfs_isDefinedBy = etree.SubElement(rdf_Description_aggr_type, '{%s}isDefinedBy' %
-                                            CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_isDefinedBy.text = current_site_url() + "/terms"
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
-
-    def _get_xml_containers(self):
-        """Helper for the subclasses to get the xml containers element to which the sub classes
-        can then add any additional elements for metadata xml generation"""
-
-        xml_string = super(type(self), self).get_xml(pretty_print=False)
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container_to_add_to = RDF_ROOT.find('rdf:Description', namespaces=CoreMetaData.NAMESPACES)
-        return RDF_ROOT, container_to_add_to
+        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), aggregation_type)
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return graph
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -1205,6 +1170,9 @@ class AbstractLogicalFile(models.Model):
             res_files=self.files.all()
         )
 
+        self.resource.setAVU("bag_modified", True)
+        self.resource.setAVU('metadata_dirty', 'true')
+
     def get_parent(self):
         """Find the parent fileset aggregation of this aggregation
         :return a fileset aggregation if found, otherwise None
@@ -1379,7 +1347,7 @@ class AbstractLogicalFile(models.Model):
         # Fetch the serialization
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
-        # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
+        # <ore:aggregates rdf:resource="https://www.hydroshare.org/terms/[aggregation name]"/>
         xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
@@ -1408,6 +1376,14 @@ class AbstractLogicalFile(models.Model):
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
+
+    def read_metadata_file(self):
+        istorage = self.resource.get_irods_storage()
+        return istorage.download(self.metadata_file_path).read()
+
+    def read_metadata_as_rdf(self):
+        g = Graph()
+        return g.parse(data=self.read_metadata_file())
 
 
 class FileTypeContext(object):

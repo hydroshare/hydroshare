@@ -252,6 +252,7 @@ class GenericLogicalFile(AbstractLogicalFile):
 
             ft_ctx.logical_file = logical_file
             log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+            return logical_file
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
@@ -263,3 +264,9 @@ class GenericLogicalFile(AbstractLogicalFile):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+    @classmethod
+    def get_main_file_type(cls):
+        # a singel file extension in the group which is considered the main file
+        # - subclass needs to override this
+        return ".*"
