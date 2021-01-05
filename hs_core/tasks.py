@@ -32,7 +32,7 @@ from theme.models import UserQuota, QuotaMessage, UserProfile, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, TaskNotification
 from theme.utils import get_quota_message
 
 
@@ -613,3 +613,12 @@ def update_task_notification(sender=None, task_id=None, state=None, retval=None,
         get_or_create_task_notification(task_id, status="aborted", payload=retval)
     else:
         logger.warning("Unhandled task state of {} for {}".format(state, task_id))
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+def task_notification_cleanup():
+    """
+    Delete expired task notifications each week
+    """
+    week_ago = datetime.today() - timedelta(days=7)
+    TaskNotification.objects.filter(created__lte=week_ago).delete()
