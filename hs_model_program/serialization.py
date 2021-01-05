@@ -44,7 +44,7 @@ class ModelProgramResourceMeta(GenericResourceMeta):
 
         print("--- ModelProgramResource ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get Model program metadata (MpMetadata)
         for s, p, o in self._rmeta_graph.triples((None, hsterms.MpMetadata, None)):

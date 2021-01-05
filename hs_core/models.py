@@ -1,10 +1,13 @@
 """Declare critical models for Hydroshare hs_core app."""
-
+import copy
 import os.path
 import json
 import arrow
 import logging
+import re
 from uuid import uuid4
+
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
@@ -42,6 +45,8 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from rdflib import Literal, BNode, URIRef
+from rdflib.namespace import DC, DCTERMS, RDF
 
 import unicodedata
 
@@ -340,10 +345,8 @@ def page_permissions_page_processor(request, page):
     }
 
 
-class AbstractMetaDataElement(models.Model):
+class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
     """Define abstract class for all metadata elements."""
-
-    term = None
 
     object_id = models.PositiveIntegerField()
     # see the following link the reason for having the related_name setting
@@ -438,6 +441,34 @@ class Party(AbstractMetaDataElement):
 
         abstract = True
 
+    def rdf_triples(self, subject, graph):
+        party_type = self.get_class_term()
+        party = BNode()
+        graph.add((subject, party_type, party))
+        for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+            graph.add((party, field_term, field_value))
+        for k, v in self.identifiers.items():
+            graph.add((party, getattr(HSTERMS, k), URIRef(v)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        """Default implementation that ingests by convention"""
+        party_type = cls.get_class_term()
+        for party in graph.objects(subject=subject, predicate=party_type):
+            value_dict = {}
+            identifiers = {}
+            fields_by_term = {cls.get_field_term(field.name): field for field in cls._meta.fields}
+            for _, p, o in graph.triples((party, None, None)):
+                if p not in fields_by_term:
+                    identifiers[p.rsplit("/", 1)[1]] = str(o)
+                else:
+                    value_dict[fields_by_term[p].name] = str(o)
+            if value_dict or identifiers:
+                if identifiers:
+                    cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
+                else:
+                    cls.create(content_object=content_object, **value_dict)
+
     @classmethod
     def get_post_data_with_identifiers(cls, request, as_json=True):
         identifier_names = request.POST.getlist('identifier_name')
@@ -490,7 +521,8 @@ class Party(AbstractMetaDataElement):
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
-            kwargs['order'] = creator_order
+            if 'order' not in kwargs or kwargs['order'] is None:
+                kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
         else:
             party = super(Party, cls).create(**kwargs)
@@ -618,12 +650,14 @@ class Party(AbstractMetaDataElement):
         return identifiers
 
 
+@rdf_terms(DC.contributor)
 class Contributor(Party):
     """Extend Party model with the term of 'Contributor'."""
 
     term = 'Contributor'
 
 
+@rdf_terms(DC.creator, order=HSTERMS.creatorOrder)
 class Creator(Party):
     """Extend Party model with the term of 'Creator' and a proper ordering."""
 
@@ -636,6 +670,7 @@ class Creator(Party):
         ordering = ['order']
 
 
+@rdf_terms(DC.description, abstract=DCTERMS.abstract)
 class Description(AbstractMetaDataElement):
     """Define Description metadata element model."""
 
@@ -668,6 +703,44 @@ class Description(AbstractMetaDataElement):
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
+@rdf_terms(DCTERMS.bibliographicCitation)
+class Citation(AbstractMetaDataElement):
+    """Define Citation metadata element model."""
+
+    term = 'Citation'
+    value = models.TextField()
+
+    def __unicode__(self):
+        """Return value field for unicode representation."""
+        return self.value
+
+    class Meta:
+        """Define meta properties for Citation class."""
+
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Call parent update function for Citation class."""
+        super(Citation, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def remove(cls, element_id):
+        """Call delete function for Citation class."""
+        element = cls.objects.get(id=element_id)
+        element.delete()
+
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        citation = graph.value(subject=subject, predicate=cls.get_class_term())
+        if citation:
+            Citation.create(value=citation.value, content_object=content_object)
+
+
+@rdf_terms(DC.title)
 class Title(AbstractMetaDataElement):
     """Define Title metadata element model."""
 
@@ -699,7 +772,17 @@ class Title(AbstractMetaDataElement):
         """Define custom remove function for Title class."""
         raise ValidationError("Title element of a resource can't be deleted.")
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        title = graph.value(subject=subject, predicate=cls.get_class_term())
+        if title:
+            Title.create(value=title.value, content_object=content_object)
+
+
+@rdf_terms(DC.type)
 class Type(AbstractMetaDataElement):
     """Define Type metadata element model."""
 
@@ -720,7 +803,17 @@ class Type(AbstractMetaDataElement):
         """Define custom remove function for Type model."""
         raise ValidationError("Type element of a resource can't be deleted.")
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), URIRef(self.url)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        url = graph.value(subject=subject, predicate=cls.get_class_term())
+        if url:
+            Type.create(url=str(url), content_object=content_object)
+
+
+@rdf_terms(DC.date)
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
@@ -748,6 +841,22 @@ class Date(AbstractMetaDataElement):
         """Define meta properties for Date class."""
 
         unique_together = ("type", "content_type", "object_id")
+
+    def rdf_triples(self, subject, graph):
+        date_node = BNode()
+        graph.add((subject, self.get_class_term(), date_node))
+        graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
+        graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, date_node in graph.triples((subject, cls.get_class_term(), None)):
+            type = graph.value(subject=date_node, predicate=RDF.type)
+            value = graph.value(subject=date_node, predicate=RDF.value)
+            if type and value:
+                type = type.split('/')[-1]
+                start_date = parser.parse(str(value))
+                Date.create(type=type, start_date=start_date, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):
@@ -834,6 +943,7 @@ class Date(AbstractMetaDataElement):
         dt.delete()
 
 
+@rdf_terms(DC.relation)
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
@@ -866,6 +976,23 @@ class Relation(AbstractMetaDataElement):
     def __unicode__(self):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
+
+    def rdf_triples(self, subject, graph):
+        relation_node = BNode()
+        graph.add((subject, self.get_class_term(), relation_node))
+        graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
+            for _, p, o in graph.triples((relation_node, None, None)):
+                type_term = p
+                value = o
+                break
+            if type_term:
+                type = type_term.split('/')[-1]
+                value = str(value)
+                Relation.create(type=type, value=value, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):
@@ -943,6 +1070,7 @@ class Relation(AbstractMetaDataElement):
         super(Relation, cls).update(element_id, **kwargs)
 
 
+@rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):
     """Create Identifier custom metadata element."""
 
@@ -953,6 +1081,28 @@ class Identifier(AbstractMetaDataElement):
     def __unicode__(self):
         """Return {name} {url} for unicode representation."""
         return "{name} {url}".format(name=self.name, url=self.url)
+
+    def rdf_triples(self, subject, graph):
+        identifier_node = BNode()
+        graph.add((subject, self.get_class_term(), identifier_node))
+        if self.name.lower() == 'doi':
+            graph.add((identifier_node, HSTERMS.doi, URIRef(self.url)))
+        else:
+            graph.add((identifier_node, HSTERMS.hydroShareIdentifier, URIRef(self.url)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, identifier_node in graph.triples((subject, cls.get_class_term(), None)):
+            url = graph.value(subject=identifier_node, predicate=HSTERMS.doi)
+            name = 'doi'
+            if not url:
+                name = 'hydroShareIdentifier'
+                url = graph.value(subject=identifier_node, predicate=HSTERMS.hydroShareIdentifier)
+                if url:
+                    # overwrite hydroShareIdentifier url with this resource's url
+                    url = content_object.rdf_subject()
+            if url:
+                Identifier.create(url=str(url), name=name, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):
@@ -1031,6 +1181,7 @@ class Identifier(AbstractMetaDataElement):
         idf.delete()
 
 
+@rdf_terms(DC.publisher, name=HSTERMS.publisherName, url=HSTERMS.publisherURL)
 class Publisher(AbstractMetaDataElement):
     """Define Publisher custom metadata model."""
 
@@ -1095,6 +1246,7 @@ class Publisher(AbstractMetaDataElement):
         raise ValidationError("Publisher element can't be deleted.")
 
 
+@rdf_terms(DC.language)
 class Language(AbstractMetaDataElement):
     """Define language custom metadata model."""
 
@@ -1134,7 +1286,17 @@ class Language(AbstractMetaDataElement):
         else:
             raise ValidationError('Language code is missing.')
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.code)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        code = graph.value(subject=subject, predicate=cls.get_class_term())
+        if code:
+            Language.create(code=str(code), content_object=content_object)
+
+
+@rdf_terms(DC.coverage)
 class Coverage(AbstractMetaDataElement):
     """Define Coverage custom metadata element model."""
 
@@ -1367,6 +1529,34 @@ class Coverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            type = graph.value(subject=cov, predicate=RDF.type)
+            value = graph.value(subject=cov, predicate=RDF.value)
+            type = type.split('/')[-1]
+            value_dict = {}
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                if k in ['start', 'end']:
+                    v = parser.parse(v).strftime("%Y/%m/%d")
+                value_dict[k] = v
+            Coverage.create(type=type, value=value_dict, content_object=content_object)
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, self.get_class_term(), coverage))
+        DCTERMS_type = getattr(DCTERMS, self.type)
+        graph.add((coverage, RDF.type, DCTERMS_type))
+        value_dict = {}
+        for k, v in self.value.items():
+            if k in ['start', 'end']:
+                v = parser.parse(v).isoformat()
+            value_dict[k] = v
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
+
+    @classmethod
     def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         """Validate values based on coverage type."""
         if coverage_type == 'period':
@@ -1546,6 +1736,8 @@ class Format(AbstractMetaDataElement):
         return self.value
 
 
+@rdf_terms(HSTERMS.awardInfo, agency_name=HSTERMS.fundingAgencyName, award_title=HSTERMS.awardTitle,
+           award_number=HSTERMS.awardNumber, agency_url=HSTERMS.fundingAgencyURL)
 class FundingAgency(AbstractMetaDataElement):
     """Define FundingAgency custom metadata element mode."""
 
@@ -1578,6 +1770,7 @@ class FundingAgency(AbstractMetaDataElement):
         super(FundingAgency, cls).update(element_id, **kwargs)
 
 
+@rdf_terms(DC.subject)
 class Subject(AbstractMetaDataElement):
     """Define Subject custom metadata element model."""
 
@@ -1614,7 +1807,16 @@ class Subject(AbstractMetaDataElement):
             raise ValidationError("The only subject element of the resource can't be deleted.")
         sub.delete()
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
+            Subject.create(value=str(o), content_object=content_object)
+
+
+@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
@@ -1631,6 +1833,7 @@ class Source(AbstractMetaDataElement):
         return self.derived_from
 
 
+@rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
 class Rights(AbstractMetaDataElement):
     """Define Rights custom metadata element model."""
 
@@ -2206,8 +2409,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         return author_name + ", "
 
+    def get_custom_citation(self):
+        """Get custom citation."""
+        if self.metadata.citation.first() is None:
+            return ''
+        return str(self.metadata.citation.first())
+
     def get_citation(self):
         """Get citation or citations from resource metadata."""
+
         citation_str_lst = []
 
         CITATION_ERROR = "Failed to generate citation."
@@ -2251,21 +2461,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return CITATION_ERROR
 
-        ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
-        repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
-                                 citation_date.start_date.year)
-        if ref_rel:
-            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
-                ref_rel_value=ref_rel.value,
-                creation_date=date_str))
-        elif repl_rel:
-            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    "HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                   creation_date=date_str,
-                                                                   url=hs_identifier.url))
-        else:
-            citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
         if isPendingActivation:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
@@ -3504,6 +3700,51 @@ class BaseResource(Page, AbstractResource):
 
         return hs_term_dict
 
+    def replaced_by(self):
+        """ return a list or resources that replaced this one """
+        from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
+        replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
+        rlist = []
+        for r in replacedby:
+            replacement = r.value
+            # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
+            if replacement.startswith(current_site_url() + "/resource/"):
+                replacement = replacement[-32:]  # strip header
+                try:
+                    rv = get_resource_by_shortkey(replacement, or_404=False)
+                except BaseResource.DoesNotExist:
+                    rv = None
+                if rv is not None:
+                    rlist.append(rv)
+        return rlist
+
+    @property
+    def show_in_discover(self):
+        """
+        return True if a resource should be exhibited
+        A resource should be exhibited if it is at least discoverable
+        and not replaced by anything that exists and is at least discoverable.
+
+        A resource is hidden if there is any descendant (according to isReplacedBy)
+        that is discoverable. The descendent tree is searched via breadth-first search
+        with cycle elimination.  Thus the search always terminates regardless of the
+        complexity of descendents.
+        """
+        if not self.raccess.discoverable:
+            return False  # not exhibitable
+        replacedby = self.replaced_by()
+        visited = {}
+        visited[self.short_id] = True
+
+        # breadth-first replacement search, first discoverable replacement wins
+        for r in replacedby:
+            if r.raccess.discoverable:
+                return False
+            if r.short_id not in visited:
+                replacedby.extend(r.replaced_by())
+                visited[r.short_id] = True
+        return True  # no reason not to show it
+
 
 # TODO Deprecated
 class GenericResource(BaseResource):
@@ -3541,7 +3782,7 @@ Page.get_content_model = new_get_content_model
 
 
 # This model has a one-to-one relation with the AbstractResource model
-class CoreMetaData(models.Model):
+class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     """Define CoreMetaData model."""
 
     XML_HEADER = '''<?xml version="1.0"?>
@@ -3552,7 +3793,7 @@ class CoreMetaData(models.Model):
                   'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",
                   'dc': "http://purl.org/dc/elements/1.1/",
                   'dcterms': "http://purl.org/dc/terms/",
-                  'hsterms': "http://hydroshare.org/terms/"}
+                  'hsterms': "https://www.hydroshare.org/terms/"}
 
     id = models.AutoField(primary_key=True)
 
@@ -3560,6 +3801,7 @@ class CoreMetaData(models.Model):
     _title = GenericRelation(Title)
     creators = GenericRelation(Creator)
     contributors = GenericRelation(Contributor)
+    citation = GenericRelation(Citation)
     dates = GenericRelation(Date)
     coverages = GenericRelation(Coverage)
     formats = GenericRelation(Format)
@@ -3632,6 +3874,65 @@ class CoreMetaData(models.Model):
         from .views.resource_metadata_rest_api import CoreMetaDataSerializer
         return CoreMetaDataSerializer(self)
 
+    def rdf_subject(self):
+        from .hydroshare import current_site_url
+        return URIRef("{}/resource/{}".format(current_site_url(), self.resource.short_id))
+
+    def rdf_metadata_subject(self):
+        from .hydroshare import current_site_url
+        return URIRef("{}/resource/{}/data/resourcemetadata.xml".format(current_site_url(), self.resource.short_id))
+
+    def rdf_type(self):
+        return getattr(HSTERMS, self.resource.resource_type)
+
+    def ignored_generic_relations(self):
+        """Override to exclude generic relations from the rdf/xml.  This is built specifically for Format, which is the
+        only AbstractMetadataElement that is on a metadata model and not included in the rdf/xml.  Returns a list
+        of classes to be ignored"""
+        return [Format]
+
+    def ingest_metadata(self, graph):
+        super(CoreMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
+        extra_metadata = {}
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            extra_metadata[key] = value
+        res = self.resource
+        res.extra_metadata = copy.deepcopy(extra_metadata)
+
+        # delete ingested default citation
+        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")
+        ingested_citation = self.citation.first()
+        if ingested_citation and citation_regex.match(ingested_citation.value):
+            self.citation.first().delete()
+
+        res.save()
+
+    def get_rdf_graph(self):
+        graph = super(CoreMetaData, self).get_rdf_graph()
+
+        subject = self.rdf_subject()
+
+        # add any key/value metadata items
+        if len(self.resource.extra_metadata) > 0:
+            for key, value in self.resource.extra_metadata.items():
+                extendedMetadata = BNode()
+                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
+
+        # if custom citation does not exist, use the default citation
+        if not self.citation.first():
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation())))
+
+        from .hydroshare import current_site_url
+        TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return graph
+
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):
         """Parse the input *metadata* dict to needed format and store it in
@@ -3696,6 +3997,7 @@ class CoreMetaData(models.Model):
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
         return ['Description',
+                'Citation',
                 'Creator',
                 'Contributor',
                 'Coverage',
@@ -3962,7 +4264,7 @@ class CoreMetaData(models.Model):
                 self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                                property_name="funding_agencies")
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
+    def get_xml_legacy(self, pretty_print=True, include_format_elements=True):
         """Get metadata XML rendering."""
         # importing here to avoid circular import problem
         from .hydroshare.utils import current_site_url, get_resource_types
@@ -4159,10 +4461,8 @@ class CoreMetaData(models.Model):
     # need to use the same method from the hydroshare.utils.py
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         """Generate XML elements for a given metadata element.
-
         Helper function to generate xml elements for a given metadata element that belongs to
         'hsterms' namespace
-
         :param root: the xml document root element to which xml elements for the specified
         metadata element needs to be added
         :param md_element: the metadata element object. The term attribute of the metadata
@@ -4171,7 +4471,6 @@ class CoreMetaData(models.Model):
         with first element being the metadata element object and the second being the name
         for the root element. Example: md_element=self.Creat or    # the term attribute of the
         Creator object will be used md_element=(self.Creator, 'Author') # 'Author' will be used
-
         :param md_fields: a list of attribute names of the metadata element (if the name to be used
          in generating the xml element name is same as the attribute name then include the
          attribute name as a list item. if xml element name needs to be different from the
@@ -4267,6 +4566,10 @@ class CoreMetaData(models.Model):
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
+
+    @property
+    def resource_uri(self):
+        return self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
@@ -4400,7 +4703,8 @@ class TaskNotification(models.Model):
         ('completed', 'Completed'),
         ('delivered', 'Delivered'),
     )
-    username = models.CharField(max_length=150, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=150, blank=True, db_index=True)
     task_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=1000, blank=True)
     payload = models.CharField(max_length=1000, blank=True)
