@@ -10,6 +10,7 @@ logger = logging.getLogger('django')
 
 celery_inspector = inspect()
 
+
 def _retrieve_task_id(job_name, res_id, job_dict):
     """
     internal function to retrieve a matching job id for job_name celery task (e.g., hs_core.tasks.create_bag_by_irods)
