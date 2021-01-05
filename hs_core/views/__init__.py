@@ -1647,7 +1647,7 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-def hsapi_get_user_or_group_data(request, user_identifier):
+def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 

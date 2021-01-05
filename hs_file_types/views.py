@@ -153,19 +153,25 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
                     status=json_response.status_code)
 
 
+def get_fileset_id(resource_id, file_path):
+    resource = utils.get_resource_by_shortkey(resource_id)
+    filesets = [lf for lf in resource.logical_files if lf.get_aggregation_type_name() == "FileSetAggregation" and
+                lf.folder == file_path]
+    if not filesets:
+        return Response('Folder {} does not exist.'.format(file_path),
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    return filesets[0].id
+
+
 @api_view(['POST'])
 def remove_aggregation_public(request, resource_id, hs_file_type, file_path, **kwargs):
     """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
     However, it doesn't delete resource files associated with the aggregation.
     """
     if hs_file_type == "FileSetLogicalFile":
-        resource = utils.get_resource_by_shortkey(resource_id)
-        filesets = [lf for lf in resource.logical_files if lf.get_aggregation_type_name() == "FileSetAggregation" and
-                    lf.folder == file_path]
-        if not filesets:
-            return Response('Folder {} does not exist.'.format(file_path),
-                            status=status.HTTP_400_BAD_REQUEST)
-        return remove_aggregation(request, resource_id, hs_file_type, filesets[0].id, **kwargs)
+        fileset_id = get_fileset_id(resource_id, file_path)
+        return remove_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
     else:
         res_file = get_res_file(resource_id, file_path)
         if isinstance(res_file, Response):
@@ -178,13 +184,8 @@ def delete_aggregation_public(request, resource_id, hs_file_type, file_path, **k
     """Deletes all files associated with an aggregation and all the associated metadata.
     """
     if hs_file_type == "FileSetLogicalFile":
-        resource = utils.get_resource_by_shortkey(resource_id)
-        filesets = [lf for lf in resource.logical_files if lf.get_aggregation_type_name() == "FileSetAggregation" and
-                    lf.folder == file_path]
-        if not filesets:
-            return Response('Folder {} does not exist.'.format(file_path),
-                            status=status.HTTP_400_BAD_REQUEST)
-        return delete_aggregation(request, resource_id, hs_file_type, filesets[0].id, **kwargs)
+        fileset_id = get_fileset_id(resource_id, file_path)
+        return delete_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
     else:
         res_file = get_res_file(resource_id, file_path)
         if isinstance(res_file, Response):
