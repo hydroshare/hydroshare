@@ -129,6 +129,10 @@ class ModelInstanceMetaData(CoreMetaData):
     _model_output = GenericRelation(ModelOutput)
     _executed_by = GenericRelation(ExecutedBy)
 
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time"
+                                  .format(self.__class__.__name__))
+
     @property
     def resource(self):
         return ModelInstanceResource.objects.filter(object_id=self.id).first()
@@ -192,7 +196,7 @@ class ModelInstanceMetaData(CoreMetaData):
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
-        xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(ModelInstanceMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
