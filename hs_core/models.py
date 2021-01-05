@@ -521,7 +521,7 @@ class Party(AbstractMetaDataElement):
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
-            if 'order' not in kwargs:
+            if 'order' not in kwargs or kwargs['order'] is None:
                 kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
         else:
