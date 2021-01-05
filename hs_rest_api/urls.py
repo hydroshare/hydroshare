@@ -4,7 +4,7 @@ from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
-    data_store_edit_reference_url_public
+    data_store_edit_reference_url_public, ingest_metadata_files
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
@@ -112,6 +112,10 @@ urlpatterns = [
         core_views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ingest_metadata/$',
+        ingest_metadata_files,
+        name='ingest_metadata_files'),
+
     url(r'^resource/data-store-add-reference/$',
         data_store_add_reference_public),
 
@@ -153,6 +157,21 @@ urlpatterns = [
         r'(?P<hs_file_type>[A-z]+)/$',
         file_type_views.set_file_type_public,
         name="set_file_type_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/functions/remove-file-type/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/$',
+        file_type_views.remove_aggregation_public,
+        name="remove_aggregation_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/functions/delete-file-type/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/$',
+        file_type_views.delete_aggregation_public,
+        name="delete_aggregation_public"),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_path>.*)/functions/move-file-type/(?P<tgt_path>.*)$',
+        file_type_views.move_aggregation_public,
+        name="move_aggregation_public"),
 
     # DEPRECATED: use form above instead. Added unused POST for simplicity
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',

@@ -1,7 +1,7 @@
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 
-from hs_core.signals import pre_download_file, pre_delete_resource, post_create_resource
+from hs_core.signals import pre_download_file, post_delete_resource, post_create_resource
 
 from .models import Session
 from .models import Variable
@@ -92,7 +92,7 @@ def capture_resource_create(**kwargs):
                    resource_id=kwargs['resource'].short_id)
 
 
-@receiver(pre_delete_resource)
+@receiver(post_delete_resource)
 def capture_resource_delete(**kwargs):
 
     # exit early if the request object is not passed in as a kwarg
