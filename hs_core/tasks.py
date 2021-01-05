@@ -28,7 +28,7 @@ from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage, UserProfile, User
+from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
