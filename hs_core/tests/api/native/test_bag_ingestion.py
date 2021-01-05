@@ -2,7 +2,6 @@
 import os
 import tempfile
 import zipfile
-import shutil
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
@@ -38,6 +37,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         self.extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
         from pathlib import Path
+
         def zip_up(ziph, root_directory, directory=""):
             full_path = Path(os.path.join(root_directory, directory))
             dirs = [str(item) for item in full_path.iterdir() if item.is_dir()]
