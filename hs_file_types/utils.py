@@ -322,7 +322,7 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
         if logical_file_class is FileSetLogicalFile:
             file_path = subject.rsplit('/', 1)[0]
             file_path = file_path.split('data/contents/', 1)[1]
-            res_file = resource.files.get(file_folder=file_path)
+            res_file = resource.files.filter(file_folder=file_path).first()
             if res_file:
                 FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
         elif logical_file_class is GenericLogicalFile:
