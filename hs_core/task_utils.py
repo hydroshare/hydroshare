@@ -140,6 +140,8 @@ def get_all_tasks(username):
     :param username: the user to retrieve all tasks for
     :return: list of tasks where each task is a dict with id, name, and status keys
     """
+    if not username:
+        return []
     task_notif_list = []
     for obj in TaskNotification.objects.filter(username=username):
         task_notif_list.append({
