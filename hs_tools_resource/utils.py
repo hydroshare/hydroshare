@@ -1,4 +1,3 @@
-import imghdr
 import os
 from string import Template
 import logging
@@ -36,28 +35,11 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
 
         new_url_string = Template(new_url_string).substitute(merged_term_dic)
     except Exception:
-        logger.exception("[WebApp] '{0}' cannot be parsed by term_dict {1}.".
+        logger.debug("[WebApp] '{0}' cannot be parsed by term_dict {1}, skipping.".
                          format(new_url_string, str(merged_term_dic)))
         new_url_string = None
     finally:
         return new_url_string
-
-
-def get_image_type(h):
-    """
-    Wraps the imghdr.what method to include a patch for identify Exif jpeg formats.
-    This is a documented bug that is not and will not be patched for python 2.7
-    https://bugs.python.org/issue16512
-    :param h: the byte array of an image file
-    :return: the image type as a string (i.e. jpeg, png... etc)
-    """
-    image_type = imghdr.what(None, h=h)
-    if not image_type:
-        if h.startswith(b'\xff\xd8'):
-            return 'jpeg'
-        return None
-    else:
-        return image_type
 
 
 def get_SupportedResTypes_choices():
@@ -133,7 +115,7 @@ def copy_res_to_specified_federated_irods_server_as_needed(app_shortkey, res_sho
         except SessionException as ex:
             raise WebAppLaunchException(ex.stderr)
         except Exception as ex:
-            raise WebAppLaunchException(ex.message)
+            raise WebAppLaunchException(str(ex))
 
 
 def do_work_when_launching_app_as_needed(app_shortkey, res_shortkey, user):

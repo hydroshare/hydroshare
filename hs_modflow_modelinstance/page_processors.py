@@ -106,7 +106,7 @@ def landing_page(request, page):
                                                                               allow_edit=True)),
                                                 formset=BaseFormSet, extra=0)
         model_input_formset = ModelInputFormSetEdit(
-            initial=content_model.metadata.model_inputs.values(),
+            initial=list(content_model.metadata.model_inputs.values()),
             prefix='modelinput')
         for model_input_form in model_input_formset.forms:
             if len(model_input_form.initial) > 0:

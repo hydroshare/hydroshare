@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
@@ -32,18 +33,14 @@
             {% endif %}
         {% endblock %}
 
-        {%  if task_id and download_path %}
-            <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
-            <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-            <div class="col-sm-12">
-                <div id='download-status-info' class="alert alert-success">
-                    Please wait for the download to be prepared<span id="loading">.</span>
-                </div>
-            </div>
-        {% endif %}
-
         {# Needs to be included first so it's available before other instances initialize #}
         {% include "includes/profile-card.html" %}
+
+        {%  block modal %}
+            {% include "resource-landing-page/modals.html" %}
+            {% include "includes/author-preview.html" %}
+            {% include "resource-landing-page/coordinates_picker.html" %}
+        {%  endblock %}
 
         {# ======= Title ======= #}
         {% include "resource-landing-page/title-section.html" %}
@@ -332,8 +329,8 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="warnings-list">
-                                        <div>Consider saving a copy of the files before you delete it if it is
-                                            important to you.
+                                        <div>Consider downloading a copy of file(s) before deleting.<br /><br />
+                                            <p id="additional-citation-warning"></p>
                                         </div>
                                         <br>
                                     </div>
@@ -350,7 +347,7 @@
                     </div>
                     {# ======= Modal window ends =======#}
 
-                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path=""
+                    <div id="hs-file-browser" data-current-path=""
                          {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
                          data-supported-files="{{ cm.get_supported_upload_file_types }}"
                          data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
@@ -548,7 +545,7 @@
                                                 <button id="fb-delete" data-fb-action="delete"
                                                         class="disabled fb-space-right"
                                                         title="Delete" data-toggle="modal"
-                                                        data-target="#confirm-delete-dialog">
+                                                        data-target="#confirm-delete-dialog" onclick="warnExternalContent('{{ cm.short_id }}')">
                                                     <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                 </button>
                                             {% endif %}
@@ -591,18 +588,18 @@
                                                 </a>
                                             {% endif %}
 
-                                            {% for b in cm.bags.all %}
-                                                <a id="btn-download-all" type="button"
-                                                   title="Download all content as Zipped BagIt Archive"
-                                                        {% if cm.raccess.require_download_agreement %}
-                                                   data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                                   data-placement="auto"
-                                                   {% else %}href="{{ cm.bag_url }}"{% endif %}>
-                                                    <span class="fa fa-briefcase icon-blue"></span>
-                                                </a>
-                                                <a class="small" target="_blank"
-                                                   href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
-                                            {% endfor %}
+                                            <button id="btn-download-all"
+                                                title="Download all content as Zipped BagIt Archive"
+                                                {% if cm.raccess.require_download_agreement %}
+                                                data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                data-placement="auto"
+                                                {% else %}
+                                                data-bag-url="{{ cm.bag_url }}"
+                                                {% endif %}>
+                                                <span class="fa fa-briefcase icon-blue"></span>
+                                            </button>
+                                            <a class="small" target="_blank"
+                                               href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
                                         </div>
                                     </div>
                                 </div>
@@ -766,30 +763,58 @@
 
         {# ======= Comments ======= #}
         {% include "resource-landing-page/comments.html" %}
-
-        {%  block modal %}
-            {% include "resource-landing-page/modals.html" %}
-            {% include "includes/author-preview.html" %}
-            {% include "resource-landing-page/coordinates_picker.html" %}
-        {%  endblock %}
         </div>
 {% endblock %}
 
 {% block extra_js %}
+    {% set_page_permissions page %}
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      const SHORT_ID = "{{ cm.short_id }}";
+      var global_num_ext_refs = 0;
+      var global_custom_citation = "{{ custom_citation }}";
+
+      $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+      }).complete(function(res) {
+        if (res.responseText) {
+          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
+        }
+      });
+      const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
       const FILE_COUNT = {{ cm.files.all.count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
+      const AUTHORS = [
+          {% for author in creators %}
+              {
+                  "id": "{{ author.id }}",
+                  "name": "{{ author.name|default:"" }}",
+                  "email": "{{ author.email|default:"" }}",
+                  "organization": "{{ author.organization|default:"" }}",
+                  "identifiers": {
+                      {% for name, link in author.identifiers.items %}
+                          "{{ name }}": "{{ link }}",
+                      {% endfor %}
+                  },
+                  "address": "{{ author.address|default:"" }}",
+                  "phone": "{{ author.phone|default:"" }}",
+                  "homepage": "{{ author.homepage|default:"" }}",
+                  "profileUrl": "{{ author.description|default:"" }}",
+                  "order": "{{ author.order }}"
+              },
+          {% endfor %}
+      ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
       {% with cm.last_changed_by as usr %}
@@ -825,12 +850,12 @@
           };
       {% endif %}
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
+
     </script>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>

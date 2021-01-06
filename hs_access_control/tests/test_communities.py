@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
         GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance, \
         GroupResourcePrivilege
-from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, is_disjoint_from
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
@@ -168,12 +168,12 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
                                                                         PrivilegeCodes.VIEW))
-        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
-                                                                        PrivilegeCodes.CHANGE))
+        self.assertFalse(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                         PrivilegeCodes.CHANGE))
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.cats,
                                                                         PrivilegeCodes.VIEW))
-        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.cats,
-                                                                        PrivilegeCodes.CHANGE))
+        self.assertFalse(self.dog.uaccess.can_share_community_with_group(self.pets, self.cats,
+                                                                         PrivilegeCodes.CHANGE))
 
         self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.VIEW)
@@ -194,10 +194,8 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         ggp = GroupCommunityProvenance.objects.get(group=self.cats, community=self.pets)
         self.assertEqual(ggp.privilege, PrivilegeCodes.VIEW)
 
-        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs),
-                         PrivilegeCodes.VIEW)
-        self.assertEqual(self.pets.get_effective_group_privilege(self.cats),
-                         PrivilegeCodes.VIEW)
+        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs), PrivilegeCodes.VIEW)
+        self.assertEqual(self.pets.get_effective_group_privilege(self.cats), PrivilegeCodes.VIEW)
 
         self.assertTrue(self.holes in self.cat.uaccess.view_resources)
         self.assertTrue(self.holes not in self.cat.uaccess.edit_resources)
@@ -230,20 +228,6 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.pets.get_effective_group_privilege(self.cats),
                          PrivilegeCodes.VIEW)
 
-        # upgrade share privilege
-        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.CHANGE)
-
-        # privilege object created
-        ggp = GroupCommunityPrivilege.objects.get(group=self.dogs, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.CHANGE)
-
-        # provenance object created
-        ggp = GroupCommunityProvenance.objects.filter(group=self.dogs, community=self.pets)
-        self.assertEqual(ggp.count(), 2)
-
-        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs), PrivilegeCodes.CHANGE)
-        self.assertEqual(self.pets.get_effective_group_privilege(self.cats), PrivilegeCodes.VIEW)
-
         # user privileges reflect community privileges
 
         self.assertTrue(self.holes in self.dog.uaccess.view_resources)
@@ -264,11 +248,13 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
     def test_undo_share_community_with_group(self):
         " undo share of community with group "
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
-                                                                        PrivilegeCodes.CHANGE))
-        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.CHANGE)
+                                                                        PrivilegeCodes.VIEW))
+        self.assertFalse(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                         PrivilegeCodes.CHANGE))
+        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.VIEW)
 
-        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs), PrivilegeCodes.CHANGE)
+        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs), PrivilegeCodes.VIEW)
         self.assertEqual(self.pets.get_effective_group_privilege(self.cats), PrivilegeCodes.VIEW)
 
         self.assertTrue(self.dog.uaccess.can_undo_share_community_with_group(self.pets,
@@ -284,13 +270,13 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
 
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.dog2,
-                                                                        PrivilegeCodes.VIEW))
+                                                                       PrivilegeCodes.VIEW))
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.dog2,
-                                                                        PrivilegeCodes.CHANGE))
+                                                                       PrivilegeCodes.CHANGE))
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.cat2,
-                                                                        PrivilegeCodes.VIEW))
+                                                                       PrivilegeCodes.VIEW))
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.cat2,
-                                                                        PrivilegeCodes.CHANGE))
+                                                                       PrivilegeCodes.CHANGE))
 
         self.dog.uaccess.share_community_with_user(self.pets, self.dog2, PrivilegeCodes.VIEW)
         self.dog.uaccess.share_community_with_user(self.pets, self.cat2, PrivilegeCodes.VIEW)
@@ -321,7 +307,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
 
         # accept ownership of community by a user
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.dog2,
-                                                                        PrivilegeCodes.OWNER))
+                                                                       PrivilegeCodes.OWNER))
         self.dog.uaccess.share_community_with_user(self.pets, self.dog2,
                                                    PrivilegeCodes.OWNER)
         # privilege object created
@@ -366,7 +352,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
     def test_undo_share_community_with_user(self):
         " undo share of community with group "
         self.assertTrue(self.dog.uaccess.can_share_community_with_user(self.pets, self.dog2,
-                                                                        PrivilegeCodes.CHANGE))
+                                                                       PrivilegeCodes.CHANGE))
         self.dog.uaccess.share_community_with_user(self.pets, self.dog2,
                                                     PrivilegeCodes.CHANGE)
         self.dog.uaccess.share_community_with_user(self.pets, self.cat2,
@@ -505,16 +491,8 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set(groupv, [self.cats, self.bats, self.dogs]))
 
         for group in groupv:
-            change_resources = comm.get_resources_with_explicit_access(self.dog, group,
-                                                                       PrivilegeCodes.CHANGE)
             view_resources = comm.get_resources_with_explicit_access(self.dog, group,
                                                                      PrivilegeCodes.VIEW)
-            self.assertTrue(is_disjoint_from(change_resources, view_resources))
-
-            for r in change_resources:
-                self.assertTrue(self.dog.uaccess.can_change_resource(r))
-                self.assertTrue(self.dog.uaccess.can_view_resource(r))
-
             for r in view_resources:
                 # if a resource can be changed by some other group, it can be changed.
                 # if self has administrative privilege over a group, and that group
@@ -526,112 +504,6 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
                         group__g2ugp__user=self.dog).exists():
                     self.assertFalse(self.dog.uaccess.can_change_resource(r))
                 self.assertTrue(self.dog.uaccess.can_view_resource(r))
-
-    def test_privilege_elevation(self):
-        """ test that privilege=CHANGE works properly """
-
-        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
-        self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.CHANGE)
-
-        # privilege object created
-        ggp = UserCommunityPrivilege.objects.get(user=self.dog, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.OWNER)
-        ggp = GroupCommunityPrivilege.objects.get(group=self.dogs, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.VIEW)
-        ggp = GroupCommunityPrivilege.objects.get(group=self.cats, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.CHANGE)
-
-        # provenance object created
-        ggp = UserCommunityProvenance.objects.get(user=self.dog, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.OWNER)
-        ggp = GroupCommunityProvenance.objects.get(group=self.dogs, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.VIEW)
-        ggp = GroupCommunityProvenance.objects.get(group=self.cats, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.CHANGE)
-
-        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs),
-                         PrivilegeCodes.VIEW)
-        self.assertEqual(self.pets.get_effective_group_privilege(self.cats),
-                         PrivilegeCodes.CHANGE)
-
-        # dogs has CHANGE over squirrels, and cats inherits CHANGE over squirrels
-        self.assertTrue(self.squirrels in self.cat.uaccess.view_resources)
-        self.assertTrue(self.squirrels in self.cat.uaccess.edit_resources)
-        self.assertTrue(self.squirrels in self.cat2.uaccess.view_resources)
-        self.assertTrue(self.squirrels in self.cat2.uaccess.edit_resources)
-
-        # dogs has VIEW over holes, and cats inherits only VIEW over holes
-        self.assertTrue(self.holes in self.cat.uaccess.view_resources)
-        self.assertTrue(self.holes not in self.cat.uaccess.edit_resources)
-        self.assertTrue(self.holes in self.cat2.uaccess.view_resources)
-        self.assertTrue(self.holes not in self.cat2.uaccess.edit_resources)
-
-        # group privileges do not reflect community privileges
-        self.assertFalse(self.squirrels in self.cats.gaccess.view_resources)
-        self.assertFalse(self.squirrels in self.cats.gaccess.edit_resources)
-        self.assertFalse(self.holes in self.cats.gaccess.view_resources)
-        self.assertFalse(self.holes in self.cats.gaccess.edit_resources)
-
-    def test_privilege_squashing(self):
-        """ setting allow_view to False disallows local group view """
-
-        self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)
-        self.dog.uaccess.share_community_with_group(self.pets, self.cats, PrivilegeCodes.CHANGE)
-
-        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs),
-                         PrivilegeCodes.VIEW)
-        self.assertEqual(self.pets.get_effective_group_privilege(self.cats),
-                         PrivilegeCodes.CHANGE)
-
-        ggp = GroupCommunityPrivilege.objects.get(group=self.dogs, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.VIEW)
-        ggp.allow_view = False
-        ggp.save()
-        ggp = GroupCommunityPrivilege.objects.get(group=self.cats, community=self.pets)
-        self.assertEqual(ggp.privilege, PrivilegeCodes.CHANGE)
-        ggp.allow_view = False
-        ggp.save()
-
-        self.assertEqual(self.pets.get_effective_group_privilege(self.dogs),
-                         PrivilegeCodes.VIEW)
-        self.assertEqual(self.pets.get_effective_group_privilege(self.cats),
-                         PrivilegeCodes.CHANGE)
-
-        # CHANGE privileges are not squashed by allow_view=False
-        # (cat2 has only the privileges of the group cats)
-        self.assertTrue(self.squirrels in self.cat2.uaccess.view_resources)
-        self.assertTrue(self.squirrels in self.cat2.uaccess.edit_resources)
-        self.assertTrue(self.holes in self.cat2.uaccess.view_resources)
-        self.assertTrue(self.holes not in self.cat2.uaccess.edit_resources)
-
-        self.assertTrue(self.cat2.uaccess.can_view_resource(self.squirrels))
-        self.assertTrue(self.cat2.uaccess.can_change_resource(self.squirrels))
-        self.assertTrue(self.cat2.uaccess.can_view_resource(self.holes))
-        self.assertFalse(self.cat2.uaccess.can_change_resource(self.holes))
-
-        # group privileges do not reflect community privileges
-        self.assertFalse(self.squirrels in self.cats.gaccess.view_resources)
-        self.assertFalse(self.squirrels in self.cats.gaccess.edit_resources)
-        self.assertFalse(self.holes in self.cats.gaccess.view_resources)
-        self.assertFalse(self.holes in self.cats.gaccess.edit_resources)
-
-        # VIEW privileges are squashed by allow_view=False
-        # (dog2 has only the privileges of the group dogs)
-        self.assertTrue(self.posts not in self.dog2.uaccess.view_resources)
-        self.assertTrue(self.posts not in self.dog2.uaccess.edit_resources)
-        self.assertTrue(self.claus not in self.dog2.uaccess.view_resources)
-        self.assertTrue(self.claus not in self.dog2.uaccess.edit_resources)
-
-        self.assertFalse(self.dog2.uaccess.can_view_resource(self.posts))
-        self.assertFalse(self.dog2.uaccess.can_change_resource(self.posts))
-        self.assertFalse(self.dog2.uaccess.can_view_resource(self.claus))
-        self.assertFalse(self.dog2.uaccess.can_change_resource(self.claus))
-
-        # group privileges do not reflect community privileges
-        self.assertFalse(self.posts in self.dogs.gaccess.view_resources)
-        self.assertFalse(self.posts in self.dogs.gaccess.edit_resources)
-        self.assertFalse(self.claus in self.dogs.gaccess.view_resources)
-        self.assertFalse(self.claus in self.dogs.gaccess.edit_resources)
 
     def test_public_resources(self):
         """ public resources contain those resources that are public and discoverable """

@@ -55,11 +55,11 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             target_temp_file = os.path.join(self.temp_dir, file)
             shutil.copy("{}{}".format(d, file), target_temp_file)
             if self.sample_nam_name == file:
-                self.sample_nam_obj = open(target_temp_file, 'r')
+                self.sample_nam_obj = open(target_temp_file, 'rb')
             elif self.sample_nam_name2 == file:
-                self.sample_nam_obj2 = open(target_temp_file, 'r')
+                self.sample_nam_obj2 = open(target_temp_file, 'rb')
             elif self.sample_dis_file == file:
-                self.sample_dis_obj = open(target_temp_file, 'r')
+                self.sample_dis_obj = open(target_temp_file, 'rb')
             else:
                 self.file_list.append(target_temp_file)
 
@@ -67,7 +67,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Instance resource files")
-        self.text_file_obj = open(temp_text_file, 'r')
+        self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):
         super(TestMODFLOWModelInstanceMetaData, self).tearDown()

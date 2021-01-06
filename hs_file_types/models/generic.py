@@ -9,7 +9,7 @@ from dominate.tags import div, form, button, hr, i
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.signals import post_add_generic_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):
@@ -217,7 +217,7 @@ class GenericLogicalFile(AbstractLogicalFile):
             return None
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None, extra_data={}):
+    def set_file_type(cls, resource, user, file_id=None, folder_path='', extra_data={}):
         """
         Makes any physical file part of a generic aggregation type. The physical file must
         not already be a part of any aggregation.
@@ -252,6 +252,7 @@ class GenericLogicalFile(AbstractLogicalFile):
 
             ft_ctx.logical_file = logical_file
             log.info("Generic aggregation was created for file:{}.".format(res_file.storage_path))
+            return logical_file
 
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
@@ -263,3 +264,9 @@ class GenericLogicalFile(AbstractLogicalFile):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+    @classmethod
+    def get_main_file_type(cls):
+        # a singel file extension in the group which is considered the main file
+        # - subclass needs to override this
+        return ".*"

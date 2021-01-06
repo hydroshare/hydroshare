@@ -59,7 +59,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
         response = self.client.get(zip_download_url, format="json", follow=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         task_id = response_json["task_id"]
         download_path = response_json["download_path"]
         self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
@@ -76,5 +76,5 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.assertEqual("foo.zip", download_split[9])
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.content)
+        response_json = json.loads(response.content.decode())
         self.assertNotEqual(response_json["download_path"].split("/")[5], download_split[5])

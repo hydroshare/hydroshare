@@ -61,5 +61,5 @@ def ref_time_series_describe_resource_trigger(sender, **kwargs):
                 raise Exception("Missing parameter 'referenceurl' in request")
 
         except Exception as ex:
-            logger.exception("Failed to create refts res from rest api: " + ex.message)
+            logger.exception("Failed to create refts res from rest api: " + str(ex))
             raise ex

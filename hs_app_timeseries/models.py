@@ -16,6 +16,7 @@ from django.db import models
 from django.utils.timezone import now
 
 from dominate.tags import table, tbody, tr, td, th, a
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -107,10 +108,36 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
             series_ids = element_data_dict.get('series_ids', [])
         return series_ids
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        """Parses series_ids"""
+        term = cls.get_class_term()
+        if not term:
+            metadata_nodes = [subject]
+        else:
+            metadata_nodes = graph.objects(subject=subject, predicate=term)
+        for metadata_node in metadata_nodes:
+            value_dict = {}
+            for field in cls._meta.fields:
+                if cls.ignored_fields and field.name in cls.ignored_fields:
+                    continue
+                field_term = cls.get_field_term(field.name)
+                val = graph.value(metadata_node, field_term)
+                if field_term == HSTERMS.timeSeriesResultUUID:
+                    if val is not None:
+                        value_dict[field.name] = [v.replace("'", "") for v in val.strip('][').split(', ')]
+                elif val is not None:
+                    value_dict[field.name] = str(val.toPython())
+            if value_dict:
+                cls.create(content_object=content_object, **value_dict)
+
     class Meta:
         abstract = True
 
 
+@rdf_terms(HSTERMS.site, series_ids=HSTERMS.timeSeriesResultUUID, site_code=HSTERMS.SiteCode,
+           site_name=HSTERMS.SiteName, elevation_m=HSTERMS.Elevation_m, elevation_datum=HSTERMS.ElevationDatum,
+           site_type=HSTERMS.SiteType, latitude=HSTERMS.Latitude, longitude=HSTERMS.Longitude)
 class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
     site_code = models.CharField(max_length=200)
@@ -227,32 +254,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
         # get the series ids associated with this element
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
 
-        element_fields = [('site_code', 'SiteCode')]
-
-        if self.site_name:
-            element_fields.append(('site_name', 'SiteName'))
-
-        if self.elevation_m:
-            element_fields.append(('elevation_m', 'Elevation_m'))
-
-        if self.elevation_datum:
-            element_fields.append(('elevation_datum', 'ElevationDatum'))
-
-        if self.site_type:
-            element_fields.append(('site_type', 'SiteType'))
-
-        if self.latitude:
-            element_fields.append(('latitude', 'Latitude'))
-
-        if self.longitude:
-            element_fields.append(('longitude', 'Longitude'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'site'), element_fields)
-
-
+@rdf_terms(HSTERMS.variable, series_ids=HSTERMS.timeSeriesResultUUID, variable_code=HSTERMS.VariableCode,
+           variable_name=HSTERMS.VariableName, variable_type=HSTERMS.VariableType, no_data_value=HSTERMS.NoDataValue,
+           variable_definition=HSTERMS.VariableDefinition, speciation=HSTERMS.Speciation)
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
     variable_code = models.CharField(max_length=50)
@@ -356,24 +361,10 @@ class Variable(TimeSeriesAbstractMetaDataElement):
 
         return html_table.render(pretty=pretty)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
 
-        element_fields = [('variable_code', 'VariableCode'),
-                          ('variable_name', 'VariableName'),
-                          ('variable_type', 'VariableType'),
-                          ('no_data_value', 'NoDataValue')
-                          ]
-
-        if self.variable_definition:
-            element_fields.append(('variable_definition', 'VariableDefinition'))
-
-        if self.speciation:
-            element_fields.append(('speciation', 'Speciation'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'variable'), element_fields)
-
-
+@rdf_terms(HSTERMS.method, series_ids=HSTERMS.timeSeriesResultUUID, method_code=HSTERMS.MethodCode,
+           method_name=HSTERMS.MethodName, method_type=HSTERMS.MethodType, method_description=HSTERMS.MethodDescription,
+           method_link=HSTERMS.MethodLink)
 class Method(TimeSeriesAbstractMetaDataElement):
     term = 'Method'
     method_code = models.CharField(max_length=50)
@@ -490,21 +481,10 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
         return html_table.render(pretty=pretty)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
 
-        element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
-                          ('method_type', 'MethodType')]
-
-        if self.method_description:
-            element_fields.append(('method_description', 'MethodDescription'))
-
-        if self.method_link:
-            element_fields.append(('method_link', 'MethodLink'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'method'), element_fields)
-
-
+@rdf_terms(HSTERMS.processingLevel, series_ids=HSTERMS.timeSeriesResultUUID,
+           processing_level_code=HSTERMS.ProcessingLevelCode, definition=HSTERMS.Definition,
+           explanation=HSTERMS.Explanation)
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
     processing_level_code = models.CharField(max_length=50)
@@ -596,20 +576,11 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
 
         return html_table.render(pretty=pretty)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
 
-        element_fields = [('processing_level_code', 'ProcessingLevelCode')]
-
-        if self.definition:
-            element_fields.append(('definition', 'Definition'))
-
-        if self.explanation:
-            element_fields.append(('explanation', 'Explanation'))
-
-        utils.add_metadata_element_to_xml(container, (self, 'processingLevel'), element_fields)
-
-
+@rdf_terms(HSTERMS.timeSeriesResult, series_ids=HSTERMS.timeSeriesResultUUID, units_type=HSTERMS.UnitsType,
+           units_name=HSTERMS.UnitsName, units_abbreviation=HSTERMS.UnitsAbbreviation,
+           status=HSTERMS.Status, sample_medium=HSTERMS.SampleMedium, value_count=HSTERMS.ValueCount,
+           aggregation_statistics=HSTERMS.AggregationStatistic, series_label=HSTERMS.SeriesLabel)
 class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     term = 'TimeSeriesResult'
     units_type = models.CharField(max_length=255)
@@ -707,56 +678,8 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
 
         return html_table.render(pretty=pretty)
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of this metadata element"""
-        from lxml import etree
 
-        NAMESPACES = CoreMetaData.NAMESPACES
-        hsterms_time_series_result = etree.SubElement(
-            container, '{%s}timeSeriesResult' % NAMESPACES['hsterms'])
-        hsterms_time_series_result_rdf_Description = etree.SubElement(
-            hsterms_time_series_result, '{%s}Description' % NAMESPACES['rdf'])
-        hsterms_result_UUID = etree.SubElement(
-            hsterms_time_series_result_rdf_Description, '{%s}timeSeriesResultUUID' %
-                                                        NAMESPACES['hsterms'])
-        hsterms_result_UUID.text = str(self.series_ids[0])
-        hsterms_units = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                         '{%s}units' % NAMESPACES['hsterms'])
-        hsterms_units_rdf_Description = etree.SubElement(hsterms_units, '{%s}Description' %
-                                                         NAMESPACES['rdf'])
-        hsterms_units_type = etree.SubElement(hsterms_units_rdf_Description,
-                                              '{%s}UnitsType' % NAMESPACES['hsterms'])
-        hsterms_units_type.text = self.units_type
-
-        hsterms_units_name = etree.SubElement(hsterms_units_rdf_Description,
-                                              '{%s}UnitsName' % NAMESPACES['hsterms'])
-        hsterms_units_name.text = self.units_name
-
-        hsterms_units_abbv = etree.SubElement(
-            hsterms_units_rdf_Description, '{%s}UnitsAbbreviation' % NAMESPACES['hsterms'])
-        hsterms_units_abbv.text = self.units_abbreviation
-
-        if self.status:
-            hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                              '{%s}Status' % NAMESPACES['hsterms'])
-            hsterms_status.text = self.status
-
-        hsterms_sample_medium = etree.SubElement(
-            hsterms_time_series_result_rdf_Description, '{%s}SampleMedium' %
-                                                        NAMESPACES['hsterms'])
-        hsterms_sample_medium.text = self.sample_medium
-
-        hsterms_value_count = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                               '{%s}ValueCount' % NAMESPACES['hsterms'])
-        hsterms_value_count.text = str(self.value_count)
-
-        hsterms_statistics = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                              '{%s}AggregationStatistic' %
-                                              NAMESPACES['hsterms'])
-        hsterms_statistics.text = self.aggregation_statistics
-        return hsterms_time_series_result_rdf_Description
-
-
+@rdf_terms(HSTERMS.UTCOffSet, series_ids=HSTERMS.timeSeriesResultUUID)
 class UTCOffSet(TimeSeriesAbstractMetaDataElement):
     # this element is not part of the science metadata
     term = 'UTCOffSet'
@@ -772,7 +695,7 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
         if metadata.series_names:
             # this condition is true if csv file has been uploaded but data has not been written
             # to the blank sqlite file
-            kwargs['series_ids'] = range(len(metadata.series_names))
+            kwargs['series_ids'] = list(range(len(metadata.series_names)))
 
         return super(UTCOffSet, cls).create(**kwargs)
 
@@ -783,7 +706,7 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
         if element.metadata.series_names:
             # this condition is true if csv file has been uploaded but data has not been written
             # to the blank sqlite file
-            kwargs['series_ids'] = range(len(element.metadata.series_names))
+            kwargs['series_ids'] = list(range(len(element.metadata.series_names)))
 
         super(UTCOffSet, cls).update(element_id, **kwargs)
 
@@ -971,7 +894,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         # once metadata changes are written to the blank sqlite file as
         # part of the sync operation.
         self.refresh_from_db()
-        return self.value_counts.keys()
+        return list(self.value_counts.keys())
 
     @property
     def series_ids(self):
@@ -996,7 +919,7 @@ class TimeSeriesMetaDataMixin(models.Model):
                 series_ids[series_id] = self._get_series_label(series_id, tgt_obj)
 
         # sort the dict on series names - item[1]
-        series_ids = OrderedDict(sorted(series_ids.items(), key=lambda item: item[1].lower()))
+        series_ids = OrderedDict(sorted(list(series_ids.items()), key=lambda item: item[1].lower()))
         return series_ids
 
     @classmethod
@@ -1038,7 +961,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         if self.series_names:
             # applies to the case of csv file upload
             # check that we have each type of metadata element for each of the series ids
-            series_ids = range(0, len(self.series_names))
+            series_ids = list(range(0, len(self.series_names)))
             series_ids = set([str(n) for n in series_ids])
         else:
             series_ids = set(TimeSeriesResult.get_series_ids(metadata_obj=self))
@@ -1073,7 +996,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         if self.series_names:
             # applies only in the case of csv file upload
             # check that we have each type of metadata element for each of the series ids
-            series_ids = range(0, len(self.series_names))
+            series_ids = list(range(0, len(self.series_names)))
             series_ids = set([str(n) for n in series_ids])
             if self.sites and series_ids != set(Site.get_series_ids(metadata_obj=self)):
                 missing_required_elements.append('Site')
@@ -1719,16 +1642,16 @@ class TimeSeriesMetaDataMixin(models.Model):
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row (header)
-            header = csv_reader.next()
-            first_row_data = csv_reader.next()
-            second_row_data = csv_reader.next()
+            header = next(csv_reader)
+            first_row_data = next(csv_reader)
+            second_row_data = next(csv_reader)
             time_interval = (parser.parse(second_row_data[0]) -
                              parser.parse(first_row_data[0])).seconds / 60
 
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row (header) and skip
-            csv_reader.next()
+            next(csv_reader)
             value_id = 1
             data_header = header[1:]
             for col, value in enumerate(data_header):
@@ -1742,7 +1665,7 @@ class TimeSeriesMetaDataMixin(models.Model):
                 data_col_index = col + 1
                 # start at the beginning of data row
                 fl_obj.seek(0)
-                csv_reader.next()
+                next(csv_reader)
                 for date_time, data_value in self._read_csv_specified_column(
                         csv_reader, data_col_index):
                     date_time = parser.parse(date_time)
@@ -1870,7 +1793,7 @@ class TimeSeriesMetaDataMixin(models.Model):
             log.error("Failed to update blank SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.message))
+            log.exception("Failed to update blank SQLite file. Error:{}".format(str(ex)))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):
@@ -1885,22 +1808,6 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
     @property
     def resource(self):
         return TimeSeriesResource.objects.filter(object_id=self.id).first()
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-        from hs_file_types.models.timeseries import add_to_xml_container_helper
-
-        # get the xml string representation of the core metadata elements
-        xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-        add_to_xml_container_helper(self, container)
-
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         super(TimeSeriesMetaData, self).copy_all_elements_from(src_md, exclude_elements)

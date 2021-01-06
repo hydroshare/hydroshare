@@ -1,7 +1,7 @@
 import os
 import heapq
 import xml.sax
-import urlparse
+import urllib.parse
 import logging
 
 import rdflib
@@ -54,7 +54,7 @@ class HsDeserializationDependencyException(HsDeserializationException):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(self)
 
 
 def _prepare_resource_files_for_creation(file_paths):
@@ -124,13 +124,13 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                         resource_title=rm.title,
                                         page_redirect_url_key=None)
     except ResourceFileSizeException as ex:
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     except ResourceFileValidationException as ex:
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     except Exception as ex:
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     # Create the resource
     resource = None
@@ -165,7 +165,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                    **kwargs)
     except Exception as ex:
         logger.exception("Resource creation failed.")
-        raise HsDeserializationException(ex.message)
+        raise HsDeserializationException(str(ex))
 
     # Add additional metadata
     assert(resource is not None)
@@ -447,7 +447,7 @@ class GenericResourceMeta(object):
         SAX_parse_results = GenericResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Warn if title does not match that from resource map
         title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)
@@ -916,7 +916,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
         def set_uri(self, uri):
             """
@@ -936,7 +936,7 @@ class GenericResourceMeta(object):
 
             if is_hs_user_uri:
                 # Parse URI
-                parsed_uri = urlparse.urlparse(uri)
+                parsed_uri = urllib.parse.urlparse(uri)
                 # Set rel_uri
                 self.rel_uri = parsed_uri.path
 
@@ -974,7 +974,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ResourceRights(object):
 
@@ -989,7 +989,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ResourceCoverage(object):
         pass
@@ -1007,7 +1007,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1068,7 +1068,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1139,7 +1139,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
         def __init__(self, value_str):
             self.name = None  # Optional
@@ -1227,7 +1227,7 @@ class GenericResourceMeta(object):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
         def __init__(self, uri, relationship_uri):
             self.uri = None
@@ -1320,7 +1320,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     raise xml.sax.SAXException(msg)
                 # Create new contributor
                 contributor = GenericResourceMeta.ResourceContributor()
-                if attrs.has_key('rdf:about'):
+                if 'rdf:about' in attrs:
                     contributor.set_uri(attrs.getValue('rdf:about'))
                 self.contributors.append(contributor)
                 self._get_contributor_details = True
@@ -1355,7 +1355,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
 
         elif name == 'hsterms:phone':
             if self._get_contributor_details:
-                if not attrs.has_key('rdf:resource'):
+                if 'rdf:resource' not in attrs:
                     msg = "Error: hsterms:phone within dc:contributor element has no phone number."
                     raise xml.sax.SAXException(msg)
                 phone_raw = str(attrs.getValue('rdf:resource')).split(':')

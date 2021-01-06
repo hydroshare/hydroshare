@@ -1,0 +1,15 @@
+textarea.title-builder-output {
+    width: 100%;
+    margin-bottom: 1em;
+    cursor: not-allowed;
+}
+
+select.cz-select {
+    margin-bottom: 1em;
+    cursor: pointer;
+}
+
+span.inline-error {
+    color:red;
+    float:left
+}

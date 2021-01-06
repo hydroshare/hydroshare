@@ -1,8 +1,9 @@
 import unittest
 
 from django.contrib.auth.models import Group, AnonymousUser
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import NotFound
 
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
@@ -820,18 +821,18 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         res, authorized, user = authorize(self.request, res_id=self.res.short_id,
                                           needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
-        self.assertEquals(authorized, False)
-        self.assertEquals(res, self.res)
-        self.assertEquals(user, authenticated_user)
+        self.assertEqual(authorized, False)
+        self.assertEqual(res, self.res)
+        self.assertEqual(user, authenticated_user)
 
     def test_return_data(self):
         # test authorization True
         self.request.user = self.user
         res, authorized, user = authorize(self.request, res_id=self.res.short_id,
                                           needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        self.assertEquals(authorized, True)
-        self.assertEquals(res, self.res)
-        self.assertEquals(user, self.user)
+        self.assertEqual(authorized, True)
+        self.assertEqual(res, self.res)
+        self.assertEqual(user, self.user)
 
         # test authorization False
         anonymous_user = AnonymousUser()
@@ -839,16 +840,16 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         res, authorized, user = authorize(self.request, res_id=self.res.short_id,
                                           needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                                           raises_exception=False)
-        self.assertEquals(authorized, False)
-        self.assertEquals(res, self.res)
-        self.assertEquals(user, anonymous_user)
+        self.assertEqual(authorized, False)
+        self.assertEqual(res, self.res)
+        self.assertEqual(user, anonymous_user)
 
     def _run_tests(self, request, parameters):
         for params in parameters:
             if params['exception'] is None:
                 res, authorized, user = authorize(request, res_id=params['res_id'],
                                                   needed_permission=params['needed_permission'])
-                self.assertEquals(params['success'], authorized)
+                self.assertEqual(params['success'], authorized)
             else:
                 with self.assertRaises(params['exception']):
                     authorize(request, res_id=params['res_id'], needed_permission=params['needed_permission'])

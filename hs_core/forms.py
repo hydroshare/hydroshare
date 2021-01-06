@@ -9,8 +9,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
-from hydroshare import utils
-from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
+from .hydroshare import utils
+from .models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
     FundingAgency, Description
 
 
@@ -297,7 +297,7 @@ class BaseCreatorFormSet(BaseFormSet):
         """Collect and append creator data to form fields."""
         creators_data = []
         for form in self.forms:
-            creator_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            creator_data = {k: v for k, v in list(form.cleaned_data.items())}
             if creator_data:
                 creators_data.append({'creator': creator_data})
 
@@ -380,7 +380,7 @@ class BaseContributorFormSet(BaseFormSet):
         """Collect and append contributor data to form fields."""
         contributors_data = []
         for form in self.forms:
-            contributor_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            contributor_data = {k: v for k, v in list(form.cleaned_data.items())}
             if contributor_data:
                 contributors_data.append({'contributor': contributor_data})
 
@@ -759,7 +759,7 @@ class SubjectsForm(forms.Form):
             self.action = ""
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
 
@@ -870,7 +870,7 @@ class CoverageTemporalForm(forms.Form):
             self.action = ""
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
 
     def clean(self):
@@ -982,7 +982,7 @@ class CoverageSpatialForm(forms.Form):
             self.fields['units'].widget.attrs['value'] = 'Decimal degrees'
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
         else:
             self.fields['projection'].widget.attrs['readonly'] = True

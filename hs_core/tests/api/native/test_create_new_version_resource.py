@@ -53,8 +53,8 @@ class TestNewVersionResource(TestCase):
         test_file2 = open('test2.txt', 'w')
         test_file2.write("Test text file in test2.txt")
         test_file2.close()
-        self.test_file1 = open('test1.txt', 'r')
-        self.test_file2 = open('test2.txt', 'r')
+        self.test_file1 = open('test1.txt', 'rb')
+        self.test_file2 = open('test2.txt', 'rb')
 
         hydroshare.add_resource_files(self.res_generic.short_id, self.test_file1, self.test_file2)
 
@@ -63,7 +63,7 @@ class TestNewVersionResource(TestCase):
         temp_dir = tempfile.mkdtemp()
         temp_raster_file = os.path.join(temp_dir, 'cea.tif')
         shutil.copy(raster_file, temp_raster_file)
-        self.raster_obj = open(temp_raster_file, 'r')
+        self.raster_obj = open(temp_raster_file, 'rb')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
         self.res_raster = hydroshare.create_resource(
             resource_type='RasterResource',

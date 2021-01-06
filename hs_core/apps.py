@@ -10,4 +10,4 @@ class HSCoreAppConfig(AppConfig):
 
     def ready(self):
         """On application ready, import receivers for Django signals."""
-        import receivers  # noqa
+        from . import receivers  # noqa

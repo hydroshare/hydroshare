@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from hs_modelinstance.serializers import ModelInstanceMetaDataSerializer
-from models import ModelObjective, SimulationType, ModelMethod, ModelParameter, ModelInput, \
+from .models import ModelObjective, SimulationType, ModelMethod, ModelParameter, ModelInput, \
      ModelObjectiveChoices, ModelParametersChoices, SWATModelInstanceMetaData
 
 

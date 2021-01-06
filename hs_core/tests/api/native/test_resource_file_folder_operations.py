@@ -45,9 +45,9 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
         test_file.write("Test text file in file3.txt")
         test_file.close()
 
-        self.test_file_1 = open(self.test_file_name1, 'r')
-        self.test_file_2 = open(self.test_file_name2, 'r')
-        self.test_file_3 = open(self.test_file_name3, 'r')
+        self.test_file_1 = open(self.test_file_name1, 'rb')
+        self.test_file_2 = open(self.test_file_name2, 'rb')
+        self.test_file_3 = open(self.test_file_name3, 'rb')
 
     def tearDown(self):
         super(TestResourceFileFolderOprsAPI, self).tearDown()

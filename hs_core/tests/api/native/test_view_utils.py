@@ -28,7 +28,7 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         resource.save()
 
         open('myfile.txt', "w").close()
-        file = open('myfile.txt', 'r')
+        file = open('myfile.txt', 'rb')
 
         hydroshare.add_resource_files(resource.short_id, file)
         create_folder(resource.short_id, "data/contents/test_folder")
@@ -64,7 +64,7 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         resource.save()
 
         open('myfile.txt', "w").close()
-        file = open('myfile.txt', 'r')
+        file = open('myfile.txt', 'rb')
 
         hydroshare.add_resource_files(resource.short_id, file)
         create_folder(resource.short_id, "data/contents/test_folder")

@@ -44,7 +44,7 @@ def match_nested_dicts(d1, d2):
     if not isinstance(d1, dict): return False
     if not isinstance(d2, dict): return False
     # print("got two dicts")
-    if not match_lists_as_sets(d1.keys(), d2.keys()): return False
+    if not match_lists_as_sets(list(d1.keys()), list(d2.keys())): return False
     # print("same keys")
     for k in d1:
         # print("key is ", k)

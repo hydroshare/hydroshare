@@ -13,7 +13,7 @@ from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, Ge
 
 class CompositeResourceTestMixin(object):
 
-    def add_file_to_resource(self, file_to_add, upload_folder=None):
+    def add_file_to_resource(self, file_to_add, upload_folder=''):
         file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
                                       name=os.path.basename(file_to_add))
 
@@ -22,7 +22,7 @@ class CompositeResourceTestMixin(object):
         )
         return new_res_file
 
-    def add_files_to_resource(self, files_to_add, upload_folder=None):
+    def add_files_to_resource(self, files_to_add, upload_folder=''):
         files_to_upload = []
         for fl in files_to_add:
             file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))
@@ -31,13 +31,13 @@ class CompositeResourceTestMixin(object):
                                                   *files_to_upload, folder=upload_folder)
         return added_resource_files
 
-    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=None):
+    def create_composite_resource(self, file_to_upload=[], auto_aggregate=False, folder=''):
         if isinstance(file_to_upload, str):
             file_to_upload = [file_to_upload]
         files = []
         full_paths = {}
         for file_name in file_to_upload:
-            file_obj = open(file_name, 'r')
+            file_obj = open(file_name, 'rb')
             if folder:
                 full_paths[file_obj] = os.path.join(folder, file_name)
             uploaded_file = UploadedFile(file=file_obj, name=os.path.basename(file_obj.name))
@@ -138,9 +138,9 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     # testing extended metadata element: band information
     self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
     band_info = logical_file.metadata.bandInformations.first()
-    self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-    self.assertEqual(band_info.maximumValue, '2880.00708008')
-    self.assertEqual(band_info.minimumValue, '1870.63659668')
+    self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+    self.assertEqual(band_info.maximumValue, '2880.007080078125')
+    self.assertEqual(band_info.minimumValue, '1870.6365966796875')
 
 
 def assert_netcdf_file_type_metadata(self, title, aggr_folder):
@@ -153,7 +153,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.files.count(), 2)
     # check that we put the 2 files in a new folder *aggr_folder*
     for res_file in self.composite_resource.files.all():
-        if aggr_folder is not None:
+        if aggr_folder:
             expected_file_path = "{0}/{1}/{2}".format(self.composite_resource.file_path,
                                                       aggr_folder, res_file.file_name)
         else:
@@ -191,7 +191,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(self.composite_resource.metadata.sources.all().count(), 0)
 
     # there should be one license element:
-    self.assertNotEquals(self.composite_resource.metadata.rights.statement, 1)
+    self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
 
     # there should be no relation element
     self.assertEqual(self.composite_resource.metadata.relations.all().count(), 0)
@@ -212,10 +212,10 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 41.867126409)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.505940368)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138808)
+    self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
+    self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
+    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
+    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -244,9 +244,9 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # testing extended metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
-    self.assertNotEquals(ori_coverage, None)
+    self.assertNotEqual(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-    proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
+    proj_text = '+proj=tmerc +y_0=0.0 +x_0=500000.0 +k_0=0.9996 +lat_0=0.0 +lon_0=-111.0'
     self.assertEqual(ori_coverage.projection_string_text, proj_text)
     self.assertEqual(float(ori_coverage.value['northlimit']), 4.63515e+06)
     self.assertEqual(float(ori_coverage.value['eastlimit']), 458010.0)
@@ -260,7 +260,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test time variable
     var_time = logical_file.metadata.variables.all().filter(name='time').first()
-    self.assertNotEquals(var_time, None)
+    self.assertNotEqual(var_time, None)
     self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
     self.assertEqual(var_time.type, 'Float')
     self.assertEqual(var_time.shape, 'time')
@@ -268,7 +268,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test x variable
     var_x = logical_file.metadata.variables.all().filter(name='x').first()
-    self.assertNotEquals(var_x, None)
+    self.assertNotEqual(var_x, None)
     self.assertEqual(var_x.unit, 'Meter')
     self.assertEqual(var_x.type, 'Float')
     self.assertEqual(var_x.shape, 'x')
@@ -276,7 +276,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test y variable
     var_y = logical_file.metadata.variables.all().filter(name='y').first()
-    self.assertNotEquals(var_y, None)
+    self.assertNotEqual(var_y, None)
     self.assertEqual(var_y.unit, 'Meter')
     self.assertEqual(var_y.type, 'Float')
     self.assertEqual(var_y.shape, 'y')
@@ -284,7 +284,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
 
     # test SWE variable
     var_swe = logical_file.metadata.variables.all().filter(name='SWE').first()
-    self.assertNotEquals(var_swe, None)
+    self.assertNotEqual(var_swe, None)
     self.assertEqual(var_swe.unit, 'm')
     self.assertEqual(var_swe.type, 'Float')
     self.assertEqual(var_swe.shape, 'y,x,time')
@@ -295,7 +295,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     # test grid mapping variable
     var_grid = logical_file.metadata.variables.all(). \
         filter(name='transverse_mercator').first()
-    self.assertNotEquals(var_grid, None)
+    self.assertNotEqual(var_grid, None)
     self.assertEqual(var_grid.unit, 'Unknown')
     self.assertEqual(var_grid.type, 'Unknown')
     self.assertEqual(var_grid.shape, 'Not defined')
@@ -437,7 +437,7 @@ def assert_ref_time_series_file_type_metadata(self):
     self.assertEqual(len(logical_file.metadata.web_services), 2)
     web_urls = [web.url for web in logical_file.metadata.web_services]
     self.assertIn("http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL", web_urls)
-    self.assertIn("http://data.iutahepscor.org/ProvoRiverWOF/cuahsi_1_1.asmx?WSDL", web_urls)
+    self.assertIn("http://www.google.com", web_urls)
     web_service_types = [web.service_type for web in logical_file.metadata.web_services]
     self.assertIn("SOAP", web_service_types)
     self.assertEqual(len(set(web_service_types)), 1)

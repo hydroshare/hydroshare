@@ -910,81 +910,81 @@ def check_provenance_synchronization(self):
 
 
 def printGroupResourceProvenance():
-    print "==================================="
-    print "GroupResourcePrivilege"
+    print("===================================")
+    print("GroupResourcePrivilege")
     priv = GroupResourcePrivilege.objects.all().order_by('group__id', 'resource__id')
     o = None
     for p in priv:
         if o is not None and (p.group != o.group or p.resource != o.resource):
-            print "------------------------------"
+            print("------------------------------")
         print(p)
         o = p
-    print "==================================="
-    print "GroupResourceProvenance"
+    print("===================================")
+    print("GroupResourceProvenance")
     prov = GroupResourceProvenance.objects.all().order_by(
         'group__id', 'resource__id', 'start')
     o = None
     for p in prov:
         if o is not None and (p.group != o.group or p.resource != o.resource):
-            print "------------------------------"
+            print("------------------------------")
         current = GroupResourceProvenance.get_current_record(
             resource=p.resource, group=p.group)
         star = ''
         if current == p:
             star = 'CURRENT'
-        print(p, star)
+        print((p, star))
         o = p
 
 
 def printUserResourceProvenance():
-    print "==================================="
-    print "UserResourcePrivilege"
+    print("===================================")
+    print("UserResourcePrivilege")
     priv = UserResourcePrivilege.objects.all().order_by('user__id', 'resource__id')
     o = None
     for p in priv:
         if o is not None and (p.user != o.user or p.resource != o.resource):
-            print "------------------------------"
+            print("------------------------------")
         print(p)
         o = p
-    print "==================================="
-    print "UserResourceProvenance"
+    print("===================================")
+    print("UserResourceProvenance")
     prov = UserResourceProvenance.objects.all().order_by(
         'user__id', 'resource__id', 'start')
     o = None
     for p in prov:
         if o is not None and (p.user != o.user or p.resource != o.resource):
-            print "------------------------------"
+            print("------------------------------")
         current = UserResourceProvenance.get_current_record(
             resource=p.resource, user=p.user)
         star = ''
         if current == p:
             star = 'CURRENT'
-        print(p, star)
+        print((p, star))
         o = p
 
 
 def printUserGroupProvenance():
-    print "==================================="
-    print "UserGroupPrivilege"
+    print("===================================")
+    print("UserGroupPrivilege")
     priv = UserGroupPrivilege.objects.all().order_by('user__id', 'group__id')
     o = None
     for p in priv:
         if o is not None and (p.user != o.user or p.group != o.group):
-            print "------------------------------"
+            print("------------------------------")
         pprint(p)
         o = p
-    print "==================================="
-    print "UserGroupProvenance"
+    print("===================================")
+    print("UserGroupProvenance")
     prov = UserGroupProvenance.objects.all().order_by(
         'user__id', 'group__id', 'start')
     o = None
     for p in prov:
         if o is not None and (p.user != o.user or p.group != o.group):
-            print "------------------------------"
+            print("------------------------------")
         current = UserGroupProvenance.get_current_record(
             group=p.group, user=p.user)
         star = ''
         if current == p:
             star = 'CURRENT'
-        print(p, star)
+        print((p, star))
         o = p

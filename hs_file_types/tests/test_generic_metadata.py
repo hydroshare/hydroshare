@@ -8,7 +8,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
-from utils import CompositeResourceTestMixin
+from .utils import CompositeResourceTestMixin
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 
@@ -49,7 +49,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
         # file has no folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
@@ -397,7 +397,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create generic aggregation
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # test rename of file is allowed
         src_path = 'data/contents/{}'.format(res_file.file_name)
         tgt_path = "data/contents/{0}_1{1}".format(base_file_name, ext)
@@ -419,7 +419,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create generic aggregation
         GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         # test moving the file to a new folder is allowed
         new_folder = 'test_folder'
@@ -484,8 +484,8 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
 
         self.assertEqual(1, GenericLogicalFile.objects.count())
-        self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file_type())
-        self.assertEqual(None, GenericLogicalFile.objects.first().get_main_file)
+        self.assertEqual(".*", GenericLogicalFile.objects.first().get_main_file_type())
+        self.assertEqual(res_file, GenericLogicalFile.objects.first().get_main_file)
 
     def test_has_modified_metadata_no_change(self):
         self.create_composite_resource(self.generic_file)

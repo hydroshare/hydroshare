@@ -43,7 +43,7 @@ class TestSetAccessRules(HSRESTTestCase):
         sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['resource_type'], rtype)
         self.assertEqual(content['resource_title'], title)
         self.assertFalse(content['public'])

@@ -1,7 +1,6 @@
 {% load crispy_forms_tags hydroshare_tags %}
 
 <input id="resID" type="hidden" value="{{ cm.short_id }}"/>
-
 {% if page.perms.change and resource_edit_mode %}
     <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
          aria-hidden="true">
@@ -30,284 +29,377 @@
         </div>
     </div>
 
-    <div class="modal fade" id="add-creator-dialog" tabindex="-1" role="dialog" aria-labelledby="add-creator" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="add-creator"> Add Author </h4>
-                </div>
 
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-5 text-center">
-                            <div class="radio-inline center-radio-inline text-center">
-                                <label>
-                                    <div>Person</div>
-                                    <input type="radio" checked name="add_author_user_type" value="person">
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-2 text-center or-separator">
-                            <span class="text-muted">- Or -</span>
-                        </div>
-
-                        <div class="col-sm-5 text-center">
-                            <div class="radio-inline center-radio-inline text-center">
-                                <label>
-                                    <div>Organization</div>
-                                    <input type="radio" name="add_author_user_type" value="organization">
-                                </label>
-                            </div>
-                        </div>
+    <script id="add-author-modal-template" type="text/x-template">
+        <div class="modal fade" id="add-author-modal" tabindex="-1" role="dialog"
+             aria-labelledby="add-creator" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="add-creator"> Add Author </h4>
                     </div>
 
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <hr>
-                        </div>
-                    </div>
-                </div>
-
-                {# Person #}
-                <div data-hs-user-type="person">
                     <div class="modal-body">
-                        <div class="row">
-                            <div class="col-sm-5 text-center">
-                                <div class="radio-inline center-radio-inline text-center">
-                                    <label>
-                                        <div>Existing HydroShare User</div>
-                                        <input type="radio" checked name="add_author_person" value="hs_user">
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-2 text-center or-separator">
-                                <span class="text-muted">- Or -</span>
-                            </div>
-
-                            <div class="col-sm-5 text-center">
-                                <div class="radio-inline center-radio-inline text-center">
-                                    <label>
-                                        <div>Other</div>
-                                        <input type="radio" name="add_author_person" value="other_person">
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <hr>
-                            </div>
+                        <div class="btn-group flex author-types" role="group" aria-label="Author type">
+                            <button @click="authorType = authorTypes.EXISTING_HS_USER"
+                                    :class="{'btn-primary': authorType === authorTypes.EXISTING_HS_USER, 'btn-default': authorType !== authorTypes.EXISTING_HS_USER}"
+                                    type="button" class="btn">Existing<br>HydroShare User
+                            </button>
+                            <button @click="authorType = authorTypes.OTHER_PERSON"
+                                    :class="{'btn-primary': authorType === authorTypes.OTHER_PERSON, 'btn-default': authorType !== authorTypes.OTHER_PERSON}"
+                                    type="button" class="btn">Other Person
+                            </button>
+                            <button @click="authorType = authorTypes.ORGANIZATION"
+                                    :class="{'btn-primary': authorType === authorTypes.ORGANIZATION, 'btn-default': authorType !== authorTypes.ORGANIZATION}"
+                                    type="button" class="btn">Organization
+                            </button>
                         </div>
                     </div>
-                    {#  Existing HydroShare User  #}
-                    <div data-hs-person-type="hs_user">
-                        <div class="modal-body">
-                            {{ add_view_hs_user_form.user }}
-                        </div>
 
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                              enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input name="resource-mode" type="hidden" value="edit">
+                    <hr>
 
-                            <div class="modal-body" style="display:none;">
-                                <input maxlength="100" name="name" type="text">
-                                <input name="description" type="text">
-                                <input name="organization" type="text">
-                                <input name="email" type="email">
-                                <input maxlength="250" name="address" type="text">
-                                <input maxlength="25" name="phone" type="text">
-                                <input maxlength="200" name="homepage" type="url">
-                                <div id="identifiers"></div>
+                    {# Person #}
+                    <div>
+                        {#  Existing HydroShare User  #}
+                        <div v-show="authorType === authorTypes.EXISTING_HS_USER">
+                            <div class="modal-body">
+                                {{ add_view_hs_user_form.user }}
+
+                                <div v-if="addAuthorError" class="alert alert-danger space-top">
+                                    ${addAuthorError}
+                                </div>
                             </div>
 
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-add-author" type="button" class="btn btn-primary">
-                                    Save Changes
+                                <button :disabled="isAddingAuthor" type="button"
+                                        class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button @click="addAuthorExistingUser"
+                                        :disabled="isAddingAuthor"
+                                    type="button" class="btn btn-primary">
+                                    <template v-if="isAddingAuthor">Saving Changes...</template>
+                                    <template v-else>Save Changes</template>
                                 </button>
                             </div>
-                        </form>
-                    </div>
-
-                    {# Other Person #}
-                    {% with "person-type-other-person" as div_id %}
-                        <div data-hs-person-type="other_person" style="display:none;">
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                                  enctype="multipart/form-data">
-                                {% csrf_token %}
-                                <input name="resource-mode" type="hidden" value="edit">
-                                <div class="modal-body">
-                                    {% csrf_token %}
-                                    <div class="form-group">
-                                        {% csrf_token %}
-                                        <fieldset>
-                                            <div id="{{ div_id }}_name" class="control-group">
-                                                <label for="{{ div_id }}_input_name"
-                                                       class="control-label requiredField" >Name<span
-                                                        class="asteriskField">*</span>
-                                                </label>
-
-                                                <div class="controls">
-                                                    <input class="form-control input-sm textinput textInput"
-                                                           id="{{ div_id }}_input_name" maxlength="100" name="name"
-                                                           required="required" type="text"
-                                                           placeholder="e.g. 'Smith, John Arnold'">
-                                                </div>
-                                            </div>
-
-                                            <div id="{{ div_id }}_organization" class="control-group">
-                                                <label for="{{ div_id }}_input_organization"
-                                                       class="control-label">Organization</label>
-                                                <div class="controls">
-                                                    <input class="form-control input-sm textinput textInput"
-                                                           id="{{ div_id }}_input_organization" maxlength="200"
-                                                           name="organization" type="text">
-                                                </div>
-                                            </div>
-                                            <div id="{{ div_id }}_email" class="control-group">
-                                                <label for="{{ div_id }}_input_email"
-                                                       class="control-label">Email</label>
-
-                                                <div class="controls">
-                                                    <input class="form-control input-sm emailinput"
-                                                           id="{{ div_id }}_input_email" maxlength="75" name="email"
-                                                           type="email">
-                                                </div>
-                                            </div>
-                                            <div id="{{ div_id }}_address" class="control-group">
-                                                <label for="{{ div_id }}_input_address"
-                                                       class="control-label">Address</label>
-                                                <div class="controls">
-                                                    <input class="form-control input-sm textinput textInput"
-                                                           id="{{ div_id }}_input_address" maxlength="250"
-                                                           name="address"
-                                                           type="text">
-                                                </div>
-                                            </div>
-                                            <div id="{{ div_id }}_phone" class="control-group">
-                                                <label for="{{ div_id }}_input_phone"
-                                                       class="control-label">Phone</label>
-                                                <div class="controls">
-                                                    <input class="form-control input-sm textinput textInput"
-                                                           id="{{ div_id }}_input_phone" maxlength="25" name="phone"
-                                                           type="text">
-                                                </div>
-                                            </div>
-                                            <div id="{{ div_id }}_homepage" class="control-group">
-                                                <label for="{{ div_id }}_input_homepage"
-                                                       class="control-label">Homepage</label>
-                                                <div class="controls">
-                                                    <input class="form-control input-sm urlinput"
-                                                           id="{{ div_id }}_input_homepage" maxlength="200"
-                                                           name="homepage"
-                                                           type="url">
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                        <label class="control-label">Author Identifiers</label>
-                                        <div class="modal-identifiers-container height-fix">
-                                            {% include "includes/identifiers-form.html" %}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
-                                </div>
-                            </form>
                         </div>
-                    {% endwith %}
-                </div>
 
-                {#  Organization  #}
-                <div data-hs-user-type="organization" style="display:none">
-                    {#  Other Organization  #}
-                    {% with "org-type-other-org" as div_id %}
-                    <div data-hs-org-type="other_organization">
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                              enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input name="resource-mode" type="hidden" value="edit">
+                        {# Other Person or Organization #}
+                        <div v-show="authorType === authorTypes.OTHER_PERSON || authorType === authorTypes.ORGANIZATION">
                             <div class="modal-body">
-                                {% csrf_token %}
                                 <div class="form-group">
-                                    {% csrf_token %}
                                     <fieldset>
-                                        <div id="{{ div_id }}_name" class="control-group" style="display:none">
-                                            <label for="{{ div_id }}_input_name" class="control-label">Name</label>
+                                        {# NAME #}
+                                        <div v-if="authorType === authorTypes.OTHER_PERSON"
+                                             class="control-group control-group--name">
+                                            <label for="creator-name"
+                                                   class="control-label requiredField">Name<span
+                                                class="asteriskField">*</span>
+                                            </label>
 
                                             <div class="controls">
-                                                <input class="form-control input-sm textinput textInput"
-                                                       id="{{ div_id }}_input_name" maxlength="100" name="name"
-                                                       type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'">
+                                                <input v-model="author.name"
+                                                       id="creator-name"
+                                                       placeholder="e.g. 'Smith, John Arnold'"
+                                                       required="required"
+                                                       class="form-control input-sm textinput textInput"
+                                                       maxlength="100">
                                             </div>
                                         </div>
-                                        <div id="{{ div_id }}_organization" class="control-group">
-                                            <label for="{{ div_id }}_input_organizatio"
-                                                   class="control-label requiredField">Organization Name<span
-                                                    class="asteriskField">*</span>
+
+                                        {# ORGANIZATION #}
+                                        <div class="control-group">
+                                            <label for="creator-organization"
+                                                   class="control-label">Organization
+                                                <span v-if="authorType === authorTypes.ORGANIZATION">*</span>
                                             </label>
+
                                             <div class="controls">
-                                                <input class="form-control input-sm textinput textInput"
-                                                       id="{{ div_id }}_input_organizatio" maxlength="200"
-                                                       name="organization" type="text"
-                                                       placeholder="e.g. 'U.S. Army Corps of Engineers'"
-                                                       required="required">
+                                                <input v-model="author.organization" id="creator-organization"
+                                                       required="authorType === authorTypes.ORGANIZATION"
+                                                       type="text" maxlength="200"
+                                                       class="form-control input-sm textinput textInput">
                                             </div>
                                         </div>
-                                        <div id="{{ div_id }}_email" class="control-group">
-                                            <label for="{{ div_id }}_input_email" class="control-label">Email</label>
+
+                                        {# EMAIL #}
+                                        <div class="control-group">
+                                            <label for="creator-email" class="control-label">Email</label>
+
                                             <div class="controls">
-                                                <input class="form-control input-sm emailinput"
-                                                       id="{{ div_id }}_input_email" maxlength="75" name="email"
-                                                       type="email">
+                                                <input v-model="author.email" id="creator-email"
+                                                       class="form-control input-sm emailinput"
+                                                       maxlength="75" type="email">
                                             </div>
                                         </div>
-                                        <div id="{{ div_id }}_address" class="control-group">
-                                            <label for="{{ div_id }}_input_address"
-                                                   class="control-label">Address</label>
+
+                                        {# ADDRESS #}
+                                        <div class="control-group">
+                                            <label for="creator-address" class="control-label">Address</label>
+
                                             <div class="controls">
-                                                <input class="form-control input-sm textinput textInput"
-                                                       id="{{ div_id }}_input_address" maxlength="250" name="address"
-                                                       type="text">
+                                                <input v-model="author.address" id="creator-address"
+                                                       class="form-control input-sm textinput textInput"
+                                                       maxlength="250" type="text">
                                             </div>
                                         </div>
-                                        <div id="{{ div_id }}_phone" class="control-group">
-                                            <label for="{{ div_id }}_input_phone" class="control-label">Phone</label>
+
+                                        {# PHONE #}
+                                        <div class="control-group">
+                                            <label for="creator-phone" class="control-label">Phone</label>
+
                                             <div class="controls">
-                                                <input class="form-control input-sm textinput textInput"
-                                                       id="{{ div_id }}_input_phone" maxlength="25" name="phone"
-                                                       type="text">
+                                                <input v-model="author.phone" id="creator-phone"
+                                                       class="form-control input-sm textinput textInput"
+                                                       maxlength="25" type="text">
                                             </div>
                                         </div>
-                                        <div id="{{ div_id }}_homepage" class="control-group">
-                                            <label for="{{ div_id }}_input_homepage"
-                                                   class="control-label">Homepage</label>
+
+                                        {# HOMEPAGE #}
+                                        <div class="control-group">
+                                            <label for="creator-homepage" class="control-label">Homepage</label>
+
                                             <div class="controls">
-                                                <input class="form-control input-sm urlinput"
-                                                       id="{{ div_id }}_input_homepage" maxlength="200"
-                                                       name="homepage" type="url">
+                                                <input v-model="author.homepage" id="creator-homepage"
+                                                       class="form-control input-sm urlinput"
+                                                       maxlength="200" type="url">
                                             </div>
                                         </div>
                                     </fieldset>
+
+                                    {# AUTHOR IDENTIFIERS #}
+                                    <template v-if="authorType !== authorTypes.ORGANIZATION">
+                                        <label class="control-label">Author Identifiers</label>
+
+                                        <div class="modal-identifiers-container height-fix">
+                                            <div class="edit-identifiers-container">
+                                                <div v-for="(identifier, index) in author.identifiers" class="well">
+                                                    <div style="height:22px;">
+                                                        <button @click="onDeleteIdentifier(index)" type="button"
+                                                                class="close">&times;</button>
+                                                    </div>
+                                                    <fieldset class="select-identifier-fieldset">
+                                                        <label>Identifier Name</label>
+                                                        <select v-model="identifier.identifierName"
+                                                                class="form-control select-identifier">
+                                                            <option v-for="ident in identifierDict"
+                                                                    :disabled="hasIdentifier(ident.value)"
+                                                                    :value="ident.value">
+                                                                ${ident.title}
+                                                            </option>
+                                                        </select>
+                                                    </fieldset>
+
+                                                    <fieldset>
+                                                        <label>Identifier Link</label>
+                                                        <input v-model="identifier.identifierLink"
+                                                               class="form-control identifier-link">
+                                                    </fieldset>
+                                                </div>
+                                            </div>
+
+                                            <button @click="onAddIdentifier"
+                                                    type="button" class="btn btn-success">
+                                                <i class="fa fa-plus" aria-hidden="true"></i> Add New
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
+                                <div v-if="addAuthorError" v-html="addAuthorError" class="alert alert-danger space-top"></div>
                             </div>
+
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary btn-disable-after-valid">Save Changes</button>
+                                <button :disabled="isAddingAuthor"
+                                        type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                                </button>
+                                <button @click="addAuthorOtherPerson" :disabled="isAddingAuthor"
+                                        type="button" class="btn btn-primary">
+                                    <template v-if="isAddingAuthor">Saving changes...</template>
+                                    <template v-else>Save changes</template>
+                                </button>
                             </div>
-                        </form>
+                        </div>
                     </div>
-                    {% endwith %}
                 </div>
             </div>
         </div>
-    </div>
+    </script>
+
+    <script id="edit-author-modal-template" type="text/x-template">
+        <div class="modal fade" id="edit-author-modal"
+             tabindex="-1" role="dialog" aria-labelledby="edit-creator" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
+                    </div>
+
+                    <div v-if="can_remove" class="modal-body">
+                        <div class="flex">
+                            <span @click="showConfirmDelete = !showConfirmDelete" title="Remove author"
+                                  class="glyphicon glyphicon-trash icon-button table-icon btn-remove space-right">
+                            </span>
+
+                            <transition name="fade">
+                                <div v-if="showConfirmDelete">
+                                    <div>
+                                        <strong>Are you sure you want to delete this metadata element?</strong>
+                                    </div>
+
+                                    <div class="space-top">
+                                        <button :disabled="is_deleting_author"
+                                                @click="showConfirmDelete = false"
+                                                type="button" class="btn btn-default">Cancel
+                                        </button>
+                                        <a :disabled="is_deleting_author"
+                                           @click="onDeleteAuthor()" type="button" class="btn btn-danger">
+                                            <template v-if="is_deleting_author">Deleting...</template>
+                                            <template v-else>Delete</template>
+                                        </a>
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <fieldset>
+                                {# NAME #}
+                                <div v-if="is_person" class="control-group">
+                                    <label for="creator-name" class="control-label requiredField">Name<span
+                                        class="asteriskField">*</span>
+                                    </label>
+
+                                    <div class="controls">
+                                        <input v-model="author.name"
+                                               :required="is_person ? 'required' : 'false'"
+                                               id="creator-name"
+                                               placeholder="e.g. 'Smith, John Arnold'"
+                                               class="form-control input-sm textinput textInput"
+                                               maxlength="100">
+                                    </div>
+                                </div>
+
+                                {# PROFILE URL #}
+                                <div v-if="author.profileUrl" class="control-group">
+                                    <label class="control-label space-right">HydroShare Profile</label>
+                                    <div class="space-bottom"><a :href="author.profileUrl">View Profile</a></div>
+                                </div>
+
+                                {# ORGANIZATION #}
+                                <div class="control-group">
+                                    <label for="creator-organization" class="control-label">Organization
+                                        <span v-if="!is_person" class="asteriskField">*</span></label>
+
+                                    <div class="controls">
+                                        <input v-model="author.organization" id="creator-organization"
+                                               :class="{requiredField: !is_person}"
+                                               :required="is_person ? false : 'required'"
+                                               type="text" maxlength="200"
+                                               class="form-control input-sm textinput textInput">
+                                    </div>
+                                </div>
+
+                                {# EMAIL #}
+                                <div class="control-group">
+                                    <label for="creator-email" class="control-label">Email</label>
+
+                                    <div class="controls">
+                                        <input v-model="author.email" id="creator-email"
+                                               class="form-control input-sm emailinput"
+                                               maxlength="75" type="email">
+                                    </div>
+                                </div>
+
+                                {# ADDRESS #}
+                                <div class="control-group">
+                                    <label for="creator-address" class="control-label">Address</label>
+
+                                    <div class="controls">
+                                        <input v-model="author.address" id="creator-address"
+                                               class="form-control input-sm textinput textInput"
+                                               maxlength="250" type="text">
+                                    </div>
+                                </div>
+
+                                {# PHONE #}
+                                <div class="control-group">
+                                    <label for="creator-phone" class="control-label">Phone</label>
+
+                                    <div class="controls">
+                                        <input v-model="author.phone" id="creator-phone"
+                                               class="form-control input-sm textinput textInput"
+                                               maxlength="25" type="text">
+                                    </div>
+                                </div>
+
+                                {# HOMEPAGE #}
+                                <div class="control-group">
+                                    <label for="creator-homepage" class="control-label">Homepage</label>
+
+                                    <div class="controls">
+                                        <input v-model="author.homepage" id="creator-homepage"
+                                               class="form-control input-sm urlinput"
+                                               maxlength="200" type="url">
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            {# AUTHOR IDENTIFIERS #}
+                            <template v-if="is_person">
+                                <label class="control-label">Author Identifiers</label>
+                                <div class="modal-identifiers-container height-fix">
+                                    <div class="edit-identifiers-container">
+                                        <div v-for="(identifier, index) in author.identifiers" class="well">
+                                            <div style="height:22px;">
+                                                <button @click="onDeleteIdentifier(index)" type="button"
+                                                        class="close">&times;</button>
+                                            </div>
+                                            <fieldset class="select-identifier-fieldset">
+                                                <label>Identifier Name</label>
+                                                <select v-model="identifier.identifierName"
+                                                        class="form-control select-identifier">
+                                                    <option v-for="ident in identifierDict"
+                                                            :disabled="hasIdentifier(ident.value)"
+                                                            :value="ident.value">
+                                                        ${ident.title}
+                                                    </option>
+                                                </select>
+                                            </fieldset>
+
+                                            <fieldset>
+                                                <label>Identifier Link</label>
+                                                <input v-model="identifier.identifierLink"
+                                                       class="form-control identifier-link">
+                                            </fieldset>
+                                        </div>
+                                    </div>
+
+                                    <button @click="onAddIdentifier"
+                                            type="button" class="btn btn-success">
+                                        <i class="fa fa-plus" aria-hidden="true"></i> Add New
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                        <div v-if="edit_author_error" v-html="edit_author_error" class="alert alert-danger space-top"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button :disabled="is_updating_author || is_deleting_author"
+                                type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button @click="onSaveAuthor"
+                                :disabled="is_updating_author || is_deleting_author"
+                                type="button" class="btn btn-primary">
+                            <template v-if="is_updating_author">Saving changes...</template>
+                            <template v-else>Save changes</template>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
 
     <div class="modal fade in" id="add-contributor-dialog" tabindex="-1" role="dialog"
          aria-labelledby="add-contributor" aria-hidden="true">
@@ -319,40 +411,21 @@
                 </div>
 
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-5 text-center">
-                            <div class="radio-inline center-radio-inline text-center">
-                                <label>
-                                    <div>Existing HydroShare User</div>
-                                    <input type="radio" name="add_contributor_user_type" value="hs_user" checked>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-2 text-center or-separator">
-                            <span class="text-muted">- Or -</span>
-                        </div>
-
-                        <div class="col-sm-5 text-center">
-                            <div class="radio-inline center-radio-inline text-center">
-                                <label>
-                                    <div>Other</div>
-                                    <input type="radio" name="add_contributor_user_type" value="other">
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <hr>
-                        </div>
+                    <div class="btn-group flex author-types" role="group"
+                         aria-label="Author type">
+                        <button class="btn btn-primary" data-contributor-type="hs_user" type="button">
+                            Existing<br>HydroShare User
+                        </button>
+                        <button class="btn btn-default" data-contributor-type="other" type="button">
+                            Other Person
+                        </button>
                     </div>
                 </div>
+                <hr>
 
                 {#  Existing HydroShare User  #}
                 {% with "user-type-hs-user" as div_id %}
-                <div data-hs-user-type="hs_user">
+                <div data-contributor-type="hs_user">
                     <div class="modal-body">
                         {{ add_view_contrib_user_form.user }}
                     </div>
@@ -447,7 +520,7 @@
 
                 {#  Other Person #}
                 {% with "user-type-other-user" as div_id %}
-                <div data-hs-user-type="other" style="display:none">
+                <div data-contributor-type="other" style="display:none">
                     <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
                           enctype="multipart/form-data">
                         {% csrf_token %}
@@ -462,6 +535,7 @@
 
                                         <div class="controls">
                                             <input class="form-control input-sm textinput textInput"
+                                                   placeholder="e.g. 'Smith, John Arnold'"
                                                    id="{{ div_id }}_input_name" maxlength="100" name="name"
                                                    required="required" type="text">
                                         </div>
@@ -1060,7 +1134,9 @@
                                         <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                             <option value="">---------</option>
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% if type_display != "The content of this resource is hosted by" %}
+                                                    <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1112,38 +1188,51 @@
                                     <label class="control-label requiredField">Name<span
                                             class="asteriskField">*</span></label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_contributor-{{ contributor.order|add:"-1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"-1" }}-name"
-                                            required="required" type="text" value="{% if contributor.name %}{{ contributor.name }}{% endif %}"></div>
+                                    <div class="controls">
+                                        <input class="form-control input-sm textinput textInput"
+                                               id="id_contributor-{{ contributor.order|add:"-1" }}-name"
+                                               placeholder="e.g. 'Smith, John Arnold'"
+                                               maxlength="100" name="contributor-{{ contributor.order|add:"-1" }}-name"
+                                               required="required" type="text"
+                                               value="{% if contributor.name %}{{ contributor.name }}{% endif %}">
+                                    </div>
                                 </div>
                                 {% if contributor.description %}
                                     <div id="div_id_description" class="control-group">
-                                        <label class="control-label">HydroShare User Identifier (URL)</label>
+                                        <label class="control-label">HydroShare Profile</label>
+                                        <div class="space-bottom">
+                                            <a href="{{ contributor.description }}">View Profile</a>
+                                        </div>
 
-                                        <div class="controls"><input
-                                                class="form-control input-sm urlinput"
-                                                id="id_creator-{{ contributor.order|add:"-1" }}-description"
-                                                maxlength="200"
-                                                name="creator-{{ contributor.order|add:"-1" }}-description" type="url"
-                                                value="{{ contributor.description }}"
-                                                readonly></div>
+                                        <div class="controls hidden">
+                                            <input class="form-control input-sm urlinput"
+                                                   id="id_creator-{{ contributor.order|add:"-1" }}-description"
+                                                   maxlength="200"
+                                                   name="creator-{{ contributor.order|add:"-1" }}-description"
+                                                   type="url"
+                                                   value="{{ contributor.description }}"
+                                                   readonly>
+                                        </div>
                                     </div>
                                 {% endif %}
                                 <div id="div_id_organization" class="control-group">
                                     <label class="control-label">Organization</label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm textinput textInput"
-                                            id="id_contributor-{{ contributor.order|add:"-1" }}-organization" maxlength="200"
-                                            name="contributor-{{ contributor.order|add:"-1" }}-organization" type="text" value="{% if contributor.organization %}{{ contributor.organization }}{% endif %}"></div>
+                                    <div class="controls">
+                                        <input class="form-control input-sm textinput textInput" type="text"
+                                               id="id_contributor-{{ contributor.order|add:"-1" }}-organization"
+                                               maxlength="200"
+                                               name="contributor-{{ contributor.order|add:"-1" }}-organization"
+                                               value="{% if contributor.organization %}{{ contributor.organization }}{% endif %}">
+                                    </div>
                                 </div>
                                 <div id="div_id_email" class="control-group">
                                     <label class="control-label">Email</label>
 
                                     <div class="controls">
                                         <input class="form-control input-sm emailinput"
-                                               id="id_contributor-{{ contributor.order|add:"-1" }}-email" maxlength="75" name="contributor-{{ contributor.order|add:"- 1" }}-email"
+                                               id="id_contributor-{{ contributor.order|add:"-1" }}-email"
+                                               maxlength="75" name="contributor-{{ contributor.order|add:"- 1" }}-email"
                                                type="email" value="{% if contributor.email %}{{ contributor.email }}{% endif %}">
                                     </div>
                                 </div>
@@ -1162,17 +1251,20 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput"
-                                               id="id_contributor-{{ contributor.order|add:"-1" }}-phone" maxlength="25" name="contributor-{{ contributor.order|add:"- 1" }}-phone"
+                                               id="id_contributor-{{ contributor.order|add:"-1" }}-phone" maxlength="25"
+                                               name="contributor-{{ contributor.order|add:"- 1" }}-phone"
                                                type="text" value="{% if contributor.phone %}{{ contributor.phone }}{% endif %}">
                                     </div>
                                 </div>
                                 <div id="div_id_homepage" class="control-group">
                                     <label class="control-label">Homepage</label>
 
-                                    <div class="controls"><input
-                                            class="form-control input-sm urlinput"
-                                            id="id_contributor-{{ contributor.order|add:"-1" }}-homepage" maxlength="200" name="contributor-{{ contributor.order|add:"-1" }}-homepage"
-                                            type="url" value="{% if contributor.homepage %}{{ contributor.homepage }}{% endif %}"></div>
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput" type="url"
+                                            id="id_contributor-{{ contributor.order|add:"-1" }}-homepage"
+                                            maxlength="200" name="contributor-{{ contributor.order|add:"-1" }}-homepage"
+                                            value="{% if contributor.homepage %}{{ contributor.homepage }}{% endif %}">
+                                    </div>
                                 </div>
                             </fieldset>
                             <label class="control-label">Author Identifiers</label>
@@ -1208,130 +1300,6 @@
         </div>
     </div>
     {% endfor %}
-
-    <div class="modal fade" id="edit-creator-dialog" tabindex="-1" role="dialog"
-         aria-labelledby="edit-creator" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"
-                            aria-hidden="true">×
-                    </button>
-                    <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
-                </div>
-
-                <div class="modal-body modal-body--delete">
-                    <span title="Remove"
-                       data-toggle="collapse" data-target="#confirm-delete-author"
-                       class="glyphicon glyphicon-trash icon-button table-icon btn-remove"></span>
-
-                    <div id="confirm-delete-author" class="collapse row" style="margin-top: 35px;">
-                        <div class="col-xs-6">
-                            <strong>Are you sure you want to delete this metadata element?</strong>
-                        </div>
-                        <div class="col-xs-6">
-                            <button type="button" class="btn btn-default" data-toggle="collapse"
-                                    style="margin-right: 5px;"
-                                    data-target="#confirm-delete-author">Cancel
-                            </button>
-                            <a type="button" class="btn btn-danger btn-disable-after"
-                               href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/">
-                                Delete
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit">
-
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <fieldset>
-                                <div class="control-group control-group--name">
-                                    <label for="creator-name" class="control-label requiredField">Name<span
-                                            class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <input id="creator-name" class="form-control input-sm textinput textInput"
-                                               maxlength="100">
-                                    </div>
-                                </div>
-
-                                <div class="control-group control-group--description">
-                                    <label for="creator-description" class="control-label">HydroShare User Identifier (URL)</label>
-
-                                    <div class="controls">
-                                        <input id="creator-description" class="form-control input-sm urlinput"
-                                               maxlength="200" type="url" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="control-group control-group--organization">
-                                    <label for="creator-organization" class="control-label">Organization<span class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <input id="creator-organization" type="text"
-                                               class="form-control input-sm textinput textInput" maxlength="200">
-                                    </div>
-                                </div>
-
-                                <div class="control-group control-group--email">
-                                    <label for="creator-email" class="control-label">Email</label>
-
-                                    <div class="controls">
-                                        <input id="creator-email" class="form-control input-sm emailinput" maxlength="75"
-                                               type="email">
-                                    </div>
-                                </div>
-
-                                <div class="control-group control-group--address">
-                                    <label for="creator-address" class="control-label">Address</label>
-
-                                    <div class="controls">
-                                        <input id="creator-address" class="form-control input-sm textinput textInput"
-                                               maxlength="250" type="text">
-                                    </div>
-                                </div>
-
-                                <div class="control-group control-group--phone">
-                                    <label for="creator-phone" class="control-label">Phone</label>
-
-                                    <div class="controls">
-                                        <input id="creator-phone" class="form-control input-sm textinput textInput"
-                                               maxlength="25" type="text">
-                                    </div>
-                                </div>
-
-                                <div class="control-group control-group--homepage">
-                                    <label for="creator-homepage" class="control-label">Homepage</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm urlinput"
-                                               id="creator-homepage" maxlength="200" type="url">
-                                    </div>
-                                </div>
-                            </fieldset>
-
-                            <label class="control-label">Author Identifiers</label>
-                            <div class="modal-identifiers-container height-fix">
-                                {% include "includes/identifiers-form.html" with identifiers=author.identifiers %}
-                            </div>
-                        </div>
-                    </div>
-
-                    {# Hidden in replacement for drag and drop, but still needed for form submission here #}
-                    <input class="hidden-form input-order" type="number">
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="add-source"
          aria-hidden="true">
@@ -1398,7 +1366,9 @@
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% if type_display != "The content of this resource is hosted by" %}
+                                                    <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1421,6 +1391,61 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="customize-citation-dialog" tabindex="-1" role="dialog" aria-labelledby="customize-citation"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                {% if custom_citation %}
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/citation/{{ citation_id }}/update-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                {% else %}
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/citation/add-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                {% endif %}
+                <input type="hidden" name="resource-mode">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="customize-citation">Custom Citation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="custom-citation-input">Provide the full text of how you would like this resource to be cited:</label>
+                            <textarea class="form-control" name="content" id="custom-citation-input" cols="30"
+                                      rows="3">{% if custom_citation %}{{ custom_citation }}{% endif %}</textarea>
+                            Suggested Format: Creator(s) (Publication Year). Title,  Version, Publisher, Resource Type, Identifier (preferably encoded as a URL)
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        {% if custom_citation %}
+                        <script language="JavaScript">
+                          function AsyncRevertCitation() {
+                            $('#customize-citation-dialog').toggle();
+                            document.body.style.cursor = 'wait';
+                            $.ajax({
+                              type: "POST",
+                              url: "/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/",
+                            }).complete(function() {
+                              document.body.style.cursor = 'default';
+                              if (window.location.href.includes('?resource-mode=edit')) {
+                                location.reload();
+                              } else {
+                                window.location.href = window.location.href + '?resource-mode=edit';
+                              }
+                            });
+                          }
+                        </script>
+                        <a id="remove-citation-link" href="javascript:AsyncRevertCitation()"><i class="glyphicon glyphicon-trash table-icon icon-button btn-remove"></i>Remove Custom Citation</a>
+                        {% endif %}
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1456,6 +1481,30 @@
     {% include "irods_upload_add.html" %}
 
 {% endif %}
+
+<div class="modal fade in" id="deleteCommentDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form enctype="multipart/form-data">
+                <input name="resource-mode" type="hidden" value="edit">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="extra_meta_title"> Delete Comment </h4>
+                </div>
+                <div class="modal-body">
+                <p id="delete_comment_message">
+                    Confirm to delete the comment and any threaded reply messages
+                </p>
+                </div>
+                <div class="modal-footer">
+                    <input id="delete_comment_id" type="hidden" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="btn-confirm-delete-comment" type="button" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% if not resource_edit_mode and not is_replaced_by %}
     {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
@@ -1568,8 +1617,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <a type="button" class="btn btn-danger"
-                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                                    <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
                                 </div>
                             </div>
                         </div>
@@ -1580,8 +1628,8 @@
     {% endif %}
 
     {% if user.is_authenticated and rights.statement %}
-        {% if cm.raccess.public or self_access_level != 'None' %}
-            {% if allow_resource_copy %}
+        {% if permissions_allow_copy %}
+            {% if rights_allow_copy %}
                 <div class="modal fade" id="copy-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -1609,8 +1657,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-success" id="copy-btn"
-                                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/" disabled>Copy this resource</a>
+                                <button id="copy-btn" class="btn btn-success" disabled>Copy this resource</button>
                             </div>
                         </div>
                     </div>
@@ -1647,8 +1694,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-success" id="download-bag-btn"
-                   href="{{ cm.bag_url }}" disabled>Download</a>
+                <button type="button" class="btn btn-success" id="download-bag-btn"
+                   data-bag-url="{{ cm.bag_url }}" disabled>Download</button>
             </div>
         </div>
     </div>

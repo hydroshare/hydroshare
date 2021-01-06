@@ -150,6 +150,23 @@ function removeExtraMetaTable(table) {
     saveExtraMetadata();
 }
 
+function showRemoveCommentPopup(comment_id_str, thread_count) {
+    // this is a hidden HTML element to store the comment_id_str
+    $("#delete_comment_id").val(comment_id_str);
+    if(thread_count > 0){
+        $("#delete_comment_message").text("This will delete this comment and " + thread_count + " threaded reply messages")
+    }
+    else{
+        $("#delete_comment_message").text("This will delete this comment")
+    }
+    $('#deleteCommentDialog').modal('show');
+}
+
+function removeComment() {
+    $("#deleteCommentDialog").modal('hide');
+    window.location = "/comment/delete/" + $("#delete_comment_id").val().trim();
+}
+
 function findMaxRowID(table) {
     var max_id = -1;
     table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
@@ -222,84 +239,11 @@ function removeExtraMetadataFromTable(row_id) {
     removed_row.remove().draw(false);
 }
 
-function update_download_status(task_id, download_path) {
-    download_status_timeout_id=-1;
-    // disable download button to prevent it from being clicked again
-    $('#btn-download-all').attr('disabled', 'disabled');
-    $.ajax({
-        dataType: "json",
-        cache: false,
-        timeout: 60000,
-        type: "POST",
-        url: '/django_irods/check_task_status/',
-        data: {
-            task_id: task_id
-        },
-        success: function(data) {
-            if(data.status) {
-                $("#loading").html('');
-                if(download_status_timeout_id > -1)
-                    clearTimeout(download_status_timeout_id);
-                $("#btn-download-all").removeAttr('disabled');
-                $("#download-status-info").html(
-                        "If your download does not start automatically, " +
-                        "please click <a href='" + download_path + "'>here</a>.");
-                window.location.href = download_path;
-            }
-            // only check status again in 3 seconds when $("#loading") is not
-            // cleared up by success status above
-            else if($("#loading").html()) {
-                $("#loading").html($("#loading").html() + ".");
-                download_status_timeout_id = setTimeout(function () {
-                    update_download_status(task_id, download_path);
-                }, 3000);
-            }
-        },
-        error: function (xhr, errmsg, err) {
-            if(download_status_timeout_id > -1)
-                clearTimeout(download_status_timeout_id);
-            $("#btn-download-all").removeAttr('disabled');
-            console.log(errmsg);
-            alert("Resource bag cannot be generated due to download poll errors: " + errmsg);
-        }
-    });
-}
-
 $(document).ready(function () {
-    var task_id = $('#task_id').val();
-    var download_path = $('#download_path').val();
-    if (task_id) {
-        update_download_status(task_id, download_path);
-    }
-
     $('.authors-wrapper.sortable').sortable({
         placeholder: "ui-state-highlight",
         stop: function (event, ui) {
-            var forms = $(".authors-wrapper.sortable form");
-
-            // Set the new order value in the form items
-            for (let i = 0; i < forms.length; i++) {
-                $(forms[i]).find("input.input-order").val(i + 1);
-                $(forms[i]).find("input.input-order").attr("value", i + 1);
-            }
-
-            let $form = $(ui.item.find("form"));
-            var url = $form.attr('action');
-            var datastring = $form.serialize();
-            $("html").css("cursor", "progress");
-
-            $.ajax({
-                type: "POST",
-                url: url,
-                data: datastring,
-                success: function () {
-                    $("html").css("cursor", "initial");
-                },
-                error: function (xhr, errmsg, err) {
-                    $("html").css("cursor", "initial");
-                    console.log(errmsg, err);
-                }
-            });
+            leftHeaderApp.updateAuthorOrder($(ui.item));
         }
     });
 
@@ -334,6 +278,24 @@ $(document).ready(function () {
         else
             $('#download-file-btn').attr('disabled', 'disabled');
     });
+
+    $("#copy-btn").on('click', function(e) {
+        e.stopImmediatePropagation();
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/copy-resource/",
+            success: function (task) {
+                $('#copy-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to copy the resource', xhr.responseText);
+                $('#copy-resource-dialog').modal('hide');
+            }
+        })
+    });
+
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
     inputElementToAdd = inputElementToAdd.replace('mode_to_replace', RESOURCE_MODE.toLowerCase());
@@ -357,33 +319,24 @@ $(document).ready(function () {
         metadata_update_ajax_submit(formID);
     });
 
+    $("#add-contributor-dialog .author-types > .btn").click(onAddContributorTypeChange);
+
     // Display toggle for Add Author/Contributor radio buttons
     function onAddContributorTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-user-type]").hide();
-        $("div[data-hs-user-type='" + type + "']").show();
+        const type = $(this).attr("data-contributor-type");
+        const isHydroShareUser = type === "hs-user";
+
+        // Toggle form visibility
+        $("#add-contributor-dialog div[data-contributor-type]").hide();
+        $("#add-contributor-dialog div[data-contributor-type='" + type + "']").show();
+
+        let buttons = $("#add-contributor-dialog .author-types .btn");
+        buttons.each(function() {
+            const isActive = $(this).attr("data-contributor-type") === type;
+            $(this).toggleClass("btn-primary", isActive);
+            $(this).toggleClass("btn-default", !isActive);
+        });
     }
-
-    $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
-    $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
-
-    // Display toggle for author type radio buttons ('person' or 'organization')
-    function onOrgTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-org-type]").hide();
-        $("div[data-hs-org-type='" + type + "']").show();
-    }
-
-    $("input[name='choose_org_type']").click(onOrgTypeChange);
-
-    // Display toggle for author type radio buttons ('person' or 'organization')
-    function onPersonTypeChange() {
-        var type = $(this).val();
-        $("div[data-hs-person-type]").hide();
-        $("div[data-hs-person-type='" + type + "']").show();
-    }
-
-    $("input[name='add_author_person']").click(onPersonTypeChange);
 
     $("#citation-text").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower
@@ -561,6 +514,11 @@ $(document).ready(function () {
         deleteFileTypeExtraMetadata(formID);
     });
 
+    $("#comments").on("click", ".btn-confirm-delete-comment", function () {
+        var commentId = $(this).attr("comment-id");
+        var thread_count = $(this).parent().find(".comment-author").length;
+        showRemoveCommentPopup(commentId, thread_count);
+    });
 
     const SPACING = 22; // 2 * 10px(from margins) + 2 * 1px (from borders)
     var toolbar_offset = $(".custom-btn-toolbar").parent().offset().top - $("#hs-nav-bar").height() - SPACING;
@@ -569,7 +527,10 @@ $(document).ready(function () {
     // ========================================
     $(window).bind('scroll', function () {
         let toolbar = $(".custom-btn-toolbar");
-        if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
+        if (toolbar.children().length == 0){
+            toolbar.css("display", 'None');
+        }
+        else if ($(window).scrollTop() > toolbar_offset && !toolbar.hasClass('toolbar-fixed')) {
             toolbar.parent().height(toolbar.parent().height());
             toolbar.css("top", $("#hs-nav-bar").height() + 11);
             toolbar.addClass('toolbar-fixed');

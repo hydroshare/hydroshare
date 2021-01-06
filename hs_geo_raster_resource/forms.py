@@ -5,7 +5,7 @@ from django import forms
 from crispy_forms.layout import Layout, HTML, Fieldset
 from crispy_forms.helper import FormHelper
 
-from models import BandInformation, CellInformation
+from .models import BandInformation, CellInformation
 from hs_core.forms import BaseFormHelper, get_crispy_form_fields
 from django.forms.models import formset_factory
 
@@ -60,7 +60,7 @@ class OriginalCoverageSpatialForm(forms.Form):
         self.errors.clear()
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
 
     def clean(self):
@@ -138,7 +138,7 @@ class CellInfoForm(ModelForm):
                                          element_id, element_name='CellInformation')
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
 
@@ -232,7 +232,7 @@ class BandInfoForm(ModelForm):
             self.action = ""
 
         if not allow_edit:
-            for field in self.fields.values():
+            for field in list(self.fields.values()):
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
 
@@ -280,7 +280,7 @@ class BaseBandInfoFormSet(BaseFormSet):
     def get_metadata_dict(self):
         bands_data = []
         for form in self.forms:
-            band_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            band_data = {k: v for k, v in list(form.cleaned_data.items())}
             bands_data.append({'BandInformation': band_data})
         return bands_data
 

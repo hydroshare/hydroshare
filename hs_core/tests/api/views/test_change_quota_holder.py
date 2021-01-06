@@ -48,7 +48,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
 
         self.add_session_to_request(request)
         response = change_quota_holder(request, shortkey=self.res.short_id)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertTrue(self.res.get_quota_holder() == self.user2)
         self.assertEqual(response_data['status'], 'success')
 

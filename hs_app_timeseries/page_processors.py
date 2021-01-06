@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
-from forms import UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout, \
+from .forms import UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout, \
     UTCOffSetLayout, UTCOffSetForm
 from hs_app_timeseries.models import TimeSeriesResource
 from hs_core import page_processors
@@ -32,18 +32,18 @@ def landing_page(request, page):
     series_ids = content_model.metadata.series_ids_with_labels
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
-        if selected_series_id not in series_ids.keys():
+        if selected_series_id not in list(series_ids.keys()):
             # this will happen only in case of CSV file upload when data is written
             # first time to the blank sqlite file as the series ids get changed to
             # uuids
-            selected_series_id = series_ids.keys()[0]
+            selected_series_id = list(series_ids.keys())[0]
         if 'series_id' in request.session:
             if selected_series_id != request.session['series_id']:
                 request.session['series_id'] = selected_series_id
         else:
             request.session['series_id'] = selected_series_id
     else:
-        selected_series_id = series_ids.keys()[0] if series_ids.keys() else None
+        selected_series_id = list(series_ids.keys())[0] if list(series_ids.keys()) else None
         request.session['series_id'] = selected_series_id
 
     ts_result_value_count = None

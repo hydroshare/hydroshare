@@ -100,53 +100,6 @@ class RefTSMetadata(CoreMetaData):
         elements.append('DataSource')
         return elements
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        # get the xml string representation of the core metadata elements
-        xml_string = super(RefTSMetadata, self).get_xml(pretty_print=pretty_print)
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        # inject resource specific metadata elements to container element
-        if self.referenceURLs.all().first():
-            referenceURLs_fields = ['value', 'type']
-            self.add_metadata_element_to_xml(container,
-                                             self.referenceURLs.all().first(),
-                                             referenceURLs_fields)
-
-        if self.sites.all().first():
-            sites_fields = ['name', 'code', 'latitude', 'longitude']
-            self.add_metadata_element_to_xml(container,
-                                             self.sites.all().first(),
-                                             sites_fields)
-
-        if self.variables.all().first():
-            variables_fields = ['name', 'code', 'data_type', 'sample_medium']
-            self.add_metadata_element_to_xml(container,
-                                             self.variables.all().first(),
-                                             variables_fields)
-
-        if self.methods.all().first():
-            methods_fields = ['code', 'description']
-            self.add_metadata_element_to_xml(container,
-                                             self.methods.all().first(),
-                                             methods_fields)
-        if self.quality_levels.all().first():
-            quality_levels_fields = ['code', 'definition']
-            self.add_metadata_element_to_xml(container,
-                                             self.quality_levels.all().first(),
-                                             quality_levels_fields)
-
-        if self.datasources.all().first():
-            datasources_fields = ['code']
-            self.add_metadata_element_to_xml(container,
-                                             self.datasources.all().first(),
-                                             datasources_fields)
-
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
     def delete_all_elements(self):
         super(RefTSMetadata, self).delete_all_elements()
         self.referenceURLs.all().delete()
@@ -156,4 +109,4 @@ class RefTSMetadata(CoreMetaData):
         self.quality_levels.all().delete()
         self.datasources.all().delete()
 
-import receivers
+from . import receivers

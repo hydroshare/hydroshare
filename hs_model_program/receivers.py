@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from hs_core.signals import *
 from hs_model_program.models import ModelProgramResource
 from hs_model_program.forms import *
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 
 @receiver(pre_metadata_element_create, sender=ModelProgramResource)

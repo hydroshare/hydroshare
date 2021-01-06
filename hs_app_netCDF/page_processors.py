@@ -96,7 +96,7 @@ def landing_page(request, page):
                                               (partial(VariableForm, allow_edit=edit_resource)),
                                               formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(
-            initial=content_model.metadata.variables.all().values(), prefix='variable')
+            initial=list(content_model.metadata.variables.all().values()), prefix='variable')
         add_variable_modal_form = VariableForm(
             allow_edit=edit_resource, res_short_id=content_model.short_id)
 

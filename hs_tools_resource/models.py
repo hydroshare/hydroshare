@@ -1,5 +1,6 @@
 import requests
 import base64
+import imghdr
 
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
@@ -10,7 +11,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
-from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices, get_image_type
+from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
 from hs_file_types.utils import get_SupportedAggTypes_choices
 
@@ -227,7 +228,7 @@ class SupportedResTypes(AbstractMetaDataElement):
                         res_type)
                 meta_instance.supported_res_types.add(qs[0])
 
-            elif isinstance(res_type, basestring):
+            elif isinstance(res_type, str):
                 # create or update res
                 qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type)
                 if qs.exists():
@@ -241,7 +242,7 @@ class SupportedResTypes(AbstractMetaDataElement):
     @classmethod
     def _validate_supported_res_types(cls, supported_res_types):
         for res_type in supported_res_types:
-            if isinstance(res_type, basestring) \
+            if isinstance(res_type, str) \
                     and res_type not in [res_type_choice[0]
                                          for res_type_choice in get_SupportedResTypes_choices()]:
                 raise ValidationError('Invalid supported_res_types:%s' % res_type)
@@ -317,7 +318,7 @@ class SupportedAggTypes(AbstractMetaDataElement):
                         agg_type)
                 meta_instance.supported_agg_types.add(qs[0])
 
-            elif isinstance(agg_type, basestring):
+            elif isinstance(agg_type, str):
                 # create or update agg
                 qs = SupportedAggTypeChoices.objects.filter(description__iexact=agg_type)
                 if qs.exists():
@@ -331,7 +332,7 @@ class SupportedAggTypes(AbstractMetaDataElement):
     @classmethod
     def _validate_supported_agg_types(cls, supported_agg_types):
         for agg_type in supported_agg_types:
-            if isinstance(agg_type, basestring) \
+            if isinstance(agg_type, str) \
                     and agg_type not in [agg_type_choice[0]
                                          for agg_type_choice in get_SupportedAggTypes_choices()]:
                 raise ValidationError('Invalid supported_agg_types:%s' % agg_type)
@@ -404,7 +405,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                     raise ObjectDoesNotExist('Sharing status {0} is not supported').format(
                         sharing_status)
                 meta_instance.sharing_status.add(qs[0])
-            elif isinstance(sharing_status, basestring):
+            elif isinstance(sharing_status, str):
                 # create or update res
                 qs = SupportedSharingStatusChoices.objects. \
                     filter(description__iexact=sharing_status)
@@ -419,7 +420,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     @classmethod
     def _validate_sharing_status(cls, sharing_status_list):
         for sharing_status in sharing_status_list:
-            if isinstance(sharing_status, basestring) and \
+            if isinstance(sharing_status, str) and \
                     sharing_status not in [sharing_status_choice_tuple[0]
                                            for sharing_status_choice_tuple in
                                            get_SupportedSharingStatus_choices()]:
@@ -467,19 +468,19 @@ class ToolIcon(AbstractMetaDataElement):
         try:
             response = requests.get(url, verify=False)
         except Exception as ex:
-            raise ValidationError("Failed to read data from given url: {0}".format(ex.message))
+            raise ValidationError("Failed to read data from given url: {0}".format(str(ex)))
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
                                format(response.status_code))
         image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
-        image_type = get_image_type(h=response.content)
+        image_type = imghdr.what(None, h=response.content)
         if image_type not in ["png", "gif", "jpeg"]:
             raise ValidationError("Supported icon image types are png, gif and jpeg")
         base64_string = base64.b64encode(response.content)
         data_url = "data:image/{image_type};base64,{base64_string}". \
-            format(image_type=image_type, base64_string=base64_string)
+            format(image_type=image_type, base64_string=base64_string.decode())
         return data_url
 
     @classmethod
@@ -534,12 +535,12 @@ class ToolMetaData(CoreMetaData):
     _homepage_url = GenericRelation(AppHomePageUrl)
 
     approved = models.BooleanField(default=False)
-    testing_protocol_url = GenericRelation(TestingProtocolUrl)
-    help_page_url = GenericRelation(HelpPageUrl)
-    source_code_url = GenericRelation(SourceCodeUrl)
-    issues_page_url = GenericRelation(IssuesPageUrl)
-    mailing_list_url = GenericRelation(MailingListUrl)
-    roadmap = GenericRelation(Roadmap)
+    _testing_protocol_url = GenericRelation(TestingProtocolUrl)
+    _help_page_url = GenericRelation(HelpPageUrl)
+    _source_code_url = GenericRelation(SourceCodeUrl)
+    _issues_page_url = GenericRelation(IssuesPageUrl)
+    _mailing_list_url = GenericRelation(MailingListUrl)
+    _roadmap = GenericRelation(Roadmap)
     show_on_open_with_list = GenericRelation(ShowOnOpenWithList)
 
     @property
@@ -587,9 +588,33 @@ class ToolMetaData(CoreMetaData):
         return self._tool_icon.first()
 
     @property
+    def mailing_list_url(self):
+        return self._mailing_list_url.first()
+
+    @property
+    def testing_protocol_url(self):
+        return self._testing_protocol_url.first()
+
+    @property
+    def help_page_url(self):
+        return self._help_page_url.first()
+
+    @property
+    def source_code_url(self):
+        return self._source_code_url.first()
+
+    @property
+    def issues_page_url(self):
+        return self._issues_page_url.first()
+
+    @property
+    def roadmap(self):
+        return self._roadmap.first()
+
+    @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import ToolMetaDataSerializer
+        from .serializers import ToolMetaDataSerializer
         return ToolMetaDataSerializer(self)
 
     @classmethod
@@ -597,7 +622,12 @@ class ToolMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        # TODO The json metadata has underscores, remove those to matche the metadata elements.  This is probably an
+        # issue in the other metadata implementations as well.
+        for key, value in list(metadata.items()):
+            if "_" in key:
+                metadata[key.replace("_", "")] = metadata.pop(key)
+        keys_to_update = list(metadata.keys())
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
 
@@ -630,6 +660,30 @@ class ToolMetaData(CoreMetaData):
         if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append(
                 {"supportedsharingstatus": metadata.pop('supportedsharingstatus')})
+
+        if 'testingprotocolurl' in keys_to_update:
+            parsed_metadata.append(
+                {"testingprotocolurl": metadata.pop('testingprotocolurl')})
+
+        if 'helppageurl' in keys_to_update:
+            parsed_metadata.append(
+                {"helppageurl": metadata.pop('helppageurl')})
+
+        if 'sourcecodeurl' in keys_to_update:
+            parsed_metadata.append(
+                {"sourcecodeurl": metadata.pop('sourcecodeurl')})
+
+        if 'issuespageurl' in keys_to_update:
+            parsed_metadata.append(
+                {"issuespageurl": metadata.pop('issuespageurl')})
+
+        if 'mailinglisturl' in keys_to_update:
+            parsed_metadata.append(
+                {"mailinglisturl": metadata.pop('mailinglisturl')})
+
+        if 'roadmap' in keys_to_update:
+            parsed_metadata.append(
+                {"roadmap": metadata.pop('roadmap')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -703,18 +757,18 @@ class ToolMetaData(CoreMetaData):
         self._supported_file_extensions.all().delete()
         self._homepage_url.all().delete()
 
-        self.testing_protocol_url.all().delete()
-        self.help_page_url.all().delete()
-        self.source_code_url.all().delete()
-        self.issues_page_url.all().delete()
-        self.mailing_list_url.all().delete()
-        self.roadmap.all().delete()
+        self._testing_protocol_url.all().delete()
+        self._help_page_url.all().delete()
+        self._source_code_url.all().delete()
+        self._issues_page_url.all().delete()
+        self._mailing_list_url.all().delete()
+        self._roadmap.all().delete()
         self.show_on_open_with_list.all().delete()
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
-        from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
+        from .forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
             UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
             SupportedAggTypesValidationForm, SupportedFileExtensionsValidationForm, \
             AppResourceLevelUrlValidationForm, AppAggregationLevelUrlValidationForm, \
@@ -722,7 +776,6 @@ class ToolMetaData(CoreMetaData):
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
-
         # update resource specific metadata
 
         def validate_form(form):
@@ -815,6 +868,58 @@ class ToolMetaData(CoreMetaData):
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+                elif 'mailinglisturl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['mailinglisturl'])
+                    validate_form(validation_form)
+                    mailing_list_url = self.mailing_list_url
+                    if mailing_list_url is not None:
+                        self.update_element('mailinglisturl', mailing_list_url.id,
+                                            **dict_item['mailinglisturl'])
+                    else:
+                        self.create_element('mailinglisturl', **dict_item['mailinglisturl'])
+                elif 'testingprotocolurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['testingprotocolurl'])
+                    validate_form(validation_form)
+                    testing_protocol_url = self.testing_protocol_url
+                    if testing_protocol_url is not None:
+                        self.update_element('testingprotocolurl', testing_protocol_url.id,
+                                            **dict_item['testingprotocolurl'])
+                    else:
+                        self.create_element('testingprotocolurl', **dict_item['testingprotocolurl'])
+                elif 'helppageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['helppageurl'])
+                    validate_form(validation_form)
+                    help_page_url = self.help_page_url
+                    if help_page_url is not None:
+                        self.update_element('helppageurl', help_page_url.id,
+                                            **dict_item['helppageurl'])
+                    else:
+                        self.create_element('helppageurl', **dict_item['helppageurl'])
+                elif 'sourcecodeurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['sourcecodeurl'])
+                    validate_form(validation_form)
+                    source_code_url = self.source_code_url
+                    if source_code_url is not None:
+                        self.update_element('sourcecodeurl', source_code_url.id,
+                                            **dict_item['sourcecodeurl'])
+                    else:
+                        self.create_element('sourcecodeurl', **dict_item['sourcecodeurl'])
+                elif 'issuespageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['issuespageurl'])
+                    validate_form(validation_form)
+                    issues_page_url = self.issues_page_url
+                    if issues_page_url is not None:
+                        self.update_element('issuespageurl', issues_page_url.id,
+                                            **dict_item['issuespageurl'])
+                    else:
+                        self.create_element('issuespageurl', **dict_item['issuespageurl'])
+                elif 'roadmap' in dict_item:
+                    roadmap = self.roadmap
+                    if roadmap is not None:
+                        self.update_element('roadmap', roadmap.id,
+                                            **dict_item['roadmap'])
+                    else:
+                        self.create_element('roadmap', **dict_item['roadmap'])
 
     def __str__(self):
         return self.title.value

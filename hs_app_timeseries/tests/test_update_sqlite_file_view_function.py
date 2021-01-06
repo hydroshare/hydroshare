@@ -39,7 +39,7 @@ class TestUpdateSQLiteFile(MockIRODSTestCaseMixin, TestCase):
         self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
         target_temp_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_file_name)
         shutil.copy(self.odm2_sqlite_file, target_temp_sqlite_file)
-        self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'r')
+        self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'rb')
 
         # create a timeseries resource
         self.resTimeSeries = hydroshare.create_resource(

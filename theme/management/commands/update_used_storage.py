@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
 from theme.models import UserQuota
-from hs_core.tasks import update_quota_usage_task
+from hs_core.hydroshare.resource import update_quota_usage
 
 
 class Command(BaseCommand):
@@ -15,4 +15,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for u in User.objects.all():
             if UserQuota.objects.filter(user=u).exists() and u.is_active and not u.is_superuser:
-                update_quota_usage_task(u.username)
+                update_quota_usage(u.username)

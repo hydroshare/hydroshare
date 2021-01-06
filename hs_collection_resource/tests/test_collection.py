@@ -216,7 +216,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                          'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id,
                                           self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 3)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -229,7 +229,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                          'resource_id_list':
                                          [self.resGen1.short_id, self.resGen3.short_id,
                                           self.resGen4.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 3)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -253,7 +253,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                          'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id,
                                           self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 3)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -265,7 +265,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'update_type': 'add',
                                          'resource_id_list':
                                          [self.resGen4.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 4)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -278,7 +278,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'update_type': 'add',
                                          'resource_id_list':
                                          []}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 4)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -291,7 +291,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'update_type': 'add',
                                          'resource_id_list':
                                          [self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 4)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -306,7 +306,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                          'resource_id_list':
                                          [self.resGen1.short_id,
                                           self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen2, self.resCollection.resources.all())
@@ -317,7 +317,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'update_type': 'remove',
                                          'resource_id_list':
                                          []}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen2, self.resCollection.resources.all())
@@ -328,7 +328,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'update_type': 'remove',
                                          'resource_id_list':
                                          [self.resGen1.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen2, self.resCollection.resources.all())
@@ -340,7 +340,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                          'resource_id_list':
                                          [self.resGen2.short_id,
                                           self.resGen4.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 0)
 
@@ -357,7 +357,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id,
                                           self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
         self.assertFalse(self.resCollection.can_be_public_or_discoverable)
@@ -371,7 +371,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id,
                                           self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
@@ -384,7 +384,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
@@ -397,7 +397,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': []},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
         self.assertFalse(self.resCollection.can_be_public_or_discoverable)
@@ -408,7 +408,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id,
                                           self.resGen5.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 0)
 
@@ -416,7 +416,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
@@ -428,7 +428,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resGen2.short_id, self.resGen5.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
@@ -441,12 +441,69 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resGen2.short_id, self.resGen5.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen2, self.resCollection.resources.all())
         self.assertIn(self.resGen5, self.resCollection.resources.all())
+
+        # make resGen5 not shareable
+        self.resGen5.raccess.shareable = False
+        self.resGen5.raccess.save()
+        # remove all existing contained resources
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': []},
+                                        )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # trying to add resGen5 (for which user1 has vew permission) to the collection should fail as resGen5 is not
+        # shareable
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "error")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # make resGen5 not discoverable
+        self.resGen5.raccess.discoverable = False
+        self.resGen5.raccess.save()
+        # remove all existing contained resources
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': []},
+                                        )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # trying to add resGen5 (for which user1 has vew permission) to the collection should fail as resGen5 is not
+        # discoverable
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "error")
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # make resGen5 discoverable
+        self.resGen5.raccess.discoverable = True
+        self.resGen5.raccess.public = False
+        self.resGen5.raccess.save()
+        # trying to add resGen5 (resource discoverable but private) to the collection should be successful
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 1)
+
+        # make resGen5 public
+        self.resGen5.raccess.public = True
+        self.resGen5.raccess.save()
+        # trying to add resGen5 (public resource not shareable) to the collection should be successful
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen5.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 1)
 
         # test adding resources to a collection that does not have all the required metadata
         self.assertEqual(self.resCollection_with_missing_metadata.resources.count(), 0)
@@ -457,7 +514,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertFalse(self.resCollection_with_missing_metadata.can_be_public_or_discoverable)
 
@@ -472,7 +529,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resGen5.short_id]},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertFalse(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -486,7 +543,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resGen5.short_id]},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertFalse(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -499,7 +556,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resGen5.short_id]},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
@@ -509,7 +566,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resGen3.short_id]},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
@@ -522,7 +579,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resGen3.short_id]},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
@@ -534,7 +591,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
 
         # this collection should contain no resources at this point
-        self.assertEquals(self.resCollection.resources.count(), 0)
+        self.assertEqual(self.resCollection.resources.count(), 0)
         # user 1 login
         self.api_client.login(username='user1', password='mypassword1')
 
@@ -543,21 +600,21 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resCollection.short_id]},
                                         )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         # collection still should have no resource
-        self.assertEquals(self.resCollection.resources.count(), 0)
+        self.assertEqual(self.resCollection.resources.count(), 0)
 
         # add one collection resource to another collection resource
         # json response status should be success
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resCollection_with_missing_metadata.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         # collection should have 1 resource
-        self.assertEquals(self.resCollection.resources.count(), 1)
-        self.assertEquals(self.resCollection.resources.all()[0].resource_type.lower(),
+        self.assertEqual(self.resCollection.resources.count(), 1)
+        self.assertEqual(self.resCollection.resources.all()[0].resource_type.lower(),
                           "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):
@@ -621,7 +678,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # User 2 update_collection_for_deleted_resources --> error
         response = self.api_client.post(url_to_update_collection_for_deleted_resources)
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
 
@@ -631,7 +688,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # User 1update_collection_for_deleted_resources --> success
         response = self.api_client.post(url_to_update_collection_for_deleted_resources)
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         # there should be now no tracked deleted resources for the collection
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
@@ -680,7 +737,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new version of collection
-        new_collection = create_empty_resource(self.resCollection.short_id, self.user1)
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1.username)
 
         new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
 
@@ -708,7 +765,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new copy of collection
-        new_collection = create_empty_resource(self.resCollection.short_id, self.user1,
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1.username,
                                                action='copy')
 
         new_collection = copy_resource(self.resCollection, new_collection)
@@ -816,7 +873,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             self.url_to_calculate_collection_coverages.\
             format(self.resCollection.short_id)
         response = self.api_client.post(url_to_calculate_collection_coverages)
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(len(resp_json["new_coverage_list"]), 2)
         found_period = False
@@ -860,7 +917,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen2.short_id,
                                           self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 3)
 
@@ -887,7 +944,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list':
                                          [self.resGen1.short_id, self.resGen3.short_id]}, )
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(self.resCollection.resources.count(), 2)
 

@@ -14,7 +14,7 @@ from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, Executed
 
 def delete_if_empty(term_obj, non_standard_elements):
     all_blank = True
-    for attr, val in vars(term_obj).iteritems():
+    for attr, val in list(vars(term_obj).items()):
         if attr in non_standard_elements and val != '':
             all_blank = False
             break
@@ -28,7 +28,7 @@ def uncouple(choices):
 
 
 def validate_choice(value, choices):
-    choices = choices if isinstance(choices[0], basestring) else uncouple(choices)
+    choices = choices if isinstance(choices[0], str) else uncouple(choices)
     if isinstance(value, int):
         return value
     if 'Choose' in value:
@@ -114,7 +114,7 @@ class GridDimensions(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if key == 'typeOfRows' or key == 'typeOfColumns':
                 kwargs[key] = validate_choice(val, cls.gridTypeChoices)
         return kwargs
@@ -166,7 +166,7 @@ class StressPeriod(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if key == 'stressPeriodType':
                 kwargs[key] = validate_choice(val, cls.stressPeriodTypeChoices)
             elif key == 'transientStateValueType':
@@ -212,7 +212,7 @@ class GroundWaterFlow(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if key == 'flowPackage':
                 kwargs[key] = validate_choice(val, cls.flowPackageChoices)
             elif key == 'flowParameter':
@@ -318,7 +318,7 @@ class BoundaryCondition(AbstractMetaDataElement):
             if qs.exists():
                 self.specified_head_boundary_packages.add(qs[0])
             else:
-                if isinstance(package, basestring):
+                if isinstance(package, str):
                     self.specified_head_boundary_packages.create(description=package)
 
     def _add_specified_flux_boundary_packages(self, packages):
@@ -332,7 +332,7 @@ class BoundaryCondition(AbstractMetaDataElement):
             if qs.exists():
                 self.specified_flux_boundary_packages.add(qs[0])
             else:
-                if isinstance(package, basestring):
+                if isinstance(package, str):
                     self.specified_flux_boundary_packages.create(description=package)
 
     def _add_head_dependent_flux_boundary_packages(self, packages):
@@ -347,7 +347,7 @@ class BoundaryCondition(AbstractMetaDataElement):
             if qs.exists():
                 self.head_dependent_flux_boundary_packages.add(qs[0])
             else:
-                if isinstance(package, basestring):
+                if isinstance(package, str):
                     self.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
@@ -434,7 +434,7 @@ class BoundaryCondition(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if key == 'specified_head_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
                                for package in kwargs[key]]
@@ -490,7 +490,7 @@ class ModelCalibration(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if key == 'observationProcessPackage':
                 kwargs[key] = validate_choice(val, cls.observationProcessPackageChoices)
         return kwargs
@@ -548,7 +548,7 @@ class GeneralElements(AbstractMetaDataElement):
             if qs.exists():
                 self.output_control_package.add(qs[0])
             else:
-                if isinstance(type_choices, basestring):
+                if isinstance(type_choices, str):
                     self.output_control_package.create(description=type_choices)
 
     @classmethod
@@ -582,7 +582,7 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         # raise Exception(kwargs)
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
             elif key == 'output_control_package':
@@ -658,6 +658,7 @@ class MODFLOWModelInstanceResource(BaseResource):
                     nam_file_count += 1
                     name_file = res_file.resource_file.file
                     for row in name_file:
+                        row = row.decode('utf-8')
                         row = row.strip()
                         row = row.replace("'", "")
                         row = row.replace('"', "")
@@ -686,6 +687,10 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
     _model_calibration = GenericRelation(ModelCalibration)
     _model_input = GenericRelation(ModelInput)
     _general_elements = GenericRelation(GeneralElements)
+
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time"
+                                  .format(self.__class__.__name__))
 
     @property
     def resource(self):
@@ -726,7 +731,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import MODFLOWModelInstanceMetaDataSerializer
+        from .serializers import MODFLOWModelInstanceMetaDataSerializer
         return MODFLOWModelInstanceMetaDataSerializer(self)
 
     @classmethod
@@ -734,7 +739,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         """Overriding the base class method"""
 
         ModelInstanceMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'studyarea' in keys_to_update:
             parsed_metadata.append({"studyarea": metadata.pop('studyarea')})
 
@@ -777,7 +782,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method
-        from forms import StudyAreaValidationForm, GridDimensionsValidationForm, \
+        from .forms import StudyAreaValidationForm, GridDimensionsValidationForm, \
             StressPeriodValidationForm, GroundWaterFlowValidationForm, \
             BoundaryConditionValidationForm, ModelCalibrationValidationForm, \
             GeneralElementsValidationForm, ModelOutputValidationForm, ExecutedByValidationForm, \
@@ -805,7 +810,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         with transaction.atomic():
             # update/create non-repeatable element
-            for element_name in attribute_mappings.keys():
+            for element_name in list(attribute_mappings.keys()):
                 for dict_item in metadata:
                     if element_name in dict_item:
                         validation_form = validation_forms_mapping[element_name](
@@ -830,7 +835,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
-        xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -953,7 +958,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                                                       self.NAMESPACES['hsterms'])
                 subsidence_package.text = self.general_elements.subsidencePackage
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(MODFLOWModelInstanceMetaData, self).delete_all_elements()

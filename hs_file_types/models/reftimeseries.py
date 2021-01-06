@@ -1,9 +1,9 @@
 import json
 import logging
 from dateutil import parser
-from urllib2 import Request, urlopen, URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 import jsonschema
-from lxml import etree
 
 from django.utils import timezone
 from django.db import models, transaction
@@ -13,10 +13,9 @@ from django.template import Template, Context
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
-from hs_core.models import CoreMetaData
 from hs_core.signals import post_add_reftimeseries_aggregation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class TimeSeries(object):
@@ -140,90 +139,6 @@ class TimeSeries(object):
                                     td(self.end_date)
 
         return root_div
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        ref_ts_result = etree.SubElement(container, '{%s}referencedTimeSeriesResult'
-                                         % NAMESPACES['hsterms'])
-        rdf_description = etree.SubElement(ref_ts_result, '{%s}Description' % NAMESPACES['rdf'])
-
-        # encode request info data
-        hs_request_info = etree.SubElement(rdf_description, '{%s}requestInfo'
-                                           % NAMESPACES['hsterms'])
-        hs_request_info_desc = etree.SubElement(hs_request_info, '{%s}Description'
-                                                % NAMESPACES['rdf'])
-        hs_network_name = etree.SubElement(hs_request_info_desc, '{%s}networkName'
-                                           % NAMESPACES['hsterms'])
-        hs_network_name.text = self.network_name
-        hs_ref_type = etree.SubElement(hs_request_info_desc, '{%s}refType' % NAMESPACES['hsterms'])
-        hs_ref_type.text = self.reference_type
-        hs_retrun_type = etree.SubElement(hs_request_info_desc, '{%s}returnType'
-                                          % NAMESPACES['hsterms'])
-        hs_retrun_type.text = self.return_type
-        hs_service_type = etree.SubElement(hs_request_info_desc, '{%s}serviceType'
-                                           % NAMESPACES['hsterms'])
-        hs_service_type.text = self.reference_type
-        hs_wsdl_url = etree.SubElement(hs_request_info_desc, '{%s}url' % NAMESPACES['hsterms'])
-        hs_wsdl_url.text = self.url
-
-        # encode date (duration) data
-        hs_begin_date = etree.SubElement(rdf_description, '{%s}beginDate' % NAMESPACES['hsterms'])
-        st_date = parser.parse(self.start_date)
-        hs_begin_date.text = st_date.isoformat()
-        hs_end_date = etree.SubElement(rdf_description, '{%s}endDate' % NAMESPACES['hsterms'])
-        end_date = parser.parse(self.end_date)
-        hs_end_date.text = end_date.isoformat()
-
-        # encode sample medium
-        if self.sample_medium:
-            hs_sample_medium = etree.SubElement(rdf_description, '{%s}sampleMedium'
-                                                % NAMESPACES['hsterms'])
-            hs_sample_medium.text = self.sample_medium
-
-        # encode value count
-        if self.value_count is not None:
-            hs_value_count = etree.SubElement(rdf_description, '{%s}valueCount'
-                                              % NAMESPACES['hsterms'])
-            hs_value_count.text = str(self.value_count)
-
-        # encode site data
-        hs_site = etree.SubElement(rdf_description, '{%s}site' % NAMESPACES['hsterms'])
-        hs_site_desc = etree.SubElement(hs_site, '{%s}Description' % NAMESPACES['rdf'])
-        hs_site_code = etree.SubElement(hs_site_desc, '{%s}siteCode' % NAMESPACES['hsterms'])
-        hs_site_code.text = self.site_code
-        if self.site_name:
-            hs_site_name = etree.SubElement(hs_site_desc, '{%s}siteName' % NAMESPACES['hsterms'])
-            hs_site_name.text = self.site_name
-        hs_site_lat = etree.SubElement(hs_site_desc, '{%s}Latitude' % NAMESPACES['hsterms'])
-        hs_site_lat.text = str(self.latitude)
-        hs_site_lon = etree.SubElement(hs_site_desc, '{%s}Longitude' % NAMESPACES['hsterms'])
-        hs_site_lon.text = str(self.longitude)
-
-        # encode variable data
-        hs_variable = etree.SubElement(rdf_description, '{%s}variable' % NAMESPACES['hsterms'])
-        hs_variable_desc = etree.SubElement(hs_variable, '{%s}Description' % NAMESPACES['rdf'])
-        hs_variable_code = etree.SubElement(hs_variable_desc, '{%s}variableCode'
-                                            % NAMESPACES['hsterms'])
-        hs_variable_code.text = self.variable_code
-        if self.variable_name:
-            hs_variable_name = etree.SubElement(hs_variable_desc, '{%s}variableName'
-                                                % NAMESPACES['hsterms'])
-            hs_variable_name.text = self.variable_name
-
-        # encode method data
-        if self.method_link or self.method_description:
-            hs_method = etree.SubElement(rdf_description, '{%s}method' % NAMESPACES['hsterms'])
-            hs_rdf_method_desc = etree.SubElement(hs_method, '{%s}Description' % NAMESPACES['rdf'])
-            if self.method_description:
-                hs_method_desc = etree.SubElement(hs_rdf_method_desc, '{%s}methodDescription'
-                                                  % NAMESPACES['hsterms'])
-                hs_method_desc.text = self.method_description
-            if self.method_link:
-                hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
-                                                  % NAMESPACES['hsterms'])
-                hs_method_link.text = self.method_link
 
 
 class Site(object):
@@ -697,42 +612,12 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             p(json_res_file.full_path[33:])
             header_info = self.json_file_content
             if isinstance(header_info, str):
-                header_info = unicode(header_info, 'utf-8')
+                header_info = header_info.encode()
 
             textarea(header_info, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%; resize: vertical;")
 
         return json_file_content_div
-
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(RefTimeseriesFileMetaData, self)._get_xml_containers()
-        NAMESPACES = CoreMetaData.NAMESPACES
-        if self.abstract:
-            dc_description = etree.SubElement(container_to_add_to,
-                                              '{%s}description' % NAMESPACES['dc'])
-            dc_des_rdf_Desciption = etree.SubElement(dc_description,
-                                                     '{%s}Description' % NAMESPACES['rdf'])
-            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
-                                                '{%s}abstract' % NAMESPACES['dcterms'])
-            dcterms_abstract.text = self.abstract
-        if self.file_version:
-            hsterms_file_version = etree.SubElement(container_to_add_to,
-                                                    '{%s}fileVersion' % NAMESPACES['hsterms'])
-            hsterms_file_version.text = self.file_version
-
-        if self.symbol:
-            hsterms_symbol = etree.SubElement(container_to_add_to,
-                                              '{%s}symbol' % NAMESPACES['hsterms'])
-            hsterms_symbol.text = self.symbol
-
-        for series in self.time_series_list:
-            series.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
 
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
@@ -813,7 +698,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return res_files[0] if res_files else None
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(RefTimeseriesLogicalFile, cls)._validate_set_file_type_inputs(
             resource, file_id, folder_path)
         if not res_file.file_name.lower().endswith('.refts.json'):
@@ -822,7 +707,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return res_file, folder_path
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a RefTimeseriesLogicalFile (aggregation) from a json resource file (.refts.json)
         """
 
@@ -838,7 +723,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 json_file_content = _validate_json_file(res_file)
             except Exception as ex:
                 log.exception("failed json validation")
-                raise ValidationError(ex.message)
+                raise ValidationError(str(ex))
 
             with transaction.atomic():
                 try:
@@ -860,9 +745,10 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                 except Exception as ex:
                     msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                           "type. Error:{}"
-                    msg = msg.format(ex.message)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)
+                return logical_file
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
@@ -958,7 +844,7 @@ def _validate_json_file(res_json_file):
         # validate json_data based on the schema
         jsonschema.Draft4Validator(TS_SCHEMA).validate(json_data)
     except jsonschema.ValidationError as ex:
-        msg = "Not a valid reference time series json file. {}".format(ex.message)
+        msg = "Not a valid reference time series json file. {}".format(str(ex))
         raise Exception(msg)
 
     _validate_json_data(json_data)

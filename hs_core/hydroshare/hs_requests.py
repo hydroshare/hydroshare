@@ -10,7 +10,7 @@ This is mainly used in end-to-end testing implemented in management commands.
 """
 
 import requests
-import urlparse
+import urllib.parse
 from django.conf import settings
 
 
@@ -35,13 +35,13 @@ def localize_url(url):
     to the internal address, so that urls embedded in metadata can be
     accessed from a docker container for loopback testing.
     """
-    parsed = urlparse.urlparse(url)
+    parsed = urllib.parse.urlparse(url)
     # www.hydroshare.org or dev-machine-name.domain.org
     if parsed[1] == getattr(settings, 'PROD_FQDN_OR_IP', 'www.hydroshare.org') or \
        parsed[1] == getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org'):
         # insert local IP instead of fake target
-        parsed2 = urlparse.ParseResult(parsed[0], get_nginx_ip(), parsed[2],
-                                       parsed[3], parsed[4], parsed[5])
+        parsed2 = urllib.parse.ParseResult(parsed[0], get_nginx_ip(), parsed[2],
+                                           parsed[3], parsed[4], parsed[5])
         return parsed2.geturl()
     else:
         return url

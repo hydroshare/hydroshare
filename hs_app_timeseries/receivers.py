@@ -11,7 +11,7 @@ from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare import utils, delete_resource_file_only, resource_modified
 from hs_app_timeseries.models import TimeSeriesResource, TimeSeriesMetaData
-from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
+from .forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
     ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
 from hs_file_types.models.timeseries import extract_metadata, validate_odm2_db_file, \
@@ -158,7 +158,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
         _delete_resource_file(resource, ".sqlite")
 
         # add the blank sqlite file
-        add_blank_sqlite_file(resource, upload_folder=None)
+        add_blank_sqlite_file(resource, upload_folder='')
         resource_modified(resource, user, overwrite_bag=False)
 
         # populate CV metadata django models from the blank sqlite file
@@ -317,7 +317,7 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
     with open(uploaded_csv_file_name, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row
-        header = csv_reader.next()
+        header = next(csv_reader)
         header = [el.strip() for el in header]
         if any(len(h) == 0 for h in header):
             err_message += " Column heading is missing."

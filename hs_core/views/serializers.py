@@ -1,6 +1,6 @@
-
+import json
 from collections import namedtuple
-
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 
@@ -58,10 +58,10 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
 
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
-            choices=zip(
+            choices=list(zip(
                 [x.__name__ for x in hydroshare.get_resource_types()],
                 [x.__name__ for x in hydroshare.get_resource_types()]
-            ), default='CompositeResource')
+            )), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
@@ -152,6 +152,46 @@ class ResourceListItemSerializer(serializers.Serializer):
     resource_map_url = serializers.URLField()
     resource_url = serializers.URLField()
 
+    def to_representation(self, instance):
+        # URLs in metadata should be fully qualified.
+        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
+        site_url = hydroshare.utils.current_site_url()
+        bag_url = site_url + instance.bag_url
+        science_metadata_url = site_url + reverse('get_update_science_metadata', args=[instance.short_id])
+        resource_map_url = site_url + reverse('get_resource_map', args=[instance.short_id])
+        resource_url = site_url + instance.get_absolute_url()
+        coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
+                     for v in list(instance.metadata.coverages.values())]
+        authors = []
+        for c in instance.metadata.creators.all():
+            authors.append(c.name)
+        doi = None
+        if instance.raccess.published:
+            doi = "10.4211/hs.{}".format(instance.short_id)
+        description = ''
+        if instance.metadata.description:
+            description = instance.metadata.description.abstract
+        return {'resource_type': instance.resource_type,
+                'resource_id': instance.short_id,
+                'resource_title': instance.metadata.title.value,
+                'abstract': description,
+                'authors': authors,
+                'creator': instance.first_creator.name,
+                'doi': doi,
+                'public': instance.raccess.public,
+                'discoverable': instance.raccess.discoverable,
+                'shareable': instance.raccess.shareable,
+                'immutable': instance.raccess.immutable,
+                'published': instance.raccess.published,
+                'date_created': instance.created,
+                'date_last_updated': instance.last_updated,
+                'bag_url': bag_url,
+                'coverages': coverages,
+                'science_metadata_url': science_metadata_url,
+                'resource_map_url': resource_map_url,
+                'resource_url': resource_url,
+                'content_types': instance.aggregation_types}
+
 
 class ResourceCreatedSerializer(serializers.Serializer):
     resource_type = serializers.CharField(max_length=100)
@@ -165,6 +205,8 @@ class ResourceFileSerializer(serializers.Serializer):
     size = serializers.IntegerField(help_text='The size of the file')
     content_type = serializers.CharField(max_length=255, help_text='The content type of the file')
     logical_file_type = serializers.CharField(max_length=255)
+    modified_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S")
+    checksum = serializers.CharField(max_length=100)
 
 
 class GroupPrivilegeSerializer(serializers.Serializer):
@@ -233,7 +275,9 @@ ResourceFileItem = namedtuple('ResourceFileItem',
                                'file_name',
                                'size',
                                'content_type',
-                               'logical_file_type'])
+                               'logical_file_type',
+                               'modified_time',
+                               'checksum'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):

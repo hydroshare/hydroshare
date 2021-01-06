@@ -53,28 +53,6 @@ function act_on_request_ajax_submit() {
     return false;
 }
 
-// Makes all group preview containers have the same height.
-function fixViewPort(current) {
-    if (!current) {
-        return;
-    }
-
-    $('.group-thumbnails').find('div.group-container').height("initial");   // Reset height
-
-    var containers = $('.group-thumbnails').find('div.group-container');
-
-    var maxHeight = 0;
-    for (var i = 0; i < containers.length; i++) {
-        maxHeight = Math.max($(containers[i]).height() + $(containers[i]).find(".group-thumbnail-footer").height(), maxHeight);
-    }
-
-    // set to new max height
-    for (var i = 0; i < containers.length; i++) {
-        $(containers[i]).height(maxHeight);
-        $(containers[i]).find(".group-thumbnail-footer").width($(containers[i]).find(".group-description").width())
-    }
-}
-
 // File name preview for picture field, change method
 $(document).on('change', '.btn-file :file', function () {
     var input = $(this);
@@ -126,19 +104,3 @@ function show_not_found(searchString) {
     let not_found_message = "We couldn't find anything for <strong>" + searchString + "</strong>.";
     $("#id-Group-Search-Result-Msg").html(not_found_message);
 }
-
-
-// Uses bootstrap toolkit to trigger FixViewPort on bootstrap responsive breakpoints
-(function ($, viewport) {
-    $(document).ready(function () {
-        // Executes when page loads
-        fixViewPort(viewport.current());
-
-        // Executes each time window size changes
-        $(window).resize(
-            viewport.changed(function () {
-                fixViewPort(viewport.current());
-            })
-        );
-    });
-})(jQuery, ResponsiveBootstrapToolkit);

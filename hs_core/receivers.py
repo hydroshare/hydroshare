@@ -8,7 +8,7 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_core.tasks import update_web_services
 from hs_core.models import GenericResource, Party
 from django.conf import settings
-from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
+from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
@@ -31,7 +31,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
             post_data_dict = Party.get_post_data_with_identifiers(request=request)
         except Exception as ex:
             return {'is_valid': False, 'element_data_dict': None,
-                    "errors": {"identifiers": [ex.message]}}
+                    "errors": {"identifiers": [str(ex)]}}
 
         element_form = CreatorValidationForm(post_data_dict)
 
@@ -40,8 +40,12 @@ def metadata_element_pre_create_handler(sender, **kwargs):
             post_data_dict = Party.get_post_data_with_identifiers(request=request)
         except Exception as ex:
             return {'is_valid': False, 'element_data_dict': None,
-                    "errors": {"identifiers": [ex.message]}}
+                    "errors": {"identifiers": [str(ex)]}}
         element_form = ContributorValidationForm(post_data_dict)
+
+    elif element_name == "citation":
+        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
+
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
     elif element_name == 'source':
@@ -93,6 +97,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = AbstractValidationForm(request.POST)
     elif element_name == "fundingagency":
         element_form = FundingAgencyValidationForm(request.POST)
+    elif element_name == "citation":
+        return {'is_valid': True, 'element_data_dict': {'value': request.POST.get('content').strip()}}
     elif element_name in repeatable_elements:
         # since element_name is a repeatable element (e.g creator) and data for the element
         # is displayed on the landing page using formset, the data coming from a single element
@@ -105,7 +111,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                     post_data_dict = Party.get_post_data_with_identifiers(request=request)
                 except Exception as ex:
                     return {'is_valid': False, 'element_data_dict': None,
-                            "errors": {"identifiers": [ex.message]}}
+                            "errors": {"identifiers": [str(ex)]}}
 
                 # for creator or contributor who is not a hydroshare user the 'description'
                 # key might be missing in the POST form data
@@ -161,10 +167,16 @@ def hs_update_web_services(sender, **kwargs):
     """Signal to update resource web services."""
 
     if settings.HSWS_ACTIVATED:
-        update_web_services.apply_async((
-            settings.HSWS_URL,
-            settings.HSWS_API_TOKEN,
-            settings.HSWS_TIMEOUT,
-            settings.HSWS_PUBLISH_URLS,
-            kwargs.get("resource").short_id
-        ), countdown=1)
+        rid = None
+        if "resource" in kwargs:
+            rid = kwargs.get("resource").short_id
+        elif "resource_id" in kwargs:
+            rid = kwargs.get('resource_id')
+        if rid:
+            update_web_services.apply_async((
+                settings.HSWS_URL,
+                settings.HSWS_API_TOKEN,
+                settings.HSWS_TIMEOUT,
+                settings.HSWS_PUBLISH_URLS,
+                rid
+            ), countdown=1)

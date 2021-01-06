@@ -8,7 +8,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
-from utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
+from .utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
 
 from hs_file_types.models import RefTimeseriesLogicalFile, RefTimeseriesFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
@@ -44,7 +44,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # test resource file is not in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -57,7 +57,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
         res_file = self.composite_resource.files.first()
         # test resource file is not in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         # test extracted ref time series file type metadata
         assert_ref_time_series_file_type_metadata(self)
@@ -66,10 +66,10 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # saved in json_file_content field of the file metadata object
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
+        self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
         # test resource file is not in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         self.composite_resource.delete()
 
@@ -110,7 +110,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # saved in json_file_content field of the file metadata object
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
+        self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
         # test resource file is in a folder
         self.assertEqual(res_file.file_folder, new_folder)
@@ -290,7 +290,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create refts aggregation
         RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         # test rename of file is allowed
         src_path = 'data/contents/{}'.format(res_file.file_name)
         tgt_path = "data/contents/{0}_1{1}".format(base_file_name, ext)
@@ -312,7 +312,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create generic aggregation
         RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # file should not be in a folder
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         # test moving the file to a new folder is allowed
         new_folder = 'test_folder'
@@ -615,7 +615,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(json_res_file.has_logical_file)
         logical_file = json_res_file.logical_file
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
-        self.assertEqual(logical_file.metadata.json_file_content,
+        self.assertEqual(logical_file.metadata.json_file_content.encode(),
                          json_res_file.resource_file.read())
         self.composite_resource.delete()
 

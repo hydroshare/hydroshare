@@ -5,7 +5,7 @@
 First one must add an alias to make the commands work. **hsctl does not handle tokenized strings correctly and cannot be used to manage communities.** 
 
 ```
-alias community='docker exec -it -u=hydro-service hydroshare python manage.py community'
+alias community='docker exec -it -u=hydro-service hydroshare python manage.py access_community'
 ```
 After this, the `community` command has the following forms: 
 
@@ -23,8 +23,6 @@ After this, the `community` command has the following forms:
 * `community {c-name} group {g-name} remove`  # remove a group to a community 
 * Options for group commands include
     * `--owner={owner-username}`
-    * `--prohibit_view`  # prohibit viewing of this group's resources by community. 
-    * `--allow_edit`  # allow this group to edit resources of other groups in the community. 
 * `community {c-name} owner {o-name} add`  # add an owner
 * `community {c-name} owner {o-name} remove`  # remove an owner 
 

@@ -204,7 +204,7 @@ class UserLabels(models.Model):
         Get a QuerySet of resources with a specific label.
         """
         if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_label, basestring)
+            assert isinstance(this_label, str)
 
         label_string = UserLabels.clean_label(this_label)  # remove leading and trailing spaces
         return BaseResource.objects.filter(r2url__user=self.user,
@@ -241,7 +241,7 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert isinstance(this_label, basestring)
+            assert isinstance(this_label, str)
 
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
@@ -259,7 +259,7 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert isinstance(this_label, basestring)
+            assert isinstance(this_label, str)
 
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
@@ -283,7 +283,7 @@ class UserLabels(models.Model):
         clear a label from the labeling system.
         """
         if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_label, basestring)
+            assert isinstance(this_label, str)
         UserResourceLabels.objects.filter(label=this_label, user=self.user)\
                                   .delete()
 

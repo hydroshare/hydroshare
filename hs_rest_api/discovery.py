@@ -19,6 +19,7 @@ class DiscoveryResourceSerializer(HaystackSerializer):
             "subject",
             "abstract",
             "resource_type",
+            "content_type",
             "coverage_type",
             "availability",
             "created",
@@ -46,7 +47,9 @@ class DiscoverResourceValidator(serializers.Serializer):
     abstract = HaystackCharField(required=False,
                                  help_text='Search within the abstract')
     resource_type = HaystackCharField(required=False,
-                                      help_text='Search By resource type')
+                                      help_text='Search by resource type')
+    content_type = HaystackMultiValueField(required=False,
+                                           help_text='Search by content type')
     coverage_type = HaystackMultiValueField(required=False,
                                             help_text='Search by coverage type '
                                                       '(point, box, period)')

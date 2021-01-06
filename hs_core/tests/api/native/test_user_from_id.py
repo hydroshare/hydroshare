@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import unittest
 
@@ -21,7 +21,7 @@ class TestUserFromId(TestCase):
         )
 
     def test_accept_user_instance(self):
-        self.assertEquals(
+        self.assertEqual(
             hydroshare.user_from_id(self.user),
             self.user,
             msg='user passthrough failed',

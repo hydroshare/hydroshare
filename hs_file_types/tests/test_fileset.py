@@ -5,7 +5,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
-from utils import CompositeResourceTestMixin
+from .utils import CompositeResourceTestMixin
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
     GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile
 
@@ -1340,8 +1340,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         fs_aggr.update_spatial_coverage()
         # test fileset aggregation spatial coverage data
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.0500269597691)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.505940368)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.8639080745)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.50594036845686)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.8639080745171)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084055)
 
         self.composite_resource.delete()

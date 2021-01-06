@@ -1,0 +1,102 @@
+"""
+Intentionally mess up CZO groups.  DO NOT RUN THIS IN PRODUCTION. 
+It creates several errors in the CZO configuration that check_czo_groups can fix. 
+THIS IS PROVIDED AS DOCUMENTATION ONLY
+"""
+
+from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User, Group
+from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, \
+        GroupCommunityPrivilege, PrivilegeCodes, Community
+from hs_core.models import BaseResource
+from django_irods.icommands import SessionException
+
+
+# Details of CZO setup.
+# This should be updated as groups are added.
+czo_setup = [
+    # group owner    group name      title prefix
+    ["czo_national", "CZO National", "Cross-CZO"],
+    ["czo_boulder", "CZO Boulder", "BCCZO"],
+    ["czo_calhoun", "CZO Calhoun", "CCZO"],
+    ["czo_catalina-jemez", "CZO Catalina-Jemez", "CJCZO"],
+    ["czo_eel", "CZO Eel", "ERCZO"],
+    ["czo_luquillo", "CZO Luquillo", "LCZO"],
+    ["czo_reynolds", "CZO Reynolds", "RCCZO"],
+    ["czo_shale-hills", "CZO Shale Hills", "SSHCZO"],
+    ["czo_sierra", "CZO Southern Sierra", "SSCZO"],
+    ["czo_christina", "CZO Christina", "CRBCZO"],
+    ["czo_iml", "CZO IML", "IMLCZO"],
+]
+
+
+class Command(BaseCommand):
+    help = "check syntax"
+
+    def handle(self, *args, **options):
+        national_user = User.objects.get(username=czo_setup[0][0])
+        national_group = Group.objects.get(name=czo_setup[0][1])
+
+        boulder_user = User.objects.get(username=czo_setup[1][0])
+        boulder_group = Group.objects.get(name=czo_setup[1][1])
+        resources = BaseResource.objects.filter(r2urp__user=national_user, 
+                                                r2grp__group=boulder_group)
+        resources = list(resources)  # force evaluation of query
+
+        # choose a random resource and foul it up
+        r = resources[0]
+        print("{} unsharing {} with {}".format(r.short_id, 
+                                               r.title.encode('ascii', 'ignore'), 
+                                               boulder_user.username))
+        UserResourcePrivilege.unshare(user=boulder_user, resource=r, grantor=national_user)
+
+        r = resources[1]
+        print("{} unsharing {} with {}".format(r.short_id, 
+                                               r.title.encode('ascii', 'ignore'), 
+                                               national_user.username))
+        UserResourcePrivilege.unshare(user=national_user, resource=r, grantor=national_user)
+        
+        r = resources[2]
+        print("{} unsharing {} with {}".format(r.short_id, 
+                                               r.title.encode('ascii', 'ignore'), 
+                                               boulder_group.name))
+        GroupResourcePrivilege.unshare(group=boulder_group, resource=r, grantor=national_user)
+
+        r = resources[3] 
+        print("{} sharing {} with {}".format(r.short_id, 
+                                             r.title.encode('ascii', 'ignore'), 
+                                             national_group.name))
+        GroupResourcePrivilege.share(group=national_group, 
+                                     resource=r, 
+                                     privilege=PrivilegeCodes.VIEW,
+                                     grantor=national_user)
+
+        r = resources[4]
+        print("{} dissociating everything but group membership from {}"
+              .format(r.short_id, r.title.encode('ascii', 'ignore')))
+
+        UserResourcePrivilege.unshare(resource=r, user=national_user, grantor=national_user)
+        UserResourcePrivilege.unshare(resource=r, user=boulder_user, grantor=national_user)
+
+        calhoun_user = User.objects.get(username=czo_setup[2][0])
+        calhoun_group = Group.objects.get(name=czo_setup[2][1])
+        
+        r = resources[5]
+        print("{} dissociating and misfiling group membership from {}"
+              .format(r.short_id, r.title.encode('ascii', 'ignore')))
+        
+        UserResourcePrivilege.unshare(resource=r, user=national_user, grantor=national_user)
+        UserResourcePrivilege.unshare(resource=r, user=boulder_user, grantor=national_user)
+        GroupResourcePrivilege.unshare(resource=r, group=boulder_group, grantor=national_user)
+        GroupResourcePrivilege.share(resource=r, group=calhoun_group, grantor=national_user, 
+                                     privilege=PrivilegeCodes.VIEW)
+
+        r = resources[6]
+        print("{} dissociating and misfiling group ownership from {}"
+              .format(r.short_id, r.title.encode('ascii', 'ignore')))
+
+        UserResourcePrivilege.unshare(resource=r, user=national_user, grantor=national_user)
+        UserResourcePrivilege.unshare(resource=r, user=boulder_user, grantor=national_user)
+        GroupResourcePrivilege.unshare(resource=r, group=boulder_group, grantor=national_user)
+        UserResourcePrivilege.share(resource=r, user=calhoun_user, grantor=national_user,
+                                    privilege=PrivilegeCodes.OWNER)

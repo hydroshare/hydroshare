@@ -25,7 +25,7 @@ class TestPublicResourceFlagsEndpoint(HSRESTTestCase):
         ]
         file_one = "test1.txt"
         open(file_one, "w").close()
-        self.file_one = open(file_one, "r")
+        self.file_one = open(file_one, "rb")
         self.txt_file_path = os.path.join(self.tmp_dir, 'text.txt')
         txt = open(self.txt_file_path, 'w')
         txt.write("Hello World\n")

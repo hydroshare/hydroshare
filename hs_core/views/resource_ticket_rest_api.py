@@ -67,14 +67,14 @@ class CreateResourceTicket(APIView):
             resource, authorized, user = view_utils.authorize(
                 request, pk, needed_permission=needed_permission, raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 
         try:
             view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
         if pathname is not None and pathname != '':
             fullpath = os.path.join(resource.root_path, pathname)
@@ -92,7 +92,7 @@ class CreateResourceTicket(APIView):
         except SessionException as e:
             return Response(e.stderr, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
-            return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
             {'resource_id': pk,
@@ -135,7 +135,7 @@ class CreateBagTicket(APIView):
                 request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 
@@ -145,7 +145,7 @@ class CreateBagTicket(APIView):
         except SessionException as e:
             return Response(e.stderr, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
-            return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
             {'resource_id': pk,
@@ -226,14 +226,14 @@ class ManageResourceTicket(APIView):
                 request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             return Response(data=resource.list_ticket(ticket), status=status.HTTP_200_OK)
         except ValidationError as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         except SessionException as ex:
             return Response(ex.stderr, status=status.HTTP_400_BAD_REQUEST)
 
@@ -247,7 +247,7 @@ class ManageResourceTicket(APIView):
                 request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
@@ -255,7 +255,7 @@ class ManageResourceTicket(APIView):
         try:
             data = resource.list_ticket(ticket)
         except ValidationError as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         except SessionException as ex:
             return Response(ex.stderr, status=status.HTTP_400_BAD_REQUEST)
 
@@ -265,7 +265,7 @@ class ManageResourceTicket(APIView):
         except PermissionDenied as ex:
             return Response(ex.stderr, status=status.HTTP_403_PERMISSION_DENIED)
         except ValidationError as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
         except SessionException as ex:
             return Response(ex.stderr, status=status.HTTP_400_BAD_REQUEST)
 

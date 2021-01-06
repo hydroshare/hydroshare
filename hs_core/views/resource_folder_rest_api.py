@@ -33,7 +33,7 @@ class ResourceFolders(APIView):
                 request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 
@@ -44,7 +44,7 @@ class ResourceFolders(APIView):
         try:
             view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
         relpath = os.path.join('data', 'contents', pathname)
         try:
@@ -68,7 +68,7 @@ class ResourceFolders(APIView):
                 request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
@@ -79,7 +79,7 @@ class ResourceFolders(APIView):
         try:
             view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
         # relativise the path
         relpath = os.path.join('data', 'contents', pathname)
@@ -100,7 +100,7 @@ class ResourceFolders(APIView):
                 request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
-            return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+            return Response(str(ex), status=status.HTTP_404_NOT_FOUND)
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
@@ -111,7 +111,7 @@ class ResourceFolders(APIView):
         try:
             view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
         # relativise the path
         relpath = os.path.join('data', 'contents', pathname)

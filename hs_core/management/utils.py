@@ -28,6 +28,32 @@ from hs_core.views.utils import link_irods_file_to_django
 import logging
 
 
+def migrate_core_meta_elements(orig_meta_obj, comp_res):
+    """
+    Helper to migrate core metadata elements from the resource that is converted to
+    composite resource
+    :param orig_meta_obj: metadata object of the resource that is getting converted to
+    composite resource
+    :param comp_res: converted composite resource
+    :return:
+    """
+    single_meta_elements = ['title', 'type', 'language', 'rights', 'description',
+                            'publisher']
+    multiple_meta_elements = ['creators', 'contributors', 'coverages', 'subjects',
+                              'dates', 'formats', 'identifiers', 'sources', 'relations',
+                              'funding_agencies']
+    for meta_element_name in single_meta_elements:
+        meta_element = getattr(orig_meta_obj, meta_element_name)
+        if meta_element is not None:
+            meta_element.content_object = comp_res.metadata
+            meta_element.save()
+    for meta_element_name in multiple_meta_elements:
+        meta_elements = getattr(orig_meta_obj, meta_element_name)
+        for meta_element in meta_elements.all():
+            meta_element.content_object = comp_res.metadata
+            meta_element.save()
+
+
 def check_relations(resource):
     """Check for dangling relations due to deleted resource files.
 
@@ -109,31 +135,24 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
         from hs_composite_resource.models import CompositeResource as CR
         if isinstance(resource, CR):
             for lf in resource.logical_files:
-                if not istorage.exists(lf.metadata_file_path):
-                    ecount += 1
-                    msg = "check_irods_files: logical metadata file {} does not exist in iRODS"\
-                        .format(lf.metadata_file_path)
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-                if not istorage.exists(lf.map_file_path):
-                    ecount += 1
-                    msg = "check_irods_files: logical map file {} does not exist in iRODS"\
-                        .format(lf.map_file_path)
-                    if echo_errors:
-                        print(msg)
-                    if log_errors:
-                        logger.error(msg)
-                    if return_errors:
-                        errors.append(msg)
-                    if stop_on_error:
-                        raise ValidationError(msg)
-
+                    for f in lf.files.all():
+                        try:
+                            f.resource_file.size
+                        except:
+                            ecount += 1
+                            msg = "check_resource: file {} does not exist on irods" \
+                                .format(f.storage_path.encode('ascii', 'replace'))
+                            print(msg)
+                            if clean_django:
+                                f.delete()
+                            if echo_errors:
+                                print(msg)
+                            if log_errors:
+                                logger.error(msg)
+                            if return_errors:
+                                errors.append(msg)
+                            if stop_on_error:
+                                raise ValidationError(msg)
         # Step 4: does every iRODS file correspond to a record in files?
         error2, ecount2 = __check_irods_directory(resource, resource.file_path, logger,
                                                   stop_on_error=stop_on_error,
@@ -203,7 +222,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     if ecount > 0:  # print information about the affected resource (not really an error)
         msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
             .format(resource.short_id, resource.resource_type,
-                    resource.title.encode('ascii', 'replace'))
+                    resource.title)
         if log_errors:
             logger.error(msg)
         if echo_errors:
@@ -242,7 +261,7 @@ def __check_irods_directory(resource, dir, logger,
             if not found and not resource.is_aggregation_xml_file(fullpath):
                 ecount += 1
                 msg = "check_irods_files: file {} in iRODs does not exist in Django"\
-                    .format(fullpath.encode('ascii', 'replace'))
+                    .format(fullpath)
                 if clean:
                     try:
                         istorage.delete(fullpath)
@@ -364,7 +383,7 @@ def __ingest_irods_directory(resource,
             if not found and not resource.is_aggregation_xml_file(fullpath):
                 ecount += 1
                 msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
-                    .format(fullpath.encode('ascii', 'replace'))
+                    .format(fullpath)
                 if echo_errors:
                     print(msg)
                 if log_errors:
@@ -378,7 +397,7 @@ def __ingest_irods_directory(resource,
 
                 # Create required logical files as necessary
                 if resource.resource_type == "CompositeResource":
-                    file_type = get_logical_file_type(res=resource, user=None,
+                    file_type = get_logical_file_type(res=resource,
                                                       file_id=res_file.pk, fail_feedback=False)
                     if not res_file.has_logical_file and file_type is not None:
                         msg = "ingest_irods_files: setting required logical file for {}"\
@@ -396,7 +415,7 @@ def __ingest_irods_directory(resource,
                     elif res_file.has_logical_file and file_type is not None and \
                             not isinstance(res_file.logical_file, file_type):
                         msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
-                            .format(res_file.storage_path.encode('ascii', 'replace'),
+                            .format(res_file.storage_path,
                                     type(res_file.logical_file).__name__,
                                     file_type.__name__)
                         if echo_errors:
@@ -528,7 +547,7 @@ def repair_resource(resource, logger, stop_on_error=False,
         if count:
             print("... affected resource {} has type {}, title '{}'"
                   .format(resource.short_id, resource.resource_type,
-                          resource.title.encode('ascii', 'replace')))
+                          resource.title))
 
     _, count = check_irods_files(resource,
                                  stop_on_error=False,
@@ -541,7 +560,7 @@ def repair_resource(resource, logger, stop_on_error=False,
     if count:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
-                      resource.title.encode('ascii', 'replace')))
+                      resource.title))
 
 
 class CheckResource(object):
@@ -593,21 +612,19 @@ class CheckResource(object):
             print("  ... resource {} has type {} and title {}"
                   .format(self.resource.short_id,
                           self.resource.resource_type,
-                          self.resource.title.encode('ascii', 'replace')))
+                          self.resource.title))
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):
             value = self.check_avu(a)
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
-                print("  AVU resourceType is {}, should be {}".format(value.encode('ascii',
-                                                                                   'replace'),
-                                                                      self.resource.resource_type))
+                print(("  AVU resourceType is {}, should be {}".format(value,
+                                                                       self.resource.resource_type)))
             if a == 'isPublic' and value is not None and value != self.resource.raccess.public:
                 self.label()
-                print("  AVU isPublic is {}, but public is {}".format(value.encode('ascii',
-                                                                                   'replace'),
-                                                                      self.resource.raccess.public))
+                print(("  AVU isPublic is {}, but public is {}".format(value,
+                                                                       self.resource.raccess.public)))
 
         irods_issues, irods_errors = check_irods_files(self.resource,
                                                        log_errors=False,
@@ -623,22 +640,22 @@ class CheckResource(object):
         if self.resource.resource_type == 'CompositeResource':
             logical_issues = []
             for res_file in self.resource.files.all():
-                file_type = get_logical_file_type(res=self.resource, user=None,
+                file_type = get_logical_file_type(res=self.resource,
                                                   file_id=res_file.pk, fail_feedback=False)
                 if not res_file.has_logical_file and file_type is not None:
                     msg = "check_resource: file {} does not have required logical file {}"\
-                          .format(res_file.storage_path.encode('ascii', 'replace'),
+                          .format(res_file.storage_path,
                                   file_type.__name__)
                     logical_issues.append(msg)
                 elif res_file.has_logical_file and file_type is None:
                     msg = "check_resource: logical file for {} has type {}, not needed"\
-                          .format(res_file.storage_path.encode('ascii', 'replace'),
+                          .format(res_file.storage_path,
                                   type(res_file.logical_file).__name__)
                     logical_issues.append(msg)
                 elif res_file.has_logical_file and file_type is not None and \
                         not isinstance(res_file.logical_file, file_type):
                     msg = "check_resource: logical file for {} has type {}, should be {}"\
-                          .format(res_file.storage_path.encode('ascii', 'replace'),
+                          .format(res_file.storage_path,
                                   type(res_file.logical_file).__name__,
                                   file_type.__name__)
                     logical_issues.append(msg)

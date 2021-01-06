@@ -20,6 +20,7 @@
     </div>
 
     <div class="container">
+
         <div class="row">
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
@@ -36,6 +37,7 @@
                     </div>
                 {% endif %}
             {% endif %}
+
             <div class="col-sm-3">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
@@ -49,7 +51,7 @@
                              style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                     </div>
                 {% endif %}
-                </div>
+            </div>
 
             <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
@@ -63,18 +65,22 @@
                     {% if group.gaccess.active %}
                         {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                             <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
+                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip"
+                                      data-placement="auto" title="Edit Group"></span></a>
                         {% endif %}
                     {% endif %}
                     <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
-                        <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip" data-placement="auto" title="Leave Group"></span></a>
+                        <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip"
+                              data-placement="auto" title="Leave Group"></span></a>
                     {% if profile_user.is_group_owner and group.gaccess.active %}
                         <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
-                        <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip" data-placement="auto" title="Delete Group"></span></a>
+                            <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip"
+                                  data-placement="auto" title="Delete Group"></span></a>
                     {% endif %}
                     {% if profile_user.is_group_owner and not group.gaccess.active %}
                         <a href="{% url "restore_user_group" group.id %}">
-                        <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip" data-placement="auto" title="Restore Group"></span></a>
+                            <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip"
+                                  data-placement="auto" title="Restore Group"></span></a>
                     {% endif %}
                 </div>
             {% endif %}
@@ -84,106 +90,20 @@
             <!-- Nav tabs -->
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
                 <li role="presentation" class="active">
-                    <a href="#overview" aria-controls="overview" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> Overview</a></li>
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                <li role="presentation">
                     <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-file"></i> Resources</a>
                 </li>
-                {% endif %}
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public%}
-                <li role="presentation">
-                    <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-user"></i> Members</a>
-                </li>
+                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public %}
+                    <li role="presentation">
+                        <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-user"></i> Members</a>
+                    </li>
                 {% endif %}
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane fade in active" id="overview">
-                    <div class="row">
-                        <div class="col-sm-12">
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                            <h4>Recent Activity</h4>
-                            {% if group_resources %}
-                                {% for res in group_resources %}
-                                    <div class="group-activity-block activity-block">
-                                        {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
-                                            <div style="background-image: url('{{ res.grantor.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
-                                        {% else %}
-                                            <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                        {% endif %}
-                                        <div>
-                                            <h5 class="text-muted pull-right">{{ res.date_granted|date:"M d, Y" }} at {{ res.date_granted|time }}</h5>
-                                            <div class="shared-resource-info">
-                                                <strong><a>{{ res.grantor|contact }}</a></strong><span class="text-muted"> shared</span>
-                                                <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                            </div>
-                                            <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
-                                            </h5>
-                                        </div>
-
-                                        {% if res.metadata.description %}
-                                            <div class="activity-description col-sm-12" style="max-height: 50px;">
-                                                <p class="description"><strong>ABSTRACT: </strong>
-                                                </p> {{ res.metadata.description|linebreaks }}
-                                            </div>
-                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                        {% endif %}
-                                    </div>
-                            {% endfor %}
-                                {% else %}
-                                <i>No recent activity.</i>
-                            {% endif %}
-                        {% else %}
-                            {% if group.gaccess.active %}
-                            <h4><i>You are not a member of this group.</i></h4>
-                            {% if group.join_request_waiting_user_action %}
-                                <div class="request-block pull-left">
-                                    <span class="flag-joined">You have been invited to join!</span>
-                                    <br><br>
-                                    <div class="height-fix">
-                                        <form class="act-on-request height-fix"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-success"
-                                                    data-user-action="Accept">Accept
-                                            </button>
-                                        </form>
-
-                                        <form class="act-on-request height-fix"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-default">
-                                                Decline
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            {% elif group.join_request_waiting_owner_action %}
-                                <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>
-                            {% else %}
-                                <form id="join-{{ group.id }}" method="post"
-                                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary" role="button">Ask to join</button>
-                                </form>
-                            {% endif %}
-                                {% else %}
-                                <h4><i>This group is currently inactive.</i></h4>
-                            {% endif %}
-                        {% endif %}
-                        </div>
-                    </div>
-                </div>
-
                 <div role="tabpanel" class="tab-pane fade" id="members">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
@@ -197,18 +117,18 @@
                             {% endif %}
                             <table id="members-filter" class="table-user-contributions table table-hover">
                                 <tbody>
-                                    <tr class="active c-pointer" data-filter-by="all">
-                                        <td><span>All</span></td>
-                                        <td><span class="badge" data-filter-by='All'>0</span></td>
-                                    </tr>
-                                    <tr class="c-pointer" data-filter-by="edit-user">
-                                        <td><span>Owners</span></td>
-                                        <td><span class="badge" data-filter-by='Owners'>0</span></td>
-                                    </tr>
-                                    <tr class="c-pointer" data-filter-by="pending">
-                                        <td><span>Pending</span></td>
-                                        <td><span class="badge" data-filter-by='Pending'>0</span></td>
-                                    </tr>
+                                <tr class="active c-pointer" data-filter-by="all">
+                                    <td><span>All</span></td>
+                                    <td><span class="badge" data-filter-by='All'>0</span></td>
+                                </tr>
+                                <tr class="c-pointer" data-filter-by="edit-user">
+                                    <td><span>Owners</span></td>
+                                    <td><span class="badge" data-filter-by='Owners'>0</span></td>
+                                </tr>
+                                <tr class="c-pointer" data-filter-by="pending">
+                                    <td><span>Pending</span></td>
+                                    <td><span class="badge" data-filter-by='Pending'>0</span></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -232,9 +152,9 @@
                                         </td>
                                         <td>
                                             <h4><strong><a>{{ owner|contact }}</a></strong></h4>
-                                            {% if  owner.userprofile.title %}<span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
+                                            {% if  owner.userprofile.title %}
+                                                <span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
                                         </td>
-
                                         <td>
                                             {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
                                                 <div class="dropdown custom-dropdown">
@@ -313,7 +233,6 @@
                                                 </li>
                                             </ul>
                                         </div>
-
                                     </td>
                                 </tr>
 
@@ -336,39 +255,39 @@
                                         </td>
                                         <td>
                                             {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
-                                            <div class="dropdown custom-dropdown">
-                                                <button class="btn btn-default dropdown-toggle" type="button"
-                                                        id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
-                                                        aria-haspopup="true"
-                                                        aria-expanded="true">
-                                                    Member
-                                                    <span class="caret"></span>
-                                                </button>
-                                                <ul class="dropdown-menu"
-                                                    aria-labelledby="roleDropDown-{{ member.id }}">
-                                                    <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/owner/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
-                                                        </form>
-                                                    </li>
-                                                    <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-share-group" data-role="Member">Member</a>
-                                                        </form>
-                                                    </li>
-                                                    <li role="separator" class="divider"></li>
-                                                    <li>
-                                                        <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ member.id }}/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-unshare-group">Expel</a>
-                                                        </form>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                                <div class="dropdown custom-dropdown">
+                                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                                            id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
+                                                            aria-haspopup="true"
+                                                            aria-expanded="true">
+                                                        Member
+                                                        <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu"
+                                                        aria-labelledby="roleDropDown-{{ member.id }}">
+                                                        <li>
+                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/owner/">
+                                                                {% csrf_token %}
+                                                                <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
+                                                                {% csrf_token %}
+                                                                <a href="#" class="btn-share-group" data-role="Member">Member</a>
+                                                            </form>
+                                                        </li>
+                                                        <li role="separator" class="divider"></li>
+                                                        <li>
+                                                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ member.id }}/">
+                                                                {% csrf_token %}
+                                                                <a href="#" class="btn-unshare-group">Expel</a>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             {% else %}
-                                            Member
+                                                Member
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -377,163 +296,197 @@
 
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
-                            {% if group.gaccess.group_membership_requests %}
-                                {% for pendingrequest in group.gaccess.group_membership_requests %}
-                                    {% if not pendingrequest.invitation_to %}
-                                    <tr>
-                                        <td data-id="picture">
-                                            {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><strong><a>{{ pendingrequest.request_from|contact }}</a></strong></h4>
-                                            {% if  pendingrequest.request_from.userprofile.title %}
-                                                <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
-                                                    {% csrf_token %}
-                                                    <a href="#" class="btn btn-success btn-act-on-request"
-                                                       data-user-action="Accept"
-                                                       data-member-id="{{ pendingrequest.request_from.id }}"
-                                                       data-name="{{ pendingrequest.request_from|best_name }}"
-                                                       data-title="{% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
-                                                            class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-                                                </form>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                    {% csrf_token %}
-                                                    <a href="#" class="btn btn-default btn-act-on-request"
-                                                       data-user-action="Reject"><span
-                                                            class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
-                                                </form>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% else %}
-                                        <tr>
-                                            <td data-id="picture">
-                                                {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
-                                                    <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
-                                                         class="profile-pic-thumbnail round-image pull-left">
-                                                    </div>
-                                                {% else %}
-                                                    <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
-                                                </h4>
-                                                {% if  pendingrequest.invitation_to.userprofile.title %}
-                                                    <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                    <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn btn-default btn-act-on-request">Cancel Invitation</a>
-                                                    </form>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                            </td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
+                                {% if group.gaccess.group_membership_requests %}
+                                    {% for pendingrequest in group.gaccess.group_membership_requests %}
+                                        {% if not pendingrequest.invitation_to %}
+                                            <tr>
+                                                <td data-id="picture">
+                                                    {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
+                                                        <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
+                                                             class="profile-pic-thumbnail round-image pull-left">
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <h4>
+                                                        <strong><a>{{ pendingrequest.request_from|contact }}</a></strong>
+                                                    </h4>
+                                                    {% if  pendingrequest.request_from.userprofile.title %}
+                                                        <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn btn-success btn-act-on-request"
+                                                               data-user-action="Accept"
+                                                               data-member-id="{{ pendingrequest.request_from.id }}"
+                                                               data-name="{{ pendingrequest.request_from|best_name }}"
+                                                               data-title="
+                                                                       {% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
+                                                                    class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                                                        </form>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn btn-default btn-act-on-request"
+                                                               data-user-action="Reject"><span
+                                                                    class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
+                                                        </form>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td data-id="picture">
+                                                    {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
+                                                        <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
+                                                             class="profile-pic-thumbnail round-image pull-left">
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
+                                                    </h4>
+                                                    {% if  pendingrequest.invitation_to.userprofile.title %}
+                                                        <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn btn-default btn-act-on-request">Cancel
+                                                                Invitation</a>
+                                                        </form>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
                                 {% else %}
-                                <tr class="no-pending-requests"><td><i>No pending requests.</i></td></tr>
-                            {% endif %}
+                                    <tr class="no-pending-requests">
+                                        <td><i>No pending requests.</i></td>
+                                    </tr>
+                                {% endif %}
                             </table>
                         </div>
                     </div>
                 </div>
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                    <div role="tabpanel" class="tab-pane fade" id="resources">
-                     <div class="row">
-                        <div class="col-lg-2" id="facets">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h4 class="panel-title">
-                                        <span class="glyphicon glyphicon glyphicon-user"></span>
-                                        <a data-toggle="collapse" class="accordion-toggle"
-                                           data-parent="#accordion" href="#filter-shared-by">&nbsp;Shared by</a>
-                                    </h4>
-                                </div>
-                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
-                                    <div class="panel-body">
-                                        <div class="list-group">
-                                            <ul class="list-group inputs-group">
-                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>
-                                            </ul>
-                                        </div>
+                <div role="tabpanel" class="tab-pane fade in active" id="resources">
+                    <div class="row">
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
+                            <div class="col-lg-2" id="facets">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h4 class="panel-title">
+                                            <span class="glyphicon glyphicon glyphicon-user"></span>
+                                            <a data-toggle="collapse" class="accordion-toggle"
+                                               data-parent="#accordion" href="#filter-shared-by">&nbsp;Shared by</a>
+                                        </h4>
+                                    </div>
+                                    <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
+                                        <div class="panel-body">
+                                            <div class="list-group">
+                                                <ul class="list-group inputs-group">
+                                                    <i class="list-group-item no-items-found">
+                                                        <h5>No resources have been
+                                                        shared with this group yet.</h5>
+                                                    </i>
+                                                </ul>
+                                            </div>
 
-                                        <div id="grantors-list">
-                                            {% for res in group_resources %}
-                                                <span data-grantor-id="{{ res.grantor.id }}"
-                                                      data-grantor-name="{{ res.grantor|best_name }}"></span>
-                                            {% endfor %}
+                                            <div id="grantors-list">
+                                                {% for res in group_resources %}
+                                                    <span data-grantor-id="{{ res.grantor.id }}"
+                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-10" id="items">
+                            <div class="col-lg-10" id="items">
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div id="search-container" class="input-group">
                                         <span class="glyphicon glyphicon-search search-icon"></span>
-                                        <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
-                                        <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
+                                        <input id="resource-search-input" type="text" class="form-control"
+                                               placeholder="Search"/>
+                                        <span id="btn-clear-search-input"
+                                              class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
 
                                         <div class="input-group-btn">
                                             <div class="btn-group" role="group">
                                                 <div class="dropdown dropdown-lg">
-                                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                                    <button type="button" class="btn btn-default dropdown-toggle"
+                                                            data-toggle="dropdown"
                                                             aria-expanded="false"><span class="caret"></span></button>
 
                                                     <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
                                                         <form class="form-horizontal" role="form">
                                                             <div class="form-group">
                                                                 <label for="filter">Resource Type</label>
-                                                                <select id="input-resource-type" class="form-control pull-left">
+                                                                <select id="input-resource-type"
+                                                                        class="form-control pull-left">
                                                                     <option value="" selected>All</option>
-                                                                    <option value="collection resource">Collection</option>
-                                                                    <option value="composite resource">Composite</option>
+                                                                    <option value="collection resource">Collection
+                                                                    </option>
+                                                                    <option value="composite resource">Composite
+                                                                    </option>
                                                                     <option value="generic">Generic</option>
-                                                                    <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
-                                                                    <option value="geographic raster">Geographic Raster</option>
-                                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
-                                                                    <option value="model instance resource">Model Instance</option>
+                                                                    <option value="geographic feature">Geographic
+                                                                        Feature (ESRI Shapefiles)
+                                                                    </option>
+                                                                    <option value="geographic raster">Geographic
+                                                                        Raster
+                                                                    </option>
+                                                                    <option value="his referenced time series">HIS
+                                                                        Referenced Time Series
+                                                                    </option>
+                                                                    <option value="model instance resource">Model
+                                                                        Instance
+                                                                    </option>
                                                                     <option value="model program">Model Program</option>
-                                                                    <option value="modflow model instance resource">MODFLOW Model Instance</option>
-                                                                    <option value="multidimensional">Multidimensional (NetCDF)</option>
-                                                                    <option value="script resource">Script Resource</option>
-                                                                    <option value="swat model instance resource">Swat Model Instance</option>
+                                                                    <option value="modflow model instance resource">
+                                                                        MODFLOW Model Instance
+                                                                    </option>
+                                                                    <option value="multidimensional">Multidimensional
+                                                                        (NetCDF)
+                                                                    </option>
+                                                                    <option value="script resource">Script Resource
+                                                                    </option>
+                                                                    <option value="swat model instance resource">Swat
+                                                                        Model Instance
+                                                                    </option>
                                                                     <option value="time series">Time Series</option>
                                                                     <option value="web app resource">Web App</option>
                                                                 </select>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="contain">Author</label>
-                                                                <input id="input-author" class="form-control" type="text"/>
-                                                                <span id="btn-clear-author-input" class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                                <input id="input-author" class="form-control"
+                                                                       type="text"/>
+                                                                <span id="btn-clear-author-input"
+                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="contain">Subject</label>
-                                                                <input id="input-subject" class="form-control" type="text"/>
-                                                                <span id="btn-clear-subject-input" class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                                <input id="input-subject" class="form-control"
+                                                                       type="text"/>
+                                                                <span id="btn-clear-subject-input"
+                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
                                                             </div>
                                                         </form>
                                                     </div>
@@ -541,7 +494,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                 </div>
+                                </div>
                             </div>
 
                             <!-- /input-group -->
@@ -573,84 +526,129 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    {% for res in group_resources %}
-                                        <tr class="data-row">
-                                            {# Selection controls #}
-                                            <td>
-                                                <input class="row-selector" type="checkbox">
-                                                {% if res.is_favorite %}
-                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
-                                                          data-form-type="toggle-favorite"
-                                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+                                {% for res in group_resources %}
+                                    <tr class="data-row">
+                                        {# Selection controls #}
+                                        <td>
+                                            <input class="row-selector" type="checkbox">
+                                            {% if res.is_favorite %}
+                                                <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                      data-form-type="toggle-favorite"
+                                                      class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
-                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                                          method="post">
-                                                        {% csrf_token %}
-                                                        <input type="hidden" name="action" value="DELETE">
-                                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                                    </form>
-                                                {% else %}
-                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
-                                                          data-form-type="toggle-favorite"
-                                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
+                                                <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+                                                      action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                      method="post">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="DELETE">
+                                                    <input type="hidden" name="label_type" value="FAVORITE">
+                                                </form>
+                                            {% else %}
+                                                <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                      data-form-type="toggle-favorite"
+                                                      class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                                          method="post">
-                                                        {% csrf_token %}
-                                                        <input type="hidden" name="action" value="CREATE">
-                                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                                    </form>
-                                                {% endif %}
+                                                <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+                                                      action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                      method="post">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="CREATE">
+                                                    <input type="hidden" name="label_type" value="FAVORITE">
+                                                </form>
+                                            {% endif %}
 
-                                                <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                      data-toggle="dropdown" aria-expanded="false"></span>
+                                            <span class="glyphicon glyphicon-tag btn-inline-label"
+                                                  data-toggle="dropdown" aria-expanded="false"></span>
 
-                                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                                    <div class="panel-body" role="form">
-                                                        <ul data-resource-id="{{ res.short_id }}"
-                                                            class="list-group list-labels">
-                                                        </ul>
-                                                    </div>
+                                            <div class="dropdown-menu inline-dropdown" role="menu">
+                                                <div class="panel-body" role="form">
+                                                    <ul data-resource-id="{{ res.short_id }}"
+                                                        class="list-group list-labels">
+                                                    </ul>
                                                 </div>
-                                            </td>
-                                            {# Type #}
-                                            <td data-col="resource-type">
-                                                {% include "includes/res_type_col.html" with resource=res %}
-                                            </td>
-                                            {# Title #}
-                                            <td>
-                                                <strong>
-                                                    <a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
-                                                </strong>
-                                            </td>
-                                            {# First Author #}
-                                            <td>{{ res|resource_first_author }}</td>
-                                            {# Date Created #}
-                                            <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
-                                            {# Last Modified #}
-                                            <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.last_updated|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.created|date:"U" }}</td>
-                                            <td>{{ res.grantor.id }}</td>
-                                        </tr>
-                                    {% endfor %}
+                                            </div>
+                                        </td>
+                                        {# Type #}
+                                        <td data-col="resource-type">
+                                            {% include "includes/res_type_col.html" with resource=res %}
+                                        </td>
+                                        {# Title #}
+                                        <td>
+                                            <strong>
+                                                <a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+                                            </strong>
+                                        </td>
+                                        {# First Author #}
+                                        <td>{{ res|resource_first_author }}</td>
+                                        {# Date Created #}
+                                        <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
+                                        {# Last Modified #}
+                                        <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td>{{ res.last_updated|date:"U" }}</td>
+                                        <td><!-- Needed for datatable to function properly --></td>
+                                        <td>{{ res.created|date:"U" }}</td>
+                                        <td>{{ res.grantor.id }}</td>
+                                    </tr>
+                                {% endfor %}
                                 </tbody>
                             </table>
 
                             {% include "includes/legend.html" %}
 
+                        {% else %}
+
+                            <div class="col-lg-10" id="items">
+                                {% if group.gaccess.active %}
+                                    <h4><i>You are not a member of this group.</i></h4>
+                                    {% if group.join_request_waiting_user_action %}
+                                        <div class="request-block pull-left">
+                                            <span class="flag-joined">You have been invited to join!</span>
+                                            <br><br>
+                                            <div class="height-fix">
+                                                <form class="act-on-request height-fix"
+                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success"
+                                                            data-user-action="Accept">Accept
+                                                    </button>
+                                                </form>
+
+                                                <form class="act-on-request height-fix"
+                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-default">
+                                                        Decline
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    {% elif group.join_request_waiting_owner_action %}
+                                        <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
+                                            Sent</h4>
+                                    {% else %}
+                                        <form id="join-{{ group.id }}" method="post"
+                                              action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-primary" role="button">Ask to join
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% else %}
+                                    <h4><i>This group is currently inactive.</i></h4>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
                         </div>
-                     </div>
-                 </div>
-                {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -727,7 +725,8 @@
                     </div>
                     <form action="/hsapi/_internal/delete-user-group/{{ group.id }}">
                         <div class="modal-body">
-                            <h5>Are you sure you want to delete this group? If you decide to delete it, you can restore it later.</h5>
+                            <h5>Are you sure you want to delete this group? If you decide to delete it, you can restore
+                                it later.</h5>
                         </div>
 
                         <div class="modal-footer">
@@ -784,9 +783,9 @@
 
                                 {# auto approve #}
                                 <fieldset class="col-sm-12">
-                                   <input id="auto-approve" type="checkbox"  name="auto_approve"
-                                          {% if group.gaccess.auto_approve %}checked{% endif %}>
-                                   <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                                    <input id="auto-approve" type="checkbox" name="auto_approve"
+                                           {% if group.gaccess.auto_approve %}checked{% endif %}>
+                                    <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
                                 </fieldset>
 
                                 {# Picture #}

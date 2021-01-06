@@ -10,6 +10,7 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
+from django.contrib.auth.models import User
 
 from rest_framework import status
 
@@ -19,7 +20,9 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+from theme.models import UserQuota
 from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 
 
 FILE_SIZE_LIMIT = 1*(1024 ** 3)
@@ -30,36 +33,80 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def update_quota_usage(res=None, user=None):
+def get_quota_usage_from_irods(username):
     """
-    Update quota usage as follows:
-    (1) if res is not None & user is None, quota usage of the res' quota holder will be updated
-    (2) if res is None & user is not None, quota usage of the user will be updated
-    (3) if both res and user are None, nothing is updated
-    (4) if both res and user are not None, quota usage of both res' quota holder and user will be
-    updated.
-    :param res: a resource object
-    :param user: a user object
-    :return:
+    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    :param username: the user name to get quota usage for.
+    :return: the combined quota usage from iRODS data zone and user zone; raise ValidationError
+    if quota usage cannot be retrieved from iRODS
     """
-    if not res and not user:
-        return
+    attname = username + '-usage'
+    istorage = IrodsStorage()
+    # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
+    # collection
+    try:
+        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
+        if uqDataZoneSize is None:
+            # user may not have resources in data zone, so corresponding quota size AVU may not
+            # exist for this user
+            uqDataZoneSize = -1
+        else:
+            uqDataZoneSize = float(uqDataZoneSize)
+    except SessionException:
+        # user may not have resources in data zone, so corresponding quota size AVU may not exist
+        # for this user
+        uqDataZoneSize = -1
 
-    from hs_core.tasks import update_quota_usage_task
+    # get quota size for the user in iRODS user zone
+    try:
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
+                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
+                                     settings.IRODS_BAGIT_PATH)
+        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
+        if uqUserZoneSize is None:
+            # user may not have resources in user zone, so corresponding quota size AVU may not
+            # exist for this user
+            uqUserZoneSize = -1
+        else:
+            uqUserZoneSize = float(uqUserZoneSize)
+    except SessionException:
+        # user may not have resources in user zone, so corresponding quota size AVU may not exist
+        # for this user
+        uqUserZoneSize = -1
 
-    if user:
-        update_quota_usage_task.apply_async((user.username,), countdown=30)
+    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
+        err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
+        logger.error(err_msg)
+        raise ValidationError(err_msg)
+    elif uqUserZoneSize < 0:
+        used_val = uqDataZoneSize
+    elif uqDataZoneSize < 0:
+        used_val = uqUserZoneSize
+    else:
+        used_val = uqDataZoneSize + uqUserZoneSize
+    return used_val
 
-    if res:
-        quser = res.get_quota_holder()
-        if quser is None:
-            # no quota holder for this resource, this should not happen, but check just in case
-            logger.error('no quota holder is found for resource' + res.short_id)
-            return
-        # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
-        # services enough time to finish before reflecting the quota usage in django DB
-        update_quota_usage_task.apply_async((quser.username,), countdown=30)
-    return
+
+def update_quota_usage(username):
+    """
+    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
+    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
+    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
+    internal zone.
+    :param
+    username: the name of the user that needs to update quota usage for.
+    :return: raise ValidationError if quota cannot be updated.
+    """
+    hs_internal_zone = "hydroshare"
+    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    if uq is None:
+        # the quota row does not exist in Django
+        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
+        logger.error(err_msg)
+        raise ValidationError(err_msg)
+
+    used_val = get_quota_usage_from_irods(username)
+    uq.update_used_value(used_val)
 
 
 def res_has_web_reference(res):
@@ -76,21 +123,6 @@ def res_has_web_reference(res):
             if 'url' in f.logical_file.extra_data:
                 return True
     return False
-
-
-def get_resource(pk):
-    """
-    Retrieve an instance of type Bags associated with the resource identified by **pk**
-
-    Parameters:    pk - Unique HydroShare identifier for the resource to be retrieved.
-
-    Returns:    An instance of type Bags.
-
-    Raises:
-    Exceptions.NotFound - The resource identified by pid does not exist
-    """
-
-    return utils.get_resource_by_shortkey(pk).baseresource.bags.first()
 
 
 def get_science_metadata(pk):
@@ -246,11 +278,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         if bag_modified_flag:
             # import here to avoid circular import issue
             from hs_core.tasks import create_bag_by_irods
-            status = create_bag_by_irods(res_id)
-            if not status:
-                # bag fails to be created successfully
-                raise SessionException(-1, '', 'The resource bag fails to be created '
-                                               'before bag replication')
+            create_bag_by_irods(res_id)
 
         # do replication of the resource bag to irods user zone
         if not res.resource_federation_path:
@@ -261,7 +289,6 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         fsize = istorage.size(src_file)
         utils.validate_user_quota(user, fsize)
         istorage.copyFiles(src_file, tgt_file)
-        update_quota_usage(user=user)
     else:
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
@@ -487,7 +514,7 @@ def create_resource(
         resource.resource_type = resource_type
 
         # by default make resource private
-        resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
+        resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
         resource.save()
 
         if not metadata:
@@ -540,7 +567,7 @@ def create_resource(
             for element in metadata:
                 # here k is the name of the element
                 # v is a dict of all element attributes/field names and field values
-                k, v = element.items()[0]
+                k, v = list(element.items())[0]
                 resource.metadata.create_element(k, **v)
 
             for keyword in keywords:
@@ -575,7 +602,7 @@ def create_resource(
     return resource
 
 
-def create_empty_resource(pk, user, action='version'):
+def create_empty_resource(pk, user_or_username, action='version'):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
     This empty resource object is then used to create metadata and content from its original
@@ -590,15 +617,19 @@ def create_empty_resource(pk, user, action='version'):
         resource which is then further populated with metadata and content in a subsequent step.
     """
     res = utils.get_resource_by_shortkey(pk)
+    if isinstance(user_or_username, User):
+        user = user_or_username
+    else:
+        user = User.objects.get(username=user_or_username)
     if action == 'version':
         if not user.uaccess.owns_resource(res):
             raise PermissionDenied('Only resource owners can create new versions')
     elif action == 'copy':
         # import here to avoid circular import
-        from hs_core.views.utils import can_user_copy_resource
+        from hs_core.views.utils import rights_allows_copy
         if not user.uaccess.can_view_resource(res):
             raise PermissionDenied('You do not have permission to view this resource')
-        allow_copy = can_user_copy_resource(res, user)
+        allow_copy = rights_allows_copy(res, user)
         if not allow_copy:
             raise PermissionDenied('The license for this resource does not permit copying')
     else:
@@ -630,25 +661,13 @@ def copy_resource(ori_res, new_res, user=None):
     """
 
     # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
-
-    utils.copy_and_create_metadata(ori_res, new_res)
-
-    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    if hs_identifier:
-        new_res.metadata.create_element('source', derived_from=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create bag for the new resource
-    hs_bagit.create_bag(new_res)
-    # need to update quota usage for new_res quota holder
+    from hs_core.tasks import copy_resource_task
     if user:
-        update_quota_usage(user=user)
-    return new_res
+        copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
+    else:
+        copy_resource_task(ori_res.short_id, new_res.short_id)
+    # cannot directly return the new_res object being passed in, but rather return the new resource object being copied
+    return utils.get_resource_by_shortkey(new_res.short_id)
 
 
 def create_new_version_resource(ori_res, new_res, user):
@@ -700,8 +719,6 @@ def create_new_version_resource(ori_res, new_res, user):
     # obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
     ori_res.raccess.save()
-    # need to update quota usage for the user
-    update_quota_usage(user=user)
     return new_res
 
 
@@ -738,7 +755,7 @@ def add_resource_files(pk, *files, **kwargs):
     if __debug__:
         assert(isinstance(source_names, list))
 
-    folder = kwargs.pop('folder', None)
+    folder = kwargs.pop('folder', '')
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
@@ -746,13 +763,12 @@ def add_resource_files(pk, *files, **kwargs):
         assert len(kwargs) == 0
 
     prefix_path = 'data/contents'
-    if folder is None or folder == prefix_path:
+    if folder == prefix_path:
         base_dir = ""
     elif folder.startswith(prefix_path):
         base_dir = folder[len(prefix_path) + 1:]
     else:
         base_dir = folder
-    new_folders = set()
     for f in files:
         full_dir = base_dir
         if f in full_paths:
@@ -761,25 +777,20 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        if full_dir:
-            new_folders.add(os.path.join(resource.file_path, full_dir))
-            ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
-        else:
-            ret.append(utils.add_file_to_resource(resource, f, folder=None))
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
 
-    if len(source_names) > 0:
-        for ifname in source_names:
-            ret.append(utils.add_file_to_resource(resource, None,
-                                                  folder=folder,
-                                                  source_name=ifname))
+    for ifname in source_names:
+        ret.append(utils.add_file_to_resource(resource, None,
+                                              folder=folder,
+                                              source_name=ifname))
+
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
         if resource.resource_type == "CompositeResource" and auto_aggregate:
             utils.check_aggregations(resource, ret)
-        # some file(s) added, need to update quota usage
-        update_quota_usage(res=resource)
+
     return ret
 
 
@@ -854,11 +865,9 @@ def delete_resource(pk):
     Exceptions.NotFound - The resource identified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
 
-    Note:  Only HydroShare administrators will be able to delete formally published resour
+    Note:  Only HydroShare administrators will be able to delete formally published resource
     """
-
     res = utils.get_resource_by_shortkey(pk)
-
     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
         raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
                               'cannot be deleted.')
@@ -873,17 +882,15 @@ def delete_resource(pk):
         if idx == -1:
             obsolete_res_id = is_version_of_res_link
         else:
-            obsolete_res_id = is_version_of_res_link[idx+1:]
+            obsolete_res_id = is_version_of_res_link[idx + 1:]
         obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
         if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
             eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
             obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable now that it becomes the latest version
-            obsolete_res.raccess.immutable = False
-            obsolete_res.raccess.save()
-
-    # need to update quota usage when a resource is deleted
-    update_quota_usage(res=res)
+            # also make this obsoleted resource editable if not published now that it becomes the latest version
+            if not obsolete_res.raccess.published:
+                obsolete_res.raccess.immutable = False
+                obsolete_res.raccess.save()
 
     res.delete()
     return pk
@@ -914,8 +921,6 @@ def delete_resource_file_only(resource, f):
     """
     short_path = f.short_path
     f.delete()
-    # need to update quota usage when a file is deleted
-    update_quota_usage(res=resource)
     return short_path
 
 

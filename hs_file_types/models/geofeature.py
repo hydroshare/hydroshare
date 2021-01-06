@@ -3,7 +3,6 @@ import logging
 import shutil
 import zipfile
 import xmltodict
-from lxml import etree
 
 from osgeo import ogr, osr
 
@@ -14,7 +13,7 @@ from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title, CoreMetaData
+from hs_core.models import Title
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm
 from hs_core.signals import post_add_geofeature_aggregation
@@ -23,7 +22,7 @@ from hs_core.signals import post_add_geofeature_aggregation
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, FieldInformation
 
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 UNKNOWN_STR = "unknown"
 
@@ -142,23 +141,6 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(GeoFeatureFileMetaData, self)._get_xml_containers()
-        if self.geometryinformation:
-            self.geometryinformation.add_to_xml_container(container_to_add_to)
-
-        for fieldinfo in self.fieldinformations.all():
-            fieldinfo.add_to_xml_container(container_to_add_to)
-
-        if self.originalcoverage:
-            self.originalcoverage.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
-
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
@@ -248,7 +230,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             return ""
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a GeoFeatureLogicalFile (aggregation) from a .shp or a .zip resource file """
 
         log = logging.getLogger()
@@ -262,7 +244,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
                                                                                    res_file)
             except ValidationError as ex:
-                log.exception(ex.message)
+                log.exception(str(ex))
                 raise ex
 
             file_name = res_file.file_name
@@ -305,17 +287,18 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     ft_ctx.logical_file = logical_file
                     ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
-                    msg = msg.format(ex.message)
+                    msg = msg.format(str(ex))
                     log.exception(msg)
 
             if not file_type_success:
                 raise ValidationError(msg)
+            return logical_file
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(GeoFeatureLogicalFile, cls)._validate_set_file_type_inputs(
             resource, file_id, folder_path)
-        if folder_path is None and res_file.extension.lower() not in ('.zip', '.shp'):
+        if not folder_path and res_file.extension.lower() not in ('.zip', '.shp'):
             # when a file is specified by the user for creating this file type it must be a
             # zip or shp file
             raise ValidationError("Not a valid geographic feature file.")
@@ -379,7 +362,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
         else:
             msg = "Failed to parse the .shp file. Error{}"
 
-        msg = msg.format(ex.message)
+        msg = msg.format(str(ex))
         raise ValidationError(msg)
 
 
@@ -397,7 +380,7 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
     # populate resource and logical file level metadata
     target_obj = logical_file if logical_file is not None else resource
 
-    if "coverage" in metadata_dict.keys():
+    if "coverage" in list(metadata_dict.keys()):
         coverage_dict = metadata_dict["coverage"]['Coverage']
         target_obj.metadata.coverages.all().filter(type='box').delete()
         target_obj.metadata.create_element('coverage',

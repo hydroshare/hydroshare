@@ -1,0 +1,24 @@
+<VRTDataset rasterXSize="220" rasterYSize="230">
+  <SRS>PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.2572221010002,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","26912"]]</SRS>
+  <GeoTransform> 4.4557401909127034e+005, 3.0000000000000000e+001, 0.0000000000000000e+000, 4.6554924469163064e+006, 0.0000000000000000e+000,-3.0000000000000000e+001</GeoTransform>
+  <VRTRasterBand dataType="Float32" band="1">
+    <NoDataValue>-3.40282346638529E+038</NoDataValue>
+    <ColorInterp>Gray</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">logan1.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="110" RasterYSize="230" DataType="Float32" BlockXSize="110" BlockYSize="18" />
+      <SrcRect xOff="0" yOff="0" xSize="110" ySize="230" />
+      <DstRect xOff="0" yOff="0" xSize="110" ySize="230" />
+      <NODATA>-3.40282e+038</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">logan2.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="110" RasterYSize="230" DataType="Float32" BlockXSize="110" BlockYSize="18" />
+      <SrcRect xOff="0" yOff="0" xSize="110" ySize="230" />
+      <DstRect xOff="110" yOff="0" xSize="110" ySize="230" />
+      <NODATA>-3.40282e+038</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>

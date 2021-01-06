@@ -1,5 +1,5 @@
 
-from __future__ import absolute_import
+
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -21,7 +21,7 @@ class TestGroupFromId(TestCase):
         self.group = self.user.uaccess.create_group(title='Jamy group', description='This is Jamy group')
 
     def test_accept_group_instance(self):
-        self.assertEquals(
+        self.assertEqual(
             hydroshare.group_from_id(self.group),
             self.group,
             msg='group did not match'

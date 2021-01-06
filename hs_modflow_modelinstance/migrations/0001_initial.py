@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -16,9 +16,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('other_specified_head_boundary_packages', models.CharField(max_length=200, null=True, verbose_name=b'Other packages', blank=True)),
-                ('other_specified_flux_boundary_packages', models.CharField(max_length=200, null=True, verbose_name=b'Other packages', blank=True)),
-                ('other_head_dependent_flux_boundary_packages', models.CharField(max_length=200, null=True, verbose_name=b'Other packages', blank=True)),
+                ('other_specified_head_boundary_packages', models.CharField(max_length=200, null=True, verbose_name='Other packages', blank=True)),
+                ('other_specified_flux_boundary_packages', models.CharField(max_length=200, null=True, verbose_name='Other packages', blank=True)),
+                ('other_head_dependent_flux_boundary_packages', models.CharField(max_length=200, null=True, verbose_name='Other packages', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_boundarycondition_related', to='contenttypes.ContentType')),
             ],
         ),
@@ -27,9 +27,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('modelParameter', models.CharField(max_length=200, null=True, verbose_name=b'Model parameter(s)', blank=True)),
-                ('modelSolver', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Model solver', choices=[(b'DE4', b'DE4'), (b'GMG', b'GMG'), (b'LMG', b'LMG'), (b'PCG', b'PCG'), (b'PCGN', b'PCGN'), (b'SIP', b'SIP'), (b'SOR', b'SOR'), (b'NWT', b'NWT')])),
-                ('subsidencePackage', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Subsidence package', choices=[(b'IBS', b'IBS'), (b'SUB', b'SUB'), (b'SWT', b'SWT')])),
+                ('modelParameter', models.CharField(max_length=200, null=True, verbose_name='Model parameter(s)', blank=True)),
+                ('modelSolver', models.CharField(blank=True, max_length=100, null=True, verbose_name='Model solver', choices=[('DE4', 'DE4'), ('GMG', 'GMG'), ('LMG', 'LMG'), ('PCG', 'PCG'), ('PCGN', 'PCGN'), ('SIP', 'SIP'), ('SOR', 'SOR'), ('NWT', 'NWT')])),
+                ('subsidencePackage', models.CharField(blank=True, max_length=100, null=True, verbose_name='Subsidence package', choices=[('IBS', 'IBS'), ('SU', 'SU'), ('SWT', 'SWT')])),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_generalelements_related', to='contenttypes.ContentType')),
             ],
         ),
@@ -38,11 +38,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('numberOfLayers', models.CharField(max_length=100, null=True, verbose_name=b'Number of layers', blank=True)),
-                ('typeOfRows', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Type of rows', choices=[(b'Regular', b'Regular'), (b'Irregular', b'Irregular')])),
-                ('numberOfRows', models.CharField(max_length=100, null=True, verbose_name=b'Number of rows', blank=True)),
-                ('typeOfColumns', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Type of columns', choices=[(b'Regular', b'Regular'), (b'Irregular', b'Irregular')])),
-                ('numberOfColumns', models.CharField(max_length=100, null=True, verbose_name=b'Number of columns', blank=True)),
+                ('numberOfLayers', models.CharField(max_length=100, null=True, verbose_name='Number of layers', blank=True)),
+                ('typeOfRows', models.CharField(blank=True, max_length=100, null=True, verbose_name='Type of rows', choices=[('Regular', 'Regular'), ('Irregular', 'Irregular')])),
+                ('numberOfRows', models.CharField(max_length=100, null=True, verbose_name='Number of rows', blank=True)),
+                ('typeOfColumns', models.CharField(blank=True, max_length=100, null=True, verbose_name='Type of columns', choices=[('Regular', 'Regular'), ('Irregular', 'Irregular')])),
+                ('numberOfColumns', models.CharField(max_length=100, null=True, verbose_name='Number of columns', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_griddimensions_related', to='contenttypes.ContentType')),
             ],
         ),
@@ -51,8 +51,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('flowPackage', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Flow package', choices=[(b'BCF6', b'BCF6'), (b'LPF', b'LPF'), (b'HUF2', b'HUF2'), (b'UPW', b'UPW'), (b'HFB6', b'HFB6'), (b'UZF', b'UZF'), (b'SWI2', b'SWI2')])),
-                ('flowParameter', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Flow parameter', choices=[(b'Hydraulic Conductivity', b'Hydraulic Conductivity'), (b'Transmissivity', b'Transmissivity')])),
+                ('flowPackage', models.CharField(blank=True, max_length=100, null=True, verbose_name='Flow package', choices=[('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'), ('UPW', 'UPW'), ('HFB6', 'HFB6'), ('UZF', 'UZF'), ('SWI2', 'SWI2')])),
+                ('flowParameter', models.CharField(blank=True, max_length=100, null=True, verbose_name='Flow parameter', choices=[('Hydraulic Conductivity', 'Hydraulic Conductivity'), ('Transmissivity', 'Transmissivity')])),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_groundwaterflow_related', to='contenttypes.ContentType')),
             ],
         ),
@@ -68,10 +68,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('calibratedParameter', models.CharField(max_length=200, null=True, verbose_name=b'Calibrated parameter(s)', blank=True)),
-                ('observationType', models.CharField(max_length=200, null=True, verbose_name=b'Observation type(s)', blank=True)),
-                ('observationProcessPackage', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Observation process package', choices=[(b'ADV2', b'ADV2'), (b'CHOB', b'CHOB'), (b'DROB', b'DROB'), (b'DTOB', b'DTOB'), (b'GBOB', b'GBOB'), (b'HOB', b'HOB'), (b'OBS', b'OBS'), (b'RVOB', b'RVOB'), (b'STOB', b'STOB')])),
-                ('calibrationMethod', models.CharField(max_length=200, null=True, verbose_name=b'Calibration method(s)', blank=True)),
+                ('calibratedParameter', models.CharField(max_length=200, null=True, verbose_name='Calibrated parameter(s)', blank=True)),
+                ('observationType', models.CharField(max_length=200, null=True, verbose_name='Observation type(s)', blank=True)),
+                ('observationProcessPackage', models.CharField(blank=True, max_length=100, null=True, verbose_name='Observation process package', choices=[('ADV2', 'ADV2'), ('CHO', 'CHO'), ('DRO', 'DRO'), ('DTO', 'DTO'), ('GBO', 'GBO'), ('HO', 'HO'), ('OBS', 'OBS'), ('RVO', 'RVO'), ('STO', 'STO')])),
+                ('calibrationMethod', models.CharField(max_length=200, null=True, verbose_name='Calibration method(s)', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_modelcalibration_related', to='contenttypes.ContentType')),
             ],
         ),
@@ -80,9 +80,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('inputType', models.CharField(max_length=200, null=True, verbose_name=b'Type', blank=True)),
-                ('inputSourceName', models.CharField(max_length=200, null=True, verbose_name=b'Source name', blank=True)),
-                ('inputSourceURL', models.URLField(null=True, verbose_name=b'Source URL', blank=True)),
+                ('inputType', models.CharField(max_length=200, null=True, verbose_name='Type', blank=True)),
+                ('inputSourceName', models.CharField(max_length=200, null=True, verbose_name='Source name', blank=True)),
+                ('inputSourceURL', models.URLField(null=True, verbose_name='Source URL', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_modelinput_related', to='contenttypes.ContentType')),
             ],
             options={
@@ -115,10 +115,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('stressPeriodType', models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Type', choices=[(b'Steady', b'Steady'), (b'Transient', b'Transient'), (b'Steady and Transient', b'Steady and Transient')])),
-                ('steadyStateValue', models.CharField(max_length=100, null=True, verbose_name=b'Length of steady state stress period(s)', blank=True)),
-                ('transientStateValueType', models.CharField(max_length=100, null=True, verbose_name=b'Type of transient state stress period(s)', choices=[(b'Annually', b'Annually'), (b'Monthly', b'Monthly'), (b'Daily', b'Daily'), (b'Hourly', b'Hourly'), (b'Other', b'Other')])),
-                ('transientStateValue', models.CharField(max_length=100, null=True, verbose_name=b'Length of transient state stress period(s)', blank=True)),
+                ('stressPeriodType', models.CharField(blank=True, max_length=100, null=True, verbose_name='Type', choices=[('Steady', 'Steady'), ('Transient', 'Transient'), ('Steady and Transient', 'Steady and Transient')])),
+                ('steadyStateValue', models.CharField(max_length=100, null=True, verbose_name='Length of steady state stress period(s)', blank=True)),
+                ('transientStateValueType', models.CharField(max_length=100, null=True, verbose_name='Type of transient state stress period(s)', choices=[('Annually', 'Annually'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'), ('Other', 'Other')])),
+                ('transientStateValue', models.CharField(max_length=100, null=True, verbose_name='Length of transient state stress period(s)', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_stressperiod_related', to='contenttypes.ContentType')),
             ],
         ),
@@ -127,10 +127,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('totalLength', models.CharField(max_length=100, null=True, verbose_name=b'Total length in meters', blank=True)),
-                ('totalWidth', models.CharField(max_length=100, null=True, verbose_name=b'Total width in meters', blank=True)),
-                ('maximumElevation', models.CharField(max_length=100, null=True, verbose_name=b'Maximum elevation in meters', blank=True)),
-                ('minimumElevation', models.CharField(max_length=100, null=True, verbose_name=b'Minimum elevation in meters', blank=True)),
+                ('totalLength', models.CharField(max_length=100, null=True, verbose_name='Total length in meters', blank=True)),
+                ('totalWidth', models.CharField(max_length=100, null=True, verbose_name='Total width in meters', blank=True)),
+                ('maximumElevation', models.CharField(max_length=100, null=True, verbose_name='Maximum elevation in meters', blank=True)),
+                ('minimumElevation', models.CharField(max_length=100, null=True, verbose_name='Minimum elevation in meters', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_modflow_modelinstance_studyarea_related', to='contenttypes.ContentType')),
             ],
         ),

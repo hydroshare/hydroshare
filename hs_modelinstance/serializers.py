@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from hs_core.views.resource_metadata_rest_api import CoreMetaDataSerializer
-from models import ModelOutput, ExecutedBy, ModelInstanceMetaData
+from .models import ModelOutput, ExecutedBy, ModelInstanceMetaData
 
 
 class ModelOutputMetaDataSerializer(serializers.ModelSerializer):

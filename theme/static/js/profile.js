@@ -70,7 +70,7 @@ function validateForm() {
 function validateRequiredElements() {
     var requiredElements = $(".form-required");
     for (var i = 0; i < requiredElements.length; i++) {
-        if (!$(requiredElements[i]).val()) {
+        if (!$(requiredElements[i]).val().trim()) {
             $(requiredElements[i]).addClass("form-invalid");
             $(requiredElements[i]).parent().find(".error-label").remove();
             $(requiredElements[i]).parent().append(errorLabel("This field is required."));
@@ -109,11 +109,12 @@ function setEditMode() {
         $(this).addClass("blured-out");
     });
 
-    var userTypeValue = $("#db-user-type").text();
+    var userTypeValue = $("#db-user-type").text().trim();
     var selectedUserType = $('#selectUserType option[value="' + userTypeValue + '"]');
 
     if (selectedUserType.length > 0) {
         selectedUserType.attr('selected', 'selected');
+        $('#selectUserType').val(userTypeValue).change();
     }
     else if (userTypeValue) {
         $('#selectUserType option[value="' + 'Other' + '"]').attr('selected', 'selected');
@@ -148,7 +149,7 @@ $(document).on('change', '#cv-custom-upload :file', function () {
 });
 
 function onFormRequiredChange() {
-    if ($(this).val()) {
+    if ($(this).val().trim()) {
         $(this).removeClass("form-invalid");
         $(this).parent().find(".error-label").remove();
     }
@@ -194,10 +195,10 @@ function create_irods_account() {
             }
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+            err_info = xhr.status + ": " + xhr.responseText;
             $('#create-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-danger', err_info, 'Failure'));
+            irodsContainer.append(irods_status_info('alert-danger', xhr.responseText, 'Failure'));
         }
     });
     return false;
@@ -210,25 +211,25 @@ function delete_irods_account() {
         type: "POST",
         data: {},
         success: function(json) {
+            var irodsContainer = $("#irods-account-container");
             if(json.success) {
-                var irodsContainer = $("#irods-account-container");
                 irodsContainer.empty();
                 irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
                 irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
             }
             if(json.error) {
-                var irodsContainer = $("#irods-account-container");
                 irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
             }
             $('#delete-irods-account-dialog').modal('hide');
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+            err_info = xhr.status + ": " + xhr.responseText;
             $('#delete-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
+            irodsContainer.append(irods_status_info('alert-warning', xhr.responseText, 'Failure'));
         }
     });
+    return false;
 }
 
 function getUrlVars()
@@ -245,11 +246,6 @@ function getUrlVars()
 }
 
 $(document).ready(function () {
-    // Change country first empty option to 'Unspecified'
-    var option = $("select[name='country'] option:first-child");
-    option.val("Unspecified");
-    option.text("Unspecified");
-
     $("#btn-create-irods-account").click(create_irods_account);
     $("#btn-delete-irods-account").click(delete_irods_account);
 

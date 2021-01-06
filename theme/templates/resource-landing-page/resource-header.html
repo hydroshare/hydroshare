@@ -2,93 +2,51 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-sm-12 col-md-6 res-header">
-            <table id="left-header-table"
-                   class="info-table">
+        <div id="left-header" class="col-sm-12 col-md-6 res-header">
+            <table class="info-table">
                 <tr>
                     <th>Authors:</th>
-                    {% if not resource_edit_mode %}
-                        <td class="authors-wrapper">
-                            {% for author in creators %}
-                                {% include "includes/author-link.html" with author=author %}
-                            {% endfor %}
-                        </td>
-                    {% else %}
-                    <td>
-                        <a type="button" id="btn-add-new-author" class="btn btn-success btn-xs" data-toggle="modal"
-                           data-target="#add-creator-dialog" title="Add Author">
+
+                    <td class="authors-wrapper" v-if="res_mode === 'View'">
+                        <a v-for="(author, index) in authors" data-toggle="modal"
+                           @click="selectAuthor(author, index)"
+                           data-target="#view-author-modal">
+                            <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                            <template v-else-if="author.organization">${ author.organization }</template>
+                            <template v-else>${ author.email }</template>
+                        </a>
+                    </td>
+
+                    <td v-if="res_mode === 'Edit'">
+                        <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
+                           class="btn btn-success btn-xs" data-toggle="modal"
+                           data-target="#add-author-modal" title="Add Author">
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
-                        <span class="authors-wrapper sortable">
-                            {% for author in creators %}
-                                <span>
-                                    <a title="Edit {{ author.name }}"
-                                       class="author-modal-trigger" data-id="{{ author.id }}"
-                                       data-name="{{ author.name }}" data-order="{{ author.order }}"
-                                       data-description="{{ author.description|default:"" }}"
-                                       data-organization="{{ author.organization|default:"" }}"
-                                       data-email="{{ author.email|default:"" }}"
-                                       data-address="{{ author.address|default:"" }}"
-                                       data-phone="{{ author.phone|default:"" }}"
-                                       data-homepage="{{ author.homepage|default:"" }}"
-                                            {% for name, link in author.identifiers.items %}
-                                       data-{{ name }}="{{ link }}"
-                                            {% endfor %}>
-                                        {% if author.name %}
-                                            {{ author.name|name_without_commas }}
-                                        {% else %}
-                                            {{ author.organization }}
-                                        {% endif %}
-                                    </a>
 
-                                    <form class="hidden-form"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                                          enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <input name="resource-mode" type="hidden" value="edit">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-name"
-                                               value="{{ author.name|default:"" }}">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-description"
-                                               value="{{ author.description|default:"" }}">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
-                                               value="{{ author.organization|default:"" }}">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-email"
-                                               value="{{ author.email|default:"" }}">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-address"
-                                               value="{{ author.address|default:"" }}">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-phone"
-                                               type="text" value="{{ author.phone|default:"" }}">
-
-                                        <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
-                                               value="{{ author.homepage|default:"" }}">
-
-                                        <input class="input-order"
-                                               name="creator-{{ author.order|add:"- 1" }}-order"
-                                               type="number" value="{{ author.order|default:"" }}">
-                                    </form>
-                                 </span>
-                            {% endfor %}
+                        <span :class="{loading: isUpdatingAuthor}" class="authors-wrapper sortable">
+                            <span v-for="(author, index) in authors" :data-id="author.id">
+                                <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
+                                   @click="selectAuthor(author, index)" data-target="#edit-author-modal">
+                                    <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                                    <template v-else-if="author.organization">${ author.organization }</template>
+                                    <template v-else>${ author.email }</template>
+                                </a>
+                            </span>
                         </span>
+
                         <span data-toggle="tooltip" data-placement="auto"
                               title='Drag and drop Authors to rearrange.'
-                              class="glyphicon glyphicon-info-sign text-muted"></span>
+                              class="glyphicon glyphicon-info-sign text-muted">
+                        </span>
                     </td>
-                    {% endif %}
                 </tr>
                 <tr>
                     <th>Owners:</th>
                     <td class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
-                                :user="owner"
-                                v-bind:key="owner.id"
-                                v-on:load-card="onLoadOwnerCard($event)">
+                                :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)">
                             </profile-link>
                         </template>
 
@@ -135,6 +93,24 @@
                 </tr>
                 {% endif %}
             </table>
+
+            <edit-author-modal v-if="res_mode === 'Edit'"
+                               @update-author="updateAuthor"
+                               @delete-author="deleteAuthor"
+                               :_author="selectedAuthor.author"
+                               :is_updating_author="isUpdatingAuthor"
+                               :is_deleting_author="isDeletingAuthor"
+                               :is_person="isPerson"
+                               :edit_author_error="editAuthorError"
+                               :can_remove="authors.length > 1">
+            </edit-author-modal>
+
+            <author-preview-modal v-if="res_mode === 'View'"
+                                  :author="selectedAuthor.author"
+                                  :is_person="isPerson">
+            </author-preview-modal>
+
+            <add-author-modal v-if="res_mode === 'Edit'"></add-author-modal>
         </div>
         <div class="col-sm-12 col-md-6 res-header">
             {% include "resource-landing-page/highlights.html" %}

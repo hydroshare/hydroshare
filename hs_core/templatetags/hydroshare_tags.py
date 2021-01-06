@@ -1,7 +1,9 @@
-from __future__ import absolute_import, division, unicode_literals
+
 from future.builtins import int
+from json import dumps
 
 from django.utils.html import format_html
+from django.conf import settings
 
 from mezzanine import template
 
@@ -51,6 +53,14 @@ def app_on_open_with_list(content, arg):
     res_obj = content
     result = res_obj.rlabels.is_open_with_app(user_obj)
     return result
+
+
+@register.filter
+def published_date(res_obj):
+    if res_obj.raccess.published:
+        return res_obj.metadata.dates.all().filter(type='published').first().start_date
+    else:
+        return ''
 
 
 @register.filter
@@ -195,6 +205,8 @@ def relative_irods_path(fed_irods_file_name):
 
 @register.filter
 def resource_from_uuid(id):
+    if not id:
+        return None
     return get_resource_by_shortkey(id)
 
 
@@ -219,13 +231,13 @@ def remove_last_char(statement):
 def five_options_around(page):
     """ Create five page numbers around current page for discovery pagination. """
     if page.number <= 3:
-        return range(1, min(5, page.paginator.num_pages) + 1)
+        return list(range(1, min(5, page.paginator.num_pages) + 1))
     elif page.number >= (page.paginator.num_pages - 2):
-        return range(max((page.paginator.num_pages - 4), 1),
-                     page.paginator.num_pages + 1)
+        return list(range(max((page.paginator.num_pages - 4), 1),
+                          page.paginator.num_pages + 1))
     else:
-        return range(max(1, (page.number - 2)),
-                     min((page.number + 2), page.paginator.num_pages) + 1)
+        return list(range(max(1, (page.number - 2)),
+                          min((page.number + 2), page.paginator.num_pages) + 1))
 
 
 @register.filter
@@ -238,3 +250,58 @@ def normalize_human_name(name):
 def display_name_to_class(value):
     """ Converts an aggregation display name to a string that is usable as a CSS class name """
     return value.replace(" ", "_").lower()
+
+
+@register.filter
+def creator_json_ld_element(crs):
+    """ return json ld element for creators for schema.org script embedded on resource landing page"""
+    crs_array = []
+    for cr in crs:
+        cr_dict = {}
+        urls = []
+        if cr.email:
+            cr_dict["email"] = cr.email
+        if cr.address:
+            cr_dict["address"] = {
+                "@type": "PostalAddress",
+                "streetAddress": cr.address
+            }
+        if cr.name:
+            cr_dict["@type"] = "Person"
+            cr_dict["name"] = name_without_commas(cr.name)
+            if cr.organization:
+                affl_dict = {
+                    "@type": "Organization",
+                    "name": cr.organization
+                }
+                cr_dict["affiliation"] = affl_dict
+        else:
+            cr_dict["@type"] = "Organization"
+            cr_dict["name"] = cr.organization
+
+        if cr.description:
+            if cr.name:
+                # append www.hydroshare.org since schema.org script is only embedded in production
+                urls.append("https://www.hydroshare.org" + cr.description)
+            else:
+                # organization
+                urls.append(cr.description)
+        if cr.homepage:
+            urls.append(cr.homepage)
+        if cr.identifiers:
+            for k in cr.identifiers:
+                urls.append(cr.identifiers[k])
+        if len(urls) == 1:
+            cr_dict['url'] = urls[0]
+        elif len(urls) > 1:
+            cr_dict['url'] = urls
+        crs_array.append(cr_dict)
+    # reformat json dumped str a bit to fix the indentation issue with the last bracket
+    default_dump = dumps(crs_array, sort_keys=True, indent=4)
+    format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
+    return format_dump
+
+
+@register.filter
+def is_debug(page):
+    return settings.DEBUG

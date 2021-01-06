@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 import django_irods.storage
@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourcefile',
             name='fed_resource_file',
-            field=models.FileField(storage=django_irods.storage.IrodsStorage(b'federated'), max_length=500, null=True, upload_to=hs_core.models.get_path, blank=True),
+            field=models.FileField(storage=django_irods.storage.IrodsStorage('federated'), max_length=500, null=True, upload_to=hs_core.models.get_path, blank=True),
         ),
     ]

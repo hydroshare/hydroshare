@@ -6,7 +6,6 @@ import random
 import logging
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-from rdflib import Namespace, URIRef
 
 from django.db import models
 from django.core.files.uploadedfile import UploadedFile
@@ -19,21 +18,22 @@ from django.contrib.postgres.fields import HStoreField, ArrayField
 from mezzanine.conf import settings
 
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
-    span, a, form, button, label, textarea, h4, input, ul, li, p
+    span, a, form, button, label, textarea, h4, _input, ul, li, p
 
-from lxml import etree
-
+from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
+from rdflib import Literal, Namespace, BNode, URIRef, Graph
+from rdflib.namespace import DC
 
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 
 
-class AbstractFileMetaData(models.Model):
+class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     """ base class for HydroShare file type metadata """
 
     # one temporal coverage and one spatial coverage
@@ -125,7 +125,7 @@ class AbstractFileMetaData(models.Model):
                             th("Key")
                             th("Value")
                     with tbody():
-                        for k, v in self.extra_metadata.iteritems():
+                        for k, v in list(self.extra_metadata.items()):
                             with tr(data_key=k):
                                 td(k)
                                 td(v)
@@ -173,13 +173,13 @@ class AbstractFileMetaData(models.Model):
             legend("Keywords")
             with form(id="id-keywords-filetype", action=action, method="post",
                       enctype="multipart/form-data"):
-                input(id="id-delete-keyword-filetype-action", type="hidden",
-                      value=delete_action)
+                _input(id="id-delete-keyword-filetype-action", type="hidden",
+                           value=delete_action)
                 with div(cls="tags"):
                     with div(id="add-keyword-wrapper", cls="input-group"):
-                        input(id="txt-keyword-filetype", cls="form-control",
-                              placeholder="keyword",
-                              type="text", name="keywords")
+                        _input(id="txt-keyword-filetype", cls="form-control",
+                                   placeholder="keyword",
+                                   type="text", name="keywords")
                         with span(cls="input-group-btn"):
                             a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
                               type="button")
@@ -224,7 +224,7 @@ class AbstractFileMetaData(models.Model):
                             th("Edit/Remove")
                     with tbody():
                         counter = 0
-                        for k, v in self.extra_metadata.iteritems():
+                        for k, v in list(self.extra_metadata.items()):
                             counter += 1
                             with tr(data_key=k):
                                 td(k)
@@ -295,104 +295,69 @@ class AbstractFileMetaData(models.Model):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
+    def rdf_subject(self):
+        return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation
 
-        RDF_ROOT = etree.Element('{%s}RDF' % CoreMetaData.NAMESPACES['rdf'],
-                                 nsmap=CoreMetaData.NAMESPACES)
-        # create the Description element
-        rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' %
-                                           CoreMetaData.NAMESPACES['rdf'])
+    def rdf_metadata_subject(self):
+        return URIRef("{}/resource/{}#".format(current_site_url(), self.logical_file.metadata_file_path))
+
+    def rdf_type(self):
+        return getattr(HSTERMS, self.logical_file.get_aggregation_type_name())
+
+    def ingest_metadata(self, graph):
+        super(AbstractFileMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
+
+        title = graph.value(subject=subject, predicate=DC.title)
+        if title:
+            self.logical_file.dataset_name = title
+            self.logical_file.save()
+        for object in graph.objects(subject=subject, predicate=DC.subject):
+            self.keywords.append(object.value)
+        extra_metadata = {}
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            extra_metadata[key] = value
+        self.extra_metadata = copy.deepcopy(extra_metadata)
+        self.save()
+
+    def get_rdf_graph(self):
+        graph = super(AbstractFileMetaData, self).get_rdf_graph()
 
         resource = self.logical_file.resource
-
-        aggregation_map_file_path = '{}#aggregation'.format(self.logical_file.map_file_path)
-        aggregation_map_uri = current_site_url() + "/resource/{}".format(aggregation_map_file_path)
-        rdf_Description.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'], aggregation_map_uri)
-
+        subject = self.rdf_subject()
         # add aggregation title
         if self.logical_file.dataset_name:
-            dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' %
-                                            CoreMetaData.NAMESPACES['dc'])
-            dc_datatitle.text = self.logical_file.dataset_name
+            graph.add((subject, DC.title, Literal(self.logical_file.dataset_name)))
 
         # add aggregation type
-        aggregation_term_uri = current_site_url() + "/terms/{}"
-        aggregation_term_uri = aggregation_term_uri.format(
-            self.logical_file.get_aggregation_type_name())
-
-        dc_type = etree.SubElement(rdf_Description, '{%s}type' % CoreMetaData.NAMESPACES['dc'])
-        dc_type.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'], aggregation_term_uri)
+        aggregation_type = self.logical_file.get_aggregation_type_name()
+        hsterms_aggregation_type = getattr(HSTERMS, aggregation_type)
+        graph.add((subject, DC.type, hsterms_aggregation_type))
 
         # add lang element
-        dc_lang = etree.SubElement(rdf_Description, '{%s}language' % CoreMetaData.NAMESPACES['dc'])
-        dc_lang.text = resource.metadata.language.code
+        resource.metadata.language.rdf_triples(subject, graph)
 
         # add rights element
-        dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % CoreMetaData.NAMESPACES['dc'])
-        dc_rights_rdf_Description = etree.SubElement(dc_rights,
-                                                     '{%s}Description' %
-                                                     CoreMetaData.NAMESPACES['rdf'])
-        hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
-                                             '{%s}rightsStatement' %
-                                             CoreMetaData.NAMESPACES['hsterms'])
-        hsterms_statement.text = resource.metadata.rights.statement
-        if resource.metadata.rights.url:
-            hsterms_url = etree.SubElement(dc_rights_rdf_Description,
-                                           '{%s}URL' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_url.set('{%s}resource' % CoreMetaData.NAMESPACES['rdf'],
-                            resource.metadata.rights.url)
+        resource.metadata.rights.rdf_triples(subject, graph)
 
         # add keywords
         for kw in self.keywords:
-            dc_subject = etree.SubElement(rdf_Description, '{%s}subject' %
-                                          CoreMetaData.NAMESPACES['dc'])
-            dc_subject.text = kw
+            graph.add((subject, DC.subject, Literal(kw)))
 
         # add any key/value metadata items
-        for key, value in self.extra_metadata.iteritems():
-            hsterms_key_value = etree.SubElement(
-                rdf_Description, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(
-                hsterms_key_value, '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
-            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
-                                           '{%s}key' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
-                                             '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
-            hsterms_value.text = value
+        if len(self.extra_metadata) > 0:
+            for key, value in list(self.extra_metadata.items()):
+                extendedMetadata = BNode()
+                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
 
-        # add coverages
-        for coverage in self.coverages.all():
-            coverage.add_to_xml_container(rdf_Description)
-
-        # create the Description element for aggregation type
-        rdf_Description_aggr_type = etree.SubElement(RDF_ROOT, '{%s}Description' %
-                                                     CoreMetaData.NAMESPACES['rdf'])
-
-        rdf_Description_aggr_type.set('{%s}about' % CoreMetaData.NAMESPACES['rdf'],
-                                      aggregation_term_uri)
-        rdfs_label = etree.SubElement(rdf_Description_aggr_type, '{%s}label' %
-                                      CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_label.text = self.logical_file.get_aggregation_display_name()
-
-        rdfs_isDefinedBy = etree.SubElement(rdf_Description_aggr_type, '{%s}isDefinedBy' %
-                                            CoreMetaData.NAMESPACES['rdfs1'])
-        rdfs_isDefinedBy.text = current_site_url() + "/terms"
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
-
-    def _get_xml_containers(self):
-        """Helper for the subclasses to get the xml containers element to which the sub classes
-        can then add any additional elements for metadata xml generation"""
-
-        xml_string = super(type(self), self).get_xml(pretty_print=False)
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container_to_add_to = RDF_ROOT.find('rdf:Description', namespaces=CoreMetaData.NAMESPACES)
-        return RDF_ROOT, container_to_add_to
+        TYPE_SUBJECT = getattr(Namespace("{}/terms/".format(current_site_url())), aggregation_type)
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.logical_file.get_aggregation_display_name())))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return graph
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -490,10 +455,10 @@ class AbstractFileMetaData(models.Model):
                     with div(cls="control-group"):
                         legend('Title')
                         with div(cls="controls"):
-                            input(value=dataset_name,
-                                  cls="form-control input-sm textinput textInput",
-                                  id="file_dataset_name", maxlength="250",
-                                  name="dataset_name", type="text")
+                            _input(value=dataset_name,
+                                       cls="form-control input-sm textinput textInput",
+                                       id="file_dataset_name", maxlength="250",
+                                       name="dataset_name", type="text")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
@@ -523,9 +488,9 @@ class AbstractFileMetaData(models.Model):
                                     label("Key", cls="control-label requiredField",
                                           fr="file_extra_meta_name")
                                     with div(cls="controls"):
-                                        input(cls="form-control input-sm textinput textInput",
-                                              id="file_extra_meta_name", maxlength="100",
-                                              name="name", type="text")
+                                        _input(cls="form-control input-sm textinput textInput",
+                                                   id="file_extra_meta_name", maxlength="100",
+                                                   name="name", type="text")
                                 with div(cls="control-group"):
                                     label("Value", cls="control-label requiredField",
                                           fr="file_extra_meta_value")
@@ -549,7 +514,7 @@ class AbstractFileMetaData(models.Model):
         counter = 0
         root_div = div(id="edit-keyvalue-filetype-modals")
         with root_div:
-            for k, v in self.extra_metadata.iteritems():
+            for k, v in list(self.extra_metadata.items()):
                 counter += 1
                 modal_div = div(cls="modal fade",
                                 id="edit-keyvalue-filetype-modal-{}".format(counter),
@@ -576,21 +541,21 @@ class AbstractFileMetaData(models.Model):
                                                   cls="control-label requiredField",
                                                   fr="file_extra_meta_key_original")
                                             with div(cls="controls"):
-                                                input(value=k, readonly="readonly",
-                                                      cls="form-control input-sm textinput "
-                                                          "textInput",
-                                                      id="file_extra_meta_key_original",
-                                                      maxlength="100",
-                                                      name="key_original", type="text")
+                                                _input(value=k, readonly="readonly",
+                                                           cls="form-control input-sm textinput "
+                                                               "textInput",
+                                                           id="file_extra_meta_key_original",
+                                                           maxlength="100",
+                                                           name="key_original", type="text")
                                         with div(cls="control-group"):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_key")
                                             with div(cls="controls"):
-                                                input(value=k,
-                                                      cls="form-control input-sm textinput "
-                                                          "textInput",
-                                                      id="file_extra_meta_key", maxlength="100",
-                                                      name="key", type="text")
+                                                _input(value=k,
+                                                           cls="form-control input-sm textinput "
+                                                               "textInput",
+                                                           id="file_extra_meta_key", maxlength="100",
+                                                           name="key", type="text")
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -614,7 +579,7 @@ class AbstractFileMetaData(models.Model):
         counter = 0
         root_div = div(id="delete-keyvalue-filetype-modals")
         with root_div:
-            for k, v in self.extra_metadata.iteritems():
+            for k, v in list(self.extra_metadata.items()):
                 counter += 1
                 modal_div = div(cls="modal fade",
                                 id="delete-keyvalue-filetype-modal-{}".format(counter),
@@ -640,10 +605,10 @@ class AbstractFileMetaData(models.Model):
                                             label("Key", cls="control-label requiredField",
                                                   fr="file_extra_meta_name")
                                             with div(cls="controls"):
-                                                input(cls="form-control input-sm textinput "
-                                                          "textInput", value=k,
-                                                      id="file_extra_meta_key", maxlength="100",
-                                                      name="key", type="text", readonly="readonly")
+                                                _input(cls="form-control input-sm textinput "
+                                                               "textInput", value=k,
+                                                           id="file_extra_meta_key", maxlength="100",
+                                                           name="key", type="text", readonly="readonly")
                                         with div(cls="control-group"):
                                             label("Value", cls="control-label requiredField",
                                                   fr="file_extra_meta_value")
@@ -700,7 +665,7 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def create_aggregation(cls, dataset_name, resource, res_files=None, new_files_to_upload=None,
-                           folder_path=None):
+                           folder_path=''):
         """Creates an aggregation
         :param  dataset_name  a value for setting the dataset_name attribute of the new aggregation
         :param  resource  an instance of CompositeResource in which the aggregation to be created
@@ -798,7 +763,7 @@ class AbstractLogicalFile(models.Model):
         return ""
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Sub classes must implement this method to create specific logical file (aggregation) type
         :param resource: an instance of resource type CompositeResource
         :param file_id: (optional) id of the resource file to be set as an aggregation type -
@@ -811,7 +776,7 @@ class AbstractLogicalFile(models.Model):
         raise NotImplementedError()
 
     @classmethod
-    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=None):
+    def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         """Validation of *file_id* and *folder_path* for creating file type (aggregation)
 
         :param resource: an instance of resource type CompositeResource
@@ -824,11 +789,11 @@ class AbstractLogicalFile(models.Model):
         :return an instance of ResourceFile if validation is successful and the folder_path
         """
 
-        if file_id is None and folder_path is None:
+        if file_id is None and not folder_path:
             raise ValueError("Must specify id of the file or path of the folder to set as an "
                              "aggregation type")
 
-        if cls.__name__ == 'FileSetLogicalFile' and folder_path is None:
+        if cls.__name__ == 'FileSetLogicalFile' and not folder_path:
             raise ValueError("Must specify path of the folder to set as a "
                              "fileset aggregation type")
 
@@ -863,7 +828,7 @@ class AbstractLogicalFile(models.Model):
 
             if res_file.has_logical_file and not res_file.logical_file.is_fileset:
                 msg = "Selected {} {} is already part of an aggregation."
-                if folder_path is None:
+                if not folder_path:
                     msg = msg.format('file', res_file.file_name)
                 else:
                     msg = msg.format('folder', folder_path)
@@ -1104,7 +1069,7 @@ class AbstractLogicalFile(models.Model):
         :return: computed new folder path
         """
         current_folder_path = 'data/contents'
-        if file_folder is not None:
+        if file_folder:
             current_folder_path = os.path.join(current_folder_path, file_folder)
 
         new_folder_path = os.path.join(current_folder_path, file_name)
@@ -1205,6 +1170,9 @@ class AbstractLogicalFile(models.Model):
             res_files=self.files.all()
         )
 
+        self.resource.setAVU("bag_modified", True)
+        self.resource.setAVU('metadata_dirty', 'true')
+
     def get_parent(self):
         """Find the parent fileset aggregation of this aggregation
         :return a fileset aggregation if found, otherwise None
@@ -1286,7 +1254,7 @@ class AbstractLogicalFile(models.Model):
             # resource map xml file has references to aggregation map xml file paths
             set_dirty_bag_flag(self.resource)
         except Exception as ex:
-            log.error("Failed to create aggregation metadata xml file. Error:{}".format(ex.message))
+            log.error("Failed to create aggregation metadata xml file. Error:{}".format(str(ex)))
             raise ex
         finally:
             shutil.rmtree(tmpdir)
@@ -1315,7 +1283,7 @@ class AbstractLogicalFile(models.Model):
 
         # Set properties of the aggregation
         a._dc.title = self.dataset_name
-        agg_type_url = u"{site}/terms/{aggr_type}"\
+        agg_type_url = "{site}/terms/{aggr_type}"\
             .format(site=current_site_url, aggr_type=self.get_aggregation_type_name())
         a._dcterms.type = URIRef(agg_type_url)
         a._citoterms.isDocumentedBy = metadata_url
@@ -1338,7 +1306,7 @@ class AbstractLogicalFile(models.Model):
         files = self.files.all()
         resFiles = []
         for n, f in enumerate(files):
-            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
                 file_name=f.short_path)
@@ -1354,7 +1322,7 @@ class AbstractLogicalFile(models.Model):
         # Create a description of the contained aggregations and add it to the aggregation
         child_ore_aggregations = []
         for n, child_aggr in enumerate(self.get_children()):
-            res_uri = u'{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
                 aggr_name=child_aggr.map_short_file_path + '#aggregation')
@@ -1379,8 +1347,8 @@ class AbstractLogicalFile(models.Model):
         # Fetch the serialization
         remdoc = a.get_serialization()
         # remove this additional xml element - not sure why it gets added
-        # <ore:aggregates rdf:resource="http://hydroshare.org/terms/[aggregation name]"/>
-        xml_element_to_replace = u'<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
+        # <ore:aggregates rdf:resource="https://www.hydroshare.org/terms/[aggregation name]"/>
+        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
 
@@ -1405,9 +1373,17 @@ class AbstractLogicalFile(models.Model):
             file_folder = self.folder
         else:
             file_folder = self.files.first().file_folder
-        if file_folder is not None:
+        if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
+
+    def read_metadata_file(self):
+        istorage = self.resource.get_irods_storage()
+        return istorage.download(self.metadata_file_path).read()
+
+    def read_metadata_as_rdf(self):
+        g = Graph()
+        return g.parse(data=self.read_metadata_file())
 
 
 class FileTypeContext(object):
@@ -1423,7 +1399,7 @@ class FileTypeContext(object):
     :param  is_temp_file if True resource file specified by file_id will be retrieved from
     irods to temp directory
     """
-    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path=None,
+    def __init__(self, aggr_cls, user, resource, file_id=None, folder_path='',
                  post_aggr_signal=None, is_temp_file=True):
 
         self.aggr_cls = aggr_cls

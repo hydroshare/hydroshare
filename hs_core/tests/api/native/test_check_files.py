@@ -41,7 +41,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        self.test_file_1 = open(self.test_file_name1, 'r')
+        self.test_file_1 = open(self.test_file_name1, 'rb')
 
     def tearDown(self):
         super(TestResourceFileAPI, self).tearDown()
@@ -76,7 +76,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # determine where that file should live
         shortpath = os.path.join(self.res.short_id, "data", "contents", "file1.txt")
 
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         self.assertTrue(resfile.path_is_acceptable(shortpath))

@@ -13,7 +13,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
     OriginalCoverage
-from utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
+from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData,\
     GeoFeatureFileMetaData
@@ -78,7 +78,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         # test file type and file type metadata
-        assert_geofeature_file_type_metadata(self, expected_folder_name=None)
+        assert_geofeature_file_type_metadata(self, expected_folder_name='')
 
         # there should not be any file level keywords
         res_file = self.composite_resource.files.first()
@@ -187,9 +187,9 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                             42.5732416) < self.allowance)
         self.assertTrue(abs(logical_file.metadata.originalcoverage.westlimit -
                             (-0.3263017)) < self.allowance)
-        self.assertEqual(logical_file.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(logical_file.metadata.originalcoverage.unit, 'degree')
         self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
-                         'GCS_WGS_1984')
+                         'WGS 84')
 
         # there should be file level keywords
         for key in ('Logan River', 'TauDEM'):
@@ -210,11 +210,11 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # add the 3 required files to the resource at the above folder
         res_file = self.add_file_to_resource(file_to_add=self.states_shp_file)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         res_file = self.add_file_to_resource(file_to_add=self.states_shx_file)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
         res_file = self.add_file_to_resource(file_to_add=self.states_dbf_file)
-        self.assertEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, '')
 
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         res_file = self.composite_resource.files.first()

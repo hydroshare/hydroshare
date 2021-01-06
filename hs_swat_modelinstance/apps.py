@@ -5,4 +5,4 @@ class SWATModelInstanceAppConfig(AppConfig):
     name = "hs_swat_modelinstance"
 
     def ready(self):
-        import receivers  # noqa
+        from . import receivers  # noqa

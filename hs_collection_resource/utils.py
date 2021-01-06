@@ -5,9 +5,12 @@ import shutil
 import logging
 
 from django.core.files.uploadedfile import UploadedFile
+from django.db.models import Q
 
 from hs_core.hydroshare.utils import resource_modified, current_site_url
 from hs_core.hydroshare.resource import delete_resource_file_only, add_resource_files
+from hs_core.views.utils import get_my_resources_list
+from hs_access_control.models import PrivilegeCodes
 
 logger = logging.getLogger(__name__)
 RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
@@ -108,17 +111,32 @@ def update_collection_list_csv(collection_obj):
                     w.writerow(row)
 
             # push the new csv file to irods bag
-            files = (UploadedFile(file=open(csv_full_path, 'r'), name=csv_full_name))
+            files = (UploadedFile(file=open(csv_full_path, 'rb'), name=csv_full_name))
             add_resource_files(collection_obj.short_id, files)
 
     except Exception as ex:
         logger.error("Failed to update_collection_list_csv in {}"
-                     "Error:{} ".format(short_key, ex.message))
-        raise Exception("update_collection_list_csv error: " + ex.message)
+                     "Error:{} ".format(short_key, str(ex)))
+        raise Exception("update_collection_list_csv error: " + str(ex))
     finally:
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
         return csv_content_list
+
+
+def get_collectable_resources(user, coll_resource):
+    my_resources = get_my_resources_list(user)
+
+    # resource is collectable if
+    # 1) Shareable=True
+    # 2) Discoverable=True
+    # 3) OR, current user is a owner of it
+    # 4) exclude this resource as well as resources already in the collection
+    return my_resources \
+        .exclude(short_id=coll_resource.short_id) \
+        .exclude(id__in=coll_resource.resources.values_list("id", flat=True)) \
+        .filter(Q(raccess__shareable=True) | Q(raccess__discoverable=True) |
+                (Q(r2urp__user=user) & Q(r2urp__privilege=PrivilegeCodes.OWNER)))
 
 
 def _get_owners_string(owners_list):

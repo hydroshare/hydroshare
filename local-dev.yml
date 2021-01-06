@@ -80,7 +80,7 @@ services:
     stdin_open: true
     tty: true
   postgis:
-    image: hydroshare/hs_postgres:9.5.0
+    image: hydroshare/hs_postgres:9.4.7
     container_name: postgis
     hostname: postgis
     volumes:
@@ -90,7 +90,7 @@ services:
     stdin_open: true
     tty: true
   rabbitmq:
-    image: rabbitmq:3.5
+    image: rabbitmq:3.8.2
     container_name: rabbitmq
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"
@@ -192,6 +192,8 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
+    ports:
+      - "5555:5555"
     volumes:
       - ".:/hydroshare"
     links:

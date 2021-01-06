@@ -37,14 +37,14 @@ class ModelProgramResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(self)
 
     def _read_resource_metadata(self):
         super(ModelProgramResourceMeta, self)._read_resource_metadata()
 
         print("--- ModelProgramResource ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get Model program metadata (MpMetadata)
         for s, p, o in self._rmeta_graph.triples((None, hsterms.MpMetadata, None)):

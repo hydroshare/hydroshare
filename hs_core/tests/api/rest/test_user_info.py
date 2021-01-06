@@ -34,7 +34,7 @@ class TestUserInfo(APITestCase):
     def test_user_info(self):
         response = self.client.get('/hsapi/userInfo/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['username'], self.username)
         self.assertEqual(content['email'], self.email)
         self.assertEqual(content['first_name'], self.first_name)

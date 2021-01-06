@@ -31,7 +31,7 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         # resource should have no file at this point
         self.assertEqual(self.resource.files.count(), 0)
         # add the tif file to the composite resource
-        tif_file_obj = open(self.raster_file_path, "r")
+        tif_file_obj = open(self.raster_file_path, "rb")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
         resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
@@ -56,7 +56,7 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         # resource should have no file at this point
         self.assertEqual(self.resource.files.count(), 0)
         # add the tif file to the composite resource
-        tif_file_obj = open(self.raster_file_path, "r")
+        tif_file_obj = open(self.raster_file_path, "rb")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
         resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
@@ -91,7 +91,7 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         # resource should have no file at this point
         self.assertEqual(self.resource.files.count(), 0)
         # add the tif file to the composite resource
-        tif_file_obj = open(self.raster_file_path, "r")
+        tif_file_obj = open(self.raster_file_path, "rb")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
         resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,
@@ -116,7 +116,7 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         # resource should have no file at this point
         self.assertEqual(self.resource.files.count(), 0)
         # add the tif file to the composite resource
-        tif_file_obj = open(self.raster_file_path, "r")
+        tif_file_obj = open(self.raster_file_path, "rb")
         uploaded_file = UploadedFile(file=tif_file_obj,
                                      name=os.path.basename(tif_file_obj.name))
         resource_file_add_process(resource=self.resource, files=(uploaded_file,), user=self.user,

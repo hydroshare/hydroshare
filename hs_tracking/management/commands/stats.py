@@ -85,10 +85,10 @@ class Command(BaseCommand):
             print("{}: {} {}".format(timestamp, var_name, value))
         else:
             start, end = period
-            print("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
-                                                    start.year, start.month,
-                                                    end.year, end.month,
-                                                    var_name, value))
+            print(("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
+                                                     start.year, start.month,
+                                                     end.year, end.month,
+                                                     var_name, value)))
 
     def monthly_users_counts(self, start_date, end_date):
         profiles = User.objects.filter(date_joined__lte=end_date, is_active=True)
@@ -137,7 +137,7 @@ class Command(BaseCommand):
                 last_login,
                 up.user_id,
             ]
-            w.writerow([unicode(v).encode("utf-8") for v in values])
+            w.writerow([str(v) for v in values])
 
     def resources_details(self):
         w = csv.writer(sys.stdout)
@@ -164,7 +164,7 @@ class Command(BaseCommand):
                     r.user.userprofile.user_type,
                     r.user_id
                 ]
-                w.writerow([unicode(v).encode("utf-8") for v in values])
+                w.writerow([str(v) for v in values])
 
             except Exception as e:
                 err.error(e)
@@ -197,10 +197,10 @@ class Command(BaseCommand):
             vals = self.dict_spc_to_pipe(v.value)
 
             # encode variables as key value pairs (except for timestamp)
-            values = [unicode(v.timestamp).encode('utf-8'),
-                      'user_id=%s' % unicode(uid).encode(),
-                      'session_id=%s' % unicode(v.session.id).encode(),
-                      'action=%s' % unicode(v.name).encode(),
+            values = [str(v.timestamp),
+                      'user_id=%s' % str(uid),
+                      'session_id=%s' % str(v.session.id),
+                      'action=%s' % str(v.name),
                       vals]
             print('|'.join(values))
 

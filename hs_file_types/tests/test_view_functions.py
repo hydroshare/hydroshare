@@ -14,7 +14,7 @@ from hs_file_types.views import set_file_type, add_metadata_element, update_meta
     update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
     delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
     update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata, remove_aggregation, \
-    delete_coverage_element, update_aggregation_coverage, move_aggregation
+    delete_coverage_element, update_aggregation_coverage, move_aggregation, delete_aggregation
 from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, NetCDFFileMetaData, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
 from hs_file_types.tests.utils import CompositeResourceTestMixin
@@ -102,7 +102,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertEqual(res_file.file_folder, new_folder)
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
 
@@ -335,6 +335,48 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.composite_resource.delete()
 
+    def test_delete_aggregation(self):
+        # here we are testing the delete_aggregation view function
+
+        self.create_composite_resource()
+        # new_folder = 'my_folder'
+        # ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile (aggregation)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_type_id': logical_file.id,
+                      'hs_file_type': 'NetCDFLogicalFile'
+                      }
+        url = reverse('delete_aggregation', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = delete_aggregation(request, resource_id=self.composite_resource.short_id,
+                                      file_type_id=logical_file.id,
+                                      hs_file_type='NetCDFLogicalFile')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+        # check the files are deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+
+        self.composite_resource.delete()
+
     def test_move_aggregation(self):
         # here we are testing the move_aggregation view function
 
@@ -522,7 +564,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, None)
+            self.assertEqual(f.file_folder, '')
         self.composite_resource.delete()
 
     def test_add_update_single_file_aggregation_metadata(self):
@@ -552,7 +594,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = add_metadata_element(request, hs_file_type="GenericLogicalFile",
                                         file_type_id=logical_file.id, element_name='coverage')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # now the single file aggregation should have temporal coverage element
         self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
@@ -567,7 +609,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            file_type_id=logical_file.id, element_name='coverage',
                                            element_id=logical_file.metadata.temporal_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
@@ -609,7 +651,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = add_metadata_element(request, hs_file_type="FileSetLogicalFile",
                                         file_type_id=logical_file.id, element_name='coverage')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # now the single file aggregation should have temporal coverage element
         self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
@@ -624,7 +666,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            file_type_id=logical_file.id, element_name='coverage',
                                            element_id=logical_file.metadata.temporal_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
@@ -683,7 +725,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            file_type_id=logical_file.id,
                                            element_id=logical_file.metadata.spatial_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         self.assertEqual(logical_file.metadata.spatial_coverage, None)
         res_file = self.composite_resource.files.first()
@@ -712,7 +754,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            file_type_id=logical_file.id,
                                            element_id=logical_file.metadata.temporal_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         self.assertEqual(logical_file.metadata.temporal_coverage, None)
         res_file = self.composite_resource.files.first()
@@ -748,7 +790,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = add_metadata_element(request, hs_file_type="GeoRasterLogicalFile",
                                         file_type_id=logical_file.id, element_name='coverage')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # now the raster file should have temporal coverage element
         self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
@@ -763,7 +805,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            file_type_id=logical_file.id, element_name='coverage',
                                            element_id=logical_file.metadata.temporal_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
@@ -804,7 +846,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            file_type_id=logical_file.id, element_name='coverage',
                                            element_id=logical_file.metadata.temporal_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
@@ -829,7 +871,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            element_name='originalcoverage',
                                            element_id=logical_file.metadata.original_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         orig_coverage = logical_file.metadata.original_coverage
         self.assertEqual(float(orig_coverage.value['northlimit']), 111.333)
@@ -838,7 +880,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # there should be spatial coverage for the netcdf file type
         self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
         spatial_coverage = logical_file.metadata.spatial_coverage
-        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.867126409)
+        self.assertEqual(float(spatial_coverage.value['northlimit']), 41.86712640899591)
 
         coverage_data = {'type': 'box', 'projection': 'WGS 84 EPSG:4326', 'northlimit': 41.87,
                          'southlimit': 41.863,
@@ -856,7 +898,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            element_name='coverage',
                                            element_id=spatial_coverage.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         spatial_coverage = logical_file.metadata.spatial_coverage
         self.assertEqual(float(spatial_coverage.value['northlimit']), 41.87)
@@ -877,7 +919,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                                            element_name='variable',
                                            element_id=variable.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         variable = logical_file.metadata.variables.all().filter(id=variable.id).first()
         self.assertEqual(variable.name, 'variable_name_updated')
@@ -955,7 +997,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_dataset_name(request, hs_file_type=file_type,
                                        file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # check dataset_name after updating via the view function
         res_file = self.composite_resource.files.first()
@@ -993,7 +1035,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_dataset_name(request, hs_file_type="RefTimeseriesLogicalFile",
                                        file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('error', response_dict['status'])
         # check dataset_name after updating via the view function
         res_file = self.composite_resource.files.first()
@@ -1031,7 +1073,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_dataset_name(request, hs_file_type="RefTimeseriesLogicalFile",
                                        file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # check dataset_name after updating via the view function
         res_file = self.composite_resource.files.first()
@@ -1072,7 +1114,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = update_refts_abstract(request, file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('error', response_dict['status'])
         # check abstract after updating via the view function
         res_file = self.composite_resource.files.first()
@@ -1111,7 +1153,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = update_refts_abstract(request, file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # check abstract after updating via the view function
         res_file = self.composite_resource.files.first()
@@ -1144,7 +1186,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = update_timeseries_abstract(request, file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # check abstract after updating via the view function
         res_file = self.composite_resource.files.first()
@@ -1180,7 +1222,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = get_timeseries_metadata(request, file_type_id=logical_file.id,
                                            series_id=series_id, resource_mode='edit')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         self.composite_resource.delete()
 
@@ -1214,7 +1256,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = add_keyword_metadata(request, hs_file_type=file_type,
                                         file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('error', response_dict['status'])
         self.assertEqual(len(logical_file.metadata.keywords), 2)
         # check keywords after adding via the view function- should not have changed
@@ -1229,7 +1271,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = delete_keyword_metadata(request, hs_file_type=file_type,
                                            file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('error', response_dict['status'])
 
         res_file = self.composite_resource.files.first()
@@ -1273,7 +1315,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = add_keyword_metadata(request, hs_file_type=file_type,
                                         file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # check keywords after adding via the view function- should have keywords now
         res_file = self.composite_resource.files.first()
@@ -1290,7 +1332,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = delete_keyword_metadata(request, hs_file_type=file_type,
                                            file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
 
         # check keywords after deleting via the view function- one keyword should have been deleted
@@ -1325,7 +1367,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # there should be key/value metadata for the raster file type yet
         res_file = self.composite_resource.files.first()
@@ -1340,12 +1382,12 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.extra_metadata['key-2'], 'value-2')
-        self.assertNotIn('key-1', logical_file.metadata.extra_metadata.keys())
+        self.assertNotIn('key-1', list(logical_file.metadata.extra_metadata.keys()))
 
         # update existing key value metadata - updating value only
         request = self.factory.post(url, data={'key': 'key-2', 'value': 'value-1',
@@ -1354,7 +1396,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -1367,7 +1409,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = delete_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -1399,7 +1441,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_key_value_metadata(request, hs_file_type="NetCDFLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # there should be key/value metadata for the raster file type yet
         res_file = self.composite_resource.files.first()
@@ -1414,12 +1456,12 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_key_value_metadata(request, hs_file_type="NetCDFLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.extra_metadata['key-2'], 'value-2')
-        self.assertNotIn('key-1', logical_file.metadata.extra_metadata.keys())
+        self.assertNotIn('key-1', list(logical_file.metadata.extra_metadata.keys()))
 
         # update existing key value metadata - updating value only
         request = self.factory.post(url, data={'key': 'key-2', 'value': 'value-1',
@@ -1428,7 +1470,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_key_value_metadata(request, hs_file_type="NetCDFLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -1441,7 +1483,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = delete_key_value_metadata(request, hs_file_type="NetCDFLogicalFile",
                                              file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -1479,7 +1521,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                 nc_dump_res_file = f
                 break
         self.assertNotEqual(nc_dump_res_file, None)
-        self.assertIn('keywords = "Snow water equivalent"', nc_dump_res_file.resource_file.read())
+        self.assertIn('keywords = "Snow water equivalent"', nc_dump_res_file.resource_file.read().decode('utf-8'))
         logical_file.metadata.keywords = ["keyword-1", 'keyword-2']
         logical_file.metadata.save()
         url_params = {'file_type_id': logical_file.id}
@@ -1489,7 +1531,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = update_netcdf_file(request, file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # ncdump file gets regenerated as part of the netcdf file update
         for f in logical_file.files.all():
@@ -1497,7 +1539,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                 nc_dump_res_file = f
                 break
         self.assertNotEqual(nc_dump_res_file, None)
-        self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read())
+        self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read().decode('utf-8'))
         self.composite_resource.delete()
 
     def test_update_sqlite_file_for_aggregation(self):
@@ -1521,7 +1563,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # this is the view function we are testing
         response = update_sqlite_file(request, file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         self.composite_resource.delete()
 
@@ -1582,7 +1624,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_aggregation_coverage(request, file_type_id=fs_aggr.id,
                                                coverage_type='temporal')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # temporal coverage of the fileset aggregation should now match with that of the contained
         # netcdf aggregation
@@ -1601,7 +1643,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = update_aggregation_coverage(request, file_type_id=fs_aggr.id,
                                                coverage_type='spatial')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
         # test the file set spatial coverage same as that of the NC aggregation
         for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
@@ -1649,7 +1691,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = add_keyword_metadata(request, hs_file_type=file_type,
                                         file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
 
         # there should be 2 keywords for the raster file type yet
@@ -1679,7 +1721,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         response = delete_keyword_metadata(request, hs_file_type=file_type,
                                            file_type_id=logical_file.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
 
         res_file = self.composite_resource.files.first()

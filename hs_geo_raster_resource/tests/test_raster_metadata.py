@@ -50,7 +50,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.raster_tif_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_tif_file_name)
         target_temp_raster_tif_file = os.path.join(self.temp_dir, self.raster_tif_file_name)
         shutil.copy(self.raster_tif_file, target_temp_raster_tif_file)
-        self.raster_tif_file_obj = open(target_temp_raster_tif_file, 'r')
+        self.raster_tif_file_obj = open(target_temp_raster_tif_file, 'rb')
 
         self.raster_bearcr_tif_file_name = 'BearCk.tif'
         self.raster_bearcr_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
@@ -58,7 +58,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         target_temp_raster_bearcr_tif_file = os.path.join(self.temp_dir,
                                                           self.raster_bearcr_tif_file_name)
         shutil.copy(self.raster_bearcr_tif_file, target_temp_raster_bearcr_tif_file)
-        self.raster_bearcr_tif_file_obj = open(target_temp_raster_bearcr_tif_file, 'r')
+        self.raster_bearcr_tif_file_obj = open(target_temp_raster_bearcr_tif_file, 'rb')
 
         self.raster_honduras_tif_file_name = 'Honduras.tif'
         self.raster_honduras_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
@@ -66,7 +66,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         target_temp_raster_honduras_tif_file = os.path.join(self.temp_dir,
                                                             self.raster_honduras_tif_file_name)
         shutil.copy(self.raster_honduras_tif_file, target_temp_raster_honduras_tif_file)
-        self.raster_honduras_tif_file_obj = open(target_temp_raster_honduras_tif_file, 'r')
+        self.raster_honduras_tif_file_obj = open(target_temp_raster_honduras_tif_file, 'rb')
 
         self.raster_mawhefel_tif_file_name = 'mawhefel.tif'
         self.raster_mawhefel_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
@@ -74,7 +74,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         target_temp_raster_mawhefel_tif_file = os.path.join(self.temp_dir,
                                                             self.raster_mawhefel_tif_file_name)
         shutil.copy(self.raster_mawhefel_tif_file, target_temp_raster_mawhefel_tif_file)
-        self.raster_mawhefel_tif_file_obj = open(target_temp_raster_mawhefel_tif_file, 'r')
+        self.raster_mawhefel_tif_file_obj = open(target_temp_raster_mawhefel_tif_file, 'rb')
 
         self.raster_lidardem_tif_file_name = 'lidarDem.tif'
         self.raster_lidardem_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
@@ -82,7 +82,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         target_temp_raster_lidardem_tif_file = os.path.join(self.temp_dir,
                                                             self.raster_lidardem_tif_file_name)
         shutil.copy(self.raster_lidardem_tif_file, target_temp_raster_lidardem_tif_file)
-        self.raster_lidardem_tif_file_obj = open(target_temp_raster_lidardem_tif_file, 'r')
+        self.raster_lidardem_tif_file_obj = open(target_temp_raster_lidardem_tif_file, 'rb')
 
         self.raster_htelevation_tif_file_name = 'HT_Elevation.tif'
         self.raster_htelevation_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
@@ -90,32 +90,33 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         target_temp_raster_htelevation_tif_file = os.path.join(
             self.temp_dir, self.raster_htelevation_tif_file_name)
         shutil.copy(self.raster_htelevation_tif_file, target_temp_raster_htelevation_tif_file)
-        self.raster_htelevation_tif_file_obj = open(target_temp_raster_htelevation_tif_file, 'r')
+        self.raster_htelevation_tif_file_obj = open(target_temp_raster_htelevation_tif_file, 'rb')
 
         self.raster_bad_tif_file_name = 'raster_tif_invalid.tif'
         self.raster_bad_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
             self.raster_bad_tif_file_name)
         target_temp_raster_bad_tif_file = os.path.join(self.temp_dir, self.raster_bad_tif_file_name)
         shutil.copy(self.raster_bad_tif_file, target_temp_raster_bad_tif_file)
-        self.raster_bad_tif_file_obj = open(target_temp_raster_bad_tif_file, 'r')
+        self.raster_bad_tif_file_obj = open(target_temp_raster_bad_tif_file, 'rb')
 
         self.raster_zip_file_name = 'raster_zip_valid.zip'
         self.raster_zip_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_zip_file_name)
         target_temp_raster_zip_file = os.path.join(self.temp_dir, self.raster_zip_file_name)
         shutil.copy(self.raster_zip_file, target_temp_raster_zip_file)
-        self.raster_zip_file_obj = open(target_temp_raster_zip_file, 'r')
+        self.raster_zip_file_obj = open(target_temp_raster_zip_file, 'rb')
 
         self.raster_bad_zip_file_name = 'raster_zip_invalid.zip'
         self.raster_bad_zip_file = 'hs_geo_raster_resource/tests/{}'.format(
             self.raster_bad_zip_file_name)
         target_temp_raster_bad_zip_file = os.path.join(self.temp_dir, self.raster_bad_zip_file_name)
         shutil.copy(self.raster_bad_zip_file, target_temp_raster_bad_zip_file)
-        self.raster_bad_zip_file_obj = open(target_temp_raster_bad_zip_file, 'r')
+        self.raster_bad_zip_file_obj = open(target_temp_raster_bad_zip_file, 'rb')
 
         temp_text_file = os.path.join(self.temp_dir, 'raster_text.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("Raster records")
-        self.text_file_obj = open(temp_text_file, 'r')
+        text_file.close()
+        self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):
         super(TestRasterMetaData, self).tearDown()
@@ -239,11 +240,11 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # test that multiple tif files along with a vrt file can be uploaded and
         # be successful with file validation
 
-        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'rb'),
                              name=self.logan_tif_1_file_name)
-        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'r'),
+        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'rb'),
                              name=self.logan_tif_2_file_name)
-        vrt = UploadedFile(file=open(self.logan_vrt_file, 'r'),
+        vrt = UploadedFile(file=open(self.logan_vrt_file, 'rb'),
                            name=self.logan_vrt_file_name)
         files = [tif_1, tif_2, vrt]
 
@@ -264,9 +265,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_multiple_tif_file_without_vrt_upload(self):
         # test that multiple tif files without a vrt file uploaded will fail file validation
 
-        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'rb'),
                              name=self.logan_tif_1_file_name)
-        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'r'),
+        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'rb'),
                              name=self.logan_tif_2_file_name)
 
         files = [tif_1, tif_2]
@@ -290,9 +291,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # test that when a vrt file is uploaded, all tif files referenced in vrt must be uploaded
         # otherwise file validation fails and no file will be added to the resource
 
-        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'rb'),
                              name=self.logan_tif_1_file_name)
-        vrt = UploadedFile(file=open(self.logan_vrt_file, 'r'),
+        vrt = UploadedFile(file=open(self.logan_vrt_file, 'rb'),
                            name=self.logan_vrt_file_name)
 
         files = [tif_1, vrt]
@@ -316,12 +317,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # test that when a vrt file is uploaded, all tif files referenced in vrt must be uploaded
         # and no extra file can be uploaded, otherwise file validation fails
 
-        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'r'),
+        tif_1 = UploadedFile(file=open(self.logan_tif_1_file, 'rb'),
                              name=self.logan_tif_1_file_name)
-        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'r'),
+        tif_2 = UploadedFile(file=open(self.logan_tif_2_file, 'rb'),
                              name=self.logan_tif_2_file_name)
         extra_tif = UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)
-        vrt = UploadedFile(file=open(self.logan_vrt_file, 'r'),
+        vrt = UploadedFile(file=open(self.logan_vrt_file, 'rb'),
                            name=self.logan_vrt_file_name)
 
         files = [tif_1, tif_2, extra_tif, vrt]
@@ -761,9 +762,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # testing extended metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '3031.44311523')
-        self.assertEqual(band_info.minimumValue, '1358.33459473')
+        self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+        self.assertEqual(band_info.maximumValue, '3031.443115234375')
+        self.assertEqual(band_info.minimumValue, '1358.3345947265625')
         self.assertEqual(band_info.name, 'Band_1')
         # updating of bandinformation using a name that does not exist (band-name) should fail
         band_data = {'original_band_name': 'band-name',

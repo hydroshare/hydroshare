@@ -35,7 +35,7 @@ class TestTickets(TestCase):
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        self.test_file_1 = open(self.test_file_name1, 'r')
+        self.test_file_1 = open(self.test_file_name1, 'rb')
 
         # add one file to the resource: necessary so data/contents is created.
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1)

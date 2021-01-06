@@ -142,7 +142,7 @@ let manageAccessApp = new Vue({
             }
 
             ddClass.disabled = !ddClass.active && (ddClass.disabled || user.access === 'owner' &&
-                this.hasOnlyOneOwner || user.id === this.quotaHolder.id);
+                this.hasOnlyOneOwner || user.user_type === 'user' && user.id === this.quotaHolder.id);
 
             return ddClass;
         },

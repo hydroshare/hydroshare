@@ -57,10 +57,9 @@
                         <div class="external-profiles">
                             <template v-for="(identifier, key) of user.identifiers">
                                 <a v-if="identifierAttributes.hasOwnProperty(key)"
-                                   :href="identifier"
+                                   :href="identifier" :title="identifierAttributes[key].title"
                                    class="identifier-icon" target="_blank"
-                                   data-toggle="tooltip" data-placement="top"
-                                   :title="identifierAttributes[key].title">
+                                   data-toggle="tooltip" data-placement="top">
 
                                     <img v-if="key === 'ResearcherID'" class="hover-shadow"
                                          src="{{ STATIC_URL }}img/researcherID.png"
@@ -70,8 +69,8 @@
                                 </a>
 
                                 <a v-else :href="identifier" class="identifier-icon" target="_blank"
-                                   data-toggle="tooltip" data-placement="top"
-                                   :title="key">
+                                   :title="key"
+                                   data-toggle="tooltip" data-placement="top">
                                     <i class="fa fa-address-card hover-shadow"></i>
                                 </a>
                             </template>

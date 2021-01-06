@@ -96,5 +96,5 @@ class TestResourceTypeFileTypes(TestCase):
         response = get_supported_file_types_for_resource_type(request,
                                                               resource_type=resource_type)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         return resp_json

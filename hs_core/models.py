@@ -1,11 +1,14 @@
 """Declare critical models for Hydroshare hs_core app."""
-
+import copy
 import os.path
 import json
 import arrow
 import logging
+import re
 from uuid import uuid4
-from languages_iso import languages as iso_languages
+
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
+from .languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 from markdown import markdown
@@ -42,6 +45,8 @@ from mezzanine.pages.managers import PageManager
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from rdflib import Literal, BNode, URIRef
+from rdflib.namespace import DC, DCTERMS, RDF
 
 import unicodedata
 
@@ -56,8 +61,8 @@ def clean_for_xml(s):
     * Space-pad paragraph and NL symbols as necessary
 
     """
-    CR = unichr(0x23CE)  # carriage return unicode SYMBOL
-    PARA = unichr(0xB6)  # paragraph mark unicode SYMBOL
+    CR = chr(0x23CE)  # carriage return unicode SYMBOL
+    PARA = chr(0xB6)  # paragraph mark unicode SYMBOL
     output = ''
     next = None
     last = None
@@ -110,6 +115,8 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
+    if not hasattr(request, 'user'):
+        raise PermissionDenied
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
@@ -210,7 +217,7 @@ def get_access_object(user, user_type, user_access):
             "identifiers": user.userprofile.identifiers,
             "state": user.userprofile.state,
             "country": user.userprofile.country,
-            "joined": user.date_joined.strftime("%d %b, %Y")
+            "joined": user.date_joined.strftime("%d %b, %Y"),
         }
     elif user_type == "group":
         if user.gaccess.picture:
@@ -313,6 +320,10 @@ def page_permissions_page_processor(request, page):
     else:
         is_version_of = ''
 
+    permissions_allow_copy = False
+    if request.user.is_authenticated:
+        permissions_allow_copy = request.user.uaccess.can_view_resource(cm)
+
     show_manage_access = False
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
@@ -323,10 +334,10 @@ def page_permissions_page_processor(request, page):
 
     return {
         'resource_type': cm._meta.verbose_name,
-        'bag': cm.bags.first(),
         "users_json": users_json,
         "owners": owners,
         "self_access_level": self_access_level,
+        "permissions_allow_copy": permissions_allow_copy,
         "can_change_resource_flags": can_change_resource_flags,
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
@@ -334,10 +345,8 @@ def page_permissions_page_processor(request, page):
     }
 
 
-class AbstractMetaDataElement(models.Model):
+class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
     """Define abstract class for all metadata elements."""
-
-    term = None
 
     object_id = models.PositiveIntegerField()
     # see the following link the reason for having the related_name setting
@@ -345,6 +354,10 @@ class AbstractMetaDataElement(models.Model):
     # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
     content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        """Return unicode for python 3 compatibility in templates"""
+        return self.__unicode__()
 
     @property
     def metadata(self):
@@ -364,7 +377,7 @@ class AbstractMetaDataElement(models.Model):
     def update(cls, element_id, **kwargs):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
-        for key, value in kwargs.iteritems():
+        for key, value in list(kwargs.items()):
                 setattr(element, key, value)
         element.save()
         return element
@@ -428,6 +441,34 @@ class Party(AbstractMetaDataElement):
 
         abstract = True
 
+    def rdf_triples(self, subject, graph):
+        party_type = self.get_class_term()
+        party = BNode()
+        graph.add((subject, party_type, party))
+        for field_term, field_value in self.get_field_terms_and_values(['identifiers']):
+            graph.add((party, field_term, field_value))
+        for k, v in self.identifiers.items():
+            graph.add((party, getattr(HSTERMS, k), URIRef(v)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        """Default implementation that ingests by convention"""
+        party_type = cls.get_class_term()
+        for party in graph.objects(subject=subject, predicate=party_type):
+            value_dict = {}
+            identifiers = {}
+            fields_by_term = {cls.get_field_term(field.name): field for field in cls._meta.fields}
+            for _, p, o in graph.triples((party, None, None)):
+                if p not in fields_by_term:
+                    identifiers[p.rsplit("/", 1)[1]] = str(o)
+                else:
+                    value_dict[fields_by_term[p].name] = str(o)
+            if value_dict or identifiers:
+                if identifiers:
+                    cls.create(content_object=content_object, identifiers=identifiers, **value_dict)
+                else:
+                    cls.create(content_object=content_object, **value_dict)
+
     @classmethod
     def get_post_data_with_identifiers(cls, request, as_json=True):
         identifier_names = request.POST.getlist('identifier_name')
@@ -436,8 +477,8 @@ class Party(AbstractMetaDataElement):
         if identifier_links and identifier_names:
             if len(identifier_names) != len(identifier_links):
                 raise Exception("Invalid data for identifiers")
-            identifiers = dict(zip(identifier_names, identifier_links))
-            if len(identifier_names) != len(identifiers.keys()):
+            identifiers = dict(list(zip(identifier_names, identifier_links)))
+            if len(identifier_names) != len(list(identifiers.keys())):
                 raise Exception("Invalid data for identifiers")
 
             if as_json:
@@ -480,7 +521,8 @@ class Party(AbstractMetaDataElement):
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
-            kwargs['order'] = creator_order
+            if 'order' not in kwargs or kwargs['order'] is None:
+                kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
         else:
             party = super(Party, cls).create(**kwargs)
@@ -579,7 +621,7 @@ class Party(AbstractMetaDataElement):
                     raise ValidationError("Invalid data found for identifiers. "
                                           "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
-            links = [l.lower() for l in identifiers.values()]
+            links = [l.lower() for l in list(identifiers.values())]
             if len(links) != len(set(links)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier links found.")
@@ -593,7 +635,7 @@ class Party(AbstractMetaDataElement):
                                           "Identifier link must be a URL.")
 
             # validate identifier keys - check for duplicate names
-            names = [n.lower() for n in identifiers.keys()]
+            names = [n.lower() for n in list(identifiers.keys())]
             if len(names) != len(set(names)):
                 raise ValidationError("Invalid data found for identifiers. "
                                       "Duplicate identifier names found")
@@ -608,12 +650,14 @@ class Party(AbstractMetaDataElement):
         return identifiers
 
 
+@rdf_terms(DC.contributor)
 class Contributor(Party):
     """Extend Party model with the term of 'Contributor'."""
 
     term = 'Contributor'
 
 
+@rdf_terms(DC.creator, order=HSTERMS.creatorOrder)
 class Creator(Party):
     """Extend Party model with the term of 'Creator' and a proper ordering."""
 
@@ -626,6 +670,7 @@ class Creator(Party):
         ordering = ['order']
 
 
+@rdf_terms(DC.description, abstract=DCTERMS.abstract)
 class Description(AbstractMetaDataElement):
     """Define Description metadata element model."""
 
@@ -658,6 +703,44 @@ class Description(AbstractMetaDataElement):
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
+@rdf_terms(DCTERMS.bibliographicCitation)
+class Citation(AbstractMetaDataElement):
+    """Define Citation metadata element model."""
+
+    term = 'Citation'
+    value = models.TextField()
+
+    def __unicode__(self):
+        """Return value field for unicode representation."""
+        return self.value
+
+    class Meta:
+        """Define meta properties for Citation class."""
+
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Call parent update function for Citation class."""
+        super(Citation, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def remove(cls, element_id):
+        """Call delete function for Citation class."""
+        element = cls.objects.get(id=element_id)
+        element.delete()
+
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        citation = graph.value(subject=subject, predicate=cls.get_class_term())
+        if citation:
+            Citation.create(value=citation.value, content_object=content_object)
+
+
+@rdf_terms(DC.title)
 class Title(AbstractMetaDataElement):
     """Define Title metadata element model."""
 
@@ -689,7 +772,17 @@ class Title(AbstractMetaDataElement):
         """Define custom remove function for Title class."""
         raise ValidationError("Title element of a resource can't be deleted.")
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        title = graph.value(subject=subject, predicate=cls.get_class_term())
+        if title:
+            Title.create(value=title.value, content_object=content_object)
+
+
+@rdf_terms(DC.type)
 class Type(AbstractMetaDataElement):
     """Define Type metadata element model."""
 
@@ -710,7 +803,17 @@ class Type(AbstractMetaDataElement):
         """Define custom remove function for Type model."""
         raise ValidationError("Type element of a resource can't be deleted.")
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), URIRef(self.url)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        url = graph.value(subject=subject, predicate=cls.get_class_term())
+        if url:
+            Type.create(url=str(url), content_object=content_object)
+
+
+@rdf_terms(DC.date)
 class Date(AbstractMetaDataElement):
     """Define Date metadata model."""
 
@@ -739,11 +842,27 @@ class Date(AbstractMetaDataElement):
 
         unique_together = ("type", "content_type", "object_id")
 
+    def rdf_triples(self, subject, graph):
+        date_node = BNode()
+        graph.add((subject, self.get_class_term(), date_node))
+        graph.add((date_node, RDF.type, getattr(DCTERMS, self.type)))
+        graph.add((date_node, RDF.value, Literal(self.start_date.isoformat())))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, date_node in graph.triples((subject, cls.get_class_term(), None)):
+            type = graph.value(subject=date_node, predicate=RDF.type)
+            value = graph.value(subject=date_node, predicate=RDF.value)
+            if type and value:
+                type = type.split('/')[-1]
+                start_date = parser.parse(str(value))
+                Date.create(type=type, start_date=start_date, content_object=content_object)
+
     @classmethod
     def create(cls, **kwargs):
         """Define custom create method for Date model."""
         if 'type' in kwargs:
-            if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
+            if not kwargs['type'] in list(dict(cls.DATE_TYPE_CHOICES).keys()):
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
             # get matching resource
@@ -755,7 +874,7 @@ class Date(AbstractMetaDataElement):
                     del kwargs['end_date']
 
             if 'start_date' in kwargs:
-                if isinstance(kwargs['start_date'], basestring):
+                if isinstance(kwargs['start_date'], str):
                     kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
@@ -765,7 +884,7 @@ class Date(AbstractMetaDataElement):
                     raise ValidationError("Resource has not been made public yet.")
             elif kwargs['type'] == 'valid':
                 if 'end_date' in kwargs:
-                    if isinstance(kwargs['end_date'], basestring):
+                    if isinstance(kwargs['end_date'], str):
                         kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date "
@@ -782,7 +901,7 @@ class Date(AbstractMetaDataElement):
         dt = Date.objects.get(id=element_id)
 
         if 'start_date' in kwargs:
-            if isinstance(kwargs['start_date'], basestring):
+            if isinstance(kwargs['start_date'], str):
                 kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if dt.type == 'created':
                 raise ValidationError("Resource creation date can't be changed")
@@ -791,7 +910,7 @@ class Date(AbstractMetaDataElement):
                 dt.save()
             elif dt.type == 'valid':
                 if 'end_date' in kwargs:
-                    if isinstance(kwargs['end_date'], basestring):
+                    if isinstance(kwargs['end_date'], str):
                         kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date "
@@ -824,6 +943,7 @@ class Date(AbstractMetaDataElement):
         dt.delete()
 
 
+@rdf_terms(DC.relation)
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
@@ -857,6 +977,23 @@ class Relation(AbstractMetaDataElement):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
+    def rdf_triples(self, subject, graph):
+        relation_node = BNode()
+        graph.add((subject, self.get_class_term(), relation_node))
+        graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, relation_node in graph.triples((subject, cls.get_class_term(), None)):
+            for _, p, o in graph.triples((relation_node, None, None)):
+                type_term = p
+                value = o
+                break
+            if type_term:
+                type = type_term.split('/')[-1]
+                value = str(value)
+                Relation.create(type=type, value=value, content_object=content_object)
+
     @classmethod
     def create(cls, **kwargs):
         """Define custom create method for Relation class."""
@@ -865,7 +1002,7 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
-        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+        if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         # ensure isHostedBy and isCopiedFrom are mutually exclusive
@@ -901,7 +1038,7 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
-        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+        if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         # ensure isHostedBy and isCopiedFrom are mutually exclusive
@@ -933,6 +1070,7 @@ class Relation(AbstractMetaDataElement):
         super(Relation, cls).update(element_id, **kwargs)
 
 
+@rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):
     """Create Identifier custom metadata element."""
 
@@ -943,6 +1081,28 @@ class Identifier(AbstractMetaDataElement):
     def __unicode__(self):
         """Return {name} {url} for unicode representation."""
         return "{name} {url}".format(name=self.name, url=self.url)
+
+    def rdf_triples(self, subject, graph):
+        identifier_node = BNode()
+        graph.add((subject, self.get_class_term(), identifier_node))
+        if self.name.lower() == 'doi':
+            graph.add((identifier_node, HSTERMS.doi, URIRef(self.url)))
+        else:
+            graph.add((identifier_node, HSTERMS.hydroShareIdentifier, URIRef(self.url)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, identifier_node in graph.triples((subject, cls.get_class_term(), None)):
+            url = graph.value(subject=identifier_node, predicate=HSTERMS.doi)
+            name = 'doi'
+            if not url:
+                name = 'hydroShareIdentifier'
+                url = graph.value(subject=identifier_node, predicate=HSTERMS.hydroShareIdentifier)
+                if url:
+                    # overwrite hydroShareIdentifier url with this resource's url
+                    url = content_object.rdf_subject()
+            if url:
+                Identifier.create(url=str(url), name=name, content_object=content_object)
 
     @classmethod
     def create(cls, **kwargs):
@@ -1021,6 +1181,7 @@ class Identifier(AbstractMetaDataElement):
         idf.delete()
 
 
+@rdf_terms(DC.publisher, name=HSTERMS.publisherName, url=HSTERMS.publisherURL)
 class Publisher(AbstractMetaDataElement):
     """Define Publisher custom metadata model."""
 
@@ -1085,6 +1246,7 @@ class Publisher(AbstractMetaDataElement):
         raise ValidationError("Publisher element can't be deleted.")
 
 
+@rdf_terms(DC.language)
 class Language(AbstractMetaDataElement):
     """Define language custom metadata model."""
 
@@ -1124,7 +1286,17 @@ class Language(AbstractMetaDataElement):
         else:
             raise ValidationError('Language code is missing.')
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.code)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        code = graph.value(subject=subject, predicate=cls.get_class_term())
+        if code:
+            Language.create(code=str(code), content_object=content_object)
+
+
+@rdf_terms(DC.coverage)
 class Coverage(AbstractMetaDataElement):
     """Define Coverage custom metadata element model."""
 
@@ -1197,7 +1369,7 @@ class Coverage(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
 
-            if not kwargs['type'] in dict(cls.COVERAGE_TYPES).keys():
+            if not kwargs['type'] in list(dict(cls.COVERAGE_TYPES).keys()):
                 raise ValidationError('Invalid coverage type:%s' % kwargs['type'])
 
             if kwargs['type'] == 'box':
@@ -1225,14 +1397,14 @@ class Coverage(AbstractMetaDataElement):
                 cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('name', 'east', 'north', 'units', 'elevation',
                                            'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
+                    value_dict = {k: v for k, v in list(value_arg_dict.items())
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                            'westlimit', 'name', 'uplimit', 'downlimit',
                                            'zunits', 'projection')}
@@ -1355,6 +1527,34 @@ class Coverage(AbstractMetaDataElement):
                 cov_value += '; projection=%s' % self.value['projection']
 
         rdf_coverage_value.text = cov_value
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            type = graph.value(subject=cov, predicate=RDF.type)
+            value = graph.value(subject=cov, predicate=RDF.value)
+            type = type.split('/')[-1]
+            value_dict = {}
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                if k in ['start', 'end']:
+                    v = parser.parse(v).strftime("%Y/%m/%d")
+                value_dict[k] = v
+            Coverage.create(type=type, value=value_dict, content_object=content_object)
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, self.get_class_term(), coverage))
+        DCTERMS_type = getattr(DCTERMS, self.type)
+        graph.add((coverage, RDF.type, DCTERMS_type))
+        value_dict = {}
+        for k, v in self.value.items():
+            if k in ['start', 'end']:
+                v = parser.parse(v).isoformat()
+            value_dict[k] = v
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
 
     @classmethod
     def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
@@ -1536,6 +1736,8 @@ class Format(AbstractMetaDataElement):
         return self.value
 
 
+@rdf_terms(HSTERMS.awardInfo, agency_name=HSTERMS.fundingAgencyName, award_title=HSTERMS.awardTitle,
+           award_number=HSTERMS.awardNumber, agency_url=HSTERMS.fundingAgencyURL)
 class FundingAgency(AbstractMetaDataElement):
     """Define FundingAgency custom metadata element mode."""
 
@@ -1568,6 +1770,7 @@ class FundingAgency(AbstractMetaDataElement):
         super(FundingAgency, cls).update(element_id, **kwargs)
 
 
+@rdf_terms(DC.subject)
 class Subject(AbstractMetaDataElement):
     """Define Subject custom metadata element model."""
 
@@ -1604,7 +1807,16 @@ class Subject(AbstractMetaDataElement):
             raise ValidationError("The only subject element of the resource can't be deleted.")
         sub.delete()
 
+    def rdf_triples(self, subject, graph):
+        graph.add((subject, self.get_class_term(), Literal(self.value)))
 
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
+            Subject.create(value=str(o), content_object=content_object)
+
+
+@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
@@ -1621,6 +1833,7 @@ class Source(AbstractMetaDataElement):
         return self.derived_from
 
 
+@rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
 class Rights(AbstractMetaDataElement):
     """Define Rights custom metadata element model."""
 
@@ -1696,7 +1909,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True,
+                                        null=False,
+                                        default=1
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
@@ -1710,11 +1924,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                                           )
     file_unpack_message = models.TextField(null=True, blank=True)
 
-    # TODO: why are old versions saved?
-    bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
-                                                     'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
+    doi = models.CharField(max_length=128, null=False, blank=True, db_index=True, default='',
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -1727,7 +1938,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     extra_metadata = HStoreField(default={})
 
-    # this field is for specific resource types to store extra key:value pairs
+    # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
+    # "bag_checksum":value pair for published resources in order to meet the DataONE data distribution needs
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
@@ -1950,21 +2162,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # must start with a / in order to concat with current_site_url.
         return '/' + os.path.join('resource', self.short_id, path)
 
-    def get_public_path(self, path):
-        """Return the public path for a specific path within the resource.
-           This is the path that appears in public URLs.
-           The input path includes data/contents/ as needed.
-        """
-        return os.path.join(self.short_id, path)
-
-    def get_irods_path(self, path):
+    def get_irods_path(self, path, prepend_short_id=True):
         """Return the irods path by which the given path is accessed.
            The input path includes data/contents/ as needed.
         """
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, self.get_public_path(path))
+        if prepend_short_id and not path.startswith(self.short_id):
+            full_path = os.path.join(self.short_id, path)
         else:
-            return self.get_public_path(path)
+            full_path = path
+
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, full_path)
+        else:
+            return full_path
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -1972,7 +2182,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
-        from hs_core.hydroshare.resource import update_quota_usage
 
         if __debug__:
             assert(isinstance(setter, User))
@@ -1995,7 +2204,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # holder will be reduced as a result of setting quota holder to a different user
                 self.removeAVU(attname, oldqu)
         self.setAVU(attname, new_holder.username)
-        update_quota_usage(res=self, user=setter)
 
     def get_quota_holder(self):
         """Get quota holder of the resource.
@@ -2100,7 +2308,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def delete(self, using=None):
         """Delete resource along with all of its metadata and data bag."""
-        from hydroshare import hs_bagit
+        from .hydroshare import hs_bagit
         for fl in self.files.all():
             if fl.logical_file is not None:
                 # delete of metadata file deletes the logical file (one-to-one relation)
@@ -2110,10 +2318,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 fl.logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
             fl.delete()
-        hs_bagit.delete_files_and_bag(self)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
+        hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
 
     @property
@@ -2188,21 +2396,28 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if first_names:
             initials_list = [i[0] for i in first_names]
-            initials = u". ".join(initials_list) + "."
+            initials = ". ".join(initials_list) + "."
             if first_author:
-                author_name = u"{last_name}, {initials}"
+                author_name = "{last_name}, {initials}"
             else:
-                author_name = u"{initials} {last_name}"
+                author_name = "{initials} {last_name}"
             author_name = author_name.format(last_name=last_names,
                                              initials=initials
                                              )
         else:
-            author_name = u"{last_name}".format(last_name=last_names)
+            author_name = "{last_name}".format(last_name=last_names)
 
         return author_name + ", "
 
+    def get_custom_citation(self):
+        """Get custom citation."""
+        if self.metadata.citation.first() is None:
+            return ''
+        return str(self.metadata.citation.first())
+
     def get_citation(self):
         """Get citation or citations from resource metadata."""
+
         citation_str_lst = []
 
         CITATION_ERROR = "Failed to generate citation."
@@ -2246,21 +2461,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return CITATION_ERROR
 
-        ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
-        repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
-                                 citation_date.start_date.year)
-        if ref_rel:
-            citation_str_lst.append(u", {ref_rel_value}, last accessed {creation_date}.".format(
-                ref_rel_value=ref_rel.value,
-                creation_date=date_str))
-        elif repl_rel:
-            citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                   creation_date=date_str,
-                                                                   url=hs_identifier.url))
-        else:
-            citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
         if isPendingActivation:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
@@ -2327,7 +2528,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder=None)
+        res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
         for res_file in res_files_at_root:
@@ -2478,7 +2679,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         path_split = folder_path.split('/')
         while path_split[-1] == '':
             path_split.pop()
-        dir_path = u'/'.join(path_split[0:-1])
+        dir_path = '/'.join(path_split[0:-1])
 
         # handles federation
         irods_path = os.path.join(self.root_path, dir_path)
@@ -2499,7 +2700,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         unique_together = ("content_type", "object_id")
 
 
-def get_path(instance, filename, folder=None):
+def get_path(instance, filename, folder=''):
     """Get a path from a ResourceFile, filename, and folder.
 
     :param instance: instance of ResourceFile to use
@@ -2521,7 +2722,7 @@ def get_path(instance, filename, folder=None):
 
 
 # TODO: make this an instance method of BaseResource.
-def get_resource_file_path(resource, filename, folder=None):
+def get_resource_file_path(resource, filename, folder=''):
     """Determine storage path for a FileField based upon whether resource is federated.
 
     :param resource: resource containing the file.
@@ -2534,24 +2735,27 @@ def get_resource_file_path(resource, filename, folder=None):
 
     """
     # folder can be absolute pathname; strip qualifications off of folder if necessary
-    if folder is not None and folder.startswith(resource.root_path):
+    # cannot only test folder string to start with resource.root_path, since a relative folder path
+    # may start with the resource's uuid if the same resource bag is added into the same resource and unzipped
+    # into the resource as in the bug reported in this issue: https://github.com/hydroshare/hydroshare/issues/2984
+    if folder is not None and folder.startswith(os.path.join(resource.root_path, 'data', 'contents')):
         # TODO: does this now start with /?
         folder = folder[len(resource.root_path):]
-    if folder == '':
-        folder = None
 
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
         return filename
 
     # otherwise, it is an unqualified name.
-    if folder is not None:
+    if folder:
         # use subfolder
-        return resource.file_path + '/' + folder + '/' + filename
+        folder = folder.strip('/')
+        return os.path.join(resource.file_path, folder, filename)
 
     else:
         # use root folder
-        return resource.file_path + '/' + filename
+        filename = filename.strip('/')
+        return os.path.join(resource.file_path, filename)
 
 
 def path_is_allowed(path):
@@ -2593,7 +2797,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_file_path above.
-    file_folder = models.CharField(max_length=4096, null=True)
+    file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096,
@@ -2624,7 +2828,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.resource_file.name
 
     @classmethod
-    def create(cls, resource, file, folder=None, source=None):
+    def create(cls, resource, file, folder='', source=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -2677,7 +2881,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
-                    assert(isinstance(source, basestring))
+                    assert(isinstance(source, str))
                 # source is a path to an iRODS file to be copied here.
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
@@ -2741,6 +2945,14 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.calculate_size()
         return self._size
 
+    @property
+    def modified_time(self):
+        return self.resource_file.storage.get_modified_time(self.resource_file.name)
+
+    @property
+    def checksum(self):
+        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+
     # TODO: write unit test
     @property
     def exists(self):
@@ -2795,7 +3007,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2805,7 +3017,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
-            except SessionException:
+            except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warn("file {} not found".format(self.storage_path))
                 self._size = 0
@@ -2881,8 +3093,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         in a single point of truth.
         """
         folder, base = os.path.split(path)
-        if folder == "":
-            folder = None
         self.file_folder = folder  # must precede call to get_path
         if self.resource.is_federated:
             self.resource_file = None
@@ -2953,7 +3163,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
-            folder = None
+            folder = ''
             base = relpath
             abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
@@ -2964,7 +3174,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # classmethods do things that query or affect all files.
 
     @classmethod
-    def get(cls, resource, file, folder=None):
+    def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
             return ResourceFile.objects.get(object_id=resource.id,
@@ -2988,7 +3198,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         file_folder_to_match = folder
 
-        if folder is None:
+        if not folder:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
@@ -3152,25 +3362,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             return self.public_path
 
 
-class Bags(models.Model):
-    """Represent data bags format as django model."""
-
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
-
-    content_object = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
-    timestamp = models.DateTimeField(default=now, db_index=True)
-
-    class Meta:
-        """Define meta properties of Bags model."""
-
-        ordering = ['-timestamp']
-
-    def get_content_model(self):
-        """Return content model of Bags' content object."""
-        return self.content_object.get_content_model()
-
-
 class PublicResourceManager(models.Manager):
     """Extend Django model Manager to allow for public resource access."""
 
@@ -3199,11 +3390,11 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
+
     # this resource_federation_path is added to record where a HydroShare resource is
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
     # federated root path in the format of /federated_zone/home/localHydroProxy
-
     # TODO: change to null=True, default=None to simplify logic elsewhere
     resource_federation_path = models.CharField(max_length=100, blank=True, default='')
 
@@ -3213,7 +3404,7 @@ class BaseResource(Page, AbstractResource):
 
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for BaseResource model."""
@@ -3313,6 +3504,32 @@ class BaseResource(Page, AbstractResource):
         bag_url = istorage.url(bag_path)
         return bag_url
 
+    @property
+    def bag_checksum(self):
+        """
+        get checksum of resource bag. Currently only published resources have bag checksums computed and saved
+        :return: checksum if bag checksum exists; empty string '' otherwise
+        """
+        extra_data = self.extra_data
+        if 'bag_checksum' in extra_data and extra_data['bag_checksum']:
+            return extra_data['bag_checksum']
+        else:
+            return ''
+
+    @bag_checksum.setter
+    def bag_checksum(self, checksum):
+        """
+        Set bag checksum implemented as a property setter.
+        :param checksum: checksum value to be set
+        """
+        if checksum:
+            extra_data = self.extra_data
+            extra_data['bag_checksum'] = checksum
+            self.extra_data = extra_data
+            self.save()
+        else:
+            return ValidationError("checksum to set on the bag of the resource {} is empty".format(self.short_id))
+
     # URIs relative to resource
     # these are independent of federation strategy
     # TODO: utilize "reverse" abstraction to tie this to urls.py for robustness
@@ -3339,7 +3556,7 @@ class BaseResource(Page, AbstractResource):
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit."""
         # importing here to avoid circular import problem
-        from hydroshare.resource import get_activated_doi
+        from .hydroshare.resource import get_activated_doi
 
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
         schemaLocation = 'http://www.crossref.org/schema/4.3.6 ' \
@@ -3389,7 +3606,7 @@ class BaseResource(Page, AbstractResource):
             name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
-            ROOT, pretty_print=pretty_print)
+            ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     @property
     def size(self):
@@ -3479,8 +3696,54 @@ class BaseResource(Page, AbstractResource):
 
         hs_term_dict["HS_RES_ID"] = self.short_id
         hs_term_dict["HS_RES_TYPE"] = self.resource_type
+        hs_term_dict.update(self.extra_metadata.items())
 
         return hs_term_dict
+
+    def replaced_by(self):
+        """ return a list or resources that replaced this one """
+        from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
+        replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
+        rlist = []
+        for r in replacedby:
+            replacement = r.value
+            # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
+            if replacement.startswith(current_site_url() + "/resource/"):
+                replacement = replacement[-32:]  # strip header
+                try:
+                    rv = get_resource_by_shortkey(replacement, or_404=False)
+                except BaseResource.DoesNotExist:
+                    rv = None
+                if rv is not None:
+                    rlist.append(rv)
+        return rlist
+
+    @property
+    def show_in_discover(self):
+        """
+        return True if a resource should be exhibited
+        A resource should be exhibited if it is at least discoverable
+        and not replaced by anything that exists and is at least discoverable.
+
+        A resource is hidden if there is any descendant (according to isReplacedBy)
+        that is discoverable. The descendent tree is searched via breadth-first search
+        with cycle elimination.  Thus the search always terminates regardless of the
+        complexity of descendents.
+        """
+        if not self.raccess.discoverable:
+            return False  # not exhibitable
+        replacedby = self.replaced_by()
+        visited = {}
+        visited[self.short_id] = True
+
+        # breadth-first replacement search, first discoverable replacement wins
+        for r in replacedby:
+            if r.raccess.discoverable:
+                return False
+            if r.short_id not in visited:
+                replacedby.extend(r.replaced_by())
+                visited[r.short_id] = True
+        return True  # no reason not to show it
 
 
 # TODO Deprecated
@@ -3494,7 +3757,7 @@ class GenericResource(BaseResource):
         """Return True always."""
         return True
 
-    discovery_content_type = 'Generic'  # used during discovery
+    discovery_content_type = 'Generic Resource'  # used during discovery
 
     class Meta:
         """Define meta properties for GenericResource model."""
@@ -3519,7 +3782,7 @@ Page.get_content_model = new_get_content_model
 
 
 # This model has a one-to-one relation with the AbstractResource model
-class CoreMetaData(models.Model):
+class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     """Define CoreMetaData model."""
 
     XML_HEADER = '''<?xml version="1.0"?>
@@ -3530,7 +3793,7 @@ class CoreMetaData(models.Model):
                   'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",
                   'dc': "http://purl.org/dc/elements/1.1/",
                   'dcterms': "http://purl.org/dc/terms/",
-                  'hsterms': "http://hydroshare.org/terms/"}
+                  'hsterms': "https://www.hydroshare.org/terms/"}
 
     id = models.AutoField(primary_key=True)
 
@@ -3538,6 +3801,7 @@ class CoreMetaData(models.Model):
     _title = GenericRelation(Title)
     creators = GenericRelation(Creator)
     contributors = GenericRelation(Contributor)
+    citation = GenericRelation(Citation)
     dates = GenericRelation(Date)
     coverages = GenericRelation(Coverage)
     formats = GenericRelation(Format)
@@ -3607,8 +3871,67 @@ class CoreMetaData(models.Model):
         """Return an instance of rest_framework Serializer for self
         Note: Subclass must override this property
         """
-        from views.resource_metadata_rest_api import CoreMetaDataSerializer
+        from .views.resource_metadata_rest_api import CoreMetaDataSerializer
         return CoreMetaDataSerializer(self)
+
+    def rdf_subject(self):
+        from .hydroshare import current_site_url
+        return URIRef("{}/resource/{}".format(current_site_url(), self.resource.short_id))
+
+    def rdf_metadata_subject(self):
+        from .hydroshare import current_site_url
+        return URIRef("{}/resource/{}/data/resourcemetadata.xml".format(current_site_url(), self.resource.short_id))
+
+    def rdf_type(self):
+        return getattr(HSTERMS, self.resource.resource_type)
+
+    def ignored_generic_relations(self):
+        """Override to exclude generic relations from the rdf/xml.  This is built specifically for Format, which is the
+        only AbstractMetadataElement that is on a metadata model and not included in the rdf/xml.  Returns a list
+        of classes to be ignored"""
+        return [Format]
+
+    def ingest_metadata(self, graph):
+        super(CoreMetaData, self).ingest_metadata(graph)
+        subject = self.rdf_subject_from_graph(graph)
+        extra_metadata = {}
+        for o in graph.objects(subject=subject, predicate=HSTERMS.extendedMetadata):
+            key = graph.value(subject=o, predicate=HSTERMS.key).value
+            value = graph.value(subject=o, predicate=HSTERMS.value).value
+            extra_metadata[key] = value
+        res = self.resource
+        res.extra_metadata = copy.deepcopy(extra_metadata)
+
+        # delete ingested default citation
+        citation_regex = re.compile("(.*) \(\d{4}\)\. (.*), http:\/\/(.*)\/[A-z0-9]{32}")
+        ingested_citation = self.citation.first()
+        if ingested_citation and citation_regex.match(ingested_citation.value):
+            self.citation.first().delete()
+
+        res.save()
+
+    def get_rdf_graph(self):
+        graph = super(CoreMetaData, self).get_rdf_graph()
+
+        subject = self.rdf_subject()
+
+        # add any key/value metadata items
+        if len(self.resource.extra_metadata) > 0:
+            for key, value in self.resource.extra_metadata.items():
+                extendedMetadata = BNode()
+                graph.add((subject, HSTERMS.extendedMetadata, extendedMetadata))
+                graph.add((extendedMetadata, HSTERMS.key, Literal(key)))
+                graph.add((extendedMetadata, HSTERMS.value, Literal(value)))
+
+        # if custom citation does not exist, use the default citation
+        if not self.citation.first():
+            graph.add((subject, DCTERMS.bibliographicCitation, Literal(self.resource.get_citation())))
+
+        from .hydroshare import current_site_url
+        TYPE_SUBJECT = URIRef("{}/terms/{}".format(current_site_url(), self.resource.resource_type))
+        graph.add((TYPE_SUBJECT, RDFS1.label, Literal(self.resource.verbose_name)))
+        graph.add((TYPE_SUBJECT, RDFS1.isDefinedBy, URIRef(HSTERMS)))
+        return graph
 
     @classmethod
     def parse_for_bulk_update(cls, metadata, parsed_metadata):
@@ -3619,7 +3942,7 @@ class CoreMetaData(models.Model):
         :param  parsed_metadata: a list of dicts that will be appended with parsed data
         """
 
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'title' in keys_to_update:
             parsed_metadata.append({"title": {"value": metadata.pop('title')}})
 
@@ -3674,6 +3997,7 @@ class CoreMetaData(models.Model):
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
         return ['Description',
+                'Citation',
                 'Creator',
                 'Contributor',
                 'Coverage',
@@ -3696,7 +4020,7 @@ class CoreMetaData(models.Model):
         :param  form: an instance of Django Form class
         """
         error_string = ", ".join(key + ":" + form.errors[key][0]
-                                 for key in form.errors.keys())
+                                 for key in list(form.errors.keys()))
         return error_string
 
     def set_dirty(self, flag):
@@ -3821,7 +4145,7 @@ class CoreMetaData(models.Model):
         :param  user: user who is updating metadata
         :return:
         """
-        from forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
+        from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
             SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
 
@@ -3940,10 +4264,10 @@ class CoreMetaData(models.Model):
                 self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                                property_name="funding_agencies")
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
+    def get_xml_legacy(self, pretty_print=True, include_format_elements=True):
         """Get metadata XML rendering."""
         # importing here to avoid circular import problem
-        from hydroshare.utils import current_site_url, get_resource_types
+        from .hydroshare.utils import current_site_url, get_resource_types
 
         RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
         # create the Description element -this is not exactly a dc element
@@ -4118,7 +4442,7 @@ class CoreMetaData(models.Model):
 
         # encode extended key/value arbitrary metadata
         resource = BaseResource.objects.filter(object_id=self.id).first()
-        for key, value in resource.extra_metadata.items():
+        for key, value in list(resource.extra_metadata.items()):
             hsterms_key_value = etree.SubElement(
                 rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
             hsterms_key_value_rdf_Description = etree.SubElement(
@@ -4130,16 +4454,15 @@ class CoreMetaData(models.Model):
                                              '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
+                                                       pretty_print=pretty_print).decode()
 
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         """Generate XML elements for a given metadata element.
-
         Helper function to generate xml elements for a given metadata element that belongs to
         'hsterms' namespace
-
         :param root: the xml document root element to which xml elements for the specified
         metadata element needs to be added
         :param md_element: the metadata element object. The term attribute of the metadata
@@ -4148,7 +4471,6 @@ class CoreMetaData(models.Model):
         with first element being the metadata element object and the second being the name
         for the root element. Example: md_element=self.Creat or    # the term attribute of the
         Creator object will be used md_element=(self.Creator, 'Author') # 'Author' will be used
-
         :param md_fields: a list of attribute names of the metadata element (if the name to be used
          in generating the xml element name is same as the attribute name then include the
          attribute name as a list item. if xml element name needs to be different from the
@@ -4190,8 +4512,7 @@ class CoreMetaData(models.Model):
     def _create_person_element(self, etree, parent_element, person):
         """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
-        from hydroshare.utils import current_site_url
-        from hs_core.templatetags.hydroshare_tags import name_without_commas
+        from .hydroshare.utils import current_site_url
 
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
@@ -4201,11 +4522,11 @@ class CoreMetaData(models.Model):
         dc_person_rdf_Description = etree.SubElement(dc_person,
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
 
-        if person.name:
+        if person.name.strip():
             hsterms_name = etree.SubElement(dc_person_rdf_Description,
                                             '{%s}name' % self.NAMESPACES['hsterms'])
 
-            hsterms_name.text = name_without_commas(person.name)
+            hsterms_name.text = person.name
 
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
@@ -4241,10 +4562,14 @@ class CoreMetaData(models.Model):
                                                 '{%s}homepage' % self.NAMESPACES['hsterms'])
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
-        for name, link in person.identifiers.iteritems():
+        for name, link in person.identifiers.items():
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
+
+    @property
+    def resource_uri(self):
+        return self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
@@ -4368,6 +4693,22 @@ class CoreMetaData(models.Model):
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
+
+
+class TaskNotification(models.Model):
+    TASK_STATUS_CHOICES = (
+        ('progress', 'Progress'),
+        ('failed', 'Failed'),
+        ('aborted', 'Aborted'),
+        ('completed', 'Completed'),
+        ('delivered', 'Delivered'),
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=150, blank=True, db_index=True)
+    task_id = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=1000, blank=True)
+    payload = models.CharField(max_length=1000, blank=True)
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='progress')
 
 
 def resource_processor(request, page):

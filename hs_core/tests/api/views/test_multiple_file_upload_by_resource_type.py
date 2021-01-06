@@ -93,5 +93,5 @@ class TestResourceTypeFileTypes(TestCase):
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         response = is_multiple_file_upload_allowed(request, resource_type=resource_type)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        resp_json = json.loads(response.content)
+        resp_json = json.loads(response.content.decode())
         return resp_json

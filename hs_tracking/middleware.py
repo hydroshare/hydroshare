@@ -1,5 +1,7 @@
+from django.utils.deprecation import MiddlewareMixin
+
 from .models import Session
-import utils
+from . import utils
 import re
 
 RESOURCE_RE = re.compile('resource/([0-9a-f]{32})/')  # parser for resource id
@@ -45,7 +47,7 @@ def get_landing_from_url(path):
         return False
 
 
-class Tracking(object):
+class Tracking(MiddlewareMixin):
     """The default tracking middleware logs all successful responses as a 'visit' variable with
     the URL path as its value."""
 
@@ -62,6 +64,9 @@ class Tracking(object):
 
         # filter out everything that is not an OK response
         if response.status_code != 200:
+            return response
+
+        if not hasattr(request, 'user'):
             return response
 
         # get user info that will be recorded in the visit log

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='originalcoverage',
             name='projection_string_type',
-            field=models.CharField(max_length=20, null=True, choices=[(b'', b'---------'), (b'WKT String', b'WKT String'), (b'Proj4 String', b'Proj4 String')]),
+            field=models.CharField(max_length=20, null=True, choices=[('', '---------'), ('WKT String', 'WKT String'), ('Proj4 String', 'Proj4 String')]),
         ),
     ]

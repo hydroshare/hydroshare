@@ -117,13 +117,15 @@ def update_collection(request, shortkey, *args, **kwargs):
                     = authorize(request, res_id_add,
                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-                # the resources being added should be 'Shareable'
+                # the resources being added should be 'Shareable', 'Discoverable' or 'Public'
                 # or is owned by current user
+                is_discoverable = res_to_add.raccess.discoverable
                 is_shareable = res_to_add.raccess.shareable
+                is_public = res_to_add.raccess.public
                 is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
-                if not is_shareable and not is_owner:
-                        raise Exception('Only resource owner can add a non-shareable '
-                                        'resource to a collection ')
+                if not any([is_discoverable, is_shareable, is_public, is_owner]):
+                    raise Exception('Only resource owner can add a non-shareable, non-discoverable, or private '
+                                    'resource to a collection ')
 
                 # add this new res to collection
                 res_obj_add = get_resource_by_shortkey(res_id_add)
@@ -146,11 +148,11 @@ def update_collection(request, shortkey, *args, **kwargs):
 
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
-        logger.error(err_msg.format(ex.message,
+        logger.error(err_msg.format(str(ex),
                      request.user.username if request.user.is_authenticated() else "anonymous",
                      shortkey))
         status = "error"
-        msg = ex.message
+        msg = str(ex)
     finally:
         ajax_response_data = \
             {'status': status, 'msg': msg,
@@ -201,9 +203,9 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
     except Exception as ex:
         logger.error("Failed to update collection for "
                      "deleted resources.Collection resource ID: {}. "
-                     "Error:{} ".format(shortkey, ex.message))
+                     "Error:{} ".format(shortkey, str(ex)))
 
-        ajax_response_data = {'status': "error", 'message': ex.message}
+        ajax_response_data = {'status': "error", 'message': str(ex)}
     finally:
         return JsonResponse(ajax_response_data)
 
@@ -227,9 +229,9 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
 
     except Exception as ex:
         logger.error("Failed to calculate collection coverages. Collection resource ID: {0}. "
-                     "Error:{1} ".format(shortkey, ex.message))
+                     "Error:{1} ".format(shortkey, str(ex)))
 
-        ajax_response_data = {'status': "error", 'message': ex.message}
+        ajax_response_data = {'status': "error", 'message': str(ex)}
     finally:
         return JsonResponse(ajax_response_data)
 
@@ -297,7 +299,7 @@ def _calculate_collection_coverages(collection_res_obj):
                                    "Contained res ID: {1}"
                                    "Msg: {2} ".
                                    format(res_id,
-                                          contained_res_obj.short_id, ex.message))
+                                          contained_res_obj.short_id, str(ex)))
 
     # spatial coverage
     if len(lon_list) > 0 and len(lat_list) > 0:

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import os
 import tempfile
@@ -35,7 +35,7 @@ def get_his_urls(request):
     try:
         r = requests.get(HIS_CENTRAL_URL)
         if r.status_code == 200:
-            response = r.text.encode('utf-8')
+            response = r.text.encode()
             root = etree.XML(response)
         else:
             raise Exception("Query HIS central error.")
@@ -45,7 +45,7 @@ def get_his_urls(request):
                 url_list.append(element.text)
         return json_or_jsonp(request, {"status": "success", "url_list": url_list})
     except Exception as e:
-        logger.exception("get_his_urls: " + e.message)
+        logger.exception("get_his_urls: " + str(e))
         return json_or_jsonp(request, {"status": "error"})
 
 def search_sites(request):
@@ -59,7 +59,7 @@ def search_sites(request):
         else:
             raise Exception("search_sites form validation failed.")
     except Exception as e:
-        logger.exception("search_sites: " + e.message)
+        logger.exception("search_sites: " + str(e))
         return json_or_jsonp(request, {"status": "error"})
 
 def search_variables(request):
@@ -74,7 +74,7 @@ def search_variables(request):
         else:
             raise Exception("search_variables form validation failed.")
     except Exception as e:
-        logger.exception("search_variables: %s" % (e.message))
+        logger.exception("search_variables: %s" % (str(e)))
         return json_or_jsonp(request, {"status": "error"})
 
 def time_series_from_service(request):
@@ -126,7 +126,7 @@ def time_series_from_service(request):
         else:
             raise Exception("GetTSValuesForm form validation failed.")
     except Exception as e:
-        logger.exception("time_series_from_service: %s" % (e.message))
+        logger.exception("time_series_from_service: %s" % (str(e)))
         if tempdir is not None:
            shutil.rmtree(tempdir)
         return json_or_jsonp(request, {'status': "error"})
@@ -165,7 +165,7 @@ def verify_rest_url(request):
             params = f.cleaned_data
             url = params['url']
             ts = requests.get(url, verify=False)
-            ts_xml = etree.XML(ts.text.encode('utf-8'))
+            ts_xml = etree.XML(ts.text.encode())
             if ts.status_code == 200 and 'timeseriesresponse' in ts_xml.tag.lower():
                 return json_or_jsonp(request, {"status": "success"})
             elif ts.status_code == 200 and 'collection' in ts_xml.tag.lower():
@@ -199,7 +199,7 @@ def download_refts_resource_bag(request, shortkey, *args, **kwargs):
 
         return response
     except Exception as e:
-        logger.exception("download_refts_resource_bag: %s" % (e.message))
+        logger.exception("download_refts_resource_bag: %s" % (str(e)))
         response = HttpResponse(status=503)
         response.content = "<h3>Failed to download this resource!</h3>"
         return response
@@ -230,7 +230,7 @@ def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
             return response
 
     except Exception as e:
-        logger.exception("rest_download_refts_resource_bag: %s" % (e.message))
+        logger.exception("rest_download_refts_resource_bag: %s" % (str(e)))
         response = HttpResponse(status=503)
         response.content = "Failed to download this resource!"
         return response

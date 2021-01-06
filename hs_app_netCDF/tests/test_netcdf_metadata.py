@@ -40,25 +40,26 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
-        self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
+        self.netcdf_file_obj = open(target_temp_netcdf_file, 'rb')
 
         self.temp_dir = tempfile.mkdtemp()
         self.netcdf_file_name_crs = 'netcdf_valid_crs.nc'
         self.netcdf_file_crs = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name_crs)
         target_temp_netcdf_file_crs = os.path.join(self.temp_dir, self.netcdf_file_name_crs)
         shutil.copy(self.netcdf_file_crs, target_temp_netcdf_file_crs)
-        self.netcdf_file_obj_crs = open(target_temp_netcdf_file_crs, 'r')
+        self.netcdf_file_obj_crs = open(target_temp_netcdf_file_crs, 'rb')
 
         self.netcdf_bad_file_name = 'netcdf_invalid.nc'
         self.netcdf_bad_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_bad_file_name)
         target_temp_bad_netcdf_file = os.path.join(self.temp_dir, self.netcdf_bad_file_name)
         shutil.copy(self.netcdf_bad_file, target_temp_bad_netcdf_file)
-        self.netcdf_bad_file_obj = open(target_temp_bad_netcdf_file, 'r')
+        self.netcdf_bad_file_obj = open(target_temp_bad_netcdf_file, 'rb')
 
         temp_text_file = os.path.join(self.temp_dir, 'netcdf_text.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("NetCDF records")
-        self.text_file_obj = open(temp_text_file, 'r')
+        text_file.close()
+        self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):
         super(TestNetcdfMetaData, self).tearDown()
@@ -177,10 +178,10 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.files.all().count(), 0)
 
         # there should be a title element
-        self.assertNotEquals(self.resNetcdf.metadata.title, None)
+        self.assertNotEqual(self.resNetcdf.metadata.title, None)
 
         # there should be abstract element
-        self.assertNotEquals(self.resNetcdf.metadata.description, None)
+        self.assertNotEqual(self.resNetcdf.metadata.description, None)
 
         # there should be 2 creator element
         self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
@@ -195,7 +196,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.metadata.formats.all().count(), 0)
 
         # there should be subject element
-        self.assertNotEquals(self.resNetcdf.metadata.subjects.all().count(), 0)
+        self.assertNotEqual(self.resNetcdf.metadata.subjects.all().count(), 0)
 
         # testing extended metadata elements
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
@@ -295,9 +296,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_extended_metadata_CRUD(self):
         # create original coverage element
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
-        value = {"northlimit": '12', "projection": "transverse_mercator",
-                 "units": "meter", "southlimit": '10',
-                 "eastlimit": '23', "westlimit": '2'}
+        value = {"northlimit": 12.0, "projection": "transverse_mercator",
+                 "units": "meter", "southlimit": 10.0,
+                 "eastlimit": 23.0, "westlimit": 2.0}
         self.resNetcdf.metadata.create_element(
             'originalcoverage',
             value=value,
@@ -351,9 +352,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # update
         # update original coverage element
-        value_2 = {"northlimit": '12.5', "projection": "transverse_mercator",
-                   "units": "meter", "southlimit": '10.5',
-                   "eastlimit": '23.5', "westlimit": '2.5'}
+        value_2 = {"northlimit": 12.5, "projection": "transverse_mercator",
+                   "units": "meter", "southlimit": 10.5,
+                   "eastlimit": 23.5, "westlimit": 2.5}
         self.resNetcdf.metadata.update_element('originalcoverage',
                                                ori_coverage.id,
                                                value=value_2,
@@ -469,7 +470,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
         self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'],
-                         '4.63515e+06')
+                         4635150.0)
 
         # projection should be ignored by the update
         value = {"northlimit": '12', "projection": "transverse_mercator-new",
@@ -480,13 +481,13 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         metadata.append({'originalcoverage': {'value': value}})
         self.resNetcdf.metadata.update(metadata, self.user)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
-        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '12')
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], 12.0)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
                             "transverse_mercator-new")
         # 'datum', 'projection_string_type', 'projection_string_text' should be ignored
-        value = {"northlimit": '15', "projection": "transverse_mercator-new",
-                 "units": "meter", "southlimit": '10',
-                 "eastlimit": '23', "westlimit": '2'}
+        value = {"northlimit": 15.0, "projection": "transverse_mercator-new",
+                 "units": "meter", "southlimit": 10.0,
+                 "eastlimit": 23.0, "westlimit": 2.0}
         del metadata[:]
         metadata.append({'originalcoverage': {'value': value, 'datum': 'some datum',
                                               'projection_string_type': 'some proj string type',
@@ -496,7 +497,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         self.resNetcdf.metadata.update(metadata, self.user)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
-        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '15')
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], 15.0)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
                             "transverse_mercator-new")
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.datum, 'some datum')
@@ -619,11 +620,11 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
-        self.assertNotEquals(ori_coverage, None)
-        self.assertEqual(ori_coverage.value['northlimit'], '4662377.44692')
-        self.assertEqual(ori_coverage.value['eastlimit'], '461939.019091')
-        self.assertEqual(ori_coverage.value['southlimit'], '4612607.44692')
-        self.assertEqual(ori_coverage.value['westlimit'], '432419.019091')
+        self.assertNotEqual(ori_coverage, None)
+        self.assertEqual(ori_coverage.value['northlimit'], 4662377.446916306)
+        self.assertEqual(ori_coverage.value['eastlimit'], 461939.01909127034)
+        self.assertEqual(ori_coverage.value['southlimit'], 4612607.446916306)
+        self.assertEqual(ori_coverage.value['westlimit'], 432419.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N')
 

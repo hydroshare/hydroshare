@@ -13,7 +13,7 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     file_folder = kwargs['folder']
     validate_files = kwargs['validate_files']
-    if file_folder is not None:
+    if file_folder:
         base_path = os.path.join(resource.root_path, 'data', 'contents')
         tgt_path = os.path.join(base_path, file_folder)
         if not resource.can_add_files(target_full_path=tgt_path):

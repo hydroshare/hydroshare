@@ -11,9 +11,8 @@
                 <div class="alert alert-info" role="alert">
                     <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse"
                              data-target="#usage-info">&nbsp;</span>
-                        Use this window to share your resource with specific HydroShare users. You can give other
-                        users the ability to view or edit this resource. You can also add additional owners who
-                        will have full permissions.</p>
+                        Use this window to share your resource with specific HydroShare users or set its sharing status (Public, Discoverable, Private, Shareable).
+                        You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</p>
                     <br>
 
                     <div id="usage-info" class="collapse">
@@ -62,6 +61,7 @@
                     <div class="panel-heading">
                         <h3 class="panel-title">Give access</h3>
                     </div>
+
                     <div id="div-invite-people" class="panel-body">
                         <div id="invite-flag" class="btn-group space-bottom" role="group"
                              aria-label="Share with users or groups">
@@ -74,7 +74,6 @@
                                     @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
                                     data-value="groups">Groups</button>
                         </div>
-
 
                         <div class="row">
                             <div v-show="isInviteUsers" class="add-view-user-form col-xs-12">
@@ -198,15 +197,27 @@
                                     <div class="checkbox">
                                         <label>
                                             <input type="checkbox" v-model="resAccess.isShareable" :disabled="isProcessingShareable"
-                                                   @change="setShareable(resAccess.isShareable ? 'make_not_shareable' : 'make_shareable')">
+                                                   @change="setShareable(resAccess.isShareable ? 'make_shareable' : 'make_not_shareable')">
                                             Shareable
                                         </label>
                                     </div>
 
-                                    <p v-if="resAccess.isShareable" class="text-muted small">
-                                        Uncheck the box to prevent others from sharing the resource
-                                        without the owner's permission.
-                                    </p>
+                                    <div v-if="resAccess.isShareable" class="text-muted small">
+                                        <ul>
+                                            <li>
+                                               <p>
+                                               Check the box to let others who have access to this resource be able to share
+                                               it with others at the same permission level (Edit or View) and enable adding to Collections.
+                                               </p>
+                                            </li>
+                                            <li>
+                                               <p>
+                                               Uncheck the box to prevent others from sharing the resource without the
+                                               owner’s permission, or from adding the resource to Collections before the resource is made Discoverable or Public.
+                                               </p>
+                                            </li>
+                                        </ul>
+                                    </div>
 
                                     <p v-else class="text-muted small">
                                         Check this box to allow others to share the resource without the

@@ -31,6 +31,15 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	visibility: hidden;
 }
 
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
 /* ===== Navbar ===== */
 
 .navbar-brand {
@@ -204,6 +213,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     margin-bottom: 0.5em;
     background: white;
     border-radius: 4px;
+}
+
+#remove-citation-link {
+	float: left;
 }
 
 .recaptchatable {
@@ -399,13 +412,20 @@ a.sign-out-inline:hover {
 	overflow: hidden;
 }
 
+#add-author-modal .author-types > button, #add-contributor-dialog .author-types > button {
+	flex-grow: 1;
+	flex-basis: 0;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
 /* warning access removal dialog title */
 .access-dialog-title {
 	display: none;
 }
 /* warning access removal dialog content */
 .access-warning {
-	float:left; 
+	float:left;
 	margin:12px 12px 50px 0;
 }
 
@@ -983,19 +1003,11 @@ li.account p{
 	table-layout: fixed;
 }
 
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before {
-    content: "";
-    width: 1px;
-    display: inline-block;
-    background-color: #999;
-	height: 22px;
-    margin: 0 4px;
-    position: relative;
-    top: 2px;
-}
-
-.authors-wrapper > a:not(:first-child)::before, .authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
-.owners-wrapper > a:not(:first-child)::before, .separate :not(:first-child)::before {
+.authors-wrapper > a:not(:first-child)::before,
+.authors-wrapper span:not(:first-child):not(.ui-sortable-helper) a::before,
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before,
+.owners-wrapper > a:not(:first-child)::before,
+.separate :not(:first-child)::before {
     content: "";
     width: 1px;
     display: inline-block;
@@ -1006,8 +1018,21 @@ li.account p{
     top: 2px;
 }
 
+.authors-wrapper > .ui-state-highlight:not(:first-child)::before {
+	margin: 0 -6px;
+}
+
 .authors-wrapper.sortable span:last-child a {
     margin-right: 10px;
+}
+
+.authors-wrapper .ui-state-highlight {
+	width: 100px;
+	height: 1em;
+	display: inline-block;
+	margin-left: 8px;
+	margin-right: 4px;
+	padding: 0;
 }
 
 .authors-wrapper a {
@@ -1204,7 +1229,6 @@ div.readme .readme-header h4 > span {
 }
 
 .custom-table td {
-	word-break: break-all;
 	word-wrap: break-word;
 }
 
@@ -1217,10 +1241,10 @@ div.readme .readme-header h4 > span {
 	height: 155px;
 }
 
-span.remove {
-    position: absolute;
-    right: 1px;
-    top: 4px;
+.hilight > span.remove {
+	position: absolute;
+	right: 8px;
+	top: 10px;
 }
 
 .form-control, .controls .input-group .form-control {
@@ -1689,7 +1713,7 @@ body > .main-container {
 	color: #428bca;
 }
 
-#fb-file-operations-controls #btn-download-all, #fb-file-operations-controls #rep-res-bag {
+#fb-file-operations-controls #rep-res-bag {
 	text-decoration: none;
 	padding: 0 6px;
 	display: inline-block;
@@ -1849,6 +1873,85 @@ a.tag:hover {
 .navbar-inverse .navbar-toggle:hover,
 .navbar-inverse .navbar-toggle:focus {
 	background-color: #333;
+}
+
+/* Media query overrides for bootstrap 3 collapse breakpoint */
+/* Extended from https://stackoverflow.com/a/36289507/3288102 */
+@media (max-width: 992px) {
+	.navbar-right .visible-xs {
+		display: block !important;
+	}
+
+	.container > .navbar-collapse {
+		margin-right: -15px;
+		margin-left: -15px;
+	}
+
+	.navbar-nav {
+		margin: 7.5px -15px;
+	}
+
+	.navbar-right.hidden-xs {
+		display: none !important;
+	}
+
+	.navbar-nav .open .dropdown-menu {
+		position: static;
+		float: none;
+		width: auto;
+		margin-top: 0;
+		background-color: transparent;
+		border: 0;
+		box-shadow: none;
+	}
+
+	.navbar > .container {
+		width: 100%;
+	}
+
+	.navbar-header {
+		float: none;
+	}
+
+	.navbar-left, .navbar-right {
+		float: none !important;
+	}
+
+	.navbar-toggle {
+		display: block;
+	}
+
+	.navbar-collapse {
+		border-top: 1px solid transparent;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	.navbar-fixed-top {
+		top: 0;
+		border-width: 0 0 1px;
+	}
+
+	.navbar-collapse.collapse {
+		display: none !important;
+	}
+
+	.navbar-nav {
+		float: none !important;
+		margin-top: 7.5px;
+	}
+
+	.navbar-nav > li {
+		float: none;
+	}
+
+	.navbar-nav > li > a {
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+
+	.collapse.in {
+		display: block !important;
+	}
 }
 
 @media (max-width: 768px) {
@@ -2020,13 +2123,6 @@ a.tag:hover {
   .bs-sidebar.affix-bottom,
   .bs-sidebar.affix {
     width: 360px;
-  }
-}
-
-@media(min-width: 767px) and (max-width: 991px){
-  /* Add extra padding to push down the text */
-  .page-tip {
-    padding: 50px 0px 15px;
   }
 }
 
@@ -2269,7 +2365,7 @@ table.user-scope tr {
     background-color: #f5f5f5;
 }
 
-.user-roles li.loading, .access-table tr.loading {
+.user-roles li.loading, .access-table tr.loading, .authors-wrapper.loading {
 	animation: grayScaleChange 1s; /* animation-name followed by duration in seconds*/
 	/* you could also use milliseconds (ms) or something like 2.5s */
 	-webkit-animation: grayScaleChange 1s; /* Chrome and Safari */
@@ -3062,7 +3158,7 @@ span.you-flag {
 }
 
 .facet-list .list-group {
-	max-height: 200px;
+	max-height: 400px;
 	overflow-y: auto;
 }
 
@@ -3443,6 +3539,15 @@ span.you-flag {
   animation-duration: 0.6s; /* So they look staggered */
 }
 
+.fade-enter-active, .fade-leave-active {
+	transition: opacity .35s;
+	transition-timing-function: ease;
+}
+
+.fade-enter, .fade-leave-to {
+	opacity: 0;
+}
+
 @keyframes come-in {
   to { transform: translateY(0); }
 }
@@ -3656,13 +3761,19 @@ button.no-style:focus {
 }
 
 .group-thumbnail {
-	display: block;
 	padding: 4px;
 	margin-bottom: 20px;
 	line-height: 1.42857143;
 	background-color: #fff;
 	border: 1px solid #ddd;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+div.group-thumbnails {
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .group-container {
@@ -3675,7 +3786,14 @@ button.no-style:focus {
 }
 
 .group-caption {
-    padding: 10px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.spacer {
+	flex: 1 1 auto;
 }
 
 .users-joined {
@@ -3873,9 +3991,6 @@ button.no-style:focus {
 }
 
 .group-thumbnail-footer {
-	padding-top: 10px;
-	position: absolute;
-	bottom: 14px;
 }
 
 .group-thumbnail-footer .btn-ask-to-join {
@@ -4021,21 +4136,6 @@ div.group-add-photo {
 #edit-group-dialog div.toggle.btn {
 	width: 100px !important;
 	float: right;
-}
-
-.center-radio-inline {
-    padding: 8px;
-    border-radius: 4px;
-    width: 190px;
-}
-
-.center-radio-inline input[type='radio']{
-	float: none;
-	margin: 0;
-}
-
-.center-radio-inline label {
-	cursor: pointer;
 }
 
 .or-separator {
@@ -4513,7 +4613,6 @@ div#fb-inner-controls button, .file-browser-search {
 }
 
 #fb-file-operations-controls > button,
-#fb-file-operations-controls #btn-download-all,
 #fb-file-operations-controls #rep-res-bag {
 	filter: progid:DXImageTransform.Microsoft.Gradient(enabled='false');
 	-webkit-box-shadow: none;
@@ -4529,7 +4628,6 @@ div#fb-inner-controls button, .file-browser-search {
 }
 
 #fb-file-operations-controls > button,
-#fb-file-operations-controls #btn-download-all,
 #fb-file-operations-controls #rep-res-bag {
 	margin-top: 8px;
 	text-shadow: 0 1px 0 #fff;
@@ -4545,7 +4643,6 @@ span.caption-file-type {
 }
 
 #fb-file-operations-controls > button:not(.disabled):hover,
-#fb-file-operations-controls #btn-download-all:hover,
 #fb-file-operations-controls #rep-res-bag:hover {
 	border: 1px solid #DDD;
 	box-shadow: 1px 1px 3px #e2e2e2;
@@ -5016,4 +5113,3 @@ a[data-toggle="modal"] {
 .c-pointer {
 	cursor: pointer;
 }
-

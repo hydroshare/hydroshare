@@ -52,7 +52,7 @@ class SimpleTest(TestCase):
         }
         parser = ParseSQ()
 
-        for case in testcase.keys():
+        for case in list(testcase.keys()):
             self.assertEqual(str(parser.parse(case)), testcase[case])
 
     def test_parse_with_new_default(self):
@@ -69,7 +69,7 @@ class SimpleTest(TestCase):
                 'operator': 'OR'},
 
         }
-        for case in testcase.keys():
+        for case in list(testcase.keys()):
             parser = ParseSQ(testcase[case]['operator'])
             self.assertEqual(str(parser.parse(case, )), testcase[case]['sq'])
 
@@ -93,7 +93,7 @@ class SimpleTest(TestCase):
             'foo:bar': str(SQ(content='foo:bar')),
         }
         parser = ParseSQ()
-        for case in testcase.keys():
+        for case in list(testcase.keys()):
             self.assertEqual(str(parser.parse(case)), testcase[case])
 
     def test_dates(self):
@@ -124,7 +124,7 @@ class SimpleTest(TestCase):
                                  SQ(end_date__lt='2017-01-02T00:00:00Z')),
         }
         parser = ParseSQ()
-        for case in testcase.keys():
+        for case in list(testcase.keys()):
             self.assertEqual(str(parser.parse(case)), testcase[case])
 
     def test_inequalities(self):
@@ -143,7 +143,7 @@ class SimpleTest(TestCase):
             "created<=2017-05-02": str(SQ(created__lt='2017-05-03T00:00:00Z')),
         }
         parser = ParseSQ()
-        for case in testcase.keys():
+        for case in list(testcase.keys()):
             self.assertEqual(str(parser.parse(case)), testcase[case])
 
     def test_exceptions(self):
@@ -156,6 +156,6 @@ class SimpleTest(TestCase):
             "(abstract:something": MatchingBracketsNotFoundError
         }
         parser = ParseSQ()
-        for case in testcase.keys():
+        for case in list(testcase.keys()):
             with self.assertRaises(testcase[case]):
                 parser.parse(case)

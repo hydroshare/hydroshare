@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='variable',
             name='descriptive_name',
-            field=models.CharField(max_length=1000, null=True, verbose_name=b'long name', blank=True),
+            field=models.CharField(max_length=1000, null=True, verbose_name='long name', blank=True),
         ),
         migrations.AlterField(
             model_name='variable',
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='variable',
             name='type',
-            field=models.CharField(max_length=1000, choices=[(b'Char', b'Char'), (b'Byte', b'Byte'), (b'Short', b'Short'), (b'Int', b'Int'), (b'Float', b'Float'), (b'Double', b'Double'), (b'Int64', b'Int64'), (b'Unsigned Byte', b'Unsigned Byte'), (b'Unsigned Short', b'Unsigned Short'), (b'Unsigned Int', b'Unsigned Int'), (b'Unsigned Int64', b'Unsigned Int64'), (b'String', b'String'), (b'User Defined Type', b'User Defined Type'), (b'Unknown', b'Unknown')]),
+            field=models.CharField(max_length=1000, choices=[('Char', 'Char'), ('Byte', 'Byte'), ('Short', 'Short'), ('Int', 'Int'), ('Float', 'Float'), ('Double', 'Double'), ('Int64', 'Int64'), ('Unsigned Byte', 'Unsigned Byte'), ('Unsigned Short', 'Unsigned Short'), ('Unsigned Int', 'Unsigned Int'), ('Unsigned Int64', 'Unsigned Int64'), ('String', 'String'), ('User Defined Type', 'User Defined Type'), ('Unknown', 'Unknown')]),
         ),
         migrations.AlterField(
             model_name='variable',

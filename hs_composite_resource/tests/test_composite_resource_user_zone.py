@@ -78,7 +78,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         res_upload_files = []
         resource_file_add_pre_process(resource=self.composite_resource, files=res_upload_files,
                                       source_names=[fed_test_file_full_path], user=self.user,
-                                      folder=None)
+                                      folder='')
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
                                   source_names=[fed_test_file_full_path], user=self.user,
                                   auto_aggregate=False)

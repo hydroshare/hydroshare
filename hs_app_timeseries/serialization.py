@@ -24,7 +24,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
 
         print("--- TimeSeriesResourceMeta ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get site
         for s, p, o in self._rmeta_graph.triples((None, hsterms.site, None)):
@@ -269,7 +269,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class Variable(object):
 
@@ -291,7 +291,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class Method(object):
 
@@ -313,7 +313,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ProcessingLevel(object):
 
@@ -331,7 +331,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class TimeSeriesResult(object):
 
@@ -357,4 +357,4 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)

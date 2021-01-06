@@ -115,6 +115,26 @@ class CreateAccountTest(TestCase):
         for term in terms:
             self.assertTrue(term.name in organizations)
 
+    def test_with_usertype_country_state(self):
+        username = 'testuser'
+        usertype = 'University Faculty'
+        country = 'United States'
+        state = 'NC'
+        hydroshare.create_account(
+            'testuser@gmail.com',
+            username=username,
+            first_name='Test',
+            last_name='User',
+            organization='TestOrg',
+            user_type=usertype,
+            country=country,
+            state=state
+        )
+        user = UserProfile.objects.filter(user__username=username).first()
+        self.assertEqual(user.user_type, usertype)
+        self.assertEqual(user.country, country)
+        self.assertEqual(user.state, state)
+
     def test_case_in_username(self):
         username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
         user = hydroshare.create_account(
@@ -155,7 +175,7 @@ class CreateAccountTest(TestCase):
             self.fail("Should not be able to create an account with case insensitivie matching "
                       "usernames")
         except ValidationError as v:
-            self.assertEqual("User with provided username already exists.", v.message)
+            self.assertEqual("['User with provided username already exists.']", str(v))
             pass
 
     def test_case_in_email(self):
@@ -198,7 +218,7 @@ class CreateAccountTest(TestCase):
             self.fail("Should not be able to create an account with case insensitive matching "
                       "emails")
         except ValidationError as v:
-            self.assertEqual("User with provided email already exists.", v.message)
+            self.assertEqual("['User with provided email already exists.']", str(v))
             pass
 
     @unittest.skip

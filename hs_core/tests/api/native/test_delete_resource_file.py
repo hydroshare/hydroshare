@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import unittest
 import os
@@ -31,7 +31,7 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
         test_file = open('myfile.txt', "w")
         test_file.write("Test text file in test1.txt")
         test_file.close()
-        self.file = open('myfile.txt', 'r')
+        self.file = open('myfile.txt', 'rb')
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
 

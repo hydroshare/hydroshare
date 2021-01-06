@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import migrations, models
 
@@ -14,21 +14,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groundwaterflow',
             name='horizontalFlowBarrierPackage',
-            field=models.BooleanField(default=False, verbose_name=b'Includes HFB6 package'),
+            field=models.BooleanField(default=False, verbose_name='Includes HFB6 package'),
         ),
         migrations.AddField(
             model_name='groundwaterflow',
             name='seawaterIntrusionPackage',
-            field=models.BooleanField(default=False, verbose_name=b'Includes SWI2 package'),
+            field=models.BooleanField(default=False, verbose_name='Includes SWI2 package'),
         ),
         migrations.AddField(
             model_name='groundwaterflow',
             name='unsaturatedZonePackage',
-            field=models.BooleanField(default=False, verbose_name=b'Includes UZF package'),
+            field=models.BooleanField(default=False, verbose_name='Includes UZF package'),
         ),
         migrations.AlterField(
             model_name='groundwaterflow',
             name='flowPackage',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Flow package', choices=[(b'BCF6', b'BCF6'), (b'LPF', b'LPF'), (b'HUF2', b'HUF2'), (b'UPW', b'UPW')]),
+            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Flow package', choices=[('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'), ('UPW', 'UPW')]),
         ),
     ]

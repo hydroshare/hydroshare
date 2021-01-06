@@ -41,14 +41,14 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Program resource files")
         text_file.close()
-        self.text_file_obj = open(temp_text_file, 'r')
+        self.text_file_obj = open(temp_text_file, 'rb')
 
         self.file_name_2 = "MP.csv"
         temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
         text_file = open(temp_text_file_2, 'w')
         text_file.write("Model,Program,resource,file")
         text_file.close()
-        self.text_file_obj_2 = open(temp_text_file_2, 'r')
+        self.text_file_obj_2 = open(temp_text_file_2, 'rb')
 
     def tearDown(self):
         super(TestModelProgramMetaData, self).tearDown()
@@ -59,10 +59,10 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_allowed_file_types(self):
         # test allowed file type is '.*'
-        self.assertEquals(self.resModelProgram.get_supported_upload_file_types(), '.*')
+        self.assertEqual(self.resModelProgram.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
-        self.assertEquals(self.resModelProgram.files.all().count(), 0)
+        self.assertEqual(self.resModelProgram.files.all().count(), 0)
 
         # Upload any file type should pass both the file pre add check and post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
@@ -73,10 +73,10 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                         user=self.user, extract_metadata=False)
 
         # there should one content file
-        self.assertEquals(self.resModelProgram.files.all().count(), 1)
+        self.assertEqual(self.resModelProgram.files.all().count(), 1)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resModelProgram.metadata.program, None)
+        self.assertEqual(self.resModelProgram.metadata.program, None)
 
         # Uploading any other file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
@@ -87,51 +87,51 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                         user=self.user, extract_metadata=True)
 
         # there should two content files
-        self.assertEquals(self.resModelProgram.files.all().count(), 2)
+        self.assertEqual(self.resModelProgram.files.all().count(), 2)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resModelProgram.metadata.program, None)
+        self.assertEqual(self.resModelProgram.metadata.program, None)
 
     def test_extended_metadata_CRUD(self):
         # test the core metadata at this point
         # there should be a title element
-        self.assertEquals(self.resModelProgram.metadata.title.value, 'Test Model Program Resource')
+        self.assertEqual(self.resModelProgram.metadata.title.value, 'Test Model Program Resource')
 
         # there should be a creator element
-        self.assertEquals(self.resModelProgram.creator.username, 'user1')
+        self.assertEqual(self.resModelProgram.creator.username, 'user1')
 
         # # there should be a type element
         self.assertNotEqual(self.resModelProgram.metadata.type, None)
 
         # there should be an identifier element
-        self.assertEquals(self.resModelProgram.metadata.identifiers.count(), 1)
+        self.assertEqual(self.resModelProgram.metadata.identifiers.count(), 1)
 
         # there should be rights element
         self.assertNotEqual(self.resModelProgram.metadata.rights, None)
 
         # there shouldn't any source element
-        self.assertEquals(self.resModelProgram.metadata.sources.count(), 0)
+        self.assertEqual(self.resModelProgram.metadata.sources.count(), 0)
 
         # there shouldn't any relation element
-        self.assertEquals(self.resModelProgram.metadata.relations.count(), 0)
+        self.assertEqual(self.resModelProgram.metadata.relations.count(), 0)
 
         # there shouldn't any abstract element
-        self.assertEquals(self.resModelProgram.metadata.description, None)
+        self.assertEqual(self.resModelProgram.metadata.description, None)
 
         # there shouldn't any coverage element
-        self.assertEquals(self.resModelProgram.metadata.coverages.all().count(), 0)
+        self.assertEqual(self.resModelProgram.metadata.coverages.all().count(), 0)
 
         # there shouldn't any format element
-        self.assertEquals(self.resModelProgram.metadata.formats.all().count(), 0)
+        self.assertEqual(self.resModelProgram.metadata.formats.all().count(), 0)
 
         # there shouldn't any subject element
-        self.assertEquals(self.resModelProgram.metadata.subjects.all().count(), 0)
+        self.assertEqual(self.resModelProgram.metadata.subjects.all().count(), 0)
 
         # there shouldn't any contributor element
-        self.assertEquals(self.resModelProgram.metadata.contributors.all().count(), 0)
+        self.assertEqual(self.resModelProgram.metadata.contributors.all().count(), 0)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resModelProgram.metadata.program, None)
+        self.assertEqual(self.resModelProgram.metadata.program, None)
 
         # create Model program metadata
         release_date = '2016-10-24 21:05:00.315907+00:00'
@@ -282,28 +282,28 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                      modelEngine='sourceCode.zip')
 
         # there should one content file
-        self.assertEquals(self.resModelProgram.files.all().count(), 1)
+        self.assertEqual(self.resModelProgram.files.all().count(), 1)
 
         # there should be one format element
-        self.assertEquals(self.resModelProgram.metadata.formats.all().count(), 1)
+        self.assertEqual(self.resModelProgram.metadata.formats.all().count(), 1)
 
         # the short path should just consist of the file name.
-        self.assertEquals(self.resModelProgram.files.all()[0].short_path, self.file_name)
+        self.assertEqual(self.resModelProgram.files.all()[0].short_path, self.file_name)
 
         # delete content file that we added above; note that file name is a short_path
         hydroshare.delete_resource_file(self.resModelProgram.short_id, self.file_name, self.user)
 
         # there should no content file
-        self.assertEquals(self.resModelProgram.files.all().count(), 0)
+        self.assertEqual(self.resModelProgram.files.all().count(), 0)
 
         # test the core metadata at this point
-        self.assertNotEquals(self.resModelProgram.metadata.title, None)
+        self.assertNotEqual(self.resModelProgram.metadata.title, None)
 
         # there should be an abstract element
-        self.assertNotEquals(self.resModelProgram.metadata.description, None)
+        self.assertNotEqual(self.resModelProgram.metadata.description, None)
 
         # there should be one creator element
-        self.assertEquals(self.resModelProgram.metadata.creators.all().count(), 1)
+        self.assertEqual(self.resModelProgram.metadata.creators.all().count(), 1)
 
         # testing extended metadata elements
         self.assertNotEqual(self.resModelProgram.metadata.program, None)
@@ -372,7 +372,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # delete resource
         hydroshare.delete_resource(self.resModelProgram.short_id)
-        self.assertEquals(CoreMetaData.objects.all().count(), 0)
+        self.assertEqual(CoreMetaData.objects.all().count(), 0)
 
         # there should be no Creator metadata objects
         self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
@@ -413,7 +413,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # here we are testing the update() method of the ModelProgramMetaData class
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resModelProgram.metadata.program, None)
+        self.assertEqual(self.resModelProgram.metadata.program, None)
         # create Model program metadata
         release_date = '2016-10-24 21:05:00.315907+00:00'
         model_program_data = {'mpmetadata': {'modelVersion': '5.1.011',

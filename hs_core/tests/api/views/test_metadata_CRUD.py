@@ -56,7 +56,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
         response = add_metadata_element(request, shortkey=self.gen_res.short_id,
                                         element_name='subject')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual(response_dict['status'], 'success')
         self.assertEqual(response_dict['element_name'], 'subject')
         self.gen_res.refresh_from_db()
@@ -81,7 +81,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
         response = update_metadata_element(request, shortkey=self.gen_res.short_id,
                                            element_name='title', element_id=title_element.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual(response_dict['status'], 'success')
         self.gen_res.refresh_from_db()
         self.assertEqual(self.gen_res.metadata.title.value, 'Updated Resource Title')
@@ -102,7 +102,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
         response = add_metadata_element(request, shortkey=self.gen_res.short_id,
                                         element_name='contributor')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content)
+        response_dict = json.loads(response.content.decode())
         self.assertEqual(response_dict['status'], 'success')
         self.assertEqual(response_dict['element_name'], 'contributor')
         self.gen_res.refresh_from_db()

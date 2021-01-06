@@ -5,4 +5,4 @@ class CollectionResourceAppConfig(AppConfig):
     name = "hs_collection_resource"
 
     def ready(self):
-        import receivers  # noqa
+        from . import receivers  # noqa

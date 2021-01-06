@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 from hs_core.models import BaseResource
 from hs_core import hydroshare
 from hs_core.testing import TestCaseCommonUtilities
-from hs_core.tasks import update_quota_usage_task
+from hs_core.hydroshare.resource import update_quota_usage
 
 
 class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
@@ -114,7 +114,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # test resource deletion
         hydroshare.resource.delete_resource(res.short_id)
-        self.assertEquals(BaseResource.objects.all().count(), 0,
+        self.assertEqual(BaseResource.objects.all().count(), 0,
                           msg='Number of resources not equal to 0')
         # test to make sure original files still exist after resource deletion
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
@@ -150,7 +150,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # Although the resource creation operation above will trigger quota update celery task,
         # in the test environment, celery task is not really executed, so have to test quota update
         # task explicitely here
-        update_quota_usage_task(self.user.username)
+        update_quota_usage(self.user.username)
         uquota = self.user.quotas.first()
         target_qsize = float(test_qsize)
         target_qsize = hydroshare.utils.convert_file_size_to_unit(target_qsize, uquota.unit)

@@ -118,7 +118,7 @@ class SciMetaTestCase(HSRESTTestCase):
           'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
           'dc': "http://purl.org/dc/elements/1.1/",
           'dcterms': "http://purl.org/dc/terms/",
-          'hsterms': "http://hydroshare.org/terms/"}
+          'hsterms': "https://www.hydroshare.org/terms/"}
 
     RESOURCE_URL_TEMPLATE = "http://" + Site.objects.first().domain + "/resource/{0}"
 
@@ -126,14 +126,14 @@ class SciMetaTestCase(HSRESTTestCase):
     RESOURCE_METADATA_OLD = 'resourcemetadata_old.xml'
     RESOURCE_METADATA_UPDATED = 'resourcemetadata_updated.xml'
 
-    def getTitle(self, scimeta, should_exist=True):
+    def getTitle(self, scimeta, rdf_type="rdf:Description", should_exist=True):
         """ Get title from parsed ElementTree representation of science metadata.
 
         :param scimeta: ElementTree representing science metadata
         :param should_exist: If True, the abstract is expected to exist in the DOM.
         :return: String representing title text, if should_exist == True, else None.
         """
-        title = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:title', namespaces=self.NS)
+        title = scimeta.xpath('/rdf:RDF/{}[1]/dc:title'.format(rdf_type), namespaces=self.NS)
 
         if should_exist:
             self.assertEqual(len(title), 1)
@@ -143,14 +143,14 @@ class SciMetaTestCase(HSRESTTestCase):
 
         return None
 
-    def getAbstract(self, scimeta, should_exist=True):
+    def getAbstract(self, scimeta, rdf_type="rdf:Description", should_exist=True):
         """ Get abstract from parsed ElementTree representation of science metadata.
 
         :param scimeta: ElementTree representing science metadata
         :param should_exist: If True, the abstract is expected to exist in the DOM.
         :return: String representing abstract text, if should_exist == True, else None.
         """
-        abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+        abstract = scimeta.xpath('/rdf:RDF/{}[1]/dc:description/rdf:Description/dcterms:abstract'.format(rdf_type),
                                  namespaces=self.NS)
         if should_exist:
             self.assertEqual(len(abstract), 1)
@@ -160,24 +160,24 @@ class SciMetaTestCase(HSRESTTestCase):
 
         return None
 
-    def getKeywords(self, scimeta):
+    def getKeywords(self, scimeta, rdf_type="rdf:Description"):
         """ Get keywords from parsed ElementTree representation of science metadata.
 
         :param scimeta: ElementTree representing science metadata
         :return: Tuple of Strings representing keyword metadata elements
         """
-        keywords = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:subject',
+        keywords = scimeta.xpath('/rdf:RDF/{}[1]/dc:subject'.format(rdf_type),
                                  namespaces=self.NS)
         return tuple(k.text for k in keywords)
 
-    def updateScimetaResourceID(self, scimeta, new_id):
+    def updateScimetaResourceID(self, scimeta, new_id, rdf_type="rdf:Description"):
         """ Update resource ID of the science metadata to http://example.com/resource/$new_id
 
         :param scimeta: ElementTree representing science metadata
         :param new_id: String representing the new ID of the resource.
         :return: ElementTree representing science metadata
         """
-        desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=self.NS)[0]
+        desc = scimeta.xpath('/rdf:RDF/{}[1]'.format(rdf_type), namespaces=self.NS)[0]
         desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
                  self.RESOURCE_URL_TEMPLATE.format(new_id))
         return scimeta
@@ -199,10 +199,10 @@ class SciMetaTestCase(HSRESTTestCase):
         response = self.client.put(url, params)
         if should_succeed:
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED,
-                             msg=str(json.loads(response.content)))
+                             msg=str(json.loads(response.content.decode())))
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                             msg=str(json.loads(response.content)))
+                             msg=str(json.loads(response.content.decode())))
 
         return response
 
@@ -250,7 +250,7 @@ class ResMapTestCase(HSRESTTestCase):
           'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
           'dc': "http://purl.org/dc/elements/1.1/",
           'dcterms': "http://purl.org/dc/terms/",
-          'hsterms': "http://hydroshare.org/terms/"}
+          'hsterms': "https://www.hydroshare.org/terms/"}
 
     RESOURCE_URL_TEMPLATE = "http://example.com/resource/{0}"
 

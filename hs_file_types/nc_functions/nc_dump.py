@@ -30,7 +30,7 @@ import json
 import subprocess
 
 import netCDF4
-from nc_utils import get_nc_dataset
+from .nc_utils import get_nc_dataset
 
 
 def get_netcdf_header_file(nc_file_name, dump_folder=''):
@@ -62,7 +62,7 @@ def get_nc_dump_string_by_ncdump(nc_file_name):
     """
 
     try:
-        process = subprocess.Popen(['ncdump', '-h', nc_file_name], stdout=subprocess.PIPE)
+        process = subprocess.Popen(['ncdump', '-h', nc_file_name], stdout=subprocess.PIPE, encoding="UTF-8")
         nc_dump_string = process.communicate()[0]
     except Exception:
         nc_dump_string = ''
@@ -107,7 +107,7 @@ def get_nc_dump_dict(nc_group):
             info['global attributes'] = get_global_attr_info(nc_group)
 
         if nc_group.groups:
-            for group_name, group_obj in nc_group.groups.items():
+            for group_name, group_obj in list(nc_group.groups.items()):
                 try:
                     info['group: ' + group_name] = get_nc_dump_dict(group_obj)
                 except Exception:
@@ -124,7 +124,7 @@ def get_dimensions_info(nc_group):
     """
 
     dimensions_info = OrderedDict()
-    for dim_name, dim_obj in nc_group.dimensions.items():
+    for dim_name, dim_obj in list(nc_group.dimensions.items()):
         try:
             if dim_obj.isunlimited():
                 dimensions_info[dim_name] = 'UNLIMITED; // ({0} currently)'.format(len(dim_obj))
@@ -144,7 +144,7 @@ def get_global_attr_info(nc_group):
     """
     global_attr_info = OrderedDict()
     if nc_group.__dict__:
-        for name, val in nc_group.__dict__.items():
+        for name, val in list(nc_group.__dict__.items()):
             value = str(val).split('\n') if '\n' in str(val) else str(val)
             global_attr_info[name] = value
 
@@ -159,7 +159,7 @@ def get_variables_info(nc_group):
     """
     variables_info = OrderedDict()
     if nc_group.variables:
-        for var_name, var_obj in nc_group.variables.items():
+        for var_name, var_obj in list(nc_group.variables.items()):
             try:
                 if isinstance(var_obj.datatype, netCDF4.CompoundType):
                     var_type = 'compound'
@@ -170,7 +170,7 @@ def get_variables_info(nc_group):
                 var_dimensions = '({0})'.format(','.join(var_obj.dimensions).encode())
                 var_title = '{0} {1}{2}'.format(var_type, var_name, var_dimensions)
                 variables_info[var_title] = OrderedDict()
-                for name, val in var_obj.__dict__.items():
+                for name, val in list(var_obj.__dict__.items()):
                     value = str(val).split('\n') if '\n' in str(val) else str(val)
                     variables_info[var_title][name] = value
             except Exception:

@@ -6,7 +6,7 @@
             <a data-toggle="modal" data-target="#manage-access">
             <span data-toggle="tooltip" data-placement="bottom"
                   data-html="true"
-                  title="Manage who has access<br><br><small>Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</small>"
+                  title="Manage who has access<br><br><small>Use this button to share your resource with specific HydroShare users or set its sharing status (Public, Discoverable, Private, Shareable). You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</small>"
                   class="fa fa-user-plus icon-button icon-blue"></span>
             </a>
         {% endif %}
@@ -70,8 +70,8 @@
 
             {% if not is_replaced_by %}
                 {% if user.is_authenticated and rights.statement %}
-                    {% if cm.raccess.public or not self_access_level == 'None' %}
-                        {% if not allow_resource_copy %}
+                    {% if permissions_allow_copy %}
+                        {% if not rights_allow_copy %}
                             <a disabled>
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="You cannot copy because the license for this resource does not permit copying"

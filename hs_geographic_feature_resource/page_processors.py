@@ -6,7 +6,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_geographic_feature_resource.forms import OriginalCoverageForm, GeometryInformationForm
-from models import GeographicFeatureResource
+from .models import GeographicFeatureResource
 
 
 @processor_for(GeographicFeatureResource)

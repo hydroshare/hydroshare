@@ -36,18 +36,21 @@ class CompositeResource(BaseResource):
 
     @property
     def logical_files(self):
-        """Returns a list of all logical file type objects associated with this resource """
-
-        lf_list = []
-        lf_list.extend(self.filesetlogicalfile_set.all())
-        lf_list.extend(self.genericlogicalfile_set.all())
-        lf_list.extend(self.geofeaturelogicalfile_set.all())
-        lf_list.extend(self.netcdflogicalfile_set.all())
-        lf_list.extend(self.georasterlogicalfile_set.all())
-        lf_list.extend(self.reftimeserieslogicalfile_set.all())
-        lf_list.extend(self.timeserieslogicalfile_set.all())
-
-        return lf_list
+        """A generator that returns each of the logical files of this resource"""
+        for lf in self.filesetlogicalfile_set.all():
+            yield lf
+        for lf in self.genericlogicalfile_set.all():
+            yield lf
+        for lf in self.geofeaturelogicalfile_set.all():
+            yield lf
+        for lf in self.netcdflogicalfile_set.all():
+            yield lf
+        for lf in self.georasterlogicalfile_set.all():
+            yield lf
+        for lf in self.reftimeserieslogicalfile_set.all():
+            yield lf
+        for lf in self.timeserieslogicalfile_set.all():
+            yield lf
 
     @property
     def can_be_published(self):
@@ -83,10 +86,7 @@ class CompositeResource(BaseResource):
         """
 
         aggregation_path = dir_path[len(self.file_path) + 1:]
-        try:
-            return self.get_aggregation_by_name(aggregation_path)
-        except ObjectDoesNotExist:
-            return None
+        return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
@@ -95,11 +95,15 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        for res_file in self.files.all():
-            if res_file.full_path == file_path:
-                if res_file.has_logical_file:
-                    return res_file.logical_file
-        return None
+        relative_file_path = file_path[len(self.file_path) + 1:]
+        folder, base = os.path.split(relative_file_path)
+        try:
+            res_file = ResourceFile.get(self, file=base, folder=folder)
+            if res_file.has_logical_file:
+                return res_file.logical_file
+            return None
+        except ObjectDoesNotExist:
+            return None
 
     def can_set_folder_to_fileset(self, dir_path):
         """Checks if the specified folder *dir_path* can be set to Fileset aggregation
@@ -133,20 +137,6 @@ class CompositeResource(BaseResource):
         """ if this resource allows associating resource file objects with logical file"""
         return True
 
-    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-
-        # get resource level core metadata as xml string
-        # for composite resource we don't want the format elements at the resource level
-        # as they are included at the aggregation map xml document
-        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=False,
-                                                                     include_format_elements=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
     def _recreate_fileset_xml_docs(self, folder):
         """Recreates xml files for all fileset aggregations that exist under the path 'folder'
         as well as for any parent fileset that may exist relative to path 'folder'
@@ -164,14 +154,14 @@ class CompositeResource(BaseResource):
             if parent_fs is not None:
                 parent_fs.create_aggregation_xml_documents()
 
-    def create_aggregation_xml_documents(self, path=None):
+    def create_aggregation_xml_documents(self, path=''):
         """Creates aggregation map and metadata xml files for each of the contained aggregations
 
         :param  path: (optional) file or folder path for which xml documents need to be created for
         all associated aggregations of that path
         """
 
-        if path is None:
+        if not path:
             # create xml docs far all aggregation of this resource
             for aggregation in self.logical_files:
                 if aggregation.metadata.is_dirty:
@@ -228,16 +218,10 @@ class CompositeResource(BaseResource):
         if not new_folder.startswith(self.file_path):
             new_folder = os.path.join(self.file_path, new_folder)
 
-        res_file_objects = ResourceFile.list_folder(self, new_folder)
-        aggregations = []
-        for res_file in res_file_objects:
-            if res_file.has_logical_file:
-                aggregation = res_file.logical_file
-                if aggregation not in aggregations:
-                    aggregations.append(aggregation)
-                    if aggregation.is_fileset:
-                        continue
-                    aggregation.create_aggregation_xml_documents()
+        # create xml docs for all non-fileset aggregations
+        logical_files = self._get_aggregations_by_folder(new_folder)
+        for lf in logical_files:
+            lf.create_aggregation_xml_documents()
 
     def _create_xml_docs_for_folder(self, folder):
         """Creates xml metadata and map documents for any aggregation that is part of the
@@ -256,15 +240,10 @@ class CompositeResource(BaseResource):
         # create xml docs for all non fileset aggregations
         # note: we can't get to all filesets from resource files since
         # it is possible to have filesets without any associated resource files
-        res_file_objects = ResourceFile.list_folder(self, folder)
-        aggregations = []
-        for res_file in res_file_objects:
-            if res_file.has_logical_file and res_file.logical_file not in aggregations:
-                aggregation = res_file.logical_file
-                aggregations.append(aggregation)
-                if not aggregation.is_fileset:
-                    if aggregation.metadata.is_dirty:
-                        aggregation.create_aggregation_xml_documents()
+        logical_files = self._get_aggregations_by_folder(folder)
+        for lf in logical_files:
+            if lf.metadata.is_dirty:
+                lf.create_aggregation_xml_documents()
 
         # create xml docs for all fileset aggregations that exist under folder *folder*
         if folder.startswith(self.file_path):
@@ -274,6 +253,16 @@ class CompositeResource(BaseResource):
         for fs in filesets:
             if fs.metadata.is_dirty:
                 fs.create_aggregation_xml_documents()
+
+    def _get_aggregations_by_folder(self, folder):
+        """Get a list of all non-fileset aggregations associated with resource files that
+        exist in the specified file path *folder*
+        :param  folder: the folder path for which aggregations need to be searched
+        """
+        res_file_objects = ResourceFile.list_folder(self, folder)
+        logical_files = set(res_file.logical_file for res_file in res_file_objects if
+                            res_file.has_logical_file and not res_file.logical_file.is_fileset)
+        return logical_files
 
     def get_aggregation_by_aggregation_name(self, aggregation_name):
         """Get an aggregation that matches the aggregation dataset_name specified by *dataset_name*
@@ -294,12 +283,24 @@ class CompositeResource(BaseResource):
         :return an aggregation object if found
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
-        for aggregation in self.logical_files:
-            # remove the last slash in aggregation_name if any
-            if aggregation.aggregation_name.rstrip('/') == name:
-                return aggregation
+        # check if aggregation path *name* is a file path or a folder
+        _, ext = os.path.splitext(name)
+        is_aggr_path_a_folder = ext == ''
+        if is_aggr_path_a_folder:
+            folder_full_path = os.path.join(self.file_path, name)
+            aggregation = self.get_folder_aggregation_object(folder_full_path)
+            if aggregation is None:
+                raise ObjectDoesNotExist(
+                    "No matching aggregation was found for name:{}".format(name))
+            return aggregation
+        else:
+            folder, base = os.path.split(name)
+            res_file = ResourceFile.get(self, file=base, folder=folder)
+            if res_file.has_logical_file:
+                return res_file.logical_file
 
-        raise ObjectDoesNotExist("No matching aggregation was found for name:{}".format(name))
+            raise ObjectDoesNotExist(
+                    "No matching aggregation was found for name:{}".format(name))
 
     def get_fileset_aggregation_in_path(self, path):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path

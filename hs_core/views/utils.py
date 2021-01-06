@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import errno
 import json
 import logging
@@ -8,7 +6,8 @@ import shutil
 import string
 from collections import namedtuple
 from tempfile import NamedTemporaryFile
-from urllib2 import Request, urlopen, HTTPError, URLError
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 from uuid import uuid4
 
 import paramiko
@@ -16,7 +15,7 @@ from dateutil import parser
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
@@ -26,10 +25,10 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.utils.http import int_to_base36
 from mezzanine.conf import settings
-from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -43,6 +42,7 @@ from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResourc
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_file_types.utils import set_logical_file_type
+from theme.backends import without_login_date_token_generator
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -58,14 +58,14 @@ logger = logging.getLogger(__name__)
 
 
 def json_or_jsonp(r, i, code=200):
-    if not isinstance(i, basestring):
+    if not isinstance(i, str):
         i = json.dumps(i)
 
-    if 'callback' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['callback'], i=i),
+    if 'callback' in r:
+        return HttpResponse('{c}({i})'.format(c=r['callback'], i=i),
                             content_type='text/javascript')
-    elif 'jsonp' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['jsonp'], i=i),
+    elif 'jsonp' in r:
+        return HttpResponse('{c}({i})'.format(c=r['jsonp'], i=i),
                             content_type='text/javascript')
     else:
         return HttpResponse(i, content_type='application/json', status=code)
@@ -92,7 +92,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
-    ifnames = string.split(irods_fnames, ',')
+    ifnames = irods_fnames.split(',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
         tmpFile = irods_storage.download(ifname)
@@ -145,7 +145,7 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     # create URL file
     urltempfile = NamedTemporaryFile()
     urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
-    urltempfile.write(urlstring)
+    urltempfile.write(urlstring.encode())
     fileobj = File(file=urltempfile, name=ref_file_name)
 
     filelist = add_resource_files(res_id, fileobj, folder=curr_path)
@@ -197,7 +197,7 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
         set_logical_file_type(res, user, f.id, 'SingleFile', extra_data={'url': ref_url})
         hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
     except Exception as ex:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message, None
+        return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex), None
 
     return status.HTTP_200_OK, 'success', f.id
 
@@ -231,7 +231,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     if curr_path != prefix_path and curr_path.startswith(prefix_path):
         curr_path = curr_path[len(prefix_path) + 1:]
     if curr_path == prefix_path or not curr_path.startswith(prefix_path):
-        folder = None
+        folder = ''
     else:
         folder = curr_path[len(prefix_path) + 1:]
 
@@ -249,7 +249,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
             shutil.rmtree(temp_path)
             os.makedirs(temp_path)
         else:
-            return status.HTTP_500_INTERNAL_SERVER_ERROR, ex.message
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex)
 
     # update url file in iRODS
     urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
@@ -290,16 +290,13 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     session.get_pty()
     session.exec_command(exec_cmd)
     stdin = session.makefile('wb', -1)
-    stdout = session.makefile('rb', -1)
+    stdout = session.makefile('r', -1)
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
-    logger = logging.getLogger(__name__)
     output = stdout.readlines()
     if output:
         logger.debug(output)
-        return '.'.join(output)
-    else:
-        return ''
+    return output
 
 
 # run the update script on hyrax server via ssh session for netCDF resources on demand
@@ -311,9 +308,9 @@ def run_script_to_update_hyrax_input_files(shortkey):
                     exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
-def can_user_copy_resource(res, user):
+def rights_allows_copy(res, user):
     """
-    Check whether resource copy is permitted or not
+    Check whether resource copy is permitted or not by checking ownership and rights statement
     :param res: resource object to check for whether copy is allowed
     :param user: the requesting user to check for whether copy is allowed
     :return: return True if the resource can be copied; otherwise, return False
@@ -366,7 +363,6 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     """
     authorized = False
     user = get_user(request)
-
     try:
         res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
     except ObjectDoesNotExist:
@@ -396,7 +392,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         authorized = res.raccess.public
 
     if raises_exception and not authorized:
-        raise PermissionDenied()
+        raise PermissionDenied
     else:
         return res, authorized, user
 
@@ -451,7 +447,7 @@ def validate_metadata(metadata, resource_type):
     for element in metadata:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
-        k, v = element.items()[0]
+        k, v = list(element.items())[0]
         is_core_element = False
         model_type = None
         try:
@@ -536,7 +532,7 @@ def create_form(formclass, request):
     try:
         params = formclass(data=json.loads(request.body))
     except ValueError:
-        params = formclass(data=request.REQUEST)
+        params = formclass(data=request)
 
     return params
 
@@ -655,7 +651,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to),
+            "token": without_login_date_token_generator.make_token(email_to),
             "membership_request_id": membership_request.id
         }) + "?next=" + (next_url(request) or "/")
 
@@ -666,7 +662,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to)
+            "token": without_login_date_token_generator.make_token(email_to)
         }) + "?next=" + (next_url(request) or "/")
 
     context['action_url'] = action_url
@@ -722,9 +718,10 @@ def link_irods_file_to_django(resource, filepath):
         return ret
 
 
-def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
-    res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
-    check_aggregations(resource, res_files)
+def link_irods_folder_to_django(resource, istorage, foldername, auto_aggregate=True):
+    res_files = _link_irods_folder_to_django(resource, istorage, foldername)
+    if auto_aggregate:
+        check_aggregations(resource, res_files)
 
 
 def listfolders_recursively(istorage, path):
@@ -737,7 +734,7 @@ def listfolders_recursively(istorage, path):
     return folders
 
 
-def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
+def _link_irods_folder_to_django(resource, istorage, foldername):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
     Database after iRODS file and folder operations to get Django and iRODS in sync
@@ -745,8 +742,6 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: REDUNDANT: IrodsStorage object
     :param foldername: the folder name, as a fully qualified path
-    :param exclude: UNUSED: a tuple that includes file names to be excluded from
-        linking under the folder;
     :return: List of ResourceFile of newly linked files
     """
     if __debug__:
@@ -759,15 +754,14 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         store = istorage.listdir(foldername)
         # add files into Django resource model
         for file in store[1]:
-            if file not in exclude:
-                file_path = os.path.join(foldername, file)
-                # This assumes that file_path is a full path
-                res_files.append(link_irods_file_to_django(resource, file_path))
+            file_path = os.path.join(foldername, file)
+            # This assumes that file_path is a full path
+            res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             res_files = res_files + \
                         _link_irods_folder_to_django(resource, istorage,
-                                                     os.path.join(foldername, folder), exclude)
+                                                     os.path.join(foldername, folder))
     return res_files
 
 
@@ -809,7 +803,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         res_file_obj.set_storage_path(tgt_name)
         # if the file is getting moved into a folder that represents a FileSet or to a folder
         # inside a fileset folder, then make the file part of that FileSet
-        if file_move and res_file_obj.file_folder is not None and \
+        if file_move and res_file_obj.file_folder and \
                 resource.resource_type == 'CompositeResource':
             aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
             if aggregation is not None and not res_file_obj.has_logical_file:
@@ -928,7 +922,23 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
+class IrodsFile:
+    """Mimics an uploaded file to allow use of the ingestion logic which expects an uploaded file, rather than a file
+    on irods."""
+    def __init__(self, name, istorage):
+        self._name = name
+        self._istorage = istorage
+
+    @property
+    def name(self):
+        return self._name
+
+    def read(self):
+        return self._istorage.download(self._name).read()
+
+
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
+               overwrite=False, auto_aggregate=True, ingest_metadata=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -939,10 +949,20 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     :param bool_remove_original: a bool indicating whether original zip file will be deleted
     after unzipping.
     :param bool overwrite: a bool indicating whether to overwrite files on unzip
+    :param bool auto_aggregate: a bool indicating whether to check for and aggregate recognized files
+    :param bool ingest_metadata: a bool indicating whether to look for and ingest resource/aggregation metadata files
     :return:
     """
+    from hs_file_types.utils import identify_metadata_files
+
     if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
+
+    if ingest_metadata:
+        if not auto_aggregate:
+            raise ValidationError("auto_aggregate must be on when metadata_ingestion is on.")
+        if not overwrite:
+            raise ValidationError("overwrite must be on when metadata_ingestion is on.")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -951,16 +971,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    zip_fname = os.path.basename(zip_with_rel_path)
     working_dir = os.path.dirname(zip_with_full_path)
     unzip_path = None
     try:
-
         if overwrite:
-            # irods doesn't allow overwrite, so we have to check if a file exists, delete it and
-            # then write the new file. Aggregations are treated as single objects.  If one file is
-            # overwritten in an aggregation, the whole aggregation is deleted.
-
             # unzip to a temporary folder
             unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
             # list all files to be moved into the resource
@@ -971,9 +985,17 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             for folder in listfolders(istorage, unzip_path):
                 destination_folder = os.path.join(working_dir, folder)
                 destination_folders.append(destination_folder)
+
+            irods_files = []
+            for unzipped_file in unzipped_files:
+                irods_files.append(IrodsFile(unzipped_file, istorage))
+            res_files = irods_files
+            meta_files = []
+            if ingest_metadata:
+                res_files, meta_files, map_files = identify_metadata_files(irods_files)
             # walk through each unzipped file, delete aggregations if they exist
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 if (istorage.exists(destination_file)):
                     if resource.resource_type == "CompositeResource":
                         aggregation_object = resource.get_file_aggregation_object(
@@ -986,36 +1008,44 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                     else:
                         istorage.delete(destination_file)
             # now move each file to the destination
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                istorage.moveFile(file, destination_file)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
-            res_files = []
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
+            added_resource_files = []
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
-                res_files.append(res_file)
+                added_resource_files.append(res_file)
 
-            # scan for aggregations
-            check_aggregations(resource, res_files)
+            if auto_aggregate:
+                check_aggregations(resource, added_resource_files)
+            if ingest_metadata:
+                # delete original zip to prevent from being pulled into an aggregation
+                zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+                delete_resource_file(res_id, zip_with_rel_path, user)
+
+                from hs_file_types.utils import ingest_metadata_files
+                ingest_metadata_files(resource, meta_files, map_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
-            link_irods_folder_to_django(resource, istorage, unzip_path)
+            link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
 
     except Exception:
         logger.exception("failed to unzip")
-        if unzip_path and istorage.exists:
+        if unzip_path and istorage.exists(unzip_path):
             istorage.delete(unzip_path)
         raise
 
-    if bool_remove_original:
-        delete_resource_file(res_id, zip_fname, user)
+    if bool_remove_original and not ingest_metadata:  # ingest_metadata deletes the zip by default
+        zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+        delete_resource_file(res_id, zip_with_rel_path, user)
 
     # TODO: should check can_be_public_or_discoverable here
-
+    resource.refresh_from_db()
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 

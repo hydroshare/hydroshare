@@ -108,7 +108,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             dog.uaccess.share_resource_with_group(
                 scratching, felines, PrivilegeCodes.OWNER)
-        self.assertEqual(cm.exception.message, 'Groups cannot own resources')
+        self.assertEqual(str(cm.exception), 'Groups cannot own resources')
 
         assertGroupResourceUnshareCoherence(self)
 
@@ -149,7 +149,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         # should be able to unshare anything one shared.
         with self.assertRaises(PermissionDenied) as cm:
             nobody.uaccess.unshare_resource_with_group(scratching, felines)
-        self.assertEqual(cm.exception.message,
+        self.assertEqual(str(cm.exception),
                          'Insufficient privilege to unshare resource')
 
         assertGroupResourceUnshareCoherence(self)

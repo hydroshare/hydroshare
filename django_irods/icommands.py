@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 import textwrap
-from cStringIO import StringIO
+from io import StringIO
 from django.conf import settings
 from collections import namedtuple
 
@@ -15,8 +15,8 @@ class SessionException(Exception):
                                                "Error processing IRODS request: {exitcode}. "
                                                "stderr follows:\n\n{stderr}".format(
                                                    exitcode=exitcode, stderr=stderr))
-        self.stdout = stdout
-        self.stderr = stderr
+        self.stdout = str(stdout)
+        self.stderr = str(stderr)
         self.exitcode = exitcode
 
 
@@ -162,7 +162,7 @@ class Session(object):
 
         cmdStr = os.path.join(self.icommands_path, icommand)
         argList = [cmdStr]
-        uargs = [x.encode('utf-8') for x in args]
+        uargs = [str(x) for x in args]
         argList.extend(uargs)
 
         stdin = None
@@ -181,7 +181,7 @@ class Session(object):
         if proc.returncode:
             raise SessionException(proc.returncode, stdout, stderr)
         else:
-            return stdout, stderr
+            return stdout.decode(), stderr.decode()
 
     def run_safe(self, icommand, data=None, *args):
         myenv = os.environ.copy()
@@ -194,7 +194,7 @@ class Session(object):
 
         stdin = None
         if data:
-            print data
+            print(data)
             stdin = StringIO(data)
 
         proc = subprocess.Popen(

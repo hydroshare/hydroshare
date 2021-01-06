@@ -4,7 +4,7 @@ from theme.models import UserQuota
 
 
 class Command(BaseCommand):
-    help = "Output quota allocations for all users in HydroShare"
+    help = "Output quota allocations and used values for all users in HydroShare"
 
     def add_arguments(self, parser):
         parser.add_argument('output_file_name_with_path', help='output file name with path')
@@ -16,6 +16,7 @@ class Command(BaseCommand):
                 'User id',
                 'User name',
                 'Allocated quota value',
+                'Used quota value',
                 'Quota unit',
                 'Storage zone'
             ]
@@ -27,7 +28,8 @@ class Command(BaseCommand):
                     uq.user.id,
                     uq.user.username,
                     uq.allocated_value,
+                    uq.used_value,
                     uq.unit,
                     uq.zone
                 ]
-                w.writerow([unicode(v).encode("utf-8") for v in values])
+                w.writerow([str(v) for v in values])

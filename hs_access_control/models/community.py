@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
 from hs_core.models import BaseResource
-from django.db.models import Q, F
+from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
 
 ###################################
@@ -20,7 +20,9 @@ class Community(models.Model):
 
     @property
     def member_groups(self):
-        return Group.objects.filter(gaccess__active=True, g2gcp__community=self)
+        """ This returns all member groups """
+        return Group.objects.filter(gaccess__active=True,
+                                    g2gcp__community=self)
 
     @property
     def member_users(self):
@@ -33,6 +35,33 @@ class Community(models.Model):
                                    u2ucp__community=self,
                                    u2ucp__privilege=PrivilegeCodes.OWNER)
 
+    def groups_with_public_resources(self):
+        """ Return the list of groups that have discoverable or public resources
+            These must contain at least one resource that is discoverable and
+            is owned by a group member.
+
+            This query is subtle. See
+                https://medium.com/@hansonkd/\
+                the-dramatic-benefits-of-django-subqueries-and-annotations-4195e0dafb16
+            for details of how this improves performance.
+
+           As a short summary, all we need to know is that one resource exists.
+           This is not possible to notate in the main query except through an annotation.
+           However, that annotation is really efficient, and is implemented as a postgres
+           subquery. This is a Django 1.11 extension.
+        """
+        from hs_access_control.models import PrivilegeCodes
+        return self.member_groups\
+            .annotate(
+                has_public_resources=Exists(
+                    BaseResource.objects.filter(
+                        raccess__discoverable=True,
+                        r2grp__group__id=OuterRef('id'),
+                        r2urp__user__u2ugp__group__id=OuterRef('id'),
+                        r2urp__privilege=PrivilegeCodes.OWNER)))\
+            .filter(has_public_resources=True)\
+            .order_by('name')
+
     @property
     def public_resources(self):
         """
@@ -41,6 +70,7 @@ class Community(models.Model):
         # TODO: consider adding GenericRelation to expose reverse querying of metadata field.
         # TODO: This would enable fast querying of first author.
         # TODO: The side-effect of this is enabling deletion cascade, which shouldn't do anything.
+
         # import here to avoid import loops
         from hs_access_control.models.privilege import PrivilegeCodes
         res = BaseResource\
@@ -75,11 +105,11 @@ class Community(models.Model):
             generics.setdefault(item.content_type.id, set()).add(item.object_id)
 
         # fetch all content types in one query
-        content_types = ContentType.objects.in_bulk(generics.keys())
+        content_types = ContentType.objects.in_bulk(list(generics.keys()))
 
         # build a map between content types and the objects that use them.
         relations = {}
-        for ct, fk_list in generics.items():
+        for ct, fk_list in list(generics.items()):
             ct_model = content_types[ct].model_class()
             relations[ct] = ct_model.objects.in_bulk(list(fk_list))
 
@@ -133,10 +163,6 @@ class Community(models.Model):
         Get community resources available at a specific privilege for a given user and group.
         This routine is the root of the routines for rendering a community's holdings.
         The group determines which resources will be listed.
-        The user determines the protection level. If any of the user's own groups are declared
-        as supergroups, then the user has CHANGE over anything with CHANGE to its local group.
-        Otherwise, the user has at most VIEW. If the user is not a member of a supergroup,
-        listing may be overridden via the allow_view flag.o
 
         This listing routine has been separated from the main listing routines to avoid
         corrupting existing group views of resources, which have different protections than this.
@@ -157,25 +183,9 @@ class Community(models.Model):
         # user is not a member of group and not a superuser
         elif privilege == PrivilegeCodes.CHANGE:  # requires superuser
             return BaseResource.objects.none()
-        else:  # VIEW is requested for regular user
+        else:  # VIEW is requested for regular user via community
             return BaseResource.objects.filter(
-                # if it's immutable, it just needs to be held by this group
-                Q(raccess__immutable=True,
-                  r2grp__group=group,
+                # The only reasonable protection is VIEW; don't check protection.
+                Q(r2grp__group=group,
                   r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__allow_view=True,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user) |
-                # it's view if the group community privilege is VIEW
-                Q(raccess__immutable=False,
-                  r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__allow_view=True,
-                  r2grp__group__g2gcp__community__c2gcp__privilege=PrivilegeCodes.VIEW,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user) |
-                # it's view if the target group's privilege is view
-                Q(raccess__immutable=False,
-                  r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__allow_view=True,
-                  r2grp__privilege=PrivilegeCodes.VIEW,
                   r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()

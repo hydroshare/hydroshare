@@ -5,11 +5,11 @@ from django.forms.models import formset_factory
 from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
-from forms import CellInfoForm, BandInfoForm, BaseBandInfoFormSet, OriginalCoverageSpatialForm, \
+from .forms import CellInfoForm, BandInfoForm, BaseBandInfoFormSet, OriginalCoverageSpatialForm, \
     BandInfoLayoutEdit
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from models import RasterResource
+from .models import RasterResource
 
 
 # page processor to populate raster resource specific metadata into my-resources template page
@@ -68,7 +68,7 @@ def landing_page(request, page):
                                               (partial(BandInfoForm, allow_edit=edit_resource)),
                                               formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(
-            initial=content_model.metadata.bandInformations.values(),
+            initial=list(content_model.metadata.bandInformations.values()),
             prefix='BandInformation')
 
         for form in bandinfo_formset.forms:

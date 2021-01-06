@@ -1,5 +1,6 @@
 {% load i18n comments_tags mezzanine_tags ratings_tags hydroshare_tags %}
 {% for comment in comments_for_thread %}
+    {% if not comment.is_removed %}
     <div id="comment-{{ comment.id }}" class="comment-author">
         {% editable comment.is_public comment.is_removed %}
             {% if not comment.is_removed and comment.is_public or request.user.is_staff %}
@@ -16,6 +17,13 @@
                 <a href="#reply-{{ comment.id }}" class="reply">
                     <span class="glyphicon glyphicon-share-alt"></span> {% trans "Reply" %}
                 </a>
+                {%  if user.is_authenticated %}
+                    {% if comment.user == user or user.is_superuser or self_access_level == 'owner' %}
+                        <span comment-id="{{ comment.id }}"
+                              class="glyphicon glyphicon-trash btn-remove icon-button btn-confirm-delete-comment"
+                             title="Delete Reply">{% trans "Delete" %}</span>
+                    {% endif %}
+                {% endif %}
                 {% if settings.COMMENTS_USE_RATINGS %}
                     <div class="rating">
                         {% rating_for comment %}
@@ -50,6 +58,8 @@
             {% endif %}
         {% endeditable %}
     </div>
+    {% endif %}
+</form>
 {% endfor %}
 
 {% if no_comments %}

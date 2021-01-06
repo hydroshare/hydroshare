@@ -15,7 +15,7 @@ from hs_file_types.models.timeseries import TimeSeriesLogicalFile
 def delete_hanging_logical_files(logical_files):
     count = 0
     for file in logical_files:
-        if not file.files.all() and not hasattr(file, 'resource'):
+        if not file.files.all() or not hasattr(file, 'resource'):
             file.delete()
             count = count + 1
     return count

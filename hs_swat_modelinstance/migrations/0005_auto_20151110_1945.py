@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -61,103 +61,103 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='modelinput',
             name='demSourceName',
-            field=models.CharField(max_length=200, null=True, verbose_name=b'DEM source name', blank=True),
+            field=models.CharField(max_length=200, null=True, verbose_name='DEM source name', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='demSourceURL',
-            field=models.URLField(null=True, verbose_name=b'DEM source URL', blank=True),
+            field=models.URLField(null=True, verbose_name='DEM source URL', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='landUseDataSourceName',
-            field=models.CharField(max_length=200, null=True, verbose_name=b'LandUse data source name', blank=True),
+            field=models.CharField(max_length=200, null=True, verbose_name='LandUse data source name', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='landUseDataSourceURL',
-            field=models.URLField(null=True, verbose_name=b'LandUse data source URL', blank=True),
+            field=models.URLField(null=True, verbose_name='LandUse data source URL', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='numberOfHRUs',
-            field=models.CharField(max_length=100, null=True, verbose_name=b'Number of HRUs', blank=True),
+            field=models.CharField(max_length=100, null=True, verbose_name='Number of HRUs', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='numberOfSubbasins',
-            field=models.CharField(max_length=100, null=True, verbose_name=b'Number of subbasins', blank=True),
+            field=models.CharField(max_length=100, null=True, verbose_name='Number of subbasins', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='rainfallTimeStepType',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Rainfall time step type', choices=[(b'Daily', b'Daily'), (b'Sub-hourly', b'Sub-hourly')]),
+            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Rainfall time step type', choices=[('Daily', 'Daily'), ('Sub-hourly', 'Sub-hourly')]),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='rainfallTimeStepValue',
-            field=models.CharField(max_length=100, null=True, verbose_name=b'Rainfall time step value', blank=True),
+            field=models.CharField(max_length=100, null=True, verbose_name='Rainfall time step value', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='routingTimeStepType',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Routing time step type', choices=[(b'Daily', b'Daily'), (b'Hourly', b'Hourly')]),
+            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Routing time step type', choices=[('Daily', 'Daily'), ('Hourly', 'Hourly')]),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='routingTimeStepValue',
-            field=models.CharField(max_length=100, null=True, verbose_name=b'Routing time step value', blank=True),
+            field=models.CharField(max_length=100, null=True, verbose_name='Routing time step value', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='simulationTimeStepType',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name=b'Simulation time step type', choices=[(b'Annual', b'Annual'), (b'Monthly', b'Monthly'), (b'Daily', b'Daily'), (b'Hourly', b'Hourly')]),
+            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Simulation time step type', choices=[('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly')]),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='simulationTimeStepValue',
-            field=models.CharField(max_length=100, null=True, verbose_name=b'Simulation time step value', blank=True),
+            field=models.CharField(max_length=100, null=True, verbose_name='Simulation time step value', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='soilDataSourceName',
-            field=models.CharField(max_length=200, null=True, verbose_name=b'Soil data source name', blank=True),
+            field=models.CharField(max_length=200, null=True, verbose_name='Soil data source name', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelinput',
             name='soilDataSourceURL',
-            field=models.URLField(null=True, verbose_name=b'Soil data source URL', blank=True),
+            field=models.URLField(null=True, verbose_name='Soil data source URL', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelmethod',
             name='flowRoutingMethod',
-            field=models.CharField(max_length=200, null=True, verbose_name=b'Flow routing method', blank=True),
+            field=models.CharField(max_length=200, null=True, verbose_name='Flow routing method', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelmethod',
             name='petEstimationMethod',
-            field=models.CharField(max_length=200, null=True, verbose_name=b'PET estimation method', blank=True),
+            field=models.CharField(max_length=200, null=True, verbose_name='PET estimation method', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='modelmethod',
             name='runoffCalculationMethod',
-            field=models.CharField(max_length=200, null=True, verbose_name=b'Runoff calculation method', blank=True),
+            field=models.CharField(max_length=200, null=True, verbose_name='Runoff calculation method', blank=True),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(

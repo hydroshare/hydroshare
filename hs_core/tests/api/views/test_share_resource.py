@@ -1,11 +1,11 @@
 import json
 
+from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 
 from hs_core import hydroshare
 from hs_core.views import share_resource_with_user, share_resource_with_group
@@ -93,7 +93,7 @@ class TestShareResource(MockIRODSTestCaseMixin, TestCase):
         response = share_resource_with_user(request, shortkey=self.gen_res.short_id,
                                             privilege=bad_privilege, user_id=self.user.id)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'error')
 
         url_params = {'shortkey': self.gen_res.short_id, 'privilege': 'view',
@@ -146,7 +146,7 @@ class TestShareResource(MockIRODSTestCaseMixin, TestCase):
         response = share_resource_with_group(request, shortkey=self.gen_res.short_id,
                                              privilege=bad_privilege, group_id=self.test_group.id)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'error')
 
         # test group can't be given ownership access
@@ -160,7 +160,7 @@ class TestShareResource(MockIRODSTestCaseMixin, TestCase):
         response = share_resource_with_group(request, shortkey=self.gen_res.short_id,
                                              privilege='owner', group_id=self.test_group.id)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'error')
 
         url_params = {'shortkey': self.gen_res.short_id, 'privilege': 'view',
@@ -189,7 +189,7 @@ class TestShareResource(MockIRODSTestCaseMixin, TestCase):
         response = share_resource_with_user(request, shortkey=self.gen_res.short_id,
                                             privilege=privilege, user_id=self.user.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'success')
         self.gen_res.raccess.refresh_from_db()
 
@@ -205,6 +205,6 @@ class TestShareResource(MockIRODSTestCaseMixin, TestCase):
         response = share_resource_with_group(request, shortkey=self.gen_res.short_id,
                                              privilege=privilege, group_id=self.test_group.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = json.loads(response.content)
+        response_data = json.loads(response.content.decode())
         self.assertEqual(response_data['status'], 'success')
         self.gen_res.raccess.refresh_from_db()

@@ -38,19 +38,19 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # collect response from stream
-        output = ""
+        output = b""
         while True:
             try:
-                output += response2.streaming_content.next()
+                output += next(response2.streaming_content)
             except StopIteration:
                 break
 
         # parse as simple RDF graph
         g = Graph()
-        g.parse(data=output)
+        g.parse(data=output.decode("utf-8"))
 
         documents = g.triples(
-            (None, term.URIRef(u'http://purl.org/spar/cito/documents'), None)
+            (None, term.URIRef('http://purl.org/spar/cito/documents'), None)
         )
 
         # check for "documents" node
@@ -79,13 +79,13 @@ class TestResourceMap(ResMapTestCase):
 
         # Upload the new resource file
         params = {'file': (txt_file_name,
-                           open(txt_file_path),
+                           open(txt_file_path, 'rb'),
                            'text/plain')}
         url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content)
-        self.assertEquals(content['resource_id'], self.pid)
+        content = json.loads(response.content.decode())
+        self.assertEqual(content['resource_id'], self.pid)
 
         # download the resource map and # make sure the new file appears
         response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid))
@@ -94,20 +94,20 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # collect the map from the stream
-        output = ""
+        output = b""
         while True:
             try:
-                output += response2.streaming_content.next()
+                output += next(response2.streaming_content)
             except StopIteration:
                 break
 
         # parse as a simple RDF file of triples
         g = Graph()
-        g.parse(data=output)
+        g.parse(data=output.decode("utf-8"))
 
         # check that the graph contains an appropriate "documents" node
         documents = g.triples(
-            (None, term.URIRef(u'http://purl.org/spar/cito/documents'), None)
+            (None, term.URIRef('http://purl.org/spar/cito/documents'), None)
         )
 
         doclen = 0
@@ -127,7 +127,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(doclen, 1)
 
         formats = g.triples(
-            (None, term.URIRef(u'http://purl.org/dc/elements/1.1/format'), None)
+            (None, term.URIRef('http://purl.org/dc/elements/1.1/format'), None)
         )
 
         # check that MIME types are correctly defined
@@ -141,10 +141,10 @@ class TestResourceMap(ResMapTestCase):
             self.assertTrue(isinstance(o, term.Literal))
             if (subject == 'test.txt'):
                 txt_count += 1
-                self.assertEqual(str(o), u'text/plain')
+                self.assertEqual(str(o), 'text/plain')
             else:
                 xml_count += 1
-                self.assertEqual(str(o), u'application/rdf+xml')
+                self.assertEqual(str(o), 'application/rdf+xml')
 
         self.assertEqual(1, txt_count)
         self.assertEqual(2, xml_count)

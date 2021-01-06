@@ -40,7 +40,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        self.test_file_1 = open(self.test_file_name1, 'r')
+        self.test_file_1 = open(self.test_file_name1, 'rb')
 
     def tearDown(self):
         super(TestResourceFileAPI, self).tearDown()
@@ -70,7 +70,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # determine where that file should live
         shortpath = os.path.join(self.res.short_id, "data", "contents", "file1.txt")
 
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         self.assertTrue(resfile.path_is_acceptable(shortpath))
@@ -83,20 +83,20 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("file1.txt")
         # should match computed path
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         # now try to change that path to what it is already
         resfile.set_storage_path(shortpath)
         # should match computed path
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         # now try to change that path to a good path to a non-existent object
         with self.assertRaises(ValidationError):
             resfile.set_storage_path(otherpath)
         # should not change
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         # TODO: how to eliminate this kind of error
@@ -206,7 +206,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         resfile.set_storage_path(shortpath, test_exists=False)
         self.assertEqual(shortpath, resfile.storage_path)
 
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         self.assertTrue(resfile.path_is_acceptable(shortpath, test_exists=False))
@@ -222,13 +222,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("file1.txt", test_exists=False)
         # should match computed path
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         # now try to change that path to what it is already
         resfile.set_storage_path(shortpath, test_exists=False)
         # should match computed path
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, '')
         self.assertEqual(resfile.storage_path, shortpath)
 
         # now try to change that path to a good path to a non-existent object

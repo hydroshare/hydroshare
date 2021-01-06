@@ -1,6 +1,4 @@
-import json
 import os
-import string
 from django.http import JsonResponse
 from rest_framework import status
 
@@ -115,7 +113,7 @@ def upload_add(request):
     extract_metadata = request.POST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
     irods_fnames = request.POST.get('upload', '')
-    irods_fnames_list = string.split(irods_fnames, ',')
+    irods_fnames_list = irods_fnames.split(',')
     res_cls = resource.__class__
 
     # TODO: read resource type from resource, not from input file 
@@ -147,22 +145,22 @@ def upload_add(request):
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata, 
-                                            source_names=source_names, folder=None)
+                                            source_names=source_names, folder='')
     except hydroshare.utils.ResourceFileSizeException as ex:
-        return JsonResponse({'error': ex.message}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        return JsonResponse({'error': ex.message}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, 
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
-                                                   source_names=source_names, folder=None)
+                                                   source_names=source_names, folder='')
 
     except (hydroshare.utils.ResourceFileValidationException, SessionException) as ex:
-        if ex.message:
-            return JsonResponse({'error': ex.message},
+        if str(ex):
+            return JsonResponse({'error': str(ex)},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         elif ex.stderr:
             return JsonResponse({'error': ex.stderr},

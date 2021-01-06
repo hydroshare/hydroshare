@@ -218,10 +218,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # however, it should be possible to to update (description) hydroshare identifier to empty string
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
-        self.assertEquals(cr_mike.description, 'http://hydroshare.org/user/001')
+        self.assertEqual(cr_mike.description, 'http://hydroshare.org/user/001')
         resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, description='')
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
-        self.assertEquals(cr_mike.description, '')
+        self.assertEqual(cr_mike.description, '')
 
         # delete Mike
         resource.delete_metadata_element(self.res.short_id, 'creator', cr_mike.id )
@@ -300,10 +300,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # however, it should be possible to to update (description) hydroshare identifier to empty string
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
-        self.assertEquals(con_mike.description, 'http://hydroshare.org/user/001')
+        self.assertEqual(con_mike.description, 'http://hydroshare.org/user/001')
         resource.update_metadata_element(self.res.short_id,'contributor', con_mike.id, description='')
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
-        self.assertEquals(con_mike.description, '')
+        self.assertEqual(con_mike.description, '')
 
         # test that all resource contributors can be deleted
         # delete John
@@ -372,7 +372,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(cr_lisa.identifiers), 2,
                          msg="Creator Lisa does not have 2 identifier.")
 
-        for name, link in cr_lisa.identifiers.iteritems():
+        for name, link in list(cr_lisa.identifiers.items()):
             self.assertIn(name, ['ResearchGateID', 'ORCID'])
             self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001'])
 
@@ -417,7 +417,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(con_lisa.identifiers), 4,
                          msg="Contributor Lisa does not have 4 identifier.")
 
-        for name, link in con_lisa.identifiers.iteritems():
+        for name, link in list(con_lisa.identifiers.items()):
             self.assertIn(name, ['ResearchGateID', 'ORCID', 'GoogleScholarID', 'ResearcherID'])
             self.assertIn(link, ['https://www.researchgate.net/LH001', 'https://orcid.org/LH001',
                                  'https://scholar.google.com/LH001',
@@ -797,7 +797,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_1, "w").close()
 
         # open the file for read
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_1 = open(res_file_1, "rb")
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -805,7 +805,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                         )
         format_CSV = 'text/plain'
         # there should be only one format element at this point
-        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
@@ -814,7 +814,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_2, "w").close()
 
         # open the file for read
-        file_obj_2 = open(res_file_2, "r")
+        file_obj_2 = open(res_file_2, "rb")
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -822,17 +822,17 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                         )
 
         # there should be only one format element at this point
-        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
         # test adding files of different mime types creates one format element for each mime type
         res_file_3 = "file_three.tif"
         open(res_file_3, "w").close()
-        file_obj_3 = open(res_file_3, "r")
+        file_obj_3 = open(res_file_3, "rb")
 
         # reopen file_obj_1 for read
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_1 = open(res_file_1, "rb")
 
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
@@ -840,7 +840,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          files=(file_obj_1, file_obj_3)
                                         )
         # there should be two format elements at this point
-        self.assertEquals(res.metadata.formats.all().count(), 2, msg="Number of format elements is not equal to 2")
+        self.assertEqual(res.metadata.formats.all().count(), 2, msg="Number of format elements is not equal to 2")
         fmt_element = res.metadata.formats.all().filter(value__iexact=format_CSV).first()
         self.assertEqual(fmt_element.value, format_CSV)
 
@@ -856,7 +856,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         open(res_file_1, "w").close()
 
         # open the file for read
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_1 = open(res_file_1, "rb")
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -864,15 +864,15 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                         )
         format_CSV = 'text/plain'
         # there should be only one format element at this point
-        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
         # there should be only one file
-        self.assertEquals(res.files.all().count(), 1) 
+        self.assertEqual(res.files.all().count(), 1) 
         
         # that file should be file_one.txt 
-        self.assertEquals(res.files.all()[0].short_path, "file_one.txt") 
+        self.assertEqual(res.files.all()[0].short_path, "file_one.txt") 
 
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
@@ -880,22 +880,22 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         istorage = res.get_irods_storage()
 
         # there should be not be any format element at this point for this resource
-        self.assertEquals(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
+        self.assertEqual(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
 
         # add content files of same mime type to the resource
         res_file_2 = "file_two.txt"
         open(res_file_2, "w").close()
 
         # open the file for read
-        file_obj_2 = open(res_file_2, "r")
-        file_obj_1 = open(res_file_1, "r")
+        file_obj_2 = open(res_file_2, "rb")
+        file_obj_1 = open(res_file_1, "rb")
         hydroshare.add_resource_files(res.short_id, file_obj_1, file_obj_2)
 
         # the two files have the same format
-        self.assertEquals(res.files.all().count(), 2) 
+        self.assertEqual(res.files.all().count(), 2) 
 
         # there should be one format element at this point for this resource
-        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
@@ -903,7 +903,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
 
         # there should be still one format element at this point for this resource
-        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        self.assertEqual(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
@@ -911,7 +911,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         hydroshare.delete_resource_file(res.short_id, file_obj_2.name, self.user)
 
         # there should be not be any format element at this point for this resource
-        self.assertEquals(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
+        self.assertEqual(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
 
     def test_identifier(self):
         # when a resource is created there should be one identifier element
@@ -952,7 +952,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               url='http://resources.org/001'))
 
         # test adding an identifier with name 'DOI' when the resource does not have a DOI - should raise an exception
-        self.res.doi = None
+        self.res.doi = ''
         self.res.save()
         url_doi = "https://doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
@@ -982,7 +982,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               doi_idf.id))
 
         # test that identifier DOI can be deleted when the resource does not have a DOI.
-        self.res.doi = None
+        self.res.doi = ''
         self.res.save()
         resource.delete_metadata_element(self.res.short_id, 'identifier', doi_idf.id)
 
@@ -1060,7 +1060,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         original_file.write("original text")
         original_file.close()
 
-        original_file = open(original_file_name, 'r')
+        original_file = open(original_file_name, 'rb')
         # add the file to the resource
         hydroshare.add_resource_files(res_with_files.short_id, original_file)
 
@@ -1234,24 +1234,24 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.funding_agencies.all().count(), 1)
         # test the name of the funding agency is NSF
         agency_element = self.res.metadata.funding_agencies.all().first()
-        self.assertEquals(agency_element.agency_name, 'NSF')
+        self.assertEqual(agency_element.agency_name, 'NSF')
         # add another funding agency element with only the required name value type
         resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='USDA')
         # at this point there should be 2 funding agency element
         self.assertEqual(self.res.metadata.funding_agencies.all().count(), 2)
         # there should be one funding agency with name USDA
         agency_element = self.res.metadata.funding_agencies.all().filter(agency_name='USDA').first()
-        self.assertNotEquals(agency_element, None)
+        self.assertNotEqual(agency_element, None)
 
         # test update
         resource.update_metadata_element(self.res.short_id, 'fundingagency', agency_element.id,
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
                                          agency_url="http://www.nsf.gov")
         agency_element = self.res.metadata.funding_agencies.all().filter(agency_name='USDA').first()
-        self.assertEquals(agency_element.agency_name, 'USDA')
-        self.assertEquals(agency_element.award_title, 'Cyber Infrastructure')
-        self.assertEquals(agency_element.award_number, 'NSF-101-20-6789')
-        self.assertEquals(agency_element.agency_url, 'http://www.nsf.gov')
+        self.assertEqual(agency_element.agency_name, 'USDA')
+        self.assertEqual(agency_element.award_title, 'Cyber Infrastructure')
+        self.assertEqual(agency_element.award_number, 'NSF-101-20-6789')
+        self.assertEqual(agency_element.agency_url, 'http://www.nsf.gov')
 
         # test there can be duplicate funding agency elements for a given resource
         resource.create_metadata_element(self.res.short_id, 'fundingagency', agency_name="EPA",
@@ -1262,10 +1262,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
                                          agency_url="http://www.epa.gov")
 
-        self.assertEquals(self.res.metadata.funding_agencies.all().filter(agency_name='EPA').count(), 2)
+        self.assertEqual(self.res.metadata.funding_agencies.all().filter(agency_name='EPA').count(), 2)
 
         # test that agency name is required for  creating a funding agency element
-        self.assertEquals(self.res.metadata.funding_agencies.all().count(), 4)
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 4)
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id, 'fundingagency',
                                              award_title="Modeling on cloud",
@@ -1500,7 +1500,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         original_file.write("original text")
         original_file.close()
 
-        original_file = open(original_file_name, 'r')
+        original_file = open(original_file_name, 'rb')
         # add the file to the resource
         hydroshare.add_resource_files(self.res.short_id, original_file)
 
@@ -1535,12 +1535,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
                                          agency_url="http://www.nsf.gov")
         # check the content of the metadata xml string
-        RDF_ROOT = etree.XML(self.res.metadata.get_xml())
+        RDF_ROOT = etree.XML(self.res.metadata.get_xml().encode())
 
-        # check root 'Description' element
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.res.metadata.NAMESPACES)
+        # check root 'hsterms' element
+        container = RDF_ROOT.find('hsterms:GenericResource', namespaces=self.res.metadata.NAMESPACES)
 
-        self.assertNotEqual(container, None, msg="Root 'Description' element was not found.")
+        self.assertNotEqual(container, None, msg="Root 'hsterms:GenericResource' element was not found.")
         #res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
         res_uri = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
 
@@ -1551,8 +1551,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(title_sub_element.text, self.res.metadata.title.value,
                          msg="'Title element attribute value did not match.")
 
-        type_sub_element = container.find('dc:type', namespaces=self.res.metadata.NAMESPACES)
-        self.assertEqual(type_sub_element.get('{%s}resource' % self.res.metadata.NAMESPACES['rdf']),
+        type_sub_element = container.find('dc:type', namespaces=self.res.metadata.NAMESPACES)[0]
+        self.assertEqual(type_sub_element.get('{%s}about' % self.res.metadata.NAMESPACES['rdf']),
                          self.res.metadata.type.url,
                          msg="'Resource type element url attribute value did not match.")
 
@@ -1601,7 +1601,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
                                          agency_url="http://www.nsf.gov")
         # before resource delete
-        self.assertEquals(CoreMetaData.objects.all().count(), 1, msg="# of CoreMetadata objects is not equal to 1.")
+        self.assertEqual(CoreMetaData.objects.all().count(), 1, msg="# of CoreMetadata objects is not equal to 1.")
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Contributor metadata objects
@@ -1637,7 +1637,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # delete resource
         hydroshare.delete_resource(self.res.short_id)
-        self.assertEquals(CoreMetaData.objects.all().count(), 0, msg="CoreMetadata object was found")
+        self.assertEqual(CoreMetaData.objects.all().count(), 0, msg="CoreMetadata object was found")
 
         # there should be no Creator metadata objects
         self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())

@@ -205,12 +205,34 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource should not have any file at this point
         self.assertEqual(self.composite_resource.files.count(), 0)
         # resource has no readme file
+        self.assertIsNone(self.composite_resource.readme_file)
+        # add the README.MD file to the resource at the root level
+        files_to_add = [self.README_MD]
+        self._add_files_to_resource(files_to_add)
+        # resource should have one file at this point
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # resource has a readme file
+        self.assertIsNotNone(self.composite_resource.readme_file)
+        self.assertIsNotNone(self.composite_resource.get_readme_file_content())
+
+    def test_readme_file_8(self):
+        """Test that when a README.md file with file_folder as '' instead of None,
+        this file is considered as the readme file of the resource"""
+
+        self._create_composite_resource()
+        # resource should not have any file at this point
+        self.assertEqual(self.composite_resource.files.count(), 0)
+        # resource has no readme file
         self.assertEqual(self.composite_resource.readme_file, None)
         # add the README.MD file to the resource at the root level
         files_to_add = [self.README_MD]
         self._add_files_to_resource(files_to_add)
         # resource should have one file at this point
         self.assertEqual(self.composite_resource.files.count(), 1)
+        # Update the readme file_folder to an empty string
+        file = self.composite_resource.files.first()
+        file.file_folder = ''
+        file.save()
         # resource has a readme file
         self.assertNotEqual(self.composite_resource.readme_file, None)
         self.assertNotEqual(self.composite_resource.get_readme_file_content(), None)
@@ -222,7 +244,7 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
              title='Test Readme File'
          )
 
-    def _add_files_to_resource(self, files_to_add, upload_folder=None):
+    def _add_files_to_resource(self, files_to_add, upload_folder=''):
         files_to_upload = []
         for fl in files_to_add:
             file_to_upload = UploadedFile(file=open(fl, 'rb'), name=os.path.basename(fl))

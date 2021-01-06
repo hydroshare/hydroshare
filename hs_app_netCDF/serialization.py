@@ -35,7 +35,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
         SAX_parse_results = NetcdfResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get Variable
         if SAX_parse_results:
@@ -162,7 +162,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class SpatialReference(object):
 
@@ -213,7 +213,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
 
 class NetcdfResourceSAXHandler(xml.sax.ContentHandler):

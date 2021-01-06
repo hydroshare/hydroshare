@@ -14,7 +14,7 @@ from hs_core.views.utils import move_or_rename_file_or_folder
 
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
-from utils import assert_raster_file_type_metadata, CompositeResourceTestMixin, \
+from .utils import assert_raster_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
 
@@ -39,9 +39,11 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.logan_tif_1_file_name = 'logan1.tif'
         self.logan_tif_2_file_name = 'logan2.tif'
         self.logan_vrt_file_name = 'logan.vrt'
+        self.logan_vrt_file_name2 = 'logan2.vrt'
         self.logan_tif_1_file = 'hs_file_types/tests/{}'.format(self.logan_tif_1_file_name)
         self.logan_tif_2_file = 'hs_file_types/tests/{}'.format(self.logan_tif_2_file_name)
         self.logan_vrt_file = 'hs_file_types/tests/{}'.format(self.logan_vrt_file_name)
+        self.logan_vrt_file2 = 'hs_file_types/tests/{}'.format(self.logan_vrt_file_name2)
 
         self.raster_file_name = 'small_logan.tif'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
@@ -76,7 +78,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             print(res_file.short_path)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # test extracted raster file type metadata
-        assert_raster_file_type_metadata(self, aggr_folder_path=None)
+        assert_raster_file_type_metadata(self, aggr_folder_path='')
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
@@ -150,8 +152,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 3)
 
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
         expected_file_folder = new_folder
@@ -197,8 +199,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.files.all().count(), 2)
 
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
         expected_file_folder = '{}'.format(new_folder)
@@ -234,7 +236,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation
         base_file_name, _ = os.path.splitext(res_file.file_name)
-        self._test_aggregation_from_zip_file(aggr_folder_path=None)
+        self._test_aggregation_from_zip_file(aggr_folder_path='')
 
         self.composite_resource.delete()
 
@@ -294,6 +296,34 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.composite_resource.delete()
 
+    def test_aggregation_validation(self):
+        """Tests when a tif file is listed by more than one vrt file, validation should block the creation of the
+          aggregation with appropriate messaging"""
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
+        self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
+        res_file_tif = self.composite_resource.files.first()
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+        self.add_file_to_resource(file_to_add=self.logan_vrt_file2)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 4)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file_tif.has_logical_file, False)
+
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # set the tif file to GeoRasterFile type
+        with self.assertRaises(ValidationError) as validation_error:
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+        print(validation_error.exception.message)
+        self.assertTrue("is listed by more than one vrt file" in validation_error.exception.message)
+
+        # test aggregation does not exist
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+
+        self.composite_resource.delete()
+
     def test_create_aggregation_from_multiple_tif_without_vrt(self):
         """Here we are testing when there are multiple tif files and no vrt file at the same
         directory location, using one of the tif files to create an aggregation, should result in a
@@ -350,30 +380,28 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_create_aggregation_with_extra_tif_with_vrt(self):
-        """Here we are testing when there is a vrt file, selecting a tif file from the same
-        location for creating aggregation will fail if there is an extra tif file
-        at the same location that is no referenced in the vrt file """
+        """Here we are testing mutliple raster aggregations in the same folder.  Two aggregations
+        are added to the composite resource in the same folder """
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.logan_tif_1_file)
         res_file_tif = self.composite_resource.files.first()
         self.add_file_to_resource(file_to_add=self.logan_tif_2_file)
-        # add the extra tif file
-        self.add_file_to_resource(file_to_add=self.raster_file)
         self.add_file_to_resource(file_to_add=self.logan_vrt_file)
+        # add the extra tif file
+        lone_tif_file = self.add_file_to_resource(file_to_add=self.raster_file)
 
         self.assertEqual(self.composite_resource.files.all().count(), 4)
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file_tif.has_logical_file, False)
 
+        # test that raster aggregations may exist in the same folder next to each other
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-        # set the tif file to GeoRasterFile type should raise exception
-        with self.assertRaises(ValidationError):
-            GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
-
-        # test aggregation
-        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file_tif.id)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, lone_tif_file.id)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 2)
 
         self.composite_resource.delete()
 
@@ -449,7 +477,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.dataset_name, 'big_logan')
 
         # delete default original coverage metadata
-        self.assertNotEquals(logical_file.metadata.originalCoverage, None)
+        self.assertNotEqual(logical_file.metadata.originalCoverage, None)
         logical_file.metadata.originalCoverage.delete()
 
         # create new original coverage metadata with meaningful value
@@ -458,14 +486,14 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                  "eastlimit": 23, "westlimit": 2}
         logical_file.metadata.create_element('originalcoverage', value=value)
 
-        self.assertEquals(logical_file.metadata.originalCoverage.value, value)
+        self.assertEqual(logical_file.metadata.originalCoverage.value, value)
 
         # multiple original coverage elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             logical_file.metadata.create_element('originalcoverage', value=value)
 
         # delete default cell information element
-        self.assertNotEquals(logical_file.metadata.cellInformation, None)
+        self.assertNotEqual(logical_file.metadata.cellInformation, None)
         logical_file.metadata.cellInformation.delete()
 
         # create new cell information metadata with meaningful value
@@ -476,11 +504,11 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                              )
 
         cell_info = logical_file.metadata.cellInformation
-        self.assertEquals(cell_info.rows, 1660)
-        self.assertEquals(cell_info.columns, 985)
-        self.assertEquals(cell_info.cellSizeXValue, 30.0)
-        self.assertEquals(cell_info.cellSizeYValue, 30.0)
-        self.assertEquals(cell_info.cellDataType, 'Float32')
+        self.assertEqual(cell_info.rows, 1660)
+        self.assertEqual(cell_info.columns, 985)
+        self.assertEqual(cell_info.cellSizeXValue, 30.0)
+        self.assertEqual(cell_info.cellSizeYValue, 30.0)
+        self.assertEqual(cell_info.cellDataType, 'Float32')
         # multiple cell Information elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             logical_file.metadata.create_element('cellinformation', name='cellinfo',
@@ -489,7 +517,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                  cellSizeXValue=30.0, cellSizeYValue=30.0,
                                                  )
         # delete default band information element
-        self.assertNotEquals(logical_file.metadata.bandInformations, None)
+        self.assertNotEqual(logical_file.metadata.bandInformations, None)
         logical_file.metadata.bandInformations.first().delete()
 
         # create band information element with meaningful value
@@ -502,14 +530,14 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                              noDataValue=-9999)
 
         band_info = logical_file.metadata.bandInformations.first()
-        self.assertEquals(band_info.name, 'bandinfo')
-        self.assertEquals(band_info.variableName, 'diginal elevation')
-        self.assertEquals(band_info.variableUnit, 'meter')
-        self.assertEquals(band_info.method, 'this is method')
-        self.assertEquals(band_info.comment, 'this is comment')
-        self.assertEquals(band_info.maximumValue, '1000')
-        self.assertEquals(band_info.minimumValue, '0')
-        self.assertEquals(band_info.noDataValue, '-9999')
+        self.assertEqual(band_info.name, 'bandinfo')
+        self.assertEqual(band_info.variableName, 'diginal elevation')
+        self.assertEqual(band_info.variableUnit, 'meter')
+        self.assertEqual(band_info.method, 'this is method')
+        self.assertEqual(band_info.comment, 'this is comment')
+        self.assertEqual(band_info.maximumValue, '1000')
+        self.assertEqual(band_info.minimumValue, '0')
+        self.assertEqual(band_info.noDataValue, '-9999')
 
         # multiple band information elements are allowed
         logical_file.metadata.create_element('bandinformation', name='bandinfo',
@@ -519,7 +547,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                              comment='this is comment',
                                              maximumValue=1000, minimumValue=0,
                                              noDataValue=-9999)
-        self.assertEquals(logical_file.metadata.bandInformations.all().count(), 2)
+        self.assertEqual(logical_file.metadata.bandInformations.all().count(), 2)
 
         # test metadata delete
 
@@ -548,7 +576,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                              logical_file.metadata.originalCoverage.id,
                                              value=value_2)
 
-        self.assertEquals(logical_file.metadata.originalCoverage.value, value_2)
+        self.assertEqual(logical_file.metadata.originalCoverage.value, value_2)
 
         # update cell info element
         logical_file.metadata.update_element('cellinformation',
@@ -559,11 +587,11 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                              )
 
         cell_info = logical_file.metadata.cellInformation
-        self.assertEquals(cell_info.rows, 166)
-        self.assertEquals(cell_info.columns, 98)
-        self.assertEquals(cell_info.cellSizeXValue, 3.0)
-        self.assertEquals(cell_info.cellSizeYValue, 3.0)
-        self.assertEquals(cell_info.cellDataType, 'Double')
+        self.assertEqual(cell_info.rows, 166)
+        self.assertEqual(cell_info.columns, 98)
+        self.assertEqual(cell_info.cellSizeXValue, 3.0)
+        self.assertEqual(cell_info.cellSizeYValue, 3.0)
+        self.assertEqual(cell_info.cellDataType, 'Double')
 
         # update band info element
         logical_file.metadata.update_element('bandinformation',
@@ -578,14 +606,14 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                              )
 
         band_info = logical_file.metadata.bandInformations.first()
-        self.assertEquals(band_info.name, 'bandinfo')
-        self.assertEquals(band_info.variableName, 'precipitation')
-        self.assertEquals(band_info.variableUnit, 'mm/h')
-        self.assertEquals(band_info.method, 'this is method2')
-        self.assertEquals(band_info.comment, 'this is comment2')
-        self.assertEquals(band_info.maximumValue, '1001')
-        self.assertEquals(band_info.minimumValue, '1')
-        self.assertEquals(band_info.noDataValue, '-9998')
+        self.assertEqual(band_info.name, 'bandinfo')
+        self.assertEqual(band_info.variableName, 'precipitation')
+        self.assertEqual(band_info.variableUnit, 'mm/h')
+        self.assertEqual(band_info.method, 'this is method2')
+        self.assertEqual(band_info.comment, 'this is comment2')
+        self.assertEqual(band_info.maximumValue, '1001')
+        self.assertEqual(band_info.minimumValue, '1')
+        self.assertEqual(band_info.noDataValue, '-9998')
 
         # test extra_metadata for the logical file
         # there should be no key/value metadata at this point
@@ -1162,9 +1190,9 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # testing extended metadata element: band information
         self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
         band_info = logical_file.metadata.bandInformations.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '2880.00708008')
-        self.assertEqual(band_info.minimumValue, '2274.95898438')
+        self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
+        self.assertEqual(band_info.maximumValue, '2880.007080078125')
+        self.assertEqual(band_info.minimumValue, '2274.958984375')
 
     def test_main_file(self):
         self.create_composite_resource()

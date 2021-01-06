@@ -23,8 +23,8 @@ def update_netcdf_file(request, resource_id, *args, **kwargs):
             messages.success(request, "NetCDF file update was successful.")
             log.info("NetCDF file update was successful for resource ID:{}.".format(res.short_id))
         except Exception as ex:
-            messages.error(request, "Failed to update NetCDF file. Error:{}".format(ex.message))
-            log.exception("Failed to update NetCDF file. Error:{}".format(ex.message))
+            messages.error(request, "Failed to update NetCDF file. Error:{}".format(str(ex)))
+            log.exception("Failed to update NetCDF file. Error:{}".format(str(ex)))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'

@@ -85,8 +85,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(BaseResource.objects.count(), 0)
 
-        self.create_composite_resource(self.raster_file)
-        # There should not be a GenericLogicalFile object at this point
+        self.create_composite_resource(self.raster_file)  # There should not be a GenericLogicalFile at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # there should be one resource at this point
@@ -340,7 +339,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # there should be abstract element
         self.assertNotEqual(self.composite_resource.metadata.description, None)
         # add a file to the resource to auto create format element
-        self.raster_file_obj = open(self.raster_file, 'r')
+        self.raster_file_obj = open(self.raster_file, 'rb')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.raster_file_obj,), user=self.user,
                                   auto_aggregate=False)
@@ -436,10 +435,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                 agency_url="http://www.nsf.gov")
         agency_element = self.composite_resource.metadata.funding_agencies.all().filter(
             agency_name='NSF').first()
-        self.assertEquals(agency_element.agency_name, 'NSF')
-        self.assertEquals(agency_element.award_title, 'Cyber Infrastructure')
-        self.assertEquals(agency_element.award_number, 'NSF-101-20-6789')
-        self.assertEquals(agency_element.agency_url, 'http://www.nsf.gov')
+        self.assertEqual(agency_element.agency_name, 'NSF')
+        self.assertEqual(agency_element.award_title, 'Cyber Infrastructure')
+        self.assertEqual(agency_element.award_number, 'NSF-101-20-6789')
+        self.assertEqual(agency_element.agency_url, 'http://www.nsf.gov')
         some_idf = self.composite_resource.metadata.identifiers.all().filter(
             name='someIdentifier').first()
         metadata.update_element('identifier', some_idf.id,  name='someOtherIdentifier')
@@ -570,7 +569,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         try:
             self.composite_resource.get_metadata_xml()
         except Exception as ex:
-            self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.message))
+            self.fail("Failed to generate metadata in xml format. Error:{}".format(str(ex)))
 
     def test_resource_coverage_auto_update(self):
         # this is to test that the spatial coverage and temporal coverage
@@ -977,7 +976,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.generic_file)
         self.assertEqual(self.composite_resource.files.count(), 1)
         gen_res_file = self.composite_resource.files.first()
-        self.assertEqual(gen_res_file.file_folder, None)
+        self.assertEqual(gen_res_file.file_folder, '')
         # we should be able to create this new folder
         new_folder_full_path = os.path.join(self.composite_resource.file_path, "my-new-folder")
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_full_path),
@@ -1751,6 +1750,316 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          new_composite_resource.files.count())
         self.assertEqual(new_composite_resource.files.count(), 3)
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_no_aggregation(self):
+        """Here we are testing that we can create a new version of a composite resource that contains no
+        aggregations"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 1)
+
+    def test_version_resource_with_single_file_aggregation(self):
+        """Here we are testing that we can create a new version of a composite resource that contains one
+        single file aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        gen_res_file = self.composite_resource.files.first()
+        # set the generic file to single file aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, gen_res_file.id)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 1)
+        self.assertEqual(GenericLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_file_set_aggregation_1(self):
+        """Here we are testing that we can create a new version of a composite resource that contains one
+        file set aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_file_set_aggregation_2(self):
+        """Here we are testing that we can create a new version of a composite resource that contains one
+        file set aggregation that contains another aggregation (NetCDF aggregation)"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # add the the nc file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
+        nc_res_file = ResourceFile.get(self.composite_resource, file=self.netcdf_file_name,
+                                       folder=new_folder)
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, file_id=nc_res_file.id)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        # there should be 3 files - 2 files that we uploaded and one text file generated for netcdf
+        # aggregation
+        self.assertEqual(new_composite_resource.files.count(), 3)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_file_set_aggregation_3(self):
+        """Here we are testing that we can create a new version of a composite resource that contains one
+        nested file set aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        parent_fs_folder = 'parent_fs_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=parent_fs_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        child_fs_folder = '{}/child_fs_folder'.format(parent_fs_folder)
+        ResourceFile.create_folder(self.composite_resource, child_fs_folder)
+        # add the the txt file to the resource at the above child folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=child_fs_folder)
+        # set the child folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                         folder_path=child_fs_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 2)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 4)
+
+    def test_version_resource_with_netcdf_aggregation(self):
+        """Here were testing that we can create a new version of a composite resource that contains a
+        netcdf aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a nc file to the resource
+        self.add_file_to_resource(file_to_add=self.netcdf_file)
+        nc_res_file = self.composite_resource.files.first()
+        # set the nc file to netcdf aggregation
+        NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 2)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_timeseries_aggregation(self):
+        """Here were testing that we can create a new version of a composite resource that contains a
+        timeseries aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a sqlite file to the resource
+        self.add_file_to_resource(file_to_add=self.sqlite_file)
+        sql_res_file = self.composite_resource.files.first()
+        # set the sqlite file to timeseries aggregation
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, sql_res_file.id)
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 1)
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_reftimeseries_aggregation(self):
+        """Here were testing that we can create a new version of a composite resource that contains a
+        ref timeseries aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a json file to the resource
+        self.add_file_to_resource(file_to_add=self.json_file)
+        json_res_file = self.composite_resource.files.first()
+        # set the json file to ref timeseries aggregation
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, json_res_file.id)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 1)
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_raster_aggregation(self):
+        """Here were testing that we can create a new version of a composite resource that contains a
+        raster aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a tif file to the resource
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        tif_res_file = self.composite_resource.files.first()
+        # set the tif file to raster aggregation
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, tif_res_file.id)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 2)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 2)
+
+    def test_version_resource_with_feature_aggregation(self):
+        """Here were testing that we can create a new version of a composite resource that contains a
+        geo feature aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a shp file to the resource
+        self.add_file_to_resource(file_to_add=self.watershed_shp_file)
+        shp_res_file = self.composite_resource.files.first()
+        # add a shx file to the resource
+        self.add_file_to_resource(file_to_add=self.watershed_shx_file)
+        # add a dbf file to the resource
+        self.add_file_to_resource(file_to_add=self.watershed_dbf_file)
+
+        # set the shp file to geofeature aggregation
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, self.user, shp_res_file.id)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 3)
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 2)
+
+    def test_version_resource_immunity_unpublished(self):
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        # the replaced resource should be immutable
+        self.assertTrue(self.composite_resource.raccess.immutable)
+
+        # after deleting the new versioned resource, the original resource should be editable again
+        hydroshare.resource.delete_resource(new_composite_resource.short_id)
+        ori_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
+        self.assertFalse(ori_res.raccess.immutable)
+
+    def test_version_resource_immunity_published(self):
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # make the original resource published before versioning
+        self.composite_resource.raccess.immutable = True
+        self.composite_resource.raccess.published = True
+        self.composite_resource.raccess.save()
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
+                                                                        new_composite_resource, self.user)
+        # after deleting the new versioned resource, the original resource should stay immutable
+        hydroshare.resource.delete_resource(new_composite_resource.short_id)
+        ori_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
+        self.assertTrue(ori_res.raccess.immutable)
 
     def test_unzip(self):
         """Test that when a zip file gets unzipped at data/contents/ where a single file aggregation

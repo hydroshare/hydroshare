@@ -36,14 +36,14 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(self)
 
     def _read_resource_metadata(self):
         super(SWATModelInstanceResourceMeta, self)._read_resource_metadata()
 
         logger.debug("--- SWATModelInstanceResource ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get ModelOutput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelOutput, None)):
@@ -343,7 +343,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ExecutedBy(object):
 
@@ -357,7 +357,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ModelObjective(object):
 
@@ -370,7 +370,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class SimulationType(object):
 
@@ -383,7 +383,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ModelMethod(object):
 
@@ -402,7 +402,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ModelParameter(object):
 
@@ -415,7 +415,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class ModelInput(object):
 
@@ -476,4 +476,4 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)

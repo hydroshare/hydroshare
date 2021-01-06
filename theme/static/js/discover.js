@@ -147,7 +147,7 @@ var setMarkers = function(json_results) {
         styles:[{
             height: 55,
             width: 56,
-            url: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'
+            url: '/static/img/m2.png'
         }]
     });
 };
@@ -422,7 +422,7 @@ var createPointResourceMarker = function (point) {
     var latlng = new google.maps.LatLng(lat, lng);
     var marker = new google.maps.Marker({
         map: map,
-        icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
+        icon: '//raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
         position: latlng
     });
     markers.push(marker);
@@ -452,7 +452,7 @@ var createBoxResourceMarker = function (box) {
 
     var marker = new google.maps.Marker({
         map: map,
-        icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
+        icon: '//raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
         position: latlng
     });
     markers.push(marker);

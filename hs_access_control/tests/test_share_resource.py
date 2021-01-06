@@ -2023,7 +2023,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             dog.uaccess.share_resource_with_group(
                 holes, meowers, PrivilegeCodes.OWNER)
-        self.assertEqual(cm.exception.message, 'Groups cannot own resources')
+        self.assertEqual(str(cm.exception), 'Groups cannot own resources')
 
         # even django admin can't make a group as the owner of a resource
         self.assertFalse(
@@ -2032,7 +2032,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied) as cm:
             self.admin.uaccess.share_resource_with_group(
                 holes, meowers, PrivilegeCodes.OWNER)
-        self.assertEqual(cm.exception.message, 'Groups cannot own resources')
+        self.assertEqual(str(cm.exception), 'Groups cannot own resources')
 
     def test_12_resource_sharing_rw_with_group(self):
         """Resource can be shared as CHANGE with a group"""
@@ -2294,18 +2294,18 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # format sharing record for user
         foo = str(UserResourcePrivilege.objects.get(user=cat, resource=holes))
-        self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)
+        self.assertTrue(foo.find(holes.short_id) >= 0)
 
         # format sharing record for group
         foo = str(
             GroupResourcePrivilege.objects.get(
                 group=meowers,
                 resource=holes))
-        self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)
+        self.assertTrue(foo.find(holes.short_id) >= 0)
 
     def test_privilege_to_string(self):
-        self.assertEquals(PrivilegeCodes.VIEW, PrivilegeCodes.from_string("view"))
-        self.assertEquals(PrivilegeCodes.CHANGE, PrivilegeCodes.from_string("edit"))
-        self.assertEquals(PrivilegeCodes.OWNER, PrivilegeCodes.from_string("owner"))
-        self.assertEquals(PrivilegeCodes.NONE, PrivilegeCodes.from_string("none"))
-        self.assertEquals(None, PrivilegeCodes.from_string("bads"))
+        self.assertEqual(PrivilegeCodes.VIEW, PrivilegeCodes.from_string("view"))
+        self.assertEqual(PrivilegeCodes.CHANGE, PrivilegeCodes.from_string("edit"))
+        self.assertEqual(PrivilegeCodes.OWNER, PrivilegeCodes.from_string("owner"))
+        self.assertEqual(PrivilegeCodes.NONE, PrivilegeCodes.from_string("none"))
+        self.assertEqual(None, PrivilegeCodes.from_string("bads"))

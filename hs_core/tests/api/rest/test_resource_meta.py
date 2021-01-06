@@ -29,7 +29,7 @@ class TestResourceMetadata(HSRESTTestCase):
         sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=self.pid)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
+        content = json.loads(response.content.decode())
         self.assertEqual(content['resource_type'], self.rtype)
         self.assertEqual(content['resource_title'], self.title)
         res_tail = '/' + os.path.join('resource', self.pid) + '/'

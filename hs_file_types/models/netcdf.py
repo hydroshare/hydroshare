@@ -10,18 +10,17 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, textarea, input
-from lxml import etree
+from dominate.tags import div, legend, form, button, p, textarea, _input
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
 import hs_file_types.nc_functions.nc_utils as nc_utils
-from base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils
-from hs_core.models import Creator, Contributor, CoreMetaData
+from hs_core.models import Creator, Contributor
 from hs_core.signals import post_add_netcdf_aggregation
 
 
@@ -171,7 +170,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
-                    input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    _input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
                         button("Update NetCDF File", type="button", cls="btn btn-primary",
                                id="id-update-netcdf-file")
@@ -187,7 +186,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             wraps(VariableForm)(partial(VariableForm, allow_edit=True)),
             formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(
-            initial=self.variables.all().values(), prefix='Variable')
+            initial=list(self.variables.all().values()), prefix='Variable')
 
         for frm in variable_formset.forms:
             if len(frm.initial) > 0:
@@ -258,20 +257,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(NetCDFFileMetaData, self)._get_xml_containers()
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container_to_add_to)
-
-        for variable in self.variables.all():
-            variable.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print)
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
@@ -382,7 +367,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """ Creates a NetCDFLogicalFile (aggregation) from a netcdf file (.nc) resource file
         """
 
@@ -414,6 +399,13 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                      res_type_specific_meta, file_type_metadata, resource)
 
                 # create the ncdump text file
+                dump_file_name = nc_file_name + "_header_info.txt"
+                for file in resource.files.filter(file_folder=folder_path):
+                    # look for and delete an existing header_file before creating it below.
+                    fname = os.path.basename(file.resource_file.name)
+                    if fname in dump_file_name:
+                        file.delete()
+                        break
                 dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 file_folder = res_file.file_folder
                 upload_folder = file_folder
@@ -435,7 +427,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         for element in resource_metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             if k == 'title':
                                 # update title element
                                 title_element = resource.metadata.title
@@ -449,7 +441,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         for element in file_type_metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
+                            k, v = list(element.items())[0]
                             if k == 'subject':
                                 logical_file.metadata.keywords = v
                                 logical_file.metadata.save()
@@ -466,11 +458,12 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         file_type_success = True
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        msg = msg.format(ex.message)
+                        msg = msg.format(str(ex))
                         log.exception(msg)
 
                 if not file_type_success:
                     raise ValidationError(msg)
+                return logical_file
             else:
                 err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
                 log.error(err_msg)
@@ -700,9 +693,9 @@ def add_variable_metadata(metadata_list, extracted_metadata):
     :param extracted_metadata: a dict containing netcdf extracted metadata
     :return:
     """
-    for var_name, var_meta in extracted_metadata.items():
+    for var_name, var_meta in list(extracted_metadata.items()):
         meta_info = {}
-        for element, value in var_meta.items():
+        for element, value in list(var_meta.items()):
             if value != '':
                 meta_info[element] = value
         metadata_list.append({'variable': meta_info})
@@ -776,9 +769,11 @@ def create_header_info_txt_file(nc_temp_file, nc_file_name):
         dump_str = "".join(dump_str_list)
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write(dump_str)
+            dump_file_obj.close()
     else:
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write("")
+            dump_file_obj.close()
 
     return dump_file
 
@@ -820,7 +815,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
 
         if extra_metadata_dict:
             extra_metadata = []
-            for k, v in extra_metadata_dict.items():
+            for k, v in list(extra_metadata_dict.items()):
                 extra_metadata.append("{}:{}".format(k, v))
             nc_dataset.hs_extra_metadata = ', '.join(extra_metadata)
 
@@ -855,7 +850,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         if instance.metadata.variables.all():
             dataset_variables = nc_dataset.variables
             for variable in instance.metadata.variables.all():
-                if variable.name in dataset_variables.keys():
+                if variable.name in list(dataset_variables.keys()):
                     dataset_variable = dataset_variables[variable.name]
 
                     # update units
@@ -962,7 +957,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         nc_dataset.close()
 
     except Exception as ex:
-        log.exception(ex.message)
+        log.exception(str(ex))
         if os.path.exists(temp_nc_file):
             shutil.rmtree(os.path.dirname(temp_nc_file))
         raise ex

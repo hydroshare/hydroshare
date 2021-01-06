@@ -27,7 +27,7 @@ class RasterResourceMeta(GenericResourceMeta):
         SAX_parse_results = RasterResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get CellInformation
         for s, p, o in self._rmeta_graph.triples((None, hsterms.CellInformation, None)):
@@ -193,7 +193,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class BandInformation(object):
 
@@ -214,7 +214,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
     class SpatialReference(object):
 
@@ -236,7 +236,7 @@ class RasterResourceMeta(GenericResourceMeta):
             return msg
 
         def __unicode__(self):
-            return unicode(str(self))
+            return str(self)
 
         def __init__(self, value_str):
             kvp = value_str.split(';')

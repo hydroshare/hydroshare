@@ -29,13 +29,13 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
             )
 
         # there should be one resource at this point
-        self.assertEquals(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
+        self.assertEqual(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
 
         # delete the resource - this is the api we are testing
         resource.delete_resource(new_res.short_id)
 
         # there should be no resource at this point
-        self.assertEquals(GenericResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
+        self.assertEqual(GenericResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
 
 
 

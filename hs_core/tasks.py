@@ -1,7 +1,5 @@
 """Define celery tasks for hs_core app."""
 
-from __future__ import absolute_import
-
 import os
 import sys
 import traceback
@@ -9,6 +7,7 @@ import zipfile
 import logging
 import json
 
+from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
 
@@ -18,19 +17,24 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 
-from hs_core.hydroshare import utils
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_access_control.models import GroupMembershipRequest
+from hs_core.hydroshare import utils, create_empty_resource
+from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.task_utils import get_or_create_task_notification
+from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
 from theme.models import UserQuota, QuotaMessage, UserProfile, User
-
 from django_irods.icommands import SessionException
+from celery.result import states
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, TaskNotification
 from theme.utils import get_quota_message
+
 
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
@@ -84,7 +88,7 @@ def sync_mailchimp(active_subscribed, list_id):
     # get total members
     response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
         'hs-celery', settings.MAILCHIMP_PASSWORD))
-    total_items = json.loads(response.content)["total_items"]
+    total_items = json.loads(response.content.decode())["total_items"]
     # get list of all member ids
     response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
                                                                           total_items=total_items),
@@ -92,7 +96,7 @@ def sync_mailchimp(active_subscribed, list_id):
                                                             settings.MAILCHIMP_PASSWORD))
     # clear the email list
     delete_count = 0
-    for member in json.loads(response.content)["members"]:
+    for member in json.loads(response.content.decode())["members"]:
         if member["status"] == "subscribed":
             session_response = session.delete(
                 (url + "/{id}").format(list_id=list_id, id=member["id"]),
@@ -150,6 +154,8 @@ def manage_task_nightly():
                 # to pending
                 res.doi = get_resource_doi(act_doi, 'pending')
                 res.save()
+                # create bag and compute checksum for published resource to meet DataONE requirement
+                create_bag_by_irods(res.short_id)
             else:
                 # retry of metadata deposition failed again, notify admin
                 msg_lst.append("Metadata deposition with CrossRef for the published resource "
@@ -187,6 +193,8 @@ def manage_task_nightly():
                     res.doi = act_doi
                     res.save()
                     success = True
+                    # create bag and compute checksum for published resource to meet DataONE requirement
+                    create_bag_by_irods(res.short_id)
             if not success:
                 msg_lst.append("Published resource DOI {res_doi} is not yet activated with request "
                                "data deposited since {pub_date}.".format(res_doi=act_doi,
@@ -249,13 +257,17 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                try:
-                    # send email for people monitoring and follow-up as needed
-                    send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
-                              [u.email, settings.DEFAULT_SUPPORT_EMAIL],
-                              html_message=msg_str)
-                except Exception as ex:
-                    logger.debug("Failed to send quota warning email: " + ex.message)
+                if settings.DEBUG:
+                    logger.info("quota warning email not sent out on debug server but logged instead: "
+                                "{}".format(msg_str))
+                else:
+                    try:
+                        # send email for people monitoring and follow-up as needed
+                        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                                  [u.email, settings.DEFAULT_SUPPORT_EMAIL],
+                                  html_message=msg_str)
+                    except Exception as ex:
+                        logger.debug("Failed to send quota warning email: " + ex.message)
             else:
                 if uq.remaining_grace_period >= 0:
                     # turn grace period off now that the user is below quota soft limit
@@ -325,13 +337,16 @@ def delete_zip(zip_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path='',
+                    request_username=None):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
     :param aggregation_name: The name of the aggregation to zip
     :param sf_zip: signals a single file to zip
+    :param download_path: download path to return as task payload
+    :param request_username: the username of the requesting user
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
@@ -347,107 +362,84 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         else:  # all metadata included, e.g., /data/*
             res.create_aggregation_xml_documents()
 
-    try:
-        if aggregation or sf_zip:
-            # input path points to single file aggregation
-            # ensure that foo.zip contains aggregation metadata
-            # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-            temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
-            head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-            out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-            istorage.copyFiles(input_path, out_with_folder)
-            if aggregation:
+    if aggregation or sf_zip:
+        # input path points to single file aggregation
+        # ensure that foo.zip contains aggregation metadata
+        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
+        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
+        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
+        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
+        istorage.copyFiles(input_path, out_with_folder)
+        if aggregation:
+            try:
+                istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+            except SessionException:
+                logger.error("cannot copy {}".format(aggregation.map_file_path))
+            try:
+                istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
+            except SessionException:
+                logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            for file in aggregation.files.all():
                 try:
-                    istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
+                    istorage.copyFiles(file.storage_path, temp_folder_name)
                 except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.map_file_path))
-                try:
-                    istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
-                except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.metadata_file_path))
-                for file in aggregation.files.all():
-                    try:
-                        istorage.copyFiles(file.storage_path, temp_folder_name)
-                    except SessionException:
-                        logger.error("cannot copy {}".format(file.storage_path))
-            istorage.zipup(temp_folder_name, output_path)
-            istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
-        else:  # regular folder to zip
-            istorage.zipup(input_path, output_path)
-    except SessionException as ex:
-        logger.error(ex.stderr)
-        return False
-    return True
+                    logger.error("cannot copy {}".format(file.storage_path))
+        istorage.zipup(temp_folder_name, output_path)
+        istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+    else:  # regular folder to zip
+        istorage.zipup(input_path, output_path)
+    return download_path
 
 
 @shared_task
-def create_bag_by_irods(resource_id):
+def create_bag_by_irods(resource_id, request_username=None):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
-
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
-
-    :return: True if bag creation operation succeeds;
-             False if there is an exception raised or resource does not exist.
+    :return: bag_url if bag creation operation succeeds or
+             raise an exception if resource does not exist or any other issues that prevent bags from being created.
     """
-    from hs_core.hydroshare.utils import get_resource_by_shortkey
+    res = utils.get_resource_by_shortkey(resource_id)
 
-    res = get_resource_by_shortkey(resource_id)
     istorage = res.get_irods_storage()
+
+    bag_path = res.bag_path
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
     if metadata_dirty is None or metadata_dirty.lower() == "true":
-        try:
-            create_bag_files(res)
-        except Exception as ex:
-            logger.error('Failed to create bag files. Error:{}'.format(ex.message))
-            return False
+        create_bag_files(res)
 
-    bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
-    if res.resource_federation_path:
-        irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
-        is_exist = istorage.exists(irods_bagit_input_path)
-        # check to see if bagit readme.txt file exists or not
-        bagit_readme_file = '{fed_path}/{res_id}/readme.txt'.format(
-            fed_path=res.resource_federation_path,
-            res_id=resource_id)
-        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
-        bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
-        bagit_files = [
-            '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
-                                                   res_id=resource_id),
-            '{fed_path}/{res_id}/manifest-md5.txt'.format(
-                fed_path=res.resource_federation_path, res_id=resource_id),
-            '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
-                fed_path=res.resource_federation_path, res_id=resource_id),
-            '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
-                                                  res_id=resource_id)
-        ]
-    else:
-        is_exist = istorage.exists(resource_id)
-        # check to see if bagit readme.txt file exists or not
-        bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)
-        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
+    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+    # check to see if bagit readme.txt file exists or not
+    bagit_readme_file = res.get_irods_path('readme.txt')
+    is_bagit_readme_exist = istorage.exists(bagit_readme_file)
+    if irods_bagit_input_path.startswith(resource_id):
+        # resource is in data zone, need to append the full path for iRODS bagit rule execution
         irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
         irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
             def_res=settings.IRODS_DEFAULT_RESOURCE)
-        bagit_files = [
-            '{res_id}/bagit.txt'.format(res_id=resource_id),
-            '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
-            '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
-            'bags/{res_id}.zip'.format(res_id=resource_id)
-        ]
+    else:
+        # this will need to be changed with the default resource in whatever federated zone the
+        # resource is stored in when we have such use cases to support
+        bagit_input_resource = "*DESTRESC='{def_res}'".format(
+            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+
+    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+
+    bagit_files = [
+        res.get_irods_path('bagit.txt'),
+        res.get_irods_path('manifest-md5.txt'),
+        res.get_irods_path('tagmanifest-md5.txt'),
+        bag_path
+    ]
 
     # only proceed when the resource is not deleted potentially by another request
     # when being downloaded
+    is_exist = istorage.exists(irods_bagit_input_path)
     if is_exist:
         # if bagit readme.txt does not exist, add it.
         if not is_bagit_readme_exist:
@@ -465,91 +457,53 @@ def create_bag_by_irods(resource_id):
             # multiple ibun commands try to create the same zip file or the very same resource
             # gets deleted by another request when being downloaded
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-            istorage.zipup(irods_bagit_input_path, bag_full_name)
+            istorage.zipup(irods_bagit_input_path, bag_path)
+            if res.raccess.published:
+                # compute checksum to meet DataONE distribution requirement
+                chksum = istorage.checksum(bag_path)
+                res.bag_checksum = chksum
             istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
-            return True
+            return res.bag_url
         except SessionException as ex:
             # if an exception occurs, delete incomplete files potentially being generated by
             # iRODS bagit rule and zipping operations
             for fname in bagit_files:
                 if istorage.exists(fname):
                     istorage.delete(fname)
-            logger.error(ex.stderr)
-            return False
+            raise SessionException(-1, '', ex.stderr)
     else:
-        logger.error('Resource does not exist.')
-        return False
+        raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
 @shared_task
-def update_quota_usage_task(username):
-    """update quota usage. This function runs as a celery task, invoked asynchronously with 1
-    minute delay to give enough time for iRODS real time quota update micro-services to update
-    quota usage AVU for the user before this celery task to check this AVU to get the updated
-    quota usage for the user. Note iRODS micro-service quota update only happens on HydroShare
-    iRODS data zone and user zone independently, so the aggregation of usage in both zones need
-    to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
-    internal zone.
-    :param
-    username: the name of the user that needs to update quota usage for.
-    :return: True if quota usage update succeeds;
-             False if there is an exception raised or quota cannot be updated. See log for details.
-    """
-    hs_internal_zone = "hydroshare"
-    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
-    if uq is None:
-        # the quota row does not exist in Django
-        logger.error('quota row does not exist in Django for hydroshare zone for '
-                     'user ' + username)
-        return False
-
-    attname = username + '-usage'
-    istorage = IrodsStorage()
-    # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
-    # collection
+def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
     try:
-        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
-        if uqDataZoneSize is None:
-            # user may not have resources in data zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqDataZoneSize = -1
-        else:
-            uqDataZoneSize = float(uqDataZoneSize)
-    except SessionException:
-        # user may not have resources in data zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqDataZoneSize = -1
+        new_res = None
+        if not new_res_id:
+            new_res = create_empty_resource(ori_res_id, request_username, action='copy')
+            new_res_id = new_res.short_id
+        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
+        if not new_res:
+            new_res = utils.get_resource_by_shortkey(new_res_id)
+        utils.copy_and_create_metadata(ori_res, new_res)
 
-    # get quota size for the user in iRODS user zone
-    try:
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
-        if uqUserZoneSize is None:
-            # user may not have resources in user zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqUserZoneSize = -1
-        else:
-            uqUserZoneSize = float(uqUserZoneSize)
-    except SessionException:
-        # user may not have resources in user zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqUserZoneSize = -1
+        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        if hs_identifier:
+            new_res.metadata.create_element('source', derived_from=hs_identifier.url)
 
-    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
-        logger.error('no quota size AVU in data zone and user zone for the user ' + username)
-        return False
-    elif uqUserZoneSize < 0:
-        used_val = uqDataZoneSize
-    elif uqDataZoneSize < 0:
-        used_val = uqUserZoneSize
-    else:
-        used_val = uqDataZoneSize + uqUserZoneSize
+        if ori_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new collection will not contain "deleted resources"
+            new_res.resources = ori_res.resources.all()
 
-    uq.update_used_value(used_val)
-
-    return True
+        # create bag for the new resource
+        create_bag(new_res)
+        return new_res.get_absolute_url()
+    except Exception as ex:
+        if new_res:
+            new_res.delete()
+        raise utils.ResourceCopyException(str(ex))
 
 
 @shared_task
@@ -578,16 +532,17 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
             try:
 
                 resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content)
+                response_content = json.loads(response.content.decode())
 
-                for key, value in response_content["resource"].iteritems():
+                for key, value in response_content["resource"].items():
                     resource.extra_metadata[key] = value
                     resource.save()
 
                 for url in response_content["content"]:
-                    lf = resource.logical_files[[i.aggregation_name for i in
-                                                resource.logical_files].index(
-                                                    url["layer_name"].encode("utf-8")
+                    logical_files = list(resource.logical_files)
+                    lf = logical_files[[i.aggregation_name for i in
+                                        logical_files].index(
+                                                    url["layer_name"].encode()
                                                 )]
                     lf.metadata.extra_metadata["Web Services URL"] = url["message"]
                     lf.metadata.save()
@@ -601,3 +556,69 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)
         return e
+
+
+@shared_task
+def resource_debug(resource_id):
+    """Update web services hosted by GeoServer and HydroServer.
+    """
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
+
+    resource = get_resource_by_shortkey(resource_id)
+    from hs_core.management.utils import check_irods_files
+    return check_irods_files(resource, log_errors=False, return_errors=True)
+
+
+@shared_task
+def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
+               ingest_metadata=False):
+    from hs_core.views.utils import unzip_file
+    user = User.objects.get(pk=user_pk)
+    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
+
+
+@periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
+def daily_odm2_sync():
+    """
+    ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
+    """
+    ODM2Variable.sync()
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_month=1))
+def monthly_group_membership_requests_cleanup():
+    """
+    Delete expired and redeemed group membership requests
+    """
+    two_months_ago = datetime.today() - timedelta(days=60)
+    GroupMembershipRequest.objects.filter(my_date__lte=two_months_ago).delete()
+
+
+@task_postrun.connect
+def update_task_notification(sender=None, task_id=None, state=None, retval=None, **kwargs):
+    """
+    Updates the state of TaskNotification model when a celery task completes
+    :param sender:
+    :param task_id:
+    :param state:
+    :param retval:
+    :param kwargs:
+    :return:
+    """
+    if state == states.SUCCESS:
+        get_or_create_task_notification(task_id, status="completed", payload=retval)
+    elif state in states.EXCEPTION_STATES:
+        get_or_create_task_notification(task_id, status="failed", payload=retval)
+    elif state == states.REVOKED:
+        get_or_create_task_notification(task_id, status="aborted", payload=retval)
+    else:
+        logger.warning("Unhandled task state of {} for {}".format(state, task_id))
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+def task_notification_cleanup():
+    """
+    Delete expired task notifications each week
+    """
+    week_ago = datetime.today() - timedelta(days=7)
+    TaskNotification.objects.filter(created__lte=week_ago).delete()

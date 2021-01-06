@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('code', models.CharField(default=b'', max_length=500, blank=True)),
+                ('code', models.CharField(default='', max_length=500, blank=True)),
                 ('content_type', models.ForeignKey(related_name='ref_ts_datasource_related', to='contenttypes.ContentType')),
             ],
             options={
@@ -57,37 +57,37 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='method',
             name='code',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='method',
             name='description',
-            field=models.TextField(default=b'', blank=True),
+            field=models.TextField(default='', blank=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='qualitycontrollevel',
             name='code',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='qualitycontrollevel',
             name='definition',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='site',
             name='net_work',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='site',
             name='code',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
@@ -105,31 +105,31 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='site',
             name='name',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='variable',
             name='code',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='variable',
             name='data_type',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='variable',
             name='name',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='variable',
             name='sample_medium',
-            field=models.CharField(default=b'', max_length=500, blank=True),
+            field=models.CharField(default='', max_length=500, blank=True),
             preserve_default=True,
         ),
     ]

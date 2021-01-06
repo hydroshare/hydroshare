@@ -1,5 +1,4 @@
 import json
-from lxml import etree
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -7,15 +6,19 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, _input
+from rdflib import RDF, BNode, Literal
+from rdflib.namespace import DCTERMS
 
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
-    add_metadata_element_to_xml, get_resource_files_by_extension
+    get_resource_files_by_extension
 
 
 # Define original spatial coverage metadata info
+@rdf_terms(HSTERMS.spatialReference)
 class OriginalCoverage(AbstractMetaDataElement):
     PRO_STR_TYPES = (
         ('', '---------'),
@@ -47,6 +50,46 @@ class OriginalCoverage(AbstractMetaDataElement):
         return json.loads(self._value)
 
     @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            value = graph.value(subject=cov, predicate=RDF.value)
+            value_dict = {}
+            datum = ''
+            projection_string_text = ''
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                if k == 'datum':
+                    datum = v
+                elif k == 'projection_string':
+                    projection_string_text = v
+                elif k == 'projection_name':
+                    value_dict['projection'] = v
+                elif k == 'projection_string_type':
+                    projection_string_type = v
+                else:
+                    value_dict[k] = v
+            OriginalCoverage.create(projection_string_type=projection_string_type,
+                                    projection_string_text=projection_string_text, _value=json.dumps(value_dict),
+                                    datum=datum, content_object=content_object)
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, self.get_class_term(), coverage))
+        graph.add((coverage, RDF.type, DCTERMS.box))
+        value_dict = {}
+        for k, v in self.value.items():
+            if k == 'projection':
+                value_dict['projection_name'] = v
+            else:
+                value_dict[k] = v
+        value_dict['datum'] = self.datum
+        value_dict['projection_string'] = self.projection_string_text
+        value_dict['projection_string_type'] = self.projection_string_type
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
+
+    @classmethod
     def create(cls, **kwargs):
         """
         The '_value' subelement needs special processing. (Check if the 'value' includes the
@@ -69,7 +112,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     raise ValidationError("For original coverage meta, one or more bounding "
                                           "box limits or 'units' is missing.")
 
-            value_dict = {k: v for k, v in value_arg_dict.iteritems()
+            value_dict = {k: v for k, v in list(value_arg_dict.items())
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                    'westlimit', 'projection')}
 
@@ -113,34 +156,6 @@ class OriginalCoverage(AbstractMetaDataElement):
                 box_dict[limit] = float(box_dict[limit])
             except ValueError:
                 raise ValidationError("Bounding box data is not numeric")
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
-        cov_term = '{%s}' + 'box'
-        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
-        rdf_coverage_value = etree.SubElement(coverage_terms,
-                                              '{%s}value' % NAMESPACES['rdf'])
-        # netcdf original coverage is of box type
-        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                    % (self.value['northlimit'], self.value['eastlimit'],
-                       self.value['southlimit'], self.value['westlimit'],
-                       self.value['units'])
-
-        for meta_element in self.value:
-            if meta_element == 'projection':
-                if self.value[meta_element]:
-                    cov_value += '; projection_name={}'.format(self.value[meta_element])
-
-        if self.projection_string_text:
-            cov_value += '; projection_string={}'.format(self.projection_string_text)
-
-        if self.datum:
-            cov_value += '; datum={}'.format(self.datum)
-
-        rdf_coverage_value.text = cov_value
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
@@ -250,21 +265,6 @@ class Variable(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("The variable of the resource can't be deleted.")
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        md_fields = {
-            "md_element": "netcdfVariable",
-            "name": "name",
-            "unit": "unit",
-            "type": "type",
-            "shape": "shape",
-            "descriptive_name": "longName",
-            "method": "comment",
-            "missing_value": "missingValue"
-        }  # element name : name in xml
-        add_metadata_element_to_xml(container, self, md_fields)
 
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
@@ -425,7 +425,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import NetCDFMetaDataSerializer
+        from .serializers import NetCDFMetaDataSerializer
         return NetCDFMetaDataSerializer(self)
 
     @classmethod
@@ -433,7 +433,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'originalcoverage' in keys_to_update:
             parsed_metadata.append({"originalcoverage": metadata.pop('originalcoverage')})
 
@@ -452,7 +452,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import VariableValidationForm, OriginalCoverageValidationForm
+        from .forms import VariableValidationForm, OriginalCoverageValidationForm
         super(NetcdfMetaData, self).update(metadata, user)
         missing_file_msg = "Resource specific metadata can't be updated when there is no " \
                            "content files"
@@ -510,27 +510,6 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         # write updated metadata to netcdf file
         self.resource.update_netcdf_file(user)
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        from lxml import etree
-        # get the xml string representation of the core metadata elements
-        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        # inject netcdf resource specific metadata element 'variable' to container element
-        for variable in self.variables.all():
-            variable.add_to_xml_container(container)
-
-        ori_cov_obj = self.ori_coverage.all().first()
-        if ori_cov_obj is not None:
-            ori_cov_obj.add_to_xml_container(container)
-
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
     def update_element(self, element_model_name, element_id, **kwargs):
         super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
         if self.resource.files.all() and element_model_name in ['variable', 'title', 'description',
@@ -578,7 +557,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     div("NetCDF file needs to be synced with metadata changes.", cls='space-bottom')
 
-                    input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
+                    _input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
                     with form(action=form_action, method="post", id="update-netcdf-file",):
                         div('{% csrf_token %}')
                         button("Update NetCDF File", type="submit", cls="btn btn-primary",

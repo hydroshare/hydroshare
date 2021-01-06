@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='executedby',
             name='model_name',
-            field=models.CharField(default=None, max_length=500, choices=[(b'-', b'    ')]),
+            field=models.CharField(default=None, max_length=500, choices=[('-', '    ')]),
             preserve_default=True,
         ),
         migrations.AlterField(

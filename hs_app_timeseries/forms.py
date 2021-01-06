@@ -8,7 +8,7 @@ from crispy_forms.layout import Layout, HTML
 from crispy_forms.bootstrap import Field
 
 from hs_core.forms import BaseFormHelper
-from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult, UTCOffSet
+from .models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult, UTCOffSet
 
 
 NO_SELECTION_DROPDOWN_OPTION = "-----"
@@ -691,7 +691,7 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
 
     # sort the cv items
     cv_item_names = [item.name for item in dropdown_items]
-    cv_item_names.sort(key=unicode.lower)
+    cv_item_names.sort(key=str.lower)
 
     # create a list of tuples from item names
     cv_items = [(item_name, item_name) for item_name in cv_item_names]

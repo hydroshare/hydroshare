@@ -18,23 +18,23 @@ last_changed_by_user = None
 try:
     last_changed_by_user = User.objects.get(username='admin')
 except Exception as ex:
-    print "[{0}] Failed to get Admin user obj, set 'last_changed_by_user = None'\n"
+    print("[{0}] Failed to get Admin user obj, set 'last_changed_by_user = None'\n")
 
 hasPart = "hasPart"
 collection_res_list = list(CollectionResource.objects.all())
 collection_count = len(collection_res_list)
-print "[{0}] Find {1} Collection Resources\n".format(str(datetime.now()),
-                                                     collection_count)
+print(("[{0}] Find {1} Collection Resources\n".format(str(datetime.now()),
+                                                      collection_count)))
 counter = 0
 success_counter = 0
 error_counter = 0
 for collection_res_obj in collection_res_list:
     try:
         counter += 1
-        print "[{0}] Processing on collection {1}: ({2}/{3})\n".format(str(datetime.now()),
-                                                                       collection_res_obj.short_id,
-                                                                       counter,
-                                                                       collection_count)
+        print(("[{0}] Processing on collection {1}: ({2}/{3})\n".format(str(datetime.now()),
+                                                                        collection_res_obj.short_id,
+                                                                        counter,
+                                                                        collection_count)))
         for contained_res_obj in collection_res_obj.resources.all():
             value = RES_LANDING_PAGE_URL_TEMPLATE.format(contained_res_obj.short_id)
             add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
@@ -42,15 +42,15 @@ for collection_res_obj in collection_res_list:
                                             set_res_modified=False)
 
         resource_modified(collection_res_obj, last_changed_by_user)
-        print "[{0}] Done with Collection {1}\n".format(str(datetime.now()),
-                                                        collection_res_obj.short_id)
+        print(("[{0}] Done with Collection {1}\n".format(str(datetime.now()),
+                                                         collection_res_obj.short_id)))
         success_counter += 1
     except Exception as ex:
-        print "[{0}] Error on Collection {1}: {2}\n".format(str(datetime.now()),
-                                                            collection_res_obj.short_id,
-                                                            ex.message)
+        print(("[{0}] Error on Collection {1}: {2}\n".format(str(datetime.now()),
+                                                             collection_res_obj.short_id,
+                                                             str(ex))))
         error_counter += 1
 
-print "[{0}] All Done!\n".format(str(datetime.now()))
-print "TOTAL: {0}; SUCCESS: {1};  ERROR: {2}\n".\
-    format(collection_count, success_counter, error_counter)
+print(("[{0}] All Done!\n".format(str(datetime.now()))))
+print(("TOTAL: {0}; SUCCESS: {1};  ERROR: {2}\n".format(collection_count, success_counter,
+                                                        error_counter)))

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='requesturlbase',
             name='resShortID',
-            field=models.CharField(default=b'UNKNOWN', max_length=128),
+            field=models.CharField(default='UNKNOWN', max_length=128),
             preserve_default=True,
         ),
         migrations.AlterField(
@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='toolversion',
             name='value',
-            field=models.CharField(default=b'1.0', max_length=128),
+            field=models.CharField(default='1.0', max_length=128),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(

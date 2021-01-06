@@ -1,18 +1,17 @@
-from lxml import etree
-
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div
+from rdflib import RDF, BNode, Literal
 
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 
-from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
-
+@rdf_terms(HSTERMS.spatialReference)
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -28,6 +27,36 @@ class OriginalCoverage(AbstractMetaDataElement):
     class Meta:
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            value = graph.value(subject=cov, predicate=RDF.value)
+            value_dict = {}
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                if k == 'units':
+                    value_dict['unit'] = v
+                else:
+                    value_dict[k] = v
+            OriginalCoverage.create(**value_dict, content_object=content_object)
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, self.get_class_term(), coverage))
+        graph.add((coverage, RDF.type, HSTERMS.box))
+        value_dict = {}
+        value_dict['northlimit'] = self.northlimit
+        value_dict['southlimit'] = self.southlimit
+        value_dict['westlimit'] = self.westlimit
+        value_dict['eastlimit'] = self.eastlimit
+        value_dict['projection_string'] = self.projection_string
+        value_dict['projection_name'] = self.projection_name
+        value_dict['datum'] = self.datum
+        value_dict['units'] = self.unit
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
 
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
@@ -92,32 +121,6 @@ class OriginalCoverage(AbstractMetaDataElement):
                                                   file_type=file_type)
         return orig_coverage_form
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        NAMESPACES = CoreMetaData.NAMESPACES
-        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
-        cov_term = '{%s}' + 'box'
-        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
-        rdf_coverage_value = etree.SubElement(coverage_terms,
-                                              '{%s}value' % NAMESPACES['rdf'])
-        # original coverage is of box type
-        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                    % (self.northlimit, self.eastlimit,
-                       self.southlimit, self.westlimit,
-                       self.unit)
-
-        if self.projection_name:
-            cov_value += '; projection_name={}'.format(self.projection_name)
-
-        if self.projection_string:
-            cov_value += '; projection_string={}'.format(self.projection_string)
-
-        if self.datum:
-            cov_value += '; datum={}'.format(self.datum)
-
-        rdf_coverage_value.text = cov_value
-
 
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'
@@ -140,19 +143,6 @@ class FieldInformation(AbstractMetaDataElement):
         if pretty:
             return field_infor_tr.render(pretty=pretty)
         return field_infor_tr
-
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        # element attribute name : name in xml
-        md_fields = {
-            "fieldName": "fieldName",
-            "fieldType": "fieldType",
-            "fieldTypeCode": "fieldTypeCode",
-            "fieldWidth": "fieldWidth",
-            "fieldPrecision": "fieldPrecision"
-        }
-        add_metadata_element_to_xml(container, self, md_fields)
 
 
 class GeometryInformation(AbstractMetaDataElement):
@@ -205,17 +195,6 @@ class GeometryInformation(AbstractMetaDataElement):
                                                         file_type=file_type)
         return geom_information_form
 
-    def add_to_xml_container(self, container):
-        """Generates xml+rdf representation of the metadata element"""
-
-        # element attribute name : name in xml
-        md_fields = {
-            "geometryType": "geometryType",
-            "featureCount": "featureCount"
-        }
-
-        add_metadata_element_to_xml(container, self, md_fields)
-
 
 # TODO Deprecated
 class GeographicFeatureResource(BaseResource):
@@ -236,9 +215,9 @@ class GeographicFeatureResource(BaseResource):
                 ".mxs")
 
     def has_required_content_files(self):
-        if self.files.all().count < 3:
+        if self.files.all().count() < 3:
             return False
-        file_extensions = [f.extension for f in self.files.all()]
+        file_extensions = [f.extension.lower() for f in self.files.all()]
         return all(ext in file_extensions for ext in ['.shp', '.shx', '.dbf'])
 
     def get_hs_term_dict(self):
@@ -325,24 +304,3 @@ class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
     @property
     def resource(self):
         return GeographicFeatureResource.objects.filter(object_id=self.id).first()
-
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-        # get the xml string representation of the core metadata elements
-        xml_string = super(GeographicFeatureMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.geometryinformation:
-            self.geometryinformation.add_to_xml_container(container)
-
-        for field_info in self.fieldinformations.all():
-            field_info.add_to_xml_container(container)
-
-        if self.originalcoverage:
-            self.originalcoverage.add_to_xml_container(container)
-
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)

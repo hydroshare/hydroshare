@@ -1,11 +1,8 @@
-from __future__ import absolute_import
-
 import mimetypes
 import os
 import tempfile
 import logging
 import shutil
-import string
 import copy
 from uuid import uuid4
 import errno
@@ -45,6 +42,10 @@ class ResourceFileValidationException(Exception):
 
 
 class QuotaException(Exception):
+    pass
+
+
+class ResourceCopyException(Exception):
     pass
 
 
@@ -230,8 +231,8 @@ def get_fed_zone_files(irods_fnames):
     Note: application must delete these files after use.
     """
     ret_file_list = []
-    if isinstance(irods_fnames, basestring):
-        ifnames = string.split(irods_fnames, ',')
+    if isinstance(irods_fnames, str):
+        ifnames = irods_fnames.split(',')
     elif isinstance(irods_fnames, list):
         ifnames = irods_fnames
     else:
@@ -249,7 +250,7 @@ def get_fed_zone_files(irods_fnames):
                 shutil.rmtree(tmpdir)
                 os.makedirs(tmpdir)
             else:
-                raise Exception(ex.message)
+                raise Exception(str(ex))
         irods_storage.getFile(ifname, tmpfile)
         ret_file_list.append(tmpfile)
     return ret_file_list
@@ -469,7 +470,10 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     """
 
-    resource.last_changed_by = by_user
+    if not by_user:
+        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
+    else:
+        resource.last_changed_by = by_user
 
     resource.updated = now().isoformat()
     # seems this is the best place to sync resource title with metadata title
@@ -535,7 +539,7 @@ def current_site_url():
 def get_file_mime_type(file_name):
     # TODO: looks like the mimetypes module can't find all mime types
     # We may need to user the python magic module instead
-    file_name = u"{}".format(file_name)
+    file_name = "{}".format(file_name)
     file_format_type = mimetypes.guess_type(file_name)[0]
     if not file_format_type:
         # TODO: this is probably not the right way to get the mime type
@@ -784,26 +788,35 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
 
     # only add the resource creator as the creator for metadata if there is not already
     # creator data in the metadata object
-    metadata_keys = [element.keys()[0].lower() for element in metadata]
+    metadata_keys = [list(element.keys())[0].lower() for element in metadata]
     if 'creator' not in metadata_keys:
         creator_data = get_party_data_from_user(resource.creator)
         metadata.append({'creator': creator_data})
 
 
+def get_user_party_name(user):
+    user_profile = get_profile(user)
+    if user.last_name and user.first_name:
+        if user_profile.middle_name:
+            party_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                            user_profile.middle_name)
+        else:
+            party_name = '%s, %s' % (user.last_name, user.first_name)
+    elif user.last_name:
+        party_name = user.last_name
+    elif user.first_name:
+        party_name = user.first_name
+    elif user_profile.middle_name:
+        party_name = user_profile.middle_name
+    else:
+        party_name = ''
+    return party_name
+
+
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
-
-    if user_profile.middle_name:
-        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                        user_profile.middle_name)
-    else:
-        user_full_name = '%s, %s' % (user.last_name, user.first_name)
-
-    if user_full_name:
-        party_name = user_full_name
-    else:
-        party_name = user.username
+    party_name = get_user_party_name(user)
 
     party_data['name'] = party_name
     party_data['email'] = user.email
@@ -842,13 +855,13 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     from .resource import add_resource_files
     if __debug__:
         assert(isinstance(source_names, list))
-    folder = kwargs.pop('folder', None)
+    folder = kwargs.pop('folder', '')
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names, full_paths=full_paths,
                                                auto_aggregate=auto_aggregate)
-
+    resource.refresh_from_db()
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
@@ -873,7 +886,7 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder=None, source_name='',
+def add_file_to_resource(resource, f, folder='', source_name='',
                          check_target_folder=False, add_to_aggregation=True):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
@@ -901,7 +914,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         raise ValidationError("Resource must be a CompositeResource for validating target folder")
 
     if f:
-        if check_target_folder and folder is not None:
+        if check_target_folder and folder:
                 tgt_full_upload_path = os.path.join(resource.file_path, folder)
                 if not resource.can_add_files(target_full_path=tgt_full_upload_path):
                     err_msg = "File can't be added to this folder which represents an aggregation"
@@ -909,7 +922,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
-            if folder is not None and resource.resource_type == 'CompositeResource':
+            if folder and resource.resource_type == 'CompositeResource':
                 aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
                     # make the added file part of the fileset aggregation
@@ -1001,7 +1014,7 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                          "{{{ns}}}{field}".format(ns=name_spaces['hsterms'],
                                                                   field=xml_element_name))
-                field.text = unicode(attr)
+                field.text = str(attr)
 
 
 class ZipContents(object):
@@ -1021,7 +1034,6 @@ class ZipContents(object):
     def get_files(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            file_path = None
             for name_path in self.zip_file.namelist():
                 if not self.black_list_path(name_path):
                     name = os.path.basename(name_path)
@@ -1062,6 +1074,7 @@ def check_aggregations(resource, res_files):
     :param res_files: list of ResourceFile objects to check for aggregations creation
     :return:
     """
+    new_logical_files = []
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
 
@@ -1069,5 +1082,8 @@ def check_aggregations(resource, res_files):
         for res_file in res_files:
             if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                 # create aggregation from file 'res_file'
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      fail_feedback=False)
+                logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                                     fail_feedback=False)
+                if logical_file:
+                    new_logical_files.append(logical_file)
+    return new_logical_files

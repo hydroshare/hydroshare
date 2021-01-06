@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 
@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('fileType', models.TextField(default=None, max_length=128, choices=[(None, b'Unknown'), (b'SHP', b'ESRI Shapefiles'), (b'ZSHP', b'Zipped ESRI Shapefiles'), (b'KML', b'KML'), (b'KMZ', b'KMZ'), (b'GML', b'GML'), (b'SQLITE', b'SQLite')])),
+                ('fileType', models.TextField(default=None, max_length=128, choices=[(None, 'Unknown'), ('SHP', 'ESRI Shapefiles'), ('ZSHP', 'Zipped ESRI Shapefiles'), ('KML', 'KML'), ('KMZ', 'KMZ'), ('GML', 'GML'), ('SQLITE', 'SQLite')])),
                 ('baseFilename', models.TextField(max_length=256)),
                 ('fileCount', models.IntegerField(default=0)),
                 ('filenameString', models.TextField(null=True, blank=True)),

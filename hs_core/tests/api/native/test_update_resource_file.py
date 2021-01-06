@@ -51,7 +51,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         self.original_file.write("original text")
         self.original_file.close()
 
-        original_file = open(original_file_name, 'r')
+        original_file = open(original_file_name, 'rb')
         # add the file to the resource
         added_files = hydroshare.add_resource_files(new_res.short_id, original_file)
 
@@ -71,7 +71,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         new_file_data = 'data in new file'
         self.new_file.write(new_file_data)
         self.new_file.close()
-        new_file = open(new_file_name, 'r')
+        new_file = open(new_file_name, 'rb')
 
         # this is the api call we are testing
         rf = hydroshare.update_resource_file(new_res.short_id, original_file_name, new_file)
@@ -84,7 +84,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
 
         # test if the content of the file matches
         resource_file = hydroshare.get_resource_file(new_res.short_id, new_file_name).resource_file
-        self.assertEqual(resource_file.read(),  new_file_data, msg="resource file content didn't match")
+        self.assertEqual(resource_file.read().decode('utf-8'),  new_file_data, msg="resource file content didn't match")
 
         # reset the original resource file name for 2nd time resource file update
         original_file_name = new_file_name
@@ -95,7 +95,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         new_file_data = 'data in new file'
         new_file.write(new_file_data)
         new_file.close()
-        new_file = open(new_file_name, 'r')
+        new_file = open(new_file_name, 'rb')
 
         # this is the api call we are testing
         rf = hydroshare.update_resource_file(new_res.short_id, original_file_name, new_file)

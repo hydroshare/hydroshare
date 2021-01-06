@@ -4,7 +4,7 @@ from hs_core.signals import *
 from hs_script_resource.models import ScriptResource
 from hs_script_resource.forms import *
 
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 
 @receiver(pre_create_resource, sender=ScriptResource)

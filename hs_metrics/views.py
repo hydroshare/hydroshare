@@ -68,10 +68,10 @@ class HydroshareSiteMetrics(TemplateView):
         ctx = super(HydroshareSiteMetrics, self).get_context_data(**kwargs)
         self.get_resource_stats()
         self.get_user_stats()
-        self.user_professions = self.user_professions.items()
-        self.user_subject_areas = self.user_subject_areas.items()
-        self.resource_type_counts = self.resource_type_counts.items()
-        self.user_titles = self.user_titles.items()
+        self.user_professions = list(self.user_professions.items())
+        self.user_subject_areas = list(self.user_subject_areas.items())
+        self.resource_type_counts = list(self.resource_type_counts.items())
+        self.user_titles = list(self.user_titles.items())
         ctx['metrics'] = self
         return ctx
 

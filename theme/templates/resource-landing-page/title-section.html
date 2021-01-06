@@ -1,3 +1,5 @@
+{% load hydroshare_tags %}
+
 {# ======= Resource Publication just published notification =======#}
 {% if cm.raccess.published and just_published %}
     <div class="col-xs-12">
@@ -159,7 +161,7 @@
 
             <span id="apps-dropdown" v-if="openWithTools.length">
                 <div v-if="!isLoading" class="btn-group">
-                    <button class="btn btn-default dropdown-toggle"
+                    <button class="btn btn-primary dropdown-toggle"
                             type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Open with... <span class="caret"></span>
                     </button>
@@ -181,19 +183,79 @@
         </div>
         <hr>
     {% else %}
+        {# ======= Communities ======= #}
+        <div class="modal fade" id="title-modal" tabindex="-1" role="dialog" aria-labelledby="Title Assistant">
+            <div class="modal-dialog" role="document">
+                <div id="title-assistant" class="modal-content">
+                    <div class="modal-body">
+                        <div>
+                            <textarea id="resource-title" class="title-builder-output" v-model="title" disabled rows="3"
+                                      placeholder="start selecting items to build title">
+                            </textarea>
+                            <select id="czselect" class="cz-select" v-model="regionSelected" @change="updateTitle()">
+                                <option disabled value="">Select Critical Zone Region</option>
+                                <option>BCCZO</option>
+                                <option>CCZO</option>
+                                <option>CJCZO</option>
+                                <option>CRBCZO</option>
+                                <option>ERCZO</option>
+                                <option>LCZO</option>
+                                <option>RCCZO</option>
+                                <option>SSCZO</option>
+                                <option>SSHCZO</option>
+                                <option>IMLCZO</option>
+                                <option>Cross-CZO</option>
+                            </select>
+                            <mover :all-items="topics.itemsList" :right-items="topics.selectedItems"
+                                   title-left="Available Topics" title-right="Selected Topics"
+                                   moved-item-location="bottom" v-on:item-moved="itemMoved" v-cloak>
+                            </mover>
+                            <a style="cursor:help" title="To add Topics make a request to CriticalZoneOrg@gmail.com"
+                               href="mailto:CriticalZoneOrg@gmail.com?subject=New%20HydroShare%20Topic">To add a new topic, email the admin</a><br/>
+                            <input class="title-builder-input" id="resource-subtopic" v-model="subtopic"
+                                   v-on:keyup="updateTitle()" size="51"
+                                   maxlength="50" placeholder="Optional Custom Text"/><br/>
+                            <input class="title-builder-input" id="title-location" v-model="location"
+                                   v-on:keyup="updateTitle()" size="51"
+                                   maxlength="50" placeholder="Location" v-on:keyup="updateTitle()"/><br/>
+                            <input type="text" size="8" maxlength="4" class="title-builder-input" id="start-year"
+                                   v-model="startYear" v-on:keyup="updateDate()" placeholder="Start Year"/>
+                            <input type="text" size="8" maxlength="7" class="title-builder-input" id="end-year"
+                                   v-model="endYear" v-on:keyup="updateEndDate()" placeholder="End Year"/>
+                            <input type="checkbox" id="end-date-ongoing" name="end-date-ongoing" v-model="yearOngoing"
+                                   true-value="Ongoing" false-value="" @change="checkOngoing()">&nbsp;Ongoing
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <span class="inline-error">{% templatetag openvariable %}
+                                errmsg {% templatetag closevariable %}</span>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" v-on:click="saveTitle()" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="application/javascript">
+            // contents here are required by topics.js
+            const topics_from_page = JSON.parse("{{ topics_json }}");
+        </script>
+        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+
+
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title" method="post">
             {% csrf_token %}
             <fieldset>
                 <div id="div_id_value" class="control-group">
                     <div class="controls">
-                        <input class="form-control input-sm textinput textInput"
-                               id="txt-title" maxlength="300" name="value" type="text"
-                               value="{{ cm.metadata.title }}">
+                        <input class="form-control input-sm textinput textInput" id="txt-title"
+                                {% if czo_user %} onfocus="titleClick()" {% endif %}
+                               maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
                     </div>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-primary pull-right btn-form-submit"
+                    <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
                             style="display: none;">
                         Save changes
                     </button>
@@ -212,7 +274,13 @@
 {% endif %}
 
 {% if is_version_of %}
-    <div class="col-xs-12">
+    {% if user.is_authenticated %}
+        {# right side toolbar buttons will be displayed after the resource version text #}
+        <div class="col-xs-12">
+    {% else %}
+        {# need to add space to the bottom as the right side toolbar buttons won't be displayed for unauthenticated user #}
+        <div class="col-xs-12 space-bottom">
+    {% endif %}
         <div class="clear-fix">
             <i>An older version of this resource <a
                 href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i>
@@ -229,58 +297,87 @@
     </div>
 {% endif %}
 
+{% block extra_js %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
+
+    <style>
+        [v-cloak] {
+            display: none
+        }
+
+        .title-builder-input {
+            margin-top: 1em;
+        }
+    </style>
+    {#        vue-mover uses Sortable.min.js#}
+    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
+    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+{% endblock %}
+
+{% if not page|is_debug %}
 {# ======= JSON-LD Structure ======= #}
 <script type="application/ld+json">
 {
     "@context": {
-        "@vocab": "http://schema.org/",
-        "geolink": "http://schema.geolink.org/1.0/base/main#"
+        "@vocab": "http://www.schema.org/",
+        "datacite": "http://purl.org/spar/datacite/"
     },
+    {% if cm.raccess.published %}
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    {% else %}
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
     "@type": "Dataset",
-    "additionalType": ["http://schema.geolink.org/1.0/base/main#Dataset", "http://vivoweb.org/ontology/core#Dataset"],
+    "additionalType": "{{ cm.metadata.type.url }}",
     "name": "{{ title }}",
     "description": "{{ cm.metadata.description | escapejs }}",
-    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}/",
-    "version": "2017-06-04",
-    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    "keywords": "{{ keywords | escapejs }}",
-    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-        "license": "http://creativecommons.org/licenses/by/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-        "license": "http://creativecommons.org/licenses/by-sa/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-        "license": "http://creativecommons.org/licenses/by-nd/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-        "license": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-        "license": "http://creativecommons.org/licenses/by-nc/4.0/",
-    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-    "license": "http://creativecommons.org/licenses/by-nc-nd/4.0/",
-    {% endif %}
+    "keywords": {{ keywords|safe }},
     {% if cm.raccess.published %}
+    "creativeWorkStatus": "Published",
+    {% elif cm.raccess.public %}
+    "creativeWorkStatus": "Public",
+    {% elif cm.raccess.discoverable %}
+    "creativeWorkStatus": "Discoverable",
+    {% elif is_replaced_by %}
+    "creativeWorkStatus": "Obsolete",
+    {% else %}
+    "creativeWorkStatus": "Private",
+    {% endif %}
+    "inLanguage": "en-US",
     "identifier": {
-        "@type": "PropertyValue",
-        "additionalType": ["http://schema.geolink.org/1.0/base/main#Identifier", "http://purl.org/spar/datacite/Identifier"],
-        "propertyID": "http://purl.org/spar/datacite/doi",
+        "@type": [
+            "PropertyValue",
+            "datacite:ResourceIdentifier"
+        ],
+        {% if cm.raccess.published %}
+        "datacite:usesIdentifierScheme": {
+            "@id": "datacite:doi"
+        },
+        "propertyId": "DOI",
         "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
         "value": "10.4211/hs.{{ cm.short_id }}"
+        {% else %}
+        "datacite:usesIdentifierScheme": {
+            "@id": "datacite:local-resource-identifier-scheme"
+        },
+        "propertyId": "UUID",
+        "value": "uuid:{{ cm.short_id }}"
+        {% endif %}
     },
-    {% endif %}
-    "citation": "{{ citation }}",
-    "includedInDataCatalog": {
-        "@id": "https://www.hydroshare.org"
-    },
-    "distribution": {
-        "@type": "DataDownload",
-        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
-        "encodingFormat": "application/zip"
-    },
+    "creator": {{ creators | creator_json_ld_element | safe }},
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
     {% endif %}
-    {% if spatial_coverage %}
+    {% if spatial_coverage.exists %}
     "spatialCoverage": {
         "@type": "Place",
+        {% if spatial_coverage.name %}
+        "name": "{{ spatial_coverage.name }}",
+        {% endif %}
         "geo": {
             {% if spatial_coverage.type == 'point' %}
             "@type": "GeoCoordinates",
@@ -293,35 +390,96 @@
         }
     },
     {% endif %}
-    "creator": [
-        {% for cr in creators %}
-        {
-            "@id": "{{ cr.description }}",
-            "@type": "Role",
-            "additionalType": "http://schema.geolink.org/1.0/base/main#Participant",
-            "roleName": "Author",
-            "url": "{{ cr.description }}",
-            "creator": {
-                "@id": "{{ cr.description }}",
-                "@type": "Person",
-                "additionalType": "http://schema.geolink.org/1.0/base/main#Person",
-                "name": "{{ cr.name }}",
-                "url": "{{ cr.description }}/"
-            }
-        }
-        {%if not forloop.last%},{%endif%}
-        {% endfor %}
-    ],
+    {% if cm.raccess.published %}
+    "publisher": {
+        "@id": "https://www.hydroshare.org"
+    },
+    {% endif %}
     "provider": {
         "@id": "https://www.hydroshare.org",
         "@type": "Organization",
-        "additionalType": "http://schema.geolink.org/1.0/base/main#Organization",
-        "legalName": "HydroShare",
         "name": "HydroShare",
         "url": "https://www.hydroshare.org"
     },
-    "publisher": {
-        "@id": "https://www.hydroshare.org"
+    "includedInDataCatalog": {
+		"@type": "DataCatalog",
+		"name": "HydroShare",
+    	"url": "https://www.hydroshare.org/search/"
+	},
+	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	"license": {
+	    "@type": "CreativeWork",
+	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
+        "text": "{{ cm.metadata.rights.statement }}",
+        "url": "{{ cm.metadata.rights.url }}"
+        {% elif cm.metadata.rights.statement %}
+        "text": "{{ cm.metadata.rights.statement }}",
+        "name": "Customized license"
+        {% else %}
+        "url": "{{ cm.metadata.rights.url }}"
+        {% endif %}
+	},
+	{% endif %}
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    {% if relations %}
+    "citation": [
+    {% for relation in relations %}
+        "{{ relation.value }}"{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ],
+    {% endif %}
+    {% if fundingagencies %}
+    "funder": [
+    {% for agency in fundingagencies %}
+        {
+            "@type": "Organization",
+            "name": "{{ agency.agency_name }}",
+            "url": "{{ agency.agency_url }}"
+        }{%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    {% endif %}
+    "dateCreated": "{{ cm.created | date:"c" }}",
+    "dateModified": "{{ cm.last_updated | date:"c"}}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
+    "subjectOf": {
+        "@type": "CreativeWork",
+        "name": "Dublin Core Metadata Document Describing the Dataset",
+        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
+        "encodingFormat": "application/rdf+xml"
+    },
+    "distribution": {
+        "@type": "DataDownload",
+        "contentSize": "{{ cm.size|filesizeformat }}",
+        "encodingFormat": "application/zip",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "description": "Zipped BagIt Bag containing the HydroShare Resource",
+        "dateModified": "{{ cm.last_updated | date:"c" }}",
+        {% if cm.raccess.published %}
+        "identifier": [
+        {
+        {% else %}
+        "identifier": {
+        {% endif %}
+            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
+            "datacite:usesIdentifierScheme": {
+                "@id": "datacite:local-resource-identifier-scheme"
+            },
+            "propertyId": "UUID",
+            "value": "uuid:{{ cm.short_id }}"
+        }{% if cm.raccess.published %},
+        {
+            "@type": "PropertyValue",
+            "additionalType": [
+                "http://www.wikidata.org/entity/Q185235",
+                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+            ],
+            "identifier": "md5:{{ cm.bag_checksum }}",
+            "propertyID": "MD5",
+            "value": "{{ cm.bag_checksum }}"
+        }
+        ]{% endif %}
     }
 }
 </script>
+{% endif %}

@@ -28,14 +28,14 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
         return msg
 
     def __unicode__(self):
-        return unicode(str(self))
+        return str(self)
 
     def _read_resource_metadata(self):
         super(ModelInstanceResourceMeta, self)._read_resource_metadata()
 
         print("--- ModelInstanceResource ---")
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get ModelOutput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelOutput, None)):

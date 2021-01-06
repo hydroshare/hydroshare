@@ -45,7 +45,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
         target_temp_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_file_name)
         shutil.copy(self.odm2_sqlite_file, target_temp_sqlite_file)
-        self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'r')
+        self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'rb')
 
         self.odm2_sqlite_missing_data_file_name = \
             'ODM2_multi_site_single_variable_missing_data.sqlite'
@@ -57,18 +57,18 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
             self.odm2_sqlite_bad_file_name)
         target_temp_bad_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_bad_file_name)
         shutil.copy(self.odm2_sqlite_bad_file, target_temp_bad_sqlite_file)
-        self.odm2_sqlite_bad_file_obj = open(target_temp_bad_sqlite_file, 'r')
+        self.odm2_sqlite_bad_file_obj = open(target_temp_bad_sqlite_file, 'rb')
 
         self.odm2_csv_file_name = 'ODM2_Multi_Site_One_Variable_Test.csv'
         self.odm2_csv_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_csv_file_name)
         target_temp_csv_file = os.path.join(self.temp_dir, self.odm2_csv_file_name)
         shutil.copy(self.odm2_csv_file, target_temp_csv_file)
-        self.odm2_csv_file_obj = open(target_temp_csv_file, 'r')
+        self.odm2_csv_file_obj = open(target_temp_csv_file, 'rb')
 
         temp_text_file = os.path.join(self.temp_dir, 'ODM2.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("ODM2 records")
-        self.text_file_obj = open(temp_text_file, 'r')
+        self.text_file_obj = open(temp_text_file, 'rb')
 
     def tearDown(self):
         super(TestTimeSeriesMetaData, self).tearDown()
@@ -168,7 +168,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
     def test_metadata_extraction_from_sqlite_on_resource_creation_1(self):
         # passing the file object that points to the temp dir doesn't work - create_resource
         # throws error open the file from the fixed file location
-        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'rb')
 
         self.resTimeSeries = hydroshare.create_resource(
             resource_type='TimeSeriesResource',
@@ -183,7 +183,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
     def test_metadata_extraction_from_sqlite_on_resource_creation_2(self):
         # Here we are using a sqlite file that has data missing as specified in issue#2771
 
-        files = [open(self.odm2_sqlite_missing_data_file, 'r')]
+        files = [open(self.odm2_sqlite_missing_data_file, 'rb')]
 
         self.resTimeSeries = hydroshare.create_resource(
             resource_type='TimeSeriesResource',
@@ -693,7 +693,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         # metadata elements is updated
 
         # create a resource with uploded sqlite file
-        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'rb')
 
         self.resTimeSeries = hydroshare.create_resource(
             resource_type='TimeSeriesResource',
@@ -836,7 +836,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         # there should be new records added to the corresponding CV table (Django db table)
 
         # create a resource with uploded sqlite file
-        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'rb')
 
         self.resTimeSeries = hydroshare.create_resource(
             resource_type='TimeSeriesResource',
@@ -2215,7 +2215,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
         invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
         target_temp_csv_file = os.path.join(self.temp_dir, invalid_csv_file_name)
         shutil.copy(invalid_csv_file, target_temp_csv_file)
-        return open(target_temp_csv_file, 'r')
+        return open(target_temp_csv_file, 'rb')
 
     def _test_no_change_in_metadata(self):
         # test the core metadata at this point

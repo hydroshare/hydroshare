@@ -1,4 +1,4 @@
-from urlparse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 
 from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
@@ -355,8 +355,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(tl['res_id'], self.resWebApp.short_id)
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual(tl['agg_types'], '')
         self.assertEqual(tl['file_extensions'], '')
 
@@ -372,6 +370,61 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         relevant_tools = resource_level_tool_urls(self.resComposite, request)
         self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no appkey '
                                               'matching')
+
+    def test_web_app_extended_metadata_custom_key(self):
+        # testing a web resource may contain custom keys
+        self.user.ulabels.add_open_with_app(self.resWebApp)
+        self.assertEqual(ToolResource.objects.count(), 1)
+        metadata = []
+        metadata.append({'requesturlbase': {'value': 'https://www.google.com?s=${search_string}'}})
+        metadata.append({'supportedrestypes': {
+            'supported_res_types': ['CompositeResource']}})
+        metadata.append({'supportedsharingstatus': {'sharing_status': ['Private']}})
+        self.resWebApp.metadata.update(metadata, self.user)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        self.assertEqual(self.resComposite.extra_metadata, {})
+        self.resComposite.extra_metadata = {'search_string': 'it works'}
+        self.resComposite.save()
+
+        url = '/resource/' + self.resComposite.short_id + '/'
+        request = self.factory.get(url)
+        request.user = self.user
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None')
+        tc = relevant_tools['resource_level_app_counter']
+        self.assertEqual(tc, 1, msg='open with app counter ' + str(tc) + ' is not 1')
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(tl['res_id'], self.resWebApp.short_id)
+        self.assertEqual(tl['agg_types'], '')
+        self.assertEqual(tl['file_extensions'], '')
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
+
+        self.resComposite.extra_metadata = {}
+        self.resComposite.save()
+        self.assertEqual(self.resComposite.extra_metadata, {})
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should be None with no web app '
+                                              'matching')
+        # test for default custom key value specified in the web app
+        self.resWebApp.extra_metadata = {'search_string': 'it works'}
+        self.resWebApp.save()
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
+                                                 'web app key')
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
+
+        # test for resource override of default custom key value specified in the web app
+        self.resComposite.extra_metadata = {'search_string': 'overridden'}
+        self.resComposite.save()
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
+                                                 'web app key')
+        tl = relevant_tools['tool_list'][0]
+        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=overridden'}")
 
     def test_web_app_do_needed_work_when_being_launched(self):
         # testing a web app does needed work when being launched. Currently, the needed work when
@@ -481,7 +534,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, SupportedAggTypes.objects.all().count())
 
         # add a geo raster aggregation to the resource
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
         resource_file_add_process(resource=self.resComposite,
                                   files=(open_file,), user=self.user)
 
@@ -516,10 +569,15 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(0, tc)
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(self.resWebApp.short_id, tl['res_id'])
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual('GeoRasterLogicalFile', tl['agg_types'])
         self.assertEqual('', tl['file_extensions'])
+
+        # Remove appkey to turn off openwithlist for this resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should have no approved resources')
 
     def test_file_extensions(self):
         # set url launching pattern for aggregations
@@ -534,7 +592,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedFileExtensions.objects.all().count(), 1)
 
         # add a geo raster aggregation to the resource
-        open_file = open(self.test_file_path.format("small_logan.tif"), 'r')
+        open_file = open(self.test_file_path.format("small_logan.tif"), 'rb')
         resource_file_add_process(resource=self.resComposite,
                                   files=(open_file,), user=self.user)
 
@@ -569,10 +627,15 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(0, tc)
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(self.resWebApp.short_id, tl['res_id'])
-        self.assertFalse(tl['approved'])
-        self.assertTrue(tl['openwithlist'])
         self.assertEqual('', tl['agg_types'])
         self.assertEqual('.tif', tl['file_extensions'])
+
+        # Remove appkey to turn off openwithlist for this resource
+        self.resWebApp.extra_metadata = {}
+        self.resWebApp.save()
+
+        relevant_tools = resource_level_tool_urls(self.resComposite, request)
+        self.assertIsNone(relevant_tools, msg='relevant_tools should have no approved resources')
 
     def test_copy(self):
 

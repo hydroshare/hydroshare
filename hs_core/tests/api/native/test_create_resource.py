@@ -43,8 +43,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         open(file_two, "w").close()
 
         # open files for read and upload
-        self.file_one = open(file_one, "r")
-        self.file_two = open(file_two, "r")
+        self.file_one = open(file_one, "rb")
+        self.file_two = open(file_two, "rb")
 
         # Make a text file
         self.txt_file_path = os.path.join(self.tmp_dir, 'text.txt')
@@ -128,7 +128,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             )
 
         # test resource has 2 files
-        self.assertEquals(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
+        self.assertEqual(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
         if new_res:
             new_res.delete()
 
@@ -233,14 +233,14 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                       msg="Subject element with value of %s does not exist." % 'sub-1')
 
         # valid date should have been created
-        self.assertEquals(res.metadata.dates.filter(type='valid').count(), 1)
+        self.assertEqual(res.metadata.dates.filter(type='valid').count(), 1)
         valid_date_element = res.metadata.dates.filter(type='valid').first()
         valid_start_date = timezone.make_aware(dtime.datetime.strptime('01/20/2016', "%m/%d/%Y"),
                                                timezone.get_default_timezone())
         valid_end_date = timezone.make_aware(dtime.datetime.strptime('02/20/2016', "%m/%d/%Y"),
                                              timezone.get_default_timezone())
-        self.assertEquals(valid_date_element.start_date, valid_start_date)
-        self.assertEquals(valid_date_element.end_date, valid_end_date)
+        self.assertEqual(valid_date_element.start_date, valid_start_date)
+        self.assertEqual(valid_date_element.end_date, valid_end_date)
         if res:
             res.delete()
 
@@ -320,11 +320,11 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertNotIn(skipped_date, [dat.start_date for dat in res.metadata.dates.all()],
                          msg="Matching date value was found")
 
-        self.assertEquals(res.metadata.dates.filter(type='publisher').count(), 0, msg="Publisher date was found.")
-        self.assertEquals(res.metadata.dates.filter(type='available').count(), 0, msg="Available date was found.")
+        self.assertEqual(res.metadata.dates.filter(type='publisher').count(), 0, msg="Publisher date was found.")
+        self.assertEqual(res.metadata.dates.filter(type='available').count(), 0, msg="Available date was found.")
 
         # valid date should have been created
-        self.assertEquals(res.metadata.dates.filter(type='valid').count(), 1)
+        self.assertEqual(res.metadata.dates.filter(type='valid').count(), 1)
         valid_start_date = timezone.make_aware(dtime.datetime.strptime('01/20/2016', "%m/%d/%Y"),
                                                timezone.get_default_timezone())
         valid_end_date = timezone.make_aware(dtime.datetime.strptime('02/20/2016', "%m/%d/%Y"),
@@ -339,7 +339,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             res.delete()
 
     def test_create_resource_with_file(self):
-        raster = open(self.raster_file_path)
+        raster = open(self.raster_file_path, 'rb')
         res = resource.create_resource('GenericResource',
                                        self.user,
                                        'My Test resource',
@@ -351,7 +351,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
-        self.assertEquals(res.files.all().count(), 1)
+        self.assertEqual(res.files.all().count(), 1)
         if res:
             res.delete()
 
@@ -359,7 +359,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         raster = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name=self.raster_file_path,
                                          content_type='image/tiff',
                                          size=os.stat(self.raster_file_path).st_size)
-        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'r'), name=self.txt_file_path,
+        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'rb'), name=self.txt_file_path,
                                        content_type='text/plain',
                                        size=os.stat(self.txt_file_path).st_size)
         res = resource.create_resource('GenericResource',
@@ -373,7 +373,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
-        self.assertEquals(res.files.all().count(), 2)
+        self.assertEqual(res.files.all().count(), 2)
         if res:
             res.delete()
 
@@ -397,7 +397,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # get the resource by pid
         res = get_resource_by_shortkey(pid)
-        self.assertEquals(res.files.all().count(), 1)
+        self.assertEqual(res.files.all().count(), 1)
 
         # Create a resource with zipfile, un-pack
         payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
@@ -410,7 +410,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                                        unpack_file=True)
         pid = res.short_id
         res = get_resource_by_shortkey(pid)
-        self.assertEquals(res.files.all().count(), 2)
+        self.assertEqual(res.files.all().count(), 2)
         if res:
             res.delete()
 
@@ -450,4 +450,4 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         except QuotaException as ex:
             self.fail(
                 "create resource should not raise QuotaException for over quota cases "
-                " if quota is not enforced - Quota Exception: " + ex.message)
+                " if quota is not enforced - Quota Exception: " + str(ex))

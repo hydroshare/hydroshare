@@ -13,7 +13,7 @@ class RodsEnvironment(m.Model):
     auth = m.TextField(verbose_name='Password')
 
     def __unicode__(self):
-        return u'{username}@{host}:{port}//{def_res}/{home_coll}'.format(
+        return '{username}@{host}:{port}//{def_res}/{home_coll}'.format(
             username = self.username,
             host = self.host,
             port = self.port,

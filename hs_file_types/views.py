@@ -18,7 +18,6 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
     ResourceFile, utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
-from hs_core.hydroshare.resource import update_quota_usage
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
 
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
@@ -50,7 +49,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
     """
 
     response_data = {'status': 'error'}
-    folder_path = None
+    folder_path = ''
     if file_id is None:
         folder_path = request.POST.get('folder_path', "")
         if not folder_path:
@@ -77,7 +76,7 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         resource_modified(res, request.user, overwrite_bag=False)
 
         msg = "{} was successfully set to the selected aggregation type."
-        if folder_path is None:
+        if not folder_path:
             msg = msg.format("Selected file")
         else:
             msg = msg.format("Selected folder")
@@ -87,26 +86,14 @@ def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
         return JsonResponse(response_data, status=status.HTTP_201_CREATED)
 
     except ValidationError as ex:
-        response_data['message'] = ex.message
+        response_data['message'] = str(ex)
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
     except Exception as ex:
-        response_data['message'] = ex.message
+        response_data['message'] = str(ex)
         return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['POST'])
-def set_file_type_public(request, pk, file_path, hs_file_type):
-    """
-    Set file type as specified by *hs_file_type* using the file given by *file_path*
-
-    :param request: an instance of HttpRequest object
-    :param pk: id of the composite resource in which this file type needs to be set
-    :param file_path: relative file path of the file which needs to be set to the specified file
-    type. If the absolute file path is [resource-id]/data/contents/some-folder/some-file.txt then
-    file_path needs to be set as: some-folder/some-file.txt
-    :param hs_file_type: type of file to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
-    :return:
-    """
+def get_res_file(pk, file_path):
 
     # get id of the file from the file_path to map to the internal api call
     file_rel_path = str(file_path).strip()
@@ -132,15 +119,92 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
 
     res_file = ResourceFile.get(resource, file_name, folder)
 
-    # call the internal api for setting the file type
-    json_response = set_file_type(request=request, resource_id=pk, file_id=res_file.id,
-                                  hs_file_type=hs_file_type)
+    return res_file
+
+
+@api_view(['POST'])
+def set_file_type_public(request, pk, file_path, hs_file_type):
+    """
+    Set file type as specified by *hs_file_type* using the file given by *file_path*
+
+    :param request: an instance of HttpRequest object
+    :param pk: id of the composite resource in which this file type needs to be set
+    :param file_path: relative file path of the file which needs to be set to the specified file
+    type. If the absolute file path is [resource-id]/data/contents/some-folder/some-file.txt then
+    file_path needs to be set as: some-folder/some-file.txt
+    :param hs_file_type: type of file to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
+    :return:
+    """
+    if hs_file_type == "FileSet":
+        # call the internal api for setting the file type
+        json_response = set_file_type(request=request, resource_id=pk, hs_file_type=hs_file_type)
+    else:
+        res_file = get_res_file(pk, file_path)
+        if isinstance(res_file, Response):
+            return res_file
+
+        # call the internal api for setting the file type
+        json_response = set_file_type(request=request, resource_id=pk, file_id=res_file.id,
+                                      hs_file_type=hs_file_type)
+
     # only return the message part of the above response
     response_dict = json.loads(json_response.content)
     return Response(data=response_dict['message'],
                     status=json_response.status_code)
 
 
+def get_fileset_id(resource_id, file_path):
+    resource = utils.get_resource_by_shortkey(resource_id)
+    filesets = [lf for lf in resource.logical_files if lf.get_aggregation_type_name() == "FileSetAggregation" and
+                lf.folder == file_path]
+    if not filesets:
+        return Response('Folder {} does not exist.'.format(file_path),
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    return filesets[0].id
+
+
+@api_view(['POST'])
+def remove_aggregation_public(request, resource_id, hs_file_type, file_path, **kwargs):
+    """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
+    However, it doesn't delete resource files associated with the aggregation.
+    """
+    if hs_file_type == "FileSetLogicalFile":
+        fileset_id = get_fileset_id(resource_id, file_path)
+        return remove_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
+    else:
+        res_file = get_res_file(resource_id, file_path)
+        if isinstance(res_file, Response):
+            return res_file
+        return remove_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
+
+
+@api_view(['DELETE'])
+def delete_aggregation_public(request, resource_id, hs_file_type, file_path, **kwargs):
+    """Deletes all files associated with an aggregation and all the associated metadata.
+    """
+    if hs_file_type == "FileSetLogicalFile":
+        fileset_id = get_fileset_id(resource_id, file_path)
+        return delete_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
+    else:
+        res_file = get_res_file(resource_id, file_path)
+        if isinstance(res_file, Response):
+            return res_file
+        return delete_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
+
+
+@api_view(['POST'])
+def move_aggregation_public(request, resource_id, hs_file_type, file_path, tgt_path="", **kwargs):
+    """moves all files associated with an aggregation and all the associated metadata.
+    """
+    res_file = get_res_file(resource_id, file_path)
+    if isinstance(res_file, Response):
+        return res_file
+    return move_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, tgt_path, **kwargs)
+
+
+# TODO: This view function needs to be deleted as the actual view function for deleting
+# logical_file/aggregation is 'delete_aggregation'
 @login_required
 def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs):
     """deletes an instance of a specific file type and all its associated resource files"""
@@ -189,7 +253,7 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
 
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        err_msg = err_msg.format(list(FILE_TYPE_MAP.keys()))
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -218,7 +282,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     response_data = {'status': 'error'}
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        err_msg = err_msg.format(list(FILE_TYPE_MAP.keys()))
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -236,9 +300,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    for file in aggregation.files.all():
-        file.delete()
-    update_quota_usage(res)
+    aggregation.logical_delete(request.user)
     msg = "Aggregation was successfully deleted."
     response_data['status'] = 'success'
     response_data['message'] = msg
@@ -254,7 +316,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     response_data = {'status': 'error'}
     if hs_file_type not in FILE_TYPE_MAP:
         err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
-        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        err_msg = err_msg.format(list(FILE_TYPE_MAP.keys()))
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -369,9 +431,9 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
             resource_modified(resource, request.user, overwrite_bag=False)
             is_update_success = True
         except ValidationError as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
         except Error as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
     else:
         err_msg = err_msg.format(element_name, validation_response['errors'])
 
@@ -442,9 +504,9 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
             resource_modified(logical_file.resource, request.user, overwrite_bag=False)
             is_add_success = True
         except ValidationError as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
         except Error as ex:
-            err_msg = err_msg.format(element_name, ex.message)
+            err_msg = err_msg.format(element_name, str(ex))
     else:
         err_msg = err_msg.format(element_name, validation_response['errors'])
 
@@ -574,7 +636,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     def validate_key():
-        if key in logical_file.metadata.extra_metadata.keys():
+        if key in list(logical_file.metadata.extra_metadata.keys()):
             ajax_response_data = {'status': 'error',
                                   'logical_file_type': logical_file.type_name(),
                                   'message': "Update failed. Key already exists."}
@@ -592,7 +654,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
             if not is_valid:
                 return json_response
             else:
-                if key_original in logical_file.metadata.extra_metadata.keys():
+                if key_original in list(logical_file.metadata.extra_metadata.keys()):
                     del logical_file.metadata.extra_metadata[key_original]
     else:
         # user trying to add a new pair of key/value
@@ -635,7 +697,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     key = request.POST['key']
-    if key in logical_file.metadata.extra_metadata.keys():
+    if key in list(logical_file.metadata.extra_metadata.keys()):
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
@@ -896,7 +958,7 @@ def update_netcdf_file(request, file_type_id, **kwargs):
         logical_file.update_netcdf_file(request.user)
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'message': ex.message}
+                              'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -929,7 +991,7 @@ def update_sqlite_file(request, file_type_id, **kwargs):
         logical_file.update_sqlite_file(request.user)
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'message': ex.message}
+                              'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     resource_modified(resource, request.user, overwrite_bag=False)
@@ -974,7 +1036,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
             metadata = logical_file.metadata.get_html_forms()
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
-        ajax_response_data = {'status': 'error', 'message': ex.message}
+        ajax_response_data = {'status': 'error', 'message': str(ex)}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
@@ -1001,11 +1063,11 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
         return json_response
 
     series_ids = logical_file.metadata.series_ids_with_labels
-    if series_id not in series_ids.keys():
+    if series_id not in list(series_ids.keys()):
         # this will happen only in case of CSV file upload when data is written
         # first time to the blank sqlite file as the series ids get changed to
         # uuids
-        series_id = series_ids.keys()[0]
+        series_id = list(series_ids.keys())[0]
     try:
         if resource_mode == 'view':
             metadata = logical_file.metadata.get_html(series_id=series_id)
@@ -1013,7 +1075,7 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
             metadata = logical_file.metadata.get_html_forms(series_id=series_id)
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
-        ajax_response_data = {'status': 'error', 'message': ex.message}
+        ajax_response_data = {'status': 'error', 'message': str(ex)}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 

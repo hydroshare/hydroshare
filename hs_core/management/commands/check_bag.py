@@ -115,7 +115,7 @@ def check_bag(rid, options):
                     try:
                         create_bag_files(resource)
                     except ValueError as e:
-                        print("{}: value error encountered: {}".format(rid, e.message))
+                        print(("{}: value error encountered: {}".format(rid, str(e))))
                         return
 
                     print("{} metadata generated from Django".format(rid))
@@ -134,7 +134,7 @@ def check_bag(rid, options):
                     try:
                         create_bag_files(resource)
                     except ValueError as e:
-                        print("{}: value error encountered: {}".format(rid, e.message))
+                        print(("{}: value error encountered: {}".format(rid, str(e))))
                         return
                     print("{}: metadata generated from Django".format(rid))
                     resource.setAVU('metadata_dirty', 'false')

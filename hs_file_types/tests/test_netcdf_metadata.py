@@ -14,7 +14,7 @@ from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 from hs_app_netCDF.models import OriginalCoverage, Variable
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
-from utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
+from .utils import assert_netcdf_file_type_metadata, CompositeResourceTestMixin, \
     get_path_with_no_file_extension
 
 
@@ -132,8 +132,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_nc_file_name, _ = os.path.splitext(self.netcdf_file_name)
         expected_file_folder = new_folder
@@ -182,8 +182,8 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # test logical file/aggregation
-        self.assertEqual(len(self.composite_resource.logical_files), 1)
-        logical_file = self.composite_resource.logical_files[0]
+        self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
+        logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
         base_nc_file_name, _ = os.path.splitext(self.netcdf_file_name)
         expected_file_folder = new_folder
@@ -837,7 +837,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create aggregation from the nc file
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, nc_res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertNotEqual(res_file.file_folder, '')
 
         # add a file to the resource which will try to move into the aggregation folder
         res_file_to_move = self.add_file_to_resource(file_to_add=self.netcdf_invalid_file)
@@ -863,7 +863,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create aggregation from the nc file
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         res_file = self.composite_resource.files.first()
-        self.assertNotEqual(res_file.file_folder, None)
+        self.assertNotEqual(res_file.file_folder, '')
 
         # add a file to the resource at the aggregation folder
         self.add_file_to_resource(file_to_add=self.netcdf_invalid_file,

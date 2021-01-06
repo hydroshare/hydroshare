@@ -6,4 +6,4 @@ class ToolsResourceAppConfig(AppConfig):
     verbose_name = "Applications"
 
     def ready(self):
-        import receivers  # noqa
+        from . import receivers  # noqa

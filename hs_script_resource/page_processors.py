@@ -2,10 +2,10 @@ from crispy_forms.layout import Layout, HTML
 from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
-from forms import ScriptForm
+from .forms import ScriptForm
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from models import ScriptResource
+from .models import ScriptResource
 
 
 @processor_for(ScriptResource)

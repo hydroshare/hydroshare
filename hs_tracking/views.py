@@ -1,28 +1,29 @@
 import csv
-from cStringIO import StringIO
-import urlparse
+from io import StringIO
+import urllib.parse
 
 from django.views.generic import TemplateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.contrib import messages
 
 from . import models as hs_tracking
 from .models import Session, Variable
-from .utils import get_std_log_fields
+from .utils import get_std_log_fields, authentic_redirect_url
 from hs_tools_resource.utils import do_work_when_launching_app_as_needed, WebAppLaunchException
 
 
 class AppLaunch(TemplateView):
 
     def get(self, request, **kwargs):
-
         # get the query parameters and remove the redirect url b/c
         # we don't need to log this.
         querydict = dict(request.GET)
-        url = querydict.pop('url')[0]
+        url = querydict.pop('url', [None])[0]
 
+        if not authentic_redirect_url(url):
+            return HttpResponseForbidden()
         # do work as needed when launching web app
         res_id = querydict.pop('res_id', [''])[0]
         tool_res_id = querydict.pop('tool_res_id', [''])[0]
@@ -30,7 +31,7 @@ class AppLaunch(TemplateView):
             try:
                 do_work_when_launching_app_as_needed(tool_res_id, res_id, request.user)
             except WebAppLaunchException as ex:
-                messages.warning(request, ex.message)
+                messages.warning(request, str(ex))
                 return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
         # log app launch details if user is logged in
@@ -40,10 +41,10 @@ class AppLaunch(TemplateView):
             fields = get_std_log_fields(request, session)
 
             # parse the query and param portions of the url
-            purl = urlparse.urlparse(url)
+            purl = urllib.parse.urlparse(url)
 
             # extract the app url args so they can be logged
-            app_args = urlparse.parse_qs(purl.query)
+            app_args = urllib.parse.parse_qs(purl.query)
 
             # update the log fields with the extracted request and url params
             fields.update(querydict)
@@ -52,7 +53,7 @@ class AppLaunch(TemplateView):
             # clean up the formatting of the query and app arg dicts
             # i.e. represent lists in csv format without brackets [ ]
             # so that the log records don't need to be cleaned later.
-            fields.update(dict((k, ','.join(v)) for k, v in fields.iteritems()
+            fields.update(dict((k, ','.join(v)) for k, v in list(fields.items())
                           if type(v) == list))
 
             # format and save the log message

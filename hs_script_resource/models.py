@@ -83,7 +83,7 @@ class ScriptMetaData(CoreMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import ScriptMetaDataSerializer
+        from .serializers import ScriptMetaDataSerializer
         return ScriptMetaDataSerializer(self)
 
     @classmethod
@@ -91,7 +91,7 @@ class ScriptMetaData(CoreMetaData):
         """Overriding the base class method"""
 
         CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'scriptspecificmetadata' in keys_to_update:
             parsed_metadata.append({"scriptspecificmetadata":
                                     metadata.pop('scriptspecificmetadata')})
@@ -122,13 +122,13 @@ class ScriptMetaData(CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import ScriptFormValidation
+        from .forms import ScriptFormValidation
 
         super(ScriptMetaData, self).update(metadata, user)
         attribute_mappings = {'scriptspecificmetadata': 'program'}
         with transaction.atomic():
             # update/create non-repeatable element
-            for element_name in attribute_mappings.keys():
+            for element_name in list(attribute_mappings.keys()):
                 for dict_item in metadata:
                     if element_name in dict_item:
                         validation_form = ScriptFormValidation(dict_item[element_name])
@@ -140,40 +140,4 @@ class ScriptMetaData(CoreMetaData):
                                                            element_property_name)
                         break
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
-
-        # get the xml string for R Script
-        xml_string = super(ScriptMetaData, self).get_xml(pretty_print=pretty_print)
-
-        # create  etree element
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get the root 'Description' element, which contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.program:
-
-            if self.program.scriptReleaseDate:
-                script_release_date = etree.SubElement(container, '{%s}scriptReleaseDate' % self.NAMESPACES['hsterms'])
-                script_release_date.text = self.program.scriptReleaseDate.isoformat()
-
-            script_language = etree.SubElement(container, '{%s}scriptLanguage' % self.NAMESPACES['hsterms'])
-            script_language.text = self.program.scriptLanguage
-
-            language_version = etree.SubElement(container, '{%s}languageVersion' % self.NAMESPACES['hsterms'])
-            language_version.text = self.program.scriptVersion
-
-            script_version = etree.SubElement(container, '{%s}scriptVersion' % self.NAMESPACES['hsterms'])
-            script_version.text = self.program.scriptVersion
-
-            script_dependencies = etree.SubElement(container, '{%s}scriptDependencies' % self.NAMESPACES['hsterms'])
-            script_dependencies.text = self.program.scriptVersion
-
-            script_code_repository = etree.SubElement(container, '{%s}scriptCodeRepository' % self.NAMESPACES['hsterms'])
-            script_code_repository.text = self.program.scriptCodeRepository
-
-        xml_string = etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
-        return xml_string
-
-import receivers # never delete this otherwise none of the receiver function will work
+from . import receivers # never delete this otherwise none of the receiver function will work

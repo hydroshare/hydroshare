@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 def create_account(
         email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
-        password=None, active=True, organization=None, middle_name=None):
+        password=None, active=True, organization=None, middle_name=None, user_type=None, country=None, state=None):
     """
     Create a new user within the HydroShare system.
 
@@ -101,6 +101,17 @@ def create_account(
         user_profile.middle_name = middle_name
         user_profile.save()
 
+    if user_type:
+        user_profile.user_type = user_type
+        user_profile.save()
+
+    if country:
+        user_profile.country = country
+        user_profile.save()
+
+    if state:
+        user_profile.state = state
+        user_profile.save()
     # create default UserQuota object for the new user
     uq = UserQuota.objects.create(user=u)
     uq.save()
@@ -137,27 +148,27 @@ def update_account(user, **kwargs):
     if groups:
         if len(groups) == 1:
             groups = [(Group.objects.get_or_create(name=groups)
-                      if isinstance(groups, basestring) else groups)[0]]
+                      if isinstance(groups, str) else groups)[0]]
         else:
-            groups = zip(
+            groups = list(zip(
                 *(Group.objects.get_or_create(name=g)
-                  if isinstance(g, basestring) else g
-                  for g in groups))[0]
+                  if isinstance(g, str) else g
+                  for g in groups)))[0]
 
     if 'password' in kwargs:
         user.set_password(kwargs['password'])
 
     blacklist = {'username', 'password', 'groups'}  # handled separately or cannot change
-    for k in blacklist.intersection(kwargs.keys()):
+    for k in blacklist.intersection(list(kwargs.keys())):
         del kwargs[k]
 
     try:
         profile = get_profile(user)
         profile_update = dict()
-        update_keys = filter(lambda x: hasattr(profile, str(x)), kwargs.keys())
+        update_keys = [x for x in list(kwargs.keys()) if hasattr(profile, str(x))]
         for key in update_keys:
             profile_update[key] = kwargs[key]
-        for k, v in profile_update.items():
+        for k, v in list(profile_update.items()):
             if k == 'picture':
                 profile.picture = File(v) if not isinstance(v, UploadedFile) else v
             elif k == 'cv':
@@ -166,13 +177,13 @@ def update_account(user, **kwargs):
                 setattr(profile, k, v)
         profile.save()
     except AttributeError as e:
-        raise exceptions.ValidationError(e.message)  # ignore deprecated user profile module when we upgrade to 1.7
+        raise exceptions.ValidationError(str(e))  # ignore deprecated user profile module when we upgrade to 1.7
 
     user_update = dict()
-    update_keys = filter(lambda x: hasattr(user, str(x)), kwargs.keys())
+    update_keys = [x for x in list(kwargs.keys()) if hasattr(user, str(x))]
     for key in update_keys:
             user_update[key] = kwargs[key]
-    for k, v in user_update.items():
+    for k, v in list(user_update.items()):
         setattr(user, k, v)
     user.save()
 
@@ -202,7 +213,7 @@ def list_users(query=None, status=None, start=None, count=None):
     Exception.ServiceFailure - The service is unable to process the request
 
     """
-    query = json.loads(query) if isinstance(query, basestring) else query
+    query = json.loads(query) if isinstance(query, str) else query
 
     qs = User.objects.filter(**query)
     qs = qs.filter(active=True) if status == 'active' else qs
@@ -277,7 +288,7 @@ def get_public_groups():
 
 
 def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
-                      to_date=None, start=None, count=None, full_text_search=None,
+                      to_date=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
                       north=None, south=None, east=None, west=None, include_obsolete=False):
@@ -314,8 +325,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         user = User or name
         from_date = datetime object
         to_date = datetime object
-        start = int
-        count = int
         subject = list of subject
         type = list of resource type names, used for filtering
         coverage_type = geo parameter, one of box or point
@@ -325,8 +334,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         east = east coordinate
     """
 
-    if not any((author, creator, group, user, owner, from_date, to_date, start,
-                count, subject, full_text_search, public, type)):
+    if not any((author, creator, group, user, owner, from_date, to_date,
+                subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     q = []
@@ -338,7 +347,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(query)
 
     if published:
-        q.append(Q(doi__isnull=False))
+        q.append(Q(raccess__published=True))
 
     if author:
         authors = author.split(',')
@@ -425,39 +434,13 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
     if not include_obsolete:
         flt = flt.exclude(object_id__in=Relation.objects.filter(
             type='isReplacedBy').values('object_id'))
+    if full_text_search:
+        description_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+        title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+        # Full text search must match within the title or abstract
+        flt = flt.filter(object_id__in=description_ids.union(title_ids))
     for q in q:
         flt = flt.filter(q)
-
-        if full_text_search:
-            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
-
-            # Full text search must match within the title or abstract
-            if desc_ids:
-                flt = flt.filter(object_id__in=desc_ids)
-            elif title_ids:
-                flt = flt.filter(object_id__in=title_ids)
-            else:
-                # No matches on title or abstract, so treat as no results of search
-                flt = flt.none()
-
-    # TODO The below is legacy pagination... need to find out if anything is using it and delete
-    qcnt = 0
-    if flt:
-        qcnt = len(flt)
-
-    if start is not None and count is not None:
-        if qcnt > start:
-            if qcnt >= start + count:
-                flt = flt[start:start+count]
-            else:
-                flt = flt[start:qcnt]
-    elif start is not None:
-        if qcnt >= start:
-            flt = flt[start:qcnt]
-    elif count is not None:
-        if qcnt > count:
-            flt = flt[0:count]
 
     return flt
 

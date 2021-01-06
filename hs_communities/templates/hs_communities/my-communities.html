@@ -1,0 +1,70 @@
+{% extends "pages/page.html" %}
+
+{% load hydroshare_tags %}
+
+{% block meta_title %}My Communities {% endblock %}
+
+{% block main %}
+    <div class="collaborate-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="collaborate-nav">
+                        <a href="{% url "communities" %}" class="collaborate-nav-item">Find Communities</a>
+                        <a href="{% url "my_communities" %}" class="collaborate-nav-item active">My Communities</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <h2 class="page-title">My Communities</h2>
+            </div>
+            <div class="col-sm-9">
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% if communities_list %}
+                            <table class="groups-table">
+                                {% for c in communities_list %}
+                                    <tr>
+                                        <td>
+                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                <div class="group-image-wrapper">
+                                                    <div class="group-image-small"
+                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                                </div>
+                                            {% else %}
+                                                <div class="group-image-wrapper">
+                                                    <div class="group-image-small"
+                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <h4><a href="/community/{{ c.id }}">{{ c.name }}</a></h4>
+                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Community"
+                                                 title="Public Community">
+                                            <small class="text-muted"> Public Community</small>
+                                        </td>
+                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}
+                                            Member{% endif %}</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        {% endif %}
+                        {% if not communities_list %}
+                            <i>You have not joined any communities.</i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+{% endblock %}

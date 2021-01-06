@@ -28,27 +28,27 @@ class TestHStore(MockIRODSTestCaseMixin, TestCase):
 
     def test_extra_metadata(self):
         # create/add extra metadata
-        self.assertEquals(self.res.extra_metadata, {})
+        self.assertEqual(self.res.extra_metadata, {})
         self.res.extra_metadata = {'name': 'John Jackson'}
         self.res.save()
 
-        self.assertNotEquals(self.res.extra_metadata, {})
-        self.assertEquals(self.res.extra_metadata['name'], 'John Jackson')
+        self.assertNotEqual(self.res.extra_metadata, {})
+        self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
 
         # update extra metadata (add email)
         self.res.extra_metadata = {'name': 'John Jackson', 'email': 'jj@gmail.com'}
         self.res.save()
-        self.assertEquals(self.res.extra_metadata['name'], 'John Jackson')
-        self.assertEquals(self.res.extra_metadata['email'], 'jj@gmail.com')
+        self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
+        self.assertEqual(self.res.extra_metadata['email'], 'jj@gmail.com')
 
         # update extra metadata (remove email)
         self.res.extra_metadata = {'name': 'John Jackson'}
         self.res.save()
-        self.assertEquals(self.res.extra_metadata['name'], 'John Jackson')
-        self.assertEquals(self.res.extra_metadata.get('email', None), None)
+        self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
+        self.assertEqual(self.res.extra_metadata.get('email', None), None)
 
         # delete all extra metadata
         self.res.extra_metadata = {}
         self.res.save()
-        self.assertEquals(self.res.extra_metadata, {})
+        self.assertEqual(self.res.extra_metadata, {})
 

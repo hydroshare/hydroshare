@@ -1,0 +1,55 @@
+.mover-container {
+    display: flex;
+    flex-flow: row nowrap;
+}
+.mover-panel-box {
+    flex: 1 1 auto;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    
+    border-radius: 3px;
+    overflow: auto;    
+
+    display: flex;
+    flex-direction: column
+}
+.mover-panel {
+    height: 280px;
+    min-height: 240px;
+    width: 222px;
+    min-width: 222px;
+    overflow-y: visible !important;
+}
+.mover-controls {
+    flex: 0 0 auto;
+    align-self: center;
+    padding: 0 12px;
+}
+.mover-controls>button {
+    padding: 5px;
+    width: 30px;
+    display: block; 
+    margin-bottom: 6px;
+}
+
+.mover-item, .mover-ghost, .mover-selected, .mover-header {
+    padding: 6px 8px;
+    border-bottom:1px solid #ccc; 
+}
+.mover-header{
+    background:#444;
+    color: #fafafa;
+    font-size: 1.1em;
+    font-weight: 600;
+    text-align: center;
+}
+.mover-ghost {
+    background: coral;
+    opacity: 0.80;
+}
+.mover-selected {
+    background: steelblue;
+    color: #F0F0F0;
+    font-weight: 600;
+    opacity: 0.80;
+}

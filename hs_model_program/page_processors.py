@@ -1,10 +1,10 @@
 from crispy_forms.layout import Layout, HTML
 from django.http import HttpResponseRedirect
 
-from forms import *
+from .forms import *
 from hs_core import page_processors
 from hs_core.views import *
-from models import *
+from .models import *
 
 
 @processor_for(ModelProgramResource)

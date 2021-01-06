@@ -39,64 +39,67 @@
                     <tbody>
                     {% if collection %}
                         {% for res in collection %}
-                            <tr id="{{ res.short_id }}">
-                                <td>
-                                    <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
-                                </td>
-                                <td>
-                                    {% if res|user_permission:request.user.pk|lower == "none" %}
-                                        <strong>{{ res.metadata.title }}</strong>
-                                    {% else %}
-                                        <strong><a href="{{ res.get_absolute_url }}"
-                                                   target="_blank">{{ res.metadata.title }}</a></strong>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {{ res.resource_type }}
-                                </td>
-                                <td>
-                                    {% for owner in res.raccess.owners.all %}
-                                        {% if forloop.counter0 > 0 %} · {% endif %}
-                                        {% if owner.first_name %}
-                                            <strong><a href='/user/{{ owner.pk }}/'
-                                                       target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
-                                        {% else %}
-                                            <strong><a href='/user/{{ owner.pk }}/'
-                                                       target="_blank">{{ owner.username }}</a></strong>
-                                        {% endif %}
-                                    {% endfor %}
-                                </td>
-                                <td>
-                                    {% if res.raccess.published %}
-                                        Published
-                                    {% elif res.raccess.public %}
-                                        Public
-                                    {% elif res.raccess.discoverable %}
-                                        Discoverable
-                                    {% else %}
-                                        Private
-                                    {% endif %}
+                            {% with res.raccess as raccess %}
+                                {% with res|user_permission:request.user.pk as upermission %}
+                                    <tr id="{{ res.short_id }}">
+                                        <td>
+                                            <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                                        </td>
+                                        <td>
+                                            {% if upermission|lower == "none" %}
+                                                <strong>{{ res.metadata.title }}</strong>
+                                            {% else %}
+                                                <strong><a href="{{ res.get_absolute_url }}"
+                                                           target="_blank">{{ res.metadata.title }}</a></strong>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ res.resource_type }}
+                                        </td>
+                                        <td>
+                                            {% with raccess.owners.all|first as owner %}
+                                                {% if owner.first_name %}
+                                                    <strong><a href='/user/{{ owner.pk }}/'
+                                                               target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
+                                                {% else %}
+                                                    <strong><a href='/user/{{ owner.pk }}/'
+                                                               target="_blank">{{ owner.username }}</a></strong>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            {% if raccess.published %}
+                                                Published
+                                            {% elif raccess.public %}
+                                                Public
+                                            {% elif raccess.discoverable %}
+                                                Discoverable
+                                            {% else %}
+                                                Private
+                                            {% endif %}
 
-                                    {% if res.raccess.shareable %}
-                                         & Shareable
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if res|user_permission:request.user.pk|lower == "none" %}
-                                        <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                    {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                        <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                    {% else %}
-                                        {{ res|user_permission:request.user.pk }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span data-res-id="{{ res.short_id }}"
-                                          data-form-id="form-favorite-{{ res.short_id }}"
-                                          data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item"></span>
-                                </td>
-                            </tr>
+                                            {% if raccess.shareable %}
+                                                 & Shareable
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if upermission|lower == "none" %}
+                                                <strong class="label-private">{{ upermission }}</strong>
+                                            {% elif upermission|lower == "open access" %}
+                                                <strong class="label-public">{{ upermission }}</strong>
+                                            {% else %}
+                                                {{ upermission }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span data-res-id="{{ res.short_id }}"
+                                                  data-form-id="form-favorite-{{ res.short_id }}"
+                                                  data-form-type="toggle-favorite"
+                                                  class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item"></span>
+                                        </td>
+                                    </tr>
+                                {% endwith %}
+                            {% endwith %}
                         {% endfor %}
                     {% endif %}
                     </tbody>
@@ -123,21 +126,19 @@
             <hr>
             {% block download_bag %}
                 <div>
-                    {% for b in cm.bags.all %}
-                        <div>
-                            <a id="btn-download-all" type="button" class="btn btn-default row-selector space-bottom"
-                               href="{{ bag_url }}">
-                                    <span class="glyphicon glyphicon-download-alt">
-                                        <span title='Download All Content as Zipped BagIt Archive'
-                                              class="button-label">Download All Content as Zipped BagIt Archive</span>
-                                    </span>
-                            </a>
-                        </div>
-                        <div>
-                            <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit
-                                archive format</a>
-                        </div>
-                    {% endfor %}
+                    <div>
+                        <a id="btn-download-all" type="button" class="btn btn-default row-selector space-bottom"
+                           href="{{ bag_url }}">
+                                <span class="glyphicon glyphicon-download-alt">
+                                    <span title='Download All Content as Zipped BagIt Archive'
+                                          class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                </span>
+                        </a>
+                    </div>
+                    <div>
+                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit
+                            archive format</a>
+                    </div>
                 </div>
             {% endblock %}
         </div>
@@ -199,40 +200,43 @@
                                     <td>
                                         {{ res.resource_type }}
                                     </td>
-                                    <td>
-                                        {% for owner in res.raccess.owners.all %}
-                                            {% if forloop.counter0 > 0 %} · {% endif %}
+                                    {% with res.raccess as raccess %}
+                                        <td>
+                                            {% with raccess.owners.all|first as owner %}
 
-                                            {% if owner.first_name %}
-                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                                {% if owner.first_name %}
+                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                                {% else %}
+                                                    <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            {% if raccess.published %}
+                                                Published
+                                            {% elif raccess.public %}
+                                                Public
+                                            {% elif raccess.discoverable %}
+                                                Discoverable
                                             {% else %}
-                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                                Private
                                             {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                    <td>
-                                        {% if res.raccess.published %}
-                                            Published
-                                        {% elif res.raccess.public %}
-                                            Public
-                                        {% elif res.raccess.discoverable %}
-                                            Discoverable
-                                        {% else %}
-                                            Private
-                                        {% endif %}
 
-                                        {% if res.raccess.shareable %}
-                                            & Shareable
-                                        {% endif %}
-                                    </td>
-                                     <td>
-                                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                        {% else %}
-                                            {{ res|user_permission:request.user.pk }}
-                                        {% endif %}
+                                            {% if raccess.shareable %}
+                                                & Shareable
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
+                                    <td>
+                                        {% with res|user_permission:request.user.pk as upermission %}
+                                            {% if upermission|lower == "none" %}
+                                                <strong class="label-private">{{ upermission }}</strong>
+                                            {% elif upermission|lower == "open access" %}
+                                                <strong class="label-public">{{ upermission }}</strong>
+                                            {% else %}
+                                                {{ upermission }}
+                                            {% endif %}
+                                        {% endwith %}
                                     </td>
                                     <td>
                                         <span data-res-id="{{ res.short_id }}"
@@ -288,8 +292,7 @@
                                         {{ res.resource_title }}
                                     </td>
                                    <td>
-                                       {% for owner in res.resource_owners.all %}
-                                            {% if forloop.counter0 > 0 %} · {% endif %}
+                                       {% with res.resource_owners.all|first as owner %}
                                             {% if owner.first_name %}
                                                 <strong><a href='/user/{{ owner.pk }}/'
                                                            target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
@@ -297,17 +300,19 @@
                                                 <strong><a href='/user/{{ owner.pk }}/'
                                                            target="_blank">{{ owner.username }}</a></strong>
                                             {% endif %}
-                                      {% endfor %}
+                                      {% endwith %}
                                     </td>
                                     <td>
                                         {{ res.resource_type }}
                                     </td>
                                     <td>
-                                        {% if res.deleted_by.first_name %}
-                                            <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{res.deleted_by.first_name}} {{res.deleted_by.last_name }}</a></strong>
-                                        {% else %}
-                                            <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{ res.deleted_by.username }}</a></strong>
-                                        {% endif %}
+                                        {% with res.deleted_by as deleted_by %}
+                                            {% if deleted_by.first_name %}
+                                                <strong><a href='/user/{{ deleted_by.pk }}/' target="_blank">{{deleted_by.first_name}} {{deleted_by.last_name }}</a></strong>
+                                            {% else %}
+                                                <strong><a href='/user/{{ deleted_by.pk }}/' target="_blank">{{ deleted_by.username }}</a></strong>
+                                            {% endif %}
+                                        {% endwith %}
                                     </td>
                                     <td>
                                         {{ res.date_deleted }}

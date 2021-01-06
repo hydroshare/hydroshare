@@ -56,7 +56,7 @@ class ModelObjective(AbstractMetaDataElement):
             if qs.exists():
                 model_objective.swat_model_objectives.add(qs[0])
             else:
-                if isinstance(swat_objective, basestring):
+                if isinstance(swat_objective, str):
                     model_objective.swat_model_objectives.create(description=swat_objective)
 
     @classmethod
@@ -98,7 +98,7 @@ class ModelObjective(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_objectives(cls, objectives):
         for swat_objective in objectives:
-            if isinstance(swat_objective, basestring) and swat_objective not in [
+            if isinstance(swat_objective, str) and swat_objective not in [
                 'Hydrology',
                 'Water quality',
                 'BMPs',
@@ -206,7 +206,7 @@ class ModelParameter(AbstractMetaDataElement):
             if qs.exists():
                 swat_model_parameters.model_parameters.add(qs[0])
             else:
-                if isinstance(swat_parameter, basestring):
+                if isinstance(swat_parameter, str):
                     swat_model_parameters.model_parameters.create(description=swat_parameter)
 
     @classmethod
@@ -249,7 +249,7 @@ class ModelParameter(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
-            if isinstance(swat_parameters, basestring) and swat_parameters not in [
+            if isinstance(swat_parameters, str) and swat_parameters not in [
                 'Crop rotation',
                 'Tile drainage',
                 'Point source',
@@ -329,7 +329,7 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def _validate_time_step(cls, **kwargs):
-        for key, val in kwargs.iteritems():
+        for key, val in list(kwargs.items()):
             if val == 'Choose a type':
                 kwargs[key] = ''
             elif val != '':
@@ -382,6 +382,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     _model_parameter = GenericRelation(ModelParameter)
     _model_input = GenericRelation(ModelInput)
 
+    def ingest_metadata(self, graph):
+        raise NotImplementedError("Metadata ingestion for {} is unsupported at this time"
+                                  .format(self.__class__.__name__))
+
     @property
     def resource(self):
         return SWATModelInstanceResource.objects.filter(object_id=self.id).first()
@@ -409,7 +413,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self """
-        from serializers import SWATModelInstanceMetaDataSerializer
+        from .serializers import SWATModelInstanceMetaDataSerializer
         return SWATModelInstanceMetaDataSerializer(self)
 
     @classmethod
@@ -417,7 +421,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
         """Overriding the base class method"""
 
         ModelInstanceMetaData.parse_for_bulk_update(metadata, parsed_metadata)
-        keys_to_update = metadata.keys()
+        keys_to_update = list(metadata.keys())
         if 'modelobjective' in keys_to_update:
             parsed_metadata.append({"modelobjective": metadata.pop('modelobjective')})
 
@@ -461,7 +465,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import ModelInputValidationForm, ModelMethodValidationForm, \
+        from .forms import ModelInputValidationForm, ModelMethodValidationForm, \
             SimulationTypeValidationForm, ModelObjectiveValidationForm, \
             ModelParameterValidationForm, ModelOutputValidationForm, ExecutedByValidationForm
         super(SWATModelInstanceMetaData, self).update(metadata, user)
@@ -481,7 +485,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                     'executedby': ExecutedByValidationForm}
         with transaction.atomic():
             # update/create non-repeatable element
-            for element_name in attribute_mappings.keys():
+            for element_name in list(attribute_mappings.keys()):
                 for dict_item in metadata:
                     if element_name in dict_item:
                         validation_form = validation_forms_mapping[element_name](
@@ -493,10 +497,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                         self.update_non_repeatable_element(element_name, metadata,
                                                            element_property_name)
 
-    def get_xml(self, pretty_print=True, include_format_elements=True):
+    def get_xml_legacy(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string representation of the core metadata elements
-        xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(SWATModelInstanceMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -548,7 +552,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                 ]
             self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+        return etree.tostring(RDF_ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 
     def delete_all_elements(self):
         super(SWATModelInstanceMetaData, self).delete_all_elements()
