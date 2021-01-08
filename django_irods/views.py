@@ -167,7 +167,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
-        download_path = '/django_irods/download/' + output_path
+        download_path = '/django_irods/rest_download/' + output_path
         if use_async:
             user_id = get_task_user_id(request)
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,

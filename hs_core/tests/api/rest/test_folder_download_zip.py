@@ -62,11 +62,12 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         response_json = json.loads(response.content.decode())
         task_id = response_json["task_id"]
         download_path = response_json["download_path"]
+        self.assertEqual(response_json['zip_status'], 'Not Ready')
         self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
         download_split = download_path.split("/")
         date_folder = (date.today()).strftime('%Y-%m-%d')
         self.assertEqual("django_irods", download_split[1])
-        self.assertEqual("download", download_split[2])
+        self.assertEqual("rest_download", download_split[2])
         self.assertEqual("zips", download_split[3])
         self.assertEqual(date_folder, download_split[4])
         # index 5 is the random folder
