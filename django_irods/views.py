@@ -96,11 +96,8 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     if not authorized:
         response = HttpResponse(status=401)
         content_msg = "You do not have permission to download this resource!"
-        if rest_call:
-            raise PermissionDenied(content_msg)
-        else:
-            response.content = "<h1>" + content_msg + "</h1>"
-            return response
+        response.content = content_msg
+        return response
 
     istorage = res.get_irods_storage()
 
@@ -180,18 +177,10 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             task_id = task.task_id
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
-            if rest_call:
-                return HttpResponse(
-                    json.dumps({
-                        'zip_status': 'Not ready',
-                        'task_id': task.task_id,
-                        'download_path': '/django_irods/rest_download/' + output_path}),
-                    content_type="application/json")
-            else:
-                # return status to the task notification App AJAX call
-                task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
-                                                            username=user_id)
-                return JsonResponse(task_dict)
+            # return status to the task notification App AJAX call
+            task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                        username=user_id)
+            return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
@@ -202,10 +191,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()
-                if rest_call:
-                    response.content = content_msg
-                else:
-                    response.content = "<h1>" + content_msg + "</h1>"
+                response.content = content_msg
                 return response
             # At this point, output_path presumably exists and contains a zipfile
             # to be streamed below
@@ -251,10 +237,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 if not ret_status:
                     content_msg = "Bag cannot be created successfully. Check log for details."
                     response = HttpResponse()
-                    if rest_call:
-                        response.content = content_msg
-                    else:
-                        response.content = "<h1>" + content_msg + "</h1>"
+                    response.content = content_msg
                     return response
         elif request.is_ajax():
             task_dict = {
@@ -317,10 +300,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
         if not istorage.exists(irods_output_path):
             content_msg = "file path {} does not exist in iRODS".format(output_path)
             response = HttpResponse(status=404)
-            if rest_call:
-                response.content = content_msg
-            else:
-                response.content = "<h1>" + content_msg + "</h1>"
+            response.content = content_msg
             return response
 
         # track download count
