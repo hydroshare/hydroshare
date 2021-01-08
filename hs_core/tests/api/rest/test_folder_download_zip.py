@@ -62,7 +62,6 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         response_json = json.loads(response.content.decode())
         task_id = response_json["task_id"]
         download_path = response_json["download_path"]
-        self.assertTrue("task_status" in response_json)
         self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
         download_split = download_path.split("/")
         date_folder = (date.today()).strftime('%Y-%m-%d')
