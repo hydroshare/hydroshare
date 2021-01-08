@@ -1088,7 +1088,7 @@ def check_aggregations(resource, res_files):
                 if logical_file:
                     new_logical_files.append(logical_file)
     return new_logical_files
-  
+
 
 def build_preview_data_url(resource, folder_path, spatial_coverage):
     """Get a GeoServer layer preview link."""
