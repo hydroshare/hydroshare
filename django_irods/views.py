@@ -1,12 +1,10 @@
 import datetime
-import json
 import mimetypes
 import os
 from uuid import uuid4
 from celery.result import AsyncResult
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework import status
