@@ -83,9 +83,11 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
 
         return {
             'id': task_id,
+            'task_id': task_id,
             'name': name,
             'status': obj.status,
-            'payload': obj.payload
+            'payload': obj.payload,
+            'download_path': obj.payload
         }
 
 
