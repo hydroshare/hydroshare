@@ -81,17 +81,22 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
                 obj.status = status
             obj.save()
 
-        if payload.endswith(".zip") and obj.status == 'progress':
-            return {
+        if name in ['zip download', 'bag_download']:
+            response_map = {
                 'id': task_id,
                 'name': name,
                 'status': obj.status,
                 'payload': obj.payload,
                 # rest download backwards compatible keys
                 'task_id': task_id,
-                'download_path': obj.payload,
-                'zip_status': 'Not Ready'
+                'download_path': obj.payload
             }
+
+            if status == "progress":
+                response_map['zip_status'] = 'Not Ready'
+            if status == "completed":
+                response_map['zip_status'] = 'Ready'
+            return response_map
 
         return {
             'id': task_id,
