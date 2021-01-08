@@ -3,7 +3,6 @@ import logging
 import shutil
 import zipfile
 import xmltodict
-from lxml import etree
 
 from osgeo import ogr, osr
 
@@ -14,7 +13,7 @@ from django.template import Template, Context
 
 from dominate.tags import legend, table, tbody, tr, th, div
 
-from hs_core.models import Title, CoreMetaData
+from hs_core.models import Title
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm
 from hs_core.signals import post_add_geofeature_aggregation
@@ -141,23 +140,6 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(GeoFeatureFileMetaData, self)._get_xml_containers()
-        if self.geometryinformation:
-            self.geometryinformation.add_to_xml_container(container_to_add_to)
-
-        for fieldinfo in self.fieldinformations.all():
-            fieldinfo.add_to_xml_container(container_to_add_to)
-
-        if self.originalcoverage:
-            self.originalcoverage.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
 
     def get_preview_data_url(self, resource, folder_path):
         """Get a GeoServer layer preview link."""
@@ -324,6 +306,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             if not file_type_success:
                 raise ValidationError(msg)
+            return logical_file
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):

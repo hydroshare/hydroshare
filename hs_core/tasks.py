@@ -17,8 +17,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -27,15 +26,13 @@ from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
-from hs_core.signals import post_delete_resource
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage, UserProfile, User
-from hs_collection_resource.models import CollectionDeletedResource
+from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, TaskNotification
 from theme.utils import get_quota_message
 
 
@@ -72,69 +69,6 @@ def nightly_zips_cleanup():
             istorage = IrodsStorage("federated")
             if istorage.exists(zips_daily_date):
                 istorage.delete(zips_daily_date)
-
-
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
-def sync_email_subscriptions():
-    sixty_days = datetime.today() - timedelta(days=60)
-    active_subscribed = UserProfile.objects.filter(email_opt_out=False,
-                                                   user__last_login__gte=sixty_days,
-                                                   user__is_active=True)
-    sync_mailchimp(active_subscribed, settings.MAILCHIMP_ACTIVE_SUBSCRIBERS)
-    subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
-    sync_mailchimp(subscribed, settings.MAILCHIMP_SUBSCRIBERS)
-
-
-def sync_mailchimp(active_subscribed, list_id):
-    session = requests.Session()
-    url = "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members"
-    # get total members
-    response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
-        'hs-celery', settings.MAILCHIMP_PASSWORD))
-    total_items = json.loads(response.content.decode())["total_items"]
-    # get list of all member ids
-    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
-                                                                          total_items=total_items),
-                           auth=requests.auth.HTTPBasicAuth('hs-celery',
-                                                            settings.MAILCHIMP_PASSWORD))
-    # clear the email list
-    delete_count = 0
-    for member in json.loads(response.content.decode())["members"]:
-        if member["status"] == "subscribed":
-            session_response = session.delete(
-                (url + "/{id}").format(list_id=list_id, id=member["id"]),
-                auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
-            if session_response.status_code != 204:
-                logger.info("Expected 204 status code, got " + str(session_response.status_code))
-                logger.debug(session_response.content)
-            else:
-                delete_count += 1
-    # add active subscribed users to mailchimp
-    add_count = 0
-    for subscriber in active_subscribed:
-        json_data = {"email_address": subscriber.user.email, "status": "subscribed",
-                     "merge_fields": {"FNAME": subscriber.user.first_name,
-                                      "LNAME": subscriber.user.last_name}}
-        session_response = session.post(
-            url.format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth(
-                'hs-celery', settings.MAILCHIMP_PASSWORD))
-        if session_response.status_code != 200:
-            logger.info("Expected 200 status code, got " + str(session_response.status_code))
-            logger.debug(session_response.content)
-        else:
-            add_count += 1
-    if delete_count == active_subscribed.count():
-        logger.info("successfully cleared mailchimp for list id " + list_id)
-    else:
-        logger.info(
-            "cleared " + str(delete_count) + " out of " + str(
-                active_subscribed.count()) + " for list id " + list_id)
-
-    if active_subscribed.count() == add_count:
-        logger.info("successfully synced all subscriptions for list id " + list_id)
-    else:
-        logger.info("added " + str(add_count) + " out of " + str(
-            active_subscribed.count()) + " for list id " + list_id)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -479,66 +413,6 @@ def create_bag_by_irods(resource_id, request_username=None):
 
 
 @shared_task
-def delete_resource_task(resource_id, request_username=None):
-    """Delete a resource
-    :param
-    resource_id: the resource uuid that is used to look for the resource to delete.
-    :return: resource_id if delete operation succeeds
-             raise an exception if there were errors.
-    """
-    res = utils.get_resource_by_shortkey(resource_id)
-    res_title = res.metadata.title
-    res_type = res.resource_type
-    resource_related_collections = [col for col in res.collections.all()]
-    owners_list = [owner for owner in res.raccess.owners.all()]
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
-                              'cannot be deleted.')
-
-    with transaction.atomic():
-        # when the most recent version of a resource in an obsolescence chain is deleted, the previous
-        # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
-        # relation element
-        if res.metadata.relations.all().filter(type='isVersionOf').exists():
-            is_version_of_res_link = \
-                res.metadata.relations.all().filter(type='isVersionOf').first().value
-            idx = is_version_of_res_link.rindex('/')
-            if idx == -1:
-                obsolete_res_id = is_version_of_res_link
-            else:
-                obsolete_res_id = is_version_of_res_link[idx + 1:]
-            obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-            if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-                eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
-                obsolete_res.metadata.delete_element('relation', eid)
-                # also make this obsoleted resource editable if not published now that it becomes the latest version
-                if not obsolete_res.raccess.published:
-                    obsolete_res.raccess.immutable = False
-                    obsolete_res.raccess.save()
-
-        res.delete()
-        if request_username:
-            # if the deleted resource is part of any collection resource, then for each of those collection
-            # create a CollectionDeletedResource object which can then be used to list collection deleted
-            # resources on collection resource landing page
-            for collection_res in resource_related_collections:
-                o = CollectionDeletedResource.objects.create(
-                    resource_title=res_title,
-                    deleted_by=User.objects.get(username=request_username),
-                    resource_id=resource_id,
-                    resource_type=res_type,
-                    collection=collection_res
-                )
-                o.resource_owners.add(*owners_list)
-
-        post_delete_resource.send(sender=type(res), username=request_username,
-                                  resource_id=resource_id, resource_title=res_title)
-
-        # return the page URL to redirect to after resource deletion task is complete
-        return '/my-resources/'
-
-
-@shared_task
 def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
     try:
         new_res = None
@@ -633,10 +507,11 @@ def resource_debug(resource_id):
 
 
 @shared_task
-def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
+def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
+               ingest_metadata=False):
     from hs_core.views.utils import unzip_file
     user = User.objects.get(pk=user_pk)
-    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite)
+    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=00, hour=12))
@@ -675,3 +550,12 @@ def update_task_notification(sender=None, task_id=None, state=None, retval=None,
         get_or_create_task_notification(task_id, status="aborted", payload=retval)
     else:
         logger.warning("Unhandled task state of {} for {}".format(state, task_id))
+
+
+@periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
+def task_notification_cleanup():
+    """
+    Delete expired task notifications each week
+    """
+    week_ago = datetime.today() - timedelta(days=7)
+    TaskNotification.objects.filter(created__lte=week_ago).delete()

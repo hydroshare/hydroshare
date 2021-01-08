@@ -5,7 +5,6 @@ import subprocess
 import zipfile
 
 import xml.etree.ElementTree as ET
-from lxml import etree
 
 import gdal
 from gdalconst import GA_ReadOnly
@@ -21,7 +20,7 @@ from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import ResourceFile, CoreMetaData
+from hs_core.models import ResourceFile
 from hs_core.signals import post_add_raster_aggregation
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
@@ -192,22 +191,6 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-
-    def get_xml(self, pretty_print=True):
-        """Generates ORI+RDF xml for this aggregation metadata"""
-
-        # get the xml root element and the xml element to which contains all other elements
-        RDF_ROOT, container_to_add_to = super(GeoRasterFileMetaData, self)._get_xml_containers()
-
-        if self.originalCoverage:
-            self.originalCoverage.add_to_xml_container(container_to_add_to)
-        if self.cellInformation:
-            self.cellInformation.add_to_xml_container(container_to_add_to)
-        for bandinfo in self.bandInformations:
-            bandinfo.add_to_xml_container(container_to_add_to)
-
-        return CoreMetaData.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, encoding='UTF-8',
-                                                               pretty_print=pretty_print).decode()
 
     def get_preview_data_url(self, resource, folder_path):
         """Get a GeoServer layer preview link."""
@@ -385,6 +368,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
                 if not file_type_success:
                     raise ValidationError(msg)
+                return logical_file
             else:
                 err_msg = "Geographic raster aggregation type validation failed. {}".format(
                     ' '.join(validation_results['error_info']))
