@@ -106,7 +106,6 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
                     response_map['bag_status'] = 'Ready'
                 return response_map
 
-
         return {
             'id': task_id,
             'name': name,
