@@ -61,27 +61,7 @@ def get_task_user_id(request):
     return ""
 
 
-def get_or_create_task_notification(task_id, status='progress', name='', payload='', username='',
-                                    verify_task_id=False):
-    if verify_task_id:
-        filter_task = TaskNotification.objects.filter(task_id=task_id).first()
-        if filter_task:
-            task_dict = {
-                'id': task_id,
-                'name': filter_task.name,
-                'status': filter_task.status,
-                'payload': filter_task.payload
-            }
-            return task_dict
-        elif not task_exists(task_id):
-            # don't create task entry in the model if task does not exist when task id needs to be verified, e.g.,
-            # for anonymous users
-            return {
-                'id': task_id,
-                'name': '',
-                'status': '',
-                'payload': ''
-            }
+def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
                                                               defaults={'name': name,
@@ -101,10 +81,30 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
                 obj.status = status
             obj.save()
 
-        if obj.status == "progress":
-            if not task_exists(task_id):
-                obj.status = 'failed'
-                obj.save()
+        if name in ['zip download', 'bag download']:
+            response_map = {
+                'id': task_id,
+                'name': name,
+                'status': obj.status,
+                'payload': obj.payload,
+                # rest download backwards compatible keys
+                'task_id': task_id,
+                'download_path': obj.payload
+            }
+            if name == "zip download":
+                response_map['zip_status'] = 'Not ready'
+                if status == "failed":
+                    response_map['zip_status'] = 'Failed'
+                if status == "completed":
+                    response_map['zip_status'] = 'Ready'
+                return response_map
+            if name == "bag download":
+                response_map['bag_status'] = 'Not ready'
+                if status == "failed":
+                    response_map['bag_status'] = 'Failed'
+                if status == "completed":
+                    response_map['bag_status'] = 'Ready'
+                return response_map
 
         return {
             'id': task_id,
@@ -112,21 +112,6 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
             'status': obj.status,
             'payload': obj.payload
         }
-
-
-def task_exists(task_id):
-    """
-    get all tasks by a user identified by username input parameter
-    :param username: the user to retrieve all tasks for
-    :return: list of tasks where each task is a dict with id, name, and status keys
-    """
-    if task_id in str(celery_inspector.active()):
-        return True
-    if task_id in str(celery_inspector.reserved()):
-        return True
-    if task_id in str(celery_inspector.scheduled()):
-        return True
-    return False
 
 
 def get_resource_bag_task(res_id):

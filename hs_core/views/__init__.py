@@ -106,16 +106,8 @@ def get_tasks_by_user(request):
 
 
 def get_task(request, task_id):
-    if request.user.is_authenticated():
-        task_dict = get_or_create_task_notification(task_id)
-        return JsonResponse(task_dict)
-    else:
-        # need to verify task_id for anonoymous users to prevent creating junk task entries in the model
-        task_dict = get_or_create_task_notification(task_id, verify_task_id=True)
-        if task_dict['name'] and task_dict['status']:
-            return JsonResponse(task_dict)
-        else:
-            return JsonResponse({'error': 'not authorized to get the task'}, status=status.HTTP_401_UNAUTHORIZED)
+    task_dict = get_or_create_task_notification(task_id)
+    return JsonResponse(task_dict)
 
 
 def abort_task(request, task_id):
