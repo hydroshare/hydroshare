@@ -13,8 +13,13 @@ CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 
 # Read hydroshare-config.yaml into environment
 sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
-sed -i 's/HS_SERVICE_UID=1000/HS_SERVICE_UID='$HS_UID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
-sed -i 's/HS_SERVICE_GID=1000/HS_SERVICE_GID='$HS_GID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
+
+# Discover user and group under which this shell is running
+HS_UID=`id -u`
+HS_GID=`id -g`
+# Set this user and group in hydroshare-config.sh 
+sed -i 's/HS_SERVICE_UID=.*$/HS_SERVICE_UID='$HS_UID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
+sed -i 's/HS_SERVICE_GID=.*$/HS_SERVICE_GID='$HS_GID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Add color scheme to text | result output
