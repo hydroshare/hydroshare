@@ -114,6 +114,7 @@ function setEditMode() {
 
     if (selectedUserType.length > 0) {
         selectedUserType.attr('selected', 'selected');
+        $('#selectUserType').val(userTypeValue).change();
     }
     else if (userTypeValue) {
         $('#selectUserType option[value="' + 'Other' + '"]').attr('selected', 'selected');

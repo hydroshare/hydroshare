@@ -35,7 +35,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
         SAX_parse_results = NetcdfResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://www.hydroshare.org/terms/')
 
         # Get Variable
         if SAX_parse_results:

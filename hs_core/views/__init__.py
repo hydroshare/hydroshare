@@ -106,16 +106,8 @@ def get_tasks_by_user(request):
 
 
 def get_task(request, task_id):
-    if request.user.is_authenticated():
-        task_dict = get_or_create_task_notification(task_id)
-        return JsonResponse(task_dict)
-    else:
-        # need to verify task_id for anonoymous users to prevent creating junk task entries in the model
-        task_dict = get_or_create_task_notification(task_id, verify_task_id=True)
-        if task_dict['name'] and task_dict['status']:
-            return JsonResponse(task_dict)
-        else:
-            return JsonResponse({'error': 'not authorized to get the task'}, status=status.HTTP_401_UNAUTHORIZED)
+    task_dict = get_or_create_task_notification(task_id)
+    return JsonResponse(task_dict)
 
 
 def abort_task(request, task_id):
@@ -304,7 +296,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     }
 
     return JsonResponse(data=response_data, status=200)
-    
+
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -681,6 +673,7 @@ def file_download_url_mapper(request, shortkey):
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
     res.metadata.delete_element(element_name, element_id)
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
@@ -814,6 +807,14 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             json.dumps({"error": str(ex)}),
             content_type="application/json"
         )
+
+
+def list_referenced_content(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    # subfolders could be named contents
+    return JsonResponse({'filenames': [x.url.split('contents', 1)[-1] for x in list(res.logical_files)
+                                       if 'url' in x.extra_data]})
 
 
 def copy_resource(request, shortkey, *args, **kwargs):
@@ -1284,7 +1285,7 @@ def add_generic_context(request, page):
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
+        # Reuse the same class AddGroupForm() leads to duplicated IDs.
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1637,6 +1638,11 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
+@api_view(['GET'])
+def hsapi_get_user(request, user_identifier):
+    return get_user_or_group_data(request, user_identifier, "false")
+
+
 @login_required
 def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
@@ -1900,7 +1906,7 @@ class GroupView(TemplateView):
                 'profile_user': u
             }
         else:
-            public_group_resources = [r for r in group_resources 
+            public_group_resources = [r for r in group_resources
                                       if r.raccess.public or r.raccess.discoverable]
 
             return {
