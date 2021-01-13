@@ -23,13 +23,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=True,
+def download(request, path, use_async=True, use_reverse_proxy=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
     :param request: the request object.
     :param path: the path of the thing to be downloaded.
-    :param rest_call: True if calling from REST API
     :param use_async: True means to utilize asynchronous creation of objects to download.
     :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
 
@@ -68,6 +67,7 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
     is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
     is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
+    api_request = request.META.get('CSRF_COOKIE', None) is None
     aggregation_name = None
     is_sf_request = False
 
@@ -175,10 +175,18 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
             task_id = task.task_id
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
-            # return status to the task notification App AJAX call
-            task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
-                                                        username=user_id)
-            return JsonResponse(task_dict)
+            if api_request:
+                return HttpResponse(
+                    json.dumps({
+                        'zip_status': 'Not ready',
+                        'task_id': task.task_id,
+                        'download_path': '/django_irods/rest_download/' + output_path}),
+                    content_type="application/json")
+            else:
+                # return status to the task notification App AJAX call
+                task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                            username=user_id)
+                return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
@@ -221,15 +229,29 @@ def download(request, path, rest_call=False, use_async=True, use_reverse_proxy=T
                 task_id = get_resource_bag_task(res_id)
                 user_id = get_task_user_id(request)
                 if not task_id:
+                    # create the bag
                     task = create_bag_by_irods.apply_async((res_id, user_id))
                     task_id = task.task_id
-                    task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
-                                                                username=user_id)
-                    return JsonResponse(task_dict)
+                    if api_request:
+                        return JsonResponse({
+                            'bag_status': 'Not ready',
+                            'task_id': task_id,
+                            'download_path': res.bag_url})
+                    else:
+                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                                                    username=user_id)
+                        return JsonResponse(task_dict)
                 else:
-                    task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
-                                                                username=user_id)
-                    return JsonResponse(task_dict)
+                    # bag creation has already started
+                    if api_request:
+                        return JsonResponse({
+                            'bag_status': 'Not ready',
+                            'task_id': task_id,
+                            'download_path': res.bag_url})
+                    else:
+                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                                                                    username=user_id)
+                        return JsonResponse(task_dict)
             else:
                 ret_status = create_bag_by_irods(res_id)
                 if not ret_status:
