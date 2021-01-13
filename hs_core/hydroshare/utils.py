@@ -6,6 +6,9 @@ import shutil
 import copy
 from uuid import uuid4
 import errno
+import urllib
+
+from urllib.request import pathname2url, url2pathname
 
 from django.apps import apps
 from django.http import Http404
@@ -1087,3 +1090,27 @@ def check_aggregations(resource, res_files):
                 if logical_file:
                     new_logical_files.append(logical_file)
     return new_logical_files
+
+
+def encode_resource_url(url):
+    """
+    URL encodes a full resource file/folder url.
+    :param url: a string url
+    :return: url encoded string
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    url_encoded_path = pathname2url(parsed_url.path)
+    encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
+    return encoded_url
+
+
+def decode_resource_url(url):
+    """
+    URL decodes a full resource file/folder url.
+    :param url: an encoded string url
+    :return: url decoded string
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    url_encoded_path = url2pathname(parsed_url.path)
+    encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
+    return encoded_url
