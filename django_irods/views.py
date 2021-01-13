@@ -176,12 +176,10 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if api_request:
-                return HttpResponse(
-                    json.dumps({
-                        'zip_status': 'Not ready',
-                        'task_id': task.task_id,
-                        'download_path': '/django_irods/rest_download/' + output_path}),
-                    content_type="application/json")
+                return HttpResponse({
+                    'zip_status': 'Not ready',
+                    'task_id': task.task_id,
+                    'download_path': '/django_irods/rest_download/' + output_path})
             else:
                 # return status to the task notification App AJAX call
                 task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
