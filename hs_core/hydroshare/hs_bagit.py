@@ -173,7 +173,7 @@ def create_bag_files(resource):
                 hs_url=current_site_url,
                 res_id=resource.short_id,
                 map_file_path=logical_file.map_short_file_path)
-            agg_uri = encode_resource_url(agg_uri)
+            aggr_uri = encode_resource_url(aggr_uri)
             agg = Aggregation(aggr_uri)
             agg._ore.isAggregatedBy = ag_url
             agg_type_url = "{site}/terms/{aggr_type}"
