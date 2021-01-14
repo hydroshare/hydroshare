@@ -2,6 +2,7 @@ import pytest
 
 from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url
 
+
 @pytest.mark.parametrize("decoded_url,encoded_url", [
     ("https://www.hydroshare.org/oh look/ a/ space /weird names.txt",
      "https://www.hydroshare.org/oh%20look/%20a/%20space%20/weird%20names.txt"),
