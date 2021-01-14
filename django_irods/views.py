@@ -234,7 +234,10 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                         return JsonResponse({
                             'bag_status': 'Not ready',
                             'task_id': task_id,
-                            'download_path': res.bag_url})
+                            'download_path': res.bag_url,
+                            # status and id are checked by by hs_core.tests.api.rest.test_create_resource.py
+                            'status': 'Not ready',
+                            'id': task_id})
                     else:
                         task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
                                                                     username=user_id)
