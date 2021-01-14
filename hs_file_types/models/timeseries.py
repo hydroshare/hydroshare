@@ -454,7 +454,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         description_node = graph.value(subject=subject, predicate=DC.description, default=None)
         if description_node:
             self.abstract = graph.value(subject=description_node, predicate=DCTERMS.abstract, default="").toPython()
-        self.save()
+            self.save()
 
         super(TimeSeriesFileMetaData, self).ingest_metadata(graph)
 
