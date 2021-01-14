@@ -176,7 +176,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             delete_zip.apply_async((irods_output_path,),
                                    countdown=(60 * 60 * 24))  # delete after 24 hours
             if api_request:
-                return HttpResponse({
+                return JsonResponse({
                     'zip_status': 'Not ready',
                     'task_id': task.task_id,
                     'download_path': '/django_irods/rest_download/' + output_path})
