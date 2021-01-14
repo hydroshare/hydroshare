@@ -118,6 +118,7 @@ class RDF_Term_MixIn(object):
 
     def get_field_terms_and_values(self, extra_ignored_fields=[]):
         """Method that returns the field terms and field values on an object"""
+        from hs_core.hydroshare import encode_resource_url
         term_values = []
         extra_ignored_fields.extend(self.ignored_fields)
         for field in [field for field in self._meta.fields if field.name not in extra_ignored_fields]:
@@ -126,7 +127,7 @@ class RDF_Term_MixIn(object):
             if field_value and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
-                    field_value = URIRef(field_value)
+                    field_value = URIRef(encode_resource_url(field_value))
                 else:
                     field_value = Literal(field_value)
                 term_values.append((field_term, field_value))
@@ -155,6 +156,8 @@ class RDF_Term_MixIn(object):
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         """Default implementation that ingests by convention"""
+        from hs_core.hydroshare import decode_resource_url
+
         term = cls.get_class_term()
         if not term:
             metadata_nodes = [subject]
@@ -168,7 +171,10 @@ class RDF_Term_MixIn(object):
                 field_term = cls.get_field_term(field.name)
                 val = graph.value(metadata_node, field_term)
                 if val is not None:
-                    value_dict[field.name] = str(val.toPython())
+                    if isinstance(val, URIRef):
+                        value_dict[field.name] = decode_resource_url(str(val.toPython()))
+                    else:
+                        value_dict[field.name] = str(val.toPython())
             if value_dict:
                 cls.create(content_object=content_object, **value_dict)
 
