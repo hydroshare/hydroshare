@@ -9,6 +9,11 @@
   <hsterms:TimeSeriesAggregation rdf:about="http://www.hydroshare.org/resource/e013dae505e647378dfc7d1662170e20/data/contents/ODM2_Multi_Site_One_Variable_resmap.xml#aggregation">
     <dc:title>changed from the Little Bear River, UT</dc:title>
     <dc:type rdf:resource="https://www.hydroshare.org/terms/TimeSeriesAggregation"/>
+    <dc:description>
+      <rdf:Description>
+        <dcterms:abstract>a timseries abstract</dcterms:abstract>
+      </rdf:Description>
+    </dc:description>
     <hsterms:timeSeriesResult>
       <rdf:Description>
         <hsterms:site>

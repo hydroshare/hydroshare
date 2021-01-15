@@ -10,6 +10,7 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 import bagit
+
 from hs_core.models import ResourceFile
 
 
@@ -56,6 +57,7 @@ def create_bag_files(resource):
     create a bag on demand as needed.
     """
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
+    from hs_core.hydroshare import encode_resource_url
 
     istorage = resource.get_irods_storage()
 
@@ -141,6 +143,7 @@ def create_bag_files(resource):
                 hs_url=current_site_url,
                 res_id=resource.short_id,
                 file_name=f.short_path)
+            res_uri = encode_resource_url(res_uri)
             ar = AggregatedResource(res_uri)
             ar._ore.isAggregatedBy = ag_url
             ar._dc.format = get_file_mime_type(os.path.basename(f.short_path))
@@ -170,6 +173,7 @@ def create_bag_files(resource):
                 hs_url=current_site_url,
                 res_id=resource.short_id,
                 map_file_path=logical_file.map_short_file_path)
+            aggr_uri = encode_resource_url(aggr_uri)
             agg = Aggregation(aggr_uri)
             agg._ore.isAggregatedBy = ag_url
             agg_type_url = "{site}/terms/{aggr_type}"
