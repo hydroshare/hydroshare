@@ -1135,7 +1135,7 @@ def build_preview_data_url(resource, folder_path, spatial_coverage):
 
     return preview_data_url
 
-  
+
 def encode_resource_url(url):
     """
     URL encodes a full resource file/folder url.
