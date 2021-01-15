@@ -7,6 +7,9 @@ urlpatterns = [
     url(r'^resource/(?P<shortkey>[A-z0-9]+)/data/contents/(.*)/$', views.file_download_url_mapper,
         name='get_resource_file'),
 
-    url(r'^resource/(?P<shortkey>[A-z0-9]+)/([^/]+)/$', views.file_download_url_mapper,
+    url(r'^resource/(?P<shortkey>[A-z0-9]+)/data/([^/]+)/$', views.file_download_url_mapper,
         name='get_resourcemap_or_metadata_file'),
+
+    url(r'^resource/(?P<shortkey>[A-z0-9]+)/([^/]+)/$', views.file_download_url_mapper,
+        name='get_a_bagit_file'),
 ]
