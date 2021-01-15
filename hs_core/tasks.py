@@ -17,7 +17,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
@@ -329,7 +329,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
 
 @shared_task
-def create_bag_by_irods(resource_id, request_username=None):
+def create_bag_by_irods(resource_id):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
@@ -444,6 +444,61 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
 
 
 @shared_task
+def replicate_resource_bag_to_user_zone_task(res_id, request_username):
+    """
+    Task for replicating resource bag which will be created on demand if not existent already to iRODS user zone
+    Args:
+        res_id: the resource id with its bag to be replicated to iRODS user zone
+        request_username: the requesting user's username to whose user zone space the bag is copied to
+
+    Returns:
+    None, but exceptions will be raised if there is an issue with iRODS operation
+    """
+
+    res = utils.get_resource_by_shortkey(res_id)
+    res_coll = res.root_path
+    istorage = res.get_irods_storage()
+    bag_modified_flag = True
+    # needs to check whether res_id collection exists before getting/setting AVU on it to
+    # accommodate the case where the very same resource gets deleted by another request when
+    # it is getting downloaded
+    if istorage.exists(res_coll):
+        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
+
+        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
+        # is False; otherwise, bag_modified_flag will take the default True value so that the
+        # bag will be created or recreated
+        if bag_modified:
+            if bag_modified.lower() == "false":
+                bag_file_name = res_id + '.zip'
+                if res.resource_federation_path:
+                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
+                                                 bag_file_name)
+                else:
+                    bag_full_path = os.path.join('bags', bag_file_name)
+
+                if istorage.exists(bag_full_path):
+                    bag_modified_flag = False
+
+        if bag_modified_flag:
+            # import here to avoid circular import issue
+            create_bag_by_irods(res_id)
+
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=request_username, resid=res_id)
+        fsize = istorage.size(src_file)
+        utils.validate_user_quota(request_username, fsize)
+        istorage.copyFiles(src_file, tgt_file)
+        return res.get_absolute_url()
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
+
+
+@shared_task
 def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     """Update web services hosted by GeoServer and HydroServer.
 
@@ -532,17 +587,18 @@ def monthly_group_membership_requests_cleanup():
 
 
 @task_postrun.connect
-def update_task_notification(sender=None, task_id=None, state=None, retval=None, **kwargs):
+def update_task_notification(sender=None, task_id=None, task=None, state=None, retval=None, **kwargs):
     """
     Updates the state of TaskNotification model when a celery task completes
     :param sender:
-    :param task_id:
-    :param state:
-    :param retval:
+    :param task_id: task id
+    :param task: task object
+    :param state: task return state
+    :param retval: task return value
     :param kwargs:
     :return:
     """
-    if retval is not None:
+    if task.name in settings.TASK_NAME_LIST:
         if state == states.SUCCESS:
             get_or_create_task_notification(task_id, status="completed", payload=retval)
         elif state in states.EXCEPTION_STATES:

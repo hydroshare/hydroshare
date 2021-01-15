@@ -63,6 +63,16 @@ $(document).ready(function () {
                         "failed": "Failed",
                         "delivered": "Delivered"
                     }
+                },
+                "resource copy to user zone": {
+                    title: "Resource copy to user zone",
+                    status: {
+                        "progress": "In progress...",
+                        "aborted": "Aborted",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
                 }
             },
             statusIcons: {
@@ -256,6 +266,11 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource copy":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource copy to user zone":
                         if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
                         }

@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group
 
 from hs_core.models import BaseResource
 from hs_core import hydroshare
+from hs_core.tasks import replicate_resource_bag_to_user_zone_task
 from hs_core.testing import TestCaseCommonUtilities
 from hs_core.hydroshare.resource import update_quota_usage
 
@@ -108,7 +109,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # resource is wrongly set to False when the bag for this resource does not exist and
         # need to be recreated
         res.setAVU('bag_modified', 'false')
-        hydroshare.resource.replicate_resource_bag_to_user_zone(self.user, res.short_id)
+        replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
         self.assertTrue(self.irods_storage.exists(user_path + res.short_id + '.zip'),
                         msg='replicated resource bag is not in the user zone')
 

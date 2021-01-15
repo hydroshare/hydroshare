@@ -635,14 +635,18 @@ def convert_file_size_to_unit(size, unit):
         return tbsize
 
 
-def validate_user_quota(user, size):
+def validate_user_quota(user_or_username, size):
     """
     validate to make sure the user is not over quota with the newly added size
-    :param user: the user to be validated
+    :param user_or_username: the user to be validated
     :param size: the newly added file size to add on top of the user's used quota to be validated.
                  size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
+    if isinstance(user_or_username, User):
+        user = user_or_username
+    else:
+        user = User.objects.get(username=user_or_username)
     if user:
         # validate it is within quota hard limit
         uq = user.quotas.filter(zone='hydroshare').first()
