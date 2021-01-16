@@ -1,14 +1,16 @@
 import json
 import os
-from dateutil import parser
 from operator import lt, gt
 
+from dateutil import parser
+from django.apps import apps
 from django.db import transaction
+from foresite import utils as fs_utils
 from rdflib import RDFS, Graph
-from rdflib.namespace import DC, Namespace
+from rdflib.namespace import DC, Namespace, RDF
 
 from hs_core.hydroshare import utils, get_resource_file, ResourceFile
-
+from hs_file_types.models.base import AbstractLogicalFile
 from .models import (
     GenericLogicalFile,
     GeoRasterLogicalFile,
@@ -18,11 +20,8 @@ from .models import (
     TimeSeriesLogicalFile,
     FileSetLogicalFile,
     ModelProgramLogicalFile,
-    ModelInstanceLogicalFile
+    ModelInstanceLogicalFile,
 )
-
-from hs_file_types.models.base import AbstractLogicalFile
-from django.apps import apps
 
 
 def get_SupportedAggTypes_choices():
@@ -261,6 +260,10 @@ def is_aggregation_metadata_file(file):
     return file.name.endswith('_meta.xml')
 
 
+def is_aggregation_metadata_schema_file(file):
+    return file.name.endswith('_schema.json')
+
+
 def is_map_file(file):
     return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
 
@@ -270,11 +273,11 @@ def is_resource_metadata_file(file):
 
 
 def identify_and_ingest_metadata_files(resource, files):
-    res_files, meta_files, map_files = identify_metadata_files(files)
-    ingest_metadata_files(resource, meta_files, map_files)
+    res_files, meta_files, meta_schema_files, map_files = identify_metadata_files(files)
+    ingest_metadata_files(resource, meta_files, meta_schema_files, map_files)
 
 
-def ingest_metadata_files(resource, meta_files, map_files):
+def ingest_metadata_files(resource, meta_files, meta_schema_files, map_files):
     # refresh to pick up any new possible aggregations
     resource_metadata_file = None
     for f in meta_files:
@@ -282,6 +285,11 @@ def ingest_metadata_files(resource, meta_files, map_files):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
             ingest_logical_file_metadata(f, resource, map_files)
+
+    # process meta json schema files (model aggregations) after meta files
+    for f in meta_schema_files:
+        ingest_metadata_schema_file(f, resource, map_files)
+
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
@@ -300,14 +308,17 @@ def identify_metadata_files(files):
     res_files = []
     meta_files = []
     map_files = []
+    meta_schema_files = []
     for f in files:
         if is_resource_metadata_file(f) or is_aggregation_metadata_file(f):
             meta_files.append(f)
         elif is_map_file(f):
             map_files.append(f)
+        elif is_aggregation_metadata_schema_file(f):
+            meta_schema_files.append(f)
         else:
             res_files.append(f)
-    return res_files, meta_files, map_files
+    return res_files, meta_files, meta_schema_files, map_files
 
 
 def ingest_logical_file_metadata(metadata_file, resource, map_files):
@@ -388,6 +399,52 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
             lf.metadata.delete_all_elements()
             lf.metadata.ingest_metadata(graph)
             lf.create_aggregation_xml_documents()
+
+
+def ingest_metadata_schema_file(f, resource, map_files):
+    """ingests metadata schema from the schema JSON file"""
+
+    # get aggregation map file name from meta schema file name
+    aggr_map_filename = f.name.replace('_schema.json', '_resmap.xml')
+    for map_file in map_files:
+        if map_file.name == aggr_map_filename:
+            aggr_map_file = map_file
+            break
+    else:
+        raise Exception("Could not find matching aggregation map file for aggregation schema file {}".format(f.name))
+
+    resource.refresh_from_db()
+    graph = Graph()
+    graph = graph.parse(data=aggr_map_file.read())
+    agg_type_name = None
+    RDFS1 = fs_utils.namespaces['rdfs']
+    for s, _, o in graph.triples((None, RDFS1.isDefinedBy, None)):
+        o = str(o)
+        if o.endswith("/www.hydroshare.org/terms"):
+            agg_type_name = s.split("/")[-1]
+            break
+    if not agg_type_name:
+        raise Exception("Could not derive aggregation type from {}".format(aggr_map_file.name))
+
+    subject = None
+    for s, _, o in graph.triples((None, RDF.type, None)):
+        o = str(o)
+        if o.endswith("/ResourceMap"):
+            subject = s.split('/resource/', 1)[1]
+            break
+    if not subject:
+        raise Exception("Could not derive aggregation path from {}".format(aggr_map_file.name))
+
+    logical_file_class = get_logical_file(agg_type_name)
+    lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
+    if lf is None:
+        raise Exception("Could not derive aggregation path from {}".format(aggr_map_file.name))
+
+    if not lf.is_model_program and not lf.is_model_instance:
+        raise Exception("Could not find a model aggregation for schema file {}".format(f.name))
+
+    lf.metadata_schema_json = json.loads(f.read())
+    lf.save()
 
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
