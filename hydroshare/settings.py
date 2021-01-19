@@ -690,8 +690,6 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
-HSWS_ACTIVATED = False
-
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 
 DISCOVERY_EXTENSION_CONTENT_TYPES = { 

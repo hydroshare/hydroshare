@@ -626,6 +626,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                                            id="btn-delete-key-value")  # TODO: TESTING
         return root_div
 
+    @classmethod
+    def get_preview_data_url(self, resource, folder_path):
+        # A data preview url pointing to an external data service.
+        # - subclass needs to override this
+        return None
+
 
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
