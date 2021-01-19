@@ -255,20 +255,6 @@ function updateSelectionMenuContext() {
         uiActionStates.setRefTimeseriesFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
 
-        uiActionStates.preview.disabled = true;
-        uiActionStates.preview.fileMenu.hidden = true;
-
-        for (let i = 0; i < selected.length; i++) {
-            const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
-            if (size > maxSize) {
-                // Some file is too large for direct download
-                // Here we just disable, but keep the menu item visible
-                uiActionStates.download.disabled = true;
-                $("#fb-download-help").toggleClass("hidden", true);
-                break;
-            }
-        }
-
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
             uiActionStates.removeAggregation.disabled = true;
@@ -281,14 +267,6 @@ function updateSelectionMenuContext() {
     }
     else if (selected.length == 1) {
         // Exactly one item selected
-        var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
-        if (size > maxSize) {
-            uiActionStates.download.disabled = false;
-            $("#fb-download-help").toggleClass("hidden", false);
-        }
-        else {
-            $("#fb-download-help").toggleClass("hidden", true);
-        }
 
         var fileName = $(selected).find(".fb-file-name").text();
 
@@ -459,7 +437,6 @@ function updateSelectionMenuContext() {
             })
         }
 
-        $("#fb-download-help").toggleClass("hidden", true);
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
 

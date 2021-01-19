@@ -1267,7 +1267,7 @@ class AbstractLogicalFile(models.Model):
 
     def _generate_map_xml(self):
         """Generates the xml needed to write to the aggregation map xml document"""
-
+        from hs_core.hydroshare import encode_resource_url
         from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
 
         current_site_url = current_site_url()
@@ -1276,9 +1276,11 @@ class AbstractLogicalFile(models.Model):
         # this is the path to the resourcemedata file for download
         aggr_metadata_file_path = self.metadata_short_file_path
         metadata_url = os.path.join(hs_res_url, aggr_metadata_file_path)
+        metadata_url = encode_resource_url(metadata_url)
         # this is the path to the aggregation resourcemap file for download
         aggr_map_file_path = self.map_short_file_path
         res_map_url = os.path.join(hs_res_url, aggr_map_file_path)
+        res_map_url = encode_resource_url(res_map_url)
 
         # make the resource map:
         utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
@@ -1316,6 +1318,7 @@ class AbstractLogicalFile(models.Model):
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
                 file_name=f.short_path)
+            res_uri = encode_resource_url(res_uri)
             resFiles.append(AggregatedResource(res_uri))
             resFiles[n]._ore.isAggregatedBy = ag_url
             resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
@@ -1332,6 +1335,7 @@ class AbstractLogicalFile(models.Model):
                 hs_url=current_site_url,
                 res_id=self.resource.short_id,
                 aggr_name=child_aggr.map_short_file_path + '#aggregation')
+            res_uri = encode_resource_url(res_uri)
             child_ore_aggr = Aggregation(res_uri)
             child_ore_aggregations.append(child_ore_aggr)
             child_ore_aggregations[n]._ore.isAggregatedBy = ag_url

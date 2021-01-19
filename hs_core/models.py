@@ -3512,7 +3512,7 @@ class BaseResource(Page, AbstractResource):
         """
         extra_data = self.extra_data
         if 'bag_checksum' in extra_data and extra_data['bag_checksum']:
-            return extra_data['bag_checksum']
+            return extra_data['bag_checksum'].strip('\n')
         else:
             return ''
 
