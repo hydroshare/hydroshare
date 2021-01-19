@@ -22,7 +22,7 @@ class CollaborateView(TemplateView):
 class CommunityView(TemplateView):
     def __init__(self, **kwargs):
         super(CommunityView, self).__init__(**kwargs)
-        self.perpage = 40
+        self.perpage = 25
 
     template_name = 'hs_communities/community.html'
 
