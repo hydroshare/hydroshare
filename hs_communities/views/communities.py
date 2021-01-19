@@ -1,7 +1,7 @@
 
 
 import json
-
+from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.shortcuts import render, redirect
@@ -20,6 +20,10 @@ class CollaborateView(TemplateView):
 
 
 class CommunityView(TemplateView):
+    def __init__(self, **kwargs):
+        super(CommunityView, self).__init__(**kwargs)
+        self.perpage = 40
+
     template_name = 'hs_communities/community.html'
 
     def dispatch(self, *args, **kwargs):
@@ -49,8 +53,18 @@ class CommunityView(TemplateView):
         except:
             is_admin = False
 
+        p = Paginator(community_resources, self.perpage)
+
+        if self.request.GET.get('pnum'):
+            pnum = self.request.GET.get('pnum')
+            pnum = int(pnum)
+            pnum = min(pnum, p.num_pages)
+        else:
+            pnum = 1  # page number not specified, implies page 1
+            pnum = min(pnum, p.num_pages)
+
         return {
-            'community_resources': community_resources,
+            'community_resources': p.page(pnum),
             'groups': groups,
             'grpfilter': grpfilter,
             'is_admin': is_admin
