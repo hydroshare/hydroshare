@@ -9,7 +9,7 @@ composite resource phase-2 implementation
 
 from django.core.management.base import BaseCommand
 
-from hs_core.hydroshare import create_bag_files
+from hs_core.hydroshare import create_bag_metadata_files
 from hs_composite_resource.models import CompositeResource
 
 
@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 aggregation.metadata.is_dirty = True
                 aggregation.metadata.save()
             print("> GENERATING BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id))
-            create_bag_files(resource)
+            create_bag_metadata_files(resource)
             print(">> GENERATED BAG FILES FOR COMPOSITE RESOURCE:{}".format(resource.short_id))
             # re-set metadata status
             for aggregation in resource.logical_files:

@@ -48,7 +48,7 @@ class ResourceIRODSMixin(models.Model):
         """
         from hs_core.tasks import create_bag_by_irods
         from hs_core.hydroshare.resource import check_resource_type
-        from hs_core.hydroshare.hs_bagit import create_bag_files
+        from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
         # send signal for pre_check_bag_flag
         resource_cls = check_resource_type(self.resource_type)
@@ -58,7 +58,7 @@ class ResourceIRODSMixin(models.Model):
         bag_modified = self.getAVU('bag_modified')
 
         if metadata_dirty:  # automatically cast to Bool
-            create_bag_files(self)
+            create_bag_metadata_files(self)
             self.setAVU('metadata_dirty', False)
 
         # the ticket system does synchronous bag creation.
@@ -73,11 +73,11 @@ class ResourceIRODSMixin(models.Model):
 
         This checks the "metadata dirty" AVU before updating files if necessary.
         """
-        from hs_core.hydroshare.hs_bagit import create_bag_files
+        from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
         metadata_dirty = self.getAVU('metadata_dirty')
         if metadata_dirty:
-            create_bag_files(self)
+            create_bag_metadata_files(self)
             self.setAVU('metadata_dirty', False)
 
     def create_ticket(self, user, path=None, write=False, allowed_uses=1):
