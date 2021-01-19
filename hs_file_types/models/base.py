@@ -1281,7 +1281,6 @@ class AbstractLogicalFile(models.Model):
         utils.namespaceSearchOrder.append('citoterms')
 
         ag_url = res_map_url + '#aggregation'
-        ag_url = ag_url
         a = Aggregation(ag_url)
 
         # Set properties of the aggregation
