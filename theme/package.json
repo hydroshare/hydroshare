@@ -1,0 +1,59 @@
+{
+  "name": "hs_theme",
+  "version": "1.0.0",
+  "description": "Theme",
+  "main": "vue.config.js",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack-defaults": "webpack-defaults"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "bootstrap": "^4.6.0",
+    "bootstrap-vue": "^2.21.2",
+    "core-js": "2.6.5",
+    "vue": "^2.6.12",
+    "vue-date-pick": "^1.4.1",
+    "vue-router": "^3.4.9",
+    "webpack": "^4.46.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.12.1",
+    "@vue/cli-plugin-eslint": "^3.12.1",
+    "@vue/cli-service": "^3.12.1",
+    "@vue/eslint-config-airbnb": "^4.0.1",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^5.16.0",
+    "eslint-plugin-vue": "^5.2.3",
+    "vue-template-compiler": "^2.6.12"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "@vue/airbnb"
+    ],
+    "rules": {
+      "max-len": [
+        "error",
+        {
+          "code": 255
+        }
+      ]
+    },
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions"
+  ]
+}

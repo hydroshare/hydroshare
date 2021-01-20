@@ -44,3 +44,4 @@ pg.deploy.sql
 node_modules/
 hs_discover/templates/
 hs_discover/static
+theme/build
