@@ -1,4 +1,4 @@
-{% extends "pages/page.html" %}
+{% extends "cleanbase.html" %}
 {% load comment_tags %}
 {% block meta_title %}CZO Community {% endblock %}
 {% block extra_css %}
@@ -104,28 +104,28 @@
                                     </div>
                                 </div>
 
-        <div id="resource-rows" class="col-lg-9">
+        <div id="resource-rows" class="col-lg-9" >
             <br/>
             <div class="table-wrapper">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (sharedByFilter.length)"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
-                    class="table-hover table-striped resource-custom-table main-table">
+                    class="table-hover table-striped resource-custom-table main-table" size="600px">
                     <thead>
                         <tr><th><!-- placeholder --></th>
-                            <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
+                            <th v-for="key in labels" style="cursor:pointer"
                                 @click="sortBy(key)">
                                 <i :class="sortStyling(key)"></i>{% templatetag openvariable %}key{% templatetag closevariable %}
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(entry) in resources" v-bind:key="entry">
+                    <tr v-for="(entry) in resources">
                         <td style=width:15%;>
                           <span id="img-icons">
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
-                                :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
+                                :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability">
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
@@ -167,13 +167,12 @@
 {% endblock main %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
             integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
             crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.js" integrity="sha512-Z0dNfC81uEXC2iTTXtE0rM18I3ATkwn1m8Lxe0onw/uPEEkCmVZd+H8GTeYGkAZv50yvoSR5N3hoy/Do2hNSkw==" crossorigin="anonymous"></script>
 
     <script type="text/javascript" src="/static/js/communities.js"></script>
-    <script type="text/javascript" src="/static/js/hs_resource_table_community.js"></script>
 {% endblock %}
