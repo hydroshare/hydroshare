@@ -4,7 +4,7 @@ import unittest
 from django.conf import settings
 
 
-class TestGenericResourceMeta(unittest.TestCase):
+class TestCompositeResourceMeta(unittest.TestCase):
     def setUp(self):
         pass
 

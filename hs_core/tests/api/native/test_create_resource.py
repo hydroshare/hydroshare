@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
-from hs_core.models import GenericResource
+from hs_core.models import CompositeResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
@@ -65,7 +65,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        CompositeResource.objects.all().delete()
         self.file_one.close()
         os.remove(self.file_one.name)
         self.file_two.close()
@@ -73,13 +73,13 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
     def test_create_resource_without_content_files(self):
         res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
             )
 
-        self.assertEqual(res.resource_type, 'GenericResource')
-        self.assertTrue(isinstance(res, GenericResource))
+        self.assertEqual(res.resource_type, 'CompositeResource')
+        self.assertTrue(isinstance(res, CompositeResource))
         self.assertTrue(res.metadata.title.value == 'My Test Resource')
         self.assertTrue(res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(res.creator == self.user)
@@ -90,7 +90,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
     def test_create_resource_with_content_files(self):
         new_res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource',
             files=(self.file_one,)
@@ -106,8 +106,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         # test the extension of the content file
         self.assertEqual(res_file.extension, ".txt")
 
-        self.assertEqual(new_res.resource_type, 'GenericResource')
-        self.assertTrue(isinstance(new_res, GenericResource), type(new_res))
+        self.assertEqual(new_res.resource_type, 'CompositeResource')
+        self.assertTrue(isinstance(new_res, CompositeResource), type(new_res))
         self.assertTrue(new_res.metadata.title.value == 'My Test Resource')
         self.assertTrue(new_res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(new_res.creator == self.user)
@@ -121,7 +121,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # test creating resource with multiple files
         new_res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource',
             files=(self.file_one, self.file_two)
@@ -164,7 +164,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         ]
 
         res = resource.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='My Test Resource',
             metadata=metadata_dict
@@ -249,7 +249,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         # resource is not yet published
         metadata_dict = [{'publisher': {'name': 'HydroShare', 'url': 'https://hydroshare.org'}}, ]
         with self.assertRaises(Exception):
-            resource.create_resource(resource_type='GenericResource',
+            resource.create_resource(resource_type='CompositeResource',
                                      owner=self.user,
                                      title='My Test Resource',
                                      metadata=metadata_dict
@@ -258,15 +258,15 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
     def test_create_resource_with_metadata_for_type(self):
         # trying to create a resource with metadata for type element should ignore the provided type element data
         # and create the system generated type element
-        metadata_dict = [{'type': {'url': 'https://hydroshare.org/GenericResource'}}, ]
+        metadata_dict = [{'type': {'url': 'https://hydroshare.org/CompositeResource'}}, ]
         res = resource.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='My Test Resource',
             metadata=metadata_dict
         )
 
-        type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'GenericResource')
+        type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'CompositeResource')
         self.assertEqual(res.metadata.type.url, type_url, msg='type element url is wrong')
         if res:
             res.delete()
@@ -276,7 +276,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         # as format elements are system generated based on resource content files
         metadata_dict = [{'format': {'value': 'plain/text'}}, {'format': {'value': 'image/tiff'}}]
         res = resource.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='My Test Resource',
             metadata=metadata_dict
@@ -302,7 +302,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                          {'date': {'type': 'valid', 'start_date': parser.parse('01/20/2016'),
                                    'end_date': parser.parse('02/20/2016')}}]
         res = resource.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='My Test Resource',
             metadata=metadata_dict
@@ -340,7 +340,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
     def test_create_resource_with_file(self):
         raster = open(self.raster_file_path, 'rb')
-        res = resource.create_resource('GenericResource',
+        res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
                                        files=(raster,))
@@ -348,8 +348,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # get the resource by pid
         res = get_resource_by_shortkey(pid)
-        self.assertEqual(res.resource_type, 'GenericResource')
-        self.assertTrue(isinstance(res, GenericResource), type(res))
+        self.assertEqual(res.resource_type, 'CompositeResource')
+        self.assertTrue(isinstance(res, CompositeResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
         self.assertEqual(res.files.all().count(), 1)
         if res:
@@ -362,7 +362,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         text = MyTemporaryUploadedFile(open(self.txt_file_path, 'rb'), name=self.txt_file_path,
                                        content_type='text/plain',
                                        size=os.stat(self.txt_file_path).st_size)
-        res = resource.create_resource('GenericResource',
+        res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
                                        files=(raster, text))
@@ -370,8 +370,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # get the resource by pid
         res = get_resource_by_shortkey(pid)
-        self.assertEqual(res.resource_type, 'GenericResource')
-        self.assertTrue(isinstance(res, GenericResource), type(res))
+        self.assertEqual(res.resource_type, 'CompositeResource')
+        self.assertTrue(isinstance(res, CompositeResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
         self.assertEqual(res.files.all().count(), 2)
         if res:
@@ -389,7 +389,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
                                         content_type='application/zip',
                                         size=os.stat(zip_path).st_size)
-        res = resource.create_resource('GenericResource',
+        res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
                                        files=(payload,))
@@ -403,7 +403,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
                                         content_type='application/zip',
                                         size=os.stat(zip_path).st_size)
-        res = resource.create_resource('GenericResource',
+        res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
                                        files=(payload2,),
@@ -429,7 +429,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True
         with self.assertRaises(QuotaException):
-            resource_pre_create_actions(resource_type='GenericResource',
+            resource_pre_create_actions(resource_type='CompositeResource',
                                         resource_title='My Test Resource',
                                         page_redirect_url_key=None,
                                         files=(self.file_one,),
@@ -441,7 +441,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         # create resource should not raise quota exception now that enforce_quota flag
         # is set to False
         try:
-            resource_pre_create_actions(resource_type='GenericResource',
+            resource_pre_create_actions(resource_type='CompositeResource',
                                         resource_title='My Test Resource',
                                         page_redirect_url_key=None,
                                         files=(self.file_one,),

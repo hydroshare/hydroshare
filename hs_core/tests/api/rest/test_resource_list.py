@@ -25,7 +25,7 @@ class TestResourceList(HSRESTTestCase):
 
     def test_resource_list_by_type(self):
 
-        gen_res = resource.create_resource('CompositeResource',
+        gen_res = resource.create_resource('GenericResource',
                                            self.user,
                                            'My Test Resource')
         gen_pid = gen_res.short_id

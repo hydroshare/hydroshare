@@ -23,7 +23,7 @@ class TestGetResourceByShortkeyAPI(MockIRODSTestCaseMixin, TestCase):
 
         # create a resource
         resource = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user_creator,
             'My Test Resource'
         )

@@ -32,7 +32,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='My Test Resource'
         )

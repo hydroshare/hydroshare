@@ -19,7 +19,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             )
 
-        self.res = hydroshare.create_resource('GenericResource', self.user, 'Test Resource')
+        self.res = hydroshare.create_resource('CompositeResource', self.user, 'Test Resource')
 
     def test_update_science_metadata(self):
         # add these new metadata elements

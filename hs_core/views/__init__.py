@@ -302,7 +302,7 @@ def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
 
     if element_name in core_metadata_element_names:
-        sender_resource = GenericResource().__class__
+        sender_resource = CompositeResource().__class__
     else:
         sender_resource = resource.__class__
 
@@ -1236,43 +1236,6 @@ class GroupUpdateForm(GroupForm):
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
-
-
-@processor_for(GenericResource)
-def add_generic_context(request, page):
-    user = request.user
-    user_zone_account_exist = utils.get_user_zone_status_info(user)
-
-    class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
-
-    class AddUserContriForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'contri'}))
-
-    class AddUserInviteForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'invite'}))
-
-    class AddUserHSForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
-                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete", attrs={'id':'hs-user'}))
-
-    class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
-                                       widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
-
-    return {
-        'add_view_contrib_user_form': AddUserContriForm(),
-        'add_view_invite_user_form': AddUserInviteForm(),
-        'add_view_hs_user_form': AddUserHSForm(),
-        'add_view_user_form': AddUserForm(),
-        # Reuse the same class AddGroupForm() leads to duplicated IDs.
-        'add_view_group_form': AddGroupForm(),
-        'add_edit_group_form': AddGroupForm(),
-        'user_zone_account_exist': user_zone_account_exist,
-    }
 
 
 @login_required

@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import CompositeResource
 from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
 
@@ -40,7 +40,7 @@ class TestNewVersionResource(TestCase):
 
         # create a generic resource
         self.res_generic = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.owner,
             title='Test Generic Resource'
         )
@@ -113,7 +113,7 @@ class TestNewVersionResource(TestCase):
                                                                  self.owner)
 
         # test the new versioned resource has the same resource type as the original resource
-        self.assertTrue(isinstance(new_res_generic, GenericResource))
+        self.assertTrue(isinstance(new_res_generic, CompositeResource))
 
         # test the new versioned resource has the correct content file with correct path copied over
 

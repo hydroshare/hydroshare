@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import CompositeResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
@@ -18,7 +18,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         super(TestUpdateResourceFileAPI, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        CompositeResource.objects.all().delete()
         self.original_file.close()
         os.remove(self.original_file.name)
         self.new_file.close()
@@ -36,7 +36,7 @@ class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         )
 
         new_res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user_creator,
             'My Test Resource'
             )

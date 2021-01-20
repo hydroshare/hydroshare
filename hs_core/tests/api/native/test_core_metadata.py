@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, User
 
 from hs_core.hydroshare import resource
-from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
+from hs_core.models import CompositeResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
     Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
 from hs_core import hydroshare
@@ -29,7 +29,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='Generic resource',
             keywords=['kw1', 'kw2']
@@ -41,7 +41,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         super(TestCoreMetadata, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        CompositeResource.objects.all().delete()
         Creator.objects.all().delete()
         Contributor.objects.all().delete()
         CoreMetaData.objects.all().delete()
@@ -87,7 +87,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="Subject value 'kw2' was not found.")
 
         # 'Type' element should have been created
-        type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'GenericResource')
+        type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'CompositeResource')
         self.assertEqual(self.res.metadata.type.url, type_url, msg='type element url is wrong')
 
         # Language element should have been created
@@ -798,7 +798,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # open the file for read
         file_obj_1 = open(res_file_1, "rb")
-        res = hydroshare.create_resource(resource_type='GenericResource',
+        res = hydroshare.create_resource(resource_type='CompositeResource',
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1,)
@@ -815,7 +815,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # open the file for read
         file_obj_2 = open(res_file_2, "rb")
-        res = hydroshare.create_resource(resource_type='GenericResource',
+        res = hydroshare.create_resource(resource_type='CompositeResource',
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1, file_obj_2)
@@ -834,7 +834,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # reopen file_obj_1 for read
         file_obj_1 = open(res_file_1, "rb")
 
-        res = hydroshare.create_resource(resource_type='GenericResource',
+        res = hydroshare.create_resource(resource_type='CompositeResource',
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1, file_obj_3)
@@ -857,7 +857,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # open the file for read
         file_obj_1 = open(res_file_1, "rb")
-        res = hydroshare.create_resource(resource_type='GenericResource',
+        res = hydroshare.create_resource(resource_type='CompositeResource',
                                          owner=self.user,
                                          title='Generic resource',
                                          files=(file_obj_1,)
@@ -1038,7 +1038,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # publisher name 'CUAHSI' only and publisher url to 'https://www.cuahsi.org' only.
         # create a different resource
         res_with_files = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='Generic resource with files',
         )

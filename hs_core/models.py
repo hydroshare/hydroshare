@@ -3727,6 +3727,7 @@ class GenericResource(BaseResource):
     """Define GenericResource model."""
 
     objects = ResourceManager('GenericResource')
+    archived_model = True
 
     @property
     def supports_folders(self):
