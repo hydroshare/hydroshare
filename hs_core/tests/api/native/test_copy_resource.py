@@ -7,13 +7,9 @@ from django.test import TestCase
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.models import GenericResource
-from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
-from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, \
-    BandInformation
 from hs_file_types.models import GeoRasterLogicalFile
 
 
