@@ -7,13 +7,10 @@ from django.test import TestCase
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.models import GenericResource
 from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
-from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, \
-    BandInformation
 
 
 class TestNewVersionResource(TestCase):
@@ -195,118 +192,3 @@ class TestNewVersionResource(TestCase):
                              "its versioned resource is deleted")
         # delete the original resource to make sure iRODS files are cleaned up
         hydroshare.delete_resource(self.res_generic.short_id)
-
-    def test_new_version_raster_resource(self):
-        # test to make sure only owners can version a resource
-        with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
-
-        self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
-                                                    PrivilegeCodes.CHANGE)
-        with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
-
-        self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
-                                                    PrivilegeCodes.VIEW)
-        with self.assertRaises(PermissionDenied):
-            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
-
-        new_res_raster = hydroshare.create_empty_resource(self.res_raster.short_id,
-                                                          self.owner)
-        new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster,
-                                                                self.owner)
-
-        # test the new versioned resource has the same resource type as the original resource
-        self.assertTrue(isinstance(new_res_raster, CompositeResource))
-
-        # test science metadata elements are copied from the original resource to the new versioned
-        # resource
-        self.assertTrue(new_res_raster.metadata.title.value == self.res_raster.metadata.title.value)
-        self.assertTrue(new_res_raster.creator == self.owner)
-
-        # test extended metadata elements are copied from the original resource to the new
-        # versioned resource
-        self.assertTrue(OriginalCoverage.objects.filter(
-            object_id=new_res_raster.metadata.id).exists())
-        self.assertEqual(new_res_raster.metadata.originalCoverage.value,
-                         self.res_raster.metadata.originalCoverage.value,
-                         msg="OriginalCoverage of new versioned resource is not equal to "
-                             "that of the original resource")
-
-        self.assertTrue(CellInformation.objects.filter(
-            object_id=new_res_raster.metadata.id).exists())
-        newcell = new_res_raster.metadata.cellInformation
-        oldcell = self.res_raster.metadata.cellInformation
-        self.assertEqual(newcell.rows, oldcell.rows,
-                         msg="Rows of new versioned resource is not equal to that of "
-                             "the original resource")
-        self.assertEqual(newcell.columns, oldcell.columns,
-                         msg="Columns of new versioned resource is not equal to that of the "
-                             "original resource")
-        self.assertEqual(newcell.cellSizeXValue, oldcell.cellSizeXValue,
-                         msg="CellSizeXValue of new versioned resource is not equal to "
-                             "that of the original resource")
-        self.assertEqual(newcell.cellSizeYValue, oldcell.cellSizeYValue,
-                         msg="CellSizeYValue of new versioned resource is not equal to "
-                             "that of the original resource")
-        self.assertEqual(newcell.cellDataType, oldcell.cellDataType,
-                         msg="CellDataType of new versioned resource is not equal to "
-                             "that of the original resource")
-
-        self.assertTrue(BandInformation.objects.filter(
-            object_id=new_res_raster.metadata.id).exists())
-        newband = new_res_raster.metadata.bandInformations.first()
-        oldband = self.res_raster.metadata.bandInformations.first()
-        self.assertEqual(newband.name, oldband.name,
-                         msg="Band name of new versioned resource is not equal to that of "
-                             "the original resource")
-
-        # test to make sure a new unique identifier has been created for the new versioned resource
-        self.assertIsNotNone(new_res_raster.short_id, msg='Unique identifier has not been '
-                                                          'created for new versioned resource.')
-        self.assertNotEqual(new_res_raster.short_id, self.res_raster.short_id)
-
-        # test to make sure the new versioned resource has 2 content file
-        # since an additional vrt file is created
-        self.assertEqual(new_res_raster.files.all().count(), 2)
-
-        # test to make sure the new versioned resource has the correct identifier
-        self.assertEqual(new_res_raster.metadata.identifiers.all().count(), 1,
-                         msg="Number of identifier elements not equal to 1.")
-        self.assertIn('hydroShareIdentifier',
-                      [id.name for id in new_res_raster.metadata.identifiers.all()],
-                      msg="hydroShareIdentifier name was not found for new versioned resource.")
-        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                         new_res_raster.short_id)
-        self.assertIn(id_url, [id.url for id in new_res_raster.metadata.identifiers.all()],
-                      msg="Identifier url was not found for new versioned resource.")
-
-        # test to make sure the new versioned resource is linked with the original resource via
-        # isReplacedBy and isVersionOf metadata elements
-        self.assertGreater(new_res_raster.metadata.relations.all().count(), 0,
-                           msg="New versioned resource does has relation element.")
-        self.assertIn('isVersionOf', [rel.type for rel in new_res_raster.metadata.relations.all()],
-                      msg="No relation element of type 'isVersionOf' for new versioned resource")
-        version_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                                self.res_raster.short_id)
-        self.assertIn(version_value, [rel.value for rel in new_res_raster.metadata.relations.all()],
-                      msg="The original resource identifier is not set as value "
-                          "for isVersionOf for new versioned resource.")
-        self.assertIn('isReplacedBy',
-                      [rel.type for rel in self.res_raster.metadata.relations.all()],
-                      msg="No relation element of type 'isReplacedBy' for the original resource")
-        version_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                                new_res_raster.short_id)
-        self.assertIn(version_value,
-                      [rel.value for rel in self.res_raster.metadata.relations.all()],
-                      msg="The new versioned resource identifier is not set as value "
-                          "for isReplacedBy for original resource.")
-
-        # test isReplacedBy is removed after the new versioned resource is deleted
-        hydroshare.delete_resource(new_res_raster.short_id)
-        self.assertNotIn('isReplacedBy',
-                         [rel.type for rel in self.res_raster.metadata.relations.all()],
-                         msg="isReplacedBy is not removed from the original resource "
-                             "after its versioned resource is deleted")
-        # delete the original resource to make sure iRODS files are cleaned up
-        hydroshare.delete_resource(self.res_raster.short_id)
