@@ -3,7 +3,8 @@ $(document).ready(function () {
         el: "#communities-app",
         data: {
             filterTo: [],
-            groupIds: []
+            groupIds: [],
+            groups: ['group1', 'group2']
         },
         mounted: function () {
             let groupIds = {};

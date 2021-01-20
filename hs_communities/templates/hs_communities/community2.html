@@ -1,0 +1,165 @@
+{% extends "cleanbase.html" %}
+{% block meta_title %}CZO Community {% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <style>
+        .pagination {
+          z-index: 1000;
+          margin: 0;
+          transform: translateY(4px);
+        }
+        .interactive:hover {
+          color: LightBlue;
+          /* Avoid double-click selection during rapid clicking: */
+          user-select: none; /* standard syntax */
+          -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+          -moz-user-select: none; /* mozilla browsers */
+          -ms-user-select: none; /* IE10+ */
+        }
+    </style>
+{% endblock %}
+{% block extra_head %}
+    <script>
+    const PAGEDISP = 1;
+    const PERPAGE = 40;
+    const PAGECOUNT = 5;
+    const RESCOUNT = 400;
+</script>
+{% endblock %}
+{% block main %}
+    <div id="communities-app">
+        <div class="collaborate-header">
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="collaborate-nav">
+                            <a href="{% url "communities" %}" class="collaborate-nav-item">Find Communities</a>
+                            <a href="{% url "my_communities" %}" class="collaborate-nav-item">My Communities</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-3">
+                    <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/czo-logo-wide.png"
+                                                                alt="CZO National"></a></div>
+                </div>
+                <div class="col-sm-7">
+                </div>
+                <div><!-- [Modals] --></div>
+            </div>
+            <div class="full-width-tabs-container" id="user-profile-tabs">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
+                    </li>
+                    {% if is_admin %}
+                        <li role="presentation">
+                            <a href="#admin" aria-controls="admin" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-file"></i>&nbsp;ADMIN</a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content" style="size: 800px">
+                    <!-- PUBLIC -->
+                    <div role="tabpanel" class="tab-pane fade in active" id="public">
+                        <div class="row">
+                            <div class="col-lg-2" id="facets">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h4 class="panel-title">
+                                            <span class="glyphicon glyphicon glyphicon-user"></span>
+                                            &nbsp;Shared by</h4>
+                                    </div>
+                                    <div id="filter-shared-by" class="facet-list">
+                                        <div class="panel-body">
+                                            <div class="list-group">
+                                                <div id="groups-list">
+                                                    <!-- this id=groups-list is used to construct the VueJS group name to id map -->
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-10" id="items">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div id="search-container" class="input-group">
+                                            <span class="glyphicon glyphicon-search search-icon"></span>
+                                            <input id="resource-search-input" type="text" class="form-control"
+                                                   placeholder="Search" size="600px"/>
+                                            <span id="btn-clear-search-input"
+                                                  class="glyphicon glyphicon-remove-sign btn-clear-search"
+                                                  style="right: 10px"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <table id="item-selectors" class="table-hover table-striped resource-custom-table">
+                                    <thead>
+                                    <tr>
+                                        <th><input class="all-rows-selector" type="checkbox"></th>
+                                        <th>Type</th>
+                                        <th>Title</th>
+                                        <th>First Author</th>
+                                        <th>Date Created</th>
+                                        <th>Last modified</th>
+                                        <th>Subject</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Authors</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Permission Level</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Labels</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Favorite</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Last modified</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Sharing Status</th>
+                                        {# Needed for datatable to function properly #}
+                                        <th>Date Created</th>
+                                        {# Needed for datatable to function properly #}
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                                {% include "includes/legend.html" %}
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="admin">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-3">
+                                <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
+                                                                                            class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
+                                    Topics</h4></a>
+                                Someone has requested a topic to be created or modified for use in the Title Assistant
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock main %}
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/communities.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table_community.js"></script>
+{% endblock %}
