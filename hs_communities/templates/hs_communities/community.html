@@ -102,99 +102,49 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- /input-group -->
-                                <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                                    <thead>
-                                    <tr>
-                                        <th><input class="all-rows-selector" type="checkbox"></th>
-                                        <th>Type</th>
-                                        <th>Title</th>
-                                        <th>First Author</th>
-                                        <th>Date Created</th>
-                                        <th>Last modified</th>
-                                        <th>Subject</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Authors</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Permission Level</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Labels</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Favorite</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Last modified</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Sharing Status</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Date Created</th>
-                                        {# Needed for datatable to function properly #}
-                                    </tr>
-                                    </thead>
-                <! -- TODO FIX GRPFILTER FUNCTIONALITY -->
-                                    <tbody>
-                                    {% for res in community_resources %}
-                                        <tr class="data-row" v-show="isVisible({{ res.group_id }})">
-                                            {# Selection controls #}
-                                            <td>
-                                                <input class="row-selector" type="checkbox">
-                                                <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                      data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                                <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                      action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="CREATE">
-                                                    <input type="hidden" name="label_type" value="FAVORITE">
-                                                </form>
-                                                <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                      data-toggle="dropdown" aria-expanded="false"></span>
+        <div id="resource-rows" class="col-lg-9">
+            <br/>
+            <div class="table-wrapper">
+              <p class="table-message" style="color:red" v-if="(!resources.length) && (sharedByFilter.length)"><i>No resource matches</i></p>
+                <table id="items-discovered" v-if="resources.length"
+                    class="table-hover table-striped resource-custom-table main-table">
+                    <thead>
+                        <tr><th><!-- placeholder --></th>
+                            <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
+                                @click="sortBy(key)">
+                                <i :class="sortStyling(key)"></i>{% templatetag openvariable %}key{% templatetag closevariable %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="(entry) in resources" v-bind:key="entry">
+                        <td style=width:15%;>
+                          <span id="img-icons">
+                            <img :src="resIconName[entry.type]" v-b-tooltip.hover
+                                :title="entry.type" :alt="entry.type" height="30" width="30">
+                            <img :src="entry.availabilityurl" v-b-tooltip.hover
+                                :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
+                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            </span>
+                        </td>
+                        <td style="width:60%;" class="title-span">
+                          <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{% templatetag openvariable %}ellip(entry.title, 250){% templatetag closevariable %}</a>
+                        </td>
+                        <td style=width:15%;>
+                            <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
+                               :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{% templatetag openvariable %}entry.author{% templatetag closevariable %}</a>
+                        </td>
+                        <!-- python is passing .isoformat() in views.py -->
+                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{% templatetag openvariable %}new Date(entry.created).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{% templatetag openvariable %}new Date(entry.modified).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                                    <div class="panel-body" role="form">
-                                                        <ul data-resource-id="{{ res.resource_id }}"
-                                                            class="list-group list-labels">
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            {# Type #}
-                                            <td data-col="resource-type">
-                                                {% include "includes/res_type_col_community.html" with resource=res %}
-                                            </td>
-                                            {# Title #}
-                                            <td>
-                                                <strong>
-                                                    <a href="/{{ res.slug }}/">{{ res.title }}</a>
-                                                </strong>
-                                            </td>
-                                            {# First Author #}
-                                            {% if res.first_creator.description %}
-                                                <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
-                                                </td>
-                                            {% else %}
-                                                <td>{{ res.first_creator.name }}</td>
-                                            {% endif %}
-                                            {# Date Created #}
-                                            <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
-                                            {# Last Modified #}
-                                            <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.updated|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.created|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                                {% include "includes/legend.html" %}
+
                             </div>
                         </div>
                     </div>
@@ -218,6 +168,10 @@
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+            integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+            crossorigin="anonymous"></script>
+
     <script type="text/javascript" src="/static/js/communities.js"></script>
     <script type="text/javascript" src="/static/js/hs_resource_table_community.js"></script>
 {% endblock %}
