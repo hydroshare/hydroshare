@@ -94,6 +94,14 @@ $(document)
             return names;
           }
         },
+        sortBy(key) {
+          if (this.sortMap[key] !== 'type') {
+            this.sortDir = this.sortMap[key] === this.sortingBy ? this.sortDir * -1 : 1;
+            this.sortingBy = this.sortMap[key];
+            this.searchClick(true);
+          }
+        },
+
         sortStyling(key) {
           if (this.sortMap[key] === this.sortingBy) {
             return this.sortDir === 1 ? 'fa fa-fw fa-sort-asc interactive' : 'fa fa-fw fa-sort-desc interactive';
@@ -108,7 +116,7 @@ $(document)
 
                 try {
                   this.resources = JSON.parse(response.data.resources);
-                  console.log(this.resources)
+                  console.log(this.resources);
                   if (paging !== true) {
                     this.pagenum = 1;
                   }
