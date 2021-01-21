@@ -458,30 +458,12 @@ def replicate_resource_bag_to_user_zone_task(res_id, request_username):
     res = utils.get_resource_by_shortkey(res_id)
     res_coll = res.root_path
     istorage = res.get_irods_storage()
-    bag_modified_flag = True
-    # needs to check whether res_id collection exists before getting/setting AVU on it to
-    # accommodate the case where the very same resource gets deleted by another request when
-    # it is getting downloaded
     if istorage.exists(res_coll):
-        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-
-        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
-        # is False; otherwise, bag_modified_flag will take the default True value so that the
-        # bag will be created or recreated
-        if bag_modified:
-            if bag_modified.lower() == "false":
-                bag_file_name = res_id + '.zip'
-                if res.resource_federation_path:
-                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
-                                                 bag_file_name)
-                else:
-                    bag_full_path = os.path.join('bags', bag_file_name)
-
-                if istorage.exists(bag_full_path):
-                    bag_modified_flag = False
-
-        if bag_modified_flag:
-            # import here to avoid circular import issue
+        bag_modified = res.getAVU('bag_modified')
+        if bag_modified is None or not bag_modified:
+            if not istorage.exists(res.bag_path):
+               create_bag_by_irods(res_id)
+        else:
             create_bag_by_irods(res_id)
 
         # do replication of the resource bag to irods user zone
@@ -493,7 +475,7 @@ def replicate_resource_bag_to_user_zone_task(res_id, request_username):
         fsize = istorage.size(src_file)
         utils.validate_user_quota(request_username, fsize)
         istorage.copyFiles(src_file, tgt_file)
-        return res.get_absolute_url()
+        return None
     else:
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 

@@ -271,7 +271,7 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource copy to user zone":
-                        if (task.status === "completed" && task.payload) {
+                        if (task.status === "completed") {
                             vue.deliverTask(task);
                         }
                         break;

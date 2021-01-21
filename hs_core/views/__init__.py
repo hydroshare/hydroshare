@@ -789,8 +789,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
 
     task = replicate_resource_bag_to_user_zone_task.apply_async((shortkey, user.username))
     task_id = task.task_id
-    task_dict = get_or_create_task_notification(task_id, name='resource copy to user zone', payload=shortkey,
-                                                username=user.username)
+    task_dict = get_or_create_task_notification(task_id, name='resource copy to user zone', username=user.username)
     return JsonResponse(task_dict)
 
 
