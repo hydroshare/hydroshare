@@ -53,6 +53,6 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
         response = rep_res_bag_to_irods_user_zone(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = json.loads(response.content.decode())
-        self.assertIn('resource copy to user zone',  response_data)
+        self.assertIn('resource copy to user zone',  response_data.values())
         # clean up
         hydroshare.delete_resource(self.gen_res.short_id)

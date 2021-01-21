@@ -643,10 +643,17 @@ def validate_user_quota(user_or_username, size):
                  size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
-    if isinstance(user_or_username, User):
-        user = user_or_username
+    if user_or_username:
+        if isinstance(user_or_username, User):
+            user = user_or_username
+        else:
+            try:
+                user = User.objects.get(username=user_or_username)
+            except User.DoesNotExist:
+                user = None
     else:
-        user = User.objects.get(username=user_or_username)
+        user = None
+
     if user:
         # validate it is within quota hard limit
         uq = user.quotas.filter(zone='hydroshare').first()
