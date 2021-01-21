@@ -39,9 +39,6 @@
                     <div><a href="http://criticalzone.org"><img src="/static/img/czo-logo-wide.png"
                                                                 alt="CZO National"></a></div>
                 </div>
-                <div class="col-sm-7">
-                </div>
-                <div><!-- [Modals] --></div>
             </div>
             <div class="full-width-tabs-container" id="user-profile-tabs">
                 <!-- Nav tabs -->
@@ -104,12 +101,11 @@
                                         <div id="search-container" class="input-group">
                                             <span class="fa fa-search inside-left"></span>
                                             <input id="resource-search-input" type="text" class="form-control"
-                                                   placeholder="Search" size="600px"/>
+                                                   placeholder="Search Resources Shared by CZO National Groups" size="600px"/>
                                             <span id="btn-clear-search-input"
                                                   class="fa fa-times-circle inside-right interactive"
                                                   style="right: 10px"></span>
                                         </div>
-
 
                                         <div id="resource-rows" >
                                     <div class="table-wrapper">
@@ -126,7 +122,7 @@
                                             </thead>
                                             <tbody>
                                             <tr v-for="(entry) in resources">
-                                                <td>
+                                                <td style="width: 110px">
                                                   <span id="img-icons">
                                                     <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                                         :title="entry.type" :alt="entry.type" height="30" width="30">
