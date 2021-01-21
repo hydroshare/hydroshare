@@ -5,7 +5,11 @@ $(document)
       data: {
         filterTo: [],
         groupIds: [],
-        groups: [{"id": 1, "name": "CZO Sierra", "res_count": 1}],
+        groups: [{
+          'id': 1,
+          'name': 'CZO Sierra',
+          'res_count': 1
+        }],
         resources: [],
         sharedByFilter: '',
         pnum: 1,
@@ -71,6 +75,15 @@ $(document)
           } else {  // Display row if Group ID found in the filterTo Array
             return this.$data.filterTo.indexOf(groupId) > -1;
           }
+        },
+        clearSearch() {
+          this.searchtext = '';
+          this.searchClick(false, true, true);
+        },
+        paging(direction) {
+          pagecalc = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
+          this.pagenum = Math.min(this.pagecount, pagecalc)
+          // this.searchClick(true);
         },
         updateContribs(groupId) {
           let loc = this.$data.filterTo.indexOf(groupId);
