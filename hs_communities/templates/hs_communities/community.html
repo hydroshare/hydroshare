@@ -109,12 +109,9 @@
                                                   class="fa fa-times-circle inside-right interactive"
                                                   style="right: 10px"></span>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div id="resource-rows" class="col-lg-10">
-                                    <div class="row">
-                                    <br/>
+
+                                        <div id="resource-rows" >
                                     <div class="table-wrapper">
                                       <p class="table-message" style="color:red" v-if="(!resources.length) && (sharedByFilter.length)"><i>No resource matches</i></p>
                                         <table id="items-discovered" v-if="resources.length"
@@ -152,6 +149,8 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                </div>
+
                                     </div>
                                 </div>
 
