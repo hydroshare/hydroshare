@@ -3,7 +3,7 @@
 {% load pages_tags mezzanine_tags i18n staticfiles theme_tags hydroshare_tags %}
 <head>
     {% if page|is_debug %}
-    <meta name="robots" content="noindex">
+        <meta name="robots" content="noindex">
     {% endif %}
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width">
@@ -19,21 +19,18 @@
 
     {% compress css %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.3.0.2.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/animate.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}">
-    <link rel='stylesheet' type='text/css' href="{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}"> <!-- spacing above search bar -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_core.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/notifications-app.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/identifiers.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/academicons.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_extends.css' %}">
 
     {% if request.user.is_staff %}
-    <style>
-        .animated {
-            animation-fill-mode: none;
-        }
-    </style>
+        <style>
+            .animated {
+                animation-fill-mode: none;
+            }
+        </style>
     {% endif %}
     {% block extra_css %}{% endblock %}
     {% endcompress %}

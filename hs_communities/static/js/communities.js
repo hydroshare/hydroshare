@@ -1,11 +1,11 @@
 $(document)
   .ready(function () {
     let CommunitiesVm = new Vue({
-      el: '#resource-rows',
+      el: '#communities-app',
       data: {
         filterTo: [],
         groupIds: [],
-        groups: ['group1', 'group2'],
+        groups: [{"id": 1, "name": "CZO Sierra", "res_count": 1}],
         resources: [],
         sharedByFilter: '',
         pnum: 1,
