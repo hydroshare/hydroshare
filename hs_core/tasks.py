@@ -462,7 +462,7 @@ def replicate_resource_bag_to_user_zone_task(res_id, request_username):
         bag_modified = res.getAVU('bag_modified')
         if bag_modified is None or not bag_modified:
             if not istorage.exists(res.bag_path):
-               create_bag_by_irods(res_id)
+                create_bag_by_irods(res_id)
         else:
             create_bag_by_irods(res_id)
 
