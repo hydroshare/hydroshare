@@ -5,7 +5,7 @@
     <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
         <input id="search-input" type="search" class="form-control" v-model="searchtext"
                placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
+        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" v-on:click="clearSearch" class="fa fa-times-circle inside-right interactive"></i>
         <i id="search-glass" class="fa fa-search inside-left"></i>
     </div>
     <div id="resources-main" class="row">
@@ -588,7 +588,7 @@ export default {
     .inside-right {
         position: absolute;
         top: 10px;
-        right: 20px;
+        right: 10px;
         z-index: 2;
     }
     .inside-left {
@@ -617,6 +617,7 @@ export default {
       transform: translateY(4px);
     }
     .interactive:hover {
+      cursor: pointer;
       color: LightBlue;
       /* Avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */

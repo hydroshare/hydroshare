@@ -3,6 +3,7 @@ $(document)
     let CommunitiesVm = new Vue({
       el: '#communities-app',
       data: {
+        columns: ['name', 'author', 'created', 'modified'],
         filterTo: [],
         groupIds: [],
         groups: [{
@@ -10,18 +11,14 @@ $(document)
           'name': 'CZO Sierra',
           'res_count': 1
         }],
-        resources: [],
-        sharedByFilter: '',
+        labels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
         pnum: 1,
-        sortingBy: 'modified',
-        sortDir: -1,
-        rescount: 0,
         pagenum: 1, // initial page number to show
         pagedisp: 1, // page being displayed
         perpage: 0,
         pagecount: 0,
-        columns: ['name', 'author', 'created', 'modified'],
-        labels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
+        resources: [],
+        rescount: 0,
         resIconName: {
           'Composite Resource': '/static/img/resource-icons/composite48x48.png',
           Generic: '/static/img/resource-icons/generic48x48.png',
@@ -37,6 +34,10 @@ $(document)
           'Multidimensional (NetCDF)': '/static/img/resource-icons/multidimensional48x48.png',
           'HIS Referenced Time Series': '/static/img/resource-icons/his48x48.png',
         },
+        sharedByFilter: '',
+        sortingBy: 'modified',
+        sortDir: -1,
+        searchtext: '',
         sortMap: {
           'First Author': 'author',
           Owner: 'owner',
@@ -47,7 +48,6 @@ $(document)
           'Date Created': 'created',
           'Last Modified': 'modified',
         },
-
       },
       mounted: function () {
         this.searchClick();
@@ -81,9 +81,9 @@ $(document)
           this.searchClick(false, true, true);
         },
         paging(direction) {
-          pagecalc = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
-          this.pagenum = Math.min(this.pagecount, pagecalc)
-          // this.searchClick(true);
+          let pagecalc = Math.max(1, this.pagenum + Number.parseInt(direction, 10));
+          this.pagenum = Math.min(this.pagecount, pagecalc);
+          this.searchClick(true);
         },
         updateContribs(groupId) {
           let loc = this.$data.filterTo.indexOf(groupId);
@@ -123,20 +123,25 @@ $(document)
         },
         searchClick(paging, dofilters, reset) { // paging flag to skip the page reset after data retrieval
           document.body.style.cursor = 'wait';
-          axios.get('/discoverapi/', {})
+          axios.get('/discoverapi/', {
+            params: {
+              q: this.searchtext,
+              sort: this.sortingBy,
+              asc: this.sortDir,
+              pnum: this.pagenum,
+            },
+          })
             .then((response) => {
               if (response) {
-
                 try {
                   this.resources = JSON.parse(response.data.resources);
-                  console.log(this.resources);
                   if (paging !== true) {
                     this.pagenum = 1;
                   }
                   this.pagecount = response.data.pagecount;
                   this.rescount = response.data.rescount;
                   this.perpage = response.data.perpage;
-
+                  this.pagedisp = this.pagenum;
                   document.body.style.cursor = 'default';
                 } catch (e) {
                   document.body.style.cursor = 'default';

@@ -7,7 +7,7 @@
         .inside-right {
         position: absolute;
         top: 10px;
-        right: 20px;
+        right: 10px;
         z-index: 2;
     }
     .inside-left {
@@ -17,17 +17,18 @@
         z-index: 2;
     }
     .pagination {
-      z-index: 1000;
-      margin: 0;
-      transform: translateY(4px);
+        z-index: 1000;
+        margin: 0;
+        transform: translateY(4px);
     }
     .interactive:hover {
-      color: LightBlue;
-      /* Avoid double-click selection during rapid clicking: */
-      user-select: none; /* standard syntax */
-      -webkit-user-select: none; /* webkit (safari, chrome) browsers */
-      -moz-user-select: none; /* mozilla browsers */
-      -ms-user-select: none; /* IE10+ */
+        cursor:pointer;
+        color: LightBlue;
+        /* Avoid double-click selection during rapid clicking: */
+        user-select: none; /* standard syntax */
+        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+        -moz-user-select: none; /* mozilla browsers */
+        -ms-user-select: none; /* IE10+ */
     }
     </style>
 {% endblock %}
@@ -114,10 +115,12 @@
                                         <div id="search-container" class="input-group">
                                             <span class="fa fa-search inside-left"></span>
                                             <input id="resource-search-input" type="text" class="form-control"
-                                                   placeholder="Search Resources Shared by CZO National Groups" size="600px"/>
+                                                   placeholder="Search Resources Shared by CZO National Groups"
+                                                   v-model="searchtext" size="600px"
+                                            @keyup.enter="searchClick(false, true, true)"/>
                                             <span id="btn-clear-search-input"
                                                   class="fa fa-times-circle inside-right interactive"
-                                                  style="right: 10px"></span>
+                                                  v-on:click="clearSearch" ></span>
                                         </div>
 
 
