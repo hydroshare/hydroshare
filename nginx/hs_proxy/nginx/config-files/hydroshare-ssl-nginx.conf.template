@@ -16,7 +16,7 @@ geo $external {
   172.16.0.0/12 0;
   127.0.0.0/8 0;
   10.0.0.0/8 0;
-  152.54.0.0/22 0;
+  152.54.0.0/16 0;
 }
 
 server {
@@ -36,7 +36,7 @@ server {
         if ($external) { 
             return 404; 
         } 
-	proxy_pass https://CURRENT_VM; 
+	proxy_pass http://CURRENT_VM; 
     } 
 
     location / { 
