@@ -10,7 +10,9 @@ esac
 ### Local Config ###
 CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
-git checkout -- $CONFIG_FILE  # refresh this in case overridden otherwise
+
+# This might be needed if the file has changed. 
+# git checkout -- $CONFIG_FILE  # refresh this in case overridden otherwise
 
 # Discover user and group under which this shell is running
 HS_UID=`id -u`
