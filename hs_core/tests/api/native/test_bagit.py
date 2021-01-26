@@ -38,7 +38,7 @@ class TestBagIt(TestCase):
 
     def test_create_bag_files(self):
         # this is the api call we are testing
-        irods_storage_obj = hs_bagit.create_bag_files(self.test_res)
+        irods_storage_obj = hs_bagit.create_bag_metadata_files(self.test_res)
         self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
 
     def test_bag_creation_and_deletion(self):

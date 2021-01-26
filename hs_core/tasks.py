@@ -17,18 +17,18 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource
-from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage, UserProfile, User
+from theme.models import UserQuota, QuotaMessage, User
 from django_irods.icommands import SessionException
 from celery.result import states
 
@@ -69,69 +69,6 @@ def nightly_zips_cleanup():
             istorage = IrodsStorage("federated")
             if istorage.exists(zips_daily_date):
                 istorage.delete(zips_daily_date)
-
-
-@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
-def sync_email_subscriptions():
-    sixty_days = datetime.today() - timedelta(days=60)
-    active_subscribed = UserProfile.objects.filter(email_opt_out=False,
-                                                   user__last_login__gte=sixty_days,
-                                                   user__is_active=True)
-    sync_mailchimp(active_subscribed, settings.MAILCHIMP_ACTIVE_SUBSCRIBERS)
-    subscribed = UserProfile.objects.filter(email_opt_out=False, user__is_active=True)
-    sync_mailchimp(subscribed, settings.MAILCHIMP_SUBSCRIBERS)
-
-
-def sync_mailchimp(active_subscribed, list_id):
-    session = requests.Session()
-    url = "https://us3.api.mailchimp.com/3.0/lists/{list_id}/members"
-    # get total members
-    response = session.get(url.format(list_id=list_id), auth=requests.auth.HTTPBasicAuth(
-        'hs-celery', settings.MAILCHIMP_PASSWORD))
-    total_items = json.loads(response.content.decode())["total_items"]
-    # get list of all member ids
-    response = session.get((url + "?offset=0&count={total_items}").format(list_id=list_id,
-                                                                          total_items=total_items),
-                           auth=requests.auth.HTTPBasicAuth('hs-celery',
-                                                            settings.MAILCHIMP_PASSWORD))
-    # clear the email list
-    delete_count = 0
-    for member in json.loads(response.content.decode())["members"]:
-        if member["status"] == "subscribed":
-            session_response = session.delete(
-                (url + "/{id}").format(list_id=list_id, id=member["id"]),
-                auth=requests.auth.HTTPBasicAuth('hs-celery', settings.MAILCHIMP_PASSWORD))
-            if session_response.status_code != 204:
-                logger.info("Expected 204 status code, got " + str(session_response.status_code))
-                logger.debug(session_response.content)
-            else:
-                delete_count += 1
-    # add active subscribed users to mailchimp
-    add_count = 0
-    for subscriber in active_subscribed:
-        json_data = {"email_address": subscriber.user.email, "status": "subscribed",
-                     "merge_fields": {"FNAME": subscriber.user.first_name,
-                                      "LNAME": subscriber.user.last_name}}
-        session_response = session.post(
-            url.format(list_id=list_id), json=json_data, auth=requests.auth.HTTPBasicAuth(
-                'hs-celery', settings.MAILCHIMP_PASSWORD))
-        if session_response.status_code != 200:
-            logger.info("Expected 200 status code, got " + str(session_response.status_code))
-            logger.debug(session_response.content)
-        else:
-            add_count += 1
-    if delete_count == active_subscribed.count():
-        logger.info("successfully cleared mailchimp for list id " + list_id)
-    else:
-        logger.info(
-            "cleared " + str(delete_count) + " out of " + str(
-                active_subscribed.count()) + " for list id " + list_id)
-
-    if active_subscribed.count() == add_count:
-        logger.info("successfully synced all subscriptions for list id " + list_id)
-    else:
-        logger.info("added " + str(add_count) + " out of " + str(
-            active_subscribed.count()) + " for list id " + list_id)
 
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
@@ -392,7 +329,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
 
 @shared_task
-def create_bag_by_irods(resource_id, request_username=None):
+def create_bag_by_irods(resource_id):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
@@ -410,53 +347,20 @@ def create_bag_by_irods(resource_id, request_username=None):
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
     if metadata_dirty is None or metadata_dirty.lower() == "true":
-        create_bag_files(res)
+        create_bag_metadata_files(res)
 
     irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
-    # check to see if bagit readme.txt file exists or not
-    bagit_readme_file = res.get_irods_path('readme.txt')
-    is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-    if irods_bagit_input_path.startswith(resource_id):
-        # resource is in data zone, need to append the full path for iRODS bagit rule execution
-        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-        irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.IRODS_DEFAULT_RESOURCE)
-    else:
-        # this will need to be changed with the default resource in whatever federated zone the
-        # resource is stored in when we have such use cases to support
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
-
-    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
-
-    bagit_files = [
-        res.get_irods_path('bagit.txt'),
-        res.get_irods_path('manifest-md5.txt'),
-        res.get_irods_path('tagmanifest-md5.txt'),
-        bag_path
-    ]
 
     # only proceed when the resource is not deleted potentially by another request
     # when being downloaded
     is_exist = istorage.exists(irods_bagit_input_path)
     if is_exist:
-        # if bagit readme.txt does not exist, add it.
-        if not is_bagit_readme_exist:
-            from_file_name = getattr(settings, 'HS_BAGIT_README_FILE_WITH_PATH',
-                                     'docs/bagit/readme.txt')
-            istorage.saveFile(from_file_name, bagit_readme_file, True)
-
-        # call iRODS bagit rule here
-        bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE',
-                                  'hydroshare/irods/ruleGenerateBagIt_HS.r')
-
+        create_bagit_files_by_irods(res, istorage)
         try:
-            # call iRODS run and ibun command to create and zip the bag, ignore SessionException
+            # call iRODS run and ibun command to zip the bag, ignore SessionException
             # for now as a workaround which could be raised from potential race conditions when
             # multiple ibun commands try to create the same zip file or the very same resource
             # gets deleted by another request when being downloaded
-            istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
             istorage.zipup(irods_bagit_input_path, bag_path)
             if res.raccess.published:
                 # compute checksum to meet DataONE distribution requirement
@@ -465,11 +369,6 @@ def create_bag_by_irods(resource_id, request_username=None):
             istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
             return res.bag_url
         except SessionException as ex:
-            # if an exception occurs, delete incomplete files potentially being generated by
-            # iRODS bagit rule and zipping operations
-            for fname in bagit_files:
-                if istorage.exists(fname):
-                    istorage.delete(fname)
             raise SessionException(-1, '', ex.stderr)
     else:
         raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
@@ -504,6 +403,43 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if new_res:
             new_res.delete()
         raise utils.ResourceCopyException(str(ex))
+
+
+@shared_task
+def replicate_resource_bag_to_user_zone_task(res_id, request_username):
+    """
+    Task for replicating resource bag which will be created on demand if not existent already to iRODS user zone
+    Args:
+        res_id: the resource id with its bag to be replicated to iRODS user zone
+        request_username: the requesting user's username to whose user zone space the bag is copied to
+
+    Returns:
+    None, but exceptions will be raised if there is an issue with iRODS operation
+    """
+
+    res = utils.get_resource_by_shortkey(res_id)
+    res_coll = res.root_path
+    istorage = res.get_irods_storage()
+    if istorage.exists(res_coll):
+        bag_modified = res.getAVU('bag_modified')
+        if bag_modified is None or not bag_modified:
+            if not istorage.exists(res.bag_path):
+                create_bag_by_irods(res_id)
+        else:
+            create_bag_by_irods(res_id)
+
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=request_username, resid=res_id)
+        fsize = istorage.size(src_file)
+        utils.validate_user_quota(request_username, fsize)
+        istorage.copyFiles(src_file, tgt_file)
+        return None
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 @shared_task
@@ -595,24 +531,26 @@ def monthly_group_membership_requests_cleanup():
 
 
 @task_postrun.connect
-def update_task_notification(sender=None, task_id=None, state=None, retval=None, **kwargs):
+def update_task_notification(sender=None, task_id=None, task=None, state=None, retval=None, **kwargs):
     """
     Updates the state of TaskNotification model when a celery task completes
     :param sender:
-    :param task_id:
-    :param state:
-    :param retval:
+    :param task_id: task id
+    :param task: task object
+    :param state: task return state
+    :param retval: task return value
     :param kwargs:
     :return:
     """
-    if state == states.SUCCESS:
-        get_or_create_task_notification(task_id, status="completed", payload=retval)
-    elif state in states.EXCEPTION_STATES:
-        get_or_create_task_notification(task_id, status="failed", payload=retval)
-    elif state == states.REVOKED:
-        get_or_create_task_notification(task_id, status="aborted", payload=retval)
-    else:
-        logger.warning("Unhandled task state of {} for {}".format(state, task_id))
+    if task.name in settings.TASK_NAME_LIST:
+        if state == states.SUCCESS:
+            get_or_create_task_notification(task_id, status="completed", payload=retval)
+        elif state in states.EXCEPTION_STATES:
+            get_or_create_task_notification(task_id, status="failed", payload=retval)
+        elif state == states.REVOKED:
+            get_or_create_task_notification(task_id, status="aborted", payload=retval)
+        else:
+            logger.warning("Unhandled task state of {} for {}".format(state, task_id))
 
 
 @periodic_task(ignore_result=True, run_every=crontab(day_of_week=1))
