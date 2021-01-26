@@ -11,11 +11,11 @@
     <div id="resources-main" class="row">
         <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
             <br/>
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+            <i id="page-left" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
             Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {{pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+            <i id="page-right" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                     class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
                 &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
              <br/>
@@ -201,25 +201,25 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td style=width:15%;>
+                        <td class="tbl-col-icons">
                           <span id="img-icons">
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" src="/static/img/Globe-Green.png" alt="globe" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
-                        <td style="width:60%;" class="title-span">
+                        <td class="title-span">
                           <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 250)}}</a>
                         </td>
-                        <td style=width:15%;>
+                        <td class="tbl-col-authors">
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
                     </tr>
                     </tbody>
                 </table>
@@ -394,7 +394,7 @@ export default {
             }
           }
         })
-        .catch((error) => { // eslint-disable-line
+        .catch(() => { // eslint-disable-line
           document.body.style.cursor = 'default';
         });
     },
@@ -512,56 +512,6 @@ export default {
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
-    .main-table {
-        width: 100%;
-    }
-    .panel-title > a:before {
-        float: left !important;
-        font-family: FontAwesome;
-        content:"\f068";
-        padding-right: 5px;
-    }
-    .panel-title > a.collapsed:before {
-        float: left !important;
-        content:"\f067";
-    }
-    .panel-title > a:hover,
-    .panel-title > a:active,
-    .panel-title > a:focus  {
-        text-decoration:none;
-    }
-    #filter-items {
-        /* Ensure collapse without overlap */
-        width: 235px;
-    }
-    .table-wrapper {
-        margin-top: 0;
-    }
-    .table-hover {
-        margin-top: 0;
-    }
-    .checkbox {
-        /* Override older version of bootstrap styling */
-    }
-    .mapdisp {
-        right: 0;
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-    .table-message {
-        position: absolute;
-        left: 100px;
-    }
-    .title-span {
-        min-width: 437px;
-        max-width: 437px;
-        width: 437px;
-        word-break: normal;
-        word-wrap: break-word;
-        white-space: normal;
-        padding-top: 4px;
-        padding-bottom: 4px;
-    }
     #resultsdisp {
         left: 300px;
     }
@@ -585,6 +535,62 @@ export default {
         min-width: 85px;
         white-space: nowrap;
     }
+    #filter-items {
+        /* Ensure collapse without overlap */
+        width: 235px;
+    }
+    .panel-title > a:before {
+        float: left !important;
+        font-family: FontAwesome;
+        content:"\f068";
+        padding-right: 5px;
+    }
+    .panel-title > a.collapsed:before {
+        float: left !important;
+        content:"\f067";
+    }
+    .panel-title > a:hover,
+    .panel-title > a:active,
+    .panel-title > a:focus  {
+        text-decoration:none;
+    }
+    .checkbox {
+        /* Override older version of bootstrap styling */
+    }
+    .mapdisp {
+        right: 0;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    .main-table {
+        width: 100%;
+    }
+    .table-wrapper {
+        margin-top: 0;
+    }
+    .table-hover {
+        margin-top: 0;
+    }
+    .table-message {
+        position: absolute;
+        left: 100px;
+    }
+    .title-span {
+        word-break: normal;
+        word-wrap: break-word;
+        white-space: normal;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    .btn:focus {
+        /* Remove unwanted outline behavior */
+        outline: 0;
+        box-shadow: None;
+    }
+    .date-wrapper {
+        display: block;
+        width: 100%;
+    }
     .inside-right {
         position: absolute;
         top: 10px;
@@ -597,24 +603,11 @@ export default {
         left: 10px;
         z-index: 2;
     }
-    .btn.focus {
-        /* Remove unwanted outline behavior */
-        outline: 0;
-        box-shadow: None;
-    }
-    .btn:focus {
-        /* Remove unwanted outline behavior */
-        outline: 0;
-        box-shadow: None;
-    }
-    .date-wrapper {
-        display: block;
-        width: 100%;
-    }
     .pagination {
       z-index: 1000;
       margin: 0;
       transform: translateY(4px);
+      cursor: pointer;
     }
     .interactive:hover {
       cursor: pointer;
@@ -624,5 +617,14 @@ export default {
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
       -moz-user-select: none; /* mozilla browsers */
       -ms-user-select: none; /* IE10+ */
+    }
+    .tbl-col-icons {
+        width: 110px
+    }
+    .tbl-col-authors {
+        width: 120px
+    }
+    .tbl-col-date {
+        width: 86px
     }
 </style>

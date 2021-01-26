@@ -5,31 +5,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.css" integrity="sha512-YnP4Ql71idaMB+/ZG38+1adSSQotdqvixQ+dQg8x/IFA4heIj6i0BC31W5T5QUdK1Uuwa01YdqdcT42q+RldAg==" crossorigin="anonymous" />
     <style>
         .inside-right {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 2;
-    }
-    .inside-left {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 2;
-    }
-    .pagination {
-        z-index: 1000;
-        margin: 0;
-        transform: translateY(4px);
-    }
-    .interactive:hover {
-        cursor:pointer;
-        color: LightBlue;
-        /* Avoid double-click selection during rapid clicking: */
-        user-select: none; /* standard syntax */
-        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
-        -moz-user-select: none; /* mozilla browsers */
-        -ms-user-select: none; /* IE10+ */
-    }
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+        }
+        .inside-left {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+        }
+        .pagination {
+            z-index: 1000;
+            margin: 0;
+            transform: translateY(4px);
+            cursor: pointer;
+        }
+        .interactive:hover {
+            cursor:pointer;
+            color: LightBlue;
+            /* Avoid double-click selection during rapid clicking: */
+            user-select: none; /* standard syntax */
+            -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+            -moz-user-select: none; /* mozilla browsers */
+            -ms-user-select: none; /* IE10+ */
+        }
+        .tbl-col-icons {
+            width: 110px
+        }
+        .tbl-col-authors {
+            width: 120px
+        }
+        .tbl-col-date {
+            width: 86px
+        }
     </style>
 {% endblock %}
 
@@ -50,8 +60,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-3">
-                    <div><a href="http://criticalzone.org"><img src="/static/img/czo-logo-wide.png"
-                                                                alt="CZO National"></a></div>
+                    <div><a href="http://criticalzone.org"><img src="/static/img/czo-logo-wide.png" alt="CZO National"></a></div>
                 </div>
             </div>
             <div class="full-width-tabs-container" id="user-profile-tabs">
@@ -88,20 +97,20 @@
                                                     <ul class="list-group inputs-group">
                                                         <i v-if="!groups" class="list-group-item no-items-found">No resources have been
                                                         shared with this community yet.</i>
-                                                            <li v-for="g in groups" class="list-group-item" id="{% templatetag openvariable %} g.id {% templatetag closevariable %}">
-                                                                <span data-facet="none"
-                                                                      class="badge">{% templatetag openvariable %} g.res_count {% templatetag closevariable %}</span>
-                                                                <label class="checkbox noselect"><input
-                                                                        id="{% templatetag openvariable %} g.id {% templatetag closevariable %}}" type="checkbox"
-                                                                        data-facet="none" value="Click"
-                                                                        @click="updateContribs(g.id)"> {% templatetag openvariable %} g.name {% templatetag closevariable %}
+                                                        <li v-for="g in groups" class="list-group-item" id="{% templatetag openvariable %} g.id {% templatetag closevariable %}">
+                                                            <span data-facet="none"
+                                                                  class="badge">{% templatetag openvariable %} g.res_count {% templatetag closevariable %}</span>
+                                                            <label class="checkbox noselect"><input
+                                                                id="{% templatetag openvariable %} g.id {% templatetag closevariable %}}" type="checkbox"
+                                                                data-facet="none" value="Click"
+                                                                @click="updateContribs(g.id)"> {% templatetag openvariable %} g.name {% templatetag closevariable %}
 
 {#                                                                    TODO ADD BACK GRPFILTER FUNCTIONALITY#}
 {#                                                                    {% if grpfilter == g.name %}#}
 {#                                                                        checked#}
 {#                                                                    {% endif %}#}
-                                                                </label>
-                                                            </li>
+                                                            </label>
+                                                        </li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -126,18 +135,19 @@
 
 
              <div v-if="resources.length > 0"  id="resultsdisp-top">
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+            <i id="page-left" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
             Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
                 min="1" :max="pagecount"> of {% templatetag openvariable %}pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+            <i id="page-right" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                     class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
-                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %} - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %} of {% templatetag openvariable %}rescount{% templatetag closevariable %}
-             <br/> <br/>
+                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %}
+                 - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %}
+                 of {% templatetag openvariable %}rescount{% templatetag closevariable %}
+             <br/><br/>
         </div>
 
                                         <div id="resource-rows" >
-
                                     <div class="table-wrapper">
                                       <p class="table-message" style="color:red" v-if="(!resources.length) && (sharedByFilter.length)"><i>No resource matches</i></p>
                                         <table id="items-discovered" v-if="resources.length"
@@ -152,7 +162,7 @@
                                             </thead>
                                             <tbody>
                                             <tr v-for="(entry) in resources">
-                                                <td style="width: 110px">
+                                                <td class="tbl-col-icons">
                                                   <span id="img-icons">
                                                     <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                                         :title="entry.type" :alt="entry.type" height="30" width="30">
@@ -162,15 +172,19 @@
                                                     </span>
                                                 </td>
                                                 <td class="title-span">
-                                                  <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{% templatetag openvariable %}ellip(entry.title, 250){% templatetag closevariable %}</a>
+                                                  <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >
+                                                      {% templatetag openvariable %}ellip(entry.title, 250){% templatetag closevariable %}</a>
                                                 </td>
-                                                <td>
+                                                <td class="tbl-col-authors">
                                                     <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
-                                                       :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{% templatetag openvariable %}entry.author{% templatetag closevariable %}</a>
+                                                       :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">
+                                                        {% templatetag openvariable %}entry.author{% templatetag closevariable %}</a>
                                                 </td>
                                                 <!-- python is passing .isoformat() in views.py -->
-                                              <td><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{% templatetag openvariable %}new Date(entry.created).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
-                                              <td><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{% templatetag openvariable %}new Date(entry.modified).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                                              <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">
+                                                  {% templatetag openvariable %}new Date(entry.created).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                                              <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">
+                                                  {% templatetag openvariable %}new Date(entry.modified).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -184,15 +198,15 @@
                 min="1" :max="pagecount"> of {% templatetag openvariable %}pagecount}}
             <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                     class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
-                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %} - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %} of {% templatetag openvariable %}rescount{% templatetag closevariable %}
+                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %}
+                 - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %}
+                 of {% templatetag openvariable %}rescount{% templatetag closevariable %}
              <br/> <br/>
         </div>
 
                                         {% include "legend_search.html" %}
-
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -218,6 +232,5 @@
             integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
             crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.js" integrity="sha512-Z0dNfC81uEXC2iTTXtE0rM18I3ATkwn1m8Lxe0onw/uPEEkCmVZd+H8GTeYGkAZv50yvoSR5N3hoy/Do2hNSkw==" crossorigin="anonymous"></script>
-
     <script type="text/javascript" src="/static/js/communities.js"></script>
 {% endblock %}
