@@ -365,10 +365,6 @@ def create_bag_by_irods(resource_id, create_zip=True):
         is_exist = istorage.exists(irods_bagit_input_path)
         if is_exist:
             try:
-                # call iRODS run and ibun command to zip the bag, ignore SessionException
-                # for now as a workaround which could be raised from potential race conditions when
-                # multiple ibun commands try to create the same zip file or the very same resource
-                # gets deleted by another request when being downloaded
                 istorage.zipup(irods_bagit_input_path, bag_path)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement

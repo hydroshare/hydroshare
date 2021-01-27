@@ -11,7 +11,6 @@ from rest_framework import status
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bagit_files_by_irods
 from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
