@@ -575,13 +575,6 @@ export default {
         position: absolute;
         left: 100px;
     }
-    .title-span {
-        word-break: normal;
-        word-wrap: break-word;
-        white-space: normal;
-        padding-top: 4px;
-        padding-bottom: 4px;
-    }
     .btn:focus {
         /* Remove unwanted outline behavior */
         outline: 0;
@@ -617,6 +610,16 @@ export default {
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
       -moz-user-select: none; /* mozilla browsers */
       -ms-user-select: none; /* IE10+ */
+    }
+    .title-span {
+        min-width: 437px;
+        max-width: 437px;
+        width: 437px;
+        word-break: normal;
+        word-wrap: break-word;
+        white-space: normal;
+        padding-top: 4px;
+        padding-bottom: 4px;
     }
     .tbl-col-icons {
         width: 110px
