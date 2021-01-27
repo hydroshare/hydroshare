@@ -11,7 +11,6 @@ from rest_framework import status
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bagit_files_by_irods
 from hs_core.task_utils import get_resource_bag_task, get_or_create_task_notification, get_task_user_id
 
 from hs_core.signals import pre_download_file, pre_check_bag_flag
@@ -270,13 +269,15 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
+
         if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
                     f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
                     f"{res_id}/bagit.txt"]:
-            metadata_dirty = res.getAVU("metadata_dirty")
-            if metadata_dirty is None or metadata_dirty:
-                create_bag_metadata_files(res)  # sets metadata_dirty to False
-                create_bagit_files_by_irods(res, res.get_irods_storage())
+
+            bag_modified = res.getAVU("bag_modified")
+            if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
+                res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
+                create_bag_by_irods(res_id, False)
 
         # send signal for pre download file
         # TODO: does not contain subdirectory information: duplicate refreshes possible

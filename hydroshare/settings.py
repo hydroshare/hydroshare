@@ -708,6 +708,9 @@ TASK_NAME_MAPPING = {
     'hs_core.tasks.unzip_task': 'file unzip',
     'hs_core.tasks.copy_resource_task': 'resource copy',
 }
+
+HSWS_ACTIVATED = False
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
