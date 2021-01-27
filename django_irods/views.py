@@ -274,10 +274,11 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
                     f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
                     f"{res_id}/bagit.txt"]:
-            metadata_dirty = res.getAVU("metadata_dirty")
-            if metadata_dirty is None or metadata_dirty or not istorage.exists(irods_output_path):
-                create_bag_metadata_files(res)  # sets metadata_dirty to False
-                create_bagit_files_by_irods(res, istorage)
+
+            bag_modified = res.getAVU("bag_modified")
+            if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
+                res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
+                create_bag_by_irods(res_id, False)
 
         # send signal for pre download file
         # TODO: does not contain subdirectory information: duplicate refreshes possible
