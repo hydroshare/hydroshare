@@ -270,13 +270,14 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
+
         if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
                     f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
                     f"{res_id}/bagit.txt"]:
             metadata_dirty = res.getAVU("metadata_dirty")
-            if metadata_dirty is None or metadata_dirty:
+            if metadata_dirty is None or metadata_dirty or not istorage.exists(irods_output_path):
                 create_bag_metadata_files(res)  # sets metadata_dirty to False
-                create_bagit_files_by_irods(res, res.get_irods_storage())
+                create_bagit_files_by_irods(res, istorage)
 
         # send signal for pre download file
         # TODO: does not contain subdirectory information: duplicate refreshes possible
