@@ -8,6 +8,8 @@ import logging
 
 logger = logging.getLogger('django')
 
+celery_inspector = inspect()
+
 
 def _retrieve_task_id(job_name, res_id, job_dict):
     """
@@ -42,47 +44,24 @@ def _retrieve_job_id(job_name, res_id):
     :param res_id: resource id
     :return: job id
     """
-    i = inspect()
-    active_jobs = i.active()
+    active_jobs = celery_inspector.active()
     job_id = _retrieve_task_id(job_name, res_id, active_jobs)
     if not job_id:
-        reserved_jobs = i.reserved()
+        reserved_jobs = celery_inspector.reserved()
         job_id = _retrieve_task_id(job_name, res_id, reserved_jobs)
         if not job_id:
-            scheduled_jobs = i.scheduled()
+            scheduled_jobs = celery_inspector.scheduled()
             job_id = _retrieve_task_id(job_name, res_id, scheduled_jobs)
     return job_id
 
 
 def get_task_user_id(request):
     if request.user.is_authenticated():
-        user_id = request.user.username
-    else:
-        user_id = request.session.session_key
-    return user_id
+        return request.user.username
+    return ""
 
 
-def get_or_create_task_notification(task_id, status='progress', name='', payload='', username='',
-                                    verify_task_id=False):
-    if verify_task_id:
-        filter_task = TaskNotification.objects.filter(task_id=task_id).first()
-        if filter_task:
-            task_dict = {
-                'id': task_id,
-                'name': filter_task.name,
-                'status': filter_task.status,
-                'payload': filter_task.payload
-            }
-            return task_dict
-        elif not task_exists(task_id):
-            # don't create task entry in the model if task does not exist when task id needs to be verified, e.g.,
-            # for anonymous users
-            return {
-                'id': task_id,
-                'name': '',
-                'status': '',
-                'payload': ''
-            }
+def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
                                                               defaults={'name': name,
@@ -102,33 +81,12 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
                 obj.status = status
             obj.save()
 
-        if obj.status == "progress":
-            if not task_exists(task_id):
-                obj.status = 'failed'
-                obj.save()
-
         return {
             'id': task_id,
             'name': name,
             'status': obj.status,
             'payload': obj.payload
         }
-
-
-def task_exists(task_id):
-    """
-    get all tasks by a user identified by username input parameter
-    :param username: the user to retrieve all tasks for
-    :return: list of tasks where each task is a dict with id, name, and status keys
-    """
-    i = inspect()
-    if task_id in str(i.active()):
-        return True
-    if task_id in str(i.reserved()):
-        return True
-    if task_id in str(i.scheduled()):
-        return True
-    return False
 
 
 def get_resource_bag_task(res_id):
@@ -142,6 +100,8 @@ def get_all_tasks(username):
     :param username: the user to retrieve all tasks for
     :return: list of tasks where each task is a dict with id, name, and status keys
     """
+    if not username:
+        return []
     task_notif_list = []
     for obj in TaskNotification.objects.filter(username=username):
         task_notif_list.append({

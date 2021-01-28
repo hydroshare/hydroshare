@@ -192,6 +192,20 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    def get_preview_data_url(self, resource, folder_path):
+        """Get a GeoServer layer preview link."""
+
+        if self.spatial_coverage:
+            preview_data_url = utils.build_preview_data_url(
+                resource=resource,
+                folder_path=folder_path,
+                spatial_coverage=self.spatial_coverage.value
+            )
+        else:
+            preview_data_url = None
+
+        return preview_data_url
+
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")

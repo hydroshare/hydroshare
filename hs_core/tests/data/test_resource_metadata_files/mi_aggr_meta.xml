@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns="http://www.hydroshare.org/resource/0f371c7bab0e41b9851ed79b7260cca2/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <hsterms:ModelInstanceAggregation rdf:about="http://www.hydroshare.org/resource/0f371c7bab0e41b9851ed79b7260cca2/data/contents/mi_aggr_resmap.xml#aggregation">
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+      </rdf:Description>
+    </dc:rights>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:key>mi-key-1</hsterms:key>
+        <hsterms:value>mi-value-1</hsterms:value>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/ModelInstanceAggregation"/>
+    <modelSpecificMetadata>
+      <rdf:Description>
+        <hsterms:executedByModelProgram rdf:resource="http://www.hydroshare.org/resource/0f371c7bab0e41b9851ed79b7260cca2/data/contents/mp_aggr_resmap.xml#aggregation"/>
+        <dc:title>SWAT Model Instance Metadata Schema</dc:title>
+        <modelProperties>
+          <rdf:Description>
+            <modelParameter>
+              <rdf:Description>
+                <dc:description>Various model paramters used in this model instance.</dc:description>
+                <modelParameterProperties>
+                  <rdf:Description>
+                    <fertilizer>
+                      <rdf:Description>
+                        <dc:title>Fertilizer</dc:title>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</rdf:value>
+                      </rdf:Description>
+                    </fertilizer>
+                    <tillageOperation>
+                      <rdf:Description>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                        <dc:title>Tillage operation</dc:title>
+                      </rdf:Description>
+                    </tillageOperation>
+                    <pointSource>
+                      <rdf:Description>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                        <dc:title>Point source</dc:title>
+                      </rdf:Description>
+                    </pointSource>
+                    <tileDrainage>
+                      <rdf:Description>
+                        <dc:title>Tile drainage</dc:title>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</rdf:value>
+                      </rdf:Description>
+                    </tileDrainage>
+                    <OtherParameters>
+                      <rdf:Description>
+                        <rdf:value>mp-obj-1,mp-obj-2</rdf:value>
+                        <dc:title>Other parameters</dc:title>
+                      </rdf:Description>
+                    </OtherParameters>
+                    <cropRotation>
+                      <rdf:Description>
+                        <dc:title>Crop rotation</dc:title>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                      </rdf:Description>
+                    </cropRotation>
+                    <inletOfDrainingWatershed>
+                      <rdf:Description>
+                        <dc:title>Inlet of draining watershed</dc:title>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                      </rdf:Description>
+                    </inletOfDrainingWatershed>
+                    <irrigationOperation>
+                      <rdf:Description>
+                        <dc:title>Irrigation operation</dc:title>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                      </rdf:Description>
+                    </irrigationOperation>
+                  </rdf:Description>
+                </modelParameterProperties>
+                <dc:title>Model Parameters</dc:title>
+              </rdf:Description>
+            </modelParameter>
+            <modelObjective>
+              <rdf:Description>
+                <modelObjectiveProperties>
+                  <rdf:Description>
+                    <climateLanduseChange>
+                      <rdf:Description>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                        <dc:title>Climate / Landuse Change</dc:title>
+                      </rdf:Description>
+                    </climateLanduseChange>
+                    <hydrology>
+                      <rdf:Description>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</rdf:value>
+                        <dc:title>Hydrology</dc:title>
+                      </rdf:Description>
+                    </hydrology>
+                    <waterQuality>
+                      <rdf:Description>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</rdf:value>
+                        <dc:title>Water Quality</dc:title>
+                      </rdf:Description>
+                    </waterQuality>
+                    <BMPs>
+                      <rdf:Description>
+                        <rdf:value rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</rdf:value>
+                        <dc:title>BMPs</dc:title>
+                      </rdf:Description>
+                    </BMPs>
+                    <OtherObjectives>
+                      <rdf:Description>
+                        <dc:title>Other objectives</dc:title>
+                        <rdf:value>mo-ob-1,mo-obj-2</rdf:value>
+                      </rdf:Description>
+                    </OtherObjectives>
+                  </rdf:Description>
+                </modelObjectiveProperties>
+                <dc:description>Objectives of this SWAT model instance.</dc:description>
+                <dc:title>Model Objectives</dc:title>
+              </rdf:Description>
+            </modelObjective>
+            <modelMethod>
+              <rdf:Description>
+                <dc:description>Various methods used in creating this model instance.</dc:description>
+                <modelMethodProperties>
+                  <rdf:Description>
+                    <runoffCalculationMethod>
+                      <rdf:Description>
+                        <rdf:value>test runoff cal method</rdf:value>
+                        <dc:title>Runoff Calculation Method</dc:title>
+                        <dc:description>Runoff calculation method used in creating this model instance.</dc:description>
+                      </rdf:Description>
+                    </runoffCalculationMethod>
+                    <flowRoutingMethod>
+                      <rdf:Description>
+                        <dc:title>Flow Routing Method</dc:title>
+                        <dc:description>Flow routing method used in creating this model instance.</dc:description>
+                        <rdf:value>test flow routing method</rdf:value>
+                      </rdf:Description>
+                    </flowRoutingMethod>
+                    <petEstimationMethod>
+                      <rdf:Description>
+                        <rdf:value>test pet est method</rdf:value>
+                        <dc:description>Potential evapotranspiration estimation method used in creating this model instance.</dc:description>
+                        <dc:title>PET Estimation Method</dc:title>
+                      </rdf:Description>
+                    </petEstimationMethod>
+                  </rdf:Description>
+                </modelMethodProperties>
+                <dc:title>Model Method</dc:title>
+              </rdf:Description>
+            </modelMethod>
+            <simulationType>
+              <rdf:Description>
+                <rdf:value>Normal Simulation</rdf:value>
+                <dc:description>Type of simulation used.</dc:description>
+                <dc:title>Simulation Type</dc:title>
+              </rdf:Description>
+            </simulationType>
+          </rdf:Description>
+        </modelProperties>
+        <hsterms:includesModelOutput>false</hsterms:includesModelOutput>
+      </rdf:Description>
+    </modelSpecificMetadata>
+    <dc:language>eng</dc:language>
+    <dc:coverage>
+      <dcterms:point>
+        <rdf:value>projection=WGS 84 EPSG:4326; east=-79.2126; north=37.9408; units=Decimal degrees</rdf:value>
+      </dcterms:point>
+    </dc:coverage>
+    <dc:subject>model instance</dc:subject>
+    <dc:title>mi_aggr</dc:title>
+  </hsterms:ModelInstanceAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/ModelInstanceAggregation">
+    <rdfs:label>Model Instance Content: One or more files with specific metadata</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

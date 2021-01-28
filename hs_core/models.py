@@ -521,7 +521,8 @@ class Party(AbstractMetaDataElement):
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
-            kwargs['order'] = creator_order
+            if 'order' not in kwargs or kwargs['order'] is None:
+                kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
         else:
             party = super(Party, cls).create(**kwargs)
@@ -979,7 +980,7 @@ class Relation(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
-        graph.add((relation_node, getattr(HSTERMS, self.type), URIRef(self.value)))
+        graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -3506,7 +3507,7 @@ class BaseResource(Page, AbstractResource):
         """
         extra_data = self.extra_data
         if 'bag_checksum' in extra_data and extra_data['bag_checksum']:
-            return extra_data['bag_checksum']
+            return extra_data['bag_checksum'].strip('\n')
         else:
             return ''
 
@@ -3693,6 +3694,51 @@ class BaseResource(Page, AbstractResource):
         hs_term_dict.update(self.extra_metadata.items())
 
         return hs_term_dict
+
+    def replaced_by(self):
+        """ return a list or resources that replaced this one """
+        from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
+        replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
+        rlist = []
+        for r in replacedby:
+            replacement = r.value
+            # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
+            if replacement.startswith(current_site_url() + "/resource/"):
+                replacement = replacement[-32:]  # strip header
+                try:
+                    rv = get_resource_by_shortkey(replacement, or_404=False)
+                except BaseResource.DoesNotExist:
+                    rv = None
+                if rv is not None:
+                    rlist.append(rv)
+        return rlist
+
+    @property
+    def show_in_discover(self):
+        """
+        return True if a resource should be exhibited
+        A resource should be exhibited if it is at least discoverable
+        and not replaced by anything that exists and is at least discoverable.
+
+        A resource is hidden if there is any descendant (according to isReplacedBy)
+        that is discoverable. The descendent tree is searched via breadth-first search
+        with cycle elimination.  Thus the search always terminates regardless of the
+        complexity of descendents.
+        """
+        if not self.raccess.discoverable:
+            return False  # not exhibitable
+        replacedby = self.replaced_by()
+        visited = {}
+        visited[self.short_id] = True
+
+        # breadth-first replacement search, first discoverable replacement wins
+        for r in replacedby:
+            if r.raccess.discoverable:
+                return False
+            if r.short_id not in visited:
+                replacedby.extend(r.replaced_by())
+                visited[r.short_id] = True
+        return True  # no reason not to show it
 
 
 # TODO Deprecated
@@ -4650,7 +4696,8 @@ class TaskNotification(models.Model):
         ('completed', 'Completed'),
         ('delivered', 'Delivered'),
     )
-    username = models.CharField(max_length=150, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=150, blank=True, db_index=True)
     task_id = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=1000, blank=True)
     payload = models.CharField(max_length=1000, blank=True)
