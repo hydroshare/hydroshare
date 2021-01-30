@@ -3,6 +3,8 @@ import zipfile
 import shutil
 import logging
 import requests
+import datetime
+import pytz
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -605,7 +607,6 @@ def copy_resource(ori_res, new_res, user=None):
         the new resource copied from the original resource
     """
 
-    # add files directly via irods backend file operation
     from hs_core.tasks import copy_resource_task
     if user:
         copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
@@ -628,43 +629,19 @@ def create_new_version_resource(ori_res, new_res, user):
         the new versioned resource for the original resource and thus obsolete the original resource
 
     """
-    # newly created new resource version is private initially
-    # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
-
-    # copy metadata from source resource to target new-versioned resource except three elements
-    utils.copy_and_create_metadata(ori_res, new_res)
-
-    # add or update Relation element to link source and target resources
-    hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-
-    if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
-        # the original resource is already a versioned resource, and its isVersionOf relation
-        # element is copied over to this new version resource, needs to delete this element so
-        # it can be created to link to its original resource correctly
-        eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
-        new_res.metadata.delete_element('relation', eid)
-
-    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new version collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create bag for the new resource
-    hs_bagit.create_bag(new_res)
-
-    # since an isReplaceBy relation element is added to original resource, needs to call
-    # resource_modified() for original resource
-    utils.resource_modified(ori_res, user, overwrite_bag=False)
-    # if everything goes well up to this point, set original resource to be immutable so that
-    # obsoleted resources cannot be modified from REST API
-    ori_res.raccess.immutable = True
-    ori_res.raccess.save()
-    return new_res
+    from hs_core.tasks import create_new_version_resource_task
+    if ori_res.locked_time:
+        # cannot create new version for this resource since the resource is locked by another user
+        raise utils.ResourceVersioningException('Failed to create a new version for this resource '
+                                                'since another user is creating a new version for '
+                                                'this resource synchronously.')
+    # lock the resource to prevent concurrent new version creation since only one new version for an
+    # obsoleted resource is allowed
+    ori_res.locked_time = datetime.datetime.now(pytz.utc)
+    ori_res.save()
+    create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
+    # cannot directly return the new_res object being passed in, but rather return the new resource object being copied
+    return utils.get_resource_by_shortkey(new_res.short_id)
 
 
 def add_resource_files(pk, *files, **kwargs):

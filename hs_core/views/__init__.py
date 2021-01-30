@@ -48,7 +48,9 @@ from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id
-from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task
+from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
+    create_new_version_resource_task
+
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -826,47 +828,32 @@ def copy_resource_public(request, pk):
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
-
     if res.locked_time:
-        elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
-        if elapsed_time.days >= 0 or elapsed_time.seconds > settings.RESOURCE_LOCK_TIMEOUT_SECONDS:
-            # clear the lock since the elapsed time is greater than timeout threshold
-            res.locked_time = None
-            res.save()
-        else:
-            # cannot create new version for this resource since the resource is locked by another
-            # user
-            request.session['resource_creation_error'] = 'Failed to create a new version for ' \
-                                                         'this resource since another user is ' \
-                                                         'creating a new version for this ' \
-                                                         'resource synchronously.'
-            return HttpResponseRedirect(res.get_absolute_url())
-
-    new_resource = None
-    try:
-        # lock the resource to prevent concurrent new version creation since only one new version for an
-        # obsoleted resource is allowed
-        res.locked_time = datetime.datetime.now(pytz.utc)
-        res.save()
-        new_resource = hydroshare.create_empty_resource(shortkey, user)
-        new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
-    except Exception as ex:
-        if new_resource:
-            new_resource.delete()
-        # release the lock if new version of the resource failed to create
-        res.locked_time = None
-        res.save()
-        request.session['resource_creation_error'] = 'Failed to create a new version of ' \
-                                                     'this resource: ' + str(ex)
+        # cannot create new version for this resource since the resource is locked by another
+        # user
+        request.session['resource_creation_error'] = 'Failed to create a new version for ' \
+                                                     'this resource since another user is ' \
+                                                     'creating a new version for this ' \
+                                                     'resource synchronously.'
         return HttpResponseRedirect(res.get_absolute_url())
-
-    # release the lock if new version of the resource is created successfully
-    res.locked_time = None
+    # lock the resource to prevent concurrent new version creation since only one new version for an
+    # obsoleted resource is allowed
+    res.locked_time = datetime.datetime.now(pytz.utc)
     res.save()
-
-    # go to resource landing page
-    request.session['just_created'] = True
-    return HttpResponseRedirect(new_resource.get_absolute_url())
+    if request.is_ajax():
+        task = create_new_version_resource_task.apply_async((shortkey, user.username))
+        task_id = task.task_id
+        task_dict = get_or_create_task_notification(task_id, name='resource version', payload=shortkey,
+                                                    username=user.username)
+        return JsonResponse(task_dict)
+    else:
+        try:
+            response_url = create_new_version_resource_task(shortkey, user.username)
+            return HttpResponseRedirect(response_url)
+        except utils.ResourceVersioningException as ex:
+            request.session['resource_creation_error'] = 'Failed to create a new version of ' \
+                                                         'this resource: ' + str(ex)
+            return HttpResponseRedirect(res.get_absolute_url())
 
 
 @api_view(['POST'])
