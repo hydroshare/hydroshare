@@ -40,7 +40,7 @@
                     {% endif %}
                 {% endif %}
 
-                <ul id="lst-tags" class="custom-well tag-list">
+                <ul id="lst-tags" class="custom-well tag-list" style="display:none">
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
@@ -54,7 +54,7 @@
                     </li>
                 </ul>
             </div>
-            <div>
+            <div id="subj-inline-error" style="display:none">
                 <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
                 <div v-if="error" class='alert alert-danger space-top small'>
                     <strong>Error: </strong>${ error }
