@@ -9,7 +9,7 @@ let subjKeywordsApp = new Vue({
     data: {
         newKeyword: '',
         resMode: RESOURCE_MODE,
-        resKeywords: RES_KEYWORDS,   // global constant defined in template
+        resKeywords: RES_KEYWORDS, // global constant defined in parent template of subject template
         showIsDuplicate: false,
         error: '',
     },
@@ -59,7 +59,6 @@ let subjKeywordsApp = new Vue({
             }.bind(this), "json");
         },
         removeKeyword: function (resIdShort, keywordName) {
-            // TODO this feels sluggish in the UI. Consider removing in VueJS then handling the database. In the event of a failure, simply log. UX will be that keyword reappeared (rare case of failure or losing db conn)
             let newVal = this.resKeywords.slice(); // Get a copy
             newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
