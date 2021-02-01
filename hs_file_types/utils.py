@@ -284,11 +284,7 @@ def ingest_metadata_files(resource, meta_files, meta_schema_files, map_files):
         if is_resource_metadata_file(f):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
-            ingest_logical_file_metadata(f, resource, map_files)
-
-    # process meta json schema files (model aggregations) after meta files
-    for f in meta_schema_files:
-        ingest_metadata_schema_file(f, resource, map_files)
+            ingest_logical_file_metadata(f, resource, map_files, meta_schema_files)
 
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
@@ -318,14 +314,16 @@ def identify_metadata_files(files):
             meta_schema_files.append(f)
         else:
             res_files.append(f)
+
     return res_files, meta_files, meta_schema_files, map_files
 
 
-def ingest_logical_file_metadata(metadata_file, resource, map_files):
+def ingest_logical_file_metadata(metadata_file, resource, map_files, meta_schema_files):
     resource.refresh_from_db()
     graph = Graph()
     graph = graph.parse(data=metadata_file.read())
     agg_type_name = None
+
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
@@ -340,26 +338,26 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
-    logical_files = {}
     if not lf:
         # see if the files exist and create it
-        res_files = []
         folder_based_aggr_created = False
         if logical_file_class is FileSetLogicalFile or logical_file_class is ModelInstanceLogicalFile or \
                 logical_file_class is ModelProgramLogicalFile:
             file_path = subject.rsplit('/', 1)[0]
+
             if not file_path.endswith('/data/contents'):
                 # it's a folder path
                 file_path = file_path.split('data/contents/', 1)[1]
-                res_files = ResourceFile.list_folder(resource=resource, folder=file_path)
-                logical_file_class.set_file_type(resource, None, folder_path=file_path)
+                lf = logical_file_class.set_file_type(resource, None, folder_path=file_path)
                 folder_based_aggr_created = True
+
         if not folder_based_aggr_created:
             if logical_file_class is GenericLogicalFile or logical_file_class is ModelInstanceLogicalFile or \
                     logical_file_class is ModelProgramLogicalFile:
                 map_name = subject.split('data/contents/', 1)[1]
                 map_name = map_name.split('#', 1)[0]
                 file_path = ''
+
                 for map_file in map_files:
                     if map_file.name.endswith(map_name):
                         ORE = Namespace("http://www.openarchives.org/ore/terms/")
@@ -379,26 +377,35 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
                     raise Exception("Could not determine the {} logical file name".format(aggr_name))
                 file_path = file_path.split('data/contents/', 1)[1]
                 res_file = get_resource_file(resource.short_id, file_path)
-                res_files.append(res_file)
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      logical_file_type_class=logical_file_class, fail_feedback=True)
-        if res_files:
-            for res_file in res_files:
-                res_file.refresh_from_db()
-                lf = res_file.logical_file
-                if lf.id not in logical_files:
-                    logical_files[lf.id] = lf
-        else:
-            raise Exception("Could not find aggregation for {}".format(metadata_file.name))
+                lf = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                           logical_file_type_class=logical_file_class, fail_feedback=True)
 
-        if not logical_files:
-            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
+        if not lf:
+            raise Exception(
+                "Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
 
-    with transaction.atomic():
-        for lf in logical_files.values():
+    if not lf.is_model_instance and not lf.is_model_program:
+        with transaction.atomic():
             lf.metadata.delete_all_elements()
             lf.metadata.ingest_metadata(graph)
             lf.create_aggregation_xml_documents()
+    else:
+        # lf is either model instance or model program aggregation
+        # process meta json schema files (model aggregations) after meta files
+        for f in meta_schema_files:
+            schema_path = f.name.split(resource.file_path)[1].split("/")[2:]
+            schema_path = "/".join(schema_path)
+            schema_path = os.path.join(resource.file_path, schema_path)
+            if lf.schema_file_path == schema_path:
+                ingest_metadata_schema_file(f, resource, map_files)
+                lf.refresh_from_db()
+                break
+        else:
+            raise Exception("Failed to find schema JSON file {}".format(lf.schema_file_path))
+
+        lf.metadata.delete_all_elements()
+        lf.metadata.ingest_metadata(graph)
+        lf.create_aggregation_xml_documents()
 
 
 def ingest_metadata_schema_file(f, resource, map_files):
