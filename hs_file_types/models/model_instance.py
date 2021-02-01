@@ -275,6 +275,54 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         rendered_html = template.render(context)
         return rendered_html
 
+    def ingest_metadata(self, graph):
+        from ..utils import get_logical_file_by_map_file_path
+
+        resource = self.logical_file.resource
+        for s, _, o in graph.triples((None, HSTERMS.includesModelOutput, None)):
+            o = str(o)
+            self.has_model_output = o == "true"
+            break
+        for _, _, o in graph.triples((None, HSTERMS.executedByModelProgram, None)):
+            aggr_map_path = o.split('/resource/', 1)[1].split("#")[0]
+            mp_aggr = get_logical_file_by_map_file_path(resource, ModelProgramLogicalFile, aggr_map_path)
+            self.executed_by = mp_aggr
+
+        res_id = ''
+        for s, _, o in graph.triples((None, DC.rights, None)):
+            if s.endswith("#aggregation"):
+                res_id = s.split('/resource/', 1)[1].split("/")[0]
+                break
+
+        RESOURCE_NS = self._get_resource_namespace(hs_site_url="http://www.hydroshare.org", resource_id=res_id)
+        res_predicate_term = RESOURCE_NS.term(name="")
+
+        meta_dict = {}
+        for s, _, o in graph.triples((None, RESOURCE_NS.modelProperties, None)):
+            for _, p2, o2 in graph.triples((o, None, None)):
+                field_name = p2.split(res_predicate_term)[1]
+                object_p = p2 + "Properties"
+                if (None, object_p, None) in graph:
+                    meta_dict[field_name] = {}
+                    # get sub field names
+                    for s3, _, o3 in graph.triples((None, object_p, None)):
+                        for _, p4, o4 in graph.triples((o3, None, None)):
+                            sub_field_name = p4.split(res_predicate_term)[1]
+                            value = graph.value(subject=o4, predicate=RDF.value)
+                            value_literal = Literal(value)
+                            value_to_python = value_literal.toPython()
+                            meta_dict[field_name][sub_field_name] = value_to_python
+                else:
+                    # non-object type field
+                    for _, _, o3 in graph.triples((None, p2, None)):
+                        value = graph.value(subject=o3, predicate=RDF.value)
+                        value_literal = Literal(value)
+                        value_to_python = value_literal.toPython()
+                        meta_dict[field_name] = value_to_python
+
+        self.metadata_json = meta_dict
+        self.save()
+
     def get_rdf_graph(self):
         graph = super(ModelInstanceFileMetaData, self).get_rdf_graph()
         subject = self.rdf_subject()
@@ -310,7 +358,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         valid_schema = False
         resource = self.logical_file.resource
-        if self.metadata_json:
+        if self.metadata_json and self.logical_file.metadata_schema_json:
             try:
                 jsonschema.Draft4Validator(self.logical_file.metadata_schema_json).validate(
                     self.metadata_json)
@@ -407,6 +455,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         graph.remove((model_prop_node, None, k_element_node))
 
         return graph
+
+    def _get_resource_namespace(self, hs_site_url, resource_id):
+        res_xmlns = os.path.join(hs_site_url, 'resource', resource_id) + "/"
+        return Namespace(res_xmlns)
 
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
