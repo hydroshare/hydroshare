@@ -127,6 +127,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
                                                                             res_file.storage_path))
             ft_ctx.logical_file = logical_file
+        return logical_file
 
     def create_metadata_schema_json_file(self):
         """Creates aggregation metadata schema json file """
