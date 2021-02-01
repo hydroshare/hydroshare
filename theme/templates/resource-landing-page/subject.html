@@ -39,17 +39,18 @@
                         </div>
                     {% endif %}
                 {% endif %}
-
                 <ul id="lst-tags" class="custom-well tag-list" style="display:none">
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
-                            <span v-if="resKeywords.length" class="tag">{% templatetag openvariable %} k {% templatetag closevariable %}<span
-                                    @click="removeKeyword('{{ cm.short_id }}', k )"
-                                    class="glyphicon glyphicon-remove-circle icon-remove"></span></span>
+                            <span v-if="resKeywords.length" class="tag">
+                                {% templatetag openvariable %} k {% templatetag closevariable %}<span
+                                @click="removeKeyword('{{ cm.short_id }}', k )"
+                                class="glyphicon glyphicon-remove-circle icon-remove"></span>
+                            </span>
                         {% else %}
                             <a class='tag' target="_blank"
-                               :href="'/search/?q=&selected_facets=subject_exact:' + k">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
+                               :href="'/search/?subject=' + k">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
                         {% endif %}
                     </li>
                 </ul>
