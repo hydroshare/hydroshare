@@ -2036,7 +2036,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
                                                                         new_composite_resource, self.user)
         # the replaced resource should be immutable
-        self.assertTrue(self.composite_resource.raccess.immutable)
+        obsoleted_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
+        self.assertTrue(obsoleted_res.raccess.immutable)
 
         # after deleting the new versioned resource, the original resource should be editable again
         hydroshare.resource.delete_resource(new_composite_resource.short_id)

@@ -640,7 +640,7 @@ def create_new_version_resource(ori_res, new_res, user):
     ori_res.locked_time = datetime.datetime.now(pytz.utc)
     ori_res.save()
     create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
-    # cannot directly return the new_res object being passed in, but rather return the new resource object being copied
+    # cannot directly return the new_res object being passed in, but rather return the new versioned resource object
     return utils.get_resource_by_shortkey(new_res.short_id)
 
 

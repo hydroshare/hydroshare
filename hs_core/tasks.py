@@ -459,6 +459,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         # obsoleted resources cannot be modified from REST API
         ori_res.raccess.immutable = True
         ori_res.raccess.save()
+        ori_res.save()
         # release the lock if new version of the resource is created successfully
         ori_res.locked_time = None
         ori_res.save()
