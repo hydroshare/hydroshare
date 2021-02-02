@@ -61,12 +61,8 @@
         }
 </style>
         {% endblock %}
-    {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="/static/css/notifications-app.css">
-{% endblock %}
-{% block extra_js %}
     <script type="text/javascript" src="/static/js/hs-vue/notifications-app.js"></script>
-{% endblock %}
 <div id="hs-nav-bar" class="navbar navbar-inverse navbar-fixed-top">
     <div id="toplevel-nav-container" class="container">
         <div class="navbar-header">
@@ -126,6 +122,7 @@
                                 </li>
                             </ul>
                         </li>
+                        {% include "includes/notifications-app.html" %}
                     {% else %}
                         <li id="signin-menu"><a href="{% url 'login' %}"><span
                                 class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
