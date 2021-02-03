@@ -15,7 +15,34 @@
 
         <div id="facets" class="col-lg-3">
             <div id="filter-items">
-
+                                  <!-- filter by temporal overlap -->
+                <div id="faceting-temporal">
+                    <div class="panel panel-default">
+                        <div id="headingDate" class="panel-heading">
+                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
+                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
+                                Temporal Coverage Filter</a>
+                            </h4>
+                        </div>
+                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
+<!--                          https://github.com/dbrekalo/vue-date-pick/issues/74  -->
+                          <div class="date-wrapper">
+                            <span class="fa fa-calendar calendar-icon"></span>
+                              <date-pick
+                                 v-model="startdate"
+                                 :displayFormat="'MM/DD/YYYY'"
+                                 :inputAttributes="{placeholder: 'Choose Start Date'}"
+                            ></date-pick></div>
+                          <div class="date-wrapper">
+                            <span class="fa fa-calendar calendar-icon"></span>
+                            <date-pick
+                                 v-model="enddate"
+                                 :displayFormat="'MM/DD/YYYY'"
+                                 :inputAttributes="{placeholder: 'Choose End Date'}"
+                            ></date-pick></div>
+                        </div>
+                    </div>
+                </div>
                 <!-- filter by author -->
                 <div id="faceting-creator">
                     <div class="panel panel-default">
@@ -154,43 +181,18 @@
         </div>
         <div id="resource-rows" class="col-lg-9">
           <div class="row" style="padding-right:14px">
-                          <!-- filter by temporal overlap -->
-<!--                <div id="faceting-temporal">-->
-<!--                    <div class="panel panel-default">-->
-<!--                        <div id="headingDate" class="panel-heading">-->
-<!--                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"-->
-<!--                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">-->
-<!--                                Temporal Coverage Filter</a>-->
-<!--                            </h4>-->
-<!--                        </div>-->
-<!--                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">-->
-<!--                            <div class="date-wrapper">-->
-<!--                            <date-pick-->
-<!--                                 v-model="startdate"-->
-<!--                                 :displayFormat="'MM/DD/YYYY'"-->
-<!--                                 :inputAttributes="{placeholder: 'Start Date'}"-->
-<!--                            ></date-pick></div>-->
-<!--                          <div class="date-wrapper">-->
-<!--                            <date-pick-->
-<!--                                 v-model="enddate"-->
-<!--                                 :displayFormat="'MM/DD/YYYY'"-->
-<!--                                 :inputAttributes="{placeholder: 'End Date'}"-->
-<!--                            ></date-pick></div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
+
                   <div v-if="resources.length > 0" id="resultsdisp">
-            <br/>
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
-                min="1" :max="pagecount"> of {{pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
+            <span id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number"
+                    type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
+            <span id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
                 &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-             <br/>
-        </div>
-            <br/>
+                        </div>
+
+
             <div class="table-wrapper" style="overflow: auto">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
               ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
@@ -201,7 +203,7 @@
                         <tr><th><!-- placeholder --></th>
                             <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
                                 @click="sortBy(key)">
-                                <i :class="sortStyling(key)"></i>{{key}}
+                                <span :class="sortStyling(key)"></span>{{key}}
                             </th>
                         </tr>
                     </thead>
@@ -216,16 +218,16 @@
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
-                        <td style="width:60%;" class="title-span">
+                        <td class="tbl-col-title">
                           <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 250)}}</a>
                         </td>
-                        <td style=width:15%;>
+                        <td class="tbl-col-authors">
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
                     </tr>
                     </tbody>
                 </table>
@@ -524,6 +526,28 @@ export default {
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
+    #resultsdisp {
+        left: 300px;
+    }
+    #page-number {
+        width: 60px;
+    }
+    #wrapper .search-field div {
+        width: 100%;
+    }
+    #wrapper > a {
+        margin-left: 1em;
+    }
+    #search input {
+        width: 100%;
+        padding-left: 28px;
+        padding-right: 28px;
+        z-index: 1;
+    }
+    #img-icons {
+        min-width: 85px;
+        white-space: nowrap;
+    }
     .main-table {
         width: 100%;
     }
@@ -546,12 +570,6 @@ export default {
         /* Ensure collapse without overlap */
         /*width: 235px;*/
     }
-    .table-wrapper {
-        margin-top: 0;
-    }
-    .table-hover {
-        margin-top: 0;
-    }
     .checkbox {
         /* Override older version of bootstrap styling */
     }
@@ -560,7 +578,12 @@ export default {
         margin-top: 10px;
         margin-bottom: 20px;
     }
-
+    .table-wrapper {
+        margin-top: 0;
+    }
+    .table-hover {
+        margin-top: 0;
+    }
     .table-message {
         position: absolute;
         left: 100px;
@@ -570,37 +593,20 @@ export default {
         padding-left: 5px;
         padding-right: 0;
     }
-    .title-span {
-        /*min-width: 437px;*/
+    .tbl-col-title {
+        width: 60%;
         max-width: 437px;
-        /*width: 437px;*/
         word-break: normal;
         word-wrap: break-word;
         white-space: normal;
         padding-top: 4px;
         padding-bottom: 4px;
     }
-    #resultsdisp {
-        left: 300px;
+    .tbl-col-authors {
+        width: 122px;
     }
-    #page-number {
-        width: 60px;
-    }
-    #wrapper .search-field div {
-        width: 100%;
-    }
-    #wrapper > a {
-        margin-left: 1em;
-    }
-    #search input {
-        width: 100%;
-        padding-left: 28px;
-        padding-right: 28px;
-        z-index: 1;
-    }
-    #img-icons {
-        min-width: 85px;
-        white-space: nowrap;
+    .tbl-col-date {
+        width: 5%;
     }
     .inside-right {
         position: absolute;
@@ -627,10 +633,17 @@ export default {
     .date-wrapper {
         display: block;
         width: 100%;
+        border-style: solid;
+        border-width: 1px;
+        border-color: gray;
+    }
+    .calendar-icon {
+        margin: 3px;
     }
     .pagination {
       z-index: 1000;
-      margin: 0;
+      margin-top: 15px;
+      margin-bottom: 15px;
       transform: translateY(4px);
     }
     .interactive:hover {
