@@ -31,14 +31,14 @@
                               <date-pick
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'Choose Start Date'}"
+                                 :inputAttributes="{placeholder: 'Start Date (M/D/YYYY)'}"
                             ></date-pick></div>
                           <div class="date-wrapper">
                             <span class="fa fa-calendar calendar-icon"></span>
                             <date-pick
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'Choose End Date'}"
+                                 :inputAttributes="{placeholder: 'End Date (M/D/YYYY)'}"
                             ></date-pick></div>
                         </div>
                     </div>
@@ -182,16 +182,15 @@
         <div id="resource-rows" class="col-lg-9">
           <div class="row" style="padding-right:14px">
 
-                  <div v-if="resources.length > 0" id="resultsdisp">
-            <span id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number"
+                  <div v-if="resources.length > 0" id="resultsdisp-upper">
+            <span id="page-left-upper" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number-upper"
                     type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
-            <span id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
-                &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+            <span id="page-right-upper" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
+                Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
                         </div>
-
 
             <div class="table-wrapper" style="overflow: auto">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
@@ -232,6 +231,16 @@
                     </tbody>
                 </table>
             </div>
+
+            <div v-if="resources.length > 0" id="resultsdisp-lower">
+            <span id="page-left-lower" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number-lower"
+                    type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
+            <span id="page-right-lower" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
+                Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+                        </div>
         </div>
     </div>
     </div>
@@ -529,7 +538,7 @@ export default {
     #resultsdisp {
         left: 300px;
     }
-    #page-number {
+    #page-number-upper, #page-number-lower {
         width: 60px;
     }
     #wrapper .search-field div {
@@ -542,11 +551,19 @@ export default {
         width: 100%;
         padding-left: 28px;
         padding-right: 28px;
+        margin-bottom: 4px;
         z-index: 1;
     }
     #img-icons {
         min-width: 85px;
         white-space: nowrap;
+    }
+    #filter-items {
+        /* Ensure collapse without overlap */
+        /*width: 235px;*/
+    }
+    #page-right-upper, #page-right-lower {
+        margin-right: 25px;
     }
     .main-table {
         width: 100%;
@@ -565,10 +582,6 @@ export default {
     .panel-title > a:active,
     .panel-title > a:focus  {
         text-decoration:none;
-    }
-    #filter-items {
-        /* Ensure collapse without overlap */
-        /*width: 235px;*/
     }
     .checkbox {
         /* Override older version of bootstrap styling */
@@ -638,7 +651,7 @@ export default {
         border-color: gray;
     }
     .calendar-icon {
-        margin: 3px;
+        margin: 6px 6px 6px 9px;
     }
     .pagination {
       z-index: 1000;
