@@ -74,7 +74,6 @@
                     <div class="row">
                         <div class="col-md-12">
                             <button type="button" class="close btn-close-message">&times;</button>
-                            {# TODO: TESTING #}
                             {% if 'verification email' in message.message %}
                                 <!-- Google Code for HydroShare Conversions Conversion Page -->
                                 <script type="text/javascript">
@@ -108,17 +107,10 @@
     {% endif %}
 {% endnevercache %}
 
-<!-- Universal message box for AJAX requests -->
-<div id="universalMessage">
-    <span>Hi, I'm an error.</span>
-    <a href="#" class="um_close" id="UMClose">x</a>
-</div>
-
 {% block all_content %}
     <div class="main-container">
         {% block main %}{% endblock %}
         {% block after_main %}{% endblock %}
-
     </div>
 {% endblock %}
 

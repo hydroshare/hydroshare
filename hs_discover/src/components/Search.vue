@@ -1,52 +1,21 @@
 <template>
-  <div id="discover-search">
+  <div id="discover-search" class="container">
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
-        <input id="search-input" type="search" class="form-control" v-model="searchtext"
-               placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
-        <i id="search-glass" class="fa fa-search inside-left"></i>
+    <div class="row">
+        <div id="search" class="input-group col-lg-12" @keyup.enter="searchClick(false, true, true)">
+            <input id="search-input" class="form-control" type="search" v-model="searchtext"
+                   placeholder="Search all Public and Discoverable Resources">
+            <span id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer"
+                  v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
+            <span id="search-glass" class="fa fa-search inside-left"></span>
+        </div>
     </div>
     <div id="resources-main" class="row">
-        <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
-            <br/>
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
-                min="1" :max="pagecount"> of {{pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
-                &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-             <br/>
-        </div>
-        <div class="col-xs-3" id="facets">
+
+        <div id="facets" class="col-lg-3">
             <div id="filter-items">
-                <!-- filter by temporal overlap -->
-                <div id="faceting-temporal">
-                    <div class="panel panel-default">
-                        <div id="headingDate" class="panel-heading">
-                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"
-                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">
-                                Temporal Coverage Filter</a>
-                            </h4>
-                        </div>
-                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
-                            <div class="date-wrapper">
-                            <date-pick
-                                 v-model="startdate"
-                                 :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'Start Date'}"
-                            ></date-pick></div>
-                          <div class="date-wrapper">
-                            <date-pick
-                                 v-model="enddate"
-                                 :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'End Date'}"
-                            ></date-pick></div>
-                        </div>
-                    </div>
-                </div>
+
                 <!-- filter by author -->
                 <div id="faceting-creator">
                     <div class="panel panel-default">
@@ -184,8 +153,45 @@
             </div>
         </div>
         <div id="resource-rows" class="col-lg-9">
+          <div class="row" style="padding-right:14px">
+                          <!-- filter by temporal overlap -->
+<!--                <div id="faceting-temporal">-->
+<!--                    <div class="panel panel-default">-->
+<!--                        <div id="headingDate" class="panel-heading">-->
+<!--                            <h4 title="Enter a date range to filter search results by the timeframe that data was collected or observations were made"-->
+<!--                                class="panel-title"><a data-toggle="collapse" href="#dateselectors" aria-expanded="true" aria-controls="dateselectors">-->
+<!--                                Temporal Coverage Filter</a>-->
+<!--                            </h4>-->
+<!--                        </div>-->
+<!--                        <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">-->
+<!--                            <div class="date-wrapper">-->
+<!--                            <date-pick-->
+<!--                                 v-model="startdate"-->
+<!--                                 :displayFormat="'MM/DD/YYYY'"-->
+<!--                                 :inputAttributes="{placeholder: 'Start Date'}"-->
+<!--                            ></date-pick></div>-->
+<!--                          <div class="date-wrapper">-->
+<!--                            <date-pick-->
+<!--                                 v-model="enddate"-->
+<!--                                 :displayFormat="'MM/DD/YYYY'"-->
+<!--                                 :inputAttributes="{placeholder: 'End Date'}"-->
+<!--                            ></date-pick></div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+                  <div v-if="resources.length > 0" id="resultsdisp">
             <br/>
-            <div class="table-wrapper">
+            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                min="1" :max="pagecount"> of {{pagecount}}
+            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
+                &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+             <br/>
+        </div>
+            <br/>
+            <div class="table-wrapper" style="overflow: auto">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
               ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
               availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')"><i>No resource matches</i></p>
@@ -201,7 +207,7 @@
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td style=width:15%;>
+                        <td class="tbl-col-icons">
                           <span id="img-icons">
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
@@ -225,6 +231,7 @@
                 </table>
             </div>
         </div>
+    </div>
     </div>
     </div>
 </template>
@@ -537,7 +544,7 @@ export default {
     }
     #filter-items {
         /* Ensure collapse without overlap */
-        width: 235px;
+        /*width: 235px;*/
     }
     .table-wrapper {
         margin-top: 0;
@@ -553,14 +560,20 @@ export default {
         margin-top: 10px;
         margin-bottom: 20px;
     }
+
     .table-message {
         position: absolute;
         left: 100px;
     }
+    .tbl-col-icons {
+        width: 100px;
+        padding-left: 5px;
+        padding-right: 0;
+    }
     .title-span {
-        min-width: 437px;
+        /*min-width: 437px;*/
         max-width: 437px;
-        width: 437px;
+        /*width: 437px;*/
         word-break: normal;
         word-wrap: break-word;
         white-space: normal;
@@ -581,9 +594,8 @@ export default {
     }
     #search input {
         width: 100%;
-        min-width: 800px;
-        padding-left: 25px;
-        padding-right: 25px;
+        padding-left: 28px;
+        padding-right: 28px;
         z-index: 1;
     }
     #img-icons {
@@ -593,13 +605,13 @@ export default {
     .inside-right {
         position: absolute;
         top: 10px;
-        right: 20px;
+        right: 24px;
         z-index: 2;
     }
     .inside-left {
         position: absolute;
         top: 10px;
-        left: 10px;
+        left: 25px;
         z-index: 2;
     }
     .btn.focus {
