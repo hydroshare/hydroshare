@@ -15,7 +15,7 @@ geo $external {
   172.16.0.0/12 0;
   127.0.0.0/8 0;
   10.0.0.0/8 0;
-  152.54.0.0/22 0;
+  152.54.0.0/20 0;
 }
 
 proxy_set_header Host $host;
@@ -103,6 +103,18 @@ server {
 
     location /media/ {
         alias /hydroshare/hydroshare/static/media/;
+    }
+
+    location /upload {
+        root                  /tmp/target;
+
+        client_body_temp_path /tmp/working; 
+
+        dav_methods PUT;
+
+        create_full_put_path  on;
+        dav_access            group:rw  all:r;
+
     }
 
     location /IRODS_DATA_URI/ {

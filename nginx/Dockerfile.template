@@ -1,17 +1,38 @@
-FROM nginx:1.11
-MAINTAINER Michael J. Stealey <michael.j.stealey@gmail.com>
+FROM debian:buster
+ENV NGINX_VERSION 1.19.6
 
-COPY . /tmp
-RUN cp /tmp/config-files/hs-nginx.conf /etc/nginx/conf.d/default.conf \
-    && cp /tmp/config-files/nginx.conf-default /etc/nginx/nginx.conf \
-    && cp /tmp/.htpasswd /etc/nginx/.htpasswd \
-    && cp /tmp/docker-entrypoint.sh /docker-entrypoint.sh \
-    && groupadd -g SENDFILE_IRODS_GROUP_ID SENDFILE_IRODS_GROUP \
-    && echo 'SENDFILE_IRODS_USER:x:SENDFILE_IRODS_USER_ID:SENDFILE_IRODS_GROUP_ID::/home/SENDFILE_IRODS_USER:/bin/bash' >> /etc/passwd
+COPY install.sh /usr/src/
+COPY nginx.key /usr/src/
 
-# cleanup - rm from tmp began failing on 4/9/17 for some reason
-#RUN rm -rf /tmp/*
+# Create hashed temporary upload locations
+RUN mkdir -p /var/www/images/_upload/0 && \
+    mkdir -p /var/www/images/_upload/1 && \
+    mkdir -p /var/www/images/_upload/2 && \
+    mkdir -p /var/www/images/_upload/3 && \
+    mkdir -p /var/www/images/_upload/4 && \
+    mkdir -p /var/www/images/_upload/5 && \
+    mkdir -p /var/www/images/_upload/6 && \
+    mkdir -p /var/www/images/_upload/7 && \
+    mkdir -p /var/www/images/_upload/8 && \
+    mkdir -p /var/www/images/_upload/9 && \
+    chmod 777 -R /var/www/images/_upload
+
+EXPOSE 80 443
+
+RUN sh -x /usr/src/install.sh
+# COPY nginx.conf /etc/nginx/nginx.conf
+# COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+
+COPY ./config-files/hs-nginx.conf /etc/nginx/conf.d/default.conf 
+COPY ./config-files/nginx.conf-default /etc/nginx/nginx.conf 
+COPY ./.htpasswd /etc/nginx/.htpasswd 
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh 
+RUN addgroup --gid SENDFILE_IRODS_GROUP_ID SENDFILE_IRODS_GROUP 
+RUN echo 'SENDFILE_IRODS_USER:x:SENDFILE_IRODS_USER_ID:SENDFILE_IRODS_GROUP_ID::/home/SENDFILE_IRODS_USER:/bin/bash' >> /etc/passwd
+
+# This doesn't work because irods is already in the users list
+# RUN adduser --uid SENDFILE_IRODS_USER_ID --ingroup SENDFILE_IRODS_GROUP --home /home/SENDFILE_IRODS_USER --shell /bin/bash --disabled-password SENDFILE_IRODS_USER 
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["run"]
 
+CMD ["nginx", "-g", "daemon off;"]
