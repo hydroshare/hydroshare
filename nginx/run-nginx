@@ -8,6 +8,8 @@ NGINX_CONFIG_DIRECTORY='./config-files'
 NGINX_DOCKER_IMG='hydroshare_nginx'
 NGINX_DOCKER_CNTR='nginx'
 
+source ../config/hydroshare-config.sh
+
 display_usage() {
 	echo "*** run-nginx control script ***"
 	echo "usage: $0 maint_off   # removes maintenance page"
