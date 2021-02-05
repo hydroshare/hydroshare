@@ -1,5 +1,7 @@
 # coding=utf-8
 import os
+import datetime
+import pytz
 
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
@@ -9,7 +11,7 @@ from rest_framework import status
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
-from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey
+from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
     unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource
 from hs_composite_resource.models import CompositeResource
@@ -2061,6 +2063,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         hydroshare.resource.delete_resource(new_composite_resource.short_id)
         ori_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
         self.assertTrue(ori_res.raccess.immutable)
+
+    def test_version_resource_lock(self):
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # make the original resource locked before versioning
+        self.composite_resource.locked_time = datetime.datetime.now(pytz.utc)
+        self.composite_resource.save()
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        with self.assertRaises(ResourceVersioningException):
+            hydroshare.create_new_version_resource(self.composite_resource, new_composite_resource, self.user)
 
     def test_unzip(self):
         """Test that when a zip file gets unzipped at data/contents/ where a single file aggregation
