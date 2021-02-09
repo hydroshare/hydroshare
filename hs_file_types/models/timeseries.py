@@ -14,6 +14,7 @@ from django.template import Template, Context
 from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
     textarea, span
 from rdflib import BNode, Literal
+from rdflib.namespace import DCTERMS, DC
 
 from hs_core.hs_rdf import HSTERMS
 
@@ -449,6 +450,12 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             graph.remove((result_node, HSTERMS.timeSeriesResultUUID, series_id))
             graph.add((result_node, HSTERMS.timeSeriesResultUUID, Literal([str(series_id)])))
 
+        # abstract is all by itself on this model, won't get picked up by ingestion automatically
+        description_node = graph.value(subject=subject, predicate=DC.description, default=None)
+        if description_node:
+            self.abstract = graph.value(subject=description_node, predicate=DCTERMS.abstract, default="").toPython()
+            self.save()
+
         super(TimeSeriesFileMetaData, self).ingest_metadata(graph)
 
     def get_rdf_graph(self):
@@ -517,6 +524,12 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 if units_abbreviation:
                     graph.add((unit_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
                     graph.remove((result_node, HSTERMS.UnitsAbbreviation, units_abbreviation))
+
+        if self.abstract:
+            # abstract is all by itself on this model, won't get picked up by rdf/xml creation automatically
+            description_node = BNode()
+            graph.add((subject, DC.description, description_node))
+            graph.add((description_node, DCTERMS.abstract, Literal(self.abstract)))
 
         return graph
 

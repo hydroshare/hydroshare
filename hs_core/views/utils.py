@@ -546,10 +546,11 @@ def get_metadata_contenttypes():
     return meta_contenttypes
 
 
-def get_my_resources_list(user):
+def get_my_resources_list(user, annotate=True):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
     :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
     :return: an instance of QuerySet of resources
     """
 
@@ -575,8 +576,6 @@ def get_my_resources_list(user):
     viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
 
-    labeled_resources = user.ulabels.labeled_resources
-    favorite_resources = user.ulabels.favorited_resources
     discovered_resources = user.ulabels.my_resources
 
     # join all queryset objects
@@ -585,49 +584,51 @@ def get_my_resources_list(user):
         viewable_resources.distinct() | \
         discovered_resources.distinct()
 
-    resource_collection = resource_collection.annotate(
-        owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
-                        then=Value(True, BooleanField()))))
+    if annotate:  # When used in the My Resources page, annotate for speed
+        labeled_resources = user.ulabels.labeled_resources
+        favorite_resources = user.ulabels.favorited_resources
+        resource_collection = resource_collection.annotate(
+            owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
+                            then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
-                      then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
+                          then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
-                           then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
+                               then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
-                        then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
+                            then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
-                              then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                                  then=Value(True, BooleanField()))))
 
-    # The annotated field 'has_labels' would allow us to query the DB for labels only if the
-    # resource has labels - that means we won't hit the DB for each resource listed on the page
-    # to get the list of labels for a resource
-    resource_collection = resource_collection.annotate(has_labels=Case(
-        When(short_id__in=labeled_resources.values_list('short_id', flat=True),
-             then=Value(True, BooleanField()))))
+        # The annotated field 'has_labels' would allow us to query the DB for labels only if the
+        # resource has labels - that means we won't hit the DB for each resource listed on the page
+        # to get the list of labels for a resource
+        resource_collection = resource_collection.annotate(has_labels=Case(
+            When(short_id__in=labeled_resources.values_list('short_id', flat=True),
+                 then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
-
-    # we won't hit the DB for each resource to know if it's status is public/private/discoverable
-    # etc
-    resource_collection = resource_collection.select_related('raccess')
-    # prefetch metadata items - creators, keywords(subjects), dates and title
-    meta_contenttypes = get_metadata_contenttypes()
-    for ct in meta_contenttypes:
-        # get a list of resources having metadata that is an instance of a specific
-        # metadata class (e.g., CoreMetaData)
-        res_list = [res for res in resource_collection if res.content_type == ct]
-        prefetch_related_objects(res_list,
-                                 Prefetch('content_object__creators'),
-                                 Prefetch('content_object__subjects'),
-                                 Prefetch('content_object___title'),
-                                 Prefetch('content_object__dates'))
+        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
+        # we won't hit the DB for each resource to know if it's status is public/private/discoverable
+        # etc
+        resource_collection = resource_collection.select_related('raccess')
+        # prefetch metadata items - creators, keywords(subjects), dates and title
+        meta_contenttypes = get_metadata_contenttypes()
+        for ct in meta_contenttypes:
+            # get a list of resources having metadata that is an instance of a specific
+            # metadata class (e.g., CoreMetaData)
+            res_list = [res for res in resource_collection if res.content_type == ct]
+            prefetch_related_objects(res_list,
+                                     Prefetch('content_object__creators'),
+                                     Prefetch('content_object__subjects'),
+                                     Prefetch('content_object___title'),
+                                     Prefetch('content_object__dates'))
     return resource_collection
 
 

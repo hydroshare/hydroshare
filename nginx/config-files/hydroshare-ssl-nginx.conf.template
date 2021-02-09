@@ -15,7 +15,7 @@ geo $external {
   172.16.0.0/12 0;
   127.0.0.0/8 0;
   10.0.0.0/8 0;
-  152.54.0.0/22 0;
+  152.54.0.0/16 0;
 }
 
 proxy_set_header Host $host;
@@ -38,11 +38,22 @@ proxy_read_timeout 300;
 server {
     listen          80;
     server_name     FQDN_OR_IP;
-    # This should not rewrite hostname!
-    # rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
-    # This syntax is considered more efficient in nginx documentation
-    # and does the same thing as the above:
-    return 301 https://$http_host/$request_uri;
+
+    # bypass https for internal monitoring 
+    location /whatzupdoc-inner { 
+        if ($external) { 
+            return 404; 
+        } 
+        stub_status; 
+    } 
+
+    location / { 
+        # This should not rewrite hostname!
+        # rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+        # This syntax is considered more efficient in nginx documentation
+        # and does the same thing as the above:
+        return 301 https://$http_host/$request_uri;
+    } 
 }
 
 server {

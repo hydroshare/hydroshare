@@ -61,6 +61,7 @@ function getFolderTemplateInstance(folder) {
             "<span class='fb-logical-file-type' data-logical-file-type='" +
             folder['folder_aggregation_type'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] + "'>" +
             folder['folder_aggregation_name'] + "</span>" +
+            "<span class='fb-preview-data-url'>" + folder['preview_data_url'] + "</span>" +
             "<span class='fb-file-size'></span>" +
             "</li>"
     }
@@ -73,6 +74,7 @@ function getFolderTemplateInstance(folder) {
         "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type-to-set='" +
         folder['folder_aggregation_type_to_set'] + "'></span>" +
+        "<span class='fb-preview-data-url'>" + folder['preview_data_url'] + "</span>" +
         "<span class='fb-file-size'></span>" +
         "</li>";
 }
@@ -93,6 +95,7 @@ function getVirtualFolderTemplateInstance(agg) {
       "<span class='fb-file-type'>File Folder</span>" +
       "<span class='fb-logical-file-type' data-logical-file-type='" + agg.logical_type +
       "' data-logical-file-id='" + agg.logical_file_id + "'>" + agg.logical_type + "</span>" +
+      "<span class='fb-preview-data-url'>" + agg.preview_data_url + "</span>" +
       "<span class='fb-file-size'></span>" +
       "</li>";
 }
@@ -180,6 +183,7 @@ function updateSelectionMenuContext() {
         "getRefUrl",
         "open",
         "paste",
+        "preview",
         "removeAggregation",
         "rename",
         "setFileSetFileType",
@@ -251,17 +255,6 @@ function updateSelectionMenuContext() {
         uiActionStates.setRefTimeseriesFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
 
-        for (let i = 0; i < selected.length; i++) {
-            const size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
-            if (size > maxSize) {
-                // Some file is too large for direct download
-                // Here we just disable, but keep the menu item visible
-                uiActionStates.download.disabled = true;
-                $("#fb-download-help").toggleClass("hidden", true);
-                break;
-            }
-        }
-
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
             uiActionStates.removeAggregation.disabled = true;
@@ -274,14 +267,6 @@ function updateSelectionMenuContext() {
     }
     else if (selected.length == 1) {
         // Exactly one item selected
-        var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
-        if (size > maxSize) {
-            uiActionStates.download.disabled = false;
-            $("#fb-download-help").toggleClass("hidden", false);
-        }
-        else {
-            $("#fb-download-help").toggleClass("hidden", true);
-        }
 
         var fileName = $(selected).find(".fb-file-name").text();
 
@@ -316,6 +301,11 @@ function updateSelectionMenuContext() {
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+
+                let previewDataURL = selected.children('span.fb-preview-data-url').text();
+                if (previewDataURL == 'null') {
+                    uiActionStates.preview.fileMenu.hidden = true;
+                };
             }
 
             let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
@@ -330,6 +320,9 @@ function updateSelectionMenuContext() {
             // Disable add metadata to folder
             uiActionStates.setFileSetFileType.disabled = true;
             uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+
+            uiActionStates.preview.disabled = true;
+            uiActionStates.preview.fileMenu.hidden = true;
 
             if (!fileName.toUpperCase().endsWith(".ZIP")) {
                 uiActionStates.unzip.disabled = true;
@@ -426,6 +419,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setGeoRasterFileType.disabled = true;
         uiActionStates.setGeoFeatureFileType.disabled = true;
         uiActionStates.setTimeseriesFileType.disabled = true;
+        uiActionStates.preview.disabled = true;
 
         if (resourceType === 'Composite Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
@@ -443,7 +437,6 @@ function updateSelectionMenuContext() {
             })
         }
 
-        $("#fb-download-help").toggleClass("hidden", true);
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
 
@@ -1128,6 +1121,12 @@ function isVirtualFolder(item) {
     item = $(item);
     let isFileSet = item.find(".fb-logical-file-type").attr("data-logical-file-type") === "FileSetLogicalFile";
     return item.hasClass("fb-folder") && item.attr("data-logical-file-id") && !isFileSet;
+}
+
+function previewData() {
+    let selected = $("#fb-files-container li.ui-selected");
+    let previewDataURL = selected.children('span.fb-preview-data-url').text();
+    window.open(previewDataURL, '_blank');
 }
 
 function startDownload(zipFiles) {
@@ -2141,6 +2140,11 @@ $(document).ready(function () {
             $("#rename-dialog").modal('hide');
             refreshFileBrowser();
         });
+    });
+
+    // Preview data
+    $("[data-fb-action='preview']").click(function () {
+        previewData();
     });
 
     // Download method

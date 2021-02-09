@@ -22,7 +22,7 @@ from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource
-from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
@@ -329,12 +329,13 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
 
 @shared_task
-def create_bag_by_irods(resource_id, request_username=None):
+def create_bag_by_irods(resource_id, create_zip=True):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
+    :param create_zip: defaults to True, set to false to create bagit files without zipping
     :return: bag_url if bag creation operation succeeds or
              raise an exception if resource does not exist or any other issues that prevent bags from being created.
     """
@@ -344,72 +345,36 @@ def create_bag_by_irods(resource_id, request_username=None):
 
     bag_path = res.bag_path
 
-    metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
+    metadata_dirty = res.getAVU('metadata_dirty')
+    metadata_dirty = metadata_dirty is None or metadata_dirty
     # if metadata has been changed, then regenerate metadata xml files
-    if metadata_dirty is None or metadata_dirty.lower() == "true":
-        create_bag_files(res)
+    if metadata_dirty:
+        create_bag_metadata_files(res)
 
-    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
-    # check to see if bagit readme.txt file exists or not
-    bagit_readme_file = res.get_irods_path('readme.txt')
-    is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-    if irods_bagit_input_path.startswith(resource_id):
-        # resource is in data zone, need to append the full path for iRODS bagit rule execution
-        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-        irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.IRODS_DEFAULT_RESOURCE)
-    else:
-        # this will need to be changed with the default resource in whatever federated zone the
-        # resource is stored in when we have such use cases to support
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+    bag_modified = res.getAVU("bag_modified")
+    bag_modified = bag_modified is None or bag_modified
+    if metadata_dirty or bag_modified:
+        create_bagit_files_by_irods(res, istorage)
+        res.setAVU("bag_modified", False)
 
-    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+    if create_zip:
+        irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
 
-    bagit_files = [
-        res.get_irods_path('bagit.txt'),
-        res.get_irods_path('manifest-md5.txt'),
-        res.get_irods_path('tagmanifest-md5.txt'),
-        bag_path
-    ]
-
-    # only proceed when the resource is not deleted potentially by another request
-    # when being downloaded
-    is_exist = istorage.exists(irods_bagit_input_path)
-    if is_exist:
-        # if bagit readme.txt does not exist, add it.
-        if not is_bagit_readme_exist:
-            from_file_name = getattr(settings, 'HS_BAGIT_README_FILE_WITH_PATH',
-                                     'docs/bagit/readme.txt')
-            istorage.saveFile(from_file_name, bagit_readme_file, True)
-
-        # call iRODS bagit rule here
-        bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE',
-                                  'hydroshare/irods/ruleGenerateBagIt_HS.r')
-
-        try:
-            # call iRODS run and ibun command to create and zip the bag, ignore SessionException
-            # for now as a workaround which could be raised from potential race conditions when
-            # multiple ibun commands try to create the same zip file or the very same resource
-            # gets deleted by another request when being downloaded
-            istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-            istorage.zipup(irods_bagit_input_path, bag_path)
-            if res.raccess.published:
-                # compute checksum to meet DataONE distribution requirement
-                chksum = istorage.checksum(bag_path)
-                res.bag_checksum = chksum
-            istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
-            return res.bag_url
-        except SessionException as ex:
-            # if an exception occurs, delete incomplete files potentially being generated by
-            # iRODS bagit rule and zipping operations
-            for fname in bagit_files:
-                if istorage.exists(fname):
-                    istorage.delete(fname)
-            raise SessionException(-1, '', ex.stderr)
-    else:
-        raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
+        # only proceed when the resource is not deleted potentially by another request
+        # when being downloaded
+        is_exist = istorage.exists(irods_bagit_input_path)
+        if is_exist:
+            try:
+                istorage.zipup(irods_bagit_input_path, bag_path)
+                if res.raccess.published:
+                    # compute checksum to meet DataONE distribution requirement
+                    chksum = istorage.checksum(bag_path)
+                    res.bag_checksum = chksum
+                return res.bag_url
+            except SessionException as ex:
+                raise SessionException(-1, '', ex.stderr)
+        else:
+            raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
 @shared_task
