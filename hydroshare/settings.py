@@ -701,6 +701,8 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Multidimensional (NetCDF)': set(['nc'])
 } 
 
+HSWS_ACTIVATED = False
+
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
     'hs_core.tasks.create_bag_by_irods',
