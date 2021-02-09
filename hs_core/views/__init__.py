@@ -42,13 +42,13 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
 
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
+    update_quota_usage as update_quota_usage_utility
 
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id
-from hs_core.tasks import copy_resource_task
+from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
@@ -779,34 +779,18 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     Returns:
         JSON list that indicates status of resource replication, i.e., success or error
     '''
-    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                      raises_exception=False)
     if not authorized:
-        return HttpResponse(
-        json.dumps({"error": "You are not authorized to replicate this resource."}),
-        content_type="application/json"
+        return JsonResponse(
+        {"error": "You are not authorized to replicate this resource."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
-    try:
-        replicate_resource_bag_to_user_zone(user, shortkey)
-        return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
-            content_type = "application/json"
-        )
-    except SessionException as ex:
-        return HttpResponse(
-        json.dumps({"error": ex.stderr}),
-        content_type="application/json"
-        )
-    except utils.QuotaException as ex:
-        return HttpResponse(
-            json.dumps({"error": str(ex)}),
-            content_type="application/json"
-        )
-    except ValidationError as ex:
-        return HttpResponse(
-            json.dumps({"error": str(ex)}),
-            content_type="application/json"
-        )
+    task = replicate_resource_bag_to_user_zone_task.apply_async((shortkey, user.username))
+    task_id = task.task_id
+    task_dict = get_or_create_task_notification(task_id, name='resource copy to user zone', username=user.username)
+    return JsonResponse(task_dict)
 
 
 def list_referenced_content(request, shortkey, *args, **kwargs):

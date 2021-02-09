@@ -701,15 +701,16 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Multidimensional (NetCDF)': set(['nc'])
 } 
 
-# celery task function name to user interpretable name mapping to be used for async task management user interface
-TASK_NAME_MAPPING = {
-    'hs_core.tasks.create_bag_by_irods': 'bag download',
-    'hs_core.tasks.create_temp_zip': 'zip download',
-    'hs_core.tasks.unzip_task': 'file unzip',
-    'hs_core.tasks.copy_resource_task': 'resource copy',
-}
-
 HSWS_ACTIVATED = False
+
+# celery task names to be recorded in task notification model
+TASK_NAME_LIST = [
+    'hs_core.tasks.create_bag_by_irods',
+    'hs_core.tasks.create_temp_zip',
+    'hs_core.tasks.unzip_task',
+    'hs_core.tasks.copy_resource_task',
+    'hs_core.tasks.replicate_resource_bag_to_user_zone_task'
+]
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

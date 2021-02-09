@@ -1,5 +1,5 @@
 nginx:
-  image: nginx:1.11
+  image: nginx:1.19
   container_name: nginx
   volumes:
    - ${HOME_DIR}/nginx/static:/system/static
