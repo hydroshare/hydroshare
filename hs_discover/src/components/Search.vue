@@ -190,7 +190,7 @@
             <span id="page-right-upper" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                 class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
                 Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-                        </div>
+                  </div>
 
             <div class="table-wrapper" style="overflow: auto">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
@@ -200,9 +200,8 @@
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
                         <tr><th><!-- placeholder --></th>
-                            <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
-                                @click="sortBy(key)">
-                                <span :class="sortStyling(key)"></span>{{key}}
+                            <th v-for="key in labels" v-bind:key="key" @click="sortBy(key)">
+                              <span class="interactive"><span :class="sortStyling(key)"></span>{{key}}</span>
                             </th>
                         </tr>
                     </thead>
@@ -240,7 +239,7 @@
             <span id="page-right-lower" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
                 class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
                 Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-                        </div>
+            </div>
         </div>
     </div>
     </div>
@@ -538,9 +537,6 @@ export default {
     #resultsdisp {
         left: 300px;
     }
-    #page-number-upper, #page-number-lower {
-        width: 60px;
-    }
     #wrapper .search-field div {
         width: 100%;
     }
@@ -565,8 +561,20 @@ export default {
     #page-right-upper, #page-right-lower {
         margin-right: 25px;
     }
+    #page-number-upper, #page-number-lower {
+        border-style: solid;
+        border-width: 1px;
+        border-color: #ccc;
+        outline: none;
+        width: 55px;
+    }
     .main-table {
         width: 100%;
+    }
+    .container {
+        padding: 0;
+        margin-left: auto;
+        margin-right: auto;
     }
     .panel-title > a:before {
         float: left !important;
@@ -648,7 +656,7 @@ export default {
         width: 100%;
         border-style: solid;
         border-width: 1px;
-        border-color: gray;
+        border-color: #ccc;
     }
     .calendar-icon {
         margin: 6px 6px 6px 9px;
@@ -661,6 +669,7 @@ export default {
     }
     .interactive:hover {
       color: LightBlue;
+      cursor: pointer;
       /* Avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
