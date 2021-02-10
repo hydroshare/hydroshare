@@ -9,6 +9,14 @@
             <span id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer"
                   v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
             <span id="search-glass" class="fa fa-search inside-left"></span>
+            <p class="table-message" v-if="(!resources.length) && (authorFilter.length ||
+              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
+              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')">No resource matches</p>
+        </div>
+        <div class="row">
+          <div class="col-lg-12">
+
+          </div>
         </div>
     </div>
     <div id="resources-main" class="row">
@@ -193,9 +201,7 @@
                   </div>
 
             <div class="table-wrapper" style="overflow: auto">
-              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
-              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
-              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')"><i>No resource matches</i></p>
+
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
@@ -606,8 +612,8 @@ export default {
         margin-top: 0;
     }
     .table-message {
-        position: absolute;
-        left: 100px;
+        font-style: italic;
+        color:red;
     }
     .tbl-col-icons {
         width: 100px;
