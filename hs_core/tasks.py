@@ -460,17 +460,15 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         ori_res.raccess.immutable = True
         ori_res.raccess.save()
         ori_res.save()
-        # release the lock if new version of the resource is created successfully
-        ori_res.locked_time = None
-        ori_res.save()
         return new_res.get_absolute_url()
     except Exception as ex:
         if new_res:
             new_res.delete()
-        # release the lock if new version of the resource is created successfully
+        raise utils.ResourceVersioningException(str(ex))
+    finally:
+        # release the lock regardless
         ori_res.locked_time = None
         ori_res.save()
-        raise utils.ResourceVersioningException(str(ex))
 
 
 @shared_task
