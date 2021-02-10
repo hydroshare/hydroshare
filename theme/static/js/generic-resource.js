@@ -296,6 +296,26 @@ $(document).ready(function () {
         })
     });
 
+    $("#new-version-btn").on('click', function(e) {
+       e.stopImmediatePropagation();
+       // disable the new version icon to prevent users from clicking it again until it is done
+       $('#new-version').addClass('disabled');
+       $('#new-version').removeAttr('data-toggle');
+       $.ajax({
+           type: 'POST',
+           url: '/hsapi/_internal/' + SHORT_ID + '/create-new-version-resource/',
+           success: function (task) {
+                $('#new-version-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to create a new version of the resource', xhr.responseText);
+                $('#new-version-resource-dialog').modal('hide');
+            }
+       })
+    });
+
     $("#btn-replicate").on('click', function(e) {
         e.stopImmediatePropagation();
         $.ajax({

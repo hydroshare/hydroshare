@@ -53,6 +53,10 @@ class ResourceCopyException(Exception):
     pass
 
 
+class ResourceVersioningException(Exception):
+    pass
+
+
 def get_resource_types():
     resource_types = []
     for model in apps.get_models():
@@ -475,9 +479,17 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     """
 
     if not by_user:
-        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
+        user = None
     else:
-        resource.last_changed_by = by_user
+        if isinstance(by_user, User):
+            user = by_user
+        else:
+            try:
+                user = User.objects.get(username=by_user)
+            except User.DoesNotExist:
+                user = None
+    if user:
+        resource.last_changed_by = user
 
     resource.updated = now().isoformat()
     # seems this is the best place to sync resource title with metadata title
