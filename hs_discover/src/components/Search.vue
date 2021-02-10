@@ -205,9 +205,20 @@
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
-                        <tr><th><!-- placeholder --></th>
-                            <th v-for="key in labels" v-bind:key="key" @click="sortBy(key)">
-                              <span class="interactive"><span :class="sortStyling(key)"></span>{{key}}</span>
+                        <tr><th class="tbl-col-icons"><!-- placeholder --></th>
+
+<!--                          'Title', 'First Author', 'Date Created', 'Last Modified'-->
+                            <th class="tbl-col-title" v-bind:key="'Title'" @click="sortBy('Title')">
+                              <span class="interactive"><span :class="sortStyling('Title')"></span>Title</span>
+                            </th>
+                            <th class="tbl-col-authors" v-bind:key="'First Author'" @click="sortBy('First Author')">
+                              <span class="interactive"><span :class="sortStyling('First Author')"></span>First<br>Author</span>
+                            </th>
+                            <th class="tbl-col-date" v-bind:key="'Date Created'" @click="sortBy('Date Created')">
+                              <span class="interactive"><span :class="sortStyling('Date Created')"></span>Date<br>Created</span>
+                            </th>
+                              <th class="tbl-col-date" v-bind:key="'Last Modified'" @click="sortBy('Last Modified')">
+                              <span class="interactive"><span :class="sortStyling('Last Modified')"></span>Last<br>Modified</span>
                             </th>
                         </tr>
                     </thead>
@@ -615,25 +626,35 @@ export default {
         font-style: italic;
         color:red;
     }
+    /* col-lg-9 992px */
     .tbl-col-icons {
         width: 100px;
+        max-width: 100px;
         padding-left: 5px;
         padding-right: 0;
     }
     .tbl-col-title {
-        width: 60%;
-        max-width: 437px;
-        word-break: normal;
+        min-width: 150px;
+        max-width: 475px;
+        word-break: break-all;
         word-wrap: break-word;
+        text-overflow: ellipsis;
+        overflow: hidden;
         white-space: normal;
         padding-top: 4px;
         padding-bottom: 4px;
     }
     .tbl-col-authors {
-        width: 122px;
+        min-width: 110px;
+        max-width: 140px;
+        word-break: normal;
+        word-wrap: break-word;
     }
     .tbl-col-date {
-        width: 5%;
+        min-width: 85px;
+        max-width: 100px;
+        word-break: break-all;
+        word-wrap: break-word;
     }
     .inside-right {
         position: absolute;
