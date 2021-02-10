@@ -16,7 +16,7 @@
         }
         .glyphicon.glyphicon-bell {
             top: 0;
-            line-height: 0.8;
+            line-height: 0.85;
         }
         .navbar-collapse {
             background: white;
@@ -44,6 +44,9 @@
         .navbar-nav {
             display: block;
             flex-direction: row;
+        }
+        .navbar-toggle {
+            margin-right: 0;
         }
         #toplevel-nav-container {
             display: block;
@@ -79,7 +82,7 @@
                 <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
             </a>
         </div>
-        <div class="collapse navbar-collapse">
+        <div style="min-width:970px" class="collapse navbar-collapse">
             <ul class="nav navbar-nav navbar-right hidden-xs">
                 {% ifinstalled mezzanine.accounts %}
                     {% if request.user.is_authenticated %}
