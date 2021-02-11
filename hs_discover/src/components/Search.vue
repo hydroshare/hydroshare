@@ -626,7 +626,6 @@ export default {
         font-style: italic;
         color:red;
     }
-    /* col-lg-9 992px */
     .tbl-col-icons {
         width: 100px;
         max-width: 100px;
@@ -651,7 +650,7 @@ export default {
         word-wrap: break-word;
     }
     .tbl-col-date {
-        min-width: 85px;
+        min-width: 90px;
         max-width: 100px;
         word-break: break-all;
         word-wrap: break-word;
