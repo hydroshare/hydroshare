@@ -1,3 +1,4 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
 <li id="notifications-dropdown">
     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
         <span class="glyphicon glyphicon-bell"></span>
@@ -9,7 +10,7 @@
                     <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
                     <a id="btn-notifications-clear" v-on:click="clear">Clear</a>
                 </div>
-                
+
                 <div v-if="loading" class="default-content">
                     <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
                 </div>
@@ -38,7 +39,7 @@
                                     title="Dismiss">
                                     <span aria-hidden="true">×</span>
                                 </button>
-                            
+
                                 <button type="button" v-if="canBeAborted(task)" v-on:click="abortTask(task)" class="close" title="Abort"
                                     aria-label="Abort">
                                     <span class="glyphicon glyphicon-ban-circle"></span>
