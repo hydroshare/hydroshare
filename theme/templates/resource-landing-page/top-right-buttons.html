@@ -92,7 +92,9 @@
                         {% csrf_token %}
 
                         {% if page.perms.delete or cm.raccess.published %}
-                            <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
+                            <a id="new-version" {% if cm.locked_time is None %}data-toggle="modal"{% endif %}
+                               data-target="#new-version-resource-dialog"
+                               {% if cm.locked_time is not None %}class="disabled"{% endif %}>
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="Create a new version of this resource"
                                       class="fa fa-code-fork icon-button icon-blue"></span>
