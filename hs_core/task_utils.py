@@ -94,6 +94,11 @@ def get_resource_bag_task(res_id):
     return _retrieve_job_id(job_name, res_id)
 
 
+def get_resource_delete_task(res_id):
+    job_name = 'hs_core.tasks.delete_resource_task'
+    return _retrieve_job_id(job_name, res_id)
+
+
 def get_all_tasks(username):
     """
     get all tasks by a user identified by username input parameter
