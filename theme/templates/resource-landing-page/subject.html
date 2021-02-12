@@ -49,8 +49,11 @@
                                 class="glyphicon glyphicon-remove-circle icon-remove"></span>
                             </span>
                         {% else %}
+
+
+
                             <a class='tag' target="_blank"
-                               :href="'/search/?subject=' + k">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
+                               :href="'/search/?subject=' + safeJS(k)">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
                         {% endif %}
                     </li>
                 </ul>

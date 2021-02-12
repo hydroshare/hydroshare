@@ -84,10 +84,11 @@ class SearchAPI(APIView):
                         sqs = sqs.filter_or(owner_exact=Exact(ownertype))
             if filters.get('subject'):
                 for k, subjtype in enumerate(filters['subject']):
-                    if k == 0 or k == len(filters['subject']):
-                        sqs = sqs.filter(subject_exact=Exact(subjtype))
+                    subj = subjtype
+                    if k == 0 or k == len(subj):
+                        sqs = sqs.filter(subject_exact=Exact(subj))
                     else:
-                        sqs = sqs.filter_or(subject_exact=Exact(subjtype))
+                        sqs = sqs.filter_or(subject_exact=Exact(subj))
             if filters.get('contributor'):
                 for k, contribtype in enumerate(filters['contributor']):
                     if k == 0 or k == len(filters['contributor']):

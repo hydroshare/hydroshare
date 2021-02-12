@@ -79,6 +79,11 @@ let subjKeywordsApp = new Vue({
                         }
                     }
                 }.bind(this), "json");
+        },
+        safeJS: function (input) {
+            input.replace("\\", "\\\\")
+            console.log(input)
+            return encodeURIComponent(input)
         }
     }
 });
