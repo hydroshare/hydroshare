@@ -650,7 +650,7 @@ export default {
         word-wrap: break-word;
     }
     .tbl-col-date {
-        min-width: 90px;
+        min-width: 95px;
         max-width: 100px;
         word-break: break-all;
         word-wrap: break-word;
