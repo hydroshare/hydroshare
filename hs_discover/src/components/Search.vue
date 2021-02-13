@@ -633,7 +633,7 @@ export default {
     .tbl-col-title {
         min-width: 150px;
         max-width: 475px;
-        word-break: break-all;
+        word-break: keep-all;
         word-wrap: break-word;
         text-overflow: ellipsis;
         overflow: hidden;
