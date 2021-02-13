@@ -36,14 +36,14 @@
 <!--                          https://github.com/dbrekalo/vue-date-pick/issues/74  -->
                           <div class="date-wrapper">
                             <span class="fa fa-calendar calendar-icon"></span>
-                              <date-pick
+                              <date-pick style="width:167px"
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
                                  :inputAttributes="{placeholder: 'Start Date (M/D/YYYY)'}"
                             ></date-pick></div>
                           <div class="date-wrapper">
                             <span class="fa fa-calendar calendar-icon"></span>
-                            <date-pick
+                            <date-pick style="width:167px"
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
                                  :inputAttributes="{placeholder: 'End Date (M/D/YYYY)'}"
@@ -206,8 +206,6 @@
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
                         <tr><th class="tbl-col-icons"><!-- placeholder --></th>
-
-<!--                          'Title', 'First Author', 'Date Created', 'Last Modified'-->
                             <th class="tbl-col-title" v-bind:key="'Title'" @click="sortBy('Title')">
                               <span class="interactive"><span :class="sortStyling('Title')"></span>Title</span>
                             </th>
