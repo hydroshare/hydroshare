@@ -108,7 +108,7 @@
                                     v-bind:key="subject">
                                     <span class="badge">{{subject[1]}}</span>
                                     <label class="checkbox noselect" :for="'subj-'+subject[0]">{{subject[0]}}
-                                        <input type="checkbox" class="faceted-selections" :value=subject[0]
+                                        <input type="checkbox" class="faceted-selections" :value=escJS(subject[0])
                                            v-model.lazy="subjectFilter" :id="'subj-'+subject[0]" @change="searchClick">
                                     </label>
                                 </li>
@@ -269,6 +269,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      prefiltered: false,
       columns: ['name', 'author', 'created', 'modified'],
       labels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
       mapmode: 'display:none',
@@ -367,10 +368,20 @@ export default {
     // Allow manual querystring manipulation of freetext search via URL
     if (document.getElementById('qstring').value.trim() !== '') {
       this.searchtext = document.getElementById('qstring').value.trim();
+      this.prefiltered = true;
     }
     // Allow exact subject search via URL particularly for Resource Landing Page
-    if (document.getElementById('prefillsubject').value.trim() !== '') {
-      this.subjectFilter = Array(decodeURIComponent(document.getElementById('prefillsubject').value.trim()));
+    const urlEncodedSubj = document.getElementById('prefillsubject').value.trim();
+    if (urlEncodedSubj !== '') {
+      this.subjectFilter = Array(decodeURIComponent(urlEncodedSubj));
+      this.prefiltered = true;
+    }
+    if (this.subjectFilter) {
+      const escaped = [];
+      this.subjectFilter.forEach((x) => {
+        escaped.push(x.replaceAll('\\', '\\\\'));
+      });
+      this.subjectFilter = escaped;
     }
     this.searchClick(false, true);
   },
@@ -397,7 +408,7 @@ export default {
           pnum: this.pagenum,
           filterbuilder: dofilters,
           updatefilters: dofilters,
-          filter: {
+          filter: JSON.stringify({
             author: this.authorFilter,
             owner: this.ownerFilter,
             subject: this.subjectFilter,
@@ -406,7 +417,7 @@ export default {
             availability: this.availabilityFilter,
             date: this.getDates(),
             geofilter: this.mapmode === 'display:block',
-          },
+          }),
         },
       })
         .then((response) => {
@@ -474,6 +485,9 @@ export default {
         return input.length > size ? `${input.substring(0, size)}...` : input;
       }
       return '';
+    },
+    escJS(input) {
+      return input.replaceAll('\\', '\\\\');
     },
     nameList(names) {
       try {
