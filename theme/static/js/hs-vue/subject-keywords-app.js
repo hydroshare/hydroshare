@@ -6,13 +6,17 @@ let subjKeywordsApp = new Vue({
     components: {
         VueBootstrapTypeahead
     },
-    delimiters: ['${', '}'],
     data: {
         newKeyword: '',
         resMode: RESOURCE_MODE,
-        resKeywords: RES_KEYWORDS,   // global constant defined in template
+        resKeywords: RES_KEYWORDS, // global constant defined in parent template of subject template
         showIsDuplicate: false,
-        error: ''
+        error: '',
+    },
+    mounted() {
+        // Until Django / VueJS cleaned up across RLP wait for VueJS state to finalize before trying to display dynamic elements
+        document.getElementById('subj-inline-error').style.display = "block";
+        document.getElementById('lst-tags').style.display = "block";
     },
     methods: {
         addKeyword: function (resIdShort) {
@@ -47,40 +51,38 @@ let subjKeywordsApp = new Vue({
                             this.$data.newKeyword = ""
                         }
                     }
-                    // Reset input
-                    // console.log(this.$data.newKeyword);
-                    // this.$data.newKeyword = "";
-                    // console.log(this.$data.newKeyword);
                 }
                 else {
                     this.error = resp.message;
-                    console.log(resp);
                 }
                 showCompletedMessage(resp);
             }.bind(this), "json");
         },
         removeKeyword: function (resIdShort, keywordName) {
-            // TODO this feels sluggish in the UI. Consider removing in VueJS then handling the database. In the event of a failure, simply log. UX will be that keyword reappeared (rare case of failure or losing db conn)
             let newVal = this.resKeywords.slice(); // Get a copy
             newVal.splice($.inArray(keywordName, this.resKeywords), 1);   // Remove the keyword
 
-            let vue = this;
-            vue.error = "";
+            this.error = "";
 
             $.post("/hsapi/_internal/" + resIdShort + "/subject/add-metadata/",
                 {value: newVal.join(",")}, function (resp) {
                     if (resp.status === "success") {
-                        vue.resKeywords = newVal;
+                        this.resKeywords = newVal;
                         if (!newVal.length) {
                             // If no keywords, the metadata is no longer sufficient to make the resource public
                             manageAccessApp.onMetadataInsufficient();
                         }
                     }
                     else {
-                        vue.error = resp.message;
-                        console.log(resp);
+                        if (this.resKeywords.length){
+                            this.error = this.message;
+                        }
                     }
-                }, "json");
+                }.bind(this), "json");
+        },
+        safeJS: function (input) {
+            input.replace("\\", "\\\\")
+            return encodeURIComponent(input)
         }
     }
 });
