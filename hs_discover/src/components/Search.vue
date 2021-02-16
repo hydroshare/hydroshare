@@ -13,11 +13,6 @@
               ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
               availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')">No resource matches</p>
         </div>
-        <div class="row">
-          <div class="col-lg-12">
-
-          </div>
-        </div>
     </div>
     <div id="resources-main" class="row">
 
