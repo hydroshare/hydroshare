@@ -339,11 +339,9 @@ export default {
       this.prefiltered = true;
     }
     // Allow exact subject search via URL particularly for Resource Landing Page
-    if (document.getElementById('prefillsubject').value.trim() !== '') {
-      const urlEncodedSubj = document.getElementById('prefillsubject').value.trim();
-      const jsSubj = decodeURIComponent(urlEncodedSubj);
-      // Escape backslashes
-      this.subjectFilter = Array(jsSubj);
+    const urlEncodedSubj = document.getElementById('prefillsubject').value.trim();
+    if (urlEncodedSubj !== '') {
+      this.subjectFilter = Array(decodeURIComponent(urlEncodedSubj));
       this.prefiltered = true;
     }
     if (this.subjectFilter) {

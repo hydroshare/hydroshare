@@ -82,7 +82,6 @@ let subjKeywordsApp = new Vue({
         },
         safeJS: function (input) {
             input.replace("\\", "\\\\")
-            console.log(input)
             return encodeURIComponent(input)
         }
     }
