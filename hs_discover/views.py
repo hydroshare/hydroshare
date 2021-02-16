@@ -97,9 +97,9 @@ class SearchAPI(APIView):
             if filters.get('type'):
                 for k, restype in enumerate(filters['type']):
                     if k == 0 or k == len(filters['type']):
-                        sqs = sqs.filter(resource_type_exact=Exact(restype))
+                        sqs = sqs.filter(content_type_exact=Exact(restype))
                     else:
-                        sqs = sqs.filter_or(resource_type_exact=Exact(restype))
+                        sqs = sqs.filter_or(content_type_exact=Exact(restype))
             if filters.get('availability'):
                 for k, availtype in enumerate(filters['availability']):
                     if k == 0 or k == len(filters['availability']):
@@ -144,7 +144,7 @@ class SearchAPI(APIView):
             owners = sqs.facet('owner').facet_counts()['fields']['owner']
             subjects = sqs.facet('subject').facet_counts()['fields']['subject']
             contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
-            types = sqs.facet('resource_type').facet_counts()['fields']['resource_type']
+            types = sqs.facet('content_type').facet_counts()['fields']['content_type']
             availability = sqs.facet('availability').facet_counts()['fields']['availability']
             if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]

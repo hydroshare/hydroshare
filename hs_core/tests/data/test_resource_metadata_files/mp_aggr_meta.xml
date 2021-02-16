@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:ModelProgramAggregation rdf:about="http://www.hydroshare.org/resource/0f371c7bab0e41b9851ed79b7260cca2/data/contents/mp_aggr_resmap.xml#aggregation">
+    <hsterms:modelProgramName>SWAT Model Program</hsterms:modelProgramName>
+    <hsterms:modelSoftware>mp_aggr.txt</hsterms:modelSoftware>
+    <dc:title>mp_aggr</dc:title>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/ModelProgramAggregation"/>
+    <dc:subject>model program</dc:subject>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <hsterms:modelReleaseDate>2017-09-11</hsterms:modelReleaseDate>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:key>mp-key-1</hsterms:key>
+        <hsterms:value>mp-value-1</hsterms:value>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <hsterms:modelWebsite>https://swat.org</hsterms:modelWebsite>
+    <dc:language>eng</dc:language>
+    <hsterms:modelCodeRepository>https://github.com/swat</hsterms:modelCodeRepository>
+    <hsterms:modelProgramLanguage>Python, C++</hsterms:modelProgramLanguage>
+    <hsterms:modelOperatingSystem>Linux</hsterms:modelOperatingSystem>
+    <hsterms:modelVersion>2.1</hsterms:modelVersion>
+  </hsterms:ModelProgramAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/ModelProgramAggregation">
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+    <rdfs:label>Model Program Content: One or more files with specific metadata</rdfs:label>
+  </rdf:Description>
+</rdf:RDF>

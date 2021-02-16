@@ -238,61 +238,6 @@ def update_resource_file(pk, filename, f):
     raise ObjectDoesNotExist(filename)
 
 
-def replicate_resource_bag_to_user_zone(user, res_id):
-    """
-    Replicate resource bag to iRODS user zone
-    Args:
-        user: the requesting user
-        res_id: the resource id with its bag to be replicated to iRODS user zone
-
-    Returns:
-    None, but exceptions will be raised if there is an issue with iRODS operation
-    """
-    # do on-demand bag creation
-
-    res = utils.get_resource_by_shortkey(res_id)
-    res_coll = res.root_path
-    istorage = res.get_irods_storage()
-    bag_modified_flag = True
-    # needs to check whether res_id collection exists before getting/setting AVU on it to
-    # accommodate the case where the very same resource gets deleted by another request when
-    # it is getting downloaded
-    if istorage.exists(res_coll):
-        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-
-        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
-        # is False; otherwise, bag_modified_flag will take the default True value so that the
-        # bag will be created or recreated
-        if bag_modified:
-            if bag_modified.lower() == "false":
-                bag_file_name = res_id + '.zip'
-                if res.resource_federation_path:
-                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
-                                                 bag_file_name)
-                else:
-                    bag_full_path = os.path.join('bags', bag_file_name)
-
-                if istorage.exists(bag_full_path):
-                    bag_modified_flag = False
-
-        if bag_modified_flag:
-            # import here to avoid circular import issue
-            from hs_core.tasks import create_bag_by_irods
-            create_bag_by_irods(res_id)
-
-        # do replication of the resource bag to irods user zone
-        if not res.resource_federation_path:
-            istorage.set_fed_zone_session()
-        src_file = res.bag_path
-        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
-        fsize = istorage.size(src_file)
-        utils.validate_user_quota(user, fsize)
-        istorage.copyFiles(src_file, tgt_file)
-    else:
-        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
-
-
 def get_related(pk):
     """
     Returns a list of pids for resources that are related to the resource identified by the

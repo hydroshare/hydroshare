@@ -183,18 +183,33 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
     :param hs_file_type: type of file to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
     :return:
     """
+    if hs_file_type == "FileSet":
+        # call the internal api for setting the file type
+        json_response = set_file_type(request=request, resource_id=pk, hs_file_type=hs_file_type)
+    else:
+        res_file = get_res_file(pk, file_path)
+        if isinstance(res_file, Response):
+            return res_file
 
-    res_file = get_res_file(pk, file_path)
-    if isinstance(res_file, Response):
-        return res_file
+        # call the internal api for setting the file type
+        json_response = set_file_type(request=request, resource_id=pk, file_id=res_file.id,
+                                      hs_file_type=hs_file_type)
 
-    # call the internal api for setting the file type
-    json_response = set_file_type(request=request, resource_id=pk, file_id=res_file.id,
-                                  hs_file_type=hs_file_type)
     # only return the message part of the above response
     response_dict = json.loads(json_response.content)
     return Response(data=response_dict['message'],
                     status=json_response.status_code)
+
+
+def get_fileset_id(resource_id, file_path):
+    resource = utils.get_resource_by_shortkey(resource_id)
+    filesets = [lf for lf in resource.logical_files if lf.get_aggregation_type_name() == "FileSetAggregation" and
+                lf.folder == file_path]
+    if not filesets:
+        return Response('Folder {} does not exist.'.format(file_path),
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    return filesets[0].id
 
 
 @api_view(['POST'])
@@ -202,20 +217,28 @@ def remove_aggregation_public(request, resource_id, hs_file_type, file_path, **k
     """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
     However, it doesn't delete resource files associated with the aggregation.
     """
-    res_file = get_res_file(resource_id, file_path)
-    if isinstance(res_file, Response):
-        return res_file
-    return remove_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
+    if hs_file_type == "FileSetLogicalFile":
+        fileset_id = get_fileset_id(resource_id, file_path)
+        return remove_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
+    else:
+        res_file = get_res_file(resource_id, file_path)
+        if isinstance(res_file, Response):
+            return res_file
+        return remove_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
 
 
 @api_view(['DELETE'])
 def delete_aggregation_public(request, resource_id, hs_file_type, file_path, **kwargs):
     """Deletes all files associated with an aggregation and all the associated metadata.
     """
-    res_file = get_res_file(resource_id, file_path)
-    if isinstance(res_file, Response):
-        return res_file
-    return delete_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
+    if hs_file_type == "FileSetLogicalFile":
+        fileset_id = get_fileset_id(resource_id, file_path)
+        return delete_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
+    else:
+        res_file = get_res_file(resource_id, file_path)
+        if isinstance(res_file, Response):
+            return res_file
+        return delete_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
 
 
 @api_view(['POST'])

@@ -2,7 +2,6 @@
 import os
 import tempfile
 import zipfile
-import shutil
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
@@ -42,19 +41,26 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[self.hs_group]
         )
-        self.bag_file_name = 'test_resource_metadata_files.zip'
-        self.test_bag_path = 'hs_core/tests/data/{}'.format(self.bag_file_name)
-        self.extracted_directory = "temp"
+        self.test_bag_path = 'hs_core/tests/data/test_resource_metadata_files.zip'
 
-        with zipfile.ZipFile(self.test_bag_path, 'r') as zip_ref:
-            zip_ref.extractall(self.extracted_directory)
+        self.extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
+        from pathlib import Path
+
+        def zip_up(ziph, root_directory, directory=""):
+            full_path = Path(os.path.join(root_directory, directory))
+            dirs = [str(item) for item in full_path.iterdir() if item.is_dir()]
+            files = [str(item) for item in full_path.iterdir() if item.is_file()]
+            for file in files:
+                ziph.write(file, arcname=os.path.join(directory, os.path.basename(file)))
+            for d in dirs:
+                zip_up(ziph, root_directory, os.path.join(directory, os.path.basename(d)))
+
+        zipf = zipfile.ZipFile(self.test_bag_path, 'w')
+        zip_up(zipf, self.extracted_directory)
 
     def tearDown(self):
         super(TestCreateResource, self).tearDown()
-
-        shutil.rmtree(self.tmp_dir)
-
-        shutil.rmtree(self.extracted_directory)
+        os.remove(self.test_bag_path)
 
     def test_bag_ingestion(self):
         from hs_core.views.utils import unzip_file
@@ -73,8 +79,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             )
         full_paths = {}
 
-        files_to_upload = [UploadedFile(file=open(self.test_bag_path, 'rb'),
-                                        name=self.bag_file_name)]
+        files_to_upload = [UploadedFile(file=open('hs_core/tests/data/test_resource_metadata_files.zip', 'rb'),
+                                        name="test_resource_metadata_files.zip")]
         add_resource_files(res.short_id, *files_to_upload, full_paths=full_paths)
 
         unzip_file(self.user, res.short_id, "data/contents/{}".format(self.bag_file_name), True,
