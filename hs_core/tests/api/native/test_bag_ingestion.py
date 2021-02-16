@@ -18,12 +18,12 @@ from hs_file_types.models import (
     GenericLogicalFile,
     FileSetLogicalFile,
     GeoFeatureLogicalFile,
-    # GeoRasterLogicalFile,
+    GeoRasterLogicalFile,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile,
-    # ModelInstanceLogicalFile,
-    ModelProgramLogicalFile
+    ModelInstanceLogicalFile,
+    ModelProgramLogicalFile,
 )
 
 
@@ -107,9 +107,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         compare_metadatas(res.get_logical_files(GeoFeatureLogicalFile.type_name())[0].metadata.get_xml(),
                           "watersheds_meta.xml")
 
-        # TODO (Pabitra): This one is failing
-        # compare_metadatas(res.get_logical_files(GeoRasterLogicalFile.type_name())[0].metadata.get_xml(),
-        #                   "logan_meta.xml")
+        compare_metadatas(res.get_logical_files(GeoRasterLogicalFile.type_name())[0].metadata.get_xml(),
+                          "logan_meta.xml")
 
         compare_metadatas(res.get_logical_files(NetCDFLogicalFile.type_name())[0].metadata.get_xml(),
                           "SWE_time_meta.xml")
@@ -118,24 +117,20 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         compare_metadatas(res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "ODM2_Multi_Site_One_Variable_meta.xml")
 
-        # TODO (Pabitra): need to implement ingest_metadata() for model instance before this test for model
-        #  instance can be run
-        # mi_logical_files = res.get_logical_files(ModelInstanceLogicalFile.type_name())
-        # for mi_lf in mi_logical_files:
-        #     if mi_lf.aggregation_name.startswith('mi_aggr.'):
-        #         compare_metadatas(mi_lf.metadata.get_xml(), "mi_aggr_meta.xml")
-        #         # print(mi_lf.metadata.get_xml())
-        #         # self.fail(">>Testing...")
-        #         break
-        # else:
-        #     self.fail("Model instance aggregation not found for metadata file: mi_aggr_meta.xml")
+        mi_logical_files = res.get_logical_files(ModelInstanceLogicalFile.type_name())
+        for mi_lf in mi_logical_files:
+            if mi_lf.aggregation_name.startswith('mi_aggr.'):
+                compare_metadatas(mi_lf.metadata.get_xml(), "mi_aggr_meta.xml")
+                break
+        else:
+            self.fail("Model instance aggregation not found for metadata file: mi_aggr_meta.xml")
 
-        # for mi_lf in mi_logical_files:
-        #     if mi_lf.aggregation_name == 'mi-aggr-folder':
-        #         compare_metadatas(mi_lf.metadata.get_xml(), "mi-aggr-folder/mi-aggr-folder_meta.xml")
-        #         break
-        # else:
-        #    self.fail("Model instance aggregation not found for metadata file: mi-aggr-folder/mi-aggr-folder_meta.xml")
+        for mi_lf in mi_logical_files:
+            if mi_lf.aggregation_name == 'mi-aggr-folder':
+                compare_metadatas(mi_lf.metadata.get_xml(), "mi-aggr-folder/mi-aggr-folder_meta.xml")
+                break
+        else:
+            self.fail("Model instance aggregation not found for metadata file: mi-aggr-folder/mi-aggr-folder_meta.xml")
 
         mp_logical_files = res.get_logical_files(ModelProgramLogicalFile.type_name())
         for mp_lf in mp_logical_files:
