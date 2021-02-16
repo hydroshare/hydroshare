@@ -1,5 +1,7 @@
 # coding=utf-8
 import os
+import datetime
+import pytz
 
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
@@ -10,7 +12,8 @@ from rest_framework import status
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
-from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, add_file_to_resource
+from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException, \
+    add_file_to_resource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
     unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource
 from hs_composite_resource.models import CompositeResource
@@ -1191,7 +1194,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_folder_path = os.path.join("data", "contents", new_folder)
         create_folder(self.composite_resource.short_id, new_folder_path)
         src_path = os.path.join('data', 'contents', self.generic_file_name)
-        tgt_path = os.path.join(new_folder_path, self.generic_file_name)
+        tgt_path = new_folder_path
         # now move the file to this new folder
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
                                       src_path, tgt_path)
@@ -1260,7 +1263,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # of GeoRasterLogicalFile object
         tif_res_file = self.composite_resource.files.first()
         src_full_path = tif_res_file.storage_path
-        tgt_full_path = os.path.join(self.composite_resource.file_path, new_folder, tif_res_file.file_name)
+        tgt_full_path = os.path.join(self.composite_resource.file_path, new_folder)
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), False)
@@ -2089,7 +2092,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         new_composite_resource = hydroshare.create_new_version_resource(self.composite_resource,
                                                                         new_composite_resource, self.user)
         # the replaced resource should be immutable
-        self.assertTrue(self.composite_resource.raccess.immutable)
+        obsoleted_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
+        self.assertTrue(obsoleted_res.raccess.immutable)
 
         # after deleting the new versioned resource, the original resource should be editable again
         hydroshare.resource.delete_resource(new_composite_resource.short_id)
@@ -2113,6 +2117,19 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         hydroshare.resource.delete_resource(new_composite_resource.short_id)
         ori_res = hydroshare.utils.get_resource_by_shortkey(self.composite_resource.short_id)
         self.assertTrue(ori_res.raccess.immutable)
+
+    def test_version_resource_lock(self):
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # make the original resource locked before versioning
+        self.composite_resource.locked_time = datetime.datetime.now(pytz.utc)
+        self.composite_resource.save()
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user)
+        with self.assertRaises(ResourceVersioningException):
+            hydroshare.create_new_version_resource(self.composite_resource, new_composite_resource, self.user)
 
     def test_unzip(self):
         """Test that when a zip file gets unzipped at data/contents/ where a single file aggregation

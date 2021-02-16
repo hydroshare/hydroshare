@@ -64,6 +64,15 @@ $(document).ready(function () {
                         "delivered": "Delivered"
                     }
                 },
+                "resource version": {
+                    title: "Resource versioning",
+                    status: {
+                        "progress": "In progress...",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
+                },
                 "resource copy to user zone": {
                     title: "Resource copy to user zone",
                     status: {
@@ -266,6 +275,11 @@ $(document).ready(function () {
                         }
                         break;
                     case "resource copy":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource version":
                         if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
                         }

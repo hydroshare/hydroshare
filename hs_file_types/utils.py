@@ -296,7 +296,8 @@ def ingest_metadata_files(resource, meta_files, meta_schema_files, map_files):
         except:
             # logger.exception("Error processing resource metadata file")
             raise
-    resource.setAVU('metadata_dirty', 'true')
+    resource.setAVU('metadata_dirty', True)
+    resource.setAVU("bag_modified", True)
 
 
 def identify_metadata_files(files):

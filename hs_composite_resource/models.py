@@ -994,11 +994,8 @@ class CompositeResource(BaseResource):
 
                 if 'GeographicFeature' in resource_data_types:
                     wfs_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/wfs?'
-                        f'service=WFS&'
-                        f'version=1.1.0&'
-                        f'request=GetCapabilities&'
-                        f'namespace=HS-{self.short_id}'
+                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/wfs?'
+                        f'request=GetCapabilities'
                     )
                 else:
                     wfs_url = None
