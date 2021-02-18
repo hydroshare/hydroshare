@@ -194,8 +194,8 @@
                   </div>
 
             <div class="table-wrapper" style="overflow: auto">
-
-                <table id="items-discovered" v-if="resources.length"
+                <!-- override stray value from hydroshare_core.css -->
+                <table style="width: 100%" id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
                         <tr><th class="tbl-col-icons"><!-- placeholder --></th>
@@ -567,10 +567,6 @@ export default {
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
     #resultsdisp {
         left: 300px;
-    }
-    #items-discovered {
-      /* override unusual entry from hydroshare_core.css */
-      width: 100%;
     }
     #wrapper .search-field div {
         width: 100%;
