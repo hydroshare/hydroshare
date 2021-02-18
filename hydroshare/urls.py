@@ -20,6 +20,7 @@ from hs_app_timeseries import views as hs_ts_views
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
+from hs_publication.views import PublicationView
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -74,6 +75,7 @@ urlpatterns = i18n_patterns(
     url(r'^search/$', SearchView.as_view(), name='Discover'),
     url(r'^topics/$', hs_communities.views.communities.TopicsView.as_view(), name='topics'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
+    url(r'^publication/$', PublicationView.as_view(), name='Publication'),
     url(r'^sitemap/$', sitemap, name='sitemap'),
     url(r'^sitemap', include('hs_sitemap.urls')),
     url(r'^groups', hs_core_views.FindGroupsView.as_view(), name='groups'),

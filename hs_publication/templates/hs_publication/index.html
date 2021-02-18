@@ -1,0 +1,20 @@
+<head>
+    <link href=/static/js/hs-publication.js as=script>
+</head>
+{% extends "newbase.html" %}
+{% block meta_title %}Publication{% endblock %}
+{% block main %}
+    <style type=text/css></style>
+    <input type=hidden id=qstring value="{{ request.GET.q }}">
+    <input type=hidden id=prefillsubject value="{{ request.GET.subject }}">
+    <div class=container id=publication-main><h2 class=page-title>Publication <small class=text-muted>
+        <i>Publication DOI Approval Dashboard</i></small></h2>
+        <a href="">Click here for Policy</a>
+        <br>
+        <div class=row>
+            <div id=app></div>
+        </div>
+        <br>
+    </div>
+{% endblock %}
+<script src=https://unpkg.com/axios/dist/axios.min.js></script>

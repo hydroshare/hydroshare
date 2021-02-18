@@ -309,7 +309,8 @@ INSTALLED_APPS = (
     "security",
     "markdown",
     "hs_communities",
-    "hs_discover"
+    "hs_discover",
+    "hs_publication"
 )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
@@ -689,15 +690,15 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 # Categorization in discovery of content types
-# according to file extension of otherwise unaggregated files. 
-DISCOVERY_EXTENSION_CONTENT_TYPES = { 
+# according to file extension of otherwise unaggregated files.
+DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Document': set(['doc', 'docx', 'pdf', 'odt', 'rtf', 'tex', 'latex']),
     'Spreadsheet': set(['csv', 'xls', 'xlsx', 'ods']),
     'Presentation': set(['ppt', 'pptx', 'odp']),
     'Jupyter Notebook': set(['ipynb']),
     'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
     'Multidimensional (NetCDF)': set(['nc'])
-} 
+}
 
 HSWS_ACTIVATED = False
 
