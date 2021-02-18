@@ -194,8 +194,7 @@
                   </div>
 
             <div class="table-wrapper" style="overflow: auto">
-                <!-- override stray value from hydroshare_core.css -->
-                <table style="width: 100%" id="items-discovered" v-if="resources.length"
+                <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
                         <tr><th class="tbl-col-icons"><!-- placeholder --></th>
@@ -600,7 +599,7 @@ export default {
         width: 55px;
     }
     .main-table {
-        width: 100%;
+        width: 99%;
     }
     .container {
         padding: 0;
@@ -648,7 +647,7 @@ export default {
     }
     .tbl-col-title {
         min-width: 150px;
-        max-width: 444px;
+        max-width: 440px;
         word-break: keep-all;
         word-wrap: break-word;
         text-overflow: ellipsis;
@@ -659,13 +658,13 @@ export default {
     }
     .tbl-col-authors {
         min-width: 110px;
-        max-width: 125px;
+        max-width: 120px;
         word-break: normal;
         word-wrap: break-word;
     }
     .tbl-col-date {
-        min-width: 95px;
-        max-width: 95px;
+        min-width: 94px;
+        max-width: 94px;
         word-break: break-all;
         word-wrap: break-word;
     }
