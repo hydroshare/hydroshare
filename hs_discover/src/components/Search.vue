@@ -373,7 +373,7 @@ export default {
     if (this.subjectFilter) {
       const escaped = [];
       this.subjectFilter.forEach((x) => {
-        escaped.push(x.replaceAll('\\', '\\\\'));
+        escaped.push(x.replace(/\\/g, '\\\\'));
       });
       this.subjectFilter = escaped;
     }
@@ -484,7 +484,7 @@ export default {
       return '';
     },
     escJS(input) {
-      return input.replaceAll('\\', '\\\\');
+      return input.replace(/\\/g, '\\\\');
     },
     nameList(names) {
       try {
