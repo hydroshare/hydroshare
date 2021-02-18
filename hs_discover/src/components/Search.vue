@@ -181,7 +181,7 @@
             </div>
         </div>
         <div id="resource-rows" class="col-lg-9">
-          <div class="row" style="padding-right:14px">
+          <div class="row">
 
                   <div v-if="resources.length > 0" id="resultsdisp-upper">
             <span id="page-left-upper" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
