@@ -9,9 +9,7 @@
             <span id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer"
                   v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
             <span id="search-glass" class="fa fa-search inside-left"></span>
-            <p class="table-message" v-if="(!resources.length) && (authorFilter.length ||
-              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
-              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')">No resource matches</p>
+            <p class="table-message" v-if="noMatches()">No resource matches</p>
         </div>
     </div>
     <div id="resources-main" class="row">
@@ -264,6 +262,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      loading: true,
       prefiltered: false,
       columns: ['name', 'author', 'created', 'modified'],
       labels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -432,13 +431,16 @@ export default {
                   this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
               }
               document.body.style.cursor = 'default';
+              this.loading = false;
             } catch (e) {
               document.body.style.cursor = 'default';
+              this.loading = false;
             }
           }
         })
         .catch((error) => { // eslint-disable-line
           document.body.style.cursor = 'default';
+          this.loading = false;
         });
     },
     clearSearch() {
@@ -490,6 +492,11 @@ export default {
       } catch {
         return names;
       }
+    },
+    noMatches() {
+      return (!this.loading) && (!this.resources.length) && (this.authorFilter.length || this.ownerFilter.length
+          || this.subjectFilter.length || this.contributorFilter.length || this.typeFilter.length
+          || this.availabilityFilter.length || this.searchtext !== '' || this.startdate !== '' || this.enddate !== '');
     },
     showMap() {
       toggleMap(); // eslint-disable-line
@@ -560,6 +567,10 @@ export default {
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
     #resultsdisp {
         left: 300px;
+    }
+    #items-discovered {
+      /* override unusual entry from hydroshare_core.css */
+      width: 100%;
     }
     #wrapper .search-field div {
         width: 100%;
@@ -641,7 +652,7 @@ export default {
     }
     .tbl-col-title {
         min-width: 150px;
-        max-width: 475px;
+        max-width: 444px;
         word-break: keep-all;
         word-wrap: break-word;
         text-overflow: ellipsis;
@@ -652,13 +663,13 @@ export default {
     }
     .tbl-col-authors {
         min-width: 110px;
-        max-width: 140px;
+        max-width: 125px;
         word-break: normal;
         word-wrap: break-word;
     }
     .tbl-col-date {
         min-width: 95px;
-        max-width: 100px;
+        max-width: 95px;
         word-break: break-all;
         word-wrap: break-word;
     }
