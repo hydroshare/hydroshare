@@ -66,7 +66,6 @@ from hs_core.hydroshare import utils
 
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
-from hs_collection_resource.models import CollectionDeletedResource
 
 
 logger = logging.getLogger(__name__)
@@ -735,14 +734,14 @@ def delete_resource(request, shortkey, *args, **kwargs):
             task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
                                                     username=user.username)
-        post_delete_resource.send(sender=type(res), request=request, user=user,
+        pre_delete_resource.send(sender=type(res), request=request, user=user,
                                   resource_shortkey=shortkey, resource=res,
                                   resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
         return JsonResponse(task_dict)
     else:
         try:
             hydroshare.delete_resource(shortkey, request_username=request.user.username)
-            post_delete_resource.send(sender=type(res), request=request, user=user,
+            pre_delete_resource.send(sender=type(res), request=request, user=user,
                                       resource_shortkey=shortkey, resource=res,
                                       resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
             return HttpResponseRedirect('/my-resources/')
