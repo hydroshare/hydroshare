@@ -9,7 +9,7 @@ from foresite import utils as fs_utils
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace, RDF
 
-from hs_core.hydroshare import utils, get_resource_file, ResourceFile
+from hs_core.hydroshare import utils, get_resource_file
 from hs_file_types.models.base import AbstractLogicalFile
 from .models import (
     GenericLogicalFile,
