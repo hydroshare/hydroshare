@@ -365,6 +365,8 @@ def create_bag_by_irods(resource_id, create_zip=True):
         is_exist = istorage.exists(irods_bagit_input_path)
         if is_exist:
             try:
+                if istorage.exists(bag_path):
+                    istorage.delete(bag_path)
                 istorage.zipup(irods_bagit_input_path, bag_path)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement
