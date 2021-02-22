@@ -522,6 +522,8 @@ def delete_resource_task(resource_id, request_username=None):
              raise an exception if there were errors.
     """
     res = utils.get_resource_by_shortkey(resource_id)
+    res_title = res.metadata.title
+    res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
 
@@ -552,10 +554,10 @@ def delete_resource_task(resource_id, request_username=None):
         # resources on collection resource landing page
         for collection_res in resource_related_collections:
             o = CollectionDeletedResource.objects.create(
-                resource_title=res.metadata.title,
+                resource_title=res_title,
                 deleted_by=User.objects.get(username=request_username),
                 resource_id=resource_id,
-                resource_type=res.resource_type,
+                resource_type=res_type,
                 collection=collection_res
             )
             o.resource_owners.add(*owners_list)
