@@ -13,18 +13,8 @@
         </div>
     </div>
     <div id="resources-main" class="row">
-        <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
-            <br/>
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
-                min="1" :max="pagecount"> of {{pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
-                &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-             <br/>
-        </div>
-        <div class="col-xs-3" id="facets">
+
+        <div class="col-sm-3" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -190,7 +180,7 @@
                 <!-- end facet panels -->
             </div>
         </div>
-        <div id="resource-rows" class="col-lg-9">
+        <div id="resource-rows" class="col-lg">
             <br/>
             <div class="table-wrapper">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
@@ -199,16 +189,24 @@
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
-                        <tr><th><!-- placeholder --></th>
-                            <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
-                                @click="sortBy(key)">
-                                <i :class="sortStyling(key)"></i>{{key}}
+                        <tr><th class="tbl-col-icons"><!-- placeholder --></th>
+                            <th class="tbl-col-title" v-bind:key="'Title'" @click="sortBy('Title')">
+                              <span class="interactive"><span :class="sortStyling('Title')"></span>Title</span>
+                            </th>
+                            <th class="tbl-col-authors" v-bind:key="'First Author'" @click="sortBy('First Author')">
+                              <span class="interactive"><span :class="sortStyling('First Author')"></span>First<br>Author</span>
+                            </th>
+                            <th class="tbl-col-date" v-bind:key="'Date Created'" @click="sortBy('Date Created')">
+                              <span class="interactive"><span :class="sortStyling('Date Created')"></span>Date<br>Created</span>
+                            </th>
+                              <th class="tbl-col-date" v-bind:key="'Last Modified'" @click="sortBy('Last Modified')">
+                              <span class="interactive"><span :class="sortStyling('Last Modified')"></span>Last<br>Modified</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td style=width:15%;>
+                        <td class="tbl-col-icons">
                           <span id="img-icons">
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
@@ -217,16 +215,16 @@
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
-                        <td style="width:60%;" class="title-span">
+                        <td class="tbl-col-title">
                           <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 250)}}</a>
                         </td>
-                        <td style=width:15%;>
+                        <td class="tbl-col-authors">
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
                     </tr>
                     </tbody>
                 </table>
@@ -244,6 +242,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      loading: true,
       prefiltered: false,
       columns: ['name', 'author', 'created', 'modified'],
       labels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -412,8 +411,10 @@ export default {
                   this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
               }
               document.body.style.cursor = 'default';
+              this.loading = false;
             } catch (e) {
               document.body.style.cursor = 'default';
+              this.loading = false;
             }
           }
         })
@@ -580,8 +581,37 @@ export default {
         margin-bottom: 20px;
     }
     .table-message {
-        position: absolute;
-        left: 100px;
+        font-style: italic;
+        color:red;
+    }
+    .tbl-col-icons {
+        width: 100px;
+        max-width: 100px;
+        padding-left: 5px;
+        padding-right: 0;
+    }
+    .tbl-col-title {
+        min-width: 150px;
+        max-width: 440px;
+        word-break: keep-all;
+        word-wrap: break-word;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: normal;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    .tbl-col-authors {
+        min-width: 110px;
+        max-width: 120px;
+        word-break: normal;
+        word-wrap: break-word;
+    }
+    .tbl-col-date {
+        min-width: 94px;
+        max-width: 94px;
+        word-break: break-all;
+        word-wrap: break-word;
     }
     .title-span {
         min-width: 437px;
