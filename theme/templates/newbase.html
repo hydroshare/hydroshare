@@ -302,7 +302,7 @@
                 {% endif %}
 
                 {% if not user.is_anonymous %}
-                    <li><a href="/user/{{ user.id }}/">Profile</a></li>
+                    <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
                 {% endif %}
 
                 {% ifinstalled mezzanine.accounts %}
