@@ -14,10 +14,7 @@
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
     <link rel="shortcut icon" href="/static/img/favicon.png">
 
-{#    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">#}
     <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_fonts.css" rel="stylesheet"/>
-{#    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet"/>#}
-{#    <link rel="stylesheet" type="text/css" href="/static/fonts/font-mfizz/font-mfizz.css"/>#}
 
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.3.0.2.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/animate.css"/>
@@ -305,7 +302,7 @@
                 {% endif %}
 
                 {% if not user.is_anonymous %}
-                    <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
+                    <li><a href="/user/{{ user.id }}/">Profile</a></li>
                 {% endif %}
 
                 {% ifinstalled mezzanine.accounts %}
