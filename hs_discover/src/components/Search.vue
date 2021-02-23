@@ -1,12 +1,16 @@
 <template>
-  <div id="discover-search">
+  <div id="discover-search" class="container">
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
-        <input id="search-input" type="search" class="form-control" v-model="searchtext"
-               placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
-        <i id="search-glass" class="fa fa-search inside-left"></i>
+    <div class="row">
+        <div id="search" class="input-group col-lg-12" @keyup.enter="searchClick(false, true, true)">
+            <input id="search-input" class="form-control" type="search" v-model="searchtext"
+                   placeholder="Search all Public and Discoverable Resources">
+            <span id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer"
+                  v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
+            <span id="search-glass" class="fa fa-search inside-left"></span>
+            <p class="table-message" v-if="noMatches()">No resource matches</p>
+        </div>
     </div>
     <div id="resources-main" class="row">
         <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
@@ -32,17 +36,20 @@
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
-                            <div class="date-wrapper">
-                            <date-pick
+<!--                          https://github.com/dbrekalo/vue-date-pick/issues/74  -->
+                          <div class="date-wrapper">
+                            <span class="fa fa-calendar calendar-icon"></span>
+                              <date-pick style="width:167px"
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'Start Date'}"
+                                 :inputAttributes="{placeholder: 'Start Date (M/D/YYYY)'}"
                             ></date-pick></div>
                           <div class="date-wrapper">
-                            <date-pick
+                            <span class="fa fa-calendar calendar-icon"></span>
+                            <date-pick style="width:167px"
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'End Date'}"
+                                 :inputAttributes="{placeholder: 'End Date (M/D/YYYY)'}"
                             ></date-pick></div>
                         </div>
                     </div>
@@ -347,7 +354,7 @@ export default {
     if (this.subjectFilter) {
       const escaped = [];
       this.subjectFilter.forEach((x) => {
-        escaped.push(x.replaceAll('\\', '\\\\'));
+        escaped.push(x.replace(/\\/g, '\\\\'));
       });
       this.subjectFilter = escaped;
     }
@@ -455,7 +462,7 @@ export default {
       return '';
     },
     escJS(input) {
-      return input.replaceAll('\\', '\\\\');
+      return input.replace(/\\/g, '\\\\');
     },
     nameList(names) {
       try {
@@ -463,6 +470,11 @@ export default {
       } catch {
         return names;
       }
+    },
+    noMatches() {
+      return (!this.loading) && (!this.resources.length) && (this.authorFilter.length || this.ownerFilter.length
+          || this.subjectFilter.length || this.contributorFilter.length || this.typeFilter.length
+          || this.availabilityFilter.length || this.searchtext !== '' || this.startdate !== '' || this.enddate !== '');
     },
     showMap() {
       toggleMap(); // eslint-disable-line
@@ -607,13 +619,13 @@ export default {
     .inside-right {
         position: absolute;
         top: 10px;
-        right: 20px;
+        right: 24px;
         z-index: 2;
     }
     .inside-left {
         position: absolute;
         top: 10px;
-        left: 10px;
+        left: 25px;
         z-index: 2;
     }
     .btn.focus {
@@ -629,6 +641,12 @@ export default {
     .date-wrapper {
         display: block;
         width: 100%;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #ccc;
+    }
+    .calendar-icon {
+        margin: 6px 6px 6px 9px;
     }
     .pagination {
       z-index: 1000;
@@ -637,6 +655,7 @@ export default {
     }
     .interactive:hover {
       color: LightBlue;
+      cursor: pointer;
       /* Avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
