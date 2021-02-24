@@ -183,7 +183,15 @@
             </div>
         </div>
         <div id="resource-rows" class="col-md col-lg">
-            <br/>
+            <div v-if="resources.length > 0" id="resultsdisp-upper">
+            <span id="page-left-upper" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number-upper"
+                    type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
+            <span id="page-right-upper" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
+                Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+                  </div>
             <div class="table-wrapper">
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
@@ -227,6 +235,15 @@
                     </tr>
                     </tbody>
                 </table>
+            </div>
+                    <div v-if="resources.length > 15" id="resultsdisp-lower">
+            <span id="page-left-lower" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number-lower"
+                    type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
+            <span id="page-right-lower" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
+                Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
             </div>
         </div>
     </div>
@@ -547,6 +564,37 @@ export default {
     #discover-search.container {
         padding: 0;
     }
+    #resultsdisp {
+        left: 300px;
+    }
+    #page-number {
+        width: 60px;
+    }
+    #wrapper .search-field div {
+        width: 100%;
+    }
+    #wrapper > a {
+        margin-left: 1em;
+    }
+    #search input {
+        padding-left: 30px;
+        padding-right: 30px;
+        z-index: 1;
+    }
+    #img-icons {
+        min-width: 85px;
+        white-space: nowrap;
+    }
+    #page-right-upper, #page-right-lower {
+        margin-right: 25px;
+    }
+    #page-number-upper, #page-number-lower {
+        border-style: solid;
+        border-width: 1px;
+        border-color: #ccc;
+        outline: none;
+        width: 55px;
+    }
     .main-table {
         width: 100%;
     }
@@ -593,7 +641,7 @@ export default {
         min-width: 150px;
         max-width: 440px;
         word-break: keep-all;
-        word-wrap: break-word;
+        word-wrap: anywhere;
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: normal;
@@ -621,27 +669,6 @@ export default {
         white-space: normal;
         padding-top: 4px;
         padding-bottom: 4px;
-    }
-    #resultsdisp {
-        left: 300px;
-    }
-    #page-number {
-        width: 60px;
-    }
-    #wrapper .search-field div {
-        width: 100%;
-    }
-    #wrapper > a {
-        margin-left: 1em;
-    }
-    #search input {
-        padding-left: 30px;
-        padding-right: 30px;
-        z-index: 1;
-    }
-    #img-icons {
-        min-width: 85px;
-        white-space: nowrap;
     }
     .inside-right {
         position: absolute;
@@ -677,7 +704,8 @@ export default {
     }
     .pagination {
       z-index: 1000;
-      margin: 0;
+      margin-top: 15px;
+      margin-bottom: 15px;
       transform: translateY(4px);
     }
     .interactive:hover {

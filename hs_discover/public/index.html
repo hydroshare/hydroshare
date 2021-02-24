@@ -10,7 +10,13 @@
         /* a height must be specified to make visible */
         height: 50%;
     }
-
+    #map-view {
+        display: none;
+    }
+    #discover-footer {
+        /* align with filters and resource rows */
+        padding: 0;
+    }
     .vdpHeadCellContent {
         font-size: 1em;
     }
@@ -27,7 +33,6 @@
     .vdpArrowPrev:after {
         border-right-color: #428BCA;
     }
-
     .vdpArrowNext:after {
         border-left-color: #428BCA;
     }
@@ -44,23 +49,12 @@
         -moz-user-select: none; /* mozilla browsers */
         -ms-user-select: none; /* IE10+ */
     }
-
     .vdpClearInput {
         z-index: 999;
     }
-
     input {
         /*padding-right: 30px;*/
         font-size: 14px;
-    }
-
-    #map-view {
-        display: none;
-    }
-
-    #discover-footer {
-        /* align with filters and resource rows */
-        padding: 0;
     }
 </style>
 <input type="hidden" id="qstring" value="{{ request.GET.q }}">
