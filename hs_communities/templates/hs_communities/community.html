@@ -4,6 +4,10 @@
 {% block extra_css %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.css" integrity="sha512-YnP4Ql71idaMB+/ZG38+1adSSQotdqvixQ+dQg8x/IFA4heIj6i0BC31W5T5QUdK1Uuwa01YdqdcT42q+RldAg==" crossorigin="anonymous" />
     <style>
+        #search-container input {
+            padding-left: 30px;
+            padding-right: 30px;
+        }
         .inside-right {
             position: absolute;
             top: 10px;
@@ -159,7 +163,7 @@
 
 
 
-             <div v-if="resources.length > 0"  id="resultsdisp-top">
+             <div v-if="resources.length > 0" id="resultsdisp-top">
             <i id="page-left" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
                     class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
             Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
