@@ -3,7 +3,8 @@
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
     <div class="row">
-        <div id="search" class="input-group col-lg-12" @keyup.enter="searchClick(false, true, true)">
+      <div class="col col-sm col-md col-lg col-xl">
+        <div id="search" class="input-group" @keyup.enter="searchClick(false, true, true)">
             <input id="search-input" class="form-control" type="search" v-model="searchtext"
                    placeholder="Search all Public and Discoverable Resources">
             <span id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer"
@@ -11,10 +12,11 @@
             <span id="search-glass" class="fa fa-search inside-left"></span>
             <p class="table-message" v-if="noMatches()">No resource matches</p>
         </div>
+      </div>
     </div>
     <div id="resources-main" class="row">
-        <!-- 576 768 992 1200 -->
-        <div class="col col-sm col-md-4 col-lg-4" id="facets">
+        <!--  col 576 sm 768 md 992 lg 1200 xl -->
+        <div class="col col-sm col-md-4 col-lg-3 col-xl-3" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -183,9 +185,6 @@
         <div id="resource-rows" class="col-md col-lg">
             <br/>
             <div class="table-wrapper">
-              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
-              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
-              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
@@ -545,6 +544,9 @@ export default {
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
+    #discover-search.container {
+        padding: 0;
+    }
     .main-table {
         width: 100%;
     }
@@ -633,10 +635,8 @@ export default {
         margin-left: 1em;
     }
     #search input {
-        width: 100%;
-        min-width: 800px;
-        padding-left: 25px;
-        padding-right: 25px;
+        padding-left: 30px;
+        padding-right: 30px;
         z-index: 1;
     }
     #img-icons {
@@ -646,13 +646,13 @@ export default {
     .inside-right {
         position: absolute;
         top: 10px;
-        right: 24px;
+        right: 12px;
         z-index: 2;
     }
     .inside-left {
         position: absolute;
         top: 10px;
-        left: 25px;
+        left: 12px;
         z-index: 2;
     }
     .btn.focus {
