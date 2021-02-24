@@ -15,7 +15,6 @@
     <link rel="shortcut icon" href="/static/img/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_fonts.css" rel="stylesheet"/>
-
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.3.0.2.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/animate.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/elements.css"/>
@@ -86,7 +85,7 @@
     {% block extra_css %}{% endblock %}
     <script src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
     <script src="/static/js/custom.js"></script>
-    <script src="/static/js/scrolltopcontrol.js"></script><!-- Scroll to top javascript -->
+    <script src="/static/js/scrolltopcontrol.js"></script>
     <script src="/static/js/jqcsrf.js"></script>
     <script src="/static/js/jquery-ui.js"></script>
     <script src="/static/js/bootstrap.3.0.2.min.js"></script>
@@ -94,8 +93,7 @@
     {% block extra_js %}{% endblock %}
     {% include 'autocomplete_light/static.html' %}
 
-    {% load inplace_edit %}
-    {% inplace_static %}
+    {% load inplace_edit %}{% inplace_static %}
 
     {% block extra_head %}{% endblock %}
     {% if not page|is_debug %}
@@ -359,12 +357,6 @@
         {% endfor %}
     {% endif %}
 {% endnevercache %}
-
-<!-- Universal message box for AJAX requests -->
-<div id="universalMessage">
-    <span>Hi, I'm an error.</span>
-    <a href="#" class="um_close" id="UMClose">x</a>
-</div>
 
 {% block all_content %}
     <div class="main-container">
