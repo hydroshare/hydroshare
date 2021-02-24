@@ -660,16 +660,6 @@ export default {
         word-break: break-all;
         word-wrap: break-word;
     }
-    .title-span {
-        min-width: 437px;
-        max-width: 437px;
-        width: 437px;
-        word-break: normal;
-        word-wrap: break-word;
-        white-space: normal;
-        padding-top: 4px;
-        padding-bottom: 4px;
-    }
     .inside-right {
         position: absolute;
         top: 10px;
@@ -703,18 +693,19 @@ export default {
         margin: 6px 6px 6px 9px;
     }
     .pagination {
-      z-index: 1000;
-      margin-top: 15px;
-      margin-bottom: 15px;
-      transform: translateY(4px);
+        z-index: 1000;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        transform: translateY(4px);
+        cursor: pointer;
     }
     .interactive:hover {
-      color: LightBlue;
-      cursor: pointer;
-      /* Avoid double-click selection during rapid clicking: */
-      user-select: none; /* standard syntax */
-      -webkit-user-select: none; /* webkit (safari, chrome) browsers */
-      -moz-user-select: none; /* mozilla browsers */
-      -ms-user-select: none; /* IE10+ */
+        color: LightBlue;
+        cursor: pointer;
+        /* Avoid double-click selection during rapid clicking: */
+        user-select: none; /* standard syntax */
+        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+        -moz-user-select: none; /* mozilla browsers */
+        -ms-user-select: none; /* IE10+ */
     }
 </style>

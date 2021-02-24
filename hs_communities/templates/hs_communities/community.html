@@ -7,18 +7,19 @@
         .inside-right {
             position: absolute;
             top: 10px;
-            right: 10px;
+            right: 12px;
             z-index: 2;
         }
         .inside-left {
             position: absolute;
             top: 10px;
-            left: 10px;
+            left: 12px;
             z-index: 2;
         }
         .pagination {
             z-index: 1000;
-            margin: 0;
+            margin-top: 15px;
+            margin-bottom: 15px;
             transform: translateY(4px);
             cursor: pointer;
         }
@@ -31,14 +32,38 @@
             -moz-user-select: none; /* mozilla browsers */
             -ms-user-select: none; /* IE10+ */
         }
+        .table-message {
+            font-style: italic;
+            color:red;
+        }
         .tbl-col-icons {
-            width: 110px
+            width: 100px;
+            max-width: 100px;
+            padding-left: 5px;
+            padding-right: 0;
+        }
+        .tbl-col-title {
+            min-width: 150px;
+            max-width: 440px;
+            word-break: keep-all;
+            word-wrap: anywhere;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: normal;
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
         .tbl-col-authors {
-            width: 120px
+            min-width: 110px;
+            max-width: 120px;
+            word-break: normal;
+            word-wrap: break-word;
         }
         .tbl-col-date {
-            width: 86px
+            min-width: 94px;
+            max-width: 94px;
+            word-break: break-all;
+            word-wrap: break-word;
         }
     </style>
 {% endblock %}
@@ -154,11 +179,18 @@
                                             class="table-hover table-striped resource-custom-table main-table">
                                             <thead>
                                                 <tr><th><!-- placeholder --></th>
-                                                    <th v-for="key in labels" style="cursor:pointer"
-                                                        @click="sortBy(key)">
-                                                        <i :class="sortStyling(key)"></i>{% templatetag openvariable %}key{% templatetag closevariable %}
-                                                    </th>
-                                                </tr>
+                                                <th class="tbl-col-title" v-bind:key="'Title'" @click="sortBy('Title')">
+                                                  <span class="interactive"><span :class="sortStyling('Title')"></span>Title</span>
+                                                </th>
+                                                <th class="tbl-col-authors" v-bind:key="'First Author'" @click="sortBy('First Author')">
+                                                  <span class="interactive"><span :class="sortStyling('First Author')"></span>First<br>Author</span>
+                                                </th>
+                                                <th class="tbl-col-date" v-bind:key="'Date Created'" @click="sortBy('Date Created')">
+                                                  <span class="interactive"><span :class="sortStyling('Date Created')"></span>Date<br>Created</span>
+                                                </th>
+                                                  <th class="tbl-col-date" v-bind:key="'Last Modified'" @click="sortBy('Last Modified')">
+                                                  <span class="interactive"><span :class="sortStyling('Last Modified')"></span>Last<br>Modified</span>
+                                                </th>
                                             </thead>
                                             <tbody>
                                             <tr v-for="(entry) in resources">
@@ -227,7 +259,7 @@
 {% endblock main %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.css" integrity="sha512-EaaldggZt4DPKMYBa143vxXQqLq5LE29DG/0OoVenoyxDrAScYrcYcHIuxYO9YNTIQMgD8c8gIUU8FQw7WpXSQ==" crossorigin="anonymous" />    <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
             integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
             crossorigin="anonymous"></script>
