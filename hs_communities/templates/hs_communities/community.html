@@ -1,8 +1,46 @@
-{% extends "pages/page.html" %}
+{% extends "newbase.html" %}
 {% load comment_tags %}
 {% block meta_title %}CZO Community {% endblock %}
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.css" integrity="sha512-YnP4Ql71idaMB+/ZG38+1adSSQotdqvixQ+dQg8x/IFA4heIj6i0BC31W5T5QUdK1Uuwa01YdqdcT42q+RldAg==" crossorigin="anonymous" />
+    <style>
+        .inside-right {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+        }
+        .inside-left {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+        }
+        .pagination {
+            z-index: 1000;
+            margin: 0;
+            transform: translateY(4px);
+            cursor: pointer;
+        }
+        .interactive:hover {
+            cursor:pointer;
+            color: LightBlue;
+            /* Avoid double-click selection during rapid clicking: */
+            user-select: none; /* standard syntax */
+            -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+            -moz-user-select: none; /* mozilla browsers */
+            -ms-user-select: none; /* IE10+ */
+        }
+        .tbl-col-icons {
+            width: 110px
+        }
+        .tbl-col-authors {
+            width: 120px
+        }
+        .tbl-col-date {
+            width: 86px
+        }
+    </style>
 {% endblock %}
 
 {% block main %}
@@ -22,12 +60,8 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-3">
-                    <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/czo-logo-wide.png"
-                                                                alt="CZO National"></a></div>
+                    <div><a href="http://criticalzone.org"><img src="/static/img/czo-logo-wide.png" alt="CZO National"></a></div>
                 </div>
-                <div class="col-sm-7">
-                </div>
-                <div><!-- [Modals] --></div>
             </div>
             <div class="full-width-tabs-container" id="user-profile-tabs">
                 <!-- Nav tabs -->
@@ -60,141 +94,119 @@
                                         <div class="panel-body">
                                             <div class="list-group">
                                                 <div id="groups-list">
-                                                    <!-- this id=groups-list is used to construct the VueJS group name to id map -->
-                                                    {% if not groups %}
-                                                        <i class="list-group-item no-items-found">No resources have been
-                                                            shared with this community yet.</i>
-                                                    {% else %}
-                                                        <ul class="list-group inputs-group">
-                                                            {% for g in groups %}
-                                                                <li class="list-group-item" id="{{ g.id }}">
-                                                                    <span data-facet="none"
-                                                                          class="badge">{{ g.res_count }}</span>
-                                                                    <label class="checkbox noselect"><input
-                                                                            id="{{ g.id }}" type="checkbox"
-                                                                            data-facet="none" value="Click"
-                                                                            @click="updateContribs({{ g.id }})"> {{ g.name }}
-                                                                        {% if grpfilter == g.name %}
-                                                                            checked
-                                                                        {% endif %}
-                                                                    </label>
-                                                                </li>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    {% endif %}
+                                                    <ul class="list-group inputs-group">
+                                                        <i v-if="!groups" class="list-group-item no-items-found">No resources have been
+                                                        shared with this community yet.</i>
+                                                        <li v-for="g in groups" class="list-group-item" id="{% templatetag openvariable %} g.id {% templatetag closevariable %}">
+                                                            <span data-facet="none"
+                                                                  class="badge">{% templatetag openvariable %} g.res_count {% templatetag closevariable %}</span>
+                                                            <label class="checkbox noselect"><input
+                                                                id="{% templatetag openvariable %} g.id {% templatetag closevariable %}}" type="checkbox"
+                                                                data-facet="none" value="Click"
+                                                                @click="updateContribs(g.id)"> {% templatetag openvariable %} g.name {% templatetag closevariable %}
+
+{#                                                                    TODO ADD BACK GRPFILTER FUNCTIONALITY#}
+{#                                                                    {% if grpfilter == g.name %}#}
+{#                                                                        checked#}
+{#                                                                    {% endif %}#}
+                                                            </label>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-10" id="items">
+                            <div id="items" class="col-lg-10">
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div id="search-container" class="input-group">
-                                            <span class="glyphicon glyphicon-search search-icon"></span>
+                                            <span class="fa fa-search inside-left"></span>
                                             <input id="resource-search-input" type="text" class="form-control"
-                                                   placeholder="Search" size="600px"/>
+                                                   placeholder="Search Resources Shared by CZO National Groups"
+                                                   v-model="searchtext" size="600px"
+                                            @keyup.enter="searchClick(false, true, true)"/>
                                             <span id="btn-clear-search-input"
-                                                  class="glyphicon glyphicon-remove-sign btn-clear-search"
-                                                  style="right: 10px"></span>
+                                                  class="fa fa-times-circle inside-right interactive"
+                                                  v-on:click="clearSearch" ></span>
                                         </div>
+
+
+
+             <div v-if="resources.length > 0"  id="resultsdisp-top">
+            <i id="page-left" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                min="1" :max="pagecount"> of {% templatetag openvariable %}pagecount}}
+            <i id="page-right" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
+                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %}
+                 - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %}
+                 of {% templatetag openvariable %}rescount{% templatetag closevariable %}
+             <br/><br/>
+        </div>
+
+                                        <div id="resource-rows" >
+                                    <div class="table-wrapper">
+                                      <p class="table-message" style="color:red" v-if="(!resources.length) && (sharedByFilter.length)"><i>No resource matches</i></p>
+                                        <table id="items-discovered" v-if="resources.length"
+                                            class="table-hover table-striped resource-custom-table main-table">
+                                            <thead>
+                                                <tr><th><!-- placeholder --></th>
+                                                    <th v-for="key in labels" style="cursor:pointer"
+                                                        @click="sortBy(key)">
+                                                        <i :class="sortStyling(key)"></i>{% templatetag openvariable %}key{% templatetag closevariable %}
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr v-for="(entry) in resources">
+                                                <td class="tbl-col-icons">
+                                                  <span id="img-icons">
+                                                    <img :src="resIconName[entry.type]" v-b-tooltip.hover
+                                                        :title="entry.type" :alt="entry.type" height="30" width="30">
+                                                    <img :src="entry.availabilityurl" v-b-tooltip.hover
+                                                        :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability">
+                                                    <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                                                    </span>
+                                                </td>
+                                                <td class="title-span">
+                                                  <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >
+                                                      {% templatetag openvariable %}ellip(entry.title, 250){% templatetag closevariable %}</a>
+                                                </td>
+                                                <td class="tbl-col-authors">
+                                                    <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
+                                                       :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">
+                                                        {% templatetag openvariable %}entry.author{% templatetag closevariable %}</a>
+                                                </td>
+                                                <!-- python is passing .isoformat() in views.py -->
+                                              <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">
+                                                  {% templatetag openvariable %}new Date(entry.created).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                                              <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">
+                                                  {% templatetag openvariable %}new Date(entry.modified).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
-                                <!-- /input-group -->
-                                <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                                    <thead>
-                                    <tr>
-                                        <th><input class="all-rows-selector" type="checkbox"></th>
-                                        <th>Type</th>
-                                        <th>Title</th>
-                                        <th>First Author</th>
-                                        <th>Date Created</th>
-                                        <th>Last modified</th>
-                                        <th>Subject</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Authors</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Permission Level</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Labels</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Favorite</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Last modified</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Sharing Status</th>
-                                        {# Needed for datatable to function properly #}
-                                        <th>Date Created</th>
-                                        {# Needed for datatable to function properly #}
-                                    </tr>
-                                    </thead>
-                                    <div id="filter-querystring"
-                                         style="display: none;">{{ grpfilter|default_if_none:'' }}</div>
-                                    <tbody>
-                                    {% for res in community_resources %}
-                                        <tr class="data-row" v-show="isVisible({{ res.group_id }})">
-                                            {# Selection controls #}
-                                            <td>
-                                                <input class="row-selector" type="checkbox">
-                                                <span data-form-id="form-favorite-{{ res.resource_id }}"
-                                                      data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                                <form class="hidden-form" data-id="form-favorite-{{ res.resource_id }}"
-                                                      action="/hsapi/_internal/{{ res.resource_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="CREATE">
-                                                    <input type="hidden" name="label_type" value="FAVORITE">
-                                                </form>
-                                                <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                      data-toggle="dropdown" aria-expanded="false"></span>
+             <div v-if="resources.length > 25"  id="resultsdisp-bottom">
+            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                min="1" :max="pagecount"> of {% templatetag openvariable %}pagecount}}
+            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
+                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %}
+                 - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %}
+                 of {% templatetag openvariable %}rescount{% templatetag closevariable %}
+             <br/> <br/>
+        </div>
 
-                                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                                    <div class="panel-body" role="form">
-                                                        <ul data-resource-id="{{ res.resource_id }}"
-                                                            class="list-group list-labels">
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            {# Type #}
-                                            <td data-col="resource-type">
-                                                {% include "includes/res_type_col_community.html" with resource=res %}
-                                            </td>
-                                            {# Title #}
-                                            <td>
-                                                <strong>
-                                                    <a href="/{{ res.slug }}/">{{ res.title }}</a>
-                                                </strong>
-                                            </td>
-                                            {# First Author #}
-                                            {% if res.first_creator.description %}
-                                                <td>
-                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
-                                                </td>
-                                            {% else %}
-                                                <td>{{ res.first_creator.name }}</td>
-                                            {% endif %}
-                                            {# Date Created #}
-                                            <td>{{ res.created|date:"d M Y" }} {{ res.created|time }}</td>
-                                            {# Last Modified #}
-                                            <td>{{ res.updated|date:"d M Y" }} {{ res.updated|time }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.updated|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                            <td>{{ res.created|date:"U" }}</td>
-                                            <td><!-- Needed for datatable to function properly --></td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                                {% include "includes/legend.html" %}
+                                        {% include "includes/legend.html" %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -202,8 +214,7 @@
                         <div class="row">
                             <div class="col-sm-12 col-md-3">
                                 <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
-                                                                                            class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
-                                    Topics</h4></a>
+                                class="glyphicon glyphicon-pencil"></span>&nbsp;Edit Topics</h4></a>
                                 Someone has requested a topic to be created or modified for use in the Title Assistant
                             </div>
                         </div>
@@ -216,9 +227,10 @@
 {% endblock main %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/communities.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table_community.js"></script>
+    <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+            integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.js" integrity="sha512-Z0dNfC81uEXC2iTTXtE0rM18I3ATkwn1m8Lxe0onw/uPEEkCmVZd+H8GTeYGkAZv50yvoSR5N3hoy/Do2hNSkw==" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/static/js/communities.js"></script>
 {% endblock %}
