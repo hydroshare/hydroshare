@@ -14,13 +14,35 @@
     .vdpHeadCellContent {
         font-size: 1em;
     }
-
     .vdpCellContent {
         font-size: 1em;
     }
+    .vdpCell.selectable:hover .vdpCellContent, .vdpCell.selected .vdpCellContent {
+        background: LightBlue;
+    }
+    .vdpCell.selected .vdpCellContent {
+        /* Matches create button in navbar */
+        background: #428BCA;
+    }
+    .vdpArrowPrev:after {
+        border-right-color: #428BCA;
+    }
 
-    .vdpComponent.vdpWithInput > input {
-         width: 233px;
+    .vdpArrowNext:after {
+        border-left-color: #428BCA;
+    }
+    .vdpCell.today {
+        color: Red;
+    }
+    .vdpComponent.vdpWithInput>input {
+        width: 100%;
+        padding-right: 20px;
+        border: 0 transparent;
+        outline: none;
+        user-select: none; /* standard syntax */
+        -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+        -moz-user-select: none; /* mozilla browsers */
+        -ms-user-select: none; /* IE10+ */
     }
 
     .vdpClearInput {

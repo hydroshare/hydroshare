@@ -13,8 +13,8 @@
         </div>
     </div>
     <div id="resources-main" class="row">
-
-        <div class="col-sm-3" id="facets">
+        <!-- 576 768 992 1200 -->
+        <div class="col col-sm col-md-4 col-lg-4" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -180,7 +180,7 @@
                 <!-- end facet panels -->
             </div>
         </div>
-        <div id="resource-rows" class="col-lg">
+        <div id="resource-rows" class="col-md col-lg">
             <br/>
             <div class="table-wrapper">
               <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
@@ -420,6 +420,7 @@ export default {
         })
         .catch((error) => { // eslint-disable-line
           document.body.style.cursor = 'default';
+          this.loading = false;
         });
     },
     clearSearch() {
@@ -561,10 +562,6 @@ export default {
     .panel-title > a:active,
     .panel-title > a:focus  {
         text-decoration:none;
-    }
-    #filter-items {
-        /* Ensure collapse without overlap */
-        width: 235px;
     }
     .table-wrapper {
         margin-top: 0;
