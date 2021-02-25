@@ -1,408 +1,236 @@
 {% load pages_tags mezzanine_tags theme_tags hydroshare_tags %}
-{% block extra_css %}
-    <style>
-        #img-brand-logo {
-            width: 145px;
-        }
 
-        #nav-shadowed-border {
-            border: none;
-            width: 100%;
-            height: 50px;
-            border-bottom: 1px solid darkgray;
-            box-shadow: 0 20px 20px -23px #333;
-            margin: -90px auto 0;
-        }
-
-        .navbar-collapse {
-            color: #777;
-            font: 13px/18px 'Open Sans', arial, sans-serif;
-        }
-
-        .navbar {
-            text-transform: uppercase;
-
-        }
-
-        .navbar-expand-lg .navbar-nav .nav-link {
-            padding: 15px;
-        }
-
-        /* bootstrap 3.0.2 overrides */
-        li {
-            display: block;
-            text-align: right;
-        }
-
-        ul {
-            list-style-type: none;
-        }
-
-        .nav-item:active {
-            color: black;
-        }
-
-        .navbar-nav > li > a {
-            color: #777;
-            text-decoration: none;
-            padding: 15px;
-        }
-
-        ul.navbar-nav.mr-auto {
-            list-style-type: none;
-        }
-
-        #notifications-dropdown > a {
-            font-size: 20px;
-        }
-
-        #notifications-dropdown .dropdown-menu {
-            width: 350px;
-            max-height: 400px;
-            height: auto;
-        }
-
-        #notifications-dropdown .dropdown-menu > li {
-            max-height: 398px;
-            overflow-y: auto;
-        }
-
-        .notification--status {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            margin-top: 1em;
-        }
-
-        .notification--status span.fa, .notification--status span.glyphicon {
-            margin-right: 6px;
-        }
-
-        li.notifications {
-            text-transform: none;
-        }
-
-        li.notifications .task {
-            padding: 1em;
-            border-bottom: 1px solid #DDD;
-            display: flex;
-        }
-
-        li.notifications .task .notification--content {
-            flex-grow: 1;
-        }
-
-        li.notifications .task .notification--controls {
-            margin-left: 1em;
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        li.notifications .task .notification--controls button {
-            outline: none;
-        }
-
-        li.notifications .task .notification--controls .glyphicon,
-        li.notifications .task .notification--controls .fa {
-            font-size: 14px;
-        }
-
-        #notifications-dropdown .notifications--header {
-            padding: 1em;
-            border-bottom: 1px solid #DDD;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #notifications-dropdown .default-content {
-            padding: 1em;
-        }
-
-        #btn-notifications-clear {
-            cursor: pointer;
-        }
-
-    </style>
-{% endblock %}
-<nav class="navbar navbar-expand-lg navbar-light">
-    <a class="navbar-brand" href="/landingPage">
-        <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
-            <li id="dropdown-menu-home" class="nav-item {% if request.path == "/home/" %}active{% endif %}">
-                <a class="nav-link" href="/home/">Home</a>
-            </li>
-            <li id="dropdown-menu-my-resources"
-                class="nav-item {% if request.path == "/my-resources/" %}active{% endif %}">
-                <a class="nav-link" href="/my-resources/">My Resources</a>
-            </li>
-            <li id="dropdown-menu-search" class="nav-item {% if request.path == "/search/" %}active{% endif %}">
-                <a class="nav-link" href="/search/">Search</a>
-            </li>
-            <li id="dropdown-menu-collaborate" {% if request.path == "/collaborate/" %}class="active"{% endif %}>
-                <a class="nav-link" href="/collaborate/">Collaborate</a>
-            </li>
-            <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
-                <a class="nav-link" href="https://www.hydroshare.org/apps/">Apps</a>
-            </li>
-            <li class="" id="dropdown-menu-https:--help.hydroshare.org">
-                <a class="nav-link" href="https://help.hydroshare.org">Help</a>
-            </li>
-        </ul>
-    </div>
-
-    <ul id="resource-dropdown" class="nav navbar-nav navbar-right">
-        {% if not user.is_anonymous %}
-            <li class="res-dropdown">
-                <button id="select-resource-type" data-toggle="dropdown"
-                        class="dropdown btn btn-primary"
-                        role="button" aria-haspopup="true" aria-expanded="false">Create
-                </button>
-                {% if not user.is_anonymous %}
-                    <ul id="res-menu-contents" class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="A resource which can include multiple files without file format limitations."
-                               data-modal-title="Create a Resource"
-                               data-modal-input-title="Enter the title for the new resource."
-                               data-value="CompositeResource">
-                                <img src="/static/img/resource-icons/composite48x48.png"
-                                     alt="Composite Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Resource</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="A resource that holds a list of other resources in HydroShare."
-                               data-modal-title="Create a Collection"
-                               data-modal-input-title="Enter the title for the new collection of HydroShare resources."
-                               data-value="CollectionResource">
-                                <img src="/static/img/resource-icons/collection48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Collection</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
-                               data-modal-title="Create a Web App Connector"
-                               data-modal-input-title="Enter the name for the new Web App Connector."
-                               data-value="ToolResource">
-                                <img src="/static/img/resource-icons/webapp48x48.png"
-                                     alt="Web App Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Web App Connector</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="Describes the software component of a generic model within the water domain."
-                               data-modal-title="Create a Model Program Resource"
-                               data-modal-input-title="Enter the name for the new Model Program Resource."
-                               data-value="ModelProgramResource">
-                                <img src="/static/img/resource-icons/modelprogram48x48.png"
-                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Program</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="Defines the input and output data for a generic hydrological model, for a specific time and place."
-                               data-modal-title="Create a Model Instance Resource"
-                               data-modal-input-title="Enter the name for the new Model Instance Resource."
-                               data-value="ModelInstanceResource">
-                                <img src="/static/img/resource-icons/modelinstance48x48.png"
-                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
-                               data-modal-title="Create a SWAT Model Instance Resource"
-                               data-modal-input-title="Enter the name for the new SWAT Model Instance Resource."
-                               data-value="SWATModelInstanceResource">
-                                <img src="/static/img/resource-icons/swat48x48.png"
-                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="left"
-                               title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
-                               data-modal-title="Create a MODFLOW Model Instance Resource"
-                               data-modal-input-title="Enter the name for the new MODFLOW Model Instance Resource."
-                               data-value="MODFLOWModelInstanceResource">
-                                <img src="/static/img/resource-icons/modflow48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
-                            </a>
-                        </li>
-                    </ul>
-                {% endif %}
-            </li>
-        {% endif %}
-
-
-    </ul>
-
-
-    {% ifinstalled mezzanine.accounts %}
-        {% if request.user.is_authenticated %}
-            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                <a href="#" class="dropdown" data-toggle="dropdown">
-                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                         class="round-image profile-pic-thumbnail pull-left">
-                    </div>
-                </a>
-            {% else %}
-                <a href="#" class="dropdown" data-toggle="dropdown">
-                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
-                </a>
-            {% endif %}
-            <ul class="dropdown-menu arrow_box">
-                <li class="account">
-                    <div class="row">
-                        <div class="col-sm-4">
+<div id="hs-nav-bar" class="navbar navbar-inverse navbar-fixed-top">
+    <div id="toplevel-nav-container" class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/landingPage">
+                <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav navbar-right hidden-xs">
+                {% ifinstalled mezzanine.accounts %}
+                    {% if request.user.is_authenticated %}
+                        <li id="profile-menu" class="display-block">
                             {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                </div>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                         class="round-image profile-pic-thumbnail pull-left">
+                                    </div>
+                                </a>
                             {% else %}
-                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
+                                </a>
                             {% endif %}
-                        </div>
-                        <div class="col-sm-8">
-                            <strong id="profile-menu-fullname"
-                                    title="{{ request.user|best_name }}">{{ request.user|best_name }}</strong>
-                            {% if request.user.email %}
-                                <div id="profile-menu-email" class="text-muted"
-                                     title="{{ request.user.email }}">{{ request.user.email }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
+                            <ul class="dropdown-menu arrow_box">
+                                <li class="account">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong id="profile-menu-fullname"
+                                                    title="{{ request.user|best_name }}">{{ request.user|best_name }}</strong>
+                                            {% if request.user.email %}
+                                                <div id="profile-menu-email" class="text-muted"
+                                                     title="{{ request.user.email }}">{{ request.user.email }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
 
+                                    <div class="dropdown-footer">
+                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
+                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
+                                            <span class="glyphicon glyphicon-log-out"></span> Sign out
+                                        </a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li id="signin-menu"><a href="{% url 'login' %}"><span
+                                class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+                    {% endif %}
+                {% endifinstalled %}
+            </ul>
+            {% load mezzanine_tags %}
 
+            <ul class="nav navbar-nav">
+                <li {% if request.path == "/home/" %}class="active"{% endif %} id="dropdown-menu-home">
+                    <a href="/home/">Home</a>
+                </li>
+                <li {% if request.path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
+                    <a href="/my-resources/">My Resources</a>
+                </li>
+                <li {% if request.path == "/search/" %}class="active"{% endif %} id="dropdown-menu-search">
+                    <a href="/search/">Discover</a>
+                </li>
+                <li {% if request.path == "/collaborate/" %}class="active"{% endif %} id="dropdown-menu-collaborate">
+                    <a href="/collaborate/">Collaborate</a>
+                </li>
+                <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
+                    <a href="https://www.hydroshare.org/apps/">Apps</a>
+                </li>
+                <li class="" id="dropdown-menu-https:--help.hydroshare.org">
+                    <a href="http://help.hydroshare.org">Help</a>
                 </li>
             </ul>
 
-            <li id="notifications-dropdown">
-                <a href="#" class="dropdown" data-toggle="dropdown" role="button" aria-haspopup="true"
-                   aria-expanded="false">
-                    <span class="glyphicon glyphicon-bell"></span>
-                </a>
-                <ul class="dropdown-menu arrow_box">
-                    <li class="notifications">
-                        <div id="app-notifications">
-                            <div class="notifications--header">
-                                <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
-                                <a id="btn-notifications-clear" v-on:click="clear">Clear</a>
-                            </div>
-
-                            <div v-if="loading" class="default-content">
-                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                            </div>
-                            <div v-if="!loading">
-                                <div v-if="tasks.length">
-                                    <div class="task" v-for="task in tasks">
-                                        <div class="notification--content">
-                                            <div class="notification--name">${taskMessages[task.name].title}</span>
-                                                <div class="notification--status">
-                                                    <span :class="statusIcons[task.status]"></span>
-
-                                                    <small v-if="canNotifyDownload(task)">
-                                                        Your download will start in a few seconds. If it does not start
-                                                        click <a
-                                                            :href="task.payload">here</a>
-                                                        to download your files directly.
-                                                    </small>
-                                                    <small v-else>${taskMessages[task.name].status[task.status]}.
-                                                        <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
-                                            Click <a :href="task.payload">here</a> to refresh user interface.
-                                            </span></small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="notification--controls">
-                                            <button type="button" v-if="canBeDismissed(task)"
-                                                    v-on:click="dismissTask(task)" class="close" aria-label="Dismiss"
-                                                    title="Dismiss">
-                                                <span aria-hidden="true">×</span>
-                                            </button>
-
-                                            <button type="button" v-if="canBeAborted(task)" v-on:click="abortTask(task)"
-                                                    class="close" title="Abort"
-                                                    aria-label="Abort">
-                                                <span class="glyphicon glyphicon-ban-circle"></span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-else class="default-content">You don't have any notifications.</div>
-                            </div>
-                        </div>
+            <ul id="resource-dropdown" class="nav navbar-nav navbar-right">
+                {% if not user.is_anonymous %}
+                    <li class="res-dropdown">
+                        <button id="select-resource-type" data-toggle="dropdown"
+                                class="dropdown-toggle btn btn-primary"
+                                role="button" aria-haspopup="true" aria-expanded="false">Create
+                        </button>
+                        {% if not user.is_anonymous %}
+                            <ul id="res-menu-contents" class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A resource which can include multiple files without file format limitations."
+                                       data-modal-title="Create a Resource"
+                                       data-modal-input-title="Enter the title for the new resource."
+                                       data-value="CompositeResource">
+                                        <img src="/static/img/resource-icons/composite48x48.png"
+                                             alt="Composite Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Resource</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A resource that holds a list of other resources in HydroShare."
+                                       data-modal-title="Create a Collection"
+                                       data-modal-input-title="Enter the title for the new collection of HydroShare resources."
+                                       data-value="CollectionResource">
+                                        <img src="/static/img/resource-icons/collection48x48.png"
+                                             alt="Collection Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Collection</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
+                                       data-modal-title="Create a Web App Connector"
+                                       data-modal-input-title="Enter the name for the new Web App Connector."
+                                       data-value="ToolResource">
+                                        <img src="/static/img/resource-icons/webapp48x48.png"
+                                             alt="Web App Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Web App Connector</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="Describes the software component of a generic model within the water domain."
+                                       data-modal-title="Create a Model Program Resource"
+                                       data-modal-input-title="Enter the name for the new Model Program Resource."
+                                       data-value="ModelProgramResource">
+                                        <img src="/static/img/resource-icons/modelprogram48x48.png"
+                                             alt="Model Program Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Model Program</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="Defines the input and output data for a generic hydrological model, for a specific time and place."
+                                       data-modal-title="Create a Model Instance Resource"
+                                       data-modal-input-title="Enter the name for the new Model Instance Resource."
+                                       data-value="ModelInstanceResource">
+                                        <img src="/static/img/resource-icons/modelinstance48x48.png"
+                                             alt="Model Instance Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Model Instance</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
+                                       data-modal-title="Create a SWAT Model Instance Resource"
+                                       data-modal-input-title="Enter the name for the new SWAT Model Instance Resource."
+                                       data-value="SWATModelInstanceResource">
+                                        <img src="/static/img/resource-icons/swat48x48.png"
+                                             alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
+                                       data-modal-title="Create a MODFLOW Model Instance Resource"
+                                       data-modal-input-title="Enter the name for the new MODFLOW Model Instance Resource."
+                                       data-value="MODFLOWModelInstanceResource">
+                                        <img src="/static/img/resource-icons/modflow48x48.png"
+                                             alt="Collection Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        {% endif %}
                     </li>
-                </ul>
-            </li>
+                {% endif %}
 
-        {% else %}
+                {% if not user.is_anonymous %}
+                    <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
+                {% endif %}
 
-        {% endif %}
-    {% endifinstalled %}
-    <div class="dropdown-footer">
+                {% ifinstalled mezzanine.accounts %}
+                    <!-- Profile links for extra small screens -->
+                    {% if not user.is_anonymous %}
+                        <li class="visible-xs"><a href="{% url 'logout' %}"><span
+                                class="glyphicon glyphicon-log-out"></span> Sign Out</a></li>
+                    {% else %}
+                        <li class="visible-xs"><a href="{% url 'login' %}"><span
+                                class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+                    {% endif %}
+                {% endifinstalled %}
+            </ul>
 
-        {% if request.user.is_authenticated %}
-            <a href="{% url 'logout' %}" id="signout-menu">
-                <span class="glyphicon glyphicon-log-out"></span> Sign out</a>
-        {% else %}
-            <a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a>
-        {% endif %}
+        </div>
     </div>
-
-</nav>
-<hr id="nav-shadowed-border">
-<script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
-<script type="text/javascript" src="/static/js/hs-vue/notifications-app.js"></script>
-        {# ======= Modal window begins =======#}
-        <div class="modal fade" id="submit-title-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-hidden="true">&times;
-                        </button>
-                        <h4 class="modal-title">Create a Resource</h4>
+</div>
+{# ======= Modal window begins =======#}
+<div class="modal fade" id="submit-title-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;
+                </button>
+                <h4 class="modal-title">Create a Resource</h4>
+            </div>
+            <div class="modal-body">
+                <div class="warnings-list">
+                    <div class="modal-input-title">Enter the title for the new resource.
                     </div>
-                    <div class="modal-body">
-                        <div class="warnings-list">
-                            <div class="modal-input-title">Enter the title for the new resource.
-                            </div>
-                            <br>
-                            <input id="input-title" class="form-control textinput textInput" maxlength="300"
-                                   name="value" type="text" placeholder="Resource Title" value="">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
-                        </button>
-                        <button id="btn-resource-create" type="button" data-value="" class="btn btn-primary"
-                                data-dismiss="modal">Create
-                        </button>
-                    </div>
+                    <br>
+                    <input id="input-title" class="form-control textinput textInput" maxlength="300"
+                           name="value" type="text" placeholder="Resource Title" value="">
                 </div>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                </button>
+                <button id="btn-resource-create" type="button" data-value="" class="btn btn-primary"
+                        data-dismiss="modal">Create
+                </button>
+            </div>
         </div>
-        {# ======= Modal window ends =======#}
+    </div>
+</div>
+{# ======= Modal window ends =======#}
 <script>
-        $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
+    $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
         $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
         let title = $(this).attr("data-modal-title");
         let inputTitle = $(this).attr("data-modal-input-title");
@@ -461,5 +289,4 @@
             }
         });
     }
-
 </script>
