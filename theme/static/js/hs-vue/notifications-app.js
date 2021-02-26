@@ -205,7 +205,7 @@ $(document).ready(function () {
                     return !vue.canBeDismissed(task);
                 });
             },
-            scheduleCheck() {
+            scheduleCheck: function() {
                 let vue = this;
                 if (vue.someInProgress && !vue.isCheckingStatus) {
                     vue.isCheckingStatus = true;
@@ -243,7 +243,7 @@ $(document).ready(function () {
                     vue.isCheckingStatus = false;
                 }
             },
-            checkTaskStatus(task) {
+            checkTaskStatus: function(task) {
                 let vue = this;
                 
                 return $.ajax({
