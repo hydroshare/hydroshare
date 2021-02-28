@@ -2,7 +2,6 @@ import glob
 import json
 import os
 
-from dateutil import parser
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -124,46 +123,6 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             mi_metadata.save()
 
         super(ModelProgramFileMetaData, self).delete()
-
-    def ingest_metadata(self, graph):
-        subject = self.rdf_subject_from_graph(graph)
-        for _, pred, obj in graph.triples((subject, None, None)):
-            obj = str(obj)
-            if pred == HSTERMS.modelProgramName:
-                self.logical_file.model_program_type = obj
-            elif pred == HSTERMS.modelVersion:
-                self.version = obj
-            elif pred == HSTERMS.modelReleaseDate:
-                self.release_date = parser.parse(obj)
-            elif pred == HSTERMS.modelWebsite:
-                self.website = obj
-            elif pred == HSTERMS.modelCodeRepository:
-                self.code_repository = obj
-            elif pred == HSTERMS.modelProgramLanguage:
-                langs = obj.split(',')
-                langs = [lang.strip() for lang in langs]
-                self.programming_languages = langs
-            elif pred == HSTERMS.modelOperatingSystem:
-                o_systems = obj.split(',')
-                o_systems = [o_sys.strip() for o_sys in o_systems]
-                self.operating_systems = o_systems
-            elif pred in (HSTERMS.modelReleaseNotes, HSTERMS.modelDocumentation, HSTERMS.modelSoftware,
-                          HSTERMS.modelEngine):
-                if pred == HSTERMS.modelReleaseNotes:
-                    mp_file_type = ModelProgramResourceFileType.RELEASE_NOTES
-                elif pred == HSTERMS.modelDocumentation:
-                    mp_file_type = ModelProgramResourceFileType.DOCUMENTATION
-                elif pred == HSTERMS.modelSoftware:
-                    mp_file_type = ModelProgramResourceFileType.SOFTWARE
-                else:
-                    mp_file_type = ModelProgramResourceFileType.ENGINE
-                mp_file_type = ModelProgramResourceFileType.type_name_from_type(mp_file_type)
-                for res_file in self.logical_file.files.all():
-                    if res_file.short_path == obj:
-                        ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=res_file,
-                                                            mp_metadata=self)
-
-        super(ModelProgramFileMetaData, self).ingest_metadata(graph)
 
     def get_rdf_graph(self):
         graph = super(ModelProgramFileMetaData, self).get_rdf_graph()

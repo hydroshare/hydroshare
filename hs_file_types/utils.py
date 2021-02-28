@@ -5,9 +5,8 @@ from operator import lt, gt
 from dateutil import parser
 from django.apps import apps
 from django.db import transaction
-from foresite import utils as fs_utils
 from rdflib import RDFS, Graph
-from rdflib.namespace import DC, Namespace, RDF
+from rdflib.namespace import DC, Namespace
 
 from hs_core.hydroshare import utils, get_resource_file
 from hs_file_types.models.base import AbstractLogicalFile
@@ -260,10 +259,6 @@ def is_aggregation_metadata_file(file):
     return file.name.endswith('_meta.xml')
 
 
-def is_aggregation_metadata_schema_file(file):
-    return file.name.endswith('_schema.json')
-
-
 def is_map_file(file):
     return file.name.endswith('_resmap.xml') or file.name == 'resourcemap.xml'
 
@@ -273,19 +268,18 @@ def is_resource_metadata_file(file):
 
 
 def identify_and_ingest_metadata_files(resource, files):
-    res_files, meta_files, meta_schema_files, map_files = identify_metadata_files(files)
-    ingest_metadata_files(resource, meta_files, meta_schema_files, map_files)
+    res_files, meta_files, map_files = identify_metadata_files(files)
+    ingest_metadata_files(resource, meta_files, map_files)
 
 
-def ingest_metadata_files(resource, meta_files, meta_schema_files, map_files):
+def ingest_metadata_files(resource, meta_files, map_files):
     # refresh to pick up any new possible aggregations
     resource_metadata_file = None
     for f in meta_files:
         if is_resource_metadata_file(f):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
-            ingest_logical_file_metadata(f, resource, map_files, meta_schema_files)
-
+            ingest_logical_file_metadata(f, resource, map_files)
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
@@ -305,33 +299,28 @@ def identify_metadata_files(files):
     res_files = []
     meta_files = []
     map_files = []
-    meta_schema_files = []
     for f in files:
         if is_resource_metadata_file(f) or is_aggregation_metadata_file(f):
             meta_files.append(f)
         elif is_map_file(f):
             map_files.append(f)
-        elif is_aggregation_metadata_schema_file(f):
-            meta_schema_files.append(f)
         else:
             res_files.append(f)
+    return res_files, meta_files, map_files
 
-    return res_files, meta_files, meta_schema_files, map_files
 
-
-def ingest_logical_file_metadata(metadata_file, resource, map_files, meta_schema_files):
+def ingest_logical_file_metadata(metadata_file, resource, map_files):
     resource.refresh_from_db()
     graph = Graph()
     graph = graph.parse(data=metadata_file.read())
     agg_type_name = None
-
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
         raise Exception("Could not derive aggregation type from {}".format(metadata_file.name))
     subject = None
-    for s, _, _ in graph.triples((None, DC.type, None)):
+    for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
@@ -339,120 +328,46 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files, meta_schema
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
+
     if not lf:
         # see if the files exist and create it
-        folder_based_aggr_created = False
-        if logical_file_class is FileSetLogicalFile or logical_file_class is ModelInstanceLogicalFile or \
-                logical_file_class is ModelProgramLogicalFile:
+        res_file = None
+        if logical_file_class is FileSetLogicalFile:
             file_path = subject.rsplit('/', 1)[0]
-
-            if not file_path.endswith('/data/contents'):
-                # it's a folder path
-                file_path = file_path.split('data/contents/', 1)[1]
-                lf = logical_file_class.set_file_type(resource, None, folder_path=file_path)
-                folder_based_aggr_created = True
-
-        if not folder_based_aggr_created:
-            if logical_file_class is GenericLogicalFile or logical_file_class is ModelInstanceLogicalFile or \
-                    logical_file_class is ModelProgramLogicalFile:
-                map_name = subject.split('data/contents/', 1)[1]
-                map_name = map_name.split('#', 1)[0]
-                file_path = ''
-
-                for map_file in map_files:
-                    if map_file.name.endswith(map_name):
-                        ORE = Namespace("http://www.openarchives.org/ore/terms/")
-                        map_graph = Graph().parse(data=map_file.read())
-                        for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
-                            o = str(o)
-                            if not o.endswith("_meta.xml") and not o.endswith("_schema.json"):
-                                file_path = o
-                                break
-                if not file_path:
-                    if logical_file_class is GenericLogicalFile:
-                        aggr_name = 'generic'
-                    elif logical_file_class is ModelProgramLogicalFile:
-                        aggr_name = 'model program'
-                    else:
-                        aggr_name = 'model instance'
-                    raise Exception("Could not determine the {} logical file name".format(aggr_name))
-                file_path = file_path.split('data/contents/', 1)[1]
-                res_file = get_resource_file(resource.short_id, file_path)
-                lf = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                           logical_file_type_class=logical_file_class, fail_feedback=True)
-
-        if not lf:
-            raise Exception(
-                "Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
-
-    if not lf.is_model_instance and not lf.is_model_program:
-        with transaction.atomic():
-            lf.metadata.delete_all_elements()
-            lf.metadata.ingest_metadata(graph)
-            lf.create_aggregation_xml_documents()
-    else:
-        # lf is either model instance or model program aggregation
-        # process meta json schema files (model aggregations) after meta files
-        for f in meta_schema_files:
-            schema_path = f.name.split(resource.file_path)[1].split("/")[2:]
-            schema_path = "/".join(schema_path)
-            schema_path = os.path.join(resource.file_path, schema_path)
-            if lf.schema_file_path == schema_path:
-                ingest_metadata_schema_file(f, resource, map_files)
-                lf.refresh_from_db()
-                break
+            file_path = file_path.split('data/contents/', 1)[1]
+            res_file = resource.files.filter(file_folder=file_path).first()
+            if res_file:
+                FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
+        elif logical_file_class is GenericLogicalFile:
+            map_name = subject.split('data/contents/', 1)[1]
+            map_name = map_name.split('#', 1)[0]
+            for map_file in map_files:
+                if map_file.name.endswith(map_name):
+                    ORE = Namespace("http://www.openarchives.org/ore/terms/")
+                    map_graph = Graph().parse(data=map_file.read())
+                    for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
+                        if not str(o).endswith("_meta.xml"):
+                            file_path = str(o)
+                            break
+            if not file_path:
+                raise Exception("Could not determine the generic logical file name")
+            file_path = file_path.split('data/contents/', 1)[1]
+            res_file = get_resource_file(resource.short_id, file_path)
+            if res_file:
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+        if res_file:
+            res_file.refresh_from_db()
+            lf = res_file.logical_file
         else:
-            raise Exception("Failed to find schema JSON file {}".format(lf.schema_file_path))
+            raise Exception("Could not find aggregation for {}".format(metadata_file.name))
+        if not lf:
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
 
+    with transaction.atomic():
         lf.metadata.delete_all_elements()
         lf.metadata.ingest_metadata(graph)
         lf.create_aggregation_xml_documents()
-
-
-def ingest_metadata_schema_file(f, resource, map_files):
-    """ingests metadata schema from the schema JSON file"""
-
-    # get aggregation map file name from meta schema file name
-    aggr_map_filename = f.name.replace('_schema.json', '_resmap.xml')
-    for map_file in map_files:
-        if map_file.name == aggr_map_filename:
-            aggr_map_file = map_file
-            break
-    else:
-        raise Exception("Could not find matching aggregation map file for aggregation schema file {}".format(f.name))
-
-    resource.refresh_from_db()
-    graph = Graph()
-    graph = graph.parse(data=aggr_map_file.read())
-    agg_type_name = None
-    RDFS1 = fs_utils.namespaces['rdfs']
-    for s, _, o in graph.triples((None, RDFS1.isDefinedBy, None)):
-        o = str(o)
-        if o.endswith("/www.hydroshare.org/terms"):
-            agg_type_name = s.split("/")[-1]
-            break
-    if not agg_type_name:
-        raise Exception("Could not derive aggregation type from {}".format(aggr_map_file.name))
-
-    subject = None
-    for s, _, o in graph.triples((None, RDF.type, None)):
-        o = str(o)
-        if o.endswith("/ResourceMap"):
-            subject = s.split('/resource/', 1)[1]
-            break
-    if not subject:
-        raise Exception("Could not derive aggregation path from {}".format(aggr_map_file.name))
-
-    logical_file_class = get_logical_file(agg_type_name)
-    lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
-    if lf is None:
-        raise Exception("Could not derive aggregation path from {}".format(aggr_map_file.name))
-
-    if not lf.is_model_program and not lf.is_model_instance:
-        raise Exception("Could not find a model aggregation for schema file {}".format(f.name))
-
-    lf.metadata_schema_json = json.loads(f.read())
-    lf.save()
 
 
 def get_logical_file_by_map_file_path(resource, logical_file_class, map_file_path):
