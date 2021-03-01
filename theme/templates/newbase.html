@@ -14,10 +14,7 @@
         {% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
     <link rel="shortcut icon" href="/static/img/favicon.png">
 
-{#    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet">#}
     <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_fonts.css" rel="stylesheet"/>
-{#    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet"/>#}
-{#    <link rel="stylesheet" type="text/css" href="/static/fonts/font-mfizz/font-mfizz.css"/>#}
 
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.3.0.2.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/animate.css"/>
@@ -28,6 +25,21 @@
     <link rel="stylesheet" type="text/css" href="/static/css/academicons.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/hydroshare_extends.css"/>
     <style>
+        #toplevel-nav-container {
+            display: block;
+            flex-wrap: nowrap;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        #profile-menu .dropdown-menu {
+            position: absolute;
+        }
+        #resource-dropdown {
+            position: relative;
+        }
+        #res-menu-contents {
+            position: absolute;
+        }
         .page-title {
             /* override hydroshare_core.css to address excessive bottom margin */
             margin: 0;
@@ -36,7 +48,6 @@
             padding-bottom: 5px;
             border-bottom: 1px solid #DDD;
         }
-
         .dropdown-toggle {
         }
         .dropdown-toggle:after {
@@ -68,25 +79,9 @@
             display: block;
             flex-direction: row;
         }
-        #toplevel-nav-container {
-            display: block;
-            flex-wrap: nowrap;
-            margin-left: 0;
-            margin-right: 0;
-        }
-        #profile-menu .dropdown-menu {
-            position: absolute;
-        }
-        #resource-dropdown {
-            position: relative;
-        }
-        #res-menu-contents {
-            position: absolute;
-        }
         .modal-header {
             display: block;
         }
-
     </style>
     {% block extra_css %}{% endblock %}
     <script src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
@@ -408,112 +403,6 @@
         {# ======= Modal window ends =======#}
     </div>
 {% endblock %}
-
-<!-- Foooter
-================== -->
-<footer>
-    <div class="container">
-        <div class="row">
-            <!-- Contact Us
-            =================  -->
-            <div class="col-md-4 col-sm-4">
-                {% editable siteconf.col1_heading siteconf.col1_content %}
-                    <div class="headline">
-                        <h3>{{ siteconf.col1_heading }}</h3>
-                    </div>
-                    <div class="content">
-                        {{ siteconf.col1_content|richtext_filters|safe }}
-                    </div>
-                {% endeditable %}
-            </div>
-            <!-- Social icons
-            ===================== -->
-            <div class="col-md-4 col-sm-4">
-                {% editable siteconf.col2_heading siteconf.twitter_link siteconf.facebook_link siteconf.pinterest_link siteconf.youtube_link siteconf.github_link siteconf.linkedin_link siteconf.vk_link siteconf.gplus_link %}
-                    <div class="headline"><h3>{{ siteconf.col2_heading }}</h3></div>
-                {% endeditable %}
-                <div class="content social">
-                    {% editable siteconf.col2_content %}
-                        {{ siteconf.col2_content|richtext_filters|safe }}
-                    {% endeditable %}
-                    {% if siteconf.has_social_network_links %}
-                        <ul>{% if siteconf.twitter_link %}
-                            <li>
-                                <a href="{{ siteconf.twitter_link }}" target="_blank"><i class="fa fa-twitter"></i></a>
-                            </li>
-                        {% endif %}
-                            {% if siteconf.facebook_link %}
-                                <li>
-                                    <a href="{{ siteconf.facebook_link }}" target="_blank"><i
-                                            class="fa fa-facebook"></i></a>
-                                </li>
-                            {% endif %}
-                            {% if siteconf.pinterest_link %}
-                                <li>
-                                    <a href="{{ siteconf.pinterest_link }}" target="_blank"><i
-                                            class="fa fa-pinterest"></i></a>
-                                </li>
-                            {% endif %}
-                            {% if siteconf.youtube_link %}
-                                <li>
-                                    <a href="{{ siteconf.youtube_link }}" target="_blank"><i class="fa fa-youtube"></i></a>
-                                </li>
-                            {% endif %}
-                            {% if siteconf.github_link %}
-                                <li>
-                                    <a href="{{ siteconf.github_link }}" target="_blank"><i
-                                            class="fa fa-github"></i></a>
-                                </li>
-                            {% endif %}
-                            {% if siteconf.linkedin_link %}
-                                <li>
-                                    <a href="{{ siteconf.linkedin_link }}" target="_blank"><i
-                                            class="fa fa-linkedin"></i></a>
-                                </li>
-                            {% endif %}
-                            {% if siteconf.vk_link %}
-                                <li>
-                                    <a href="{{ siteconf.vk_link }}" target="_blank"><i class="fa fa-vk"></i></a>
-                                </li>
-                            {% endif %}
-                            {% if siteconf.gplus_link %}
-                                <li>
-                                    <a href="{{ siteconf.gplus_link }}" target="_blank"><i
-                                            class="fa fa-google-plus"></i></a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    {% endif %}
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-            <!-- Subscribe
-            =============== -->
-            <div class="col-md-4 col-sm-4">
-                {% editable siteconf.col3_heading siteconf.col3_content %}
-                    <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
-                    <div class="content">
-                        {{ siteconf.col3_content|richtext_filters|safe }}
-                    </div>
-                {% endeditable %}
-            </div>
-        </div>
-    </div>
-    <!-- Legal
-    ============= -->
-    <div class="legal">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    {% editable siteconf.copyright %}
-                        <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a
-                                href="/privacy">Statement of Privacy</a> | <a href="{% url "sitemap" %}">Site Map</a>
-                        </p>
-                    {% endeditable %}
-                </div>
-            </div>
-        </div>
-    </div>
-</footer>
+{% include 'includes/footer.html' %}
 </body>
 </html>

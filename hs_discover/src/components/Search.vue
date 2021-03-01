@@ -1,26 +1,22 @@
 <template>
-  <div id="discover-search">
+  <div id="discover-search" class="container">
     <input id="map-mode-button" type="button" class="btn btn-default mapdisp" value="Show Map" :disabled="!geoloaded"
         v-on:click="showMap">
-    <div id="search" @keyup.enter="searchClick(false, true, true)" class="input-group">
-        <input id="search-input" type="search" class="form-control" v-model="searchtext"
-               placeholder="Search all Public and Discoverable Resources">
-        <i id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer" v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></i>
-        <i id="search-glass" class="fa fa-search inside-left"></i>
+    <div class="row">
+      <div class="col col-sm col-md col-lg col-xl">
+        <div id="search" class="input-group" @keyup.enter="searchClick(false, true, true)">
+            <input id="search-input" class="form-control" type="search" v-model="searchtext"
+                   placeholder="Search all Public and Discoverable Resources">
+            <span id="search-clear" v-b-tooltip.hover title="Clear all selections and search again" style="cursor:pointer"
+                  v-on:click="clearSearch"  class="fa fa-times-circle inside-right interactive"></span>
+            <span id="search-glass" class="fa fa-search inside-left"></span>
+            <p class="table-message" v-if="noMatches()">No resource matches</p>
+        </div>
+      </div>
     </div>
     <div id="resources-main" class="row">
-        <div v-if="resources.length > 0" class="col-xs-12" id="resultsdisp">
-            <br/>
-            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
-                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
-            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
-                min="1" :max="pagecount"> of {{pagecount}}
-            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
-                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
-                &nbsp;&nbsp;&nbsp;Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
-             <br/>
-        </div>
-        <div class="col-xs-3" id="facets">
+        <!--  col 576 sm 768 md 992 lg 1200 xl -->
+        <div class="col col-sm col-md-4 col-lg-3 col-xl-3" id="facets">
             <div id="filter-items">
                 <!-- filter by temporal overlap -->
                 <div id="faceting-temporal">
@@ -32,17 +28,20 @@
                             </h4>
                         </div>
                         <div id="dateselectors" class="facet-list panel-collapse collapse in" aria-labelledby="headingDate">
-                            <div class="date-wrapper">
-                            <date-pick
+<!--                          https://github.com/dbrekalo/vue-date-pick/issues/74  -->
+                          <div class="date-wrapper">
+                            <span class="fa fa-calendar calendar-icon"></span>
+                              <date-pick style="width:167px"
                                  v-model="startdate"
                                  :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'Start Date'}"
+                                 :inputAttributes="{placeholder: 'Start Date (M/D/YYYY)'}"
                             ></date-pick></div>
                           <div class="date-wrapper">
-                            <date-pick
+                            <span class="fa fa-calendar calendar-icon"></span>
+                            <date-pick style="width:167px"
                                  v-model="enddate"
                                  :displayFormat="'MM/DD/YYYY'"
-                                 :inputAttributes="{placeholder: 'End Date'}"
+                                 :inputAttributes="{placeholder: 'End Date (M/D/YYYY)'}"
                             ></date-pick></div>
                         </div>
                     </div>
@@ -183,25 +182,38 @@
                 <!-- end facet panels -->
             </div>
         </div>
-        <div id="resource-rows" class="col-lg-9">
-            <br/>
+        <div id="resource-rows" class="col-md col-lg">
+            <div v-if="resources.length > 0" id="resultsdisp-upper">
+            <span id="page-left-upper" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number-upper"
+                    type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
+            <span id="page-right-upper" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
+                Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
+                  </div>
             <div class="table-wrapper">
-              <p class="table-message" style="color:red" v-if="(!resources.length) && (authorFilter.length ||
-              ownerFilter.length || subjectFilter.length || contributorFilter.length || typeFilter.length ||
-              availabilityFilter.length || searchtext !== '' || startdate !== '' || enddate !== '')"><i>No resource matches</i></p>
                 <table id="items-discovered" v-if="resources.length"
                     class="table-hover table-striped resource-custom-table main-table">
                     <thead>
-                        <tr><th><!-- placeholder --></th>
-                            <th v-for="key in labels" v-bind:key="key" style="cursor:pointer"
-                                @click="sortBy(key)">
-                                <i :class="sortStyling(key)"></i>{{key}}
+                        <tr><th class="tbl-col-icons"><!-- placeholder --></th>
+                            <th class="tbl-col-title" v-bind:key="'Title'" @click="sortBy('Title')">
+                              <span class="interactive"><span :class="sortStyling('Title')"></span>Title</span>
+                            </th>
+                            <th class="tbl-col-authors" v-bind:key="'First Author'" @click="sortBy('First Author')">
+                              <span class="interactive"><span :class="sortStyling('First Author')"></span>First<br>Author</span>
+                            </th>
+                            <th class="tbl-col-date" v-bind:key="'Date Created'" @click="sortBy('Date Created')">
+                              <span class="interactive"><span :class="sortStyling('Date Created')"></span>Date<br>Created</span>
+                            </th>
+                              <th class="tbl-col-date" v-bind:key="'Last Modified'" @click="sortBy('Last Modified')">
+                              <span class="interactive"><span :class="sortStyling('Last Modified')"></span>Last<br>Modified</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                     <tr v-for="(entry) in resources" v-bind:key="entry">
-                        <td style=width:15%;>
+                        <td class="tbl-col-icons">
                           <span id="img-icons">
                             <img :src="resIconName[entry.type]" v-b-tooltip.hover
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
@@ -210,19 +222,28 @@
                             <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
-                        <td style="width:60%;" class="title-span">
+                        <td class="tbl-col-title">
                           <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >{{ellip(entry.title, 250)}}</a>
                         </td>
-                        <td style=width:15%;>
+                        <td class="tbl-col-authors">
                             <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
                                :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">{{entry.author}}</a>
                         </td>
                         <!-- python is passing .isoformat() in views.py -->
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
-                      <td style=width:5%;><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">{{new Date(entry.created).toLocaleDateString('en-US')}}</span></td>
+                      <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">{{new Date(entry.modified).toLocaleDateString('en-US')}}</span></td>
                     </tr>
                     </tbody>
                 </table>
+            </div>
+                    <div v-if="resources.length > 15" id="resultsdisp-lower">
+            <span id="page-left-lower" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></span>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number-lower"
+                    type="number" v-model="pagenum" @change="searchClick(true)" min="1" :max="pagecount"> of {{pagecount}}
+            <span id="page-right-lower" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></span>
+                Resources {{Math.max(0, pagedisp * perpage - perpage + 1)}} - {{Math.min(rescount, pagedisp * perpage)}} of {{rescount}}
             </div>
         </div>
     </div>
@@ -237,6 +258,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      loading: true,
       prefiltered: false,
       columns: ['name', 'author', 'created', 'modified'],
       labels: ['Title', 'First Author', 'Date Created', 'Last Modified'],
@@ -347,7 +369,7 @@ export default {
     if (this.subjectFilter) {
       const escaped = [];
       this.subjectFilter.forEach((x) => {
-        escaped.push(x.replaceAll('\\', '\\\\'));
+        escaped.push(x.replace(/\\/g, '\\\\'));
       });
       this.subjectFilter = escaped;
     }
@@ -405,13 +427,16 @@ export default {
                   this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
               }
               document.body.style.cursor = 'default';
+              this.loading = false;
             } catch (e) {
               document.body.style.cursor = 'default';
+              this.loading = false;
             }
           }
         })
         .catch((error) => { // eslint-disable-line
           document.body.style.cursor = 'default';
+          this.loading = false;
         });
     },
     clearSearch() {
@@ -455,7 +480,7 @@ export default {
       return '';
     },
     escJS(input) {
-      return input.replaceAll('\\', '\\\\');
+      return input.replace(/\\/g, '\\\\');
     },
     nameList(names) {
       try {
@@ -463,6 +488,11 @@ export default {
       } catch {
         return names;
       }
+    },
+    noMatches() {
+      return (!this.loading) && (!this.resources.length) && (this.authorFilter.length || this.ownerFilter.length
+          || this.subjectFilter.length || this.contributorFilter.length || this.typeFilter.length
+          || this.availabilityFilter.length || this.searchtext !== '' || this.startdate !== '' || this.enddate !== '');
     },
     showMap() {
       toggleMap(); // eslint-disable-line
@@ -531,6 +561,40 @@ export default {
 
 <style scoped>
     @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
+    #discover-search.container {
+        padding: 0;
+    }
+    #resultsdisp {
+        left: 300px;
+    }
+    #page-number {
+        width: 60px;
+    }
+    #wrapper .search-field div {
+        width: 100%;
+    }
+    #wrapper > a {
+        margin-left: 1em;
+    }
+    #search input {
+        padding-left: 30px;
+        padding-right: 30px;
+        z-index: 1;
+    }
+    #img-icons {
+        min-width: 85px;
+        white-space: nowrap;
+    }
+    #page-right-upper, #page-right-lower {
+        margin-right: 25px;
+    }
+    #page-number-upper, #page-number-lower {
+        border-style: solid;
+        border-width: 1px;
+        border-color: #ccc;
+        outline: none;
+        width: 55px;
+    }
     .main-table {
         width: 100%;
     }
@@ -549,10 +613,6 @@ export default {
     .panel-title > a:focus  {
         text-decoration:none;
     }
-    #filter-items {
-        /* Ensure collapse without overlap */
-        width: 235px;
-    }
     .table-wrapper {
         margin-top: 0;
     }
@@ -568,8 +628,37 @@ export default {
         margin-bottom: 20px;
     }
     .table-message {
-        position: absolute;
-        left: 100px;
+        font-style: italic;
+        color:red;
+    }
+    .tbl-col-icons {
+        width: 100px;
+        max-width: 100px;
+        padding-left: 5px;
+        padding-right: 0;
+    }
+    .tbl-col-title {
+        min-width: 150px;
+        max-width: 440px;
+        word-break: keep-all;
+        word-wrap: anywhere;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: normal;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    .tbl-col-authors {
+        min-width: 110px;
+        max-width: 120px;
+        word-break: normal;
+        word-wrap: break-word;
+    }
+    .tbl-col-date {
+        min-width: 94px;
+        max-width: 94px;
+        word-break: break-all;
+        word-wrap: break-word;
     }
     .title-span {
         min-width: 437px;
@@ -581,39 +670,16 @@ export default {
         padding-top: 4px;
         padding-bottom: 4px;
     }
-    #resultsdisp {
-        left: 300px;
-    }
-    #page-number {
-        width: 60px;
-    }
-    #wrapper .search-field div {
-        width: 100%;
-    }
-    #wrapper > a {
-        margin-left: 1em;
-    }
-    #search input {
-        width: 100%;
-        min-width: 800px;
-        padding-left: 25px;
-        padding-right: 25px;
-        z-index: 1;
-    }
-    #img-icons {
-        min-width: 85px;
-        white-space: nowrap;
-    }
     .inside-right {
         position: absolute;
         top: 10px;
-        right: 20px;
+        right: 12px;
         z-index: 2;
     }
     .inside-left {
         position: absolute;
         top: 10px;
-        left: 10px;
+        left: 12px;
         z-index: 2;
     }
     .btn.focus {
@@ -629,14 +695,22 @@ export default {
     .date-wrapper {
         display: block;
         width: 100%;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #ccc;
+    }
+    .calendar-icon {
+        margin: 6px 6px 6px 9px;
     }
     .pagination {
       z-index: 1000;
-      margin: 0;
+      margin-top: 15px;
+      margin-bottom: 15px;
       transform: translateY(4px);
     }
     .interactive:hover {
       color: LightBlue;
+      cursor: pointer;
       /* Avoid double-click selection during rapid clicking: */
       user-select: none; /* standard syntax */
       -webkit-user-select: none; /* webkit (safari, chrome) browsers */
