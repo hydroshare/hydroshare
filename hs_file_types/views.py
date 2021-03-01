@@ -219,12 +219,13 @@ def remove_aggregation_public(request, resource_id, hs_file_type, file_path, **k
     """
     if hs_file_type == "FileSetLogicalFile":
         fileset_id = get_fileset_id(resource_id, file_path)
-        return remove_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
+        return remove_aggregation(request, resource_id=resource_id, hs_file_type=hs_file_type, file_type_id=fileset_id)
     else:
         res_file = get_res_file(resource_id, file_path)
         if isinstance(res_file, Response):
             return res_file
-        return remove_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
+        return remove_aggregation(request, resource_id=resource_id, hs_file_type=hs_file_type,
+                                  file_type_id=res_file.logical_file.id)
 
 
 @api_view(['DELETE'])
@@ -233,12 +234,13 @@ def delete_aggregation_public(request, resource_id, hs_file_type, file_path, **k
     """
     if hs_file_type == "FileSetLogicalFile":
         fileset_id = get_fileset_id(resource_id, file_path)
-        return delete_aggregation(request, resource_id, hs_file_type, fileset_id, **kwargs)
+        return delete_aggregation(request, resource_id=resource_id, hs_file_type=hs_file_type, file_type_id=fileset_id)
     else:
         res_file = get_res_file(resource_id, file_path)
         if isinstance(res_file, Response):
             return res_file
-        return delete_aggregation(request, resource_id, hs_file_type, res_file.logical_file.id, **kwargs)
+        return delete_aggregation(request, resource_id=resource_id, hs_file_type=hs_file_type,
+                                  file_type_id=res_file.logical_file.id)
 
 
 @api_view(['POST'])
