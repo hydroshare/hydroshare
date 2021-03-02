@@ -737,6 +737,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
         pre_delete_resource.send(sender=type(res), request=request, user=user,
                                   resource_shortkey=shortkey, resource=res,
                                   resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
+        # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+        res.set_discoverable(False)
         return JsonResponse(task_dict)
     else:
         try:
