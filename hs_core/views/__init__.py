@@ -730,6 +730,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
+            # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+            res.set_discoverable(False)
             task = delete_resource_task.apply_async((shortkey, user.username))
             task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
@@ -737,8 +739,6 @@ def delete_resource(request, shortkey, *args, **kwargs):
         pre_delete_resource.send(sender=type(res), request=request, user=user,
                                   resource_shortkey=shortkey, resource=res,
                                   resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
-        # make resource being deleted not discoverable to inform solr to remove this resource from solr index
-        res.set_discoverable(False)
         return JsonResponse(task_dict)
     else:
         try:
