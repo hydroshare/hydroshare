@@ -267,6 +267,8 @@ export default {
       searchtext: '',
       geodata: [],
       geopoints: [],
+      geoloaded: false, // do results contain any geodata
+      googMarkers: [],
       startdate: '',
       enddate: '',
       filteredcount: 0,
@@ -275,8 +277,8 @@ export default {
       pagedisp: 1, // page being displayed
       perpage: 0,
       pagecount: 0,
-      geoloaded: true, // endpoint called and retrieved geo data for all resources
-      googMarkers: [],
+      sortDir: -1, // 1 asc -1 desc
+      sortingBy: 'modified',
       countAuthors: {},
       authorFilter: [],
       countSubjects: {},
@@ -289,8 +291,6 @@ export default {
       typeFilter: [],
       countAvailabilities: {},
       availabilityFilter: [],
-      sortDir: -1, // 1 asc -1 desc
-      sortingBy: 'modified',
       resIconName: {
         'Composite Resource': '/static/img/resource-icons/composite48x48.png',
         Generic: '/static/img/resource-icons/generic48x48.png',
@@ -422,6 +422,9 @@ export default {
               this.perpage = response.data.perpage;
               this.pagedisp = this.pagenum;
               this.geodata = JSON.parse(response.data.geodata);
+              if (this.geodata.length > 0) {
+                this.geoloaded = true;
+              }
               if (dofilters) {
                 [this.countAuthors, this.countOwners, this.countSubjects, this.countContributors,
                   this.countTypes, this.countAvailabilities] = JSON.parse(response.data.filterdata);
@@ -434,7 +437,7 @@ export default {
             }
           }
         })
-        .catch((error) => { // eslint-disable-line
+        .catch(() => {
           document.body.style.cursor = 'default';
           this.loading = false;
         });
