@@ -1,17 +1,5 @@
 var notificationsApp;
 
-// Vue.component('notification', {
-//     delimiters: ['${', '}'],
-//     template: '#notification',
-//     props: {
-//         title: { type: Object, required: true },
-//         status: { type: Boolean, required: true },
-//     },
-//     data: function () {
-//         return {}
-//     },
-// });
-
 $(document).ready(function () {
     const checkDelay = 1000; // ms
 
@@ -245,7 +233,7 @@ $(document).ready(function () {
             },
             checkTaskStatus: function(task) {
                 let vue = this;
-                
+
                 return $.ajax({
                     type: "GET",
                     url: '/hsapi/_internal/get_task/' + task.id,
