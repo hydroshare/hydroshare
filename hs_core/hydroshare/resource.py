@@ -791,6 +791,7 @@ def delete_resource(pk, request_username=None):
     """
     from hs_core.tasks import delete_resource_task
     delete_resource_task(pk, request_username)
+
     return pk
 
 

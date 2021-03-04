@@ -731,6 +731,9 @@ def delete_resource(request, shortkey, *args, **kwargs):
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
             # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+            # deletion of a discoverable resource corrupts SOLR.
+            # Fix by making the resource undiscoverable.
+            # This has the side-effect of deleting the resource from SOLR.
             res.set_discoverable(False)
             task = delete_resource_task.apply_async((shortkey, user.username))
             task_id = task.task_id
