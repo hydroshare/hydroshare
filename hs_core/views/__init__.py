@@ -745,6 +745,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
         return JsonResponse(task_dict)
     else:
         try:
+            # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+            res.set_discoverable(False)
             hydroshare.delete_resource(shortkey, request_username=request.user.username)
             pre_delete_resource.send(sender=type(res), request=request, user=user,
                                       resource_shortkey=shortkey, resource=res,
