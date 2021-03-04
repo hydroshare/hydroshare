@@ -82,6 +82,15 @@ $(document).ready(function () {
                         "failed": "Failed",
                         "delivered": "Delivered"
                     }
+                },
+                "resource delete": {
+                    title: "Resource delete",
+                    status: {
+                        "progress": "In progress...",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
                 }
             },
             statusIcons: {
@@ -196,7 +205,7 @@ $(document).ready(function () {
                     return !vue.canBeDismissed(task);
                 });
             },
-            scheduleCheck() {
+            scheduleCheck: function() {
                 let vue = this;
                 if (vue.someInProgress && !vue.isCheckingStatus) {
                     vue.isCheckingStatus = true;
@@ -234,7 +243,7 @@ $(document).ready(function () {
                     vue.isCheckingStatus = false;
                 }
             },
-            checkTaskStatus(task) {
+            checkTaskStatus: function(task) {
                 let vue = this;
                 
                 return $.ajax({
@@ -286,6 +295,11 @@ $(document).ready(function () {
                         break;
                     case "resource copy to user zone":
                         if (task.status === "completed") {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource delete":
+                        if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
                         }
                         break;
