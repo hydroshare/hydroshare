@@ -16,36 +16,25 @@
 <link rel="alternate" type="application/atom+xml" title="Atom" href="{% url 'blog_post_feed' 'atom' %}">
 {% endifinstalled %}
 
-<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic">
 <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_fonts.css' %}">
 <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css">
-<link rel="stylesheet" type="text/css" href="{% static 'fonts/font-mfizz/font-mfizz.css' %}">
 
 {% compress css %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.3.0.2.min.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'css/animate.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}">
 <link rel='stylesheet' type='text/css' href="{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_core.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/notifications-app.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/identifiers.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'css/academicons.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_extends.css' %}">
 
-{% if request.user.is_staff %}
-<style>
-    .animated{
-        animation-fill-mode: none;
-    }
-</style>
-{% endif %}
 {% block extra_css %}{% endblock %}
 {% endcompress %}
 
 {% compress js %}
 <script type="text/javascript" src="{% static 'mezzanine/js/'|add:settings.JQUERY_FILENAME %}"></script>
 <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/vue-2.6.10-dev.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/vue-2.6.10-min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/scrolltopcontrol.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/jqcsrf.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
@@ -59,18 +48,7 @@
 
 {% load inplace_edit %}
 {% inplace_static %}
-<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-<!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-<![endif]-->
-<!--[if IE]>
-<style>
-    .showcase {
-         zoom: 0.6;
-    }
-</style>
-<![endif]-->
+
 
 {% block extra_head %}{% endblock %}
 {% if not page|is_debug %}
@@ -82,101 +60,7 @@
 </head>
 
 <body id="{% block body_id %}body{% endblock %}">
-<!-- Navbar
-    ============= -->
-    <div id="hs-nav-bar" class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="/landingPage">
-                    <img id="img-brand-logo" src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
-                </a>
-            </div>
-            <div class="collapse navbar-collapse">
-                {% comment %}
-                <!-- Search form for extra small screens -->
-                <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search" name="q">
-                        <span class="input-group-btn">
-                            <button class="hl-btn hl-btn-blue" type="button">Go!</button>
-                        </span>
-                    </div>
-                </form>
-                {% endcomment %}
-                <ul class="nav navbar-nav navbar-right hidden-xs">
-                    {% ifinstalled mezzanine.accounts %}
-                    {% if request.user.is_authenticated %}
-                        <li id="profile-menu" class="display-block">
-                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                         class="round-image profile-pic-thumbnail pull-left">
-                                    </div>
-                                </a>
-                            {% else %}
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
-                                </a>
-                            {% endif %}
-                            <ul class="dropdown-menu arrow_box">
-                                <li class="account">
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <strong id="profile-menu-fullname" title="{{ request.user|best_name }}">{{ request.user|best_name }}</strong>
-                                            {% if request.user.email %}
-                                                <div id="profile-menu-email" class="text-muted" title="{{ request.user.email }}">{{ request.user.email }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <div class="dropdown-footer">
-                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
-                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
-                                            <span class="glyphicon glyphicon-log-out"></span> Sign out
-                                        </a>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                        {% include "includes/notifications-app.html" %}
-                    {% else %}
-                    <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
-                    <li id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
-                    {% endif %}
-                    {% endifinstalled %}
-                    {% comment %}
-                    <!-- Search Button -->
-                    <li id="search">
-                        <a href="#" id="search-btn" onclick="return false;"><i class="fa fa-search" id="search-icon"></i> Search</a>
-                        <div class="search-box" id="search-box">
-                            <form class="input-group"role="search" action="{% url 'search' %}">
-                                <input type="text" class="form-control" placeholder="Search" name="q">
-                                <span class="input-group-btn">
-                                    <button class="hl-btn hl-btn-default" type="button">Go!</button>
-                                </span>
-                            </form>
-                        </div>
-                    </li>
-                    {% endcomment %}
-                </ul>
-                {% include "pages/menus/dropdown.html" %}
-            </div>
-        </div>
-    </div>
+{% include 'includes/navbar.html' %}
     {% nevercache %}
     {% if messages %}
     {% for message in messages %}
@@ -217,12 +101,6 @@
     {% endif %}
     {% endnevercache %}
 
-    <!-- Universal message box for AJAX requests -->
-    <div id="universalMessage">
-      <span>Hi, I'm an error.</span>
-      <a href="#" class="um_close" id="UMClose">x</a>
-    </div>
-
     {% block all_content %}
         <div class="main-container">
             {% block main %}{% endblock %}
@@ -231,104 +109,6 @@
         </div>
     {% endblock %}
 
-    <!-- Foooter
-    ================== -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <!-- Contact Us
-                =================  -->
-                <div class="col-md-4 col-sm-4">
-                    {% editable siteconf.col1_heading siteconf.col1_content %}
-                    <div class="headline">
-                        <h3>{{ siteconf.col1_heading }}</h3>
-                    </div>
-                    <div class="content">
-                        {{ siteconf.col1_content|richtext_filters|safe }}
-                    </div>
-                    {% endeditable %}
-                </div>
-                <!-- Social icons
-                ===================== -->
-                <div class="col-md-4 col-sm-4">
-                    {% editable siteconf.col2_heading siteconf.twitter_link siteconf.facebook_link siteconf.pinterest_link siteconf.youtube_link siteconf.github_link siteconf.linkedin_link siteconf.vk_link siteconf.gplus_link %}
-                    <div class="headline"><h3>{{ siteconf.col2_heading }}</h3></div>
-                    {% endeditable %}
-                    <div class="content social">
-                        {% editable siteconf.col2_content %}
-                        {{ siteconf.col2_content|richtext_filters|safe }}
-                        {% endeditable %}
-                        {% if siteconf.has_social_network_links %}
-                        <ul>{% if siteconf.twitter_link %}
-                            <li>
-                                <a href="{{ siteconf.twitter_link }}" target="_blank"><i class="fa fa-twitter"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.facebook_link %}
-                            <li>
-                                <a href="{{ siteconf.facebook_link }}" target="_blank"><i class="fa fa-facebook"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.pinterest_link %}
-                            <li>
-                                <a href="{{ siteconf.pinterest_link }}" target="_blank"><i class="fa fa-pinterest"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.youtube_link %}
-                            <li>
-                                <a href="{{ siteconf.youtube_link }}" target="_blank"><i class="fa fa-youtube"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.github_link %}
-                            <li>
-                                <a href="{{ siteconf.github_link }}" target="_blank"><i class="fa fa-github"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.linkedin_link %}
-                            <li>
-                                <a href="{{ siteconf.linkedin_link }}" target="_blank"><i class="fa fa-linkedin"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.vk_link %}
-                            <li>
-                                <a href="{{ siteconf.vk_link }}" target="_blank"><i class="fa fa-vk"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.gplus_link %}
-                            <li>
-                                <a href="{{ siteconf.gplus_link }}" target="_blank"><i class="fa fa-google-plus"></i></a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                        {% endif %}
-                        <div class="clearfix"></div>
-                    </div>
-                </div>
-                <!-- Subscribe
-                =============== -->
-                <div class="col-md-4 col-sm-4">
-                    {% editable siteconf.col3_heading siteconf.col3_content %}
-                    <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
-                    <div class="content">
-                        {{ siteconf.col3_content|richtext_filters|safe }}
-                    </div>
-                    {% endeditable %}
-                </div>
-            </div>
-        </div>
-        <!-- Legal
-        ============= -->
-        <div class="legal">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        {% editable siteconf.copyright %}
-                        <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a> | <a href="{% url "sitemap" %}">Site Map</a></p>
-                        {% endeditable %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+{% include 'includes/footer.html' %}
 </body>
 </html>
