@@ -1,5 +1,3 @@
-
-
 import errno
 import json
 import logging
@@ -17,7 +15,7 @@ from dateutil import parser
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
@@ -27,10 +25,10 @@ from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.utils.http import int_to_base36
 from mezzanine.conf import settings
-from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -44,6 +42,7 @@ from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResourc
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_file_types.utils import set_logical_file_type
+from theme.backends import without_login_date_token_generator
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -364,7 +363,6 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     """
     authorized = False
     user = get_user(request)
-
     try:
         res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
     except ObjectDoesNotExist:
@@ -394,7 +392,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         authorized = res.raccess.public
 
     if raises_exception and not authorized:
-        raise PermissionDenied()
+        raise PermissionDenied
     else:
         return res, authorized, user
 
@@ -548,10 +546,11 @@ def get_metadata_contenttypes():
     return meta_contenttypes
 
 
-def get_my_resources_list(user):
+def get_my_resources_list(user, annotate=True):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
     :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
     :return: an instance of QuerySet of resources
     """
 
@@ -577,8 +576,6 @@ def get_my_resources_list(user):
     viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
 
-    labeled_resources = user.ulabels.labeled_resources
-    favorite_resources = user.ulabels.favorited_resources
     discovered_resources = user.ulabels.my_resources
 
     # join all queryset objects
@@ -587,49 +584,51 @@ def get_my_resources_list(user):
         viewable_resources.distinct() | \
         discovered_resources.distinct()
 
-    resource_collection = resource_collection.annotate(
-        owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
-                        then=Value(True, BooleanField()))))
+    if annotate:  # When used in the My Resources page, annotate for speed
+        labeled_resources = user.ulabels.labeled_resources
+        favorite_resources = user.ulabels.favorited_resources
+        resource_collection = resource_collection.annotate(
+            owned=Case(When(short_id__in=owned_resources.values_list('short_id', flat=True),
+                            then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
-                      then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            editable=Case(When(short_id__in=editable_resources.values_list('short_id', flat=True),
+                          then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
-                           then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            viewable=Case(When(short_id__in=viewable_resources.values_list('short_id', flat=True),
+                               then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
-                        then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            discovered=Case(When(short_id__in=discovered_resources.values_list('short_id', flat=True),
+                            then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.annotate(
-        is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
-                              then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                                  then=Value(True, BooleanField()))))
 
-    # The annotated field 'has_labels' would allow us to query the DB for labels only if the
-    # resource has labels - that means we won't hit the DB for each resource listed on the page
-    # to get the list of labels for a resource
-    resource_collection = resource_collection.annotate(has_labels=Case(
-        When(short_id__in=labeled_resources.values_list('short_id', flat=True),
-             then=Value(True, BooleanField()))))
+        # The annotated field 'has_labels' would allow us to query the DB for labels only if the
+        # resource has labels - that means we won't hit the DB for each resource listed on the page
+        # to get the list of labels for a resource
+        resource_collection = resource_collection.annotate(has_labels=Case(
+            When(short_id__in=labeled_resources.values_list('short_id', flat=True),
+                 then=Value(True, BooleanField()))))
 
-    resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
-
-    # we won't hit the DB for each resource to know if it's status is public/private/discoverable
-    # etc
-    resource_collection = resource_collection.select_related('raccess')
-    # prefetch metadata items - creators, keywords(subjects), dates and title
-    meta_contenttypes = get_metadata_contenttypes()
-    for ct in meta_contenttypes:
-        # get a list of resources having metadata that is an instance of a specific
-        # metadata class (e.g., CoreMetaData)
-        res_list = [res for res in resource_collection if res.content_type == ct]
-        prefetch_related_objects(res_list,
-                                 Prefetch('content_object__creators'),
-                                 Prefetch('content_object__subjects'),
-                                 Prefetch('content_object___title'),
-                                 Prefetch('content_object__dates'))
+        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
+        # we won't hit the DB for each resource to know if it's status is public/private/discoverable
+        # etc
+        resource_collection = resource_collection.select_related('raccess')
+        # prefetch metadata items - creators, keywords(subjects), dates and title
+        meta_contenttypes = get_metadata_contenttypes()
+        for ct in meta_contenttypes:
+            # get a list of resources having metadata that is an instance of a specific
+            # metadata class (e.g., CoreMetaData)
+            res_list = [res for res in resource_collection if res.content_type == ct]
+            prefetch_related_objects(res_list,
+                                     Prefetch('content_object__creators'),
+                                     Prefetch('content_object__subjects'),
+                                     Prefetch('content_object___title'),
+                                     Prefetch('content_object__dates'))
     return resource_collection
 
 
@@ -653,7 +652,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to),
+            "token": without_login_date_token_generator.make_token(email_to),
             "membership_request_id": membership_request.id
         }) + "?next=" + (next_url(request) or "/")
 
@@ -664,7 +663,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),
-            "token": default_token_generator.make_token(email_to)
+            "token": without_login_date_token_generator.make_token(email_to)
         }) + "?next=" + (next_url(request) or "/")
 
     context['action_url'] = action_url
@@ -720,9 +719,10 @@ def link_irods_file_to_django(resource, filepath):
         return ret
 
 
-def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
-    res_files = _link_irods_folder_to_django(resource, istorage, foldername, exclude=())
-    check_aggregations(resource, res_files)
+def link_irods_folder_to_django(resource, istorage, foldername, auto_aggregate=True):
+    res_files = _link_irods_folder_to_django(resource, istorage, foldername)
+    if auto_aggregate:
+        check_aggregations(resource, res_files)
 
 
 def listfolders_recursively(istorage, path):
@@ -735,7 +735,7 @@ def listfolders_recursively(istorage, path):
     return folders
 
 
-def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
+def _link_irods_folder_to_django(resource, istorage, foldername):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
     Database after iRODS file and folder operations to get Django and iRODS in sync
@@ -743,8 +743,6 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: REDUNDANT: IrodsStorage object
     :param foldername: the folder name, as a fully qualified path
-    :param exclude: UNUSED: a tuple that includes file names to be excluded from
-        linking under the folder;
     :return: List of ResourceFile of newly linked files
     """
     if __debug__:
@@ -757,15 +755,14 @@ def _link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         store = istorage.listdir(foldername)
         # add files into Django resource model
         for file in store[1]:
-            if file not in exclude:
-                file_path = os.path.join(foldername, file)
-                # This assumes that file_path is a full path
-                res_files.append(link_irods_file_to_django(resource, file_path))
+            file_path = os.path.join(foldername, file)
+            # This assumes that file_path is a full path
+            res_files.append(link_irods_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             res_files = res_files + \
                         _link_irods_folder_to_django(resource, istorage,
-                                                     os.path.join(foldername, folder), exclude)
+                                                     os.path.join(foldername, folder))
     return res_files
 
 
@@ -926,7 +923,23 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
-def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=False):
+class IrodsFile:
+    """Mimics an uploaded file to allow use of the ingestion logic which expects an uploaded file, rather than a file
+    on irods."""
+    def __init__(self, name, istorage):
+        self._name = name
+        self._istorage = istorage
+
+    @property
+    def name(self):
+        return self._name
+
+    def read(self):
+        return self._istorage.download(self._name).read()
+
+
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
+               overwrite=False, auto_aggregate=True, ingest_metadata=False):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store and keep Django DB in sync.
@@ -937,10 +950,20 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     :param bool_remove_original: a bool indicating whether original zip file will be deleted
     after unzipping.
     :param bool overwrite: a bool indicating whether to overwrite files on unzip
+    :param bool auto_aggregate: a bool indicating whether to check for and aggregate recognized files
+    :param bool ingest_metadata: a bool indicating whether to look for and ingest resource/aggregation metadata files
     :return:
     """
+    from hs_file_types.utils import identify_metadata_files
+
     if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
+
+    if ingest_metadata:
+        if not auto_aggregate:
+            raise ValidationError("auto_aggregate must be on when metadata_ingestion is on.")
+        if not overwrite:
+            raise ValidationError("overwrite must be on when metadata_ingestion is on.")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -949,16 +972,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    zip_fname = os.path.basename(zip_with_rel_path)
     working_dir = os.path.dirname(zip_with_full_path)
     unzip_path = None
     try:
-
         if overwrite:
-            # irods doesn't allow overwrite, so we have to check if a file exists, delete it and
-            # then write the new file. Aggregations are treated as single objects.  If one file is
-            # overwritten in an aggregation, the whole aggregation is deleted.
-
             # unzip to a temporary folder
             unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
             # list all files to be moved into the resource
@@ -969,9 +986,17 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
             for folder in listfolders(istorage, unzip_path):
                 destination_folder = os.path.join(working_dir, folder)
                 destination_folders.append(destination_folder)
+
+            irods_files = []
+            for unzipped_file in unzipped_files:
+                irods_files.append(IrodsFile(unzipped_file, istorage))
+            res_files = irods_files
+            meta_files = []
+            if ingest_metadata:
+                res_files, meta_files, map_files = identify_metadata_files(irods_files)
             # walk through each unzipped file, delete aggregations if they exist
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 if (istorage.exists(destination_file)):
                     if resource.resource_type == "CompositeResource":
                         aggregation_object = resource.get_file_aggregation_object(
@@ -984,36 +1009,44 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite=
                     else:
                         istorage.delete(destination_file)
             # now move each file to the destination
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
-                istorage.moveFile(file, destination_file)
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
+                istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
-            res_files = []
-            for file in unzipped_files:
-                destination_file = _get_destination_filename(file, unzipped_foldername)
+            added_resource_files = []
+            for file in res_files:
+                destination_file = _get_destination_filename(file.name, unzipped_foldername)
                 destination_file = destination_file.replace(res_id + "/", "")
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
-                res_files.append(res_file)
+                added_resource_files.append(res_file)
 
-            # scan for aggregations
-            check_aggregations(resource, res_files)
+            if auto_aggregate:
+                check_aggregations(resource, added_resource_files)
+            if ingest_metadata:
+                # delete original zip to prevent from being pulled into an aggregation
+                zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+                delete_resource_file(res_id, zip_with_rel_path, user)
+
+                from hs_file_types.utils import ingest_metadata_files
+                ingest_metadata_files(resource, meta_files, map_files)
             istorage.delete(unzip_path)
         else:
             unzip_path = istorage.unzip(zip_with_full_path)
-            link_irods_folder_to_django(resource, istorage, unzip_path)
+            link_irods_folder_to_django(resource, istorage, unzip_path, auto_aggregate)
 
     except Exception:
         logger.exception("failed to unzip")
-        if unzip_path and istorage.exists:
+        if unzip_path and istorage.exists(unzip_path):
             istorage.delete(unzip_path)
         raise
 
-    if bool_remove_original:
-        delete_resource_file(res_id, zip_fname, user)
+    if bool_remove_original and not ingest_metadata:  # ingest_metadata deletes the zip by default
+        zip_with_rel_path = zip_with_rel_path.split("contents/", 1)[1]
+        delete_resource_file(res_id, zip_with_rel_path, user)
 
     # TODO: should check can_be_public_or_discoverable here
-
+    resource.refresh_from_db()
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 

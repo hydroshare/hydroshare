@@ -6,7 +6,7 @@
             <a data-toggle="modal" data-target="#manage-access">
             <span data-toggle="tooltip" data-placement="bottom"
                   data-html="true"
-                  title="Manage who has access<br><br><small>Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</small>"
+                  title="Manage who has access<br><br><small>Use this button to share your resource with specific HydroShare users or set its sharing status (Public, Discoverable, Private, Shareable). You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.</small>"
                   class="fa fa-user-plus icon-button icon-blue"></span>
             </a>
         {% endif %}
@@ -92,7 +92,9 @@
                         {% csrf_token %}
 
                         {% if page.perms.delete or cm.raccess.published %}
-                            <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
+                            <a id="new-version" {% if cm.locked_time is None %}data-toggle="modal"{% endif %}
+                               data-target="#new-version-resource-dialog"
+                               {% if cm.locked_time is not None %}class="disabled"{% endif %}>
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="Create a new version of this resource"
                                       class="fa fa-code-fork icon-button icon-blue"></span>

@@ -179,6 +179,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
+                   'custom_citation': content_model.get_custom_citation(),
                    'title': title,
                    'readme': readme,
                    'abstract': abstract,
@@ -213,18 +214,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'current_user': user,
                    'maps_key': maps_key
         }
-
-        if 'task_id' in request.session:
-            task_id = request.session.get('task_id', None)
-            if task_id:
-                context['task_id'] = task_id
-            del request.session['task_id']
-
-        if 'download_path' in request.session:
-            download_path = request.session.get('download_path', None)
-            if download_path:
-                context['download_path'] = download_path
-            del request.session['download_path']
 
         return context
 
@@ -287,6 +276,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         g.is_user_member = user in g.gaccess.members
         if g.is_user_member:
             grps_member_of.append(g)
+    try:
+        citation_id = content_model.metadata.citation.first().id
+    except:
+        citation_id = None
 
     context = {
                'cm': content_model,
@@ -305,6 +298,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
+               'custom_citation': content_model.get_custom_citation(),
+               'citation_id': citation_id,
                'rights': content_model.metadata.rights,
                'bag_url': bag_url,
                'current_user': user,
@@ -324,7 +319,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'maps_key': maps_key,
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
-               'odm2_terms': list(ODM2Variable.all())
+               'odm2_terms': list(ODM2Variable.all()),
     }
 
     return context

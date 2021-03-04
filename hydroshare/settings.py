@@ -207,6 +207,7 @@ import os
 
 # Full filesystem path to the project.
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(PROJECT_ROOT)
 
 # Name of the directory for the project.
 PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
@@ -348,7 +349,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            (os.path.join(PROJECT_ROOT, "templates"),)
+            (os.path.join(BASE_DIR, "hs_core", "templates"),)
         ],
         'OPTIONS': {
             'context_processors': [
@@ -375,7 +376,7 @@ TEMPLATES = [
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
 # response phase the middleware will be applied in reverse order.
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -399,7 +400,7 @@ MIDDLEWARE_CLASSES = (
 # security settings
 USE_SECURITY = False
 if USE_SECURITY:
-    MIDDLEWARE_CLASSES += (
+    MIDDLEWARE += (
         'security.middleware.XssProtectMiddleware',
         'security.middleware.ContentSecurityPolicyMiddleware',
         'security.middleware.ContentNoSniff',
@@ -491,8 +492,6 @@ HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealti
 # customized value for password reset token, email verification and group invitation link token
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT_DAYS = 7
-
-RESOURCE_LOCK_TIMEOUT_SECONDS = 300  # in seconds
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
@@ -688,14 +687,8 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
-SWAGGER_SETTINGS = {
-    "VALIDATOR_URL": False
-}
-
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
-HSWS_ACTIVATED = False
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 
@@ -707,6 +700,19 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Image': set(['gif', 'jpg', 'jpeg', 'tif', 'tiff', 'png']),
     'Multidimensional (NetCDF)': set(['nc'])
 } 
+
+HSWS_ACTIVATED = False
+
+# celery task names to be recorded in task notification model
+TASK_NAME_LIST = [
+    'hs_core.tasks.create_bag_by_irods',
+    'hs_core.tasks.create_temp_zip',
+    'hs_core.tasks.unzip_task',
+    'hs_core.tasks.copy_resource_task',
+    'hs_core.tasks.replicate_resource_bag_to_user_zone_task',
+    'hs_core.tasks.create_new_version_resource_task',
+    'hs_core.tasks.delete_resource_task'
+]
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

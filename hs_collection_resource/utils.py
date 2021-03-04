@@ -124,17 +124,20 @@ def update_collection_list_csv(collection_obj):
         return csv_content_list
 
 
-def get_collectable_resources(user, coll_resource):
-    get_my_resources_list(user)
-
+def get_collectable_resources(user, coll_resource, annotate=True):
     # resource is collectable if
-    # 1) Shareable=True
-    # 2) OR, current user is a owner of it
-    # 3) exclude this resource as well as resources already in the collection
-    return get_my_resources_list(user) \
+    # 1) shareable=True and resource is public in my resources, --or--
+    # 2) shareable=True and resource is accessible with view privilege, --or--
+    # 2) current user owns the resource.
+    # Also exclude this resource as well as resources already in the collection
+    # Start with both my resources and favorited public resources; so no need to
+    # check that user can view resources.
+    return get_my_resources_list(user, annotate) \
+        .filter(Q(raccess__shareable=True) |  # shareable and viewable, --or--
+                Q(raccess__discoverable=True) |  # discoverable, public, and/or published --or--
+                Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
-        .exclude(id__in=coll_resource.resources.values_list("id", flat=True)) \
-        .filter(Q(raccess__shareable=True) | (Q(r2urp__user=user) & Q(r2urp__privilege=PrivilegeCodes.OWNER)))
+        .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
 
 
 def _get_owners_string(owners_list):

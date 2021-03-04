@@ -1,4 +1,3 @@
-
 import json
 import datetime
 import pytz
@@ -41,11 +40,16 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
-    replicate_resource_bag_to_user_zone, update_quota_usage as update_quota_usage_utility
+    update_quota_usage as update_quota_usage_utility
 
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+
+from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
+    set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
+from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
+    create_new_version_resource_task, delete_resource_task
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -63,7 +67,7 @@ from hs_core.hydroshare import utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
 
-from hs_collection_resource.models import CollectionDeletedResource
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,6 +100,63 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
+def get_tasks_by_user(request):
+    user_id = get_task_user_id(request)
+    task_list = get_all_tasks(user_id)
+    return JsonResponse({'tasks': task_list})
+
+
+def get_task(request, task_id):
+    task_dict = get_or_create_task_notification(task_id)
+    return JsonResponse(task_dict)
+
+
+def abort_task(request, task_id):
+    if request.user.is_authenticated():
+        if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
+            task_dict = revoke_task_by_id(task_id)
+            return JsonResponse(task_dict)
+        else:
+            return JsonResponse({'error': 'not authorized to revoke the task'}, status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        return JsonResponse({'error': 'not authorized to revoke the task'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@login_required
+def dismiss_task(request, task_id):
+    user_id = get_task_user_id(request)
+    if TaskNotification.objects.filter(task_id=task_id, username=user_id).exists():
+        task_dict = dismiss_task_by_id(task_id)
+        if task_dict:
+            return JsonResponse(task_dict)
+        else:
+            return JsonResponse({'error': 'requested task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return JsonResponse({'error': 'not authorized to dismiss the task'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+def set_task_delivered(request, task_id):
+    if request.user.is_authenticated():
+        if TaskNotification.objects.filter(task_id=task_id, username=request.user.username).exists():
+            task_dict = set_task_delivered_by_id(task_id)
+            if task_dict:
+                return JsonResponse(task_dict)
+            else:
+                return JsonResponse({'error': 'requested task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return JsonResponse({'error': 'not authorized to deliver the task'}, status=status.HTTP_401_UNAUTHORIZED)
+    elif TaskNotification.objects.filter(task_id=task_id, username=request.session.session_key).exists():
+        # dismiss the task entry for delivered tasks for anonymous users
+        task_dict = dismiss_task_by_id(task_id)
+        if task_dict:
+            return JsonResponse(task_dict)
+        else:
+            return JsonResponse({'error': 'requested task does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return JsonResponse({'error': 'not authorized to deliver the task'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@login_required
 def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
     ajax_response_data = {'status': 'error', 'message': ''}
@@ -236,7 +297,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     }
 
     return JsonResponse(data=response_data, status=200)
-    
+
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -613,6 +674,7 @@ def file_download_url_mapper(request, shortkey):
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
     res.metadata.delete_element(element_name, element_id)
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
@@ -662,45 +724,37 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
-
-    res_title = res.metadata.title
-    res_id = shortkey
-    res_type = res.resource_type
-    resource_related_collections = [col for col in res.collections.all()]
-    owners_list = [owner for owner in res.raccess.owners.all()]
-    ajax_response_data = {'status': 'success'}
-    try:
-        hydroshare.delete_resource(shortkey)
-    except ValidationError as ex:
-        if request.is_ajax():
-            ajax_response_data['status'] = 'error'
-            ajax_response_data['message'] = str(ex)
-            return JsonResponse(ajax_response_data)
-        else:
+    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
+                              'cannot be deleted.')
+    if request.is_ajax():
+        task_id = get_resource_delete_task(shortkey)
+        if not task_id:
+            # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+            # deletion of a discoverable resource corrupts SOLR.
+            # Fix by making the resource undiscoverable.
+            # This has the side-effect of deleting the resource from SOLR.
+            res.set_discoverable(False)
+            task = delete_resource_task.apply_async((shortkey, user.username))
+            task_id = task.task_id
+        task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
+                                                    username=user.username)
+        pre_delete_resource.send(sender=type(res), request=request, user=user,
+                                  resource_shortkey=shortkey, resource=res,
+                                  resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
+        return JsonResponse(task_dict)
+    else:
+        try:
+            # make resource being deleted not discoverable to inform solr to remove this resource from solr index
+            res.set_discoverable(False)
+            hydroshare.delete_resource(shortkey, request_username=request.user.username)
+            pre_delete_resource.send(sender=type(res), request=request, user=user,
+                                      resource_shortkey=shortkey, resource=res,
+                                      resource_title=res.metadata.title, resource_type=res.resource_type, **kwargs)
+            return HttpResponseRedirect('/my-resources/')
+        except ValidationError as ex:
             request.session['validation_error'] = str(ex)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    # if the deleted resource is part of any collection resource, then for each of those collection
-    # create a CollectionDeletedResource object which can then be used to list collection deleted
-    # resources on collection resource landing page
-    for collection_res in resource_related_collections:
-        o=CollectionDeletedResource.objects.create(
-             resource_title=res_title,
-             deleted_by=user,
-             resource_id=res_id,
-             resource_type=res_type,
-             collection=collection_res
-             )
-        o.resource_owners.add(*owners_list)
-
-    post_delete_resource.send(sender=type(res), request=request, user=user,
-                              resource_shortkey=shortkey, resource=res,
-                              resource_title=res_title, resource_type=res_type, **kwargs)
-
-    if request.is_ajax():
-        return JsonResponse(ajax_response_data)
-    else:
-        return HttpResponseRedirect('/my-resources/')
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
@@ -718,53 +772,42 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     Returns:
         JSON list that indicates status of resource replication, i.e., success or error
     '''
-    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                      raises_exception=False)
     if not authorized:
-        return HttpResponse(
-        json.dumps({"error": "You are not authorized to replicate this resource."}),
-        content_type="application/json"
+        return JsonResponse(
+        {"error": "You are not authorized to replicate this resource."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
-    try:
-        replicate_resource_bag_to_user_zone(user, shortkey)
-        return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
-            content_type = "application/json"
-        )
-    except SessionException as ex:
-        return HttpResponse(
-        json.dumps({"error": ex.stderr}),
-        content_type="application/json"
-        )
-    except utils.QuotaException as ex:
-        return HttpResponse(
-            json.dumps({"error": str(ex)}),
-            content_type="application/json"
-        )
-    except ValidationError as ex:
-        return HttpResponse(
-            json.dumps({"error": str(ex)}),
-            content_type="application/json"
-        )
+    task = replicate_resource_bag_to_user_zone_task.apply_async((shortkey, user.username))
+    task_id = task.task_id
+    task_dict = get_or_create_task_notification(task_id, name='resource copy to user zone', username=user.username)
+    return JsonResponse(task_dict)
+
+
+def list_referenced_content(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    # subfolders could be named contents
+    return JsonResponse({'filenames': [x.url.split('contents', 1)[-1] for x in list(res.logical_files)
+                                       if 'url' in x.extra_data]})
 
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    new_resource = None
-    try:
-        new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource, user=request.user)
-    except Exception as ex:
-        if new_resource:
-            new_resource.delete()
-        request.session['resource_creation_error'] = 'Failed to copy this resource: ' + str(ex)
-        return HttpResponseRedirect(res.get_absolute_url())
-
-    # go to resource landing page
-    request.session['just_created'] = True
-    request.session['just_copied'] = True
-    return HttpResponseRedirect(new_resource.get_absolute_url())
+    if request.is_ajax():
+        task = copy_resource_task.apply_async((shortkey, None, user.username))
+        task_id = task.task_id
+        task_dict = get_or_create_task_notification(task_id, name='resource copy', payload=shortkey, username=user.username)
+        return JsonResponse(task_dict)
+    else:
+        try:
+            response_url = copy_resource_task(shortkey, new_res_id=None, request_username=user.username)
+            return HttpResponseRedirect(response_url)
+        except utils.ResourceCopyException:
+            return HttpResponseRedirect(res.get_absolute_url())
 
 
 @api_view(['POST'])
@@ -776,47 +819,32 @@ def copy_resource_public(request, pk):
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
-
     if res.locked_time:
-        elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
-        if elapsed_time.days >= 0 or elapsed_time.seconds > settings.RESOURCE_LOCK_TIMEOUT_SECONDS:
-            # clear the lock since the elapsed time is greater than timeout threshold
-            res.locked_time = None
-            res.save()
-        else:
-            # cannot create new version for this resource since the resource is locked by another
-            # user
-            request.session['resource_creation_error'] = 'Failed to create a new version for ' \
-                                                         'this resource since another user is ' \
-                                                         'creating a new version for this ' \
-                                                         'resource synchronously.'
-            return HttpResponseRedirect(res.get_absolute_url())
-
-    new_resource = None
-    try:
-        # lock the resource to prevent concurrent new version creation since only one new version for an
-        # obsoleted resource is allowed
-        res.locked_time = datetime.datetime.now(pytz.utc)
-        res.save()
-        new_resource = hydroshare.create_empty_resource(shortkey, user)
-        new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
-    except Exception as ex:
-        if new_resource:
-            new_resource.delete()
-        # release the lock if new version of the resource failed to create
-        res.locked_time = None
-        res.save()
-        request.session['resource_creation_error'] = 'Failed to create a new version of ' \
-                                                     'this resource: ' + str(ex)
+        # cannot create new version for this resource since the resource is locked by another
+        # user
+        request.session['resource_creation_error'] = 'Failed to create a new version for ' \
+                                                     'this resource since another user is ' \
+                                                     'creating a new version for this ' \
+                                                     'resource synchronously.'
         return HttpResponseRedirect(res.get_absolute_url())
-
-    # release the lock if new version of the resource is created successfully
-    res.locked_time = None
+    # lock the resource to prevent concurrent new version creation since only one new version for an
+    # obsoleted resource is allowed
+    res.locked_time = datetime.datetime.now(pytz.utc)
     res.save()
-
-    # go to resource landing page
-    request.session['just_created'] = True
-    return HttpResponseRedirect(new_resource.get_absolute_url())
+    if request.is_ajax():
+        task = create_new_version_resource_task.apply_async((shortkey, user.username))
+        task_id = task.task_id
+        task_dict = get_or_create_task_notification(task_id, name='resource version', payload=shortkey,
+                                                    username=user.username)
+        return JsonResponse(task_dict)
+    else:
+        try:
+            response_url = create_new_version_resource_task(shortkey, user.username)
+            return HttpResponseRedirect(response_url)
+        except utils.ResourceVersioningException as ex:
+            request.session['resource_creation_error'] = 'Failed to create a new version of ' \
+                                                         'this resource: ' + str(ex)
+            return HttpResponseRedirect(res.get_absolute_url())
 
 
 @api_view(['POST'])
@@ -1219,7 +1247,7 @@ def add_generic_context(request, page):
         'add_view_invite_user_form': AddUserInviteForm(),
         'add_view_hs_user_form': AddUserHSForm(),
         'add_view_user_form': AddUserForm(),
-        # Reuse the same class AddGroupForm() leads to duplicated IDs. 
+        # Reuse the same class AddGroupForm() leads to duplicated IDs.
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_zone_account_exist': user_zone_account_exist,
@@ -1572,6 +1600,11 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
+@api_view(['GET'])
+def hsapi_get_user(request, user_identifier):
+    return get_user_or_group_data(request, user_identifier, "false")
+
+
 @login_required
 def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
@@ -1584,13 +1617,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
     user_data = {}
     if is_group == 'false':
         user = utils.user_from_id(user_or_group_id)
-
-        if user.userprofile.middle_name:
-            user_name = "{}, {} {}".format(user.last_name, user.first_name, user.userprofile.middle_name)
-        else:
-            user_name = "{}, {}".format(user.last_name, user.first_name)
-
-        user_data['name'] = user_name
+        user_data['name'] = utils.get_user_party_name(user)
         user_data['email'] = user.email
         user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
         if user.userprofile.phone_1:
@@ -1841,7 +1868,7 @@ class GroupView(TemplateView):
                 'profile_user': u
             }
         else:
-            public_group_resources = [r for r in group_resources 
+            public_group_resources = [r for r in group_resources
                                       if r.raccess.public or r.raccess.discoverable]
 
             return {

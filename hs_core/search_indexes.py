@@ -6,7 +6,6 @@ from hs_geographic_feature_resource.models import GeographicFeatureMetaData
 from hs_app_netCDF.models import NetcdfMetaData
 from ref_ts.models import RefTSMetadata
 from hs_app_timeseries.models import TimeSeriesMetaData
-from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
@@ -227,9 +226,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return BaseResource
 
     def index_queryset(self, using=None):
-        """Return queryset including discoverable and public resources."""
-        return self.get_model().objects.filter(Q(raccess__discoverable=True) |
-                                               Q(raccess__public=True)).distinct()
+        """Return queryset including discoverable (and public) resources."""
+        candidates = self.get_model().objects.filter(raccess__discoverable=True)
+        show = [x.short_id for x in candidates if x.show_in_discover]
+        # this must return a queryset; this inefficient method is the best I can do
+        return self.get_model().objects.filter(short_id__in=show)
 
     def prepare_created(self, obj):
         return obj.created.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -553,19 +554,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period':
                     clean_date = coverage.value["start"][:10]
+                    start_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else:
-                            start_date = ""
                     elif "-" in clean_date:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else:
-                            start_date = ""
-
                     start_date = remove_whitespace(start_date)  # no embedded spaces
                     try:
                         start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
@@ -589,18 +586,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period' and 'end' in coverage.value:
                     clean_date = coverage.value["end"][:10]
+                    end_date = ""
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
-                        else:
-                            end_date = ""
                     else:
                         parsed_date = clean_date.split("-")
                         if len(parsed_date) == 3:
                             end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                        else:
-                            end_date = ""
                     end_date = remove_whitespace(end_date)  # no embedded spaces
                     try:
                         end_date_object = datetime.strptime(end_date, '%Y-%m-%d')

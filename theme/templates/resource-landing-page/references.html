@@ -1,7 +1,7 @@
 {% load hydroshare_tags crispy_forms_tags %}
 
 {% if not resource_edit_mode %}
-    {% if sources or show_relations_section %}
+    {% if sources or show_relations_section or belongs_to_collections %}
         <div class="col-xs-12 content-block">
             <h3>References</h3>
         </div>
@@ -27,9 +27,7 @@
                     {% if relation.type|lower != "haspart" %}
                         <tr>
                             <td class="dataset-label">
-                                {% if relation.type == "isHostedBy" %}
-                                    The content of this resource is hosted by:
-                                {% elif relation.type == "isCopiedFrom" %}
+                                {% if relation.type == "isCopiedFrom" %}
                                     The content of this resource was copied from:
                                 {% elif relation.type == "isPartOf" %}
                                     The content of this resource is part of:
@@ -145,9 +143,7 @@ Click this button to add a relationship to another resource, external website, o
                 {% if  relation.type|lower != "haspart" %}
                     <tr>
                         <td scope="row" class="dataset-label">
-                            {% if relation.type == "isHostedBy" %}
-                                The content of this resource is hosted by:
-                            {% elif relation.type == "isCopiedFrom" %}
+                            {% if relation.type == "isCopiedFrom" %}
                                 The content of this resource was copied from:
                             {% elif relation.type == "isPartOf" %}
                                 The content of this resource is part of:

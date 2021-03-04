@@ -1,7 +1,6 @@
 {% load crispy_forms_tags hydroshare_tags %}
 
 <input id="resID" type="hidden" value="{{ cm.short_id }}"/>
-
 {% if page.perms.change and resource_edit_mode %}
     <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
          aria-hidden="true">
@@ -29,6 +28,7 @@
             </div>
         </div>
     </div>
+
 
     <script id="add-author-modal-template" type="text/x-template">
         <div class="modal fade" id="add-author-modal" tabindex="-1" role="dialog"
@@ -1134,7 +1134,9 @@
                                         <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                             <option value="">---------</option>
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% if type_display != "The content of this resource is hosted by" %}
+                                                    <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1364,7 +1366,9 @@
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% if type_display != "The content of this resource is hosted by" %}
+                                                    <option value={{ type_value }}>{{ type_display }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1387,6 +1391,61 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary btn-disable-after-valid">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="customize-citation-dialog" tabindex="-1" role="dialog" aria-labelledby="customize-citation"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                {% if custom_citation %}
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/citation/{{ citation_id }}/update-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                {% else %}
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/citation/add-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                {% endif %}
+                <input type="hidden" name="resource-mode">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="customize-citation">Custom Citation</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="custom-citation-input">Provide the full text of how you would like this resource to be cited:</label>
+                            <textarea class="form-control" name="content" id="custom-citation-input" cols="30"
+                                      rows="3">{% if custom_citation %}{{ custom_citation }}{% endif %}</textarea>
+                            Suggested Format: Creator(s) (Publication Year). Title,  Version, Publisher, Resource Type, Identifier (preferably encoded as a URL)
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        {% if custom_citation %}
+                        <script language="JavaScript">
+                          function AsyncRevertCitation() {
+                            $('#customize-citation-dialog').toggle();
+                            document.body.style.cursor = 'wait';
+                            $.ajax({
+                              type: "POST",
+                              url: "/hsapi/_internal/{{cm.short_id}}/citation/{{citation_id}}/delete-metadata/",
+                            }).complete(function() {
+                              document.body.style.cursor = 'default';
+                              if (window.location.href.includes('?resource-mode=edit')) {
+                                location.reload();
+                              } else {
+                                window.location.href = window.location.href + '?resource-mode=edit';
+                              }
+                            });
+                          }
+                        </script>
+                        <a id="remove-citation-link" href="javascript:AsyncRevertCitation()"><i class="glyphicon glyphicon-trash table-icon icon-button btn-remove"></i>Remove Custom Citation</a>
+                        {% endif %}
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1447,33 +1506,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="large-file-download-alert" tabindex="-1" role="dialog"
-     aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="large-file-download-close">Download Alert</h4>
-            </div>
-            <div class="modal-body alert alert-warning alert-dismissible" role="alert">
-                <p>
-                    File larger than 1GB cannot be downloaded directly via HTTP. Please
-                    create an iRODS account in your iRODS user zone from your profile page
-                    if you have not done so already, and replicate the resource to your iRODS
-                    user zone, then download the large file via iRODS clients such as
-                    <a href="https://docs.irods.org/master/icommands/user/" target="_blank">
-                    icommands</a> and
-                    <a href="https://help.hydroshare.org/accessing-hydroshare-irods-from-a-windows-pc-or-mac/"
-                       target="_blank">Cyberduck</a>.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% if not resource_edit_mode and not is_replaced_by %}
     {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
         {% if page.perms.delete or cm.raccess.published %}
@@ -1494,8 +1526,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <a type="button" class="btn btn-danger"
-                               href="/hsapi/_internal/{{ cm.short_id }}/create-new-version-resource/">Create New Version</a>
+                            <button id="new-version-btn" class="btn btn-danger">Create New Version</button>
                         </div>
                     </div>
                 </div>
@@ -1585,8 +1616,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <a type="button" class="btn btn-danger"
-                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                                    <button id="btn-delete-resource" class="btn btn-danger">Delete</button>
                                 </div>
                             </div>
                         </div>
@@ -1626,8 +1656,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-success" id="copy-btn"
-                                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/" disabled>Copy this resource</a>
+                                <button id="copy-btn" class="btn btn-success" disabled>Copy this resource</button>
                             </div>
                         </div>
                     </div>
@@ -1664,8 +1693,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-success" id="download-bag-btn"
-                   href="{{ cm.bag_url }}" disabled>Download</a>
+                <button type="button" class="btn btn-success" id="download-bag-btn"
+                   data-bag-url="{{ cm.bag_url }}" disabled>Download</button>
             </div>
         </div>
     </div>
@@ -1718,7 +1747,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a id="btn-replicate" class="btn btn-danger">Copy</a>
+                    <a id="btn-replicate" class="btn btn-success">Copy</a>
                 </div>
             </div>
         </div>

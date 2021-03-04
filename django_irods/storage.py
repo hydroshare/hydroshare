@@ -399,7 +399,7 @@ class IrodsStorage(Storage):
                                   "file size".format(name))
         return int(float(stdout))
 
-    def checksum(self, full_name):
+    def checksum(self, full_name, force_compute=True):
         """
         Compute/Update checksum of file object and return the checksum
         :param full_name: the data object name with full collection path in order to locate data object from current
@@ -407,7 +407,8 @@ class IrodsStorage(Storage):
         :return: checksum of the file object
         """
         # first force checksum (re)computation
-        self.session.run("ichksum", None, "-f", full_name)
+        if force_compute:
+            self.session.run("ichksum", None, "-f", full_name)
         # retrieve checksum using iquest
         # get data object name only from the full_name input parameter to be used by iquest
         if '/' in full_name:
@@ -424,10 +425,16 @@ class IrodsStorage(Storage):
             raise ValidationError("{} cannot be found in iRODS to retrieve "
                                   "checksum".format(obj_name))
         # remove potential '\n' from stdout
-        return stdout.rstrip('\n')
+        checksum = stdout.strip('\n')
+        if not checksum:
+            if force_compute:
+                raise ValidationError("checksum for {} cannot be found in iRODS".format(obj_name))
+            # checksum hasn't been computed, so force the checksum computation
+            return self.checksum(full_name, force_compute=True)
+        return checksum
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
-        reverse_url = reverse('django_irods_download', kwargs={'path': name})
+        reverse_url = reverse('rest_download', kwargs={'path': name})
         query_params = {'url_download': url_download, "zipped": zipped, 'aggregation': aggregation}
         return reverse_url + '?' + urlencode(query_params)
 

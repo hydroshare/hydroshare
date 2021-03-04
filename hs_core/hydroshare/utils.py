@@ -5,7 +5,11 @@ import logging
 import shutil
 import copy
 from uuid import uuid4
+from urllib.parse import quote
 import errno
+import urllib
+
+from urllib.request import pathname2url, url2pathname
 
 from django.apps import apps
 from django.http import Http404
@@ -23,7 +27,7 @@ from mezzanine.conf import settings
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -42,6 +46,14 @@ class ResourceFileValidationException(Exception):
 
 
 class QuotaException(Exception):
+    pass
+
+
+class ResourceCopyException(Exception):
+    pass
+
+
+class ResourceVersioningException(Exception):
     pass
 
 
@@ -467,9 +479,17 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     """
 
     if not by_user:
-        logger.warning("by_user not specified in resource_modified, last_changed_by will not be updated")
+        user = None
     else:
-        resource.last_changed_by = by_user
+        if isinstance(by_user, User):
+            user = by_user
+        else:
+            try:
+                user = User.objects.get(username=by_user)
+            except User.DoesNotExist:
+                user = None
+    if user:
+        resource.last_changed_by = user
 
     resource.updated = now().isoformat()
     # seems this is the best place to sync resource title with metadata title
@@ -480,7 +500,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        create_bag_files(resource)
+        create_bag_metadata_files(resource)
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
@@ -628,14 +648,25 @@ def convert_file_size_to_unit(size, unit):
         return tbsize
 
 
-def validate_user_quota(user, size):
+def validate_user_quota(user_or_username, size):
     """
     validate to make sure the user is not over quota with the newly added size
-    :param user: the user to be validated
+    :param user_or_username: the user to be validated
     :param size: the newly added file size to add on top of the user's used quota to be validated.
                  size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
+    if user_or_username:
+        if isinstance(user_or_username, User):
+            user = user_or_username
+        else:
+            try:
+                user = User.objects.get(username=user_or_username)
+            except User.DoesNotExist:
+                user = None
+    else:
+        user = None
+
     if user:
         # validate it is within quota hard limit
         uq = user.quotas.filter(zone='hydroshare').first()
@@ -790,20 +821,29 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
         metadata.append({'creator': creator_data})
 
 
+def get_user_party_name(user):
+    user_profile = get_profile(user)
+    if user.last_name and user.first_name:
+        if user_profile.middle_name:
+            party_name = '%s, %s %s' % (user.last_name, user.first_name,
+                                            user_profile.middle_name)
+        else:
+            party_name = '%s, %s' % (user.last_name, user.first_name)
+    elif user.last_name:
+        party_name = user.last_name
+    elif user.first_name:
+        party_name = user.first_name
+    elif user_profile.middle_name:
+        party_name = user_profile.middle_name
+    else:
+        party_name = ''
+    return party_name
+
+
 def get_party_data_from_user(user):
     party_data = {}
     user_profile = get_profile(user)
-
-    if user_profile.middle_name:
-        user_full_name = '%s, %s %s' % (user.last_name, user.first_name,
-                                        user_profile.middle_name)
-    else:
-        user_full_name = '%s, %s' % (user.last_name, user.first_name)
-
-    if user_full_name:
-        party_name = user_full_name
-    else:
-        party_name = user.username
+    party_name = get_user_party_name(user)
 
     party_data['name'] = party_name
     party_data['email'] = user.email
@@ -848,7 +888,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names, full_paths=full_paths,
                                                auto_aggregate=auto_aggregate)
-
+    resource.refresh_from_db()
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
@@ -1061,6 +1101,7 @@ def check_aggregations(resource, res_files):
     :param res_files: list of ResourceFile objects to check for aggregations creation
     :return:
     """
+    new_logical_files = []
     if resource.resource_type == "CompositeResource":
         from hs_file_types.utils import set_logical_file_type
 
@@ -1068,5 +1109,75 @@ def check_aggregations(resource, res_files):
         for res_file in res_files:
             if not res_file.has_logical_file or res_file.logical_file.is_fileset:
                 # create aggregation from file 'res_file'
-                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      fail_feedback=False)
+                logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                                     fail_feedback=False)
+                if logical_file:
+                    new_logical_files.append(logical_file)
+    return new_logical_files
+
+
+def build_preview_data_url(resource, folder_path, spatial_coverage):
+    """Get a GeoServer layer preview link."""
+
+    if resource.raccess.public is True:
+        try:
+            geoserver_url = settings.HSWS_GEOSERVER_URL
+            resource_id = resource.short_id
+            layer_id = '.'.join('/'.join(folder_path.split('/')[2:]).split('.')[:-1])
+
+            for k, v in settings.HSWS_GEOSERVER_ESCAPE.items():
+                layer_id = layer_id.replace(k, v)
+
+            layer_id = quote(f'HS-{resource_id}:{layer_id}')
+
+            extent = quote(','.join((
+                str(spatial_coverage['westlimit']),
+                str(spatial_coverage['southlimit']),
+                str(spatial_coverage['eastlimit']),
+                str(spatial_coverage['northlimit']),
+            )))
+
+            layer_srs = quote(spatial_coverage['projection'][-9:])
+
+            preview_data_url = (
+                f'{geoserver_url}/HS-{resource_id}/wms'
+                f'?service=WMS&version=1.1&request=GetMap'
+                f'&layers={layer_id}'
+                f'&bbox={extent}'
+                f'&width=800&height=500'
+                f'&srs={layer_srs}'
+                f'&format=application/openlayers'
+            )
+
+        except Exception as e:
+            logger.exception("build_preview_data_url: " + str(e))
+            preview_data_url = None
+
+    else:
+        preview_data_url = None
+
+    return preview_data_url
+
+
+def encode_resource_url(url):
+    """
+    URL encodes a full resource file/folder url.
+    :param url: a string url
+    :return: url encoded string
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    url_encoded_path = pathname2url(parsed_url.path)
+    encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
+    return encoded_url
+
+
+def decode_resource_url(url):
+    """
+    URL decodes a full resource file/folder url.
+    :param url: an encoded string url
+    :return: url decoded string
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    url_encoded_path = url2pathname(parsed_url.path)
+    encoded_url = parsed_url._replace(path=url_encoded_path).geturl()
+    return encoded_url

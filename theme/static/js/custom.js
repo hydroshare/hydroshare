@@ -136,6 +136,11 @@ $(document).ready(function () {
         return false;
     });
 
+    // Prevents nav dropdowns from closing when clicking on elements inside
+    $('#hs-nav-bar .dropdown-menu').on('click', function (e) {
+        e.stopPropagation();
+    });
+
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
 
@@ -152,88 +157,37 @@ $(document).ready(function () {
         $(this).formatDate();
     });
 
-    $("#universalMessage a").on('click', function() {
-        $("#universalMessage").slideUp();
-        return false
-    });
-
-    $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
-        $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
-        let title = $(this).attr("data-modal-title");
-        let inputTitle = $(this).attr("data-modal-input-title");
-
-        $('#submit-title-dialog .modal-title').text(title);
-        $('#submit-title-dialog .modal-input-title').text(inputTitle);
-        $('#submit-title-dialog').modal('show');
-    });
-
-    $("#btn-resource-create").on("click", function () {
-        let resourceType = $(this).attr("data-value");
-        let title = $('#input-title').val();
-
-        createResource(resourceType, title);
-    });
-    
-    function createResource(type, title) {
-        // Disable dropdown items while we process the request
-        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
-
-        var formData = new FormData();
-        if (!title) {
-            title = "Untitled Resource";
-        }
-        formData.append("csrfmiddlewaretoken", csrf_token);
-        formData.append("title", title);
-        formData.append("resource-type", type);
-
-        customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
-        $("html").css("cursor", "progress");
-
-        $.ajax({
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            url: "/hsapi/_internal/create-resource/do/",
-            success: function (response) {
-                if (response.status === "success") {
-                    window.location = response['resource_url'];
-                }
-                else {
-                    console.log(response);
-                    $(".custom-alert").alert('close');  // Dismiss previous alert
-                    customAlert("Error", 'Failed to create resource.', "error", 6000);
-                    $("html").css("cursor", "initial");
-                    $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
-                }
-            },
-            error: function (response) {
-                console.log(response);
-                $(".custom-alert").alert('close');  // Dismiss previous alert
-                customAlert("Error", 'Failed to create resource.', "error", 6000);
-                $("html").css("cursor", "initial");
-                $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+    function popup_profile_alert(uid, fields) {
+        if ($("#publish").length) {
+                $("#publish").toggleClass("disabled", true);
+                $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
+                $("#publish > [data-toggle='tooltip']").attr("data-original-title",
+                    "Your profile information must be complete before you can formally publish resources.");
             }
-        });
+            missing_field_str = fields.join(', ')
+
+            var message = 'Your profile is nearly complete. Please fill in the '
+                + '<strong>' + missing_field_str + '</strong> fields'
+                + ' on the <a href="/user/' + uid + '/">User Profile</a> page';
+
+            customAlert("Profile", message, "info", 10000);
     }
 
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
-            if(!user.organization) {
+            var missing_profile_fields = [];
+            if(!user.organization)
+                missing_profile_fields.push('Organization')
+            if(!user.state)
+                missing_profile_fields.push('State')
+            if(!user.country)
+                missing_profile_fields.push('Country')
+            if(!user.user_type)
+                missing_profile_fields.push('User Type')
+            if(missing_profile_fields.length) {
                 // Disable publishing resources
-                if ($("#publish").length) {
-                    $("#publish").toggleClass("disabled", true);
-                    $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
-                    $("#publish > [data-toggle='tooltip']").attr("data-original-title",
-                        "Your profile information must be complete before you can formally publish resources.");
-                }
-
-                var message = 'Your profile is nearly complete. Please fill in the '
-                    + '<strong>Organization</strong> field'
-                    + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
-
-                customAlert("Profile", message, "info", 10000);
+                popup_profile_alert(user.id, missing_profile_fields)
             }
         },
         error: function(response) {

@@ -53,19 +53,24 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 using_backends = self.connection_router.for_write(instance=newinstance)
                 for using in using_backends:
                     # if object is public/discoverable or becoming public/discoverable, index it 
-                    if instance.raccess.public or instance.raccess.discoverable: 
+                    # test whether the object should be exposed. 
+                    if instance.show_in_discover: 
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.", str(type(instance)), newinstance.short_id)
+                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.", 
+                                             str(type(instance)), newinstance.short_id)
+
+
                     # if object is private or becoming private, delete from index
-                    else:
+                    else:  # not to be shown in discover
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.remove_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: delete of %s with short_id %s failed.", str(type(instance)), newinstance.short_id)
+                            logger.exception("Failure: delete of %s with short_id %s failed.", 
+                                             str(type(instance)), newinstance.short_id)
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
@@ -78,23 +83,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         """
         Given an individual model instance, determine which backends the
         delete should be sent to & delete the object on those backends.
+        This never worked well. Just set the resource to not discoverable 
+        before deleting it. This will delete it from SOLR properly. 
         """
-        from hs_core.models import BaseResource
-        from hs_access_control.models import ResourceAccess
-
-        # only delete the SOLR instance when the raccess field is recursively deleted.
-        # At this point, the resource still exists.
-        # Thus, the BaseResource is literally available and can be unindexed.
-        # Trying to delete as a result of deleting the Resource fails, because
-        # it is not possible to recover the BaseResource object.
-        if isinstance(instance, ResourceAccess):
-            newinstance = instance.resource # automatically a BaseResource
-            newsender = BaseResource
-            # self.handle_delete(newsender, newinstance)
-            using_backends = self.connection_router.for_write(instance=newinstance)
-            for using in using_backends:
-                try:
-                    index = self.connections[using].get_unified_index().get_index(newsender)
-                    index.remove_object(newinstance, using=using)
-                except NotHandled:
-                    logger.exception("Failure: delete of %s with short_id %s failed.", str(type(instance)), newinstance.short_id)
+        pass

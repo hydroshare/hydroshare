@@ -266,8 +266,11 @@ def signup_verify(request, uidb36=None, token=None):
 
 
 @login_required
-def update_user_profile(request):
-    user = request.user
+def update_user_profile(request, profile_user_id):
+    if request.user.is_superuser:
+        user = User.objects.get(id=profile_user_id)
+    else:
+        user = request.user
     old_email = user.email
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
@@ -297,7 +300,7 @@ def update_user_profile(request):
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
                 profile = profile_form.save(commit=False)
-                profile.user = request.user
+                profile.user = user
                 profile.identifiers = identifiers
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")

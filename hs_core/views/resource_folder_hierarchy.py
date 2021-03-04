@@ -8,10 +8,14 @@ from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
+from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
+from hs_core.task_utils import get_or_create_task_notification
+from hs_core.tasks import unzip_task
+from hs_core.views import utils as view_utils
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
@@ -145,6 +149,10 @@ def data_store_structure(request):
                                      'aggregation_name':
                                          f.logical_file.get_aggregation_display_name(),
                                      'main_file': f.logical_file.get_main_file.file_name,
+                                     'preview_data_url': f.logical_file.metadata.get_preview_data_url(
+                                        resource=resource,
+                                        folder_path=f_store_path
+                                     ),
                                      'url': f.logical_file.url})
             logical_file_type = f.logical_file_type_name
             logical_file_id = f.logical_file.id
@@ -288,28 +296,37 @@ def data_store_folder_unzip(request, **kwargs):
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
     overwrite = request.POST.get('overwrite', 'false').lower() == 'true'  # False by default
+    auto_aggregate = request.POST.get('auto_aggregate', 'true').lower() == 'true'  # True by default
+    ingest_metadata = request.POST.get('ingest_metadata', 'false').lower() == 'true'  # False by default
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
 
-    try:
-        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original=remove_original_zip,
-                   overwrite=overwrite)
-    except SessionException as ex:
-        specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
-                       "protection from overwriting existing files. Unzip in a different " \
-                       "location (e.g., folder) or move or rename the file being overwritten. " \
-                       "iRODS error follows: "
-        return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except DRF_ValidationError as ex:
-        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+    if request.is_ajax():
+        task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
+                                       auto_aggregate, ingest_metadata))
+        task_id = task.task_id
+        task_dict = get_or_create_task_notification(task_id, name='file unzip', username=request.user.username,
+                                                    payload=resource.get_absolute_url())
+        return JsonResponse(task_dict)
+    else:
+        try:
+            unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate, ingest_metadata)
+        except SessionException as ex:
+            specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
+                           "protection from overwriting existing files. Unzip in a different " \
+                           "location (e.g., folder) or move or rename the file being overwritten. " \
+                           "iRODS error follows: "
+            return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except DRF_ValidationError as ex:
+            return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    # this unzipped_path can be used for POST request input to data_store_structure()
-    # to list the folder structure after unzipping
-    return_object = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
+        # this unzipped_path can be used for POST request input to data_store_structure()
+        # to list the folder structure after unzipping
+        return_object = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
 
-    return HttpResponse(
-        json.dumps(return_object),
-        content_type="application/json"
-    )
+        return HttpResponse(
+            json.dumps(return_object),
+            content_type="application/json"
+        )
 
 
 @api_view(['POST'])
@@ -324,6 +341,16 @@ def data_store_folder_unzip_public(request, pk, pathname):
     """
 
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
+
+
+@api_view(['POST'])
+def ingest_metadata_files(request, pk):
+    from hs_file_types.utils import identify_and_ingest_metadata_files
+    resource, _, _ = view_utils.authorize(request, pk,
+                                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    resource_files = list(request.FILES.values())
+    identify_and_ingest_metadata_files(resource, resource_files)
+    return Response(status=204)
 
 
 @api_view(['POST'])

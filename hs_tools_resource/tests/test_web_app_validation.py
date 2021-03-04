@@ -53,12 +53,13 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseFile.objects.all().count())
+        self.assertEqual(good_url, RequestUrlBaseFile.objects.first().value)
 
-    def test_file_level_keys_add_bad(self):
-        bad_url = 'https://www.google.com?' \
-                  'file_id=${BAD_KEY}'
+    def test_file_level_keys_add_custom(self):
+        custom_url = 'https://www.google.com?' \
+                  'file_id=${custom_KEY}'
 
-        post_data = {'value': bad_url}
+        post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbasefile", 'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
@@ -69,7 +70,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                                         element_name="requesturlbasefile")
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-        self.assertEqual(0, RequestUrlBaseFile.objects.all().count())
+        self.assertEqual(1, RequestUrlBaseFile.objects.all().count())
+        self.assertEqual(custom_url, RequestUrlBaseFile.objects.first().value)
 
     def test_file_level_keys_update(self):
         good_url = 'https://www.google.com?' \
@@ -110,9 +112,10 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, RequestUrlBaseFile.objects.all().count())
         self.assertEqual(updated_url, RequestUrlBaseFile.objects.first().value)
 
-        # update bad url
+        # update custom url
         url = reverse('update_metadata_element', kwargs=url_params)
-        post_data = {'value': 'https://www.google.com?file_id=${BAD_KEY}'}
+        custom_url = 'https://www.google.com?file_id=${BAD_KEY}'
+        post_data = {'value': custom_url}
         request = self.factory.post(url, data=post_data)
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
@@ -121,8 +124,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseFile.objects.all().count())
-        # ensure it did not change
-        self.assertEqual(updated_url, RequestUrlBaseFile.objects.first().value)
+        self.assertEqual(custom_url, RequestUrlBaseFile.objects.first().value)
 
     def test_aggregation_level_keys_add_good(self):
         good_url = 'https://www.google.com?' \
@@ -145,12 +147,13 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
+        self.assertEqual(good_url, RequestUrlBaseAggregation.objects.first().value)
 
-    def test_aggregation_level_keys_add_bad(self):
-        bad_url = 'https://www.google.com?' \
-                  'file_id=${BAD_KEY}'
+    def test_aggregation_level_keys_add_custom(self):
+        custom_url = 'https://www.google.com?' \
+                  'file_id=${HS_CUSTOM}'
 
-        post_data = {'value': bad_url}
+        post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbaseaggregation",
                       'shortkey': self.resWebApp.short_id}
 
@@ -162,7 +165,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                                         element_name="requesturlbaseaggregation")
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-        self.assertEqual(0, RequestUrlBaseAggregation.objects.all().count())
+        self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
+        self.assertEqual(custom_url, RequestUrlBaseAggregation.objects.first().value)
 
     def test_aggregation_level_keys_update(self):
         good_url = 'https://www.google.com?' \
@@ -205,9 +209,10 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
         self.assertEqual(updated_url, RequestUrlBaseAggregation.objects.first().value)
 
-        # update bad url
+        # update custom key url
         url = reverse('update_metadata_element', kwargs=url_params)
-        post_data = {'value': 'https://www.google.com?file_id=${BAD_KEY}'}
+        custom_url = 'https://www.google.com?file_id=${BAD_KEY}'
+        post_data = {'value': custom_url}
         request = self.factory.post(url, data=post_data)
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
@@ -216,8 +221,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBaseAggregation.objects.all().count())
-        # ensure it did not change
-        self.assertEqual(updated_url, RequestUrlBaseAggregation.objects.first().value)
+        self.assertEqual(custom_url, RequestUrlBaseAggregation.objects.first().value)
 
     def test_resource_level_keys_add_good(self):
         good_url = 'https://www.google.com?' \
@@ -239,11 +243,11 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         self.assertEqual(1, RequestUrlBase.objects.all().count())
 
-    def test_resource_level_keys_add_bad(self):
-        bad_url = 'https://www.google.com?' \
-                  'file_id=${BAD_KEY}'
+    def test_resource_level_keys_add_custom(self):
+        custom_url = 'https://www.google.com?' \
+                  'file_id=${CUSTOM_KEY}'
 
-        post_data = {'value': bad_url}
+        post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbase", 'shortkey': self.resWebApp.short_id}
 
         url = reverse('add_metadata_element', kwargs=url_params)
@@ -254,7 +258,8 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
                                         element_name="requesturlbase")
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-        self.assertEqual(0, RequestUrlBase.objects.all().count())
+        self.assertEqual(1, RequestUrlBase.objects.all().count())
+        self.assertEqual(custom_url, RequestUrlBase.objects.first().value)
 
     def test_resource_level_keys_update(self):
         good_url = 'https://www.google.com?' \
@@ -295,9 +300,10 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(1, RequestUrlBase.objects.all().count())
         self.assertEqual(updated_url, RequestUrlBase.objects.first().value)
 
-        # update bad url
+        # update custom url
         url = reverse('update_metadata_element', kwargs=url_params)
-        post_data = {'value': 'https://www.google.com?file_id=${BAD_KEY}'}
+        custom_key_url = 'https://www.google.com?file_id=${CUSTOM_KEY}'
+        post_data = {'value': custom_key_url}
         request = self.factory.post(url, data=post_data)
         request.user = self.user
         request.META['HTTP_REFERER'] = 'http_referer'
@@ -306,8 +312,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         self.assertEqual(1, RequestUrlBase.objects.all().count())
-        # ensure it did not change
-        self.assertEqual(updated_url, RequestUrlBase.objects.first().value)
+        self.assertEqual(custom_key_url, RequestUrlBase.objects.first().value)
 
     def test_file_extensions_update(self):
         good_extensions = '.tif, .txt,.html'

@@ -15,7 +15,7 @@ geo $external {
   172.16.0.0/12 0;
   127.0.0.0/8 0;
   10.0.0.0/8 0;
-  152.54.0.0/22 0;
+  152.54.0.0/16 0;
 }
 
 proxy_set_header Host $host;
@@ -26,7 +26,7 @@ proxy_set_header X-Forwarded-Proto $scheme;
 client_max_body_size 4096m;
 client_body_buffer_size 1m;
 proxy_intercept_errors on;
-proxy_buffering on;
+proxy_buffering off;
 proxy_buffer_size 128k;
 proxy_buffers 256 16k;
 proxy_busy_buffers_size 256k;
@@ -38,11 +38,22 @@ proxy_read_timeout 300;
 server {
     listen          80;
     server_name     FQDN_OR_IP;
-    # This should not rewrite hostname!
-    # rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
-    # This syntax is considered more efficient in nginx documentation
-    # and does the same thing as the above:
-    return 301 https://$http_host/$request_uri;
+
+    # bypass https for internal monitoring 
+    location /whatzupdoc-inner { 
+        if ($external) { 
+            return 404; 
+        } 
+        stub_status; 
+    } 
+
+    location / { 
+        # This should not rewrite hostname!
+        # rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+        # This syntax is considered more efficient in nginx documentation
+        # and does the same thing as the above:
+        return 301 https://$http_host/$request_uri;
+    } 
 }
 
 server {
@@ -67,6 +78,12 @@ server {
     if ($need_rewrite = 11) {
         return 301 https://FQDN_OR_IP$request_uri;
     }
+
+    sendfile on;
+    sendfile_max_chunk 512k;
+    directio 4m;  
+    directio_alignment 512; 
+    aio threads;
 
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;

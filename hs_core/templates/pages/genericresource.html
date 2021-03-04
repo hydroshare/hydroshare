@@ -33,16 +33,6 @@
             {% endif %}
         {% endblock %}
 
-        {%  if task_id and download_path %}
-            <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
-            <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-            <div class="col-sm-12">
-                <div id='download-status-info' class="alert alert-success">
-                    Please wait for the download to be prepared<span id="loading">.</span>
-                </div>
-            </div>
-        {% endif %}
-
         {# Needs to be included first so it's available before other instances initialize #}
         {% include "includes/profile-card.html" %}
 
@@ -128,6 +118,10 @@
                     <li role="separator" class="divider"></li>
                 {% endif %}
 
+                <li id="btn-preview" data-menu-name="preview" data-fb-action="preview">
+                    <span class="glyphicon glyphicon-eye-open icon-blue"></span>
+                    <span>Preview</span>
+                </li>
                 <li id="btn-download" data-menu-name="download" data-fb-action="download">
                     <span class="glyphicon glyphicon-download icon-blue"></span>
                     <span>Download</span>
@@ -339,8 +333,8 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="warnings-list">
-                                        <div>Consider saving a copy of the files before you delete it if it is
-                                            important to you.
+                                        <div>Consider downloading a copy of file(s) before deleting.<br /><br />
+                                            <p id="additional-citation-warning"></p>
                                         </div>
                                         <br>
                                     </div>
@@ -555,7 +549,7 @@
                                                 <button id="fb-delete" data-fb-action="delete"
                                                         class="disabled fb-space-right"
                                                         title="Delete" data-toggle="modal"
-                                                        data-target="#confirm-delete-dialog">
+                                                        data-target="#confirm-delete-dialog" onclick="warnExternalContent('{{ cm.short_id }}')">
                                                     <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                 </button>
                                             {% endif %}
@@ -598,17 +592,18 @@
                                                 </a>
                                             {% endif %}
 
-                                            <a id="btn-download-all" type="button"
-                                               title="Download all content as Zipped BagIt Archive"
-                                                    {% if cm.raccess.require_download_agreement %}
-                                               data-target="#license-agree-dialog-bag" data-toggle="modal"
-                                               data-placement="auto"
-                                               {% else %}href="{{ cm.bag_url }}"{% endif %}>
+                                            <button id="btn-download-all"
+                                                title="Download all content as Zipped BagIt Archive"
+                                                {% if cm.raccess.require_download_agreement %}
+                                                data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                data-placement="auto"
+                                                {% else %}
+                                                data-bag-url="{{ cm.bag_url }}"
+                                                {% endif %}>
                                                 <span class="fa fa-briefcase icon-blue"></span>
-                                            </a>
+                                            </button>
                                             <a class="small" target="_blank"
                                                href="https://en.wikipedia.org/wiki/BagIt">Learn more</a>
-
                                         </div>
                                     </div>
                                 </div>
@@ -697,18 +692,6 @@
                         </div>
                     </div>
 
-                    <div id="fb-download-help" class="alert alert-warning hidden" role="alert">
-                        <div class="flex">
-                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                            <em>
-                                <p><strong>Downloading LargeFiles</strong></p>
-                                <p>To learn how to download files larger than 1 GB see <a
-                                        href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
-                                        target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</p>
-                            </em>
-                        </div>
-                    </div>
-
                     <div class="files" id="previews"></div>
                     {% block download_bag %}
                         {% if user_zone_account_exist %}
@@ -740,6 +723,11 @@
             </div>
         {% endif %}
         {% endblock %} {# content_block #}
+
+        {# ======= Data Services ======= #}
+        {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url  %}
+            {% include "resource-landing-page/data-services.html" %}
+        {% endif %}
 
         {# ======= Resource Specific ======= #}
 
@@ -792,6 +780,19 @@
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      const SHORT_ID = "{{ cm.short_id }}";
+      var global_num_ext_refs = 0;
+      var global_custom_citation = "{{ custom_citation }}";
+
+      $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+      }).complete(function(res) {
+        if (res.responseText) {
+          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
+        }
+      });
+      const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
@@ -801,7 +802,6 @@
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const SHORT_ID = "{{ cm.short_id }}";
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
@@ -859,12 +859,12 @@
           };
       {% endif %}
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
+
     </script>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing&v=3{% if maps_key %}&key={{ maps_key }}{% endif %}"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
