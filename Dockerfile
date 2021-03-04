@@ -1,6 +1,8 @@
 FROM hydroshare/hs_docker_base:xue_explore
 MAINTAINER Phuong Doan pdoan@cuahsi.org
 
+RUN pip install implicit
+
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen

@@ -900,6 +900,8 @@ def delete_resource(pk):
             obsolete_res.raccess.immutable = False
             obsolete_res.raccess.save()
 
+    res.set_discoverable(False)  # deletes from SOLR
+
     res.delete()
     return pk
 

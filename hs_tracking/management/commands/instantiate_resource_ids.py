@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from hs_tracking.models import Variable
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.models import BaseResource
+from time import sleep
 
 
 # a base RE for identifying the resource_id in a request.
@@ -48,6 +49,7 @@ def instantiate_timestamp_range(start, end):
                     ids = ids + 1
                     if ids % 1000 == 0:
                         print("{} of {}".format(ids, events))
+                        sleep(1)
 
                     if v.name == 'visit':  # for visits, classify kind of visit
                         if LANDING_RE.search(value):
