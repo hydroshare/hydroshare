@@ -67,23 +67,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         """
         Given an individual model instance, determine which backends the
         delete should be sent to & delete the object on those backends.
+        This never worked well. Just set the resource to not discoverable 
+        before deleting it. This will delete it from SOLR properly. 
         """
-        from hs_core.models import BaseResource
-        from hs_access_control.models import ResourceAccess
-
-        # only delete the SOLR instance when the raccess field is recursively deleted.
-        # At this point, the resource still exists.
-        # Thus, the BaseResource is literally available and can be unindexed.
-        # Trying to delete as a result of deleting the Resource fails, because
-        # it is not possible to recover the BaseResource object.
-        if isinstance(instance, ResourceAccess):
-            newinstance = instance.resource # automatically a BaseResource
-            newsender = BaseResource
-            # self.handle_delete(newsender, newinstance)
-            using_backends = self.connection_router.for_write(instance=newinstance)
-            for using in using_backends:
-                try:
-                    index = self.connections[using].get_unified_index().get_index(newsender)
-                    index.remove_object(newinstance, using=using)
-                except NotHandled:
-                    logger.exception("Failure: delete of %s with short_id %s failed.", str(type(instance)), newinstance.short_id)
+        pass

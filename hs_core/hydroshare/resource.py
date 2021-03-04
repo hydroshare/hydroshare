@@ -814,6 +814,11 @@ def delete_resource(pk):
                 obsolete_res.raccess.immutable = False
                 obsolete_res.raccess.save()
 
+    # deletion of a discoverable resource corrupts SOLR.
+    # Fix by making the resource undiscoverable.
+    # This has the side-effect of deleting the resource from SOLR.
+    res.set_discoverable(False)
+
     res.delete()
     return pk
 

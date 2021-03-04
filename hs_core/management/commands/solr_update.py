@@ -134,8 +134,12 @@ class Command(BaseCommand):
                 except BaseResource.DoesNotExist:
                     print("SOLR resource {} NOT FOUND in Django; removing from SOLR"
                           .format(r.short_id))
-                    ind.remove_object(r)
-                    solr_deleted += 1
+                    try:
+                        ind.remove_object(r)
+                        solr_deleted += 1
+                    except Exception as e:
+                        print("resource {} generated exception {}".format(r.short_id, str(e)))
+
                     continue
 
             print("Django contains {} discoverable resources and {} replaced resources"
