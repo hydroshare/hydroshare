@@ -5,6 +5,8 @@ import logging
 import types
 from haystack.query import SearchQuerySet
 from haystack.utils import get_identifier
+from hs_core.models import BaseResource
+from hs_access_control.models import ResourceAccess
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,16 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     2. The class sent to this is a subclass of BaseResource, or another class. 
     3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
     """
+
+    def setup(self):
+        # Listen only to the ``BaseResource`` and ``ResourceAccess`` models.
+        models.signals.post_save.connect(self.handle_save, sender=BaseResource)
+        models.signals.post_save.connect(self.handle_save, sender=ResourceAccess)
+
+    def teardown(self):
+        # Disconnect the ``BaseResource`` and ``ResourceAccess`` models.
+        models.signals.post_save.disconnect(self.handle_save, sender=BaseResource)
+        models.signals.post_save.disconnect(self.handle_save, sender=ResourceAccess)
 
     def handle_save(self, sender, instance, **kwargs):
         """
