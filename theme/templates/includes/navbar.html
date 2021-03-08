@@ -435,6 +435,7 @@
     </div>
 </div>
 {# ======= Modal window ends =======#}
+{% include 'autocomplete_light/static.html' %}
 <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
 
 <script>
@@ -455,6 +456,21 @@
         createResource(resourceType, title);
     });
 
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i=0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length +1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
     function createResource(type, title) {
         // Disable dropdown items while we process the request
         $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
@@ -463,7 +479,8 @@
         if (!title) {
             title = "Untitled Resource";
         }
-        formData.append("csrfmiddlewaretoken", csrf_token);
+        const csrftoken = getCookie('csrftoken');
+        formData.append("csrfmiddlewaretoken", csrftoken);
         formData.append("title", title);
         formData.append("resource-type", type);
 

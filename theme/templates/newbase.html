@@ -79,20 +79,12 @@
             display: block;
         }
     </style>
-    {% block extra_css %}{% endblock %}
     <script src="/static/mezzanine/js/jquery-1.8.3.min.js"></script>
     <script src="/static/js/custom.js"></script>
     <script src="/static/js/scrolltopcontrol.js"></script>
-    <script src="/static/js/jqcsrf.js"></script>
-    <script src="/static/js/jquery-ui.js"></script>
     <script src="/static/js/bootstrap.3.0.2.min.js"></script>
     <script src="/static/js/bootstrap-extras.js"></script>
-    {% block extra_js %}{% endblock %}
-    {% include 'autocomplete_light/static.html' %}
 
-    {% load inplace_edit %}{% inplace_static %}
-
-    {% block extra_head %}{% endblock %}
     {% if not page|is_debug %}
         <script type="text/javascript">
             window.heap = window.heap || [], heap.load = function (e, t) {
@@ -112,7 +104,7 @@
     {% endif %}
 </head>
 
-<body id="{% block body_id %}body{% endblock %}">
+<body id="body">
 {% include 'includes/navbar.html' %}
 {% nevercache %}
     {% if messages %}
@@ -122,7 +114,6 @@
                     <div class="row">
                         <div class="col-md-12">
                             <button type="button" class="close btn-close-message">&times;</button>
-                            {# TODO: TESTING #}
                             {% if 'verification email' in message.message %}
                                 <!-- Google Code for HydroShare Conversions Conversion Page -->
                                 <script type="text/javascript">
@@ -156,12 +147,9 @@
     {% endif %}
 {% endnevercache %}
 
-{% block all_content %}
-    <div class="main-container">
-        {% block main %}{% endblock %}
-        {% block after_main %}{% endblock %}
-    </div>
-{% endblock %}
+<div class="main-container">
+    {% block main %}{% endblock %}
+</div>
 {% include 'includes/footer.html' %}
 </body>
 </html>
