@@ -73,13 +73,3 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
             newinstance = instance.resource
             newsender = BaseResource
             self.handle_save(newsender, newinstance)
-
-
-    def handle_delete(self, sender, instance, **kwargs):
-        """
-        Given an individual model instance, determine which backends the
-        delete should be sent to & delete the object on those backends.
-        This never worked well. Just set the resource to not discoverable 
-        before deleting it. This will delete it from SOLR properly. 
-        """
-        pass
