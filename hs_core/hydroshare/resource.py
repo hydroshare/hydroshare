@@ -3,6 +3,8 @@ import zipfile
 import shutil
 import logging
 import requests
+import datetime
+import pytz
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -236,61 +238,6 @@ def update_resource_file(pk, filename, f):
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
-
-
-def replicate_resource_bag_to_user_zone(user, res_id):
-    """
-    Replicate resource bag to iRODS user zone
-    Args:
-        user: the requesting user
-        res_id: the resource id with its bag to be replicated to iRODS user zone
-
-    Returns:
-    None, but exceptions will be raised if there is an issue with iRODS operation
-    """
-    # do on-demand bag creation
-
-    res = utils.get_resource_by_shortkey(res_id)
-    res_coll = res.root_path
-    istorage = res.get_irods_storage()
-    bag_modified_flag = True
-    # needs to check whether res_id collection exists before getting/setting AVU on it to
-    # accommodate the case where the very same resource gets deleted by another request when
-    # it is getting downloaded
-    if istorage.exists(res_coll):
-        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-
-        # make sure bag_modified_flag is set to False only if bag exists and bag_modified AVU
-        # is False; otherwise, bag_modified_flag will take the default True value so that the
-        # bag will be created or recreated
-        if bag_modified:
-            if bag_modified.lower() == "false":
-                bag_file_name = res_id + '.zip'
-                if res.resource_federation_path:
-                    bag_full_path = os.path.join(res.resource_federation_path, 'bags',
-                                                 bag_file_name)
-                else:
-                    bag_full_path = os.path.join('bags', bag_file_name)
-
-                if istorage.exists(bag_full_path):
-                    bag_modified_flag = False
-
-        if bag_modified_flag:
-            # import here to avoid circular import issue
-            from hs_core.tasks import create_bag_by_irods
-            create_bag_by_irods(res_id)
-
-        # do replication of the resource bag to irods user zone
-        if not res.resource_federation_path:
-            istorage.set_fed_zone_session()
-        src_file = res.bag_path
-        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
-        fsize = istorage.size(src_file)
-        utils.validate_user_quota(user, fsize)
-        istorage.copyFiles(src_file, tgt_file)
-    else:
-        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 def get_related(pk):
@@ -660,7 +607,6 @@ def copy_resource(ori_res, new_res, user=None):
         the new resource copied from the original resource
     """
 
-    # add files directly via irods backend file operation
     from hs_core.tasks import copy_resource_task
     if user:
         copy_resource_task(ori_res.short_id, new_res.short_id, request_username=user.username)
@@ -683,43 +629,19 @@ def create_new_version_resource(ori_res, new_res, user):
         the new versioned resource for the original resource and thus obsolete the original resource
 
     """
-    # newly created new resource version is private initially
-    # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
-
-    # copy metadata from source resource to target new-versioned resource except three elements
-    utils.copy_and_create_metadata(ori_res, new_res)
-
-    # add or update Relation element to link source and target resources
-    hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-
-    if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
-        # the original resource is already a versioned resource, and its isVersionOf relation
-        # element is copied over to this new version resource, needs to delete this element so
-        # it can be created to link to its original resource correctly
-        eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
-        new_res.metadata.delete_element('relation', eid)
-
-    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new version collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create bag for the new resource
-    hs_bagit.create_bag(new_res)
-
-    # since an isReplaceBy relation element is added to original resource, needs to call
-    # resource_modified() for original resource
-    utils.resource_modified(ori_res, user, overwrite_bag=False)
-    # if everything goes well up to this point, set original resource to be immutable so that
-    # obsoleted resources cannot be modified from REST API
-    ori_res.raccess.immutable = True
-    ori_res.raccess.save()
-    return new_res
+    from hs_core.tasks import create_new_version_resource_task
+    if ori_res.locked_time:
+        # cannot create new version for this resource since the resource is locked by another user
+        raise utils.ResourceVersioningException('Failed to create a new version for this resource '
+                                                'since another user is creating a new version for '
+                                                'this resource synchronously.')
+    # lock the resource to prevent concurrent new version creation since only one new version for an
+    # obsoleted resource is allowed
+    ori_res.locked_time = datetime.datetime.now(pytz.utc)
+    ori_res.save()
+    create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
+    # cannot directly return the new_res object being passed in, but rather return the new versioned resource object
+    return utils.get_resource_by_shortkey(new_res.short_id)
 
 
 def add_resource_files(pk, *files, **kwargs):
@@ -843,7 +765,7 @@ def update_science_metadata(pk, metadata, user):
     resource.update_public_and_discoverable()  # set to False if necessary
 
 
-def delete_resource(pk):
+def delete_resource(pk, request_username=None):
     """
     Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an
     administrator to perform this function. The operation removes the resource from further
@@ -869,32 +791,9 @@ def delete_resource(pk):
 
     Note:  Only HydroShare administrators will be able to delete formally published resource
     """
-    res = utils.get_resource_by_shortkey(pk)
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
-                              'cannot be deleted.')
+    from hs_core.tasks import delete_resource_task
+    delete_resource_task(pk, request_username)
 
-    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
-    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
-    # relation element
-    if res.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of_res_link = \
-            res.metadata.relations.all().filter(type='isVersionOf').first().value
-        idx = is_version_of_res_link.rindex('/')
-        if idx == -1:
-            obsolete_res_id = is_version_of_res_link
-        else:
-            obsolete_res_id = is_version_of_res_link[idx + 1:]
-        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
-            obsolete_res.metadata.delete_element('relation', eid)
-            # also make this obsoleted resource editable if not published now that it becomes the latest version
-            if not obsolete_res.raccess.published:
-                obsolete_res.raccess.immutable = False
-                obsolete_res.raccess.save()
-
-    res.delete()
     return pk
 
 

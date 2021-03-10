@@ -10,10 +10,38 @@ upstream backend {
    server CURRENT_VM;
 }
 
+geo $external {
+  default 1;
+  192.168.0.0/16 0;
+  172.16.0.0/12 0;
+  127.0.0.0/8 0;
+  10.0.0.0/8 0;
+  152.54.0.0/20 0;
+}
+
 server {
     listen          80;
     server_name     FQDN_OR_IP;
-    rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+
+    # enable two watchdog URLS: outer and inner NGINX status
+     
+    location /whatzupdoc-outer { 
+        if ($external) { 
+            return 404; 
+        } 
+        stub_status; 
+    } 
+
+    location /whatzupdoc-inner { 
+        if ($external) { 
+            return 404; 
+        } 
+	proxy_pass http://CURRENT_VM; 
+    } 
+
+    location / { 
+        rewrite ^/(.*)  https://FQDN_OR_IP/$1 permanent;
+    } 
 }
 
 server {

@@ -8,7 +8,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 
 from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
-    update_collection_list_csv
+    update_collection_list_csv, get_collectable_resources
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -116,18 +116,21 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # check authorization for all new resources being added to the collection
                 # the requesting user should at least have metadata view permission for each of
                 # the new resources to be added to the collection
+
                 res_to_add, _, _ \
                     = authorize(request, res_id_add,
                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-                # the resources being added should be 'Shareable', 'Discoverable' or 'Public'
-                # or is owned by current user
-                is_discoverable = res_to_add.raccess.discoverable
-                is_shareable = res_to_add.raccess.shareable
-                is_public = res_to_add.raccess.public
-                is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
-                if not any([is_discoverable, is_shareable, is_public, is_owner]):
-                    raise Exception('Only resource owner can add a non-shareable, non-discoverable, or private '
+                # the resources being added should be discoverable, 'shareable' by,
+                # or owned by current user
+
+                # this is a lazily evaluated queryset that is only queried relative
+                # to "exists" and exactly matches the intent of the UI.  It is much
+                # more efficient than it looks.
+
+                if not get_collectable_resources(user, collection_res_obj, annotate=False)\
+                        .filter(short_id=res_to_add.short_id).exists():
+                    raise Exception('Only resource owner can add a non-shareable private'
                                     'resource to a collection ')
 
                 # add this new res to collection

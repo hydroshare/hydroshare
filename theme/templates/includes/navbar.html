@@ -1,0 +1,845 @@
+{% load pages_tags mezzanine_tags theme_tags hydroshare_tags %}
+<link rel="stylesheet" type="text/css" href="/static/css/notifications-app.css">
+
+<style>
+    /* Navbar */
+    .dropdown-menu .divider {
+        height: 1px;
+        margin: 9px 0;
+        overflow: hidden;
+        background-color: #999
+    }
+    .navbar-brand {
+        padding: 0;
+        padding-top: 10px;
+    }
+
+    #img-brand-logo {
+        width: 145px;
+    }
+
+    .container>.navbar-header, .container>.navbar-collapse {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .navbar-inverse .navbar-collapse, .navbar-inverse .navbar-form {
+        border-color: #DDD;
+    }
+
+    .navbar-toggle {
+        background: #B5B5B5;
+        border-color: #8C8C8C !important;
+    }
+
+    .navbar-inverse {
+      background-color: #FFF;
+      border: none;
+    }
+
+    .navbar>.container .navbar-brand {
+        margin-right: 10px;
+    }
+
+    .navbar-inverse .navbar-nav > .active > a, .navbar-inverse .navbar-nav > .active > a:hover, .navbar-inverse .navbar-nav > .active > a:focus {
+        color: #333;
+        background-color: #FFF !important
+    }
+
+    .navbar-inverse .navbar-brand {
+        color: #EEEEEE;
+    }
+
+    .navbar-inverse .resource-type-name,
+    .navbar-inverse .navbar-nav > li > a,
+    .navbar-inverse .navbar-nav > .open > a,
+    .navbar-inverse .navbar-nav > .open > a:hover,
+    .navbar-inverse .navbar-nav > .open > a:focus {
+        color: #777;
+        font: 13px/18px 'Open Sans', arial, sans-serif;
+    }
+
+    .navbar-nav > li > .dropdown-menu.arrow_box, .dropdown-menu.profile-card {
+        margin-top: 18px;
+        margin-right: -12px;
+        width: 300px;
+        height: 160px;
+        padding: 0;
+        background: #FFF;
+        -webkit-border-radius: 4px;
+        -moz-border-radius: 4px;
+        border-radius: 4px;
+        box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        -webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        -moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2)
+    }
+
+    .res-dropdown {
+        padding: 7px;
+        padding-right: 40px;
+    }
+
+    .dropdown-menu.profile-card {
+        width: 350px;
+        height: auto;
+        margin: unset;
+        margin-bottom: 40px;
+    }
+
+    .profile-card .flex > div {
+        padding: 15px;
+    }
+
+    .profile-card .flex > div:first-child {
+        background: #f8f8f8;
+        border-right: 1px solid #DDD;
+        width: 110px;
+    }
+
+    .profile-card .dropdown-profile-pic-thumbnail{
+        margin-right: 0;
+    }
+
+    .profile-card table .fa {
+        margin-right: 4px;
+    }
+
+    .navbar-inverse .navbar-nav > .open > a:hover,
+    .navbar-inverse .navbar-nav > li > a:hover,
+    .navbar-inverse .navbar-nav > li > a:focus {
+        color: #333;
+        -webkit-transition: color 100ms linear;
+        -moz-transition: color 100ms linear;
+        -o-transition: color 100ms linear;
+        transition: color 100ms linear;
+    }
+
+    .navbar-inverse {
+        text-transform: uppercase;
+        border-bottom: 1px solid #DDD;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .navbar-inverse .tooltip {
+        text-transform: none;
+    }
+
+    .navbar-inverse .navbar-nav > .open > a,
+    .navbar-inverse .navbar-nav > .open > a:hover,
+    .navbar-inverse .navbar-nav > .open > a:focus {
+        background-color: unset;
+    }
+
+    .dropdown-menu {
+        border: 1px solid #D6D6D6;
+        border-top-color: #EEEEEE;
+        border-radius: 0;
+        box-shadow: none;
+        -webkit-box-shadow: none;
+        -moz-box-shadow: none;
+    }
+    .dropdown-menu > li > a {
+      color: #000;
+      padding: 10px 20px;
+      font-size: 12px;
+    }
+    .dropdown-menu > li > a:hover,
+    .dropdown-menu > li > a:focus {
+      color: #333;
+      background-color: #eaeaea;
+    }
+</style>
+<div id="hs-nav-bar" class="navbar navbar-inverse navbar-fixed-top">
+    <div id="toplevel-nav-container" class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/landingPage">
+                <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
+            </a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav navbar-right hidden-xs">
+                {% ifinstalled mezzanine.accounts %}
+                    {% if request.user.is_authenticated %}
+                        <li id="profile-menu" class="display-block">
+                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                         class="round-image profile-pic-thumbnail pull-left">
+                                    </div>
+                                </a>
+                            {% else %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
+                                </a>
+                            {% endif %}
+                            <ul class="dropdown-menu arrow_box">
+                                <li class="account">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong id="profile-menu-fullname"
+                                                    title="{{ request.user|best_name }}">{{ request.user|best_name }}</strong>
+                                            {% if request.user.email %}
+                                                <div id="profile-menu-email" class="text-muted"
+                                                     title="{{ request.user.email }}">{{ request.user.email }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="dropdown-footer">
+                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
+                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
+                                            <span class="glyphicon glyphicon-log-out"></span> Sign out
+                                        </a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        <li id="notifications-dropdown">
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding-top:14px;padding-bottom:14px;"
+       role="button" aria-haspopup="true" aria-expanded="false">
+        <span class="glyphicon glyphicon-bell"></span>
+    </a>
+    <ul class="dropdown-menu arrow_box" style="position:absolute;">
+        <li class="notifications">
+            <div id="app-notifications">
+                <div class="notifications--header">
+                    <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
+                    <a id="btn-notifications-clear" v-on:click="clear">Clear</a>
+                </div>
+
+                <div v-if="loading" class="default-content">
+                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                </div>
+                <div v-if="!loading">
+                    <div v-if="tasks.length">
+                        <div class="task" v-for="task in tasks">
+                            <div class="notification--content">
+                                <div class="notification--name">${taskMessages[task.name].title}</span>
+                                    <div class="notification--status">
+                                        <span :class="statusIcons[task.status]"></span>
+
+                                        <small v-if="canNotifyDownload(task)">
+                                            Your download will start in a few seconds. If it does not start click <a
+                                                :href="task.payload">here</a>
+                                            to download your files directly.
+                                        </small>
+                                        <small v-else>${taskMessages[task.name].status[task.status]}.
+                                            <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
+                                            Click <a :href="task.payload">here</a> to refresh user interface.
+                                            </span></small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="notification--controls">
+                                <button type="button" v-if="canBeDismissed(task)" v-on:click="dismissTask(task)" class="close" aria-label="Dismiss"
+                                    title="Dismiss">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+
+                                <button type="button" v-if="canBeAborted(task)" v-on:click="abortTask(task)" class="close" title="Abort"
+                                    aria-label="Abort">
+                                    <span class="glyphicon glyphicon-ban-circle"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="default-content">You don't have any notifications.</div>
+                </div>
+            </div>
+        </li>
+    </ul>
+</li>
+                    {% else %}
+                        <li id="signin-menu"><a href="{% url 'login' %}"><span
+                                class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+                    {% endif %}
+                {% endifinstalled %}
+            </ul>
+            {% load mezzanine_tags %}
+
+            <ul class="nav navbar-nav">
+                <li {% if request.path == "/home/" %}class="active"{% endif %} id="dropdown-menu-home">
+                    <a href="/home/">Home</a>
+                </li>
+                <li {% if request.path == "/my-resources/" %}class="active"{% endif %} id="dropdown-menu-my-resources">
+                    <a href="/my-resources/">My Resources</a>
+                </li>
+                <li {% if request.path == "/search/" %}class="active"{% endif %} id="dropdown-menu-search">
+                    <a href="/search/">Discover</a>
+                </li>
+                <li {% if request.path == "/collaborate/" %}class="active"{% endif %} id="dropdown-menu-collaborate">
+                    <a href="/collaborate/">Collaborate</a>
+                </li>
+                <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
+                    <a href="https://www.hydroshare.org/apps/">Apps</a>
+                </li>
+                <li class="" id="dropdown-menu-https:--help.hydroshare.org">
+                    <a href="http://help.hydroshare.org">Help</a>
+                </li>
+            </ul>
+
+            <ul id="resource-dropdown" class="nav navbar-nav navbar-right">
+                {% if not user.is_anonymous %}
+                    <li class="res-dropdown" style="padding-right:35px;">
+                        <button id="select-resource-type" data-toggle="dropdown"
+                                class="dropdown-toggle btn btn-primary"
+                                role="button" aria-haspopup="true" aria-expanded="false">Create
+                        </button>
+                        {% if not user.is_anonymous %}
+                            <ul id="res-menu-contents" class="dropdown-menu" role="menu" aria-labelledby="select-resource-type">
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A resource which can include multiple files without file format limitations."
+                                       data-modal-title="Create a Resource"
+                                       data-modal-input-title="Enter the title for the new resource."
+                                       data-value="CompositeResource">
+                                        <img src="/static/img/resource-icons/composite48x48.png"
+                                             alt="Composite Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Resource</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A resource that holds a list of other resources in HydroShare."
+                                       data-modal-title="Create a Collection"
+                                       data-modal-input-title="Enter the title for the new collection of HydroShare resources."
+                                       data-value="CollectionResource">
+                                        <img src="/static/img/resource-icons/collection48x48.png"
+                                             alt="Collection Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Collection</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
+                                       data-modal-title="Create a Web App Connector"
+                                       data-modal-input-title="Enter the name for the new Web App Connector."
+                                       data-value="ToolResource">
+                                        <img src="/static/img/resource-icons/webapp48x48.png"
+                                             alt="Web App Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Web App Connector</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="Describes the software component of a generic model within the water domain."
+                                       data-modal-title="Create a Model Program Resource"
+                                       data-modal-input-title="Enter the name for the new Model Program Resource."
+                                       data-value="ModelProgramResource">
+                                        <img src="/static/img/resource-icons/modelprogram48x48.png"
+                                             alt="Model Program Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Model Program</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="Defines the input and output data for a generic hydrological model, for a specific time and place."
+                                       data-modal-title="Create a Model Instance Resource"
+                                       data-modal-input-title="Enter the name for the new Model Instance Resource."
+                                       data-value="ModelInstanceResource">
+                                        <img src="/static/img/resource-icons/modelinstance48x48.png"
+                                             alt="Model Instance Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;Model Instance</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
+                                       data-modal-title="Create a SWAT Model Instance Resource"
+                                       data-modal-input-title="Enter the name for the new SWAT Model Instance Resource."
+                                       data-value="SWATModelInstanceResource">
+                                        <img src="/static/img/resource-icons/swat48x48.png"
+                                             alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="left"
+                                       title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
+                                       data-modal-title="Create a MODFLOW Model Instance Resource"
+                                       data-modal-input-title="Enter the name for the new MODFLOW Model Instance Resource."
+                                       data-value="MODFLOWModelInstanceResource">
+                                        <img src="/static/img/resource-icons/modflow48x48.png"
+                                             alt="Collection Resource Icon" class="resource-type-icon"/>
+                                        <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endif %}
+
+                {% if not user.is_anonymous %}
+                    <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
+                {% endif %}
+
+                {% ifinstalled mezzanine.accounts %}
+                    <!-- Profile links for extra small screens -->
+                    {% if not user.is_anonymous %}
+                        <li class="visible-xs"><a href="{% url 'logout' %}"><span
+                                class="glyphicon glyphicon-log-out"></span> Sign Out</a></li>
+                    {% else %}
+                        <li class="visible-xs"><a href="{% url 'login' %}"><span
+                                class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+                    {% endif %}
+                {% endifinstalled %}
+            </ul>
+
+        </div>
+    </div>
+</div>
+{# ======= Modal window begins =======#}
+<div class="modal fade" id="submit-title-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;
+                </button>
+                <h4 class="modal-title">Create a Resource</h4>
+            </div>
+            <div class="modal-body">
+                <div class="warnings-list">
+                    <div class="modal-input-title">Enter the title for the new resource.
+                    </div>
+                    <br>
+                    <input id="input-title" class="form-control textinput textInput" maxlength="300"
+                           name="value" type="text" placeholder="Resource Title" value="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                </button>
+                <button id="btn-resource-create" type="button" data-value="" class="btn btn-primary"
+                        data-dismiss="modal">Create
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{# ======= Modal window ends =======#}
+<script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+
+<script>
+    $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
+        $('#btn-resource-create').attr("data-value", $(this).attr("data-value"));
+        let title = $(this).attr("data-modal-title");
+        let inputTitle = $(this).attr("data-modal-input-title");
+
+        $('#submit-title-dialog .modal-title').text(title);
+        $('#submit-title-dialog .modal-input-title').text(inputTitle);
+        $('#submit-title-dialog').modal('show');
+    });
+
+    $("#btn-resource-create").on("click", function () {
+        let resourceType = $(this).attr("data-value");
+        let title = $('#input-title').val();
+
+        createResource(resourceType, title);
+    });
+
+    function createResource(type, title) {
+        // Disable dropdown items while we process the request
+        $(".navbar-inverse .res-dropdown .dropdown-menu").toggleClass("disabled", true);
+
+        var formData = new FormData();
+        if (!title) {
+            title = "Untitled Resource";
+        }
+        formData.append("csrfmiddlewaretoken", csrf_token);
+        formData.append("title", title);
+        formData.append("resource-type", type);
+
+        customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
+        $("html").css("cursor", "progress");
+
+        $.ajax({
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            url: "/hsapi/_internal/create-resource/do/",
+            success: function (response) {
+                if (response.status === "success") {
+                    window.location = response['resource_url'];
+                }
+                else {
+                    console.log(response);
+                    $(".custom-alert").alert('close');  // Dismiss previous alert
+                    customAlert("Error", 'Failed to create resource.', "error", 6000);
+                    $("html").css("cursor", "initial");
+                    $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+                }
+            },
+            error: function (response) {
+                console.log(response);
+                $(".custom-alert").alert('close');  // Dismiss previous alert
+                customAlert("Error", 'Failed to create resource.', "error", 6000);
+                $("html").css("cursor", "initial");
+                $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
+            }
+        });
+    }
+
+        const checkDelay = 1000; // ms
+
+    $('#notifications-dropdown').on('show.bs.dropdown', function () {
+        notificationsApp.fetchTasks();
+    });
+
+    notificationsApp = new Vue({
+        el: '#app-notifications',
+        delimiters: ['${', '}'],
+        data: {
+            tasks: [],
+            loading: true,
+            isCheckingStatus: false,
+            taskMessages: {
+                "bag download": {
+                    title: "Download all content as Zipped BagIt Archive",
+                    status: {
+                        "progress": "Getting your files ready for download...",
+                        "aborted": "Aborted",
+                        "failed": "Download failed",
+                        "delivered": "Download delivered"
+                    }
+                },
+                "file unzip": {
+                    title: "File Unzipping",
+                    status: {
+                        "progress": "Unzipping your file...",
+                        "completed": "Completed",
+                        "failed": "Unzip failed",
+                        "delivered": "Unzipping completed"
+                    }
+                },
+                "zip download": {
+                    title: "File download",
+                    status: {
+                        "progress": "Getting your files ready for download...",
+                        "aborted": "Aborted",
+                        "failed": "Download failed",
+                        "delivered": "Download delivered"
+                    }
+                },
+                "resource copy": {
+                    title: "Resource copy",
+                    status: {
+                        "progress": "In progress...",
+                        "aborted": "Aborted",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
+                },
+                "resource version": {
+                    title: "Resource versioning",
+                    status: {
+                        "progress": "In progress...",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
+                },
+                "resource copy to user zone": {
+                    title: "Resource copy to user zone",
+                    status: {
+                        "progress": "In progress...",
+                        "aborted": "Aborted",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
+                },
+                "resource delete": {
+                    title: "Resource delete",
+                    status: {
+                        "progress": "In progress...",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
+                }
+            },
+            statusIcons: {
+                "aborted": "glyphicon glyphicon-ban-circle",
+                "failed": "glyphicon glyphicon-remove-sign",
+                "completed": "glyphicon glyphicon-ok-sign",
+                "progress": "fa fa-spinner fa-pulse fa-2x fa-fw icon-blue",
+                "delivered": "glyphicon glyphicon-ok-sign"
+            }
+        },
+        computed: {
+            someInProgress: function () {
+                return this.tasks.find(function (task) {
+                    return task.status === "progress";
+                });
+            }
+        },
+        methods: {
+            // Shows the tasks dropdown
+            show: function () {
+                $('#notifications-dropdown').addClass('open');
+            },
+            getUpdatedTask: function(in_task) {
+                return this.tasks.find(function(task) {
+                    return task.id === in_task.id
+                });
+            },
+            fetchTasks: function () {
+                let vue = this;
+                vue.loading = true;
+                $.ajax({
+                    type: "GET",
+                    url: '/hsapi/_internal/get_tasks_by_user/',
+                    success: function (ret_data) {
+                        vue.loading = false;
+                        tasks = ret_data['tasks']
+                        for (let i = 0; i < tasks.length; i++) {
+                            vue.registerTask(tasks[i]);
+                        }
+                        vue.scheduleCheck();
+                    },
+                    error: function (response) {
+                        console.log(response);
+                        vue.loading = false;
+                    }
+                });
+            },
+            dismissTask: function (task) {
+                let vue = this;
+                if (vue.canBeDismissed(task)) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/dismiss_task/' + task.id,
+                        success: function (task) {
+                            vue.tasks = vue.tasks.filter(function(t) {
+                                return t.id !== task.id;
+                            });
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            },
+            canBeDismissed: function (task) {
+                return task.status === 'completed'
+                    || task.status === 'failed'
+                    || task.status === 'aborted'
+                    || task.status === 'delivered'
+            },
+            deliverTask: function(task) {
+                let vue = this;
+                if (vue.canBeDelivered(task)) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/set_task_delivered/' + task.id,
+                        success: function (task) {
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            },
+            canBeDelivered: function (task) {
+                return task.status === 'completed'
+            },
+            abortTask: function(task) {
+                let vue = this;
+                if (vue.canBeAborted(task)) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/abort_task/' + task.id,
+                        success: function (task) {
+                            vue.registerTask(task);
+                        },
+                        error: function (response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            },
+            canBeAborted: function (task) {
+                let vue = this;
+                return "aborted" in vue.taskMessages[task.name].status && (task.status === 'progress')
+            },
+            clear: function () {
+                let vue = this;
+                vue.tasks = vue.tasks.filter(function(task) {
+                    if (vue.canBeDismissed(task))
+                        vue.dismissTask(task);
+                    return !vue.canBeDismissed(task);
+                });
+            },
+            scheduleCheck: function() {
+                let vue = this;
+                if (vue.someInProgress && !vue.isCheckingStatus) {
+                    vue.isCheckingStatus = true;
+
+                    // check in 1s
+                    setTimeout(function() {
+                        vue.checkStatus();
+                    }, checkDelay);
+                }
+                else {
+                    vue.isCheckingStatus = false;
+                }
+            },
+            // Checks every 1s for every task in progress
+            checkStatus: function () {
+                let vue = this;
+
+                if (vue.someInProgress) {
+                    const tasksInProgress = vue.tasks.filter(function (task) {
+                        return task.status === "progress";
+                    });
+
+                    let calls = tasksInProgress.map(function (task) {
+                        return vue.checkTaskStatus(task);
+                    });
+
+                    // wait for all of task checks to finish and recall self after 1s
+                    $.when.apply($, calls).done(function () {
+                        setTimeout(function() {
+                            vue.checkStatus();
+                        }, checkDelay);
+                    });
+                }
+                else {
+                    vue.isCheckingStatus = false;
+                }
+            },
+            checkTaskStatus: function(task) {
+                let vue = this;
+
+                return $.ajax({
+                    type: "GET",
+                    url: '/hsapi/_internal/get_task/' + task.id,
+                    success: function (task) {
+                        vue.registerTask(task);
+                    },
+                    error: function (response) {
+                        console.log(response);
+                    }
+                });
+            },
+            downloadFile: function (url, taskId) {
+                // Remove previous temporary download frames
+                $(".temp-download-frame").remove();
+
+                $("body").append("<iframe class='temp-download-frame' id='task-"
+                    + taskId + "' style='display:none;' src='" + url + "'></iframe>");
+            },
+            processTask: function (task) {
+                let vue = this;
+                switch (task.name) {
+                    case "bag download":
+                        // Check if bag creation is finished
+                        if (task.status === "completed" && task.payload) {
+                            const bagUrl = task.payload;
+                            vue.downloadFile(bagUrl, task.id);
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "zip download":
+                        // Check if zip creation is finished
+                        if (task.status === "completed" && task.payload) {
+                            const zipUrl = task.payload;
+                            vue.downloadFile(zipUrl, task.id);
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource copy":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource version":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource copy to user zone":
+                        if (task.status === "completed") {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "resource delete":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    case "file unzip":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if (task.status === 'progress')
+                    vue.scheduleCheck();
+            },
+            registerTask: function (task) {
+                let vue = this;
+                let targetTask = null;
+
+                // Minor type checking
+                if (!task.hasOwnProperty('id') || !task.hasOwnProperty('name')) {
+                    return  // Object passed is not a task
+                }
+
+                targetTask = vue.tasks.find(function (t) {
+                    return t.id === task.id;
+                });
+
+                if (targetTask) {
+                    // Update existing task only if values have changed to avoid Vue change detection
+                    if (task.status !== targetTask.status || task.payload !== targetTask.payload) {
+                        targetTask.status = task.status;
+                        targetTask.payload = task.payload;
+                        if (task.status !== 'delivered')
+                            vue.processTask(targetTask);
+                    }
+                }
+                else {
+                    // Add new task
+                    targetTask = task;
+                    vue.tasks = [targetTask, ...vue.tasks];
+                    if (task.status !== 'delivered')
+                        vue.processTask(targetTask);
+                }
+            },
+            // Used to know when a task should inform users of alternative way to download their files
+            canNotifyDownload: function (task) {
+                return task.status === 'completed'
+                    && (task.name === 'bag download' || task.name === 'zip download')
+            }
+        },
+        mounted: function () {
+            let vue = this;
+            vue.fetchTasks();
+        }
+    });
+
+
+</script>

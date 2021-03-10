@@ -296,6 +296,63 @@ $(document).ready(function () {
         })
     });
 
+    $("#new-version-btn").on('click', function(e) {
+       e.stopImmediatePropagation();
+       // disable the new version icon to prevent users from clicking it again until it is done
+       $('#new-version').addClass('disabled');
+       $('#new-version').removeAttr('data-toggle');
+       $.ajax({
+           type: 'POST',
+           url: '/hsapi/_internal/' + SHORT_ID + '/create-new-version-resource/',
+           success: function (task) {
+                $('#new-version-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to create a new version of the resource', xhr.responseText);
+                $('#new-version-resource-dialog').modal('hide');
+            }
+       })
+    });
+
+    $("#btn-replicate").on('click', function(e) {
+        e.stopImmediatePropagation();
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/rep-res-bag-to-irods-user-zone/",
+            success: function (task) {
+                $('#rep-resource-to-irods-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to copy the resource to your user zone', xhr.responseText);
+                $('#rep-resource-to-irods-dialog').modal('hide');
+            }
+        })
+    });
+
+    $("#btn-delete-resource").on('click', function(e) {
+        e.stopImmediatePropagation();
+        // disable the delete icon to prevent users from clicking it again until it is done
+        $('#delete').addClass('disabled');
+        $('#delete').removeAttr('data-toggle');
+        $.ajax({
+            type: "POST",
+            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/",
+            success: function (task) {
+                $('#delete-resource-dialog').modal('hide');
+                notificationsApp.registerTask(task);
+                notificationsApp.show();
+            },
+            error: function (xhr, errmsg, err) {
+                display_error_message('Failed to delete the resource', xhr.responseText);
+                $('#delete-resource-dialog').modal('hide');
+            }
+        })
+    });
+
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
     inputElementToAdd = inputElementToAdd.replace('mode_to_replace', RESOURCE_MODE.toLowerCase());

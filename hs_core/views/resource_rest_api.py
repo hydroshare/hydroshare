@@ -30,7 +30,7 @@ from hs_core.views import serializers
 from hs_core.hydroshare.utils import get_file_storage, resource_modified
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, \
     HsDeserializationException
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.parsers import MultiPartParser
 
@@ -136,7 +136,7 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, pk):
         # only resource owners are allowed to delete
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
-        hydroshare.delete_resource(pk)
+        hydroshare.delete_resource(pk, request_username=request.user.username)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -426,7 +426,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
                                                                          hydroshare_host=domain)
                 # Update resource metadata
                 rm.write_metadata_to_resource(resource, update_title=True, update_keywords=True)
-                create_bag_files(resource)
+                create_bag_metadata_files(resource)
             except HsDeserializationDependencyException as e:
                 msg = ("HsDeserializationDependencyException encountered when updating "
                        "science metadata for resource {pk}; depedent resource was {dep}.")

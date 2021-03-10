@@ -491,8 +491,6 @@ HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealti
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT_DAYS = 7
 
-RESOURCE_LOCK_TIMEOUT_SECONDS = 300  # in seconds
-
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
 TEMP_FILE_DIR = '/hs_tmp'
@@ -690,8 +688,6 @@ CSRF_COOKIE_SECURE = USE_SECURITY
 # detect test mode to turn off some features
 TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
-HSWS_ACTIVATED = False
-
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files. 
 DISCOVERY_EXTENSION_CONTENT_TYPES = { 
@@ -703,13 +699,19 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
     'Multidimensional (NetCDF)': set(['nc'])
 } 
 
-# celery task function name to user interpretable name mapping to be used for async task management user interface
-TASK_NAME_MAPPING = {
-    'hs_core.tasks.create_bag_by_irods': 'bag download',
-    'hs_core.tasks.create_temp_zip': 'zip download',
-    'hs_core.tasks.unzip_task': 'file unzip',
-    'hs_core.tasks.copy_resource_task': 'resource copy',
-}
+HSWS_ACTIVATED = False
+
+# celery task names to be recorded in task notification model
+TASK_NAME_LIST = [
+    'hs_core.tasks.create_bag_by_irods',
+    'hs_core.tasks.create_temp_zip',
+    'hs_core.tasks.unzip_task',
+    'hs_core.tasks.copy_resource_task',
+    'hs_core.tasks.replicate_resource_bag_to_user_zone_task',
+    'hs_core.tasks.create_new_version_resource_task',
+    'hs_core.tasks.delete_resource_task'
+]
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################

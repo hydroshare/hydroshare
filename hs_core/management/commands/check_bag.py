@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare import hs_requests
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from hs_core.tasks import create_bag_by_irods
 from django_irods.icommands import SessionException
 
@@ -113,7 +113,7 @@ def check_bag(rid, options):
             if options['generate']:  # generate usable bag
                 if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
                     try:
-                        create_bag_files(resource)
+                        create_bag_metadata_files(resource)
                     except ValueError as e:
                         print(("{}: value error encountered: {}".format(rid, str(e))))
                         return
@@ -132,7 +132,7 @@ def check_bag(rid, options):
             if options['generate_metadata']:
                 if not options['if_needed'] or dirty or not scimeta_exists or not resmap_exists:
                     try:
-                        create_bag_files(resource)
+                        create_bag_metadata_files(resource)
                     except ValueError as e:
                         print(("{}: value error encountered: {}".format(rid, str(e))))
                         return
