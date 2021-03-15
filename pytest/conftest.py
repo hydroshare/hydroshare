@@ -133,6 +133,7 @@ def sample_user():
 def public_resource_with_metadata():
     resource = base_sample_resource()
     resource.raccess.public = True
+    resource.raccess.discoverable = True
     resource.keywords_string = str(uuid.uuid4())
     resource.raccess.save()  # saves flag, doesn't necessarily re-index
     resource.save()  # invokes re-indexing.
