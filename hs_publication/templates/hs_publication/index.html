@@ -1,20 +1,262 @@
 <head>
-    <link href=/static/js/hs-publication.js as=script>
+
 </head>
 {% extends "newbase.html" %}
 {% block meta_title %}Publication{% endblock %}
+{% block extra_css %}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.css" integrity="sha512-EaaldggZt4DPKMYBa143vxXQqLq5LE29DG/0OoVenoyxDrAScYrcYcHIuxYO9YNTIQMgD8c8gIUU8FQw7WpXSQ==" crossorigin="anonymous" />    <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.css" integrity="sha512-YnP4Ql71idaMB+/ZG38+1adSSQotdqvixQ+dQg8x/IFA4heIj6i0BC31W5T5QUdK1Uuwa01YdqdcT42q+RldAg==" crossorigin="anonymous" />
+    <style>
+        #search-container input {
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+        .inside-right {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            z-index: 2;
+        }
+        .inside-left {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            z-index: 2;
+        }
+        .pagination {
+            z-index: 1000;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            transform: translateY(4px);
+            cursor: pointer;
+        }
+        .interactive:hover {
+            cursor:pointer;
+            color: LightBlue;
+            /* Avoid double-click selection during rapid clicking: */
+            user-select: none; /* standard syntax */
+            -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+            -moz-user-select: none; /* mozilla browsers */
+            -ms-user-select: none; /* IE10+ */
+        }
+        .table-message {
+            font-style: italic;
+            color:red;
+        }
+        .tbl-col-icons {
+            width: 100px;
+            max-width: 100px;
+            padding-left: 5px;
+            padding-right: 0;
+        }
+        .tbl-col-title {
+            min-width: 150px;
+            max-width: 440px;
+            word-break: keep-all;
+            word-wrap: anywhere;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: normal;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+        .tbl-col-authors {
+            min-width: 110px;
+            max-width: 120px;
+            word-break: normal;
+            word-wrap: break-word;
+        }
+        .tbl-col-date {
+            min-width: 94px;
+            max-width: 94px;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+    </style>
+{% endblock %}
 {% block main %}
-    <style type=text/css></style>
-    <input type=hidden id=qstring value="{{ request.GET.q }}">
-    <input type=hidden id=prefillsubject value="{{ request.GET.subject }}">
-    <div class=container id=publication-main><h2 class=page-title>Publication <small class=text-muted>
-        <i>Publication DOI Approval Dashboard</i></small></h2>
+    <div id="publications-app">
+    <h2 class=page-title>Publication <small class=text-muted>
+ <i>Publication DOI Approval Dashboard</i></small></h2>
         <a href="">Click here for Policy</a>
-        <br>
-        <div class=row>
-            <div id=app></div>
+    <br>
+        <div class="container">
+
+            <div class="full-width-tabs-container" id="user-profile-tabs">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#public" aria-controls="public" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i>&nbsp;PUBLIC</a>
+                    </li>
+                    {% if is_admin %}
+                        <li role="presentation">
+                            <a href="#admin" aria-controls="admin" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-file"></i>&nbsp;ADMIN</a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content" style="size: 800px">
+                    <!-- PUBLIC -->
+                    <div role="tabpanel" class="tab-pane fade in active" id="public">
+                        <div class="row">
+                            <div class="col-lg-2" id="facets">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h4 class="panel-title">
+                                            <span class="glyphicon glyphicon glyphicon-user"></span>
+                                            &nbsp;Shared by</h4>
+                                    </div>
+                                    <div id="filter-shared-by" class="facet-list">
+                                        <div class="panel-body">
+                                            <div class="list-group">
+                                                <div id="groups-list">
+                                                    <ul class="list-group inputs-group">
+                                                        <i v-if="!groups" class="list-group-item no-items-found">No resources have been
+                                                        shared with this community yet.</i>
+                                                        <li v-for="g in groups" class="list-group-item" id="{% templatetag openvariable %} g.id {% templatetag closevariable %}">
+                                                            <span data-facet="none"
+                                                                  class="badge">{% templatetag openvariable %} g.res_count {% templatetag closevariable %}</span>
+                                                            <label class="checkbox noselect"><input
+                                                                id="{% templatetag openvariable %} g.id {% templatetag closevariable %}}" type="checkbox"
+                                                                data-facet="none" value="Click"
+                                                                @click="updateContribs(g.id)"> {% templatetag openvariable %} g.name {% templatetag closevariable %}
+
+{#                                                                    TODO ADD BACK GRPFILTER FUNCTIONALITY#}
+{#                                                                    {% if grpfilter == g.name %}#}
+{#                                                                        checked#}
+{#                                                                    {% endif %}#}
+                                                            </label>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="items" class="col-lg-10">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div id="search-container" class="input-group">
+                                            <span class="fa fa-search inside-left"></span>
+                                            <input id="resource-search-input" type="text" class="form-control"
+                                                   placeholder="Search Resources Shared by CZO National Groups"
+                                                   v-model="searchtext" size="600px"
+                                            @keyup.enter="searchClick(false, true, true)"/>
+                                            <span id="btn-clear-search-input"
+                                                  class="fa fa-times-circle inside-right interactive"
+                                                  v-on:click="clearSearch" ></span>
+                                        </div>
+
+
+
+             <div v-if="resources.length > 0" id="resultsdisp-top">
+            <i id="page-left" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                min="1" :max="pagecount"> of {% templatetag openvariable %}pagecount}}
+            <i id="page-right" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
+                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %}
+                 - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %}
+                 of {% templatetag openvariable %}rescount{% templatetag closevariable %}
+             <br/><br/>
         </div>
-        <br>
+
+                                        <div id="resource-rows" >
+                                    <div class="table-wrapper">
+                                      <p class="table-message" style="color:red" v-if="(!resources.length) && (sharedByFilter.length)"><i>No resource matches</i></p>
+                                        <table id="items-discovered" v-if="resources.length"
+                                            class="table-hover table-striped resource-custom-table main-table">
+                                            <thead>
+                                                <tr><th><!-- placeholder --></th>
+                                                <th class="tbl-col-title" v-bind:key="'Title'" @click="sortBy('Title')">
+                                                  <span class="interactive"><span :class="sortStyling('Title')"></span>Title</span>
+                                                </th>
+                                                <th class="tbl-col-authors" v-bind:key="'First Author'" @click="sortBy('First Author')">
+                                                  <span class="interactive"><span :class="sortStyling('First Author')"></span>First<br>Author</span>
+                                                </th>
+                                                <th class="tbl-col-date" v-bind:key="'Date Created'" @click="sortBy('Date Created')">
+                                                  <span class="interactive"><span :class="sortStyling('Date Created')"></span>Date<br>Created</span>
+                                                </th>
+                                                  <th class="tbl-col-date" v-bind:key="'Last Modified'" @click="sortBy('Last Modified')">
+                                                  <span class="interactive"><span :class="sortStyling('Last Modified')"></span>Last<br>Modified</span>
+                                                </th>
+                                            </thead>
+                                            <tbody>
+                                            <tr v-for="(entry) in resources">
+                                                <td class="tbl-col-icons">
+                                                  <span id="img-icons">
+                                                    <img :src="resIconName[entry.type]" v-b-tooltip.hover
+                                                        :title="entry.type" :alt="entry.type" height="30" width="30">
+                                                    <img :src="entry.availabilityurl" v-b-tooltip.hover
+                                                        :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability">
+                                                    <img v-if="entry.geo" src="/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                                                    </span>
+                                                </td>
+                                                <td class="title-span">
+                                                  <a :href="entry.link" target="_blank" style="cursor:pointer" v-b-tooltip.hover :title="ellip(entry.abstract, 500)" >
+                                                      {% templatetag openvariable %}ellip(entry.title, 250){% templatetag closevariable %}</a>
+                                                </td>
+                                                <td class="tbl-col-authors">
+                                                    <a :href="entry.author_link" v-b-tooltip.hover target="_blank"
+                                                       :title="`(AUTHORS): ${nameList(entry.authors)} (OWNERS): ${nameList(entry.owner)} (CONTRIBUTORS): ${nameList(entry.contributor)}`">
+                                                        {% templatetag openvariable %}entry.author{% templatetag closevariable %}</a>
+                                                </td>
+                                                <!-- python is passing .isoformat() in views.py -->
+                                              <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.created).toLocaleTimeString('en-US')">
+                                                  {% templatetag openvariable %}new Date(entry.created).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                                              <td class="tbl-col-date"><span v-b-tooltip.hover :title="new Date(entry.modified).toLocaleTimeString('en-US')">
+                                                  {% templatetag openvariable %}new Date(entry.modified).toLocaleDateString('en-US'){% templatetag closevariable %}</span></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+             <div v-if="resources.length > 25"  id="resultsdisp-bottom">
+            <i id="page-left" style="cursor:pointer" v-on:click="paging(-1)" v-b-tooltip.hover title="Go back a page"
+                    class="pagination fa fa-angle-double-left fa-w-14 fa-fw fa-2x interactive"></i>
+            Page <input v-b-tooltip.hover title="Enter number or use keyboard up and down arrows" id="page-number" type="number" v-model="pagenum" @change="searchClick(true)"
+                min="1" :max="pagecount"> of {% templatetag openvariable %}pagecount}}
+            <i id="page-right" style="cursor:pointer" v-on:click="paging(1)" v-b-tooltip.hover title="Go forward a page"
+                    class="pagination fa fa-angle-double-right fa-w-14 fa-fw fa-2x interactive"></i>
+                &nbsp;&nbsp;&nbsp;Resources {% templatetag openvariable %}Math.max(0, pagedisp * perpage - perpage + 1){% templatetag closevariable %}
+                 - {% templatetag openvariable %}Math.min(rescount, pagedisp * perpage){% templatetag closevariable %}
+                 of {% templatetag openvariable %}rescount{% templatetag closevariable %}
+             <br/> <br/>
+        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="admin">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-3">
+                                <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
+                                class="glyphicon glyphicon-pencil"></span>&nbsp;Edit Topics</h4></a>
+                                Someone has requested a topic to be created or modified for use in the Title Assistant
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
-<script src=https://unpkg.com/axios/dist/axios.min.js></script>
+{% block extra_js %}
+
+
+{% endblock %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+            integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-vue/2.21.2/bootstrap-vue.min.js" integrity="sha512-Z0dNfC81uEXC2iTTXtE0rM18I3ATkwn1m8Lxe0onw/uPEEkCmVZd+H8GTeYGkAZv50yvoSR5N3hoy/Do2hNSkw==" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
+    <script type="text/javascript" src="/static/js/publication.js"></script>
