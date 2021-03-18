@@ -40,150 +40,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-/* ===== Navbar ===== */
-
-.navbar-brand {
-    padding: 0;
-    padding-top: 10px;
-}
-
-#img-brand-logo {
-	width: 145px;
-}
-
-.container>.navbar-header, .container>.navbar-collapse {
-    padding-left: 15px;
-    padding-right: 15px;
-}
-
-.navbar-inverse .navbar-collapse, .navbar-inverse .navbar-form {
-    border-color: #DDD;
-}
-
-.navbar-toggle {
-    background: #B5B5B5;
-    border-color: #8C8C8C !important;
-}
-
-.navbar-inverse {
-  background-color: #FFF;
-  border: none;
-}
-
-.navbar>.container .navbar-brand {
-    margin-right: 10px;
-}
-
-.navbar-inverse .navbar-nav > .active > a, .navbar-inverse .navbar-nav > .active > a:hover, .navbar-inverse .navbar-nav > .active > a:focus {
-    color: #333;
-    background-color: #FFF !important
-}
-
-.navbar-inverse .navbar-brand {
-	color: #EEEEEE;
-}
-
-.navbar-inverse .resource-type-name,
-.navbar-inverse .navbar-nav > li > a,
-.navbar-inverse .navbar-nav > .open > a,
-.navbar-inverse .navbar-nav > .open > a:hover,
-.navbar-inverse .navbar-nav > .open > a:focus {
-	color: #777;
-	font: 13px/18px 'Open Sans', arial, sans-serif;
-}
-
-.navbar-nav > li > .dropdown-menu.arrow_box, .dropdown-menu.profile-card {
-    margin-top: 18px;
-    margin-right: -12px;
-    width: 300px;
-    height: 160px;
-    padding: 0;
-    background: #FFF;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
-    -webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2)
-}
-
-.res-dropdown {
-	padding: 7px;
-	padding-right: 40px;
-}
-
-.dropdown-menu.profile-card {
-    width: 350px;
-    height: auto;
-    margin: unset;
-	margin-bottom: 40px;
-}
-
-.profile-card .flex > div {
-    padding: 15px;
-}
-
-.profile-card .flex > div:first-child {
-	background: #f8f8f8;
-	border-right: 1px solid #DDD;
-	width: 110px;
-}
-
-.profile-card .dropdown-profile-pic-thumbnail{
-    margin-right: 0;
-}
-
-.profile-card table .fa {
-	margin-right: 4px;
-}
-
-.navbar-inverse .navbar-nav > .open > a:hover,
-.navbar-inverse .navbar-nav > li > a:hover,
-.navbar-inverse .navbar-nav > li > a:focus {
-	color: #333;
-	-webkit-transition: color 100ms linear;
-	-moz-transition: color 100ms linear;
-	-o-transition: color 100ms linear;
-	transition: color 100ms linear;
-}
-
-.navbar-inverse {
-    text-transform: uppercase;
-    border-bottom: 1px solid #DDD;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-}
-
-.navbar-inverse .tooltip {
-	text-transform: none;
-}
-
-.navbar-inverse .navbar-nav > .open > a,
-.navbar-inverse .navbar-nav > .open > a:hover,
-.navbar-inverse .navbar-nav > .open > a:focus {
-	background-color: unset;
-}
-
-.dropdown-menu {
-    border: 1px solid #D6D6D6;
-    border-top-color: #EEEEEE;
-    border-radius: 0;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-}
-.dropdown-menu > li > a {
-  color: #000;
-  padding: 10px 20px;
-  font-size: 12px;
-}
-.dropdown-menu > li > a:hover,
-.dropdown-menu > li > a:focus {
-  color: #333;
-  background-color: #eaeaea;
-}
-
 /* ===== Recaptcha ===== */
 #recaptcha_challenge_image {
     max-width: 100%;
@@ -681,88 +537,6 @@ img.media-object{
 	margin: 30px 0;
 }
 
-/* ===== Footer ===== */
-
-footer {
-    background: #093E54;
-    color: #FFF;
-}
-footer a {
-	color: #B5E655;
-}
-footer a:hover {
-	color: #81D685;
-	text-decoration: none;
-}
-footer .headline {
-	margin-bottom: 20px;
-}
-footer .headline h3{
-	text-transform: uppercase;
-	color: #FFF;
-}
-.legal {
-	padding: 40px 0;
-}
-.legal a {
-	color: #B5E655;
-	text-decoration: none;
-}
-.social ul {
-    background: #3E7A8C;
-    color: white;
-    font-size: 24px;
-    margin: 0;
-	padding: 0;
-}
-
-.social li {
-    float: left;
-    display: block;
-    list-style-type: none;
-    width: 28px;
-    height: 28px;
-    margin: 0 5px 5px 0;
-    text-align: center;
-    line-height: 28px;
-}
-
-.social li:hover {
-    background: none;
-}
-
-.social li a {
-    color: #FFF;
-}
-
-.social li:hover a {
-    transition: color 0.1s;
-    -webkit-transition: color 0.1s;
-    -moz-transition: color 0.1s;
-    -o-transition: color 0.1s;
-    color: #B5E655;
-}
-
-footer .hl-btn-default {
-	color: #fff;
-	background: none;
-}
-footer .hl-btn-default:hover {
-	color: #3E7A8C;
-	background: #fff;
-	font-weight: bold;
-	border: 1px solid #fff;
-}
-footer .form-control {
-	border: white;
-}
-footer .form-control:focus {
-	border: white;
-}
-footer .sbtn {
-	margin-bottom: 5px;
-}
-
 /* Login Header*/
 
 li.account {
@@ -937,18 +711,6 @@ li.account p{
 }
 .navbar-nav li#search i.margin-2 {
 	margin-left: 2px;
-}
-
-/* ===== Pagination ===== */
-
-.pagination > .active > a,
-.pagination > .active > span,
-.pagination > .active > a:hover,
-.pagination > .active > span:hover,
-.pagination > .active > a:focus,
-.pagination > .active > span:focus {
-  background-color: #00B4FF;
-  border-color: #00B4FF;
 }
 
 /* Helper Classes */
@@ -1884,12 +1646,11 @@ a.tag:hover {
     border-top-right-radius: 5px;
 }
 /* ===== Responsive CSS ===== */
-
 .navbar-inverse .navbar-toggle:hover,
 .navbar-inverse .navbar-toggle:focus {
 	background-color: #333;
 }
-
+/* TODO THESE ARE PROBABLY THE ENTIRES CAUSING ALL THE TROUBLE */
 /* Media query overrides for bootstrap 3 collapse breakpoint */
 /* Extended from https://stackoverflow.com/a/36289507/3288102 */
 @media (max-width: 992px) {
@@ -2069,14 +1830,7 @@ a.tag:hover {
 		left: 50%;
 	}
 
-	/* Navbar dropdown */
-
-    .dropdown-menu .divider {
-        height: 1px;
-        margin: 9px 0;
-        overflow: hidden;
-        background-color: #999
-    }
+/*content manager*/
 
     .fb-content-wrapper {
         flex-direction: column;

@@ -34,6 +34,7 @@ from celery.result import states
 
 from hs_core.models import BaseResource, TaskNotification
 from theme.utils import get_quota_message
+from hs_collection_resource.models import CollectionDeletedResource
 
 
 # Pass 'django' into getLogger instead of __name__
@@ -329,12 +330,13 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
 
 @shared_task
-def create_bag_by_irods(resource_id):
+def create_bag_by_irods(resource_id, create_zip=True):
     """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
+    :param create_zip: defaults to True, set to false to create bagit files without zipping
     :return: bag_url if bag creation operation succeeds or
              raise an exception if resource does not exist or any other issues that prevent bags from being created.
     """
@@ -344,34 +346,36 @@ def create_bag_by_irods(resource_id):
 
     bag_path = res.bag_path
 
-    metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
+    metadata_dirty = res.getAVU('metadata_dirty')
+    metadata_dirty = metadata_dirty is None or metadata_dirty
     # if metadata has been changed, then regenerate metadata xml files
-    if metadata_dirty is None or metadata_dirty.lower() == "true":
+    if metadata_dirty:
         create_bag_metadata_files(res)
 
-    irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
-
-    # only proceed when the resource is not deleted potentially by another request
-    # when being downloaded
-    is_exist = istorage.exists(irods_bagit_input_path)
-    if is_exist:
+    bag_modified = res.getAVU("bag_modified")
+    bag_modified = bag_modified is None or bag_modified
+    if metadata_dirty or bag_modified:
         create_bagit_files_by_irods(res, istorage)
-        try:
-            # call iRODS run and ibun command to zip the bag, ignore SessionException
-            # for now as a workaround which could be raised from potential race conditions when
-            # multiple ibun commands try to create the same zip file or the very same resource
-            # gets deleted by another request when being downloaded
-            istorage.zipup(irods_bagit_input_path, bag_path)
-            if res.raccess.published:
-                # compute checksum to meet DataONE distribution requirement
-                chksum = istorage.checksum(bag_path)
-                res.bag_checksum = chksum
-            istorage.setAVU(irods_bagit_input_path, 'bag_modified', "false")
-            return res.bag_url
-        except SessionException as ex:
-            raise SessionException(-1, '', ex.stderr)
-    else:
-        raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
+        res.setAVU("bag_modified", False)
+
+    if create_zip:
+        irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+
+        # only proceed when the resource is not deleted potentially by another request
+        # when being downloaded
+        is_exist = istorage.exists(irods_bagit_input_path)
+        if is_exist:
+            try:
+                istorage.zipup(irods_bagit_input_path, bag_path)
+                if res.raccess.published:
+                    # compute checksum to meet DataONE distribution requirement
+                    chksum = istorage.checksum(bag_path)
+                    res.bag_checksum = chksum
+                return res.bag_url
+            except SessionException as ex:
+                raise SessionException(-1, '', ex.stderr)
+        else:
+            raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
 @shared_task
@@ -403,6 +407,72 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if new_res:
             new_res.delete()
         raise utils.ResourceCopyException(str(ex))
+
+
+@shared_task
+def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
+    """
+    Task for creating a new version of a resource
+    Args:
+        ori_res_id: the original resource id that is to be versioned.
+        new_res_id: the new versioned resource id from the original resource. If None, a
+        new resource will be created.
+        username: the requesting user's username
+    Returns:
+        the new versioned resource url as the payload
+    """
+    try:
+        new_res = None
+        if not new_res_id:
+            new_res = create_empty_resource(ori_res_id, username)
+            new_res_id = new_res.short_id
+        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+
+        # copy metadata from source resource to target new-versioned resource except three elements
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
+        if not new_res:
+            new_res = utils.get_resource_by_shortkey(new_res_id)
+        utils.copy_and_create_metadata(ori_res, new_res)
+
+        # add or update Relation element to link source and target resources
+        hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
+
+        if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+            # the original resource is already a versioned resource, and its isVersionOf relation
+            # element is copied over to this new version resource, needs to delete this element so
+            # it can be created to link to its original resource correctly
+            eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
+            new_res.metadata.delete_element('relation', eid)
+
+        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
+
+        if ori_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new version collection will not contain "deleted resources"
+            new_res.resources = ori_res.resources.all()
+
+        # create bag for the new resource
+        create_bag(new_res)
+
+        # since an isReplaceBy relation element is added to original resource, needs to call
+        # resource_modified() for original resource
+        utils.resource_modified(ori_res, by_user=username, overwrite_bag=False)
+        # if everything goes well up to this point, set original resource to be immutable so that
+        # obsoleted resources cannot be modified from REST API
+        ori_res.raccess.immutable = True
+        ori_res.raccess.save()
+        ori_res.save()
+        return new_res.get_absolute_url()
+    except Exception as ex:
+        if new_res:
+            new_res.delete()
+        raise utils.ResourceVersioningException(str(ex))
+    finally:
+        # release the lock regardless
+        ori_res.locked_time = None
+        ori_res.save()
 
 
 @shared_task
@@ -440,6 +510,60 @@ def replicate_resource_bag_to_user_zone_task(res_id, request_username):
         return None
     else:
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
+
+
+@shared_task
+def delete_resource_task(resource_id, request_username=None):
+    """
+    Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an
+    administrator to perform this function.
+    :param resource_id: The unique HydroShare identifier of the resource to be deleted
+    :return: resource_id if delete operation succeeds
+             raise an exception if there were errors.
+    """
+    res = utils.get_resource_by_shortkey(resource_id)
+    res_title = res.metadata.title
+    res_type = res.resource_type
+    resource_related_collections = [col for col in res.collections.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
+
+    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
+    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
+    # relation element
+    if res.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of_res_link = \
+            res.metadata.relations.all().filter(type='isVersionOf').first().value
+        idx = is_version_of_res_link.rindex('/')
+        if idx == -1:
+            obsolete_res_id = is_version_of_res_link
+        else:
+            obsolete_res_id = is_version_of_res_link[idx + 1:]
+        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
+        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
+            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
+            obsolete_res.metadata.delete_element('relation', eid)
+            # also make this obsoleted resource editable if not published now that it becomes the latest version
+            if not obsolete_res.raccess.published:
+                obsolete_res.raccess.immutable = False
+                obsolete_res.raccess.save()
+
+    res.delete()
+    if request_username:
+        # if the deleted resource is part of any collection resource, then for each of those collection
+        # create a CollectionDeletedResource object which can then be used to list collection deleted
+        # resources on collection resource landing page
+        for collection_res in resource_related_collections:
+            o = CollectionDeletedResource.objects.create(
+                resource_title=res_title,
+                deleted_by=User.objects.get(username=request_username),
+                resource_id=resource_id,
+                resource_type=res_type,
+                collection=collection_res
+            )
+            o.resource_owners.add(*owners_list)
+
+    # return the page URL to redirect to after resource deletion task is complete
+    return '/my-resources/'
 
 
 @shared_task
