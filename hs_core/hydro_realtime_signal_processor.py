@@ -15,23 +15,11 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 
     """ 
     Customized for the fact that all indexed resources are subclasses of BaseResource. 
-
     Notes: 
     1. RealtimeSignalProcessor already plumbs in all class updates. We might want to be more specific. 
     2. The class sent to this is a subclass of BaseResource, or another class. 
     3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
     """
-
-    # def setup(self):
-    #     # Listen only to the ``BaseResource`` and ``ResourceAccess`` models.
-    #     models.signals.post_save.connect(self.handle_save, sender=BaseResource)
-    #     models.signals.post_save.connect(self.handle_save, sender=ResourceAccess)
-
-    # def teardown(self):
-    #     # Disconnect the ``BaseResource`` and ``ResourceAccess`` models.
-    #     models.signals.post_save.disconnect(self.handle_save, sender=BaseResource)
-    #     models.signals.post_save.disconnect(self.handle_save, sender=ResourceAccess)
-
     def handle_save(self, sender, instance, **kwargs):
         """
         Given an individual model instance, determine which backends the
@@ -78,7 +66,12 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 # resolve the BaseResource corresponding to the metadata element. 
                 # this works regardless of the type of the metadata element. 
                 # fields used here are the union of all fields in the metadata element
-                newinstance = BaseResource.objects.get(Q(metadata__title=instance) |
+                # we want to re-index BaseResource if: 
+                # 1. There are changes in the metadata or extra_metadata object. 
+                # 2. There are changes in indexed objects referenced by the metadata or extra_metadata object. 
+                newinstance = BaseResource.objects.get(Q(metadata=instance) |
+                                                       Q(extra_metadata=instance) |
+                                                       Q(metadata__title=instance) |
                                                        Q(metadata__description=instance) |
                                                        Q(metadata__creators=instance) |
                                                        Q(metadata__contributors=instance) |
