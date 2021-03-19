@@ -5,7 +5,7 @@ import logging
 import types
 from haystack.query import SearchQuerySet
 from haystack.utils import get_identifier
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource,AbstractMetaDataElement
 from hs_access_control.models import ResourceAccess
 
 logger = logging.getLogger(__name__)
@@ -22,15 +22,15 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
     """
 
-    def setup(self):
-        # Listen only to the ``BaseResource`` and ``ResourceAccess`` models.
-        models.signals.post_save.connect(self.handle_save, sender=BaseResource)
-        models.signals.post_save.connect(self.handle_save, sender=ResourceAccess)
+    # def setup(self):
+    #     # Listen only to the ``BaseResource`` and ``ResourceAccess`` models.
+    #     models.signals.post_save.connect(self.handle_save, sender=BaseResource)
+    #     models.signals.post_save.connect(self.handle_save, sender=ResourceAccess)
 
-    def teardown(self):
-        # Disconnect the ``BaseResource`` and ``ResourceAccess`` models.
-        models.signals.post_save.disconnect(self.handle_save, sender=BaseResource)
-        models.signals.post_save.disconnect(self.handle_save, sender=ResourceAccess)
+    # def teardown(self):
+    #     # Disconnect the ``BaseResource`` and ``ResourceAccess`` models.
+    #     models.signals.post_save.disconnect(self.handle_save, sender=BaseResource)
+    #     models.signals.post_save.disconnect(self.handle_save, sender=ResourceAccess)
 
     def handle_save(self, sender, instance, **kwargs):
         """
@@ -71,5 +71,43 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
             newinstance = instance.resource
-            newsender = BaseResource
-            self.handle_save(newsender, newinstance)
+            self.handle_save(BaseResource, newinstance)
+
+        elif isinstance(instance, AbstractMetaDataElement): 
+            try: 
+                # resolve the BaseResource corresponding to the metadata element. 
+                # this works regardless of the type of the metadata element. 
+                # fields used here are the union of all fields in the metadata element
+                newinstance = BaseResource.objects.get(Q(metadata__title=instance) |
+                                                       Q(metadata__description=instance) |
+                                                       Q(metadata__creators=instance) |
+                                                       Q(metadata__contributors=instance) |
+                                                       Q(metadata__citation=instance) |
+                                                       Q(metadata__dates=instance) |
+                                                       Q(metadata__coverages=instance) |
+                                                       Q(metadata__formats=instance) |
+                                                       Q(metadata__identifiers=instance) |
+                                                       Q(metadata__language=instance) |
+                                                       Q(metadata__subjects=instance) |
+                                                       Q(metadata__sources=instance) |
+                                                       Q(metadata__relations=instance) |
+                                                       Q(metadata__rights=instance) |
+                                                       Q(metadata__type=instance) |
+                                                       Q(metadata__publisher=instance) |
+                                                       Q(metadata__funding_agencies=instance) |
+                                                       Q(metadata__variables=instance) |
+                                                       Q(metadata__sites=instance) |
+                                                       Q(metadata__methods=instance) |
+                                                       Q(metadata__quality_levels=instance) |
+                                                       Q(metadata__datasources=instance) |
+                                                       Q(metadata__time_series_results=instance) |
+                                                       Q(metadata__variables=instance) |
+                                                       Q(metadata__fieldinformations=instance) | 
+                                                       Q(extra_metadata=instance))
+                self.handle_save(BaseResource, newinstance)
+            except Exception:  # don't report missing resource 
+                pass
+
+    def handle_delete(self, sender, instance, **kwargs):
+        """ do not delete anything when this is called. """
+        pass
