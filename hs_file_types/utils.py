@@ -2,6 +2,7 @@ import json
 import os
 from dateutil import parser
 from operator import lt, gt
+from hsmodels.schemas import load_rdf
 
 from django.db import transaction
 from rdflib import RDFS, Graph
@@ -14,6 +15,7 @@ from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFi
 
 from hs_file_types.models.base import AbstractLogicalFile
 from django.apps import apps
+from django_irods.storage import IrodsStorage
 
 
 def get_SupportedAggTypes_choices():
@@ -384,3 +386,20 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='',
         if fail_feedback:
             raise
         return None
+
+
+def get_logical_file_metadata_json_schema(file_with_path):
+    """
+    Get logical file metadata values in json format along with its json schema
+    for metadata display
+    :param file_with_path: meatadata file with path
+    :return: metadata JSON values and schema for logical file
+    """
+    istorage = IrodsStorage()
+    json_value = {}
+    json_schema = {}
+    with istorage.open(file_with_path) as f:
+        metadata = load_rdf(f.read())
+        json_value = metadata.json()
+        json_schema = metadata.schema_json()
+    return json_value, json_schema

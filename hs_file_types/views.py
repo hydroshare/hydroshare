@@ -23,7 +23,7 @@ from hs_core.views.utils import rename_irods_file_or_folder_in_django
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
 
-from .utils import set_logical_file_type
+from .utils import set_logical_file_type, get_logical_file_metadata_json_schema
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -1017,7 +1017,6 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
 
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
 
-    from hs_core.views.utils import authorize
     from rest_framework.exceptions import PermissionDenied
     if not logical_file.resource.raccess.public:
         if request.user.is_authenticated:
@@ -1031,7 +1030,10 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
 
     try:
         if metadata_mode == 'view':
-            metadata = logical_file.metadata.get_html()
+            file_path = logical_file.metadata_file_path
+            json_value, json_schema = get_logical_file_metadata_json_schema(file_path)
+            metadata = {'json_value': json_value,
+                        'json_schema': json_schema}
         else:
             metadata = logical_file.metadata.get_html_forms()
         ajax_response_data = {'status': 'success', 'metadata': metadata}
