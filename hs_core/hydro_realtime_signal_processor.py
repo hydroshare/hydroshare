@@ -1,12 +1,12 @@
 from django.db import models
 from haystack.signals import RealtimeSignalProcessor
 from haystack.exceptions import NotHandled
-import logging
-import types
 from haystack.query import SearchQuerySet
 from haystack.utils import get_identifier
-from hs_core.models import BaseResource,AbstractMetaDataElement
+from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
 from hs_access_control.models import ResourceAccess
+import logging
+import types
 
 logger = logging.getLogger(__name__)
 
@@ -61,17 +61,19 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
             newinstance = instance.resource
             self.handle_save(BaseResource, newinstance)
 
-        elif isinstance(instance, AbstractMetaDataElement): 
+        elif isinstance(instance, CoreMetaData): 
+            try: 
+                newinstance = BaseResource.objects.get(metadata=instance)
+                self.handle_save(BaseResource, newinstance)
+            except Exception: 
+                pass
+        
+        elif isinstance(instance, AbstractMetaDataElement):
             try: 
                 # resolve the BaseResource corresponding to the metadata element. 
                 # this works regardless of the type of the metadata element. 
                 # fields used here are the union of all fields in the metadata element
-                # we want to re-index BaseResource if: 
-                # 1. There are changes in the metadata or extra_metadata object. 
-                # 2. There are changes in indexed objects referenced by the metadata or extra_metadata object. 
-                newinstance = BaseResource.objects.get(Q(metadata=instance) |
-                                                       Q(extra_metadata=instance) |
-                                                       Q(metadata__title=instance) |
+                newinstance = BaseResource.objects.get(Q(metadata__title=instance) |
                                                        Q(metadata__description=instance) |
                                                        Q(metadata__creators=instance) |
                                                        Q(metadata__contributors=instance) |
@@ -95,12 +97,18 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                                                        Q(metadata__datasources=instance) |
                                                        Q(metadata__time_series_results=instance) |
                                                        Q(metadata__variables=instance) |
-                                                       Q(metadata__fieldinformations=instance) | 
-                                                       Q(extra_metadata=instance))
+                                                       Q(metadata__fieldinformations=instance))
                 self.handle_save(BaseResource, newinstance)
             except Exception:  # don't report missing resource 
                 pass
 
+        else:  # could be extended metadata element
+            try: 
+                newinstance = BaseResource.objects.get(extra_metadata=instance)
+                self.handle_save(BaseResource, newinstance)
+            except Exception: 
+                pass
+                
     def handle_delete(self, sender, instance, **kwargs):
         """ do not delete anything when this is called. """
         pass
