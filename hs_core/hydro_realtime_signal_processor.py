@@ -71,8 +71,9 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         elif isinstance(instance, AbstractMetaDataElement):
             try: 
                 # resolve the BaseResource corresponding to the metadata element. 
-                # this works regardless of the type of the metadata element. 
                 # fields used here are the union of all fields in the metadata element
+                # some of these are deprecated, but in the interest of time, 
+                # I included them now and will delete later. 
                 newinstance = BaseResource.objects.get(Q(metadata__title=instance) |
                                                        Q(metadata__description=instance) |
                                                        Q(metadata__creators=instance) |
