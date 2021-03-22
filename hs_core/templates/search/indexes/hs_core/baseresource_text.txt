@@ -1,39 +1,30 @@
 {% load hydroshare_tags %} 
-{{ object.short_id }} 
-{{ object.doi }} 
-{{ object.content_object.title.value }} 
-{{ object.content_object.publisher.name }} 
-{{ object.resource_type }} 
-{{ object.content_object.description }} 
-{{ object.storage_type }} 
-{% for creator in object.content_object.creators.all %} {{ creator.name }} {{ creator.normalize_human_name }}  {{ creator.organization }} {% endfor %}
-{% for contributor in object.content_object.contributors.all %} {{ contributor.name }} {{ contributor.name|normalize_human_name }} {{ contributor.organization }}  {% endfor %}
-{% for owner in object.raccess.owners.all %} {{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}} {% endfor %}
-{% for subject in object.content_object.subjects.all %} {{ subject }} {% endfor %}
-{% for key, value in object.extra_content_object.items %} {{key}} {{value}} {% endfor %}
-{% for format in object.content_object.formats.all %} {{ format.value }} {% endfor %}
-{% for ident in object.content_object.identifiers.all %} {{ ident.value }} {% endfor %}
-{% for source in object.content_object.sources.all %} {{ source.derived_from }} {% endfor %}
-{% for relation in object.content_object.relations.all %} {{ relation.value }} {% endfor %}
+{{ object.short_id }} {{ object.doi }} {{ object.metadata.title.value }} 
+{{ object.metadata.publisher.name }} {{ object.resource_type }} {{ object.metadata.description }} 
+{% for creator in object.metadata.creators.all %}{{ creator.name }} {{ creator.normalize_human_name }}  {{ creator.organization }} {% endfor %}
+{% for contributor in object.metadata.contributors.all %}{{ contributor.name }} {{ contributor.name|normalize_human_name }} {{ contributor.organization }}  {% endfor %}
+{% for owner in object.raccess.owners.all %}{{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}} {% endfor %}
+{% for subject in object.metadata.subjects.all %}{{ subject }} {% endfor %} 
+{% for key, value in object.extra_metadata.items %}{{key}} {{value}} {% endfor %} 
+{% for format in object.metadata.formats.all %}{{ format.value }} {% endfor %}
+{% for ident in object.metadata.identifiers.all %}{{ ident.value }} {% endfor %}
+{% for source in object.metadata.sources.all %}{{ source.derived_from }} {% endfor %}
+{% for relation in object.metadata.relations.all %}{{ relation.value }} {% endfor %}
 {{ object.verbose_name }}
-{{ object.content_object.geometryinformation.geometryType }}
-{{ object.content_object.fieldinformations.first.fieldName }}
-{{ object.content_object.fieldinformations.first.fieldType }}
-{{ object.content_object.fieldinformations.first.fieldTypeCode }}
-{% for var in object.content_object.variables.all %} {{ var.name }} {{ var.type }} {{ var.shape }} {{ var.descriptive_name }} {{ var.speciation }} {{ var.sample_medium }} {% endfor %}
-{% for site in object.content_object.sites.all %} {{ site.name }} {% endfor %}
-{% for site in object.content_object.sites %} {{ site.site_name }} {% endfor %}
-{% for method in object.content_object.methods.all %} {{ method.description }} {% endfor %}
-{% for method in object.content_object.methods %} {{ method.method_description }} {% endfor %}
-{% for level in object.content_object.quality_levels.all %} {{ level.code }} {% endfor %}
-{% for source in object.content_object.datasources.all %} {{source.code }} {% endfor %}
-{% for res in object.content_object.time_series_results %} {{res.sample_medium }} {{ res.units_name }} {{ res.units_type }}  {% endfor %}
-
+{{ object.metadata.geometryinformation.geometryType }}
+{{ object.metadata.fieldinformations.first.fieldName }}
+{{ object.metadata.fieldinformations.first.fieldType }}
+{{ object.metadata.fieldinformations.first.fieldTypeCode }}
+{% for var in object.metadata.variables.all %}{{ var.name|discoverable }} {{ var.descriptive_name|discoverable }} {{ var.speciation|discoverable }} {{ var.sample_medium|discoverable }} {% endfor %}
+{% for site in object.metadata.sites.all %}{{ site.name|discoverable }} {% endfor %}
+{% for site in object.metadata.sites %}{{ site.site_name|discoverable }} {% endfor %}
+{% for method in object.metadata.methods.all %}{{ method.description|discoverable }} {% endfor %}
+{% for method in object.metadata.methods %}{{ method.method_description|discoverable }} {% endfor %}
+{% for level in object.metadata.quality_levels.all %}{{ level.code|discoverable }} {% endfor %}
+{% for source in object.metadata.datasources.all %}{{ source.code|discoverable }} {% endfor %}
+{% for res in object.metadata.time_series_results %}{{ res.sample_medium|discoverable }} {{ res.units_name }} {{ res.units_type }}  {% endfor %}
 {% for f in object.logical_files %} 
-  {{ f.get_discovery_content_type }} 
-  {% for v in f.metadata.variables.all %} {{ v.name|discoverable }} {% endfor %} 
-  {% for b in f.metadata.bandInformations %} {{ b.variableName|discoverable }} {% endfor %}
-  {{ f.metadata.cellinformation.name|discoverable }}  
+{{ f.get_discovery_content_type }} {{ f.metadata.cellinformation.name|discoverable }}  
+{% for v in f.metadata.variables.all %}{{ v.name|discoverable }} {% endfor %} 
+{% for b in f.metadata.bandInformations %}{{ b.variableName|discoverable }} {% endfor %}
 {% endfor %}
-
-

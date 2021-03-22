@@ -305,3 +305,10 @@ def creator_json_ld_element(crs):
 @register.filter
 def is_debug(page):
     return settings.DEBUG
+
+
+@register.filter
+def discoverable(item):
+    if item is None or item == 'Unknown': 
+        return ""
+    return item
