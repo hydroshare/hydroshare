@@ -24,7 +24,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         Given an individual model instance, determine which backends the
         update should be sent to & update the object on those backends.
         """
-        from hs_core.models import BaseResource
+        from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
 
         if isinstance(instance, BaseResource):
@@ -73,9 +73,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         elif isinstance(instance, AbstractMetaDataElement):
             try:
                 # resolve the BaseResource corresponding to the metadata element.
-                # fields used here are the union of all fields in the metadata element
-                # some of these are deprecated, but in the interest of time,
-                # I included them now and will delete later.
                 newbase = instance.metadata.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
