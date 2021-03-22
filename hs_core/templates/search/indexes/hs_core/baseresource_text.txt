@@ -1,22 +1,39 @@
 {% load hydroshare_tags %} 
-{% if object.short_id %} {{ object.short_id }} {% endif %} 
-{% if object.doi %} {{ object.doi }} {% endif %} 
-{% if object.metadata.title.value %} {{ object.metadata.title.value }} {% endif %} 
-{% if object.metadata.description %} {{ object.metadata.description }} {% endif %} 
-{% if object.metadata.publisher.name %} {{ object.metadata.publisher.name }} {% endif %} 
-{% if object.resource_type %} {{ object.resource_type }} {% endif %} 
-{% for creator in object.metadata.creators.all %}
-    {% if creator.name %} {{ creator.name }} {{ creator.normalize_human_name }} {% endif %} 
-    {% if creator.organization %} {{ creator.organization }} {% endif %} 
+{{ object.short_id }} 
+{{ object.doi }} 
+{{ object.content_object.title.value }} 
+{{ object.content_object.publisher.name }} 
+{{ object.resource_type }} 
+{{ object.content_object.description }} 
+{{ object.storage_type }} 
+{% for creator in object.content_object.creators.all %} {{ creator.name }} {{ creator.normalize_human_name }}  {{ creator.organization }} {% endfor %}
+{% for contributor in object.content_object.contributors.all %} {{ contributor.name }} {{ contributor.name|normalize_human_name }} {{ contributor.organization }}  {% endfor %}
+{% for owner in object.raccess.owners.all %} {{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}} {% endfor %}
+{% for subject in object.content_object.subjects.all %} {{ subject }} {% endfor %}
+{% for key, value in object.extra_content_object.items %} {{key}} {{value}} {% endfor %}
+{% for format in object.content_object.formats.all %} {{ format.value }} {% endfor %}
+{% for ident in object.content_object.identifiers.all %} {{ ident.value }} {% endfor %}
+{% for source in object.content_object.sources.all %} {{ source.derived_from }} {% endfor %}
+{% for relation in object.content_object.relations.all %} {{ relation.value }} {% endfor %}
+{{ object.verbose_name }}
+{{ object.content_object.geometryinformation.geometryType }}
+{{ object.content_object.fieldinformations.first.fieldName }}
+{{ object.content_object.fieldinformations.first.fieldType }}
+{{ object.content_object.fieldinformations.first.fieldTypeCode }}
+{% for var in object.content_object.variables.all %} {{ var.name }} {{ var.type }} {{ var.shape }} {{ var.descriptive_name }} {{ var.speciation }} {{ var.sample_medium }} {% endfor %}
+{% for site in object.content_object.sites.all %} {{ site.name }} {% endfor %}
+{% for site in object.content_object.sites %} {{ site.site_name }} {% endfor %}
+{% for method in object.content_object.methods.all %} {{ method.description }} {% endfor %}
+{% for method in object.content_object.methods %} {{ method.method_description }} {% endfor %}
+{% for level in object.content_object.quality_levels.all %} {{ level.code }} {% endfor %}
+{% for source in object.content_object.datasources.all %} {{source.code }} {% endfor %}
+{% for res in object.content_object.time_series_results %} {{res.sample_medium }} {{ res.units_name }} {{ res.units_type }}  {% endfor %}
+
+{% for f in object.logical_files %} 
+  {{ f.get_discovery_content_type }} 
+  {% for v in f.metadata.variables.all %} {{ v.name|discoverable }} {% endfor %} 
+  {% for b in f.metadata.bandInformations %} {{ b.variableName|discoverable }} {% endfor %}
+  {{ f.metadata.cellinformation.name|discoverable }}  
 {% endfor %}
-{% for contributor in object.metadata.contributors.all %}
-    {% if contributor.name %} {{ contributor.name }} {{ contributor.name|normalize_human_name
-    {% if contributor.organization %} {{ contributor.organization }} {% endif %} 
-{% endif %} 
-{% endfor %}
-{% for subject in object.metadata.subjects.all %}
-    {% if subject %} {{ subject }} {% endif %} 
-{% endfor %}
-{% for owner in object.raccess.owners.all %}
-    {{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}}
-{% endfor %}
+
+
