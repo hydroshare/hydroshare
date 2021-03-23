@@ -309,6 +309,7 @@ def is_debug(page):
 
 @register.filter
 def discoverable(item):
-    if item is None or item == 'Unknown': 
+    """ used in templates for discovery to avoid non-indicative results. """
+    if item is None or item == 'Unknown':
         return ""
     return item
