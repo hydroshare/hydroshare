@@ -61,14 +61,14 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.error("ResourceAccess id={} exception: {}".format(instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, CoreMetaData):
             try:
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception:
-                logger.error("CoreMetaData id={} exception: {}".format(instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, AbstractMetaDataElement):
             try:
@@ -76,14 +76,14 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 newbase = instance.metadata.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                print("{} {} exception: {}".format(type(instance), instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
         else:  # could be extended metadata element
             try:
                 newbase = BaseResource.objects.get(extra_metadata=instance)
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                print("{} {} exception: {}".format(type(instance), instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
     def handle_delete(self, sender, instance, **kwargs):
         """
