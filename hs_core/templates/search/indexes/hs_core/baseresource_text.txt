@@ -1,22 +1,33 @@
 {% load hydroshare_tags %} 
-{% if object.short_id %} {{ object.short_id }} {% endif %} 
-{% if object.doi %} {{ object.doi }} {% endif %} 
-{% if object.metadata.title.value %} {{ object.metadata.title.value }} {% endif %} 
-{% if object.metadata.description %} {{ object.metadata.description }} {% endif %} 
-{% if object.metadata.publisher.name %} {{ object.metadata.publisher.name }} {% endif %} 
-{% if object.resource_type %} {{ object.resource_type }} {% endif %} 
-{% for creator in object.metadata.creators.all %}
-    {% if creator.name %} {{ creator.name }} {{ creator.normalize_human_name }} {% endif %} 
-    {% if creator.organization %} {{ creator.organization }} {% endif %} 
-{% endfor %}
-{% for contributor in object.metadata.contributors.all %}
-    {% if contributor.name %} {{ contributor.name }} {{ contributor.name|normalize_human_name
-    {% if contributor.organization %} {{ contributor.organization }} {% endif %} 
-{% endif %} 
-{% endfor %}
-{% for subject in object.metadata.subjects.all %}
-    {% if subject %} {{ subject }} {% endif %} 
-{% endfor %}
-{% for owner in object.raccess.owners.all %}
-    {{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}}
+{{ object.short_id }} {{ object.doi }} {{ object.metadata.title.value }} 
+{{ object.metadata.publisher.name }} {{ object.resource_type }} {{ object.metadata.description }} 
+{% for creator in object.metadata.creators.all %}{{ creator.name|discoverable }} {{ creator.normalize_human_name|discoverable }}  {{ creator.organization|discoverable }} {% endfor %}
+{% for contributor in object.metadata.contributors.all %}{{ contributor.name|discoverable }} {{ contributor.name|normalize_human_name|discoverable }} {{ contributor.organization|discoverable }}  {% endfor %}
+{% for owner in object.raccess.owners.all %}{{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}} {% endfor %}
+{% for subject in object.metadata.subjects.all %}{{ subject }} {% endfor %} 
+{% for key, value in object.extra_metadata.items %}{{key}} {{value}} {% endfor %} 
+{% for format in object.metadata.formats.all %}{{ format.value }} {% endfor %}
+{% for ident in object.metadata.identifiers.all %}{{ ident.value }} {% endfor %}
+{% for source in object.metadata.sources.all %}{{ source.derived_from }} {% endfor %}
+{% for relation in object.metadata.relations.all %}{{ relation.value }} {% endfor %}
+{{ object.verbose_name }}
+{{ object.metadata.geometryinformation.geometryType }}
+{{ object.metadata.fieldinformations.first.fieldName }}
+{{ object.metadata.fieldinformations.first.fieldType }}
+{{ object.metadata.fieldinformations.first.fieldTypeCode }}
+{% for var in object.metadata.variables.all %}{{ var.name|discoverable }} {{ var.descriptive_name|discoverable }} {{ var.speciation|discoverable }} {{ var.sample_medium|discoverable }} {% endfor %}
+{% for site in object.metadata.sites.all %}{{ site.name|discoverable }} {% endfor %}
+{% for site in object.metadata.sites %}{{ site.site_name|discoverable }} {% endfor %}
+{% for method in object.metadata.methods.all %}{{ method.description|discoverable }} {% endfor %}
+{% for method in object.metadata.methods %}{{ method.method_description|discoverable }} {% endfor %}
+{% for level in object.metadata.quality_levels.all %}{{ level.code|discoverable }} {% endfor %}
+{% for source in object.metadata.datasources.all %}{{ source.code|discoverable }} {% endfor %}
+{% for res in object.metadata.time_series_results %}{{ res.sample_medium|discoverable }} {{ res.units_name }} {{ res.units_type }}  {% endfor %}
+{% for f in object.logical_files %} 
+{{ f.get_discovery_content_type }} {{ f.metadata.cellinformation.name|discoverable }}  
+{% for v in f.metadata.variables.all %}{{ v.name|discoverable }} {% endfor %} 
+{% for b in f.metadata.bandInformations %}{{ b.variableName|discoverable }} {% endfor %}
+{% if f.get_discovery_content_type == "Time Series" %}
+{% for v in f.metadata.variables %}{{ v.variable_name|discoverable }} {% endfor %} 
+{% endif %}
 {% endfor %}
