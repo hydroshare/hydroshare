@@ -26,6 +26,8 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         """
         from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
+        from django.contrib.postgres.fields import HStoreField
+
 
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
@@ -78,7 +80,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
             except Exception as e:
                 logger.exception("{} exception: {}".format(type(instance), e))
 
-        else:  # could be extended metadata element
+        elif isinstance(instance, HStoreField):
             try:
                 newbase = BaseResource.objects.get(extra_metadata=instance)
                 self.handle_save(BaseResource, newbase)
