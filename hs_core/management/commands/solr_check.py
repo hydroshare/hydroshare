@@ -25,8 +25,7 @@ class Command(BaseCommand):
 
         else:
             for resource in BaseResource.objects.filter(raccess__discoverable=True):
-                if resource.raccess.discoverable:
-                    sqs = SearchQuerySet().filter(short_id=resource.short_id)
-                    for s in list(sqs):
-                        print("SOLR FOR RESOURCE {}: {}".format(resource.short_id, s.text))
-                        print("SOLR variables: {}".format(s.variable))
+                sqs = SearchQuerySet().filter(short_id=resource.short_id)
+                for s in list(sqs):
+                    print("SOLR FOR RESOURCE {}: {}".format(resource.short_id, s.text))
+                    print("SOLR variables: {}".format(s.variable))
