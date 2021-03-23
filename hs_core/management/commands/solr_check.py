@@ -1,6 +1,4 @@
 """Checks the data ingested into SOLR for unqualified search terms
-* By default, prints errors on stdout.
-* Optional argument --log: logs output to system log.
 """
 
 from django.core.management.base import BaseCommand

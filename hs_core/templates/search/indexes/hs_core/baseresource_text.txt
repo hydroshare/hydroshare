@@ -1,8 +1,8 @@
 {% load hydroshare_tags %} 
 {{ object.short_id }} {{ object.doi }} {{ object.metadata.title.value }} 
 {{ object.metadata.publisher.name }} {{ object.resource_type }} {{ object.metadata.description }} 
-{% for creator in object.metadata.creators.all %}{{ creator.name }} {{ creator.normalize_human_name }}  {{ creator.organization }} {% endfor %}
-{% for contributor in object.metadata.contributors.all %}{{ contributor.name }} {{ contributor.name|normalize_human_name }} {{ contributor.organization }}  {% endfor %}
+{% for creator in object.metadata.creators.all %}{{ creator.name|discoverable }} {{ creator.normalize_human_name|discoverable }}  {{ creator.organization|discoverable }} {% endfor %}
+{% for contributor in object.metadata.contributors.all %}{{ contributor.name|discoverable }} {{ contributor.name|normalize_human_name|discoverable }} {{ contributor.organization|discoverable }}  {% endfor %}
 {% for owner in object.raccess.owners.all %}{{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}} {% endfor %}
 {% for subject in object.metadata.subjects.all %}{{ subject }} {% endfor %} 
 {% for key, value in object.extra_metadata.items %}{{key}} {{value}} {% endfor %} 
@@ -27,4 +27,7 @@
 {{ f.get_discovery_content_type }} {{ f.metadata.cellinformation.name|discoverable }}  
 {% for v in f.metadata.variables.all %}{{ v.name|discoverable }} {% endfor %} 
 {% for b in f.metadata.bandInformations %}{{ b.variableName|discoverable }} {% endfor %}
+{% if f.get_discovery_content_type == "Time Series" %}
+{% for v in f.metadata.variables %}{{ v.variable_name|discoverable }} {% endfor %} 
+{% endif %}
 {% endfor %}
