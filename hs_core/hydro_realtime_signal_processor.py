@@ -24,9 +24,10 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         Given an individual model instance, determine which backends the
         update should be sent to & update the object on those backends.
         """
-        from hs_core.models import BaseResource, CoreMetaData
+        from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
-        from hs_file_types.models import AbstractLogicalFile, AbstractFileMetaData, AbstractFileMetaDataElement
+        from django.contrib.postgres.fields import HStoreField
+
 
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
@@ -62,53 +63,29 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.error("ResourceAccess id={} exception: {}".format(instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, CoreMetaData):
             try:
                 newbase = instance.resource
                 self.handle_save(BaseResource, newbase)
             except Exception:
-                logger.error("CoreMetaData id={} exception: {}".format(instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, AbstractMetaDataElement):
             try:
                 # resolve the BaseResource corresponding to the metadata element.
-                # fields used here are the union of all fields in the metadata element
-                # some of these are deprecated, but in the interest of time,
-                # I included them now and will delete later.
                 newbase = instance.metadata.resource
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.error("{} {} exception: {}".format(type(instance), instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
-        elif isinstance(instance, AbstractLogicalFile): 
-            try: 
-                newbase = instance.resource 
-                self.handle_save(BaseResource, newbase)
-            except Exception as e:
-                logger.error("{} {} exception: {}".format(type(instance), instance.id, e.message))
-
-        elif isinstance(instance, AbstractFileMetaData): 
-            try: 
-                newbase = instance.logical_file.resource 
-                self.handle_save(BaseResource, newbase)
-            except Exception as e:
-                logger.error("{} {} exception: {}".format(type(instance), instance.id, e.message))
-
-        elif isinstance(instance, AbstractFileMetaDataElement): 
-            try: 
-                newbase = instance.metadata.logical_file.resource 
-                self.handle_save(BaseResource, newbase)
-            except Exception as e:
-                logger.error("{} {} exception: {}".format(type(instance), instance.id, e.message))
-        
-        else:  # could be extended metadata element
+        elif isinstance(instance, HStoreField):
             try:
                 newbase = BaseResource.objects.get(extra_metadata=instance)
                 self.handle_save(BaseResource, newbase)
             except Exception as e:
-                logger.error("{} {} exception: {}".format(type(instance), instance.id, e.message))
+                logger.exception("{} exception: {}".format(type(instance), e))
 
     def handle_delete(self, sender, instance, **kwargs):
         """
