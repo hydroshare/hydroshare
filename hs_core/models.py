@@ -2309,18 +2309,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def delete(self, using=None):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
-        for fl in self.files.all():
-            if fl.logical_file is not None:
-                # delete of metadata file deletes the logical file (one-to-one relation)
-                # so no need for fl.logical_file.delete() and deleting of metadata file
-                # object deletes (cascade delete) all the contained GenericRelated metadata
-                # elements
-                fl.logical_file.metadata.delete()
-            # COUCH: delete of file objects now cascades.
-            fl.delete()
-        # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
-        self.metadata.delete_all_elements()
-        self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
         super(AbstractResource, self).delete()
 
