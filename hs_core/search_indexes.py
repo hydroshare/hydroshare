@@ -6,6 +6,8 @@ from hs_geographic_feature_resource.models import GeographicFeatureMetaData
 from hs_app_netCDF.models import NetcdfMetaData
 from ref_ts.models import RefTSMetadata
 from hs_app_timeseries.models import TimeSeriesMetaData
+from hs_file_types.models import NetCDFFileMetaData, RefTimeseriesFileMetaData, \
+    TimeSeriesFileMetaData, GeoRasterFileMetaData
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
@@ -135,6 +137,13 @@ def get_content_types(res):
         types.add('Generic Data')
 
     return (types, exts)
+
+
+def discoverable(thing):
+    """ return True if the string given is discoverable information, False if not """
+    if thing is not None and thing.strip() != "Unknown" and thing.strip() != "":
+        return True
+    return False
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -871,18 +880,26 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata variable names if exists, otherwise return empty array.
         """
-        variable_names = []
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, NetcdfMetaData):
-                for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name.strip())
-            elif isinstance(obj.metadata, RefTSMetadata):
-                for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name.strip())
-            elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
-                    variable_names.append(variable.variable_name.strip())
-        return variable_names
+        variable_names = set()
+        for f in obj.logical_files:  # could take a long time if lots of files
+            if hasattr(f, "metadata"):
+                if isinstance(f.metadata, NetCDFFileMetaData):
+                    for v in f.metadata.variables.all():
+                        if discoverable(v.name):
+                            variable_names.add(v.name.strip())
+                elif isinstance(f.metadata, TimeSeriesFileMetaData):
+                    for v in f.metadata.variables:
+                        if discoverable(v.variable_name):
+                            variable_names.add(v.variable_name.strip())
+                elif isinstance(f.metadata, RefTimeseriesFileMetaData):
+                    for v in f.metadata.variables:
+                        if discoverable(v.name):
+                            variable_names.add(v.name.strip())
+                elif isinstance(f.metadata, GeoRasterFileMetaData):
+                    for b in f.metadata.bandInformations:
+                        if discoverable(b.variableName):
+                            variable_names.add(b.variableName)
+        return list(variable_names)
 
     def prepare_variable_type(self, obj):
         """

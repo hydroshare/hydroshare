@@ -305,3 +305,11 @@ def creator_json_ld_element(crs):
 @register.filter
 def is_debug(page):
     return settings.DEBUG
+
+
+@register.filter
+def discoverable(item):
+    """ used in templates for discovery to avoid non-indicative results. """
+    if item is None or item == 'Unknown':
+        return ""
+    return item
