@@ -8,7 +8,9 @@
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
+{% comment %}
 {% if not page|is_debug %}
+{% endcomment %}
 {# ======= JSON-LD Structure ======= #}
 <script type="application/ld+json">
 {
@@ -17,11 +19,11 @@
         "datacite": "http://purl.org/spar/datacite/"
     },
     {% if cm.raccess.published %}
-    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
     "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
     "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
     {% else %}
-    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}#schemaorg",
     "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
     {% endif %}
     "@type": "Dataset",
@@ -41,26 +43,20 @@
     "creativeWorkStatus": "Private",
     {% endif %}
     "inLanguage": "en-US",
-    "identifier": {
-        "@type": [
-            "PropertyValue",
-            "datacite:ResourceIdentifier"
-        ],
-        {% if cm.raccess.published %}
-        "datacite:usesIdentifierScheme": {
-            "@id": "datacite:doi"
-        },
-        "propertyId": "DOI",
+    {% if cm.raccess.published %}
+    "identifier": [
+      {
+        "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "@type": "PropertyValue",
+        "propertyID": "https://registry.identifiers.org/registry/doi",
         "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-        "value": "10.4211/hs.{{ cm.short_id }}"
-        {% else %}
-        "datacite:usesIdentifierScheme": {
-            "@id": "datacite:local-resource-identifier-scheme"
-        },
-        "propertyId": "UUID",
-        "value": "uuid:{{ cm.short_id }}"
-        {% endif %}
-    },
+        "value": "doi:10.4211/hs.{{ cm.short_id }}"
+      },
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% else %}
+    "identifier": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
     {% if temporal_coverage %}
     "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
@@ -136,8 +132,9 @@
     "dateModified": "{{ cm.last_updated | date:"c"}}",
     {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
     "subjectOf": {
-        "@type": "CreativeWork",
-        "name": "Dublin Core Metadata Document Describing the Dataset",
+        "@type": "DataDownload",
+        "name": "resourcemetadata.xml",
+        "description": "Dublin Core Metadata Document Describing the Dataset",
         "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
         "encodingFormat": "application/rdf+xml"
     },
@@ -150,18 +147,8 @@
         "dateModified": "{{ cm.last_updated | date:"c" }}",
         {% if cm.raccess.published %}
         "identifier": [
-        {
-        {% else %}
-        "identifier": {
-        {% endif %}
-            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
-            "datacite:usesIdentifierScheme": {
-                "@id": "datacite:local-resource-identifier-scheme"
-            },
-            "propertyId": "UUID",
-            "value": "uuid:{{ cm.short_id }}"
-        }{% if cm.raccess.published %},
-        {
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+          {
             "@type": "PropertyValue",
             "additionalType": [
                 "http://www.wikidata.org/entity/Q185235",
@@ -170,12 +157,17 @@
             "identifier": "md5:{{ cm.bag_checksum }}",
             "propertyID": "MD5",
             "value": "{{ cm.bag_checksum }}"
-        }
-        ]{% endif %}
+          }
+        ]
+        {% else %}
+        "identifier": "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+        {% endif %}
     }
 }
 </script>
+{% comment %}
 {% endif %}
+{% endcomment %}
 {% endblock %}
 
 {% block main %}
