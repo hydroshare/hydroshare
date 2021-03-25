@@ -12,11 +12,10 @@
 {% if not page|is_debug %}
 {% endcomment %}
 {# ======= JSON-LD Structure ======= #}
-<script type="application/ld+json">
+<script id="schemaorg" type="application/ld+json">
 {
     "@context": {
-        "@vocab": "https://schema.org/",
-        "datacite": "http://purl.org/spar/datacite/"
+        "@vocab": "https://schema.org/"
     },
     {% if cm.raccess.published %}
     "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
@@ -74,7 +73,7 @@
             "longitude": {{ spatial_coverage.east|floatformat:"4" }}
             {% else %}
             "@type": "GeoShape",
-            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }}, {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }}, {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}"
             {% endif %}
         }
     },
@@ -147,7 +146,7 @@
         "dateModified": "{{ cm.last_updated | date:"c" }}",
         {% if cm.raccess.published %}
         "identifier": [
-          "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}",
           {
             "@type": "PropertyValue",
             "additionalType": [
