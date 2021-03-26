@@ -8,9 +8,8 @@
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
-{% comment %}
+
 {% if not page|is_debug %}
-{% endcomment %}
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
@@ -159,14 +158,14 @@
           }
         ]
         {% else %}
-        "identifier": "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+        ]
         {% endif %}
     }
 }
 </script>
-{% comment %}
 {% endif %}
-{% endcomment %}
 {% endblock %}
 
 {% block main %}
