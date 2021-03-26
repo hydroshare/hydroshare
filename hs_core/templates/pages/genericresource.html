@@ -53,7 +53,9 @@
       "https://www.hydroshare.org/resource/{{ cm.short_id }}"
     ],
     {% else %}
-    "identifier": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "identifier": [
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
     {% if temporal_coverage %}
