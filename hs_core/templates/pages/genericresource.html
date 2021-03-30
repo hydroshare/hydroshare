@@ -99,7 +99,7 @@
 	"license": {
 	    "@type": "CreativeWork",
 	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
-        "text": "{{ cm.metadata.rights.statement }}",
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
         "text": "{{ cm.metadata.rights.statement }}",
