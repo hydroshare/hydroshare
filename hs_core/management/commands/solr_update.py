@@ -1,38 +1,17 @@
-"""List the content types of resources for debugging.
-
-* By default, prints errors on stdout.
-* Optional argument --log: logs output to system log.
+"""Update the SOLR repository for changes in resources
+Optional argument --force does the update even if the record exists.
 """
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-import mimetypes
 from hs_core.search_indexes import BaseResourceIndex
 from haystack.query import SearchQuerySet
 
 
-def get_ext(name):
-    stuff = name.split('.')
-    if len(stuff) == 1:
-        return None
-    candidate = stuff[len(stuff)-1]
-    if '/' in candidate or candidate.startswith('_'):
-        return None
-    return candidate
-
-
-def get_mime(ext):
-    if ext is not None:
-        guess = mimetypes.guess_type("foo."+ext)
-        return guess[0]
-    else:
-        return "none"
-
-
 class Command(BaseCommand):
-    help = "Print logical file information."
+    help = "Update SOLR records."
 
     def add_arguments(self, parser):
 
@@ -132,10 +111,10 @@ class Command(BaseCommand):
                     else:
                         solr_replaced += 1
                 except BaseResource.DoesNotExist:
-                    print("SOLR resource {} NOT FOUND in Django; removing from SOLR"
+                    print("SOLR resource {} NOT FOUND in Django; cannot remove from SOLR"
                           .format(r.short_id))
-                    ind.remove_object(r)
                     solr_deleted += 1
+
                     continue
 
             print("Django contains {} discoverable resources and {} replaced resources"
