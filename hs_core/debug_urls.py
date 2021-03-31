@@ -5,10 +5,10 @@ from hs_core import views
 
 urlpatterns = [
     # Resource Debugging: print consistency problems in a resource
-    url(r'^resource/(?P<shortkey>[0-9a-f-]+)/debug/$',
+    url(r'^debug/resource/(?P<shortkey>[0-9a-f-]+)/$',
         views.debug_resource_view.debug_resource,
         name='debug_resource'),
-    url(r'^resource/(?P<shortkey>[0-9a-f-]+)/debug/irods-issues/$',
+    url(r'^debug/resource/(?P<shortkey>[0-9a-f-]+)/irods-issues/$',
         views.debug_resource_view.irods_issues,
         name='debug_resource'),
     url(r'^taskstatus/(?P<task_id>[A-z0-9\-]+)/$',
