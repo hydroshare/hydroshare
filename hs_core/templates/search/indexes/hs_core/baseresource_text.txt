@@ -30,10 +30,9 @@
 {% for m in f.metadata.methods %} {{ m.description|discoverable }} {% endfor %}
 {% for m in f.metadata.sample_mediums %} {{ m|discoverable }} {% endfor %}
 {% for s in f.metadata.sites %} {{ s.name|discoverable }} {% endfor %}
-{% if f.get_discovery_content_type == "Time Series" %}
-{% for s in f.metadata.methods %}{{ s.method_description|discoverable }} {% endfor %}
+{% endfor %} 
+{% for f in object.timeserieslogicalfile_set.all %}{% for s in f.metadata.methods %}{{ s.method_description|discoverable }} {% endfor %}
 {% for s in f.metadata.sites %}{{ s.site_name|discoverable }} {% endfor %}
 {% for v in f.metadata.variables %}{{ v.variable_name|discoverable }} {{ v.variable_code|discoverable }} {% endfor %} 
 {% for r in f.metadata.time_series_results %} {{ r.sample_medium }} {{ r.method }} {{ r.units_name }} {{ r.units_type }} {% endfor %}
-{% endif %}
 {% endfor %}

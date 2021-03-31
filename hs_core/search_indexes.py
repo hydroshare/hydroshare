@@ -824,64 +824,55 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_variable(self, obj):
         """
         Return metadata variable names if exists, otherwise return empty array.
-        Index both variable names and variable codes, due to inconsistent use. 
         """
         variables = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, NetCDFFileMetaData):
-                    for v in f.metadata.variables.all():
-                        if discoverable(v.name):
-                            variables.add(v.name.strip())
-                elif isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for v in f.metadata.variables:
-                        if discoverable(v.variable_name):
-                            variables.add(v.variable_name.strip())
-                        if discoverable(v.variable_code):
-                            variables.add(v.variable_code.strip())
-                elif isinstance(f.metadata, RefTimeseriesFileMetaData):
-                    for v in f.metadata.variables:
-                        if discoverable(v.name):
-                            variables.add(v.name.strip())
-                        if discoverable(v.code):
-                            variables.add(v.code.strip())
-                elif isinstance(f.metadata, GeoRasterFileMetaData):
-                    for b in f.metadata.bandInformations:
-                        if discoverable(b.variableName):
-                            variables.add(b.variableName)
+        for f in obj.netcdflogicalfile_set.all():
+            for v in f.metadata.variables.all():
+                if discoverable(v.name):
+                    variables.add(v.name.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                # TODO: inconsistent use of variable code and variable name
+                if discoverable(v.variable_name):
+                    variables.add(v.variable_name.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                # TODO: inconsistent use of variable code and variable name
+                if discoverable(v.name):
+                    variables.add(v.name.strip())
+        for f in obj.georasterlogicalfile_set.all():
+            for b in f.metadata.bandInformations:
+                if discoverable(b.variableName):
+                    variables.add(b.variableName)
         return list(variables)
 
     def prepare_variable_type(self, obj):
         """
         Return metadata variable types if exists, otherwise return empty array.
         Variable type does not exist for referenced time series files.
-        Deprecated. Not particularly useful as a search locator. 
+        Deprecated. Not particularly useful as a search locator.
         """
         variable_types = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, NetCDFFileMetaData):
-                    for v in f.metadata.variables.all():
-                        if discoverable(v.type):
-                            variable_types.add(v.type.strip())
-                elif isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for v in f.metadata.variables:
-                        if discoverable(v.variable_type):
-                            variable_types.add(v.variable_type.strip())
+        for f in obj.netcdflogicalfile_set.all():
+            for v in f.metadata.variables.all():
+                if discoverable(v.type):
+                    variable_types.add(v.type.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                if discoverable(v.variable_type):
+                    variable_types.add(v.variable_type.strip())
         return list(variable_types)
 
     def prepare_variable_shape(self, obj):
         """
         Return metadata variable shapes if exists, otherwise return empty array.
-        Shape only exists for NetCDF resources. 
+        Shape only exists for NetCDF resources.
         """
         variable_shapes = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, NetCDFFileMetaData):
-                    for v in f.metadata.variables.all():
-                        if discoverable(v.shape):
-                            variable_shapes.add(v.shape.strip())
+        for f in obj.netcdflogicalfile_set.all():
+            for v in f.metadata.variables.all():
+                if discoverable(v.shape):
+                    variable_shapes.add(v.shape.strip())
         return list(variable_shapes)
 
     def prepare_variable_descriptive_name(self, obj):
@@ -894,51 +885,45 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_variable_speciation(self, obj):
         """
         Return metadata variable speciations if exists, otherwise return empty array.
-        Speciation only exists for the time series file type. 
+        Speciation only exists for the time series file type.
         """
         variable_speciations = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for v in f.metadata.variables:
-                        if discoverable(v.speciation):
-                            variable_speciations.add(v.speciation.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                if discoverable(v.speciation):
+                    variable_speciations.add(v.speciation.strip())
         return list(variable_speciations)
 
     def prepare_site(self, obj):
         """
         Return list of sites if exists, otherwise return empty array.
-        Sites only exist for time series. 
+        Sites only exist for time series.
         """
         sites = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for s in f.metadata.sites:
-                        if discoverable(s.site_name):
-                            sites.add(s.site_name.strip())
-                elif isinstance(f.metadata, RefTimeseriesFileMetaData):
-                    for s in f.metadata.sites:
-                        if discoverable(s.name):
-                            sites.add(s.name.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for s in f.metadata.sites:
+                if discoverable(s.site_name):
+                        sites.add(s.site_name.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for s in f.metadata.sites:
+                if discoverable(s.name):
+                    sites.add(s.name.strip())
         return list(sites)
 
     def prepare_method(self, obj):
         """
         Return list of methods if exists, otherwise return empty array.
-        Methods only exist for time series and referenced time series. 
+        Methods only exist for time series and referenced time series.
         """
         methods = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for s in f.metadata.methods:
-                        if discoverable(s.method_description):
-                            methods.add(s.method_description.strip())
-                elif isinstance(f.metadata, RefTimeseriesFileMetaData):
-                    for s in f.metadata.methods:
-                        if discoverable(s.description):
-                            methods.add(s.description.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for s in f.metadata.methods:
+                if discoverable(s.method_description):
+                    methods.add(s.method_description.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for s in f.metadata.methods:
+                if discoverable(s.description):
+                    methods.add(s.description.strip())
         return list(methods)
 
     def prepare_quality_level(self, obj):
@@ -968,50 +953,43 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_sample_medium(self, obj):
         """
         Return list of sample mediums if exists, otherwise return empty array.
-        Sample mediums only exist for time-series types. 
+        Sample mediums only exist for time-series types.
         """
         mediums = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for v in f.metadata.time_series_results:
-                        if discoverable(v.sample_medium):
-                            mediums.add(v.sample_medium.strip())
-                elif isinstance(f.metadata, RefTimeseriesFileMetaData):
-                    for v in f.metadata.sample_mediums: 
-                        if discoverable(v):
-                            mediums.add(v.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.time_series_results:
+                if discoverable(v.sample_medium):
+                    mediums.add(v.sample_medium.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for v in f.metadata.sample_mediums:
+                if discoverable(v):
+                    mediums.add(v.strip())
         return list(mediums)
 
     def prepare_units(self, obj):
         """
         Return list of units names if exists, otherwise return empty array.
-        Match both units name and units type in this field. 
-        TODO: Seriously consider blurring the distinction between units and variables during discovery. 
+        Match both units name and units type in this field.
+        TODO: Seriously consider blurring the distinction between units and variables during discovery.
         """
         units = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for v in f.metadata.time_series_results:
-                        if discoverable(v.units_name):
-                            units.add(v.units_name.strip())
-                        if discoverable(v.units_type):
-                            units.add(v.units_type.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.time_series_results:
+                # TODO: inconsistent use of units name and units type
+                if discoverable(v.units_name):
+                    units.add(v.units_name.strip())
         return list(units)
 
     def prepare_units_type(self, obj):
         """
         Return list of units types if exists, otherwise return empty array.
-        Deprecated. In future, use "units" to refer to name and type. 
+        Deprecated. In future, use "units" to refer to name and type.
         """
         units_types = set()
-        for f in obj.logical_files:  # could take a long time if lots of files
-            if hasattr(f, "metadata"):
-                if isinstance(f.metadata, TimeSeriesFileMetaData):
-                    for v in f.metadata.time_series_results:
-                        if discoverable(v.units_type):
-                            units_types.add(v.units_type.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.time_series_results:
+                if discoverable(v.units_type):
+                    units_types.add(v.units_type.strip())
         return list(units_types)
 
     def prepare_aggregation_statistics(self, obj):
@@ -1019,7 +997,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         Return list of aggregation statistics if exists, otherwise return empty array.
         Deprecated. Not useful for discovery.
         """
-        return [] 
+        return []
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""
