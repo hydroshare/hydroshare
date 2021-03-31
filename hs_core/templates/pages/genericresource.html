@@ -102,7 +102,7 @@
         "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement }}",
+        "text": "{{ cm.metadata.rights.statement | escapejs}}",
         "name": "Customized license"
         {% else %}
         "url": "{{ cm.metadata.rights.url }}"
