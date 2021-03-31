@@ -99,10 +99,10 @@
 	"license": {
 	    "@type": "CreativeWork",
 	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
-        "text": "{{ cm.metadata.rights.statement }}",
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
         "url": "{{ cm.metadata.rights.url }}"
         {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement }}",
+        "text": "{{ cm.metadata.rights.statement | escapejs}}",
         "name": "Customized license"
         {% else %}
         "url": "{{ cm.metadata.rights.url }}"
@@ -113,7 +113,7 @@
     {% if relations %}
     "citation": [
     {% for relation in relations %}
-        "{{ relation.value }}"{%if not forloop.last%},{%endif%}
+        "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
     {% endfor %}
     ],
     {% endif %}
@@ -122,7 +122,7 @@
     {% for agency in fundingagencies %}
         {
             "@type": "Organization",
-            "name": "{{ agency.agency_name }}",
+            "name": "{{ agency.agency_name | escapejs }}",
             "url": "{{ agency.agency_url }}"
         }{%if not forloop.last%},{%endif%}
         {% endfor %}
