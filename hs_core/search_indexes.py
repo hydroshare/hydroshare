@@ -2,11 +2,6 @@
 
 from haystack import indexes
 from hs_core.models import BaseResource
-from hs_geographic_feature_resource.models import GeographicFeatureMetaData
-from ref_ts.models import RefTSMetadata
-from hs_app_timeseries.models import TimeSeriesMetaData
-from hs_file_types.models import NetCDFFileMetaData, RefTimeseriesFileMetaData, \
-    TimeSeriesFileMetaData, GeoRasterFileMetaData
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
@@ -200,6 +195,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     person = indexes.MultiValueField(faceted=True)
 
     # non-core metadata
+    # TODO: there are now multiple geometry types
     geometry_type = indexes.CharField(faceted=True)
     field_name = indexes.CharField()
     field_type = indexes.CharField()
@@ -760,66 +756,45 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_geometry_type(self, obj):
         """
         Return geometry type if metadata exists, otherwise return [].
+        TODO: there can be multiples of these now.
         """
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                geometry_info = obj.metadata.geometryinformation
-                if geometry_info is not None:
-                    return geometry_info.geometryType
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            geometry_info = f.metadata.geometryinformation
+            if geometry_info is not None:
+                return geometry_info.geometryType
+        return None
 
     def prepare_field_name(self, obj):
         """
         Return metadata field name if exists, otherwise return [].
+        TODO: there can be multiples of these now.
         """
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None and field_info.fieldName is not None:
-                    return field_info.fieldName.strip()
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            field_info = f.metadata.fieldinformations.all().first()
+            if field_info is not None and field_info.fieldName is not None:
+                return field_info.fieldName.strip()
+        return None
 
     def prepare_field_type(self, obj):
         """
         Return metadata field type if exists, otherwise return None.
+        TODO: there can be multiples of these now.
         """
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None and field_info.fieldType is not None:
-                    return field_info.fieldType.strip()
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            field_info = f.metadata.fieldinformations.all().first()
+            if field_info is not None and field_info.fieldType is not None:
+                return field_info.fieldType.strip()
+        return None
 
     def prepare_field_type_code(self, obj):
         """
         Return metadata field type code if exists, otherwise return [].
         """
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None and field_info.fieldTypeCode is not None:
-                    return field_info.fieldTypeCode.strip()
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            field_info = f.metadata.fieldinformations.all().first()
+            if field_info is not None and field_info.fieldTypeCode is not None:
+                return field_info.fieldTypeCode.strip()
+        return None
 
     def prepare_variable(self, obj):
         """
@@ -850,7 +825,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata variable types if exists, otherwise return empty array.
         Variable type does not exist for referenced time series files.
-        Deprecated. Not particularly useful as a search locator.
+        TODO: Deprecated. Not particularly useful as a search locator.
         """
         variable_types = set()
         for f in obj.netcdflogicalfile_set.all():
@@ -878,7 +853,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_variable_descriptive_name(self, obj):
         """
         Return metadata variable descriptive names if exists, otherwise return empty array.
-        Deprecated. This is empty for all resources and should be deleted.
+        TODO: Deprecated. This is empty for all resources and should be deleted.
         """
         return []
 
@@ -898,6 +873,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return list of sites if exists, otherwise return empty array.
         Sites only exist for time series.
+        TODO: inconsistent use of site name and site code
         """
         sites = set()
         for f in obj.timeserieslogicalfile_set.all():
@@ -929,26 +905,20 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_quality_level(self, obj):
         """
         Return list of quality levels if exists, otherwise return empty array.
+        TODO: Deprecated. No longer present in data.
         """
-        quality_levels = []
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, RefTSMetadata):
-                for quality_level in obj.metadata.quality_levels.all():
-                    if quality_level.code is not None:
-                        quality_levels.append(quality_level.code.strip())
-        return quality_levels
+        return []
 
     def prepare_data_source(self, obj):
         """
         Return list of data sources if exists, otherwise return empty array.
         """
-        data_sources = []
-        if hasattr(obj, 'metadata'):
-            if isinstance(obj.metadata, RefTSMetadata):
-                for data_source in obj.metadata.datasources.all():
-                    if data_source.code is not None:
-                        data_sources.append(data_source.code.strip())
-        return data_sources
+        data_sources = set()
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for s in f.metadata.datasources.all():
+                if discoverable(s.code):
+                    data_sources.add(s.code.strip())
+        return list(data_sources)
 
     def prepare_sample_medium(self, obj):
         """
@@ -983,7 +953,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_units_type(self, obj):
         """
         Return list of units types if exists, otherwise return empty array.
-        Deprecated. In future, use "units" to refer to name and type.
+        TODO: Deprecated. In future, use "units" to refer to name and type.
         """
         units_types = set()
         for f in obj.timeserieslogicalfile_set.all():
@@ -995,7 +965,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_aggregation_statistics(self, obj):
         """
         Return list of aggregation statistics if exists, otherwise return empty array.
-        Deprecated. Not useful for discovery.
+        TODO: Deprecated. Not useful for discovery.
         """
         return []
 

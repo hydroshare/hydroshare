@@ -23,16 +23,25 @@
 {% for level in object.metadata.quality_levels.all %}{{ level.code|discoverable }} {% endfor %}
 {% for source in object.metadata.datasources.all %}{{ source.code|discoverable }} {% endfor %}
 {% for res in object.metadata.time_series_results %}{{ res.sample_medium|discoverable }} {{ res.units_name }} {{ res.units_type }}  {% endfor %}
-{% for f in object.logical_files %} 
-{{ f.get_discovery_content_type }} {{ f.metadata.cellinformation.name|discoverable }}  
-{% for v in f.metadata.variables.all %}{{ v.name|discoverable }} {{ v.code|discoverable }} {% endfor %} 
-{% for b in f.metadata.bandInformations %}{{ b.variableName|discoverable }} {% endfor %}
-{% for m in f.metadata.methods %} {{ m.description|discoverable }} {% endfor %}
-{% for m in f.metadata.sample_mediums %} {{ m|discoverable }} {% endfor %}
-{% for s in f.metadata.sites %} {{ s.name|discoverable }} {% endfor %}
+{% for f in object.logical_files %} {{ f.get_discovery_content_type }} {% endfor %} 
+{% for f in object.netcdflogicalfile_set.all %} 
+{% for v in f.metadata.variables.all %}{{ v.name|discoverable }} {{ v.type|discoverable }} {{ v.code|discoverable }} {{ v.shape|discoverable }} {% endfor %} 
+{% endfor %}
+{% for f in object.timeserieslogicalfile_set.all %} 
+{% for v in f.metadata.variables %}{{ v.variable_name|discoverable }} {{ v.variable_code|discoverable }} {{ v.variable_type| discoverable }} {{ v.speciation|discoverable }} {% endfor %} 
+{% for s in f.metadata.sites %} {{ s.site_name|discoverable }} {{ s.site_code|discoverable }} {% endfor %} 
+{% for m in f.metadata.methods %} {{ m.method_description|discoverable }} {% endfor %} 
+{% for m in f.metadata.time_series_results %} {{ m.sample_medium|discoverable }} {{ m.units_name|discoverable }} {{ m.units_type|discoverable }} {% endfor %} 
 {% endfor %} 
-{% for f in object.timeserieslogicalfile_set.all %}{% for s in f.metadata.methods %}{{ s.method_description|discoverable }} {% endfor %}
-{% for s in f.metadata.sites %}{{ s.site_name|discoverable }} {% endfor %}
-{% for v in f.metadata.variables %}{{ v.variable_name|discoverable }} {{ v.variable_code|discoverable }} {% endfor %} 
-{% for r in f.metadata.time_series_results %} {{ r.sample_medium }} {{ r.method }} {{ r.units_name }} {{ r.units_type }} {% endfor %}
+{% for f in object.reftimeserieslogicalfile_set.all %} 
+{% for v in f.metadata.variables %}{{ v.name|discoverable }} {{ v.code|discoverable }} {% endfor %} 
+{% for s in f.metadata.sites %} {{ s.name|discoverable }} {{ s.code|discoverable }} {% endfor %} 
+{% for m in f.metadata.methods %} {{ m.description|discoverable }} {% endfor %} 
+{% for m in f.metadata.sample_mediums %} {{ m|discoverable }} {% endfor %} 
+{% for d in f.metadata.datasources.all %} {{ d.code|discoverable }} {% endfor %} 
+{% endfor %} 
+{% for f in object.geofeaturelogicalfile_set.all %} {{ f.metadata.geometryinformation.geometryType|discoverable }}
+{% for g in f.metadata.fieldinformations.all %} {{ g.fieldName|discoverable }} {{ g.fieldType|discoverable }} {{ g.fieldTypeCode|discoverable }} {% endfor %} 
+{% for f in object.georasterlogicalfile_set.all %} {{ f.metadata.cellInformation.name|discoverable }} {% endfor %} 
+{% for b in f.metadata.bandInformations.all %} {{ b.variableName|discoverable }} {% endfor %} 
 {% endfor %}
