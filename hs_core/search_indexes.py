@@ -912,13 +912,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_data_source(self, obj):
         """
         Return list of data sources if exists, otherwise return empty array.
+        TODO: Deprecated: doesn't seem to exist any more.
         """
-        data_sources = set()
-        for f in obj.reftimeserieslogicalfile_set.all():
-            for s in f.metadata.datasources.all():
-                if discoverable(s.code):
-                    data_sources.add(s.code.strip())
-        return list(data_sources)
+        return []
 
     def prepare_sample_medium(self, obj):
         """

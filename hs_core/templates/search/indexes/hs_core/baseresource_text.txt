@@ -11,18 +11,6 @@
 {% for source in object.metadata.sources.all %}{{ source.derived_from }} {% endfor %}
 {% for relation in object.metadata.relations.all %}{{ relation.value }} {% endfor %}
 {{ object.verbose_name }}
-{{ object.metadata.geometryinformation.geometryType }}
-{{ object.metadata.fieldinformations.first.fieldName }}
-{{ object.metadata.fieldinformations.first.fieldType }}
-{{ object.metadata.fieldinformations.first.fieldTypeCode }}
-{% for var in object.metadata.variables.all %}{{ var.name|discoverable }} {{ var.descriptive_name|discoverable }} {{ var.speciation|discoverable }} {{ var.sample_medium|discoverable }} {% endfor %}
-{% for site in object.metadata.sites.all %}{{ site.name|discoverable }} {% endfor %}
-{% for site in object.metadata.sites %}{{ site.site_name|discoverable }} {% endfor %}
-{% for method in object.metadata.methods.all %}{{ method.description|discoverable }} {% endfor %}
-{% for method in object.metadata.methods %}{{ method.method_description|discoverable }} {% endfor %}
-{% for level in object.metadata.quality_levels.all %}{{ level.code|discoverable }} {% endfor %}
-{% for source in object.metadata.datasources.all %}{{ source.code|discoverable }} {% endfor %}
-{% for res in object.metadata.time_series_results %}{{ res.sample_medium|discoverable }} {{ res.units_name }} {{ res.units_type }}  {% endfor %}
 {% for f in object.logical_files %} {{ f.get_discovery_content_type }} {% endfor %} 
 {% for f in object.netcdflogicalfile_set.all %} 
 {% for v in f.metadata.variables.all %}{{ v.name|discoverable }} {{ v.type|discoverable }} {{ v.code|discoverable }} {{ v.shape|discoverable }} {% endfor %} 
@@ -38,7 +26,6 @@
 {% for s in f.metadata.sites %} {{ s.name|discoverable }} {{ s.code|discoverable }} {% endfor %} 
 {% for m in f.metadata.methods %} {{ m.description|discoverable }} {% endfor %} 
 {% for m in f.metadata.sample_mediums %} {{ m|discoverable }} {% endfor %} 
-{% for d in f.metadata.datasources.all %} {{ d.code|discoverable }} {% endfor %} 
 {% endfor %} 
 {% for f in object.geofeaturelogicalfile_set.all %} {{ f.metadata.geometryinformation.geometryType|discoverable }}
 {% for g in f.metadata.fieldinformations.all %} {{ g.fieldName|discoverable }} {{ g.fieldType|discoverable }} {{ g.fieldTypeCode|discoverable }} {% endfor %} 
