@@ -24,7 +24,7 @@
                            data-target="#add-author-modal" title="Add Author">
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
-                        {% endif %}
+
                         <span :class="{loading: isUpdatingAuthor}" class="authors-wrapper sortable">
                             <span v-for="(author, index) in authors" :data-id="author.id">
                                 <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
@@ -35,11 +35,21 @@
                                 </a>
                             </span>
                         </span>
-
                         <span data-toggle="tooltip" data-placement="auto"
                               title='Drag and drop Authors to rearrange.'
                               class="glyphicon glyphicon-info-sign text-muted">
                         </span>
+                        {% else %}
+                          <span class="authors-wrapper">
+                               <a v-for="(author, index) in authors" data-toggle="modal"
+                               @click="selectAuthor(author, index)"
+                               data-target="#view-author-modal">
+                                <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                                <template v-else-if="author.organization">${ author.organization }</template>
+                                <template v-else>${ author.email }</template>
+                                </a>
+                          </span>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
