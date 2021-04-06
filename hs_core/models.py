@@ -4591,8 +4591,13 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
         if self.resource.raccess.published:
-            if element_model_name in ('creator', 'identifier', 'format'):
+            if element_model_name in ('creator', 'format'):
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
+            elif element_model_name == 'identifier':
+                name_value = kwargs.get('name', '')
+                if name_value != 'doi':
+                    # for published resource the 'name' attribute of the identifier must be set to 'doi'
+                    raise ValidationError("For a published resource only a doi identifier can be created")
             elif element_model_name == 'date':
                 date_type = kwargs.get('type', '')
                 if date_type and date_type not in ('modified', 'published'):

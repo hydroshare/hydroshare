@@ -12,6 +12,23 @@
     </div>
 {% endif %}
 
+{# ======= Published resource edit notification =======#}
+{% if cm.raccess.published and resource_edit_mode %}
+    <div class="col-xs-12">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>This resource has been formally published. </strong>
+            <span>You can edit some of the metadata elements for published resources, but you cannot change the followings:</span>
+            <ul>
+                <li>Title</li>
+                <li>Authors</li>
+                <li>Content files</li>
+            </ul>
+            <span>Changing any of the above requires that you create a new version of the resource.</span>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Resource new version just created notification =======#}
 {% if just_created and is_version_of %}
     <div class="col-xs-12">
