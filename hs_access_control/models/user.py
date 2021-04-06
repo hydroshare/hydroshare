@@ -1360,6 +1360,9 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
+        if self.owns_resource(this_resource):
+            return True
+
         if access_resource.immutable:
             return False
 
