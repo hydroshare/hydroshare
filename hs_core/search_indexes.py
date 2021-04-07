@@ -1,5 +1,8 @@
 """Define search indexes for hs_core module."""
 
+# NOTE: this has been optimized for the current and future discovery pages.
+# Features that are not used have been commented out temporarily
+
 from haystack import indexes
 from hs_core.models import BaseResource
 from datetime import datetime
@@ -106,31 +109,40 @@ def get_content_types(res):
     resource = res.get_content_model()  # enable full logical file interface
 
     types = set([res.discovery_content_type])  # accumulate high-level content types.
-    exts = set()  # track individual file extensions
+    missing_exts = set()  # track unmapped file extensions
+    all_exts = set()  # track all file extensions
 
     # categorize logical files by type, and files without a logical file by extension.
     for f in resource.files.all():
+        # collect extensions of files
+        path = f.short_path
+        path = path.split(".")  # determine last extension
+        if len(path) > 1:
+            ext = path[len(path)-1]
+            if len(ext) <= 5:  # skip obviously non-MIME extensions
+                all_exts.add(ext.lower())
+            else:
+                ext = None
+        else:
+            ext = None
+
         if f.has_logical_file:
             candidate_type = type(f.logical_file).get_discovery_content_type()
             types.add(candidate_type)
-        else:  # collect extensions of files not corresponding to logical metadata
-            path = f.short_path
-            path = path.split(".")  # determine last extension
-            if len(path) > 1:
-                ext = path[len(path)-1]
-                if len(ext) <= 5:  # skip obviously non-MIME extensions
-                    exts.add(ext.lower())
+        else:
+            if ext is not None:
+                missing_exts.add(ext.lower())
 
     # categorize common extensions that are not part of logical files.
     for ext_type in settings.DISCOVERY_EXTENSION_CONTENT_TYPES:
-        if exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
+        if missing_exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
             types.add(ext_type)
-            exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
+            missing_exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
 
-    if exts:  # if there is anything left over, then mark as Generic
+    if missing_exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
 
-    return (types, exts)
+    return (types, missing_exts, all_exts)
 
 
 def discoverable(thing):
@@ -143,28 +155,29 @@ def discoverable(thing):
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
-    text = indexes.CharField(document=True, use_template=True)
+    text = indexes.CharField(document=True, use_template=True, stored=False)
     short_id = indexes.CharField(model_attr='short_id')
-    doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    author_raw = indexes.CharField(indexed=False)  # not normalized
+    doi = indexes.CharField(model_attr='doi', null=True, stored=False)
+    author = indexes.FacetCharField()  # normalized to last, first, middle
+    author_lower = indexes.FacetCharField()  # normalized to last, first, middle in lower case
     author_url = indexes.CharField(indexed=False, null=True)
-    title = indexes.CharField()
+    title = indexes.FacetCharField()  # so that sorting isn't tokenized
+    title_lower = indexes.FacetCharField()  # so that sorting isn't tokenized
     abstract = indexes.CharField()
-    creator = indexes.MultiValueField(faceted=True)
-    contributor = indexes.MultiValueField(faceted=True)
-    subject = indexes.MultiValueField(faceted=True)
-    availability = indexes.MultiValueField(faceted=True)
+    creator = indexes.FacetMultiValueField()
+    contributor = indexes.FacetMultiValueField()
+    subject = indexes.FacetMultiValueField()
+    availability = indexes.FacetMultiValueField()
+    shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
-    replaced = indexes.BooleanField()
+    replaced = indexes.BooleanField(stored=False)
     created = indexes.DateTimeField(model_attr='created')
     modified = indexes.DateTimeField(model_attr='last_updated')
-    organization = indexes.MultiValueField(faceted=True)
-    creator_email = indexes.MultiValueField()
-    publisher = indexes.CharField(faceted=True)
-    rating = indexes.IntegerField(model_attr='rating_sum')
-    coverage = indexes.MultiValueField()
+    organization = indexes.MultiValueField(stored=False)
+    publisher = indexes.CharField(stored=False)
+    coverage = indexes.MultiValueField(indexed=False)
     coverage_type = indexes.MultiValueField()
+    # TODO: these are duplicated in the coverage field.
     east = indexes.FloatField(null=True)
     north = indexes.FloatField(null=True)
     northlimit = indexes.FloatField(null=True)
@@ -173,50 +186,47 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     westlimit = indexes.FloatField(null=True)
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
-    storage_type = indexes.CharField()
+    storage_type = indexes.CharField(stored=False)
 
     # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
     # coverage_southwest = indexes.LocationField(null=True)
     # coverage_northeast = indexes.LocationField(null=True)
 
-    format = indexes.MultiValueField()
-    identifier = indexes.MultiValueField()
-    language = indexes.CharField(faceted=True)
-    source = indexes.MultiValueField()
-    relation = indexes.MultiValueField()
-    resource_type = indexes.CharField(faceted=True)
-    content_type = indexes.MultiValueField(faceted=True)
-    comment = indexes.MultiValueField()
-    comments_count = indexes.IntegerField(faceted=True)
-    owner_login = indexes.MultiValueField(faceted=True)
-    owner = indexes.MultiValueField(faceted=True)
-    owners_count = indexes.IntegerField(faceted=True)
-    person = indexes.MultiValueField(faceted=True)
+    format = indexes.MultiValueField(stored=False)
+    identifier = indexes.MultiValueField(stored=False)
+    language = indexes.CharField(stored=False)
+    source = indexes.MultiValueField(stored=False)
+    relation = indexes.MultiValueField(stored=False)
+    resource_type = indexes.FacetCharField()
+    content_type = indexes.FacetMultiValueField()
+    content_exts = indexes.FacetMultiValueField()
+    comment = indexes.MultiValueField(stored=False)
+    owner_login = indexes.MultiValueField(stored=False)
+    owner = indexes.FacetMultiValueField()
+    person = indexes.MultiValueField(stored=False)
 
     # non-core metadata
-    # TODO: there are now multiple geometry types
-    geometry_type = indexes.CharField(faceted=True)
-    field_name = indexes.CharField()
-    field_type = indexes.CharField()
-    field_type_code = indexes.CharField()
-    variable = indexes.MultiValueField(faceted=True)
-    variable_type = indexes.MultiValueField(faceted=True)
-    variable_shape = indexes.MultiValueField()
-    variable_descriptive_name = indexes.MultiValueField()
-    variable_speciation = indexes.MultiValueField()
-    site = indexes.MultiValueField()
-    method = indexes.MultiValueField()
-    quality_level = indexes.MultiValueField()
-    data_source = indexes.MultiValueField()
-    sample_medium = indexes.MultiValueField(faceted=True)
-    units = indexes.MultiValueField(faceted=True)
-    units_type = indexes.MultiValueField(faceted=True)
-    aggregation_statistics = indexes.MultiValueField()
+    geometry_type = indexes.CharField(stored=False)
+    field_name = indexes.CharField(stored=False)
+    field_type = indexes.CharField(stored=False)
+    field_type_code = indexes.CharField(stored=False)
+    variable = indexes.MultiValueField(stored=False)
+    variable_type = indexes.MultiValueField(stored=False)
+    variable_shape = indexes.MultiValueField(stored=False)
+    variable_descriptive_name = indexes.MultiValueField(stored=False)
+    variable_speciation = indexes.MultiValueField(stored=False)
+    site = indexes.MultiValueField(stored=False)
+    method = indexes.MultiValueField(stored=False)
+    quality_level = indexes.MultiValueField(stored=False)
+    data_source = indexes.MultiValueField(stored=False)
+    sample_medium = indexes.MultiValueField(stored=False)
+    units = indexes.MultiValueField(stored=False)
+    units_type = indexes.MultiValueField(stored=False)
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
-    extra = indexes.MultiValueField()
+    extra = indexes.MultiValueField(stored=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -245,6 +255,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
+    def prepare_title_lower(self, obj):
+        result = self.prepare_title(obj)
+        return result.lower()
+
     def prepare_abstract(self, obj):
         """Return metadata abstract if exists, otherwise return None."""
         if hasattr(obj, 'metadata') and \
@@ -254,27 +268,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return obj.metadata.description.abstract.lstrip()
         else:
             return None
-
-    def prepare_author_raw(self, obj):
-        """
-        Return metadata author if exists, otherwise return None.
-
-        This must be represented as a single-value field to enable sorting.
-        """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator is None:
-                return 'none'
-            elif first_creator.name:
-                return first_creator.name.lstrip()
-            elif first_creator.organization:
-                return first_creator.organization.strip()
-            else:
-                return 'none'
-        else:
-            return 'none'
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -298,6 +291,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return 'none'
         else:
             return 'none'
+
+    def prepare_author_lower(self, obj):
+        result = self.prepare_author(obj)
+        return result.lower()
 
     def prepare_author_url(self, obj):
         """
@@ -387,16 +384,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_creator_email(self, obj):
-        """Return metadata emails if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            return [creator.email.strip() for creator in obj.metadata.creators.all()
-                    .exclude(email__isnull=True).exclude(email='')]
-        else:
-            return []
-
     def prepare_availability(self, obj):
         """
         availability is published, public, or discoverable
@@ -416,6 +403,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             options.append('private')
         return options
+
+    def prepare_shareable(self, obj):
+        """ used in depicting results """
+        return obj.raccess.shareable
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
@@ -606,40 +597,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_storage_type(self, obj):
         return obj.storage_type
 
-    # # TODO: SOLR extension needs to be installed for these to work
-    # def prepare_coverage_point(self, obj):
-    #     """ Return Point object associated with coverage, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'point':
-    #                 return Point(float(coverage.value["east"]),
-    #                              float(coverage.value["north"]))
-    #     return None
-
-    # def prepare_coverage_southwest(self, obj):
-    #     """ Return southwest limit of bounding box, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'box':
-    #                 return Point(float(coverage.value["westlimit"]),
-    #                              float(coverage.value["southlimit"]))
-    #     return None
-
-    # def prepare_coverage_northeast(self, obj):
-    #     """ Return northeast limit of bounding box, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'box':
-    #                 return Point(float(coverage.value["eastlimit"]),
-    #                              float(coverage.value["northlimit"]))
-    #     return None
-
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata') and \
@@ -698,13 +655,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return [obj.discovery_content_type]
 
+    def prepare_content_exts(self, obj):
+        """ index by file extension """
+        output = get_content_types(obj)[2]
+        return output
+
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
         return [comment.comment.strip() for comment in obj.comments.all()]
-
-    def prepare_comments_count(self, obj):
-        """Return count of resource comments."""
-        return obj.comments_count
 
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
@@ -744,13 +702,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                        for contributor in obj.metadata.contributors.all()
                        .exclude(name__isnull=True).exclude(name='')]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
-
-    def prepare_owners_count(self, obj):
-        """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
-        if hasattr(obj, 'raccess'):
-            return obj.raccess.owners.all().count()
-        else:
-            return 0
 
     # TODO: These should probably be multi-value fields and pick up all types.
     def prepare_geometry_type(self, obj):
@@ -957,13 +908,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 if discoverable(v.units_type):
                     units_types.add(v.units_type.strip())
         return list(units_types)
-
-    def prepare_aggregation_statistics(self, obj):
-        """
-        Return list of aggregation statistics if exists, otherwise return empty array.
-        TODO: Deprecated. Not useful for discovery.
-        """
-        return []
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""
