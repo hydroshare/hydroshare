@@ -193,7 +193,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # coverage_southwest = indexes.LocationField(null=True)
     # coverage_northeast = indexes.LocationField(null=True)
 
-<<<<<<< HEAD
     format = indexes.MultiValueField(stored=False)
     identifier = indexes.MultiValueField(stored=False)
     language = indexes.CharField(stored=False)
