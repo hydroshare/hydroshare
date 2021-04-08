@@ -1,11 +1,10 @@
 """Define search indexes for hs_core module."""
 
+# NOTE: this has been optimized for the current and future discovery pages.
+# Features that are not used have been commented out temporarily
+
 from haystack import indexes
 from hs_core.models import BaseResource
-from hs_geographic_feature_resource.models import GeographicFeatureMetaData
-from hs_app_netCDF.models import NetcdfMetaData
-from ref_ts.models import RefTSMetadata
-from hs_app_timeseries.models import TimeSeriesMetaData
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
@@ -110,58 +109,75 @@ def get_content_types(res):
     resource = res.get_content_model()  # enable full logical file interface
 
     types = set([res.discovery_content_type])  # accumulate high-level content types.
-    exts = set()  # track individual file extensions
+    missing_exts = set()  # track unmapped file extensions
+    all_exts = set()  # track all file extensions
 
     # categorize logical files by type, and files without a logical file by extension.
     for f in resource.files.all():
+        # collect extensions of files
+        path = f.short_path
+        path = path.split(".")  # determine last extension
+        if len(path) > 1:
+            ext = path[len(path)-1]
+            if len(ext) <= 5:  # skip obviously non-MIME extensions
+                all_exts.add(ext.lower())
+            else:
+                ext = None
+        else:
+            ext = None
+
         if f.has_logical_file:
             candidate_type = type(f.logical_file).get_discovery_content_type()
             types.add(candidate_type)
-        else:  # collect extensions of files not corresponding to logical metadata
-            path = f.short_path
-            path = path.split(".")  # determine last extension
-            if len(path) > 1:
-                ext = path[len(path)-1]
-                if len(ext) <= 5:  # skip obviously non-MIME extensions
-                    exts.add(ext.lower())
+        else:
+            if ext is not None:
+                missing_exts.add(ext.lower())
 
     # categorize common extensions that are not part of logical files.
     for ext_type in settings.DISCOVERY_EXTENSION_CONTENT_TYPES:
-        if exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
+        if missing_exts & settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]:
             types.add(ext_type)
-            exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
+            missing_exts -= settings.DISCOVERY_EXTENSION_CONTENT_TYPES[ext_type]
 
-    if exts:  # if there is anything left over, then mark as Generic
+    if missing_exts:  # if there is anything left over, then mark as Generic
         types.add('Generic Data')
 
-    return (types, exts)
+    return (types, missing_exts, all_exts)
+
+
+def discoverable(thing):
+    """ return True if the string given is discoverable information, False if not """
+    if thing is not None and thing.strip() != "Unknown" and thing.strip() != "":
+        return True
+    return False
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
-    text = indexes.CharField(document=True, use_template=True)
+    text = indexes.CharField(document=True, use_template=True, stored=False)
     short_id = indexes.CharField(model_attr='short_id')
-    doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    author_raw = indexes.CharField(indexed=False)  # not normalized
+    doi = indexes.CharField(model_attr='doi', null=True, stored=False)
+    author = indexes.FacetCharField()  # normalized to last, first, middle
+    author_lower = indexes.FacetCharField()  # normalized to last, first, middle in lower case
     author_url = indexes.CharField(indexed=False, null=True)
-    title = indexes.CharField()
+    title = indexes.FacetCharField()  # so that sorting isn't tokenized
+    title_lower = indexes.FacetCharField()  # so that sorting isn't tokenized
     abstract = indexes.CharField()
-    creator = indexes.MultiValueField(faceted=True)
-    contributor = indexes.MultiValueField(faceted=True)
-    subject = indexes.MultiValueField(faceted=True)
-    availability = indexes.MultiValueField(faceted=True)
+    creator = indexes.FacetMultiValueField()
+    contributor = indexes.FacetMultiValueField()
+    subject = indexes.FacetMultiValueField()
+    availability = indexes.FacetMultiValueField()
+    shareable = indexes.BooleanField()
     # TODO: We might need more information than a bool in the future
-    replaced = indexes.BooleanField()
+    replaced = indexes.BooleanField(stored=False)
     created = indexes.DateTimeField(model_attr='created')
-    modified = indexes.DateTimeField()
-    organization = indexes.MultiValueField(faceted=True)
-    creator_email = indexes.MultiValueField()
-    publisher = indexes.CharField(faceted=True)
-    rating = indexes.IntegerField(model_attr='rating_sum')
-    coverage = indexes.MultiValueField()
+    modified = indexes.DateTimeField(model_attr='last_updated')
+    organization = indexes.MultiValueField(stored=False)
+    publisher = indexes.CharField(stored=False)
+    coverage = indexes.MultiValueField(indexed=False)
     coverage_type = indexes.MultiValueField()
+    # TODO: these are duplicated in the coverage field.
     east = indexes.FloatField(null=True)
     north = indexes.FloatField(null=True)
     northlimit = indexes.FloatField(null=True)
@@ -170,56 +186,47 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     westlimit = indexes.FloatField(null=True)
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
-    storage_type = indexes.CharField()
+    storage_type = indexes.CharField(stored=False)
 
-    # # TODO: SOLR extension needs to be installed for these to work
+    # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
     # coverage_southwest = indexes.LocationField(null=True)
     # coverage_northeast = indexes.LocationField(null=True)
 
-    format = indexes.MultiValueField()
-    identifier = indexes.MultiValueField()
-    language = indexes.CharField(faceted=True)
-    source = indexes.MultiValueField()
-    relation = indexes.MultiValueField()
-    resource_type = indexes.CharField(faceted=True)
-    content_type = indexes.MultiValueField(faceted=True)
-    comment = indexes.MultiValueField()
-    comments_count = indexes.IntegerField(faceted=True)
-    owner_login = indexes.MultiValueField(faceted=True)
-    owner = indexes.MultiValueField(faceted=True)
-    owners_count = indexes.IntegerField(faceted=True)
-    # # TODO: We might need these later for social discovery
-    # viewer_login = indexes.MultiValueField(faceted=True)
-    # viewer = indexes.MultiValueField(faceted=True)
-    # viewers_count = indexes.IntegerField(faceted=True)
-    # editor_login = indexes.MultiValueField(faceted=True)
-    # editor = indexes.MultiValueField(faceted=True)
-    # editors_count = indexes.IntegerField(faceted=True)
-    person = indexes.MultiValueField(faceted=True)
+    format = indexes.MultiValueField(stored=False)
+    identifier = indexes.MultiValueField(stored=False)
+    language = indexes.CharField(stored=False)
+    source = indexes.MultiValueField(stored=False)
+    relation = indexes.MultiValueField(stored=False)
+    resource_type = indexes.FacetCharField()
+    content_type = indexes.FacetMultiValueField()
+    content_exts = indexes.FacetMultiValueField()
+    comment = indexes.MultiValueField(stored=False)
+    owner_login = indexes.MultiValueField(stored=False)
+    owner = indexes.FacetMultiValueField()
+    person = indexes.MultiValueField(stored=False)
 
     # non-core metadata
-    geometry_type = indexes.CharField(faceted=True)
-    field_name = indexes.CharField()
-    field_type = indexes.CharField()
-    field_type_code = indexes.CharField()
-    variable = indexes.MultiValueField(faceted=True)
-    variable_type = indexes.MultiValueField(faceted=True)
-    variable_shape = indexes.MultiValueField()
-    variable_descriptive_name = indexes.MultiValueField()
-    variable_speciation = indexes.MultiValueField()
-    site = indexes.MultiValueField()
-    method = indexes.MultiValueField()
-    quality_level = indexes.MultiValueField()
-    data_source = indexes.MultiValueField()
-    sample_medium = indexes.MultiValueField(faceted=True)
-    units = indexes.MultiValueField(faceted=True)
-    units_type = indexes.MultiValueField(faceted=True)
-    aggregation_statistics = indexes.MultiValueField()
+    geometry_type = indexes.CharField(stored=False)
+    field_name = indexes.CharField(stored=False)
+    field_type = indexes.CharField(stored=False)
+    field_type_code = indexes.CharField(stored=False)
+    variable = indexes.MultiValueField(stored=False)
+    variable_type = indexes.MultiValueField(stored=False)
+    variable_shape = indexes.MultiValueField(stored=False)
+    variable_descriptive_name = indexes.MultiValueField(stored=False)
+    variable_speciation = indexes.MultiValueField(stored=False)
+    site = indexes.MultiValueField(stored=False)
+    method = indexes.MultiValueField(stored=False)
+    quality_level = indexes.MultiValueField(stored=False)
+    data_source = indexes.MultiValueField(stored=False)
+    sample_medium = indexes.MultiValueField(stored=False)
+    units = indexes.MultiValueField(stored=False)
+    units_type = indexes.MultiValueField(stored=False)
     absolute_url = indexes.CharField(indexed=False)
 
     # extra metadata
-    extra = indexes.MultiValueField()
+    extra = indexes.MultiValueField(stored=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -249,6 +256,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
+    def prepare_title_lower(self, obj):
+        result = self.prepare_title(obj)
+        return result.lower()
+
     def prepare_abstract(self, obj):
         """Return metadata abstract if exists, otherwise return None."""
         if hasattr(obj, 'metadata') and \
@@ -258,27 +269,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return obj.metadata.description.abstract.lstrip()
         else:
             return None
-
-    def prepare_author_raw(self, obj):
-        """
-        Return metadata author if exists, otherwise return None.
-
-        This must be represented as a single-value field to enable sorting.
-        """
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator is None:
-                return 'none'
-            elif first_creator.name:
-                return first_creator.name.lstrip()
-            elif first_creator.organization:
-                return first_creator.organization.strip()
-            else:
-                return 'none'
-        else:
-            return 'none'
 
     # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
@@ -302,6 +292,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return 'none'
         else:
             return 'none'
+
+    def prepare_author_lower(self, obj):
+        result = self.prepare_author(obj)
+        return result.lower()
 
     def prepare_author_url(self, obj):
         """
@@ -391,16 +385,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_creator_email(self, obj):
-        """Return metadata emails if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.creators is not None:
-            return [creator.email.strip() for creator in obj.metadata.creators.all()
-                    .exclude(email__isnull=True).exclude(email='')]
-        else:
-            return []
-
     def prepare_availability(self, obj):
         """
         availability is published, public, or discoverable
@@ -420,6 +404,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             options.append('private')
         return options
+
+    def prepare_shareable(self, obj):
+        """ used in depicting results """
+        return obj.raccess.shareable
 
     def prepare_replaced(self, obj):
         """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
@@ -610,40 +598,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_storage_type(self, obj):
         return obj.storage_type
 
-    # # TODO: SOLR extension needs to be installed for these to work
-    # def prepare_coverage_point(self, obj):
-    #     """ Return Point object associated with coverage, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'point':
-    #                 return Point(float(coverage.value["east"]),
-    #                              float(coverage.value["north"]))
-    #     return None
-
-    # def prepare_coverage_southwest(self, obj):
-    #     """ Return southwest limit of bounding box, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'box':
-    #                 return Point(float(coverage.value["westlimit"]),
-    #                              float(coverage.value["southlimit"]))
-    #     return None
-
-    # def prepare_coverage_northeast(self, obj):
-    #     """ Return northeast limit of bounding box, or None """
-    #     if hasattr(obj, 'metadata') and \
-    #             obj.metadata is not None and \
-    #             obj.metadata.coverages is not None:
-    #         for coverage in obj.metadata.coverages.all():
-    #             if coverage.type == 'box':
-    #                 return Point(float(coverage.value["eastlimit"]),
-    #                              float(coverage.value["northlimit"]))
-    #     return None
-
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata') and \
@@ -702,13 +656,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return [obj.discovery_content_type]
 
+    def prepare_content_exts(self, obj):
+        """ index by file extension """
+        output = get_content_types(obj)[2]
+        return output
+
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
         return [comment.comment.strip() for comment in obj.comments.all()]
-
-    def prepare_comments_count(self, obj):
-        """Return count of resource comments."""
-        return obj.comments_count
 
     def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
@@ -749,302 +704,210 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                        .exclude(name__isnull=True).exclude(name='')]
         return list(set(output0 + output1 + output2))  # eliminate duplicates
 
-    def prepare_owners_count(self, obj):
-        """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""
-        if hasattr(obj, 'raccess') and obj.raccess is not None:
-            return obj.raccess.owners.all().count()
-        else:
-            return 0
-
-    # # TODO: We might need these later for social discovery
-    # def prepare_viewer_login(self, obj):
-    #     """Return usernames of users that can view resource, otherwise return empty array."""
-    #     if hasattr(obj, 'raccess'):
-    #         return [viewer.username for viewer in obj.raccess.view_users.all()]
-    #     else:
-    #         return []
-
-    # def prepare_viewer(self, obj):
-    #     """Return full names of users that can view resource, otherwise return empty array."""
-    #     names = []
-    #     if hasattr(obj, 'raccess'):
-    #         for viewer in obj.raccess.view_users.all():
-    #             name = viewer.last_name + ', ' + viewer.first_name
-    #             names.append(name)
-    #     return names
-
-    # def prepare_viewers_count(self, obj):
-    #     """Return count of users who can view resource, otherwise return 0."""
-    #     if hasattr(obj, 'raccess'):
-    #         return obj.raccess.view_users.all().count()
-    #     else:
-    #         return 0
-
-    # def prepare_editor_login(self, obj):
-    #     """Return usernames of editors of a resource, otherwise return 0."""
-    #     if hasattr(obj, 'raccess'):
-    #         return [editor.username for editor in obj.raccess.edit_users.all()]
-    #     else:
-    #         return 0
-
-    # def prepare_editor(self, obj):
-    #     """Return full names of editors of a resource, otherwise return empty array."""
-    #     names = []
-    #     if hasattr(obj, 'raccess'):
-    #         for editor in obj.raccess.edit_users.all():
-    #             name = editor.last_name + ', ' + editor.first_name
-    #             names.append(name)
-    #     return names
-
-    # def prepare_editors_count(self, obj):
-    #     """Return count of editors of a resource, otherwise return 0."""
-    #     if hasattr(obj, 'raccess'):
-    #         return obj.raccess.edit_users.all().count()
-    #     else:
-    #         return 0
-
     # TODO: These should probably be multi-value fields and pick up all types.
     def prepare_geometry_type(self, obj):
         """
         Return geometry type if metadata exists, otherwise return [].
+        TODO: there can be multiples of these now.
         """
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                geometry_info = obj.metadata.geometryinformation
-                if geometry_info is not None:
-                    return geometry_info.geometryType
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            geometry_info = f.metadata.geometryinformation
+            if geometry_info is not None:
+                return geometry_info.geometryType
+        return None
 
     def prepare_field_name(self, obj):
         """
         Return metadata field name if exists, otherwise return [].
+        TODO: there can be multiples of these now.
         """
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None and field_info.fieldName is not None:
-                    return field_info.fieldName.strip()
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            field_info = f.metadata.fieldinformations.all().first()
+            if field_info is not None and field_info.fieldName is not None:
+                return field_info.fieldName.strip()
+        return None
 
     def prepare_field_type(self, obj):
         """
         Return metadata field type if exists, otherwise return None.
+        TODO: there can be multiples of these now.
         """
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None and field_info.fieldType is not None:
-                    return field_info.fieldType.strip()
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            field_info = f.metadata.fieldinformations.all().first()
+            if field_info is not None and field_info.fieldType is not None:
+                return field_info.fieldType.strip()
+        return None
 
     def prepare_field_type_code(self, obj):
         """
         Return metadata field type code if exists, otherwise return [].
         """
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None and field_info.fieldTypeCode is not None:
-                    return field_info.fieldTypeCode.strip()
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
+        for f in obj.geofeaturelogicalfile_set.all():
+            field_info = f.metadata.fieldinformations.all().first()
+            if field_info is not None and field_info.fieldTypeCode is not None:
+                return field_info.fieldTypeCode.strip()
+        return None
 
     def prepare_variable(self, obj):
         """
         Return metadata variable names if exists, otherwise return empty array.
         """
-        variable_names = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, NetcdfMetaData):
-                for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name.strip())
-            elif isinstance(obj.metadata, RefTSMetadata):
-                for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name.strip())
-            elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
-                    variable_names.append(variable.variable_name.strip())
-        return variable_names
+        variables = set()
+        for f in obj.netcdflogicalfile_set.all():
+            for v in f.metadata.variables.all():
+                if discoverable(v.name):
+                    variables.add(v.name.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                # TODO: inconsistent use of variable code and variable name
+                if discoverable(v.variable_name):
+                    variables.add(v.variable_name.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                # TODO: inconsistent use of variable code and variable name
+                if discoverable(v.name):
+                    variables.add(v.name.strip())
+        for f in obj.georasterlogicalfile_set.all():
+            for b in f.metadata.bandInformations:
+                if discoverable(b.variableName):
+                    variables.add(b.variableName)
+        return list(variables)
 
     def prepare_variable_type(self, obj):
         """
         Return metadata variable types if exists, otherwise return empty array.
+        Variable type does not exist for referenced time series files.
+        TODO: Deprecated. Not particularly useful as a search locator.
         """
-        variable_types = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, NetcdfMetaData):
-                for variable in obj.metadata.variables.all():
-                    variable_types.append(variable.type.strip())
-            elif isinstance(obj.metadata, RefTSMetadata):
-                for variable in obj.metadata.variables.all():
-                    variable_types.append(variable.data_type.strip())
-            elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
-                    variable_types.append(variable.variable_type.strip())
-        return variable_types
+        variable_types = set()
+        for f in obj.netcdflogicalfile_set.all():
+            for v in f.metadata.variables.all():
+                if discoverable(v.type):
+                    variable_types.add(v.type.strip())
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                if discoverable(v.variable_type):
+                    variable_types.add(v.variable_type.strip())
+        return list(variable_types)
 
     def prepare_variable_shape(self, obj):
         """
         Return metadata variable shapes if exists, otherwise return empty array.
+        Shape only exists for NetCDF resources.
         """
-        variable_shapes = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, NetcdfMetaData):
-                for variable in obj.metadata.variables.all():
-                    if variable.shape is not None:
-                        variable_shapes.append(variable.shape.strip())
-        return variable_shapes
+        variable_shapes = set()
+        for f in obj.netcdflogicalfile_set.all():
+            for v in f.metadata.variables.all():
+                if discoverable(v.shape):
+                    variable_shapes.add(v.shape.strip())
+        return list(variable_shapes)
 
     def prepare_variable_descriptive_name(self, obj):
         """
         Return metadata variable descriptive names if exists, otherwise return empty array.
+        TODO: Deprecated. This is empty for all resources and should be deleted.
         """
-        variable_descriptive_names = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, NetcdfMetaData):
-                for variable in obj.metadata.variables.all():
-                    if variable.descriptive_name is not None:
-                        variable_descriptive_names.append(variable.descriptive_name.strip())
-        return variable_descriptive_names
+        return []
 
     def prepare_variable_speciation(self, obj):
         """
         Return metadata variable speciations if exists, otherwise return empty array.
+        Speciation only exists for the time series file type.
         """
-        variable_speciations = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
-                    if variable.speciation is not None:
-                        variable_speciations.append(variable.speciation.strip())
-        return variable_speciations
+        variable_speciations = set()
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.variables:
+                if discoverable(v.speciation):
+                    variable_speciations.add(v.speciation.strip())
+        return list(variable_speciations)
 
     def prepare_site(self, obj):
         """
         Return list of sites if exists, otherwise return empty array.
+        Sites only exist for time series.
+        TODO: inconsistent use of site name and site code
         """
-        sites = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, RefTSMetadata):
-                for site in obj.metadata.sites.all():
-                    if site.name is not None and site.name != '':
-                        sites.append(site.name.strip())
-            elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for site in obj.metadata.sites:
-                    if site.site_name is not None and site.site_name != '':
-                        sites.append(site.site_name.strip())
-        return sites
+        sites = set()
+        for f in obj.timeserieslogicalfile_set.all():
+            for s in f.metadata.sites:
+                if discoverable(s.site_name):
+                        sites.add(s.site_name.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for s in f.metadata.sites:
+                if discoverable(s.name):
+                    sites.add(s.name.strip())
+        return list(sites)
 
     def prepare_method(self, obj):
         """
         Return list of methods if exists, otherwise return empty array.
+        Methods only exist for time series and referenced time series.
         """
-        methods = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, RefTSMetadata):
-                for method in obj.metadata.methods.all():
-                    if method.description is not None:
-                        methods.append(method.description.strip())
-            elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for method in obj.metadata.methods:
-                    if method.method_description is not None:
-                        methods.append(method.method_description.strip())
-        return methods
+        methods = set()
+        for f in obj.timeserieslogicalfile_set.all():
+            for s in f.metadata.methods:
+                if discoverable(s.method_description):
+                    methods.add(s.method_description.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for s in f.metadata.methods:
+                if discoverable(s.description):
+                    methods.add(s.description.strip())
+        return list(methods)
 
     def prepare_quality_level(self, obj):
         """
         Return list of quality levels if exists, otherwise return empty array.
+        TODO: Deprecated. No longer present in data.
         """
-        quality_levels = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, RefTSMetadata):
-                for quality_level in obj.metadata.quality_levels.all():
-                    if quality_level.code is not None:
-                        quality_levels.append(quality_level.code.strip())
-        return quality_levels
+        return []
 
     def prepare_data_source(self, obj):
         """
         Return list of data sources if exists, otherwise return empty array.
+        TODO: Deprecated: doesn't seem to exist any more.
         """
-        data_sources = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, RefTSMetadata):
-                for data_source in obj.metadata.datasources.all():
-                    if data_source.code is not None:
-                        data_sources.append(data_source.code.strip())
-        return data_sources
+        return []
 
     def prepare_sample_medium(self, obj):
         """
         Return list of sample mediums if exists, otherwise return empty array.
+        Sample mediums only exist for time-series types.
         """
-        sample_mediums = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
-                    if time_series_result.sample_medium is not None:
-                        sample_mediums.append(time_series_result.sample_medium)
-            elif isinstance(obj.metadata, RefTSMetadata):
-                for variable in obj.metadata.variables.all():
-                    if variable.sample_medium is not None:
-                        sample_mediums.append(variable.sample_medium)
-        return list(set(sample_mediums))
+        mediums = set()
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.time_series_results:
+                if discoverable(v.sample_medium):
+                    mediums.add(v.sample_medium.strip())
+        for f in obj.reftimeserieslogicalfile_set.all():
+            for v in f.metadata.sample_mediums:
+                if discoverable(v):
+                    mediums.add(v.strip())
+        return list(mediums)
 
     def prepare_units(self, obj):
         """
         Return list of units names if exists, otherwise return empty array.
+        Match both units name and units type in this field.
+        TODO: Seriously consider blurring the distinction between units and variables during discovery.
         """
-        units_names = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
-                    if time_series_result.units_name is not None:
-                        units_names.append(time_series_result.units_name)
-        return units_names
+        units = set()
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.time_series_results:
+                # TODO: inconsistent use of units name and units type
+                if discoverable(v.units_name):
+                    units.add(v.units_name.strip())
+        return list(units)
 
     def prepare_units_type(self, obj):
         """
         Return list of units types if exists, otherwise return empty array.
         """
-        units_types = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
-                    if time_series_result.units_type is not None:
-                        units_types.append(time_series_result.units_type.strip())
-        return units_types
-
-    def prepare_aggregation_statistics(self, obj):
-        """
-        Return list of aggregation statistics if exists, otherwise return empty array.
-        """
-        aggregation_statistics = []
-        if hasattr(obj, 'metadata') and obj.metadata is not None:
-            if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
-                    if time_series_result.aggregation_statistics is not None:
-                        aggregation_statistics.append(time_series_result.aggregation_statistics)
-        return aggregation_statistics
+        units_types = set()
+        for f in obj.timeserieslogicalfile_set.all():
+            for v in f.metadata.time_series_results:
+                if discoverable(v.units_type):
+                    units_types.add(v.units_type.strip())
+        return list(units_types)
 
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""
