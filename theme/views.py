@@ -507,8 +507,6 @@ def dashboard(request, template="pages/dashboard.html"):
     my_username = request.user.username
     user = User.objects.get(username=my_username)
     my_recent = Variable.recent_resources(user, days=60, n_resources=5)
-    today = date.today()
-    beginning = today - timedelta(30)
 
     my_recommended_resources_list = RecommendedResource.objects\
         .filter(state__lte=Status.STATUS_EXPLORED, user__username=my_username)\
