@@ -129,14 +129,10 @@ class ResourceAccess(models.Model):
         If the resource is immutable, an empty QuerySet is returned.
 
         """
-
-        if self.immutable:
-            return User.objects.none()
-        else:
-            return User.objects\
-                       .filter(self.__edit_users_from_individual |
-                               self.__edit_users_from_group |
-                               self.__edit_users_from_community).distinct()
+        return User.objects\
+                   .filter((self.__edit_users_from_individual) |
+                           (self.__edit_users_from_group) |
+                           (self.__edit_users_from_community)).distinct()
 
     @property
     def __view_groups_from_group(self):

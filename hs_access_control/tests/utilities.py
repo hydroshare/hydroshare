@@ -125,7 +125,7 @@ def assertResourceEditorsAre(self, this_resource, these_users):
         self.assertTrue(
             is_equal_to_as_set(
                 this_resource.raccess.edit_users,
-                []))
+                this_resource.raccess.owners))
     self.assertTrue(
         is_subset_of(
             these_users,
