@@ -51,7 +51,7 @@ class TestExploreUtils(TestCaseCommonUtilities, TransactionTestCase):
             metadata=[{'description': {'abstract': "This is a great resource"}},
                       {'subject': {'value': "sample"}}]
         )
-        self.posts.raccess.published = True
+        self.posts.raccess.public = True
         self.posts.raccess.save()
         self.squirrel = hydroshare.create_account(
             'squirrel@gmail.com',
