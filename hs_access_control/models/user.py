@@ -1111,6 +1111,7 @@ class UserAccess(models.Model):
         :return: QuerySet of resource objects that can be edited  by this user.
 
         This utilizes effective privilege; immutable resources are not returned.
+        Owners can edit immutable resources 4/9/2021.
 
         Note that this return includes all editable resources, whereas
         get_resources_with_explicit_access only returns those resources that are editable
@@ -1127,7 +1128,10 @@ class UserAccess(models.Model):
         #    contains the user, and the community share preserves edit
 
         return BaseResource.objects.filter(
-            # user has direct access
+            # user owns resource invariant of immutable flag 4/9/2021
+            Q(r2urp__user=self.user,
+              r2urp__privilege=PrivilegeCodes.OWNER) |
+            # user has direct access and resource is not immutable
             Q(raccess__immutable=False,
               r2urp__user=self.user,
               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
@@ -1135,8 +1139,7 @@ class UserAccess(models.Model):
             Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE))\
-            .distinct()
+              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False, via_community=False):
@@ -1340,8 +1343,8 @@ class UserAccess(models.Model):
         Note that
 
         * The ability to change a resource is not just contingent upon sharing,
-          but also upon the resource flag "immutable". Thus "owns" does not imply
-          "can change" privilege.
+          but also upon the resource flag "immutable".
+        * But "owns" now implies "can change" privilege regardless of "immutable" flag 4/9/2021
         * The ability to change a resource applies to its data and metadata, but not to its
           resource state flags: shareable, public, immutable, published, and discoverable.
 

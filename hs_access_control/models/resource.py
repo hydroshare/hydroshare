@@ -92,6 +92,9 @@ class ResourceAccess(models.Model):
     def __edit_users_from_individual(self):
         return Q(is_active=True,
                  u2urp__resource=self.resource,
+                 u2urp__privilege=PC.OWNER) | \
+               Q(is_active=True,
+                 u2urp__resource=self.resource,
                  u2urp__resource__raccess__immutable=False,
                  u2urp__privilege__lte=PC.CHANGE)
 

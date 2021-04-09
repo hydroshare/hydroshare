@@ -76,49 +76,34 @@ def assertResourceOwnersAre(self, this_resource, these_users):
         is_equal_to_as_set(
             these_users,
             this_resource.raccess.owners))
-    if not this_resource.raccess.immutable:
-        self.assertTrue(
-            is_subset_of(
-                these_users,
-                this_resource.raccess.edit_users))
-    else:
-        self.assertTrue(
-            is_equal_to_as_set(
-                this_resource.raccess.edit_users,
-                []))
+    self.assertTrue(
+        is_subset_of(
+            these_users,
+            this_resource.raccess.edit_users))
     self.assertTrue(
         is_subset_of(
             these_users,
             this_resource.raccess.view_users))
     for u in these_users:
         self.assertTrue(u.uaccess.owns_resource(this_resource))
-        if not this_resource.raccess.immutable:
-            self.assertTrue(u.uaccess.can_change_resource(this_resource))
-        else:
-            self.assertFalse(u.uaccess.can_change_resource(this_resource))
+        self.assertTrue(u.uaccess.can_change_resource(this_resource))
         self.assertTrue(u.uaccess.can_change_resource_flags(this_resource))
         self.assertTrue(u.uaccess.can_view_resource(this_resource))
         self.assertTrue(u.uaccess.can_delete_resource(this_resource))
         self.assertTrue(this_resource in u.uaccess.owned_resources)
-        if not this_resource.raccess.immutable:
-            self.assertTrue(this_resource in u.uaccess.edit_resources)
-        else:
-            self.assertTrue(this_resource not in u.uaccess.edit_resources)
+        self.assertTrue(this_resource in u.uaccess.edit_resources)
         self.assertTrue(this_resource in u.uaccess.view_resources)
         self.assertTrue(
             this_resource in u.uaccess .get_resources_with_explicit_access(
                 PrivilegeCodes.OWNER))
         self.assertTrue(
-            this_resource not in u.uaccess .get_resources_with_explicit_access(
+            this_resource not in u.uaccess.get_resources_with_explicit_access(
                 PrivilegeCodes.CHANGE))
         self.assertTrue(
             this_resource not in u.uaccess .get_resources_with_explicit_access(
                 PrivilegeCodes.VIEW))
         self.assertTrue(u in this_resource.raccess.view_users)
-        if not this_resource.raccess.immutable:
-            self.assertTrue(u in this_resource.raccess.edit_users)
-        else:
-            self.assertTrue(u not in this_resource.raccess.edit_users)
+        self.assertTrue(u in this_resource.raccess.edit_users)
         self.assertTrue(u in this_resource.raccess.owners)
         self.assertEqual(
             this_resource.raccess.get_effective_privilege(u),
@@ -267,20 +252,13 @@ def assertOwnedResourcesAre(self, this_user, these_resources):
                 PrivilegeCodes.VIEW)))
     for r in these_resources:
         self.assertTrue(this_user.uaccess.owns_resource(r))
-        if not r.raccess.immutable:
-            self.assertTrue(this_user.uaccess.can_change_resource(r))
-        else:
-            self.assertFalse(this_user.uaccess.can_change_resource(r))
+        self.assertTrue(this_user.uaccess.can_change_resource(r))
         self.assertTrue(this_user.uaccess.can_change_resource_flags(r))
         self.assertTrue(this_user.uaccess.can_view_resource(r))
         self.assertTrue(this_user.uaccess.can_delete_resource(r))
         self.assertTrue(this_user in r.raccess.owners)
-        if not r.raccess.immutable:
-            self.assertTrue(this_user in r.raccess.edit_users)
-            self.assertTrue(r in this_user.uaccess.edit_resources)
-        else:
-            self.assertTrue(this_user not in r.raccess.edit_users)
-            self.assertTrue(r not in this_user.uaccess.edit_resources)
+        self.assertTrue(this_user in r.raccess.edit_users)
+        self.assertTrue(r in this_user.uaccess.edit_resources)
         self.assertTrue(this_user in r.raccess.view_users)
         self.assertEqual(
             r.raccess.get_effective_privilege(this_user),
@@ -314,10 +292,7 @@ def assertEditableResourcesAre(self, this_user, these_resources):
                 PrivilegeCodes.VIEW)))
     for r in these_resources:
         self.assertFalse(this_user.uaccess.owns_resource(r))
-        if not r.raccess.immutable:
-            self.assertTrue(this_user.uaccess.can_change_resource(r))
-        else:
-            self.assertFalse(this_user.uaccess.can_change_resource(r))
+        self.assertTrue(this_user.uaccess.can_change_resource(r))
         self.assertFalse(this_user.uaccess.can_change_resource_flags(r))
         self.assertTrue(this_user.uaccess.can_view_resource(r))
         self.assertFalse(this_user.uaccess.can_delete_resource(r))
