@@ -4149,7 +4149,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         :param  user: user who is updating metadata
         :return:
         """
-        is_res_published = self.resource.raccess.published
         from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
             SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
@@ -4169,8 +4168,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             for element_name in ('title', 'description', 'language', 'rights'):
                 for dict_item in metadata:
                     if element_name in dict_item:
-                        if element_name in ('title', 'rights') and is_res_published:
-                            raise ValidationError("{} can't be updated for a published resource".format(element_name))
                         validation_form = validation_forms_mapping[element_name](
                             dict_item[element_name])
                         if not validation_form.is_valid():
@@ -4205,9 +4202,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                                                                              coverage_value_dict)
                             continue
                         if element_name in ['creator', 'contributor']:
-                            if element_name == 'creator' and is_res_published:
-                                raise ValidationError(
-                                    "{} can't be updated for a published resource".format(element_name))
                             try:
                                 party_data = dict_item[element_name]
                                 if 'identifiers' in party_data:
@@ -4238,8 +4232,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             element_name = 'date'
             date_list = [date_dict for date_dict in metadata if element_name in date_dict]
             if len(date_list) > 0:
-                if is_res_published:
-                    raise ValidationError("Date can't be updated for a published resource")
                 for date_item in date_list:
                     if 'type' in date_item[element_name]:
                         if date_item[element_name]['type'] == 'valid':
@@ -4253,8 +4245,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             element_name = 'identifier'
             identifier_list = [id_dict for id_dict in metadata if element_name in id_dict]
             if len(identifier_list) > 0:
-                if is_res_published:
-                    raise ValidationError("Identifier can't be updated for a published resource")
                 for id_item in identifier_list:
                     if 'name' in id_item[element_name]:
                         if id_item[element_name]['name'].lower() != 'hydroshareidentifier':
