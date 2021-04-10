@@ -217,8 +217,9 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
 
         # ownership should survive downgrading to immutable; otherwise one cuts
         # out ownership privilege completely
+        # immutable resources are still editable by owner 4/9/2021
         self.assertTrue(dog.uaccess.owns_resource(bones))
-        self.assertFalse(dog.uaccess.can_change_resource(bones))
+        self.assertTrue(dog.uaccess.can_change_resource(bones))
         self.assertTrue(dog.uaccess.can_view_resource(bones))
 
         # django admin should be able to change an immutable resource
