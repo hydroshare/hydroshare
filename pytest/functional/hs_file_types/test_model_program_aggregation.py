@@ -2,6 +2,7 @@ import glob
 import os
 from dateutil import parser
 import pytest
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework.exceptions import ValidationError as RF_ValidationError
@@ -204,7 +205,8 @@ def test_metadata_schema_json_valid(mock_irods):
 def test_metadata_schema_json_templates(mock_irods):
     """test that the schema templates stored as part of hydroshare are valid JSON schemas"""
 
-    template_path = "hs_file_types/model_meta_schema_templates/*.json"
+    template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
+    template_path = os.path.join(template_path, "*.json")
     template_exists = False
     for schema_template in glob.glob(template_path):
         template_exists = True

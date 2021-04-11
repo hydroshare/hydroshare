@@ -2,6 +2,7 @@ import glob
 import json
 import os
 
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -363,7 +364,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                             with dom_tags.select(cls="form-control", name='mi_json_schema_template',
                                                                  style="margin-top:10px;"):
                                                 dom_tags.option("Select a schema", value="")
-                                                template_path = "hs_file_types/model_meta_schema_templates/*.json"
+                                                template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
+                                                template_path = os.path.join(template_path, "*.json")
                                                 for schema_template in glob.glob(template_path):
                                                     template_file_name = os.path.basename(schema_template)
                                                     dom_tags.option(template_file_name, value=schema_template)
