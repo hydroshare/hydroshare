@@ -135,8 +135,6 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if not self.metadata_schema_json:
             return
 
-        log = logging.getLogger()
-
         # create a temp dir where the json file will be temporarily saved before copying to iRODS
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
         istorage = self.resource.get_irods_storage()
@@ -153,10 +151,5 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 out.write(json_schema)
             to_file_name = self.schema_file_path
             istorage.saveFile(json_from_file_name, to_file_name, True)
-            log.debug("Model aggregation metadata json schema file:{} created".format(to_file_name))
-
-        except Exception as ex:
-            log.error("Failed to create model aggregation metadata schema json file. Error:{}".format(str(ex)))
-            raise ex
         finally:
             shutil.rmtree(tmpdir)
