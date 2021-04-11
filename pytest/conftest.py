@@ -143,6 +143,19 @@ def public_resource_with_metadata():
 
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
+def another_public_resource_with_metadata():
+    resource = base_sample_resource(title=str(uuid.uuid4()), creator=str(uuid.uuid4()))
+    resource.raccess.public = True
+    resource.raccess.discoverable = True
+    resource.keywords_string = str(uuid.uuid4())
+    resource.raccess.save()  # saves flag, doesn't necessarily re-index
+    resource.save()  # invokes re-indexing.
+    yield resource  # this is the elegant teardown pattern for PyTest
+    resource.delete()
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
 def private_resource_with_metadata(sample_user):
     resource = base_sample_resource(username=sample_user.username)
     resource.keywords_string = str(uuid.uuid4())

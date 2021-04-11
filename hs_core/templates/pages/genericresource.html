@@ -8,6 +8,166 @@
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/modal-vue.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
+
+{% if not page|is_debug %}
+{# ======= JSON-LD Structure ======= #}
+<script id="schemaorg" type="application/ld+json">
+{
+    "@context": {
+        "@vocab": "https://schema.org/"
+    },
+    {% if cm.raccess.published %}
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
+    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    {% else %}
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}#schemaorg",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
+    "@type": "Dataset",
+    "additionalType": "{{ cm.metadata.type.url }}",
+    "name": "{{ title }}",
+    "description": "{{ cm.metadata.description | escapejs }}",
+    "keywords": {{ keywords|safe }},
+    {% if cm.raccess.published %}
+    "creativeWorkStatus": "Published",
+    {% elif cm.raccess.public %}
+    "creativeWorkStatus": "Public",
+    {% elif cm.raccess.discoverable %}
+    "creativeWorkStatus": "Discoverable",
+    {% elif is_replaced_by %}
+    "creativeWorkStatus": "Obsolete",
+    {% else %}
+    "creativeWorkStatus": "Private",
+    {% endif %}
+    "inLanguage": "en-US",
+    {% if cm.raccess.published %}
+    "identifier": [
+      {
+        "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "@type": "PropertyValue",
+        "propertyID": "https://registry.identifiers.org/registry/doi",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "value": "doi:10.4211/hs.{{ cm.short_id }}"
+      },
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% else %}
+    "identifier": [
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% endif %}
+    "creator": {{ creators | creator_json_ld_element | safe }},
+    {% if temporal_coverage %}
+    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% endif %}
+    {% if spatial_coverage.exists %}
+    "spatialCoverage": {
+        "@type": "Place",
+        {% if spatial_coverage.name %}
+        "name": "{{ spatial_coverage.name }}",
+        {% endif %}
+        "geo": {
+            {% if spatial_coverage.type == 'point' %}
+            "@type": "GeoCoordinates",
+            "latitude": {{ spatial_coverage.north|floatformat:"4" }},
+            "longitude": {{ spatial_coverage.east|floatformat:"4" }}
+            {% else %}
+            "@type": "GeoShape",
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            {% endif %}
+        }
+    },
+    {% endif %}
+    {% if cm.raccess.published %}
+    "publisher": {
+        "@id": "https://www.hydroshare.org"
+    },
+    {% endif %}
+    "provider": {
+        "@id": "https://www.hydroshare.org",
+        "@type": "Organization",
+        "name": "HydroShare",
+        "url": "https://www.hydroshare.org"
+    },
+    "includedInDataCatalog": {
+		"@type": "DataCatalog",
+		"name": "HydroShare",
+    	"url": "https://www.hydroshare.org/search/"
+	},
+	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	"license": {
+	    "@type": "CreativeWork",
+	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
+        "url": "{{ cm.metadata.rights.url }}"
+        {% elif cm.metadata.rights.statement %}
+        "text": "{{ cm.metadata.rights.statement | escapejs}}",
+        "name": "Customized license"
+        {% else %}
+        "url": "{{ cm.metadata.rights.url }}"
+        {% endif %}
+	},
+	{% endif %}
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    {% if relations %}
+    "citation": [
+    {% for relation in relations %}
+        "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ],
+    {% endif %}
+    {% if fundingagencies %}
+    "funder": [
+    {% for agency in fundingagencies %}
+        {
+            "@type": "Organization",
+            "name": "{{ agency.agency_name | escapejs }}",
+            "url": "{{ agency.agency_url }}"
+        }{%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    {% endif %}
+    "dateCreated": "{{ cm.created | date:"c" }}",
+    "dateModified": "{{ cm.last_updated | date:"c"}}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
+    "subjectOf": {
+        "@type": "DataDownload",
+        "name": "resourcemetadata.xml",
+        "description": "Dublin Core Metadata Document Describing the Dataset",
+        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
+        "encodingFormat": "application/rdf+xml"
+    },
+    "distribution": {
+        "@type": "DataDownload",
+        "contentSize": "{{ cm.size|filesizeformat }}",
+        "encodingFormat": "application/zip",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "description": "Zipped BagIt Bag containing the HydroShare Resource",
+        "dateModified": "{{ cm.last_updated | date:"c" }}",
+        {% if cm.raccess.published %}
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+          {
+            "@type": "PropertyValue",
+            "additionalType": [
+                "http://www.wikidata.org/entity/Q185235",
+                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+            ],
+            "identifier": "md5:{{ cm.bag_checksum }}",
+            "propertyID": "MD5",
+            "value": "{{ cm.bag_checksum }}"
+          }
+        ]
+        {% else %}
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+        ]
+        {% endif %}
+    }
+}
+</script>
+{% endif %}
 {% endblock %}
 
 {% block main %}

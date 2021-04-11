@@ -43,8 +43,7 @@ function bindResourceTemporalDeleteOption() {
 function setResourceSpatialCoverageDeleteOption() {
     // show/hide spatial coverage delete option at the resource level
     var $deleteSpatialCoverageResource = $("#id-delete-spatial-resource");
-    var $id_type_div = $("#div_id_type");
-    var $box_radio = $id_type_div.find("#id_type_1");
+    var $box_radio = $("#id_type_1");
     if($box_radio.prop("checked")) {
         if ($("#id_northlimit").val().length > 0) {
             $deleteSpatialCoverageResource.show();

@@ -13,7 +13,7 @@ class DiscoveryResourceSerializer(HaystackSerializer):
     class Meta:
         index_classes = [BaseResourceIndex]
         fields = [
-            "text",
+            "title",
             "author",
             "contributor",
             "subject",
@@ -27,7 +27,7 @@ class DiscoveryResourceSerializer(HaystackSerializer):
             "start_date",
             "end_date",
             "east",
-            "west",
+            "north",
             "eastlimit",
             "westlimit",
             "northlimit",
