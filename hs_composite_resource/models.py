@@ -331,17 +331,24 @@ class CompositeResource(BaseResource):
         """ if this resource allows associating resource file objects with logical file"""
         return True
 
-    def _recreate_nested_aggr_meta_files(self, folder, nested_aggr):
+    def _recreate_nested_aggr_meta_files(self, folder, nested_aggr_type):
         """Recreates meta (xml metadata, xml resource map and schema json) files for all fileset or model instance
         aggregations that exist under the path 'folder'
         as well as for any parent fileset/model instance that may exist relative to path 'folder'
         :param  folder: folder path containing nested aggregations
-        :param nested_aggr: can either be 'fileset' or 'modelinstance'
+        :param nested_aggr_type: can either be 'fileset' or 'modelinstance'
         """
-        if __debug__:
-            assert(nested_aggr in ('fileset', 'modelinstance'))
 
-        if nested_aggr == 'fileset':
+        nested_aggr_type = nested_aggr_type.lower()
+        if nested_aggr_type not in ('fileset', 'modelinstance'):
+            raise ValueError("Invalid value ({}) for parameter 'nested_aggr_type'".format(nested_aggr_type))
+
+        def create_aggregation_meta_files(aggr):
+            aggr.create_aggregation_xml_documents()
+            if aggr.is_model_program or aggr.is_model_instance:
+                aggr.create_metadata_schema_json_file()
+
+        if nested_aggr_type == 'fileset':
             nested_aggr_set = self.filesetlogicalfile_set
             aggr_in_path_func = self.get_fileset_aggregation_in_path
         else:
@@ -351,9 +358,7 @@ class CompositeResource(BaseResource):
 
         nested_aggrs = nested_aggr_set.filter(folder__startswith=folder)
         for ns_aggr in nested_aggrs:
-            ns_aggr.create_aggregation_xml_documents()
-            if ns_aggr.is_model_program or ns_aggr.is_model_instance:
-                ns_aggr.create_metadata_schema_json_file()
+            create_aggregation_meta_files(aggr=ns_aggr)
 
         # Need to recreate xml doc for any parent fileset/model instance that may exist relative to path
         # *folder*. Also for any parent model instance aggregation needs to create the schema json file
@@ -361,9 +366,7 @@ class CompositeResource(BaseResource):
             path = os.path.dirname(folder)
             parent_aggr = aggr_in_path_func(path)
             if parent_aggr is not None:
-                parent_aggr.create_aggregation_xml_documents()
-                if parent_aggr.is_model_instance:
-                    parent_aggr.create_metadata_schema_json_file()
+                create_aggregation_meta_files(aggr=parent_aggr)
 
     def _create_model_aggr_meta_json_schema_files(self, path=''):
         """ Creates metadata json schema file for any model aggregations in the resource that has
@@ -502,11 +505,11 @@ class CompositeResource(BaseResource):
 
         # first update folder attribute of any model instance aggregation that exist under *old_folder*
         update_model_instance_folder()
-        self._recreate_nested_aggr_meta_files(folder=new_folder, nested_aggr='modelinstance')
+        self._recreate_nested_aggr_meta_files(folder=new_folder, nested_aggr_type='modelinstance')
 
         # first update folder attribute of all filesets that exist under *old_folder*
         update_fileset_folder()
-        self._recreate_nested_aggr_meta_files(folder=new_folder, nested_aggr='fileset')
+        self._recreate_nested_aggr_meta_files(folder=new_folder, nested_aggr_type='fileset')
 
         # create xml files for all non fileset aggregations
         if not new_folder.startswith(self.file_path):
