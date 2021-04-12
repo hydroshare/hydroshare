@@ -372,7 +372,7 @@ class CompositeResource(BaseResource):
         """
 
         if not path:
-            # create metadata schema json file far all model aggregations of this resource
+            # create metadata schema json file for all model aggregations (containing schema json data) of this resource
             for aggregation in self.modelprogramlogicalfile_set.exclude(metadata_schema_json={}):
                 aggregation.create_metadata_schema_json_file()
             for aggregation in self.modelinstancelogicalfile_set.exclude(metadata_schema_json={}):
@@ -380,33 +380,33 @@ class CompositeResource(BaseResource):
 
         else:
             # first check if the path is a folder path or file path
-            _, ext = os.path.splitext(path)
-            is_path_a_folder = ext == ''
-            try:
-                if is_path_a_folder:
-                    # need to create json files for all model aggregations that exist under path
-                    if path.startswith(self.file_path):
-                        folder = path[len(self.file_path) + 1:]
-                    else:
-                        folder = path
-                    mp_aggrs = self.modelprogramlogicalfile_set.filter(folder__startswith=folder).exclude(
-                        metadata_schema_json={})
-                    for mp_aggr in mp_aggrs:
-                        mp_aggr.create_metadata_schema_json_file()
-
-                    mi_aggrs = self.modelinstancelogicalfile_set.filter(folder__startswith=folder).exclude(
-                        metadata_schema_json={})
-                    for mi_aggr in mi_aggrs:
-                        mi_aggr.create_metadata_schema_json_file()
+            is_path_a_folder = self._is_path_folder(path=path)
+            if is_path_a_folder:
+                # need to create json files for all model aggregations (containing schema json data)
+                # that exist under path
+                if path.startswith(self.file_path):
+                    folder = path[len(self.file_path) + 1:]
                 else:
-                    # path is a file path
+                    folder = path
+                mp_aggrs = self.modelprogramlogicalfile_set.filter(folder__startswith=folder).exclude(
+                    metadata_schema_json={})
+                for mp_aggr in mp_aggrs:
+                    mp_aggr.create_metadata_schema_json_file()
+
+                mi_aggrs = self.modelinstancelogicalfile_set.filter(folder__startswith=folder).exclude(
+                    metadata_schema_json={})
+                for mi_aggr in mi_aggrs:
+                    mi_aggr.create_metadata_schema_json_file()
+            else:
+                # path is a file path
+                try:
                     aggregation = self.get_aggregation_by_name(path)
                     # need to create json file only for this model aggregation
                     if aggregation.is_model_program or aggregation.is_model_instance:
                         aggregation.create_metadata_schema_json_file()
-            except ObjectDoesNotExist:
-                # path representing a file path is not an aggregation - nothing to do
-                pass
+                except ObjectDoesNotExist:
+                    # path representing a file path is not an aggregation - nothing to do
+                    pass
 
     def create_aggregation_meta_files(self, path=''):
         """Creates aggregation meta files (resource map, metadata xml files and schema json files) for each of the
@@ -423,21 +423,20 @@ class CompositeResource(BaseResource):
                     aggregation.create_aggregation_xml_documents()
         else:
             # first check if the path is a folder path or file path
-            _, ext = os.path.splitext(path)
-            is_path_a_folder = ext == ''
-            try:
-                if is_path_a_folder:
-                    # need to create xml files for all aggregations that exist under path
-                    self._create_xml_docs_for_folder(folder=path)
-                else:
-                    # path is a file path
+            is_path_a_folder = self._is_path_folder(path=path)
+            if is_path_a_folder:
+                # need to create xml files for all aggregations that exist under path
+                self._create_xml_docs_for_folder(folder=path)
+            else:
+                # path is a file path
+                try:
                     aggregation = self.get_aggregation_by_name(path)
                     # need to create xml docs only for this aggregation
                     if aggregation.metadata.is_dirty:
                         aggregation.create_aggregation_xml_documents()
-            except ObjectDoesNotExist:
-                # path representing a file path is not an aggregation - nothing to do
-                pass
+                except ObjectDoesNotExist:
+                    # path representing a file path is not an aggregation - nothing to do
+                    pass
 
         self._create_model_aggr_meta_json_schema_files(path=path)
 
@@ -579,8 +578,7 @@ class CompositeResource(BaseResource):
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
         # check if aggregation path *name* is a file path or a folder
-        _, ext = os.path.splitext(name)
-        is_aggr_path_a_folder = ext == ''
+        is_aggr_path_a_folder = self._is_path_folder(path=name)
         if is_aggr_path_a_folder:
             folder_full_path = os.path.join(self.file_path, name)
             aggregation = self.get_folder_aggregation_object(folder_full_path)
@@ -684,9 +682,7 @@ class CompositeResource(BaseResource):
                 istorage.delete(map_xml_file_full_path)
 
         # first check if the new_path is a folder path or file path
-        name, ext = os.path.splitext(new_path)
-        is_new_path_a_folder = ext == ''
-
+        is_new_path_a_folder = self._is_path_folder(path=new_path)
         if is_new_path_a_folder:
             delete_old_files(folder=new_path)
             self._recreate_aggregation_meta_files_for_folder(new_folder=new_path, old_folder=orig_path)
@@ -705,7 +701,6 @@ class CompositeResource(BaseResource):
                     for mi_metadata in aggregation.mi_metadata_objects.all():
                         mi_metadata.is_dirty = True
                         mi_metadata.save()
-
             except ObjectDoesNotExist:
                 # the file path *new_path* does not represent an aggregation - no more
                 # action is needed
@@ -1078,6 +1073,10 @@ class CompositeResource(BaseResource):
         mp_aggregations = [aggr for aggr in self.logical_files if aggr.type_name() == "ModelProgramLogicalFile"]
         return mp_aggregations
 
+    @staticmethod
+    def _is_path_folder(path):
+        _, ext = os.path.splitext(path)
+        return ext == ''
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
