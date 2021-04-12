@@ -81,30 +81,26 @@ class CompositeResource(BaseResource):
         :param  src_folder: folder from which the file got moved from
         :param  tgt_folder: folder to which the file got moved into
         """
-        if moved_res_file.has_logical_file and (moved_res_file.logical_file.is_fileset or
-                                                moved_res_file.logical_file.is_model_program or
-                                                moved_res_file.logical_file.is_model_instance):
-            if moved_res_file.file_folder:
-                try:
-                    aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
-                    if aggregation == moved_res_file.logical_file:
-                        if aggregation.is_fileset or ((aggregation.is_model_program or
-                                                       aggregation.is_model_instance) and
-                                                      aggregation.folder is not None):
-                            # remove aggregation association with the file
-                            # the removed aggregation is a fileset aggregation or a model program or a model instance
-                            # aggregation based on folder (note: model program/instance aggregation can also be
-                            # created from a single file)
-                            moved_res_file.logical_file_content_object = None
-                            moved_res_file.save()
-                            # delete any instance of ModelProgramResourceFileType associated with this moved file
-                            if aggregation.is_model_program:
-                                # if the file is getting moved within a model program folder hierarchy then no need
-                                # to delete any associated ModelProgramResourceFileType object
-                                if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
-                                    ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
-                except ObjectDoesNotExist:
-                    pass
+
+        if moved_res_file.file_folder:
+            try:
+                aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
+                # aggregation must be one of 'fileset', modelinstance' or 'modelprogram
+                if aggregation == moved_res_file.logical_file:
+                    # remove aggregation association with the file
+                    # the removed aggregation is a fileset aggregation or a model program or a model instance
+                    # aggregation based on folder (note: model program/instance aggregation can also be
+                    # created from a single file)
+                    moved_res_file.logical_file_content_object = None
+                    moved_res_file.save()
+                    # delete any instance of ModelProgramResourceFileType associated with this moved file
+                    if aggregation.is_model_program:
+                        # if the file is getting moved within a model program folder hierarchy then no need
+                        # to delete any associated ModelProgramResourceFileType object
+                        if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
+                            ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+            except ObjectDoesNotExist:
+                pass
 
     def add_file_to_aggregation(self, moved_res_file):
         """adds the moved file to the aggregation (fileset or model program/instance) into which the file has been moved
