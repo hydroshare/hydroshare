@@ -22,10 +22,11 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         # if a model program has been selected then this form would have the id of that aggregation
         if executed_by is not None and executed_by > 0:
             mp_aggregations = self.resource.get_model_program_aggregations()
-            selected_mp_aggr = [mp_aggr for mp_aggr in mp_aggregations if mp_aggr.id == executed_by]
-            if selected_mp_aggr:
-                selected_mp_aggr = selected_mp_aggr[0]
-                self.user_selected_mp_aggr = selected_mp_aggr
+            for mp_aggr in mp_aggregations:
+                if mp_aggr.id == executed_by:
+                    selected_mp_aggr = mp_aggr
+                    self.user_selected_mp_aggr = selected_mp_aggr
+                    break
             else:
                 self.add_error("executed_by", "Selected model program aggregation must be from the same resource")
         return selected_mp_aggr
@@ -65,16 +66,16 @@ class ModelProgramMetadataValidationForm(forms.Form):
         return version
 
     def clean_programming_languages(self):
-        langauge_string = self.cleaned_data['programming_languages']
-        if langauge_string:
+        language_string = self.cleaned_data['programming_languages'].strip()
+        if language_string:
             # generate a list of strings
-            languages = langauge_string.split(',')
+            languages = language_string.split(',')
             languages = [lang.strip() for lang in languages]
             return languages
         return []
 
     def clean_operating_systems(self):
-        os_string = self.cleaned_data['operating_systems']
+        os_string = self.cleaned_data['operating_systems'].strip()
         if os_string:
             # generate a list of strings
             op_systems = os_string.split(',')
