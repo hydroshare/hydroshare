@@ -420,15 +420,13 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
                 tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
-    # for any model program logical files in original resource need to copy the model program file types
-    mp_logical_files = [lf for lf in map_logical_files if lf.type_name() == 'ModelProgramLogicalFile']
-    for src_logical_file in mp_logical_files:
-        src_logical_file.copy_mp_file_types(tgt_logical_file=map_logical_files[src_logical_file])
-
-    # for any model instance logical files in original resource need to set the executed_by (FK) relation
-    mi_logical_files = [lf for lf in map_logical_files if lf.type_name() == 'ModelInstanceLogicalFile']
-    for src_logical_file in mi_logical_files:
-        src_logical_file.copy_executed_by(tgt_logical_file=map_logical_files[src_logical_file])
+    for lf in map_logical_files:
+        if lf.type_name() == 'ModelProgramLogicalFile':
+            # for any model program logical files in original resource need to copy the model program file types
+            lf.copy_mp_file_types(tgt_logical_file=map_logical_files[lf])
+        elif lf.type_name() == 'ModelInstanceLogicalFile':
+            # for any model instance logical files in original resource need to set the executed_by (FK) relation
+            lf.copy_executed_by(tgt_logical_file=map_logical_files[lf])
 
     if src_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
