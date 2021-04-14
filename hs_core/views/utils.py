@@ -1065,9 +1065,6 @@ def ingest_bag(resource, bag_file, user):
     data_contents_dir = os.path.join("data", "contents")
     res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 1]
 
-    for file in res_files:
-        print(file.name)
-
     # now move each file to the destination
     def destination_filename(resource, file):
         dc_dir = os.path.join("data", "contents")
@@ -1077,7 +1074,6 @@ def ingest_bag(resource, bag_file, user):
     added_resource_files = []
     for file in res_files:
         destination_file = destination_filename(resource, file.name)
-        print(f"moving {file.name} to {destination_file}")
         istorage.moveFile(file.name, destination_file)
 
         irods_path = resource.get_irods_path(destination_file)

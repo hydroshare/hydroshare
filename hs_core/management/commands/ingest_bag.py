@@ -3,10 +3,11 @@ This command ingests a bag into a resource
 """
 import os
 
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management.base import BaseCommand
 
-from hs_core.hydroshare import delete_resource_file, User, add_file_to_resource, create_resource, Q, ResourceFile
+from hs_core.hydroshare import delete_resource_file, User, add_file_to_resource, create_resource
 from hs_composite_resource.models import CompositeResource
 from zipfile import ZipFile
 from pathlib import Path
@@ -59,37 +60,42 @@ class Command(BaseCommand):
             help="Overwrites resource if it exists on HydroShare"
         )
 
+        parser.add_argument(
+            '-u',
+            '--user_id',
+            type=str,
+            help="The id of the user to make the owner of the resource, defaults to Hydroshare Administrator (1)",
+            default=1
+        )
+
     def handle(self, *args, **options):
         bag_path = options['bag_path']
 
         resource_id = options['resource_id']
 
         if not is_hydrohsare_bagit(bag_path):
-            print("not a valid hydroshare bagit zip")
-            return
+            raise ValidationError(f"{bag_path} is not a valid hydroshare bagit zip")
 
         if not resource_id:
             resource_id = extract_resource_id(bag_path)
 
         resource_exists = CompositeResource.objects.filter(short_id=resource_id).exists()
-        admin = User.objects.get(Q(id=1) | Q(id=4))
+        user = User.objects.get(id=options['user_id'])
         if resource_exists:
             if not options['overwrite']:
-                print(f"Resource {resource_id} exists, include the overwrite command or provide another resource_id.")
-                return
+                raise ValidationError(f"Resource {resource_id} exists, include the overwrite command or provide "
+                                      f"another resource_id.")
 
             res = CompositeResource.objects.get(short_id=resource_id)
 
             # delete all files and logical files
             for file in res.files.all():
-                delete_resource_file(resource_id, file.id, admin)
+                delete_resource_file(resource_id, file.id, user)
 
         else:
-            res = create_resource("CompositeResource", admin, "Title will be overwritten",)
+            res = create_resource("CompositeResource", user, "Title will be overwritten",)
 
         bag_file_name = os.path.basename(bag_path)
         bag_file = UploadedFile(file=open(bag_path, mode="rb"), name=bag_file_name)
         bag_res_file = add_file_to_resource(res, bag_file)
-        ingest_bag(res, bag_res_file, admin)
-
-
+        ingest_bag(res, bag_res_file, user)
