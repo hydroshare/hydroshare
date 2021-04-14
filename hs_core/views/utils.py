@@ -1090,6 +1090,12 @@ def ingest_bag(resource, bag_file, user):
 
     istorage.delete(unzip_path)
 
+    # In addition to the Date metadataelement with type created, the resource django model created field is used and
+    # needs to be updated.
+    created = [d for d in resource.metadata.dates.all() if d.type == 'created'][0]
+    resource.created = created.start_date
+    resource.save()
+
 
 def _get_destination_filename(file, unzipped_foldername):
     """
