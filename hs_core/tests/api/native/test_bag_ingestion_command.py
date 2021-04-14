@@ -26,11 +26,9 @@ class testIngestBag(MockIRODSTestCaseMixin, TestCase):
             groups=[self.hs_group],
         )
 
-
     def tearDown(self):
         super(testIngestBag, self).tearDown()
         self.user.delete()
-
 
     def test_bag_ingestion_command(self):
         assert CompositeResource.objects.all().count() == 0
@@ -41,7 +39,6 @@ class testIngestBag(MockIRODSTestCaseMixin, TestCase):
         assert res.files.all().count() == 1
         readme = res.files.all().first()
         assert readme.file_name == "README.md"
-
 
     def test_bag_ingestion_command_overwrite(self):
         assert CompositeResource.objects.all().count() == 0
@@ -54,7 +51,6 @@ class testIngestBag(MockIRODSTestCaseMixin, TestCase):
         assert res.files.all().count() == 1
         readme = res.files.all().first()
         assert readme.file_name == "README.md"
-
 
     def test_bag_ingestion_command_overwrite_catch(self):
         res = hydroshare.create_resource("CompositeResource", self.user, "To overwrite")
