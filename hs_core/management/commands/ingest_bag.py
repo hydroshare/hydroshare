@@ -1,5 +1,6 @@
 """
-This command ingests a bag into a resource
+This command ingests a bag into a resource.  You can provide a resource_id to ingest the bag or the command will create
+a new resource to ingest the bag into.
 """
 import os
 
@@ -23,6 +24,7 @@ def extract_resource_id(bag_file_path):
 
 
 def is_hydrohsare_bagit(bag_file_path):
+    """Checks for a hydroshare bagit file structure in a zip"""
     resource_id = extract_resource_id(bag_file_path)
     bagit_files = [
         os.path.join(resource_id, "bagit.txt"),
@@ -74,7 +76,7 @@ class Command(BaseCommand):
         resource_id = options['resource_id']
 
         if not is_hydrohsare_bagit(bag_path):
-            raise ValidationError(f"{bag_path} is not a valid hydroshare bagit zip")
+            raise ValidationError(f"{bag_path} is not a valid HydroShare bagit zip")
 
         if not resource_id:
             resource_id = extract_resource_id(bag_path)

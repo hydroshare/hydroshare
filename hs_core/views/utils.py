@@ -1044,6 +1044,12 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
 
 def ingest_bag(resource, bag_file, user):
+    """
+    Ingests a zipped bagit archive of a hydroshare reosource that has been uploaded to the resource
+    :param resource: The CompositeResource to ingest the bag into
+    :param bag_file: The ResourceFile of the zipped bag in the resource
+    :param user: The HydroShare user object to do the action as
+    """
     from hs_file_types.utils import identify_metadata_files, ingest_metadata_files
 
     istorage = resource.get_irods_storage()
@@ -1067,6 +1073,7 @@ def ingest_bag(resource, bag_file, user):
 
     # now move each file to the destination
     def destination_filename(resource, file):
+        """Parses the temporary filename to the destination filename"""
         dc_dir = os.path.join("data", "contents")
         relative_path = dc_dir.join(file.split(dc_dir, 2)[2:])
         return os.path.join(resource.file_path, relative_path.strip("/"))
