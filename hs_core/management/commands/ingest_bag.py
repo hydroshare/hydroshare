@@ -32,7 +32,6 @@ def is_hydrohsare_bagit(bag_file_path):
         os.path.join(resource_id, "data", "resourcemap.xml")
     ]
     with ZipFile(bag_file_path, 'r') as zip_file:
-        for name in zip_file.namelist():
         for bagit_file in bagit_files:
             if bagit_file not in zip_file.namelist():
                 return False
