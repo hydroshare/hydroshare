@@ -18,7 +18,7 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = hydroshare.create_account(
-            'test_user@email.com',
+            'test_bag_ingestion@email.com',
             username='bag_ingestion_test',
             first_name='some_first_name',
             last_name='some_last_name',
