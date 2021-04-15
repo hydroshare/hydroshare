@@ -26,6 +26,9 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
             groups=[self.hs_group],
         )
 
+        # delete all resources in case a test isn't cleaning up after itself
+        CompositeResource.objects.all().delete()
+
     def tearDown(self):
         super(TestIngestBag, self).tearDown()
         self.user.delete()
