@@ -10,16 +10,16 @@ from hs_core import hydroshare
 from django.core.management import call_command
 
 
-class testIngestBag(MockIRODSTestCaseMixin, TestCase):
+class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
 
     def setUp(self):
-        super(testIngestBag, self).setUp()
+        super(TestIngestBag, self).setUp()
 
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = hydroshare.create_account(
             'test_user@email.com',
-            username='mytestuser',
+            username='bag_ingestion_test',
             first_name='some_first_name',
             last_name='some_last_name',
             superuser=False,
@@ -27,7 +27,7 @@ class testIngestBag(MockIRODSTestCaseMixin, TestCase):
         )
 
     def tearDown(self):
-        super(testIngestBag, self).tearDown()
+        super(TestIngestBag, self).tearDown()
         self.user.delete()
 
     def test_bag_ingestion_command(self):
