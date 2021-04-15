@@ -29,6 +29,8 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
     def tearDown(self):
         super(TestIngestBag, self).tearDown()
         self.user.delete()
+        self.hs_group.delete()
+        CompositeResource.objects.all().delete()
 
     def test_bag_ingestion_command(self):
         assert CompositeResource.objects.all().count() == 0
