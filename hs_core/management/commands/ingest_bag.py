@@ -7,8 +7,9 @@ import os
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
 
-from hs_core.hydroshare import delete_resource_file, User, add_file_to_resource, create_resource
+from hs_core.hydroshare import delete_resource_file, add_file_to_resource, create_resource
 from hs_composite_resource.models import CompositeResource
 from zipfile import ZipFile
 from pathlib import Path
@@ -65,7 +66,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '-u',
             '--user_id',
-            type=str,
+            type=int,
             help="The id of the user to make the owner of the resource, defaults to Hydroshare Administrator (1)",
             default=1
         )
