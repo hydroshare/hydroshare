@@ -95,7 +95,7 @@ class Command(BaseCommand):
                 delete_resource_file(resource_id, file.id, user)
 
         else:
-            res = create_resource("CompositeResource", user, "Title will be overwritten",)
+            res = create_resource("CompositeResource", user, "Title will be overwritten", short_id=resource_id)
 
         bag_file_name = os.path.basename(bag_path)
         bag_file = UploadedFile(file=open(bag_path, mode="rb"), name=bag_file_name)
