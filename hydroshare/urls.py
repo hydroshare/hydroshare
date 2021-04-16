@@ -17,7 +17,6 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-from hs_app_netCDF import views as nc_views
 import hs_communities.views.communities
 from theme.views import delete_resource_comment
 from hs_discover.views import SearchView, SearchAPI
@@ -144,7 +143,7 @@ urlpatterns += [
     # one out.
 
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    # QUNIT_TESTS_OFF
+    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
 
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
