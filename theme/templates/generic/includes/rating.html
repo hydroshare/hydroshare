@@ -1,5 +1,4 @@
 {% load mezzanine_tags rating_tags i18n %}
-
 <th>+1 Votes:</th>
 <td>
     <span id="rating-{{ rating_object.id }}">
@@ -23,11 +22,9 @@
     {% if rating_sum <= 0 %}
         Be the first one to&nbsp;
     {% endif %}
-    {% if request.user.is_authenticated %}
+    {% if request.user %}
         <form class="form-inline" role="form" method="post" action="/rating/" style="display:inline;">
-            {% nevercache %}
-                {% csrf_token %}
-            {% endnevercache %}
+            {% csrf_token %}
             {{ rating_form.content_type }}
             {{ rating_form.object_pk }}
             {{ rating_form.timestamp }}
@@ -41,10 +38,6 @@
         {% endif %}
     {% elif rating_sum <= 0 %}
         +1 this.
-    {% endif %}
-
-    {% if not request.user.is_authenticated %}
-        &nbsp;(<a href="{% url 'login' %}">You need to be logged in to rate this.</a>)
     {% endif %}
 </span>
 </td>
