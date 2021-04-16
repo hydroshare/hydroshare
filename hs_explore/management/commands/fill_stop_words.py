@@ -1,5 +1,5 @@
 """
-This storEs English and customized common hydrological
+This stores English and customized common hydrological
 stop words used in our LDA model
 """
 from hs_explore.models import LDAStopWord
