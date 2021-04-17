@@ -1374,12 +1374,38 @@ class UserAccess(models.Model):
 
         return False
 
-    def can_change_resource_flags(self, this_resource, check_shareable=False):
+    def can_change_resource_shareable_flag(self, this_resource):
+        """
+        Whether self can change the shareable resource flag.
+
+        :param this_resource: Resource to check.
+
+        :return: True if user can set shareable flag otherwise false.
+
+        This is not enforced. It is up to the programmer to obey this restriction.
+
+        This is not subject to immutability. Ar present, owns_resource -> can_change_resource_shareable_flag.
+        If we made it subject to immutability, no resources could be made not immutable again.
+        Shareable flag can be set even if the resource is published.
+
+        This is called from hs_core/views/authorize to authorize actions.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_resource, BaseResource)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if self.user.is_superuser:
+            return True
+
+        return self.owns_resource(this_resource)
+
+    def can_change_resource_flags(self, this_resource):
         """
         Whether self can change resource flags.
 
         :param this_resource: Resource to check.
-        :param  check_shareable: if True only check for the shareable flag
         :return: True if user can set flags otherwise false.
 
         This is not enforced. It is up to the programmer to obey this restriction.
@@ -1399,9 +1425,6 @@ class UserAccess(models.Model):
 
         if self.user.is_superuser:
             return True
-
-        if check_shareable:
-            return self.owns_resource(this_resource)
 
         return not this_resource.raccess.published and self.owns_resource(this_resource)
 
