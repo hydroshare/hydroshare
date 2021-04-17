@@ -332,8 +332,7 @@ def rights_allows_copy(res, user):
     return True
 
 
-def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, check_shareable=False,
-              raises_exception=True):
+def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
     """
     This function checks if a user has authorization for resource related actions as outlined
     below. This function doesn't check authorization for user sharing resource with another user.
@@ -384,7 +383,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         elif needed_permission == ACTION_TO_AUTHORIZE.DELETE_RESOURCE:
             authorized = user.uaccess.can_delete_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG:
-            authorized = user.uaccess.can_change_resource_flags(res, check_shareable=check_shareable)
+            authorized = user.uaccess.can_change_resource_flags(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION:
             authorized = user.uaccess.owns_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:

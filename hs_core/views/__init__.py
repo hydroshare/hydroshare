@@ -877,11 +877,17 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     ajax_response_data = {'status': 'error', 'message': ''}
     flag = resolve_request(request).get('flag', None)
-    if flag in ('make_shareable', 'make_not_shareable'):
-        res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
-                                 check_shareable=True)
-    else:
-        res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
+                                      raises_exception=False)
+    if not authorized:
+        # for published resource above authorize call will return false
+        # need to then check permission to change shareable flag
+        if flag in ('make_shareable', 'make_not_shareable'):
+            if not user.uaccess.can_change_resource_shareable_flag(res):
+                raise PermissionDenied
+        else:
+            raise PermissionDenied
+
     message = None
 
     if flag == 'make_public':
@@ -1745,9 +1751,6 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
     """
 
     if flag_to_set == 'shareable':  # too simple to deserve a method in AbstractResource
-        # access control is separate from validation logic
-        if not user.uaccess.can_change_resource_flags(resource, check_shareable=True):
-            return "You don't have permission to change resource sharing status"
         if resource.raccess.shareable != flag_value:
             resource.raccess.shareable = flag_value
             resource.raccess.save()
