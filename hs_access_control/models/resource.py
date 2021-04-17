@@ -126,8 +126,6 @@ class ResourceAccess(models.Model):
 
         This now accounts for group and community privileges
 
-        If the resource is immutable, an empty QuerySet is returned.
-
         """
         return User.objects\
                    .filter((self.__edit_users_from_individual) |
