@@ -72,40 +72,40 @@ class SearchAPI(APIView):
             # filter values expect lists, for example discoverapi/?filter={"owner":["Firstname Lastname"]}
             if filters.get('author'):
                 for k, authortype in enumerate(filters['author']):
-                    if k == 0 or k == len(filters['author']):
-                        sqs = sqs.filter(author_exact=Exact(authortype))
+                    if k == 0:
+                        sqs = sqs.filter(author=Exact(authortype))
                     else:
-                        sqs = sqs.filter_or(author_exact=Exact(authortype))
+                        sqs = sqs.filter_or(author=Exact(authortype))
             if filters.get('owner'):
                 for k, ownertype in enumerate(filters['owner']):
-                    if k == 0 or k == len(filters['owner']):
-                        sqs = sqs.filter(owner_exact=Exact(ownertype))
+                    if k == 0:
+                        sqs = sqs.filter(owner=Exact(ownertype))
                     else:
-                        sqs = sqs.filter_or(owner_exact=Exact(ownertype))
+                        sqs = sqs.filter_or(owner=Exact(ownertype))
             if filters.get('subject'):
                 for k, subjtype in enumerate(filters['subject']):
-                    if k == 0 or k == len(subjtype):
-                        sqs = sqs.filter(subject_exact=Exact(subjtype))
+                    if k == 0:
+                        sqs = sqs.filter(subject=Exact(subjtype))
                     else:
-                        sqs = sqs.filter_or(subject_exact=Exact(subjtype))
+                        sqs = sqs.filter_or(subject=Exact(subjtype))
             if filters.get('contributor'):
                 for k, contribtype in enumerate(filters['contributor']):
-                    if k == 0 or k == len(filters['contributor']):
-                        sqs = sqs.filter(contributor_exact=Exact(contribtype))
+                    if k == 0:
+                        sqs = sqs.filter(contributor=Exact(contribtype))
                     else:
-                        sqs = sqs.filter_or(contributor_exact=Exact(contribtype))
+                        sqs = sqs.filter_or(contributor=Exact(contribtype))
             if filters.get('type'):
                 for k, restype in enumerate(filters['type']):
-                    if k == 0 or k == len(filters['type']):
-                        sqs = sqs.filter(content_type_exact=Exact(restype))
+                    if k == 0:
+                        sqs = sqs.filter(content_type=Exact(restype))
                     else:
-                        sqs = sqs.filter_or(content_type_exact=Exact(restype))
+                        sqs = sqs.filter_or(content_type=Exact(restype))
             if filters.get('availability'):
                 for k, availtype in enumerate(filters['availability']):
-                    if k == 0 or k == len(filters['availability']):
-                        sqs = sqs.filter(availability_exact=Exact(availtype))
+                    if k == 0:
+                        sqs = sqs.filter(availability=Exact(availtype))
                     else:
-                        sqs = sqs.filter_or(availability_exact=Exact(availtype))
+                        sqs = sqs.filter_or(availability=Exact(availtype))
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
             if filters.get('date'):
@@ -126,7 +126,7 @@ class SearchAPI(APIView):
                 except Exception as gen_date_ex:
                     return JsonResponse({'message': 'Filter date parsing error expecting two date string values : {}'
                                         .format(str(gen_date_ex)), 'received': request.query_params}, status=400)
-        except TypeError as type_ex:
+        except TypeError:
             pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
 
         except json.JSONDecodeError as parse_ex:
