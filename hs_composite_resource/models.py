@@ -456,7 +456,7 @@ class CompositeResource(BaseResource):
 
             filesets = self.filesetlogicalfile_set.filter(folder__startswith=old_folder)
             for fs in filesets:
-                fs.folder = os.path.join(new_folder, fs.folder[len(old_folder):]).strip('/')
+                fs.folder = os.path.join(new_folder, fs.folder[len(old_folder)+1:]).strip('/')
                 fs.save()
 
         def update_model_program_folder():
@@ -466,7 +466,7 @@ class CompositeResource(BaseResource):
             mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=old_folder)
             for mp_aggr in mp_aggregations:
                 if mp_aggr.folder is not None:
-                    mp_aggr.folder = os.path.join(new_folder, mp_aggr.folder[len(old_folder):]).strip('/')
+                    mp_aggr.folder = os.path.join(new_folder, mp_aggr.folder[len(old_folder)+1:]).strip('/')
                     mp_aggr.save()
                     # any associated model instance aggregation metadata needs to be set dirty
                     # in order to regenerate metadata xml files for these linked model instance aggregations
@@ -481,7 +481,7 @@ class CompositeResource(BaseResource):
             mi_aggregations = self.modelinstancelogicalfile_set.filter(folder__startswith=old_folder)
             for mi_aggr in mi_aggregations:
                 if mi_aggr.folder is not None:
-                    mi_aggr.folder = os.path.join(new_folder, mi_aggr.folder[len(old_folder):]).strip('/')
+                    mi_aggr.folder = os.path.join(new_folder, mi_aggr.folder[len(old_folder)+1:]).strip('/')
                     mi_aggr.save()
 
         # recreate xml files for all fileset aggregations that exist under new_folder
