@@ -153,12 +153,12 @@ class SearchAPI(APIView):
 
         filterdata = []
         if request.GET.get('filterbuilder'):
-            authors = sqs.facet('author').facet_counts()['fields']['author']
-            owners = sqs.facet('owner').facet_counts()['fields']['owner']
-            subjects = sqs.facet('subject').facet_counts()['fields']['subject']
-            contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
-            types = sqs.facet('content_type').facet_counts()['fields']['content_type']
-            availability = sqs.facet('availability').facet_counts()['fields']['availability']
+            authors = sqs.facet('author', limit=self.filterlimit).facet_counts()['fields']['author']
+            owners = sqs.facet('owner', limit=self.filterlimit).facet_counts()['fields']['owner']
+            subjects = sqs.facet('subject', limit=self.filterlimit).facet_counts()['fields']['subject']
+            contributors = sqs.facet('contributor', limit=self.filterlimit).facet_counts()['fields']['contributor']
+            types = sqs.facet('content_type', limit=self.filterlimit).facet_counts()['fields']['content_type']
+            availability = sqs.facet('availability', limit=self.filterlimit).facet_counts()['fields']['availability']
             if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]
                 owners = [x for x in owners if x[1] > 0]
@@ -166,8 +166,7 @@ class SearchAPI(APIView):
                 contributors = [x for x in contributors if x[1] > 0]
                 types = [x for x in types if x[1] > 0]
                 availability = [x for x in availability if x[1] > 0]
-            filterdata = [authors[:self.filterlimit], owners[:self.filterlimit], subjects[:self.filterlimit],
-                          contributors[:self.filterlimit], types[:self.filterlimit], availability[:self.filterlimit]]
+            filterdata = [authors, owners, subjects, contributors, types, availability]
 
         if sort == 'author':
             sqs = sqs.order_by('author_exact')
