@@ -159,6 +159,7 @@ class SearchAPI(APIView):
             contributors = sqs.facet('contributor', limit=self.filterlimit).facet_counts()['fields']['contributor']
             types = sqs.facet('content_type', limit=self.filterlimit).facet_counts()['fields']['content_type']
             availability = sqs.facet('availability', limit=self.filterlimit).facet_counts()['fields']['availability']
+            # TODO from Alva: to the best of my knowledge, this is invoked on every query and does absolutely nothing.
             if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]
                 owners = [x for x in owners if x[1] > 0]
