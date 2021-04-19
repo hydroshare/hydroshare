@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from haystack.query import SearchQuerySet
+from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
 
@@ -73,41 +73,54 @@ class SearchAPI(APIView):
             if filters.get('author'):
                 for k, authortype in enumerate(filters['author']):
                     if k == 0:
-                        sqs = sqs.filter(author=Exact(authortype))
+                        phrase = SQ(author=Exact(authortype))
                     else:
-                        sqs = sqs.filter_or(author=Exact(authortype))
+                        phrase = phrase | SQ(author=Exact(authortype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('owner'):
                 for k, ownertype in enumerate(filters['owner']):
                     if k == 0:
-                        sqs = sqs.filter(owner=Exact(ownertype))
+                        phrase = SQ(owner=Exact(ownertype))
                     else:
-                        sqs = sqs.filter_or(owner=Exact(ownertype))
+                        phrase = phrase | SQ(owner=Exact(ownertype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('subject'):
                 for k, subjtype in enumerate(filters['subject']):
                     if k == 0:
-                        sqs = sqs.filter(subject=Exact(subjtype))
+                        phrase = SQ(subject=Exact(subjtype))
                     else:
-                        sqs = sqs.filter_or(subject=Exact(subjtype))
+                        phrase = phrase | SQ(subject=Exact(subjtype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('contributor'):
                 for k, contribtype in enumerate(filters['contributor']):
                     if k == 0:
-                        sqs = sqs.filter(contributor=Exact(contribtype))
+                        phrase = SQ(contributor=Exact(contribtype))
                     else:
-                        sqs = sqs.filter_or(contributor=Exact(contribtype))
+                        phrase = phrase | SQ(contributor=Exact(contribtype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('type'):
                 for k, restype in enumerate(filters['type']):
                     if k == 0:
-                        sqs = sqs.filter(content_type=Exact(restype))
+                        phrase = SQ(content_type=Exact(restype))
                     else:
-                        sqs = sqs.filter_or(content_type=Exact(restype))
+                        phrase = phrase | SQ(content_type=Exact(restype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('availability'):
                 for k, availtype in enumerate(filters['availability']):
                     if k == 0:
-                        sqs = sqs.filter(availability=Exact(availtype))
+                        phrase = SQ(availability=Exact(availtype))
                     else:
-                        sqs = sqs.filter_or(availability=Exact(availtype))
+                        phrase = phrase | SQ(availability=Exact(availtype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
+
             if filters.get('date'):
                 try:
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
