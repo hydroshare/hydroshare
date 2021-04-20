@@ -2,7 +2,7 @@
     selected at least 5 qualified resources in the last 30 days. Resources with more
     than two keywords are considered to be qualified resources.
 """
-from datetime import timedelta, date
+from datetime import timedelta, datetime
 from hs_explore.utils import get_resource_to_subjects, get_resource_to_abstract,\
     get_resource_to_published, get_users_interacted_resources, get_resource_to_keep_words,\
     jaccard_sim, store_user_preferences, store_recommended_resources, clear_old_data,\
@@ -20,7 +20,7 @@ def make_recommendations():
     """
     resource_to_abstract = get_resource_to_abstract()
     resource_to_subjects, all_subjects_list = get_resource_to_subjects()
-    end_date = date(2018, 5, 31)
+    end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
     user_to_resources, all_usernames = get_users_interacted_resources(start_date, end_date)
     resource_to_published = get_resource_to_published()
