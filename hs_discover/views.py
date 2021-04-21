@@ -70,7 +70,7 @@ class SearchAPI(APIView):
             qs = request.query_params
             filters = json.loads(qs.get('filter'))
             # filter values expect lists, for example discoverapi/?filter={"owner":["Firstname Lastname"]}
-            if filters.get('author'):
+            if filters.get('author') and len(filters['author']) > 0:
                 for k, authortype in enumerate(filters['author']):
                     if k == 0:
                         phrase = SQ(author=Exact(authortype))
@@ -78,7 +78,7 @@ class SearchAPI(APIView):
                         phrase = phrase | SQ(author=Exact(authortype))
                 sqs = sqs.filter(phrase)
 
-            if filters.get('owner'):
+            if filters.get('owner') and len(filters['owner']) > 0:
                 for k, ownertype in enumerate(filters['owner']):
                     if k == 0:
                         phrase = SQ(owner=Exact(ownertype))
@@ -86,7 +86,7 @@ class SearchAPI(APIView):
                         phrase = phrase | SQ(owner=Exact(ownertype))
                 sqs = sqs.filter(phrase)
 
-            if filters.get('subject'):
+            if filters.get('subject') and len(filters['subject']) > 0:
                 for k, subjtype in enumerate(filters['subject']):
                     if k == 0:
                         phrase = SQ(subject=Exact(subjtype))
@@ -94,7 +94,7 @@ class SearchAPI(APIView):
                         phrase = phrase | SQ(subject=Exact(subjtype))
                 sqs = sqs.filter(phrase)
 
-            if filters.get('contributor'):
+            if filters.get('contributor') and len(filters['contributor']) > 0:
                 for k, contribtype in enumerate(filters['contributor']):
                     if k == 0:
                         phrase = SQ(contributor=Exact(contribtype))
@@ -102,7 +102,7 @@ class SearchAPI(APIView):
                         phrase = phrase | SQ(contributor=Exact(contribtype))
                 sqs = sqs.filter(phrase)
 
-            if filters.get('type'):
+            if filters.get('type') and len(filters['type']) > 0:
                 for k, restype in enumerate(filters['type']):
                     if k == 0:
                         phrase = SQ(content_type=Exact(restype))
@@ -110,7 +110,7 @@ class SearchAPI(APIView):
                         phrase = phrase | SQ(content_type=Exact(restype))
                 sqs = sqs.filter(phrase)
 
-            if filters.get('availability'):
+            if filters.get('availability') and len(filters['availability']) > 0:
                 for k, availtype in enumerate(filters['availability']):
                     if k == 0:
                         phrase = SQ(availability=Exact(availtype))
