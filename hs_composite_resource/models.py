@@ -602,11 +602,8 @@ class CompositeResource(BaseResource):
 
                 if 'GeographicRaster' in resource_data_types:
                     wcs_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/wcs?'
-                        f'service=WCS&'
-                        f'version=1.1.0&'
-                        f'request=GetCapabilities&'
-                        f'namespace=HS-{self.short_id}'
+                         f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/wcs?'
+                        f'request=GetCapabilities'
                     )
                 else:
                     wcs_url = None
