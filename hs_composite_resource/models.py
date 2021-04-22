@@ -573,7 +573,7 @@ class CompositeResource(BaseResource):
         Generates data services URLs for the resource.
 
         If the resource contains any GeoFeature or GeoRaster content, and if it's public,
-        generate data service endpoints.
+        generate data service endpoints. test
         """
 
         if self.raccess.public is True:
