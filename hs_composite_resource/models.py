@@ -573,7 +573,7 @@ class CompositeResource(BaseResource):
         Generates data services URLs for the resource.
 
         If the resource contains any GeoFeature or GeoRaster content, and if it's public,
-        generate data service endpoints. test
+        generate data service endpoints.
         """
 
         if self.raccess.public is True:
@@ -602,8 +602,11 @@ class CompositeResource(BaseResource):
 
                 if 'GeographicRaster' in resource_data_types:
                     wcs_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/wcs?'
-                        f'request=GetCapabilities'
+                        f'{settings.HSWS_GEOSERVER_URL}/wcs?'
+                        f'service=WCS&'
+                        f'version=1.1.0&'
+                        f'request=GetCapabilities&'
+                        f'namespace=HS-{self.short_id}'
                     )
                 else:
                     wcs_url = None
