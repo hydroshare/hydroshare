@@ -1,4 +1,6 @@
 import datetime
+
+from django.core.validators import RegexValidator
 from django.utils import timezone
 
 from django.contrib.auth.models import User
@@ -266,13 +268,15 @@ class UserProfile(models.Model):
         blank=True,
         help_text="The name of the organization you work for."
     )
-    phone_1 = models.CharField(max_length=1024, null=True, blank=True)
+    phone_regex = RegexValidator(regex=r'^\d{8,15}$',
+                                 message="Phone number must be entered in the format: '999999999'. Up to 16 digits allowed.")
+    phone_1 = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
         ('Home', 'Home'),
         ('Work', 'Work'),
         ('Mobile', 'Mobile'),
     ))
-    phone_2 = models.CharField(max_length=1024, null=True, blank=True)
+    phone_2 = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     phone_2_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
         ('Home', 'Home'),
         ('Work', 'Work'),
@@ -318,3 +322,5 @@ def force_unique_emails(sender, instance, **kwargs):
             raise ValidationError("Username already in use.")
 
 pre_save.connect(force_unique_emails, sender=User)
+#regex=r'^\+?1?\d{9,16}$'
+#'^\+\d{8,15}$'
