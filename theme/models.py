@@ -322,5 +322,3 @@ def force_unique_emails(sender, instance, **kwargs):
             raise ValidationError("Username already in use.")
 
 pre_save.connect(force_unique_emails, sender=User)
-#regex=r'^\+?1?\d{9,16}$'
-#'^\+\d{8,15}$'
