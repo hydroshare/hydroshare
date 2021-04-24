@@ -7,6 +7,8 @@ from uuid import uuid4
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+
+from hs_core.models import ResourceFile
 from hydroshare import settings
 
 from hs_file_types.models import AbstractLogicalFile
@@ -153,3 +155,86 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             istorage.saveFile(json_from_file_name, to_file_name, True)
         finally:
             shutil.rmtree(tmpdir)
+
+    @classmethod
+    def can_set_folder_to_aggregation(cls, resource, dir_path):
+        """helper to check if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
+        """
+
+        # checking target folder for any aggregation
+        if resource.get_folder_aggregation_object(dir_path) is not None:
+            # target folder is already an aggregation
+            return False
+
+        aggregation_path = dir_path[len(resource.file_path) + 1:]
+        # checking sub-folders for fileset aggregation
+        # check that we don't have any sub folder of dir_path representing a fileset aggregation
+        # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation
+        if resource.filesetlogicalfile_set.filter(folder__startswith=aggregation_path).exists():
+            return False
+
+        if cls.__name__ == "ModelProgramLogicalFile":
+            # checking sub-folders for model program aggregation
+            # check that we don't have any sub folder of dir_path representing a model program aggregation
+            # so that we can avoid nesting a model program aggregation inside a model
+            # program aggregation
+            if resource.modelprogramlogicalfile_set.filter(folder__startswith=aggregation_path).exists():
+                return False
+
+        # checking sub-folders for model instance aggregation
+        # check that we don't have any sub folder of dir_path representing a model instance aggregation
+        # so that we can avoid nesting a model instance aggregation inside a model program aggregation
+        if resource.modelinstancelogicalfile_set.filter(folder__startswith=aggregation_path).exists():
+            return False
+
+        # check the first parent folder that represents an aggregation
+        irods_path = dir_path
+        if resource.is_federated:
+            irods_path = os.path.join(resource.resource_federation_path, irods_path)
+
+        # get the parent folder path
+        path = os.path.dirname(dir_path)
+        parent_aggregation = None
+        while '/' in path:
+            if path == resource.file_path:
+                break
+            parent_aggregation = resource.get_folder_aggregation_object(path)
+            if parent_aggregation is not None:
+                # this is the first parent folder that represents an aggregation
+                break
+            # get the next parent folder path
+            path = os.path.dirname(path)
+
+        if parent_aggregation is not None:
+            if parent_aggregation.is_fileset:
+                # check that all resource files under the target folder 'dir_path' are associated with fileset only
+                files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+                # if all the resource files are associated with fileset then we can set the folder to model program
+                # or model instance aggregation
+                if files_in_path:
+                    return all(res_file.has_logical_file and res_file.logical_file.is_fileset for
+                               res_file in files_in_path)
+                return False
+            else:
+                return False
+        else:
+            # none of the parent folders represents an aggregation
+            # check the files in the target path
+            files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+
+            if files_in_path:
+                # if none of the resource files in the target path has logical file then we can set the folder
+                # to model program or model instance aggregation
+                if cls.__name__ == "ModelProgramLogicalFile":
+                    # if none of the resource files in the target path has logical file then we can set the folder
+                    # to model program aggregation
+                    return not any(res_file.has_logical_file for res_file in files_in_path)
+                else:
+                    # if any of the files is part of a model instance aggr or fileset - folder can't be
+                    # set to model instance
+                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
+                                                                  res_file.logical_file.is_fileset) for
+                                   res_file in files_in_path)
+
+            # path has no files - can't set the folder to aggregation
+            return False

@@ -776,9 +776,20 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def get_main_file_type(cls):
-        # a singel file extension in the group which is considered the main file
+        # a single file extension in the group which is considered the main file
         # - subclass needs to override this
         return None
+
+    @classmethod
+    def can_set_folder_to_aggregation(cls, resource, dir_path):
+        """helper to check if the specified folder *dir_path* can be set to this aggregation type
+
+        :param  resource: an instance of composite resource in which the folder to be checked
+        :param dir_path: Resource file directory path (full folder path starting with resource id)
+        for which this aggregation type to be set
+        :return True or False
+        """
+        return False
 
     @property
     def get_main_file(self):
@@ -878,21 +889,15 @@ class AbstractLogicalFile(models.Model):
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
-            # check if a FileSet aggregation can be created from the specified folder
-            if cls.__name__ == "FileSetLogicalFile":
-                if not resource.can_set_folder_to_fileset(path_to_check):
-                    msg = "FileSet aggregation can't be created from the specified folder:{}"
-                    msg = msg.format(path_to_check)
-                    raise ValidationError(msg)
-            elif cls.__name__ == "ModelInstanceLogicalFile":
-                if not resource.can_set_folder_to_model_instance_aggregation(path_to_check):
-                    msg = "Model instance aggregation can't be created from the specified folder:{}"
-                    msg = msg.format(path_to_check)
-                    raise ValidationError(msg)
-            elif cls.__name__ == "ModelProgramLogicalFile":
-                if not resource.can_set_folder_to_model_program_aggregation(path_to_check):
-                    msg = "Model program aggregation can't be created from the specified folder:{}"
-                    msg = msg.format(path_to_check)
+            if cls.__name__ in ("FileSetLogicalFile", "ModelInstanceLogicalFile", "ModelProgramLogicalFile"):
+                if not cls.can_set_folder_to_aggregation(resource=resource, dir_path=path_to_check):
+                    msg = "{} aggregation can't be created from the specified folder:{}"
+                    if cls.__name__ == "FileSetLogicalFile":
+                        msg = msg.format("Fileset", path_to_check)
+                    elif cls.__name__ == "ModelProgramLogicalFile":
+                        msg = msg.format("Model program", path_to_check)
+                    else:
+                        msg = msg.format("Model instance", path_to_check)
                     raise ValidationError(msg)
 
         if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile']:

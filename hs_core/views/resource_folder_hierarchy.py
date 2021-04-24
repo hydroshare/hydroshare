@@ -22,7 +22,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
 
-from hs_file_types.models import FileSetLogicalFile
+from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -100,8 +100,10 @@ def data_store_structure(request):
                     main_file = aggregation_object.get_main_file.file_name
             else:
                 # check first if ModelProgram/ModelInstance aggregation type can be created from this folder
-                can_set_model_instance = resource.can_set_folder_to_model_instance_aggregation(dir_path)
-                can_set_model_program = resource.can_set_folder_to_model_program_aggregation(dir_path)
+                can_set_model_instance = ModelInstanceLogicalFile.can_set_folder_to_aggregation(resource=resource,
+                                                                                                dir_path=dir_path)
+                can_set_model_program = ModelProgramLogicalFile.can_set_folder_to_aggregation(resource=resource,
+                                                                                              dir_path=dir_path)
                 if can_set_model_instance and can_set_model_program:
                     folder_aggregation_type_to_set = 'ModelProgramOrInstanceLogicalFile'
                 elif can_set_model_program:
@@ -109,7 +111,7 @@ def data_store_structure(request):
                 elif can_set_model_instance:
                     folder_aggregation_type_to_set = 'ModelInstanceLogicalFile'
                 # otherwise, check if FileSet aggregation type that can be created from this folder
-                elif resource.can_set_folder_to_fileset(dir_path):
+                elif FileSetLogicalFile.can_set_folder_to_aggregation(resource=resource, dir_path=dir_path):
                     folder_aggregation_type_to_set = FileSetLogicalFile.__name__
                 else:
                     folder_aggregation_type_to_set = ""

@@ -76,6 +76,43 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         return resource_files[0] if resource_files else None
 
     @classmethod
+    def can_set_folder_to_aggregation(cls, resource, dir_path):
+        """Checks if the specified folder *dir_path* can be set to Fileset aggregation
+
+        :return
+        If the specified folder is already represents an aggregation, return False
+        if the specified folder does not contain any files, return False
+        if any of the parent folders is a model program aggregation, return False
+        if any of the parent folders is a model instance aggregation, return False
+        otherwise, return True
+
+        Note: A fileset aggregation is not allowed inside a model program or model instance aggregation. One
+        fileset aggregation can contain any other aggregation types including fileset aggregation
+        """
+
+        if resource.get_folder_aggregation_object(dir_path) is not None:
+            # target folder is already an aggregation
+            return False
+
+        # checking all parent folders
+        path = os.path.dirname(dir_path)
+        while '/' in path:
+            parent_aggr = resource.get_folder_aggregation_object(path)
+            if parent_aggr is not None and (parent_aggr.is_model_program or parent_aggr.is_model_instance):
+                # avoid creating a fileset aggregation inside a model program/instance aggregation folder
+                return False
+            # go to next parent folder
+            path = os.path.dirname(path)
+
+        irods_path = dir_path
+        if resource.is_federated:
+            irods_path = os.path.join(resource.resource_federation_path, irods_path)
+
+        files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+        # if there are any files in the dir_path, we can set the folder to fileset aggregation
+        return len(files_in_path) > 0
+
+    @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=''):
         """Makes all physical files that are in a folder (*folder_path*) part of a file set
         aggregation type.
