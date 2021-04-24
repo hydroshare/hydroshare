@@ -178,8 +178,6 @@ class CompositeResource(BaseResource):
 
         def create_aggregation_meta_files(aggr):
             aggr.create_aggregation_xml_documents()
-            if aggr.is_model_program or aggr.is_model_instance:
-                aggr.create_metadata_schema_json_file()
 
         if nested_aggr_type == 'fileset':
             nested_aggr_set = self.filesetlogicalfile_set
@@ -200,50 +198,6 @@ class CompositeResource(BaseResource):
             parent_aggr = aggr_in_path_func(path)
             if parent_aggr is not None:
                 create_aggregation_meta_files(aggr=parent_aggr)
-
-    def _create_model_aggr_meta_json_schema_files(self, path=''):
-        """ Creates metadata json schema file for any model aggregations in the resource that has
-        metadata schema
-        :param  path: (optional) file or folder path for which metadata schema files need to be created for
-        all associated model aggregations of that path
-        """
-
-        if not path:
-            # create metadata schema json file for all model aggregations (containing schema json data) of this resource
-            for aggregation in self.modelprogramlogicalfile_set.exclude(metadata_schema_json={}):
-                aggregation.create_metadata_schema_json_file()
-            for aggregation in self.modelinstancelogicalfile_set.exclude(metadata_schema_json={}):
-                aggregation.create_metadata_schema_json_file()
-
-        else:
-            # first check if the path is a folder path or file path
-            is_path_a_folder = self._is_path_folder(path=path)
-            if is_path_a_folder:
-                # need to create json files for all model aggregations (containing schema json data)
-                # that exist under path
-                if path.startswith(self.file_path):
-                    folder = path[len(self.file_path) + 1:]
-                else:
-                    folder = path
-                mp_aggrs = self.modelprogramlogicalfile_set.filter(folder__startswith=folder).exclude(
-                    metadata_schema_json={})
-                for mp_aggr in mp_aggrs:
-                    mp_aggr.create_metadata_schema_json_file()
-
-                mi_aggrs = self.modelinstancelogicalfile_set.filter(folder__startswith=folder).exclude(
-                    metadata_schema_json={})
-                for mi_aggr in mi_aggrs:
-                    mi_aggr.create_metadata_schema_json_file()
-            else:
-                # path is a file path
-                try:
-                    aggregation = self.get_aggregation_by_name(path)
-                    # need to create json file only for this model aggregation
-                    if aggregation.is_model_program or aggregation.is_model_instance:
-                        aggregation.create_metadata_schema_json_file()
-                except ObjectDoesNotExist:
-                    # path representing a file path is not an aggregation - nothing to do
-                    pass
 
     def create_aggregation_meta_files(self, path=''):
         """Creates aggregation meta files (resource map, metadata xml files and schema json files) for each of the
@@ -274,8 +228,6 @@ class CompositeResource(BaseResource):
                 except ObjectDoesNotExist:
                     # path representing a file path is not an aggregation - nothing to do
                     pass
-
-        self._create_model_aggr_meta_json_schema_files(path=path)
 
     def _recreate_aggregation_meta_files_for_folder(self, new_folder, old_folder):
         """Re-creates meta (xml metadata, xml resource map and schema json) files for all aggregations that exists under
@@ -333,7 +285,6 @@ class CompositeResource(BaseResource):
         mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=new_folder)
         for mp_aggr in mp_aggregations:
             mp_aggr.create_aggregation_xml_documents()
-            mp_aggr.create_metadata_schema_json_file()
 
         # first update folder attribute of any model instance aggregation that exist under *old_folder*
         update_model_instance_folder()
@@ -529,8 +480,6 @@ class CompositeResource(BaseResource):
                 aggregation = self.get_aggregation_by_name(new_path)
                 delete_old_files()
                 aggregation.create_aggregation_xml_documents()
-                if aggregation.is_model_instance or aggregation.is_model_program:
-                    aggregation.create_metadata_schema_json_file()
                 # check if the affected aggregation is a model program aggregation
                 # then any associated model instance aggregation metadata needs to be set dirty
                 # in order to regenerate metadata xml files for these linked model instance aggregations

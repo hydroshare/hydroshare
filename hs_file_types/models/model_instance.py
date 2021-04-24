@@ -469,11 +469,6 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
                     self.add_resource_file(res_file)
         return res_files
 
-    def create_aggregation_xml_documents(self, create_map_xml=True):
-        super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
-        self.metadata.is_dirty = False
-        self.metadata.save()
-
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
 

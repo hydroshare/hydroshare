@@ -457,11 +457,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """
         return self.model_program_type
 
-    def create_aggregation_xml_documents(self, create_map_xml=True):
-        super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
-        self.metadata.is_dirty = False
-        self.metadata.save()
-
     def copy_mp_file_types(self, tgt_logical_file):
         """helper function to support creating copy or new version of a resource
         :param tgt_logical_file: an instance of ModelProgramLogicalFile which has been

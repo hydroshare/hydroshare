@@ -131,6 +131,12 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             ft_ctx.logical_file = logical_file
         return logical_file
 
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(AbstractModelLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
+        self.metadata.is_dirty = False
+        self.metadata.save()
+        self.create_metadata_schema_json_file()
+
     def create_metadata_schema_json_file(self):
         """Creates aggregation metadata schema json file """
 
