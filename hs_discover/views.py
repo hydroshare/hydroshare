@@ -276,7 +276,7 @@ class SearchAPI(APIView):
                 "link": result.absolute_url,
                 "availability": result.availability,
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
-                "type": result.resource_type_exact,
+                "type": result.resource_type,
                 "author": author,
                 "authors": authors,
                 "contributor": contributor,
