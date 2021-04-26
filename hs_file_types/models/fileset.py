@@ -187,3 +187,8 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         # update self
         self.folder = new_folder + self.folder[len(old_folder):]
         self.save()
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
+        for child_aggr in self.get_children():
+            child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)

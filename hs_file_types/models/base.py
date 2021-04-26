@@ -1394,6 +1394,80 @@ class AbstractLogicalFile(models.Model):
         finally:
             shutil.rmtree(tmpdir)
 
+    @classmethod
+    def update_path(cls, resource, orig_path, new_path):
+        """
+        When a folder or file representing an aggregation is renamed or moved,
+        the associated meta files (resource map, metadata xml files as well as schema json files) are deleted
+        and then regenerated
+        :param  resource: an instance of composite resource for which aggregations to be updated
+        :param  orig_path: original file/folder path prior to move/rename
+        :param  new_path: new file/folder path after move/rename
+        """
+        if new_path.startswith(resource.file_path):
+            new_path = new_path[len(resource.file_path) + 1:]
+
+        if orig_path.startswith(resource.file_path):
+            orig_path = orig_path[len(resource.file_path) + 1:]
+
+        is_new_path_a_folder = resource.is_path_folder(path=new_path)
+        istorage = resource.get_irods_storage()
+
+        # remove file extension from aggregation name (note: aggregation name is a file path
+        # for all aggregation types except fileset/model aggregation
+        file_name, _ = os.path.splitext(orig_path)
+        schema_json_file_name = file_name + SCHEMA_JSON_FILE_ENDSWITH
+        meta_xml_file_name = file_name + METADATA_FILE_ENDSWITH
+        map_xml_file_name = file_name + RESMAP_FILE_ENDSWITH
+        if not is_new_path_a_folder:
+            # case of file rename/move for single file aggregation
+            schema_json_file_full_path = os.path.join(resource.file_path, schema_json_file_name)
+            meta_xml_file_full_path = os.path.join(resource.file_path, meta_xml_file_name)
+            map_xml_file_full_path = os.path.join(resource.file_path, map_xml_file_name)
+        else:
+            # case of folder rename - fileset/model aggregation
+            _, schema_json_file_name = os.path.split(schema_json_file_name)
+            _, meta_xml_file_name = os.path.split(meta_xml_file_name)
+            _, map_xml_file_name = os.path.split(map_xml_file_name)
+            schema_json_file_full_path = os.path.join(resource.file_path, new_path, schema_json_file_name)
+            meta_xml_file_full_path = os.path.join(resource.file_path, new_path, meta_xml_file_name)
+            map_xml_file_full_path = os.path.join(resource.file_path, new_path, map_xml_file_name)
+
+        if istorage.exists(schema_json_file_full_path):
+            istorage.delete(schema_json_file_full_path)
+
+        if istorage.exists(meta_xml_file_full_path):
+            istorage.delete(meta_xml_file_full_path)
+
+        if istorage.exists(map_xml_file_full_path):
+            istorage.delete(map_xml_file_full_path)
+
+        # update any aggregations under the orig_path
+        for lf in resource.logical_files:
+            if hasattr(lf, 'folder'):
+                if lf.folder is not None and lf.folder.startswith(orig_path):
+                    lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
+                    lf.save()
+                    lf.create_aggregation_xml_documents()
+
+        # need to recreate xml doc for any parent aggregation that may exist relative to path *new_path*
+        if '/' in new_path:
+            path = os.path.dirname(new_path)
+            try:
+                parent_aggr = resource.get_aggregation_by_name(path)
+                parent_aggr.create_aggregation_xml_documents()
+            except ObjectDoesNotExist:
+                pass
+
+        try:
+            aggregation = resource.get_aggregation_by_name(new_path)
+            aggregation.create_aggregation_xml_documents()
+        except ObjectDoesNotExist:
+            # the file path *new_path* does not represent an aggregation - no more
+            # action is needed
+            pass
+        return orig_path, new_path
+
     def _generate_map_xml(self):
         """Generates the xml needed to write to the aggregation map xml document"""
         from hs_core.hydroshare import encode_resource_url

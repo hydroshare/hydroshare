@@ -441,6 +441,11 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
     def get_aggregation_type_name():
         return "ModelInstanceAggregation"
 
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
+        for child_aggr in self.get_children():
+            child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
     # used in discovery faceting to aggregate native and composite content types
     def get_discovery_content_type(self):
         """Return a human-readable content type for discovery.

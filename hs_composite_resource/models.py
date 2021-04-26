@@ -1,16 +1,14 @@
-import os
 import logging
+import os
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-
+from django.core.exceptions import ObjectDoesNotExist
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 from hs_file_types.models import ModelProgramResourceFileType
-from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, SCHEMA_JSON_FILE_ENDSWITH
+from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, AbstractLogicalFile
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
-
 
 logger = logging.getLogger(__name__)
 
@@ -164,41 +162,6 @@ class CompositeResource(BaseResource):
         """ if this resource allows associating resource file objects with logical file"""
         return True
 
-    def _recreate_nested_aggr_meta_files(self, folder, nested_aggr_type):
-        """Recreates meta (xml metadata, xml resource map and schema json) files for all fileset or model instance
-        aggregations that exist under the path 'folder'
-        as well as for any parent fileset/model instance that may exist relative to path 'folder'
-        :param  folder: folder path containing nested aggregations
-        :param nested_aggr_type: can either be 'fileset' or 'modelinstance'
-        """
-
-        nested_aggr_type = nested_aggr_type.lower()
-        if nested_aggr_type not in ('fileset', 'modelinstance'):
-            raise ValueError("Invalid value ({}) for parameter 'nested_aggr_type'".format(nested_aggr_type))
-
-        def create_aggregation_meta_files(aggr):
-            aggr.create_aggregation_xml_documents()
-
-        if nested_aggr_type == 'fileset':
-            nested_aggr_set = self.filesetlogicalfile_set
-            aggr_in_path_func = self.get_fileset_aggregation_in_path
-        else:
-            # create xml files for all model instance aggregation that may exist under *folder*
-            nested_aggr_set = self.modelinstancelogicalfile_set
-            aggr_in_path_func = self.get_model_aggregation_in_path
-
-        nested_aggrs = nested_aggr_set.filter(folder__startswith=folder)
-        for ns_aggr in nested_aggrs:
-            create_aggregation_meta_files(aggr=ns_aggr)
-
-        # Need to recreate xml doc for any parent fileset/model instance that may exist relative to path
-        # *folder*. Also for any parent model instance aggregation needs to create the schema json file
-        if '/' in folder:
-            path = os.path.dirname(folder)
-            parent_aggr = aggr_in_path_func(path)
-            if parent_aggr is not None:
-                create_aggregation_meta_files(aggr=parent_aggr)
-
     def create_aggregation_meta_files(self, path=''):
         """Creates aggregation meta files (resource map, metadata xml files and schema json files) for each of the
         contained aggregations
@@ -214,7 +177,7 @@ class CompositeResource(BaseResource):
                     aggregation.create_aggregation_xml_documents()
         else:
             # first check if the path is a folder path or file path
-            is_path_a_folder = self._is_path_folder(path=path)
+            is_path_a_folder = self.is_path_folder(path=path)
             if is_path_a_folder:
                 # need to create xml files for all aggregations that exist under path
                 self._create_xml_docs_for_folder(folder=path)
@@ -228,82 +191,6 @@ class CompositeResource(BaseResource):
                 except ObjectDoesNotExist:
                     # path representing a file path is not an aggregation - nothing to do
                     pass
-
-    def _recreate_aggregation_meta_files_for_folder(self, new_folder, old_folder):
-        """Re-creates meta (xml metadata, xml resource map and schema json) files for all aggregations that exists under
-        the specified folder *new_folder
-
-        :param  new_folder: folder path for which aggregation meta files need to be re-created for all
-        aggregations that exist under this folder path
-        :param  old_folder: folder path prior to folder path changed to as
-        per 'new_folder'
-        """
-
-        def update_fileset_folder():
-            """Updates the folder attribute of all filesets that exist under 'old_folder' when
-            the folder is renamed to *new_folder*"""
-
-            filesets = self.filesetlogicalfile_set.filter(folder__startswith=old_folder)
-            for fs in filesets:
-                fs.folder = os.path.join(new_folder, fs.folder[len(old_folder)+1:]).strip('/')
-                fs.save()
-
-        def update_model_program_folder():
-            """Updates the folder attribute of all folder based model program aggregation that exist under
-            'old_folder' when the folder is renamed to *new_folder*"""
-
-            mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=old_folder)
-            for mp_aggr in mp_aggregations:
-                if mp_aggr.folder is not None:
-                    mp_aggr.folder = os.path.join(new_folder, mp_aggr.folder[len(old_folder)+1:]).strip('/')
-                    mp_aggr.save()
-                    # any associated model instance aggregation metadata needs to be set dirty
-                    # in order to regenerate metadata xml files for these linked model instance aggregations
-                    for mi_metadata in mp_aggr.mi_metadata_objects.all():
-                        mi_metadata.is_dirty = True
-                        mi_metadata.save()
-
-        def update_model_instance_folder():
-            """Updates the folder attribute of all folder based model instance aggregation that exist under
-            'old_folder' when the folder is renamed to *new_folder*"""
-
-            mi_aggregations = self.modelinstancelogicalfile_set.filter(folder__startswith=old_folder)
-            for mi_aggr in mi_aggregations:
-                if mi_aggr.folder is not None:
-                    mi_aggr.folder = os.path.join(new_folder, mi_aggr.folder[len(old_folder)+1:]).strip('/')
-                    mi_aggr.save()
-
-        # recreate xml files for all fileset aggregations that exist under new_folder
-        if new_folder.startswith(self.file_path):
-            new_folder = new_folder[len(self.file_path) + 1:]
-
-        if old_folder.startswith(self.file_path):
-            old_folder = old_folder[len(self.file_path) + 1:]
-
-        # first update folder attribute of any model program aggregation that exist under *old_folder*
-        update_model_program_folder()
-        mp_aggregations = self.modelprogramlogicalfile_set.filter(folder__startswith=new_folder)
-        for mp_aggr in mp_aggregations:
-            mp_aggr.create_aggregation_xml_documents()
-
-        # first update folder attribute of any model instance aggregation that exist under *old_folder*
-        update_model_instance_folder()
-        self._recreate_nested_aggr_meta_files(folder=new_folder, nested_aggr_type='modelinstance')
-
-        # first update folder attribute of all filesets that exist under *old_folder*
-        update_fileset_folder()
-        self._recreate_nested_aggr_meta_files(folder=new_folder, nested_aggr_type='fileset')
-
-        # create xml files for all non fileset aggregations
-        if not new_folder.startswith(self.file_path):
-            new_folder = os.path.join(self.file_path, new_folder)
-
-        # create xml docs for all non-fileset aggregations and schema json files for model aggregations
-        logical_files = self._get_aggregations_by_folder(new_folder)
-        for lf in logical_files:
-            lf.create_aggregation_xml_documents()
-            if lf.is_model_instance or lf.is_model_program:
-                lf.create_metadata_schema_json_file()
 
     def _create_xml_docs_for_folder(self, folder):
         """Creates xml metadata and map documents for any aggregation that is part of the
@@ -366,7 +253,7 @@ class CompositeResource(BaseResource):
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
         # check if aggregation path *name* is a file path or a folder
-        is_aggr_path_a_folder = self._is_path_folder(path=name)
+        is_aggr_path_a_folder = self.is_path_folder(path=name)
         if is_aggr_path_a_folder:
             folder_full_path = os.path.join(self.file_path, name)
             aggregation = self.get_folder_aggregation_object(folder_full_path)
@@ -438,59 +325,7 @@ class CompositeResource(BaseResource):
         :param  new_path: new file/folder path after move/rename
         """
 
-        def delete_old_files(folder=''):
-            istorage = self.get_irods_storage()
-            # remove file extension from aggregation name (note: aggregation name is a file path
-            # for all aggregation types except fileset
-            file_name, _ = os.path.splitext(orig_path)
-            schema_json_file_name = file_name + SCHEMA_JSON_FILE_ENDSWITH
-            meta_xml_file_name = file_name + METADATA_FILE_ENDSWITH
-            map_xml_file_name = file_name + RESMAP_FILE_ENDSWITH
-            if not folder:
-                # case of file rename/move for single file aggregation
-                schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)
-                meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
-                map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
-            else:
-                # case of folder rename - fileset aggregation
-                _, schema_json_file_name = os.path.split(schema_json_file_name)
-                _, meta_xml_file_name = os.path.split(meta_xml_file_name)
-                _, map_xml_file_name = os.path.split(map_xml_file_name)
-                schema_json_file_full_path = os.path.join(self.file_path, folder, schema_json_file_name)
-                meta_xml_file_full_path = os.path.join(self.file_path, folder, meta_xml_file_name)
-                map_xml_file_full_path = os.path.join(self.file_path, folder, map_xml_file_name)
-
-            if istorage.exists(schema_json_file_full_path):
-                istorage.delete(schema_json_file_full_path)
-
-            if istorage.exists(meta_xml_file_full_path):
-                istorage.delete(meta_xml_file_full_path)
-
-            if istorage.exists(map_xml_file_full_path):
-                istorage.delete(map_xml_file_full_path)
-
-        # first check if the new_path is a folder path or file path
-        is_new_path_a_folder = self._is_path_folder(path=new_path)
-        if is_new_path_a_folder:
-            delete_old_files(folder=new_path)
-            self._recreate_aggregation_meta_files_for_folder(new_folder=new_path, old_folder=orig_path)
-        else:
-            # check if there is a matching aggregation based on file path *new_path*
-            try:
-                aggregation = self.get_aggregation_by_name(new_path)
-                delete_old_files()
-                aggregation.create_aggregation_xml_documents()
-                # check if the affected aggregation is a model program aggregation
-                # then any associated model instance aggregation metadata needs to be set dirty
-                # in order to regenerate metadata xml files for these linked model instance aggregations
-                if aggregation.is_model_program:
-                    for mi_metadata in aggregation.mi_metadata_objects.all():
-                        mi_metadata.is_dirty = True
-                        mi_metadata.save()
-            except ObjectDoesNotExist:
-                # the file path *new_path* does not represent an aggregation - no more
-                # action is needed
-                pass
+        AbstractLogicalFile.update_path(resource=self, orig_path=orig_path, new_path=new_path)
 
     def is_aggregation_xml_file(self, file_path):
         """ determine whether a given file in the file hierarchy is metadata.
@@ -860,7 +695,7 @@ class CompositeResource(BaseResource):
         return mp_aggregations
 
     @staticmethod
-    def _is_path_folder(path):
+    def is_path_folder(path):
         _, ext = os.path.splitext(path)
         return ext == ''
 
