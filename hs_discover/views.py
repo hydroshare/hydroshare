@@ -60,18 +60,12 @@ class SearchAPI(APIView):
         sort = 'modified'
         if request.GET.get('sort'):
             sort = request.GET.get('sort')
+            # protect against ludicrous sort orders
+            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created': 
+                sort = 'modified'
         sort = sort if asc == '1' else '-{}'.format(sort)
 
-        if sort == 'author':
-            sqs = sqs.order_by('author_lower')
-        elif sort == '-author':
-            sqs = sqs.order_by('-author_lower')
-        elif sort == 'title':
-            sqs = sqs.order_by('title_lower')
-        elif sort == '-title':
-            sqs = sqs.order_by('-title_lower')
-        else:
-            sqs = sqs.order_by(sort)
+        sqs = sqs.order_by(sort)
 
         if request.GET.get('q'):
             q = request.GET.get('q')
