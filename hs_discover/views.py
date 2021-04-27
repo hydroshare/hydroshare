@@ -216,31 +216,26 @@ class SearchAPI(APIView):
                 author = str(result.author)
                 if authors == 'None':
                     authors = author  # author would override creator in
-            else:
-                if result.organization:
-                    if isinstance(result.organization, list):
-                        author = str(result.organization[0])
-                    else:
-                        author = str(result.organization)
 
-                    author = author.replace('"', '')
-                    author = author.replace('[', '')
-                    author = author.replace(']', '').strip()
+            elif result.organization:
+                if isinstance(result.organization, list):
+                    author = str(result.organization[0])
+                else:
+                    author = str(result.organization)
 
-                    if authors == 'None':
-                        authors = author
+                author = author.replace('"', '')
+                author = author.replace('[', '')
+                author = author.replace(']', '').strip()
+
+                if authors == 'None':
+                    authors = author
 
             if result.contributor is not None:
-                try:
-                    contributor = result.contributor
-                except:
-                    pass
+                contributor = result.contributor
 
             if result.owner is not None:
-                try:
-                    owner = result.owner
-                except:
-                    pass
+                owner = result.owner
+
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
                 if 'box' in result.coverage_type:
@@ -262,26 +257,27 @@ class SearchAPI(APIView):
                     pt['westlimit'] = result.westlimit
 
                 geodata.append(pt)
-                resources.append({
-                    "title": result.title,
-                    "link": result.absolute_url,
-                    "availability": result.availability,
-                    "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
-                    "type": result.resource_type,
-                    "author": author,
-                    "authors": authors,
-                    "contributor": contributor,
-                    "author_link": author_link,
-                    "owner": owner,
-                    "abstract": result.abstract,
-                    "subject": result.subject,
-                    "created": result.created.isoformat(),
-                    "modified": result.modified.isoformat(),
-                    "short_id": result.short_id,
-                    "geo": pt
-                })
             except:
                 pass  # HydroShare production contains dirty data, this handling is in place, until data cleaned
+
+            resources.append({
+                "title": result.title,
+                "link": result.absolute_url,
+                "availability": result.availability,
+                "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
+                "type": result.resource_type,
+                "author": author,
+                "authors": authors,
+                "contributor": contributor,
+                "author_link": author_link,
+                "owner": owner,
+                "abstract": result.abstract,
+                "subject": result.subject,
+                "created": result.created.isoformat(),
+                "modified": result.modified.isoformat(),
+                "short_id": result.short_id,
+                "geo": pt
+            })
 
         return JsonResponse({
             'resources': json.dumps(resources),
