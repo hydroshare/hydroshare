@@ -576,48 +576,25 @@ class CompositeResource(BaseResource):
         generate data service endpoints.
         """
 
-        if self.raccess.public is True:
+        wfs_url = None
+        wms_url = None
+        wcs_url = None
+        if self.raccess.public:
             try:
                 resource_data_types = [lf.data_type for lf in self.logical_files]
-
-                if any(
-                    data_type in [
-                        'GeographicFeature', 'GeographicRaster'
-                    ] for data_type in resource_data_types
-                ):
-                    wms_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/wms?'
-                        f'request=GetCapabilities'
+                service_url = (
+                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/' +
+                        '{}?request=GetCapabilities'
                     )
-                else:
-                    wms_url = None
-
                 if 'GeographicFeature' in resource_data_types:
-                    wfs_url = (
-                        f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/wfs?'
-                        f'request=GetCapabilities'
-                    )
-                else:
-                    wfs_url = None
-
+                    wfs_url = service_url.format('wfs')
+                    wms_url = service_url.format('wms')
                 if 'GeographicRaster' in resource_data_types:
-                    wcs_url = (
-                         f'{settings.HSWS_GEOSERVER_URL}/HS-{self.short_id}/wcs?'
-                        f'request=GetCapabilities'
-                    )
-                else:
-                    wcs_url = None
+                    wcs_url = service_url.format('wcs')
+                    wms_url = service_url.format('wms')
 
             except Exception as e:
                 logger.exception("get_data_services_urls: " + str(e))
-                wms_url = None
-                wfs_url = None
-                wcs_url = None
-
-        else:
-            wms_url = None
-            wfs_url = None
-            wcs_url = None
 
         data_services_urls = {
             'wms_url': wms_url,
