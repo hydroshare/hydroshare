@@ -14,6 +14,8 @@ This checks that:
 """
 
 from django.core.management.base import BaseCommand
+
+from hs_composite_resource.models import CompositeResource
 from hs_core.models import BaseResource
 from hs_core.management.utils import check_irods_files, check_for_dangling_irods
 
@@ -100,6 +102,8 @@ class Command(BaseCommand):
             if options['sync_ispublic']:
                 print(' (correcting isPublic in iRODs)')
             for r in BaseResource.objects.all():
+                if r.resource_type == "CompositeResource":
+                    r = CompositeResource.objects.get(short_id=r.short_id)
                 check_irods_files(r, stop_on_error=False,
                                   echo_errors=not options['log'],  # Don't both log and echo
                                   log_errors=options['log'],
