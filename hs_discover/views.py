@@ -57,15 +57,6 @@ class SearchAPI(APIView):
         if request.GET.get('asc'):
             asc = request.GET.get('asc')
 
-        sort = 'modified'
-        if request.GET.get('sort'):
-            sort = request.GET.get('sort')
-            # protect against ludicrous sort orders
-            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created': 
-                sort = 'modified'
-        sort = sort if asc == '1' else '-{}'.format(sort)
-
-        sqs = sqs.order_by(sort)
 
         if request.GET.get('q'):
             q = request.GET.get('q')
@@ -173,6 +164,14 @@ class SearchAPI(APIView):
                 types = [x for x in types if x[1] > 0]
                 availability = [x for x in availability if x[1] > 0]
             filterdata = [authors, owners, subjects, contributors, types, availability]
+
+        sort = 'modified'
+        if request.GET.get('sort'):
+            sort = request.GET.get('sort')
+            # protect against ludicrous sort orders
+            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created': 
+                sort = 'modified'
+        sort = sort if asc == '1' else '-{}'.format(sort)
 
         sqs = sqs.order_by(sort)
 
