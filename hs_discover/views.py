@@ -170,9 +170,9 @@ class SearchAPI(APIView):
             filterdata = [authors, owners, subjects, contributors, types, availability]
 
         if sort == 'author':
-            sqs = sqs.order_by('author_exact')
+            sqs = sqs.order_by('author')
         elif sort == '-author':
-            sqs = sqs.order_by('-author_exact')
+            sqs = sqs.order_by('-author')
         else:
             sqs = sqs.order_by(sort)
 
