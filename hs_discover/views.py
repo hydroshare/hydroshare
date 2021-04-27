@@ -40,6 +40,7 @@ class SearchAPI(APIView):
         "availabilityurl": single value, pass a string to REST client
         "type": single value, pass a string to REST client
         "author": single value, pass a string to REST client first author
+        "authors": list value, one for each author. 
         "creator: authors,
                 The reason for the weird name is the DataOne standard. The metadata was designed to be compliant
                 with DataOne standards. These standards do not contain an author field. Instead, the creator field
@@ -52,10 +53,6 @@ class SearchAPI(APIView):
         start = time.time()
 
         sqs = SearchQuerySet().all()
-
-        asc = '-1'
-        if request.GET.get('asc'):
-            asc = request.GET.get('asc')
 
 
         if request.GET.get('q'):
@@ -171,6 +168,11 @@ class SearchAPI(APIView):
             # protect against ludicrous sort orders
             if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created': 
                 sort = 'modified'
+
+        asc = '-1'
+        if request.GET.get('asc'):
+            asc = request.GET.get('asc')
+
         sort = sort if asc == '1' else '-{}'.format(sort)
 
         sqs = sqs.order_by(sort)
@@ -204,36 +206,12 @@ class SearchAPI(APIView):
             creator = 'None'
             author = 'None'
 
-            if result.creator:
-                creator = result.creator
-
-            authors = creator  # there is no concept of authors in DataOne standard
-            # authors might be string 'None' here
-
-            if result.author:
-                author_link = result.author_url
-                author = str(result.author)
-                if authors == 'None':
-                    authors = author  # author would override creator in
-
-            elif result.organization:
-                if isinstance(result.organization, list):
-                    author = str(result.organization[0])
-                else:
-                    author = str(result.organization)
-
-                author = author.replace('"', '')
-                author = author.replace('[', '')
-                author = author.replace(']', '').strip()
-
-                if authors == 'None':
-                    authors = author
-
-            if result.contributor is not None:
-                contributor = result.contributor
-
-            if result.owner is not None:
-                owner = result.owner
+            creator = result.creator[0] if len(result.creator) > 0 else 'None'
+            authors = result.creator  # SOLR list
+            author = result.author if result.author is not None else 'None'  # SOLR scalar
+            author_link = result.author_url if result.author_url is not None else 'None'  # SOLR scalar
+            contributor = result.contributor  # SOLR list
+            owner = result.owner[0] if len(result.owner) > 0 else 'None'  # SOLR list
 
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
