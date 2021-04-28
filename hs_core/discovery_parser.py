@@ -111,7 +111,6 @@ class ParseSQ(object):
         'modified',
         'organization',
         'publisher',
-        'rating',
         'coverage_type',
         'east',
         'north',
@@ -130,10 +129,8 @@ class ParseSQ(object):
         'resource_type',
         'content_type',
         'comment',
-        'comments_count',
         'owner_login',
         'owner',
-        'owners_count',
         'geometry_type',
         'field_name',
         'field_type',
@@ -161,7 +158,6 @@ class ParseSQ(object):
     }
 
     INEQUALITY_FIELDS = [
-        'rating',
         'created',
         'modified',
         'east',
@@ -172,8 +168,6 @@ class ParseSQ(object):
         'westlimit',
         'start_date',
         'end_date',
-        'comments_count',
-        'owners_count',
     ]
 
     DATE_FIELDS = [

@@ -972,7 +972,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     if not resource.supports_unzip(zip_with_rel_path):
         raise ValidationError("Unzipping of this file is not supported.")
 
-    working_dir = os.path.dirname(zip_with_full_path)
     unzip_path = None
     try:
         if overwrite:
@@ -981,19 +980,13 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             # list all files to be moved into the resource
             unzipped_files = listfiles_recursively(istorage, unzip_path)
             unzipped_foldername = os.path.basename(unzip_path)
-            destination_folders = []
-            # list all folders to be written into the resource
-            for folder in listfolders(istorage, unzip_path):
-                destination_folder = os.path.join(working_dir, folder)
-                destination_folders.append(destination_folder)
 
-            irods_files = []
+            res_files = []
             for unzipped_file in unzipped_files:
-                irods_files.append(IrodsFile(unzipped_file, istorage))
-            res_files = irods_files
+                res_files.append(IrodsFile(unzipped_file, istorage))
             meta_files = []
             if ingest_metadata:
-                res_files, meta_files, map_files = identify_metadata_files(irods_files)
+                res_files, meta_files, map_files = identify_metadata_files(res_files)
             # walk through each unzipped file, delete aggregations if they exist
             for file in res_files:
                 destination_file = _get_destination_filename(file.name, unzipped_foldername)
@@ -1048,6 +1041,63 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     # TODO: should check can_be_public_or_discoverable here
     resource.refresh_from_db()
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+def ingest_bag(resource, bag_file, user):
+    """
+    Ingests a zipped bagit archive of a hydroshare reosource that has been uploaded to the resource
+    :param resource: The CompositeResource to ingest the bag into
+    :param bag_file: The ResourceFile of the zipped bag in the resource
+    :param user: The HydroShare user object to do the action as
+    """
+    from hs_file_types.utils import identify_metadata_files, ingest_metadata_files
+
+    istorage = resource.get_irods_storage()
+    zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
+
+    # unzip to a temporary folder=
+    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+    delete_resource_file(resource.short_id, bag_file.id, user)
+
+    # list all files to be moved into the resource
+    unzipped_files = listfiles_recursively(istorage, unzip_path)
+
+    res_files = []
+    for unzipped_file in unzipped_files:
+        res_files.append(IrodsFile(unzipped_file, istorage))
+    res_files, meta_files, map_files = identify_metadata_files(res_files)
+
+    # filter res_files to only files in the data/contents directory
+    data_contents_dir = os.path.join("data", "contents")
+    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 1]
+
+    # now move each file to the destination
+    def destination_filename(resource, file):
+        """Parses the temporary filename to the destination filename"""
+        dc_dir = os.path.join("data", "contents")
+        relative_path = dc_dir.join(file.split(dc_dir, 2)[2:])
+        return os.path.join(resource.file_path, relative_path.strip("/"))
+
+    added_resource_files = []
+    for file in res_files:
+        destination_file = destination_filename(resource, file.name)
+        istorage.moveFile(file.name, destination_file)
+
+        irods_path = resource.get_irods_path(destination_file)
+        res_file = link_irods_file_to_django(resource, irods_path)
+        added_resource_files.append(res_file)
+
+    check_aggregations(resource, added_resource_files)
+
+    ingest_metadata_files(resource, meta_files, map_files)
+
+    istorage.delete(unzip_path)
+
+    # In addition to the Date metadataelement with type created, the resource django model created field is used and
+    # needs to be updated.
+    created = [d for d in resource.metadata.dates.all() if d.type == 'created'][0]
+    resource.created = created.start_date
+    resource.save()
 
 
 def _get_destination_filename(file, unzipped_foldername):

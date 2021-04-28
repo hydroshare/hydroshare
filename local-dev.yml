@@ -95,15 +95,15 @@ services:
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"
   solr:
-    image: hydroshare/hs-solr:latest
+    image: solr:6.6
     container_name: solr
-    hostname: solr
     volumes:
-      - "solr_data_vol:/opt/solr/server/solr/collection1"
+      # hydroshare repository
+      - ".:/hydroshare"
+      - "solr_data_vol:/opt/solr/server/solr"
     ports:
-      - "8983:8983"
-    stdin_open: true
-    tty: true
+      - "8983"
+    command: ["solr-foreground"]
   nginx:
     build:
       context: ./nginx

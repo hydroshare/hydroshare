@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from haystack.query import SearchQuerySet
+from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
 
@@ -70,44 +70,57 @@ class SearchAPI(APIView):
             qs = request.query_params
             filters = json.loads(qs.get('filter'))
             # filter values expect lists, for example discoverapi/?filter={"owner":["Firstname Lastname"]}
-            if filters.get('author'):
+            if filters.get('author') and len(filters['author']) > 0:
                 for k, authortype in enumerate(filters['author']):
-                    if k == 0 or k == len(filters['author']):
-                        sqs = sqs.filter(author_exact=Exact(authortype))
+                    if k == 0:
+                        phrase = SQ(author=Exact(authortype))
                     else:
-                        sqs = sqs.filter_or(author_exact=Exact(authortype))
-            if filters.get('owner'):
+                        phrase = phrase | SQ(author=Exact(authortype))
+                sqs = sqs.filter(phrase)
+
+            if filters.get('owner') and len(filters['owner']) > 0:
                 for k, ownertype in enumerate(filters['owner']):
-                    if k == 0 or k == len(filters['owner']):
-                        sqs = sqs.filter(owner_exact=Exact(ownertype))
+                    if k == 0:
+                        phrase = SQ(owner=Exact(ownertype))
                     else:
-                        sqs = sqs.filter_or(owner_exact=Exact(ownertype))
-            if filters.get('subject'):
+                        phrase = phrase | SQ(owner=Exact(ownertype))
+                sqs = sqs.filter(phrase)
+
+            if filters.get('subject') and len(filters['subject']) > 0:
                 for k, subjtype in enumerate(filters['subject']):
-                    if k == 0 or k == len(subjtype):
-                        sqs = sqs.filter(subject_exact=Exact(subjtype))
+                    if k == 0:
+                        phrase = SQ(subject=Exact(subjtype))
                     else:
-                        sqs = sqs.filter_or(subject_exact=Exact(subjtype))
-            if filters.get('contributor'):
+                        phrase = phrase | SQ(subject=Exact(subjtype))
+                sqs = sqs.filter(phrase)
+
+            if filters.get('contributor') and len(filters['contributor']) > 0:
                 for k, contribtype in enumerate(filters['contributor']):
-                    if k == 0 or k == len(filters['contributor']):
-                        sqs = sqs.filter(contributor_exact=Exact(contribtype))
+                    if k == 0:
+                        phrase = SQ(contributor=Exact(contribtype))
                     else:
-                        sqs = sqs.filter_or(contributor_exact=Exact(contribtype))
-            if filters.get('type'):
+                        phrase = phrase | SQ(contributor=Exact(contribtype))
+                sqs = sqs.filter(phrase)
+
+            if filters.get('type') and len(filters['type']) > 0:
                 for k, restype in enumerate(filters['type']):
-                    if k == 0 or k == len(filters['type']):
-                        sqs = sqs.filter(content_type_exact=Exact(restype))
+                    if k == 0:
+                        phrase = SQ(content_type=Exact(restype))
                     else:
-                        sqs = sqs.filter_or(content_type_exact=Exact(restype))
-            if filters.get('availability'):
+                        phrase = phrase | SQ(content_type=Exact(restype))
+                sqs = sqs.filter(phrase)
+
+            if filters.get('availability') and len(filters['availability']) > 0:
                 for k, availtype in enumerate(filters['availability']):
-                    if k == 0 or k == len(filters['availability']):
-                        sqs = sqs.filter(availability_exact=Exact(availtype))
+                    if k == 0:
+                        phrase = SQ(availability=Exact(availtype))
                     else:
-                        sqs = sqs.filter_or(availability_exact=Exact(availtype))
+                        phrase = phrase | SQ(availability=Exact(availtype))
+                sqs = sqs.filter(phrase)
+
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
+
             if filters.get('date'):
                 try:
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
@@ -126,7 +139,7 @@ class SearchAPI(APIView):
                 except Exception as gen_date_ex:
                     return JsonResponse({'message': 'Filter date parsing error expecting two date string values : {}'
                                         .format(str(gen_date_ex)), 'received': request.query_params}, status=400)
-        except TypeError as type_ex:
+        except TypeError:
             pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
 
         except json.JSONDecodeError as parse_ex:
@@ -140,12 +153,13 @@ class SearchAPI(APIView):
 
         filterdata = []
         if request.GET.get('filterbuilder'):
-            authors = sqs.facet('author').facet_counts()['fields']['author']
-            owners = sqs.facet('owner').facet_counts()['fields']['owner']
-            subjects = sqs.facet('subject').facet_counts()['fields']['subject']
-            contributors = sqs.facet('contributor').facet_counts()['fields']['contributor']
-            types = sqs.facet('content_type').facet_counts()['fields']['content_type']
-            availability = sqs.facet('availability').facet_counts()['fields']['availability']
+            authors = sqs.facet('author', limit=self.filterlimit).facet_counts()['fields']['author']
+            owners = sqs.facet('owner', limit=self.filterlimit).facet_counts()['fields']['owner']
+            subjects = sqs.facet('subject', limit=self.filterlimit).facet_counts()['fields']['subject']
+            contributors = sqs.facet('contributor', limit=self.filterlimit).facet_counts()['fields']['contributor']
+            types = sqs.facet('content_type', limit=self.filterlimit).facet_counts()['fields']['content_type']
+            availability = sqs.facet('availability', limit=self.filterlimit).facet_counts()['fields']['availability']
+            # TODO from Alva: to the best of my knowledge, this is invoked on every query and does absolutely nothing.
             if request.GET.get('updatefilters'):
                 authors = [x for x in authors if x[1] > 0]
                 owners = [x for x in owners if x[1] > 0]
@@ -153,13 +167,12 @@ class SearchAPI(APIView):
                 contributors = [x for x in contributors if x[1] > 0]
                 types = [x for x in types if x[1] > 0]
                 availability = [x for x in availability if x[1] > 0]
-            filterdata = [authors[:self.filterlimit], owners[:self.filterlimit], subjects[:self.filterlimit],
-                          contributors[:self.filterlimit], types[:self.filterlimit], availability[:self.filterlimit]]
+            filterdata = [authors, owners, subjects, contributors, types, availability]
 
         if sort == 'author':
-            sqs = sqs.order_by('author_exact')
+            sqs = sqs.order_by('author')
         elif sort == '-author':
-            sqs = sqs.order_by('-author_exact')
+            sqs = sqs.order_by('-author')
         else:
             sqs = sqs.order_by(sort)
 
@@ -263,7 +276,7 @@ class SearchAPI(APIView):
                 "link": result.absolute_url,
                 "availability": result.availability,
                 "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
-                "type": result.resource_type_exact,
+                "type": result.resource_type,
                 "author": author,
                 "authors": authors,
                 "contributor": contributor,
