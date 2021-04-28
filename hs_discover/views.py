@@ -40,7 +40,7 @@ class SearchAPI(APIView):
         "availabilityurl": single value, pass a string to REST client
         "type": single value, pass a string to REST client
         "author": single value, pass a string to REST client first author
-        "authors": list value, one for each author. 
+        "authors": list value, one for each author.
         "creator: authors,
                 The reason for the weird name is the DataOne standard. The metadata was designed to be compliant
                 with DataOne standards. These standards do not contain an author field. Instead, the creator field
@@ -53,7 +53,6 @@ class SearchAPI(APIView):
         start = time.time()
 
         sqs = SearchQuerySet().all()
-
 
         if request.GET.get('q'):
             q = request.GET.get('q')
@@ -166,7 +165,7 @@ class SearchAPI(APIView):
         if request.GET.get('sort'):
             sort = request.GET.get('sort')
             # protect against ludicrous sort orders
-            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created': 
+            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created':
                 sort = 'modified'
 
         asc = '-1'
@@ -203,10 +202,6 @@ class SearchAPI(APIView):
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
-            creator = 'None'
-            author = 'None'
-
-            creator = result.creator[0] if len(result.creator) > 0 else 'None'
             authors = result.creator  # SOLR list
             author = result.author if result.author is not None else 'None'  # SOLR scalar
             author_link = result.author_url if result.author_url is not None else 'None'  # SOLR scalar
