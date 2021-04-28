@@ -286,8 +286,8 @@ solr_reload_hs() {
 
 update_solr_index() {
     echo "UPDATE SOLR INDEX:"
-    echo "  - docker exec hydroshare python manage.py update_index"
-    docker exec hydroshare python manage.py update_index
+    echo "  - docker exec hydroshare python manage.py solr_update"
+    docker exec hydroshare python manage.py solr_update
 }
 
 rebuild_solr_index() {
