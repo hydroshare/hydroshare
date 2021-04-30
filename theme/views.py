@@ -557,12 +557,12 @@ def email_verify_password_reset(request, uidb36=None, token=None):
     """
 
     user = authenticate(uidb36=uidb36, token=token)
-    if not user.is_active:
-        # password reset for user that hasn't hit the verification email, since they're resetting
-        # the password, we know the email is good
-        user.is_active = True
-        user.save()
     if user is not None:
+        if not user.is_active:
+            # password reset for user that hasn't hit the verification email, since they're resetting
+            # the password, we know the email is good
+            user.is_active = True
+            user.save()
         auth_login(request, user)
         # redirect to user to password reset page
         return HttpResponseRedirect(reverse('new_password_for_reset', kwargs={'token': token}))
