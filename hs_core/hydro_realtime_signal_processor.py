@@ -26,6 +26,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         """
         from hs_core.models import BaseResource, CoreMetaData, AbstractMetaDataElement
         from hs_access_control.models import ResourceAccess
+        from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
 
 
@@ -73,12 +74,20 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                 logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, AbstractMetaDataElement):
-            try:
-                # resolve the BaseResource corresponding to the metadata element.
-                newbase = instance.metadata.resource
-                self.handle_save(BaseResource, newbase)
-            except Exception as e:
-                logger.exception("{} exception: {}".format(type(instance), e))
+            if isinstance(instance.metadata, AbstractFileMetaData):
+                try:
+                    # resolve the BaseResource corresponding to the metadata element in a logical logical.
+                    newbase = instance.metadata.logical_file.resource
+                    self.handle_save(BaseResource, newbase)
+                except Exception as e:
+                    logger.exception("{} exception: {}".format(type(instance), e))
+            else:
+                try:
+                    # resolve the BaseResource corresponding to the metadata element.
+                    newbase = instance.metadata.resource
+                    self.handle_save(BaseResource, newbase)
+                except Exception as e:
+                    logger.exception("{} exception: {}".format(type(instance), e))
 
         elif isinstance(instance, HStoreField):
             try:
