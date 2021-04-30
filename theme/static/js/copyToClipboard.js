@@ -33,6 +33,8 @@ function copyToClipboard(elem, event) {
             document.body.appendChild(target);
         }
         target.textContent = elem.textContent;
+        // Removes whitespace and end line character
+        target.textContent = target.textContent.trim()
     }
     // select the content
     var currentFocus = document.activeElement;
