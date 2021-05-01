@@ -7,7 +7,8 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 from hs_file_types.models import ModelProgramResourceFileType
-from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, AbstractLogicalFile
+from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, AbstractLogicalFile, \
+    SCHEMA_JSON_FILE_ENDSWITH
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 logger = logging.getLogger(__name__)
@@ -165,7 +166,6 @@ class CompositeResource(BaseResource):
     def create_aggregation_meta_files(self, path=''):
         """Creates aggregation meta files (resource map, metadata xml files and schema json files) for each of the
         contained aggregations
-
         :param  path: (optional) file or folder path for which meta files need to be created for
         all associated aggregations of that path
         """
@@ -180,7 +180,11 @@ class CompositeResource(BaseResource):
             is_path_a_folder = self.is_path_folder(path=path)
             if is_path_a_folder:
                 # need to create xml files for all aggregations that exist under path
-                self._create_xml_docs_for_folder(folder=path)
+                if path.startswith(self.file_path):
+                    path = path[len(self.file_path) + 1:]
+                for lf in self.logical_files:
+                    if lf.aggregation_name.startswith(path) and lf.metadata.is_dirty:
+                        lf.create_aggregation_xml_documents()
             else:
                 # path is a file path
                 try:
@@ -189,49 +193,8 @@ class CompositeResource(BaseResource):
                     if aggregation.metadata.is_dirty:
                         aggregation.create_aggregation_xml_documents()
                 except ObjectDoesNotExist:
-                    # path representing a file path is not an aggregation - nothing to do
+                    # file path is not an aggregation - nothing to do
                     pass
-
-    def _create_xml_docs_for_folder(self, folder):
-        """Creates xml metadata and map documents for any aggregation that is part of the
-        the specified folder *folder*. Also xml docs are created for an aggregation only if the
-        aggregation metadata is dirty
-
-        :param  folder: folder for which xml documents need to be created for all aggregations that
-        exist in folder *folder*
-        """
-
-        # create xml map and metadata xml documents for all aggregations that exist
-        # in *folder* and its sub-folders
-        if not folder.startswith(self.file_path):
-            folder = os.path.join(self.file_path, folder)
-
-        # create xml docs for all non fileset aggregations
-        # note: we can't get to all filesets from resource files since
-        # it is possible to have filesets without any associated resource files
-        logical_files = self._get_aggregations_by_folder(folder)
-        for lf in logical_files:
-            if lf.metadata.is_dirty:
-                lf.create_aggregation_xml_documents()
-
-        # create xml docs for all fileset aggregations that exist under folder *folder*
-        if folder.startswith(self.file_path):
-            folder = folder[len(self.file_path) + 1:]
-
-        filesets = self.filesetlogicalfile_set.filter(folder__startswith=folder)
-        for fs in filesets:
-            if fs.metadata.is_dirty:
-                fs.create_aggregation_xml_documents()
-
-    def _get_aggregations_by_folder(self, folder):
-        """Get a list of all non-fileset aggregations associated with resource files that
-        exist in the specified file path *folder*
-        :param  folder: the folder path for which aggregations need to be searched
-        """
-        res_file_objects = ResourceFile.list_folder(self, folder)
-        logical_files = set(res_file.logical_file for res_file in res_file_objects if
-                            res_file.has_logical_file and not res_file.logical_file.is_fileset)
-        return logical_files
 
     def get_aggregation_by_aggregation_name(self, aggregation_name):
         """Get an aggregation that matches the aggregation dataset_name specified by *dataset_name*
@@ -325,7 +288,68 @@ class CompositeResource(BaseResource):
         :param  new_path: new file/folder path after move/rename
         """
 
-        AbstractLogicalFile.update_path(resource=self, orig_path=orig_path, new_path=new_path)
+        if new_path.startswith(self.file_path):
+            new_path = new_path[len(self.file_path) + 1:]
+
+        if orig_path.startswith(self.file_path):
+            orig_path = orig_path[len(self.file_path) + 1:]
+
+        is_new_path_a_folder = self.is_path_folder(path=new_path)
+        istorage = self.get_irods_storage()
+
+        # remove file extension from aggregation name (note: aggregation name is a file path
+        # for all aggregation types except fileset/model aggregation
+        file_name, _ = os.path.splitext(orig_path)
+        schema_json_file_name = file_name + SCHEMA_JSON_FILE_ENDSWITH
+        meta_xml_file_name = file_name + METADATA_FILE_ENDSWITH
+        map_xml_file_name = file_name + RESMAP_FILE_ENDSWITH
+        if not is_new_path_a_folder:
+            # case of file rename/move for single file aggregation
+            schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)
+            meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
+            map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
+        else:
+            # case of folder rename - fileset/model aggregation
+            _, schema_json_file_name = os.path.split(schema_json_file_name)
+            _, meta_xml_file_name = os.path.split(meta_xml_file_name)
+            _, map_xml_file_name = os.path.split(map_xml_file_name)
+            schema_json_file_full_path = os.path.join(self.file_path, new_path, schema_json_file_name)
+            meta_xml_file_full_path = os.path.join(self.file_path, new_path, meta_xml_file_name)
+            map_xml_file_full_path = os.path.join(self.file_path, new_path, map_xml_file_name)
+
+        if istorage.exists(schema_json_file_full_path):
+            istorage.delete(schema_json_file_full_path)
+
+        if istorage.exists(meta_xml_file_full_path):
+            istorage.delete(meta_xml_file_full_path)
+
+        if istorage.exists(map_xml_file_full_path):
+            istorage.delete(map_xml_file_full_path)
+
+        # update any aggregations under the orig_path
+        for lf in self.logical_files:
+            if hasattr(lf, 'folder'):
+                if lf.folder is not None and lf.folder.startswith(orig_path):
+                    lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
+                    lf.save()
+                    lf.create_aggregation_xml_documents()
+
+        # need to recreate xml doc for any parent aggregation that may exist relative to path *new_path*
+        if '/' in new_path:
+            path = os.path.dirname(new_path)
+            try:
+                parent_aggr = self.get_aggregation_by_name(path)
+                parent_aggr.create_aggregation_xml_documents()
+            except ObjectDoesNotExist:
+                pass
+
+        try:
+            aggregation = self.get_aggregation_by_name(new_path)
+            aggregation.create_aggregation_xml_documents()
+        except ObjectDoesNotExist:
+            # the file path *new_path* does not represent an aggregation - no more
+            # action is needed
+            pass
 
     def is_aggregation_xml_file(self, file_path):
         """ determine whether a given file in the file hierarchy is metadata.
