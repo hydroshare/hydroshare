@@ -126,15 +126,37 @@ class CompositeResource(BaseResource):
         """
 
         aggregation_path = dir_path[len(self.file_path) + 1:]
-        # first check for model program/instance aggregation
-        mp_mi_aggr = self.modelprogramlogicalfile_set.filter(folder=aggregation_path).first()
-        if mp_mi_aggr is None:
-            mp_mi_aggr = self.modelinstancelogicalfile_set.filter(folder=aggregation_path).first()
+        for lf in self.logical_files:
+            if hasattr(lf, 'folder'):
+                if lf.folder == aggregation_path:
+                    return lf
+        return None
 
-        if mp_mi_aggr is None:
-            # no model program or model instance aggr - check for fileset aggr
-            return self.filesetlogicalfile_set.filter(folder=aggregation_path).first()
-        return mp_mi_aggr
+    def get_folder_aggregation_in_path(self, dir_path):
+        """Gets any aggregation that is based on folder and exists in the specified path
+        Searches for a folder based aggregation moving towards the root of the specified path
+        :param  dir_path: directory path in which to search for a folder based aggregation
+
+        :return a folder based aggregation if found otherwise, None
+        """
+
+        if dir_path.startswith(self.file_path):
+            dir_path = dir_path[len(self.file_path) + 1:]
+
+        def get_aggregation(path):
+            try:
+                aggregation = self.get_aggregation_by_name(path)
+                return aggregation
+            except ObjectDoesNotExist:
+                return None
+
+        while '/' in dir_path:
+            aggr = get_aggregation(dir_path)
+            if aggr is not None:
+                return aggr
+            dir_path = os.path.dirname(dir_path)
+        else:
+            return get_aggregation(dir_path)
 
     def get_file_aggregation_object(self, file_path):
         """Returns an aggregation (file type) object if the specified file *file_path* represents a
@@ -396,11 +418,6 @@ class CompositeResource(BaseResource):
 
         src_folder, src_file_name = os.path.split(src_full_path)
         _, src_ext = os.path.splitext(src_file_name)
-        if src_ext:
-            src_file_dir = os.path.dirname(src_full_path)
-        else:
-            src_file_dir = src_full_path
-
         if src_ext and tgt_ext:
             if src_file_name != tgt_file_name:
                 is_renaming_file = True
@@ -418,114 +435,43 @@ class CompositeResource(BaseResource):
         else:
             is_moving_folder = True
 
-        def check_target_folder(src_aggr=None):
-            """checks if the target folder allows file/folder being moved into it"""
-            tgt_aggr_path = tgt_file_dir[len(self.file_path) + 1:]
-            # check if this move would create a nested model program aggregation -
-            # nested model program aggregation is NOT allowed
-            # model instance aggregation can't contain model program aggregation
-            if src_aggr is not None and (src_aggr.is_model_program or src_aggr.is_model_instance):
-                # src_aggr is a model based aggregation
-                if is_moving_file or is_moving_folder:
-                    src_model_aggr = src_aggr
-                    #  find if there is any folder based model program/instance aggregation in the target path
-                    tgt_model_aggr = self.get_model_aggregation_in_path(tgt_aggr_path)
-                    if tgt_model_aggr is not None:
-                        # tgt_model_aggr is a folder based aggregation
-                        if src_model_aggr.folder is None:
-                            # moving a file based model program/model instance aggregation
-                            if tgt_model_aggr.is_model_program:
-                                # aggregation nesting is not allowed for model program aggregation
-                                return False
-                            else:
-                                # target aggregation folder is a model instance aggregation
-                                if src_aggr.is_model_instance or src_aggr.is_model_program:
-                                    # not allowed to move a model instance/program to another model instance
-                                    return False
-
-                        # moving a folder based model program/instance aggregation
-                        # moving folder within the same model program/instance aggregation is allowed
-                        return src_model_aggr.id == tgt_model_aggr.id
-
-                    # target folder is either a normal folder or fileset folder - file or folder move is allowed
-                    return True
-                return True
-
-            # src is not an aggregation OR src is not a model instance/program type aggregation
-            if is_moving_file or is_moving_folder:
-                tgt_aggregation = self.get_fileset_aggregation_in_path(tgt_aggr_path)
-                if tgt_aggregation is None:
-                    tgt_aggregation = self.get_model_aggregation_in_path(tgt_aggr_path)
-                if src_aggr is not None and tgt_aggregation is not None:
-                    if tgt_aggregation.is_model_instance:
-                        # model instance can contains any aggregation except fileset or model instance
-                        # or model program aggregation
-                        if src_aggr.is_fileset or src_aggr.is_model_instance or src_aggr.is_model_program:
-                            return False
-                    return tgt_aggregation.can_contain_aggregations
-                elif tgt_aggregation is not None:
-                    # moving a file or folder that is not part of any aggregation
-                    return tgt_aggregation.supports_resource_file_move
-                else:
-                    # target a non-aggregation folder
-                    return True
+        def check_src_aggregation(src_aggr):
+            """checks if the aggregation at the source allows file rename/move action"""
+            if src_aggr is not None:
+                if is_renaming_file:
+                    return src_aggr.supports_resource_file_rename
+                elif is_moving_file:
+                    return src_aggr.supports_resource_file_move
             return True
 
-        def check_src_aggregation(src_aggr):
-            """checks if the aggregation at the source allows rename/move action"""
-
-            if src_aggr is None:
-                return True
-
-            if is_renaming_file:
-                return src_aggr.supports_resource_file_rename
-            elif is_moving_file:
-                if src_aggr.supports_resource_file_move:
-                    # source aggregation allows file move now check target folder
-                    return check_target_folder(src_aggr)
-                return False
-
-        if src_file_dir != self.file_path:
+        if is_renaming_file or is_moving_file:
             # see if the folder containing the file represents an aggregation
-            aggregation_path = src_file_dir[len(self.file_path) + 1:]
-            try:
-                src_aggregation = self.get_aggregation_by_name(aggregation_path)
-                if src_ext:
-                    # file rename or move
-                    return check_src_aggregation(src_aggregation)
-                else:
-                    # moving folder
-                    return check_target_folder(src_aggregation)
-            except ObjectDoesNotExist:
-                # source folder does not represent an aggregation
-                # check if the source file represents an aggregation
-                # get source resource file object from source file path
-                if src_ext:
-                    # case of file rename or move
-                    src_res_file = ResourceFile.get(self, src_file_name, aggregation_path)
-                    src_aggregation = src_res_file.logical_file
-                    return check_src_aggregation(src_aggregation)
-                else:
-                    # moving folder
-                    # check if any of the files in the moved folder is part of aggregation
-                    src_res_files = ResourceFile.list_folder(self, aggregation_path, sub_folders=True)
-                    for src_file in src_res_files:
-                        if src_file.has_logical_file:
-                            if not check_target_folder(src_file.logical_file):
-                                return False
+            src_aggr = self.get_file_aggregation_object(file_path=src_full_path)
+            if check_src_aggregation(src_aggr):
+                # check target
+                if is_moving_file:
+                    tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_file_dir)
+                    if tgt_aggr is not None:
+                        if src_aggr is None:
+                            return tgt_aggr.supports_resource_file_move
+                        else:
+                            return tgt_aggr.can_contain_aggregation(src_aggr)
+                    return True
+                return True
+            return False
 
-                    return check_target_folder()
-        else:
-            # get source resource file object from source file path
-            if src_ext:
-                # case of file rename or move
-                src_res_file = ResourceFile.get(self, src_file_name)
-                # check if the source file is part of an aggregation
-                src_aggregation = src_res_file.logical_file
-                return check_src_aggregation(src_aggregation)
-            else:
-                # moving folder
-                return check_target_folder()
+        if is_moving_folder:
+            src_aggr = self.get_folder_aggregation_in_path(dir_path=src_full_path)
+            if src_aggr is not None:
+                if src_aggr.supports_resource_file_move:
+                    tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_full_path)
+                    if tgt_aggr is not None:
+                        return tgt_aggr.supports_resource_file_move and tgt_aggr.can_contain_aggregation(src_aggr)
+                    return True
+            tgt_aggr = self.get_folder_aggregation_in_path(dir_path=tgt_full_path)
+            if tgt_aggr is not None:
+                return tgt_aggr.supports_resource_file_move
+            return True
 
     def can_add_files(self, target_full_path):
         """

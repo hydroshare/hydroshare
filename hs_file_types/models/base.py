@@ -37,11 +37,6 @@ SCHEMA_JSON_FILE_ENDSWITH = "_schema.json"
 class NestedLogicalFileMixin(object):
     """a mixin for any logical file class that needs to contain other aggregations"""
 
-    @property
-    def can_contain_aggregations(self):
-        """aggregation is allowed to contain other aggregations"""
-        return True
-
     def get_children(self):
         """Return a list of aggregation that this (self) aggregation contains"""
         child_aggregations = []
@@ -791,6 +786,12 @@ class AbstractLogicalFile(models.Model):
         """
         return False
 
+    def can_contain_aggregation(self, aggregation):
+        """Checks if the specified *aggregation* can be part of this (self) aggregation
+        :param aggregation: an aggregation that can be part of this aggregation (aggregation nesting)
+        """
+        return False
+
     @property
     def get_main_file(self):
         file_extension = self.get_main_file_type()
@@ -1014,11 +1015,6 @@ class AbstractLogicalFile(models.Model):
     def supports_unzip(self):
         """allows a zip file that is part of this logical file type to get unzipped"""
         return True
-
-    @property
-    def can_contain_aggregations(self):
-        """aggregation is not allowed to contain other aggregations"""
-        return False
 
     @property
     def aggregation_name(self):

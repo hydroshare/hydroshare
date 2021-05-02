@@ -50,6 +50,10 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         """
         return "File Set"
 
+    def can_contain_aggregation(self, aggregation):
+        # fileset can contain any aggregation
+        return True
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""

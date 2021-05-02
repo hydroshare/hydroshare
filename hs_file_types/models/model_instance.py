@@ -446,6 +446,15 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
 
+    def can_contain_aggregation(self, aggregation):
+        if self.id == aggregation.id:
+            # allow moving file/folder within the same aggregation
+            return True
+
+        if aggregation.is_model_instance or aggregation.is_model_program or aggregation.is_fileset:
+            return False
+        return True
+
     # used in discovery faceting to aggregate native and composite content types
     def get_discovery_content_type(self):
         """Return a human-readable content type for discovery.

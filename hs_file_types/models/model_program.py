@@ -450,6 +450,10 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
     def get_aggregation_type_name():
         return "ModelProgramAggregation"
 
+    def can_contain_aggregation(self, aggregation):
+        # allow moving folder/file within the same aggregation
+        return self.id == aggregation.id
+
     # used in discovery faceting to aggregate native and composite content types
     def get_discovery_content_type(self):
         """Return a human-readable content type for discovery.
