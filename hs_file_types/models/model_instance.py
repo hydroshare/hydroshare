@@ -447,7 +447,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
 
     def can_contain_aggregation(self, aggregation):
-        if self.id == aggregation.id:
+        if aggregation.is_model_instance and self.id == aggregation.id:
             # allow moving file/folder within the same aggregation
             return True
 
