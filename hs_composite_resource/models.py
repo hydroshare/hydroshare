@@ -7,8 +7,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, ResourceFile, resource_processor
 from hs_file_types.models import ModelProgramResourceFileType
-from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, AbstractLogicalFile, \
-    SCHEMA_JSON_FILE_ENDSWITH
+from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH, SCHEMA_JSON_FILE_ENDSWITH
 from hs_file_types.utils import update_target_temporal_coverage, update_target_spatial_coverage
 
 logger = logging.getLogger(__name__)
