@@ -571,9 +571,10 @@ class CompositeResource(BaseResource):
     def get_data_services_urls(self):
         """
         Generates data services URLs for the resource.
-
         If the resource contains any GeoFeature or GeoRaster content, and if it's public,
         generate data service endpoints.
+        If the resource contains any multidimensional content and it's public,
+        generate THREDDS catalog service endpoint as well.
         """
 
         if self.raccess.public is True:
@@ -613,22 +614,29 @@ class CompositeResource(BaseResource):
                     )
                 else:
                     wcs_url = None
-
             except Exception as e:
                 logger.exception("get_data_services_urls: " + str(e))
                 wms_url = None
                 wfs_url = None
                 wcs_url = None
 
+            if 'Multidimensional' in resource_data_types:
+                thredds_url = (
+                    f'{settings.THREDDS_SERVER_URL}{self.short_id}/data/contents/catalog.html'
+                )
+            else:
+                thredds_url = None
         else:
             wms_url = None
             wfs_url = None
             wcs_url = None
+            thredds_url = None
 
         data_services_urls = {
             'wms_url': wms_url,
             'wfs_url': wfs_url,
-            'wcs_url': wcs_url
+            'wcs_url': wcs_url,
+            'thredds_url': thredds_url
         }
 
         return data_services_urls

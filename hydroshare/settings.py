@@ -701,6 +701,9 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
 
 HSWS_ACTIVATED = False
 
+# HydroShare THREDDS Data Server URL
+THREDDS_SERVER_URL = 'https://thredds.hydroshare.org/thredds/catalog/hydroshare/resources/'
+
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
     'hs_core.tasks.create_bag_by_irods',
