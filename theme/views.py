@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.messages import info, error
-from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -114,12 +114,12 @@ class UserProfileView(TemplateView):
 class UserPasswordResetView(TemplateView):
     template_name = 'accounts/reset_password.html'
 
-    def get_context_data(self, **kwargs):
-        token = kwargs.pop('token', None)
-        if token is None:
-            raise ValidationError('Unauthorised access to reset password')
-        context = super(UserPasswordResetView, self).get_context_data(**kwargs)
-        return context
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, "The link you clicked is no longer valid.")
+            return HttpResponseRedirect(reverse('password_reset_url'))
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
 
 def landingPage(request, template="pages/homepage.html"):
     return render(request, template)
@@ -565,10 +565,13 @@ def email_verify_password_reset(request, uidb36=None, token=None):
             user.save()
         auth_login(request, user)
         # redirect to user to password reset page
-        return HttpResponseRedirect(reverse('new_password_for_reset', kwargs={'token': token}))
+        return HttpResponseRedirect(reverse('new_password_for_reset'))
     else:
-        messages.error(request, _("The link you clicked is no longer valid."))
-        return redirect("/")
+        if request.user and request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('new_password_for_reset'))
+        else:
+            messages.error(request, _("The link you clicked is no longer valid, please request a password reset link."))
+            return HttpResponseRedirect('/accounts/password/reset/')
 
 @login_required()
 def delete_resource_comment(request, id):
