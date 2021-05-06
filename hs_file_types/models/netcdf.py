@@ -55,7 +55,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         opendap_url = f'{settings.THREDDS_SERVER_URL}dodsC/hydroshare/resources/{res_id}/data/contents/{file_name}.html'
         with opendap_div:
             legend('HydroShare THREEDS service')
-            a('Access dataset through OPeNDAP service', href=opendap_url)
+            a('Access dataset through OPeNDAP service', href=opendap_url, target='_blank')
         return opendap_div.render()
 
     def get_html(self):
