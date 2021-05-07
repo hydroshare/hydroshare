@@ -56,8 +56,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         with opendap_div:
             legend('OPeNDAP using DAP2')
             em('The netCDF data in this multidimensional content aggregation may be accessed at the link below '
-              'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data server. '
-              'This enables direct and programmable access to this data through ')
+               'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data server. '
+               'This enables direct and programmable access to this data through ')
             a(" OPeNDAP client software",
               href="https://www.opendap.org/support/OPeNDAP-clients",
               target="_blank")
