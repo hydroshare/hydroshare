@@ -11,7 +11,7 @@ from django.conf import settings
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, a, textarea, _input
+from dominate.tags import div, legend, form, button, p, em, a, textarea, _input
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
@@ -54,8 +54,16 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         file_name = self.logical_file.aggregation_name
         opendap_url = f'{settings.THREDDS_SERVER_URL}dodsC/hydroshare/resources/{res_id}/data/contents/{file_name}.html'
         with opendap_div:
-            legend('HydroShare THREEDS service')
-            a('Access dataset through OPeNDAP service', href=opendap_url, target='_blank')
+            legend('OPeNDAP using DAP2')
+            em('The netCDF data in this multidimensional content aggregation may be accessed at the link below '
+              'using the OPeNDAP DAP2 protocol enabled on the HydroShare deployment of Unidata’s THREDDS data server. '
+              'This enables direct and programmable access to this data through ')
+            a(" OPeNDAP client software",
+              href="https://www.opendap.org/support/OPeNDAP-clients",
+              target="_blank")
+            with div(style="margin-top:10px;"):
+                a(opendap_url, href=opendap_url, target='_blank')
+
         return opendap_div.render()
 
     def get_html(self):
