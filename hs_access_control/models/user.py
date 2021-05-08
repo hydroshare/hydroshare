@@ -2112,9 +2112,13 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
         if not this_user.is_active:
-            raise PermissionDenied("User is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("User is not active")
+            return False
 
         return self.__get_group_undo_users(this_group).filter(id=this_user.id).exists()
 
@@ -2217,7 +2221,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
-            raise PermissionDenied("User is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("User is not active")
+            return False
 
         return self.__get_resource_undo_users(this_resource).filter(id=this_user.id).exists()
 
@@ -2309,7 +2315,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
 
         return self.__get_resource_undo_groups(this_resource).filter(id=this_group.id).exists()
 
@@ -3297,7 +3305,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active:
-            raise PermissionDenied("Grantee user is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Grantee user is not active")
+            return False
 
         return self.__get_community_undo_users(this_community).filter(id=this_user.id).exists()
 
@@ -3390,7 +3400,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
 
         return self.__get_community_undo_groups(this_community).filter(id=this_group.id).exists()
 
@@ -3425,7 +3437,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+            # This causes problems with display of resources
+            # raise PermissionDenied("Group is not active")
+            return False
 
         qual_undo = self.__get_community_undo_groups(this_community)
         if qual_undo.filter(id=this_group.id).exists():

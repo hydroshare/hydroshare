@@ -297,7 +297,7 @@ def creator_json_ld_element(crs):
             cr_dict['url'] = urls
         crs_array.append(cr_dict)
     # reformat json dumped str a bit to fix the indentation issue with the last bracket
-    default_dump = dumps(crs_array, sort_keys=True, indent=4)
+    default_dump = dumps({"@list": crs_array}, sort_keys=True, indent=6)
     format_dump = '{}    {}'.format(default_dump[:-1], default_dump[-1])
     return format_dump
 
@@ -305,3 +305,11 @@ def creator_json_ld_element(crs):
 @register.filter
 def is_debug(page):
     return settings.DEBUG
+
+
+@register.filter
+def discoverable(item):
+    """ used in templates for discovery to avoid non-indicative results. """
+    if item is None or item == 'Unknown':
+        return ""
+    return item
