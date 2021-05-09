@@ -938,6 +938,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
     return filename_or_id
 
+
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
