@@ -162,6 +162,11 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         finally:
             shutil.rmtree(tmpdir)
 
+    def can_be_deleted_on_file_delete(self):
+        """model aggregation based on folder is not deleted on delete of any or all of the resource files that
+        are part of the model aggregation"""
+        return self.folder is None
+
     @classmethod
     def can_set_folder_to_aggregation(cls, resource, dir_path):
         """helper to check if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation

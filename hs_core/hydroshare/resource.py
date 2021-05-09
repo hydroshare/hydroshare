@@ -895,50 +895,48 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
+    file_by_id = False
+    try:
+        int(filename_or_id)
+        file_by_id = True
+    except ValueError:
+        pass
 
-    def can_delete_logical_file(logical_file):
-        if not logical_file.is_fileset and not logical_file.is_model_program and not logical_file.is_model_instance:
-            # delete logical file if any resource file that belongs to logical file
-            # gets deleted for any logical file other than fileset or modelprogram or modelinstance logical file
-            return True
-        elif (logical_file.is_model_program or logical_file.is_model_instance) and logical_file.folder is None:
-            # this is a single file based model program/instance aggregation and not a folder based
-            # model program/instance aggregation - we need to delete the logical file
-            return True
-        return False
+    try:
+        if file_by_id:
+            f = ResourceFile.objects.get(id=filename_or_id)
+        else:
+            folder, base = os.path.split(filename_or_id)
+            f = ResourceFile.get(resource=resource, file=base, folder=folder)
+    except ObjectDoesNotExist:
+        raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
+                                            resource.short_id, filename_or_id))
 
-    for f in ResourceFile.objects.filter(object_id=resource.id):
-        if filter_condition(filename_or_id, f):
-            if delete_logical_file and f.has_logical_file:
-                logical_file = f.logical_file
-                if can_delete_logical_file(logical_file):
-                    # logical_delete() calls this function (delete_resource_file())
-                    # to delete each of its contained ResourceFile objects
-                    logical_file.logical_delete(user)
-                    return filename_or_id
-
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
-                                                       resource=resource, user=user)
-
-            file_name = delete_resource_file_only(resource, f)
-
-            # This presumes that the file is no longer in django
-            delete_format_metadata_after_delete_file(resource, file_name)
-
-            signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
-
-            # set to private if necessary -- AFTER post_delete_file handling
-            resource.update_public_and_discoverable()  # set to False if necessary
-
-            # generate bag
-            utils.resource_modified(resource, user, overwrite_bag=False)
-
+    if delete_logical_file and f.has_logical_file:
+        logical_file = f.logical_file
+        if logical_file.can_be_deleted_on_file_delete():
+            # logical_delete() calls this function (delete_resource_file())
+            # to delete each of its contained ResourceFile objects
+            logical_file.logical_delete(user)
             return filename_or_id
 
-    # if execution gets here, file was not found
-    raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
-                                        resource.short_id, filename_or_id))
+    signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
+                                               resource=resource, user=user)
 
+    file_name = delete_resource_file_only(resource, f)
+
+    # This presumes that the file is no longer in django
+    delete_format_metadata_after_delete_file(resource, file_name)
+
+    signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
+
+    # set to private if necessary -- AFTER post_delete_file handling
+    resource.update_public_and_discoverable()  # set to False if necessary
+
+    # generate bag
+    utils.resource_modified(resource, user, overwrite_bag=False)
+
+    return filename_or_id
 
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)

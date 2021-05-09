@@ -786,6 +786,11 @@ class AbstractLogicalFile(models.Model):
         """
         return False
 
+    def can_be_deleted_on_file_delete(self):
+        """Checks if this logical file (self) can be deleted on delete of any resource file
+        that is part of this aggregation"""
+        return True
+
     def can_contain_aggregation(self, aggregation):
         """Checks if the specified *aggregation* can be part of this (self) aggregation
         :param aggregation: an aggregation that can be part of this aggregation (aggregation nesting)

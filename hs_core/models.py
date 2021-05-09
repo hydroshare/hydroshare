@@ -2310,19 +2310,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
         for fl in self.files.all():
-            if fl.logical_file is not None:
-                # delete of metadata file deletes the logical file (one-to-one relation)
-                # so no need for fl.logical_file.delete() and deleting of metadata file
-                # object deletes (cascade delete) all the contained GenericRelated metadata
-                # elements
-                logical_file = fl.logical_file
-                # if we are deleting a model program aggregation, then we need to set the
-                # metadata of all the associated model instances to dirty
-                if logical_file.is_model_program:
-                    logical_file.set_model_instances_dirty()
-                logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
-            fl.delete()
+            fl.delete(delete_logical_file=True)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
@@ -2913,7 +2902,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
-    def delete(self):
+    def delete(self, delete_logical_file=False):
         """Delete a resource file record and the file contents.
 
         model.delete does not cascade to delete files themselves,
@@ -2921,6 +2910,8 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         """
         if self.exists:
+            if delete_logical_file and self.logical_file is not None:
+                self.logical_file.delete()
             if self.fed_resource_file:
                 self.fed_resource_file.delete()
             if self.resource_file:

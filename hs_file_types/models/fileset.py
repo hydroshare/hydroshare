@@ -54,6 +54,11 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         # fileset can contain any aggregation
         return True
 
+    def can_be_deleted_on_file_delete(self):
+        """fileset aggregation is not deleted on delete of any or all of the resource files that
+        are part of the fileset aggregation"""
+        return False
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""
