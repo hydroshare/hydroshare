@@ -184,6 +184,11 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
         if not is_valid:
             return status.HTTP_400_BAD_REQUEST, err_msg, None
 
+    res = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if res.raccess.published and not user.is_superuser:
+        err_msg = "Only admin can add file to a published resource"
+        return status.HTTP_400_BAD_REQUEST, err_msg, None
+
     f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
 
     if not f:
@@ -214,8 +219,8 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     :return: 200 status code and 'success' message if it succeeds, otherwise, return error status
     code and error message
     """
-    if res.raccess.published:
-        return status.HTTP_400_BAD_REQUEST, "url file can't be edited for a published resource"
+    if res.raccess.published and not user.is_superuser:
+        return status.HTTP_400_BAD_REQUEST, "url file can be edited by admin only for a published resource"
 
     ref_name = url_filename.lower()
     if not ref_name.endswith('.url'):
@@ -1231,8 +1236,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
         assert(tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published:
-        raise ValidationError("Operations related to file/folder are not allowed for a published resource")
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Operations related to file/folder are allowed only for admin user for a "
+                              "published resource")
     istorage = resource.get_irods_storage()
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
@@ -1276,8 +1282,8 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
         assert(tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published:
-        raise ValidationError("Operations related to file/folder are not allowed for a published resource")
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
     istorage = resource.get_irods_storage()
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
@@ -1322,8 +1328,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         assert(tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published:
-        raise ValidationError("Operations related to file/folder are not allowed for a published resource")
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
     istorage = resource.get_irods_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 

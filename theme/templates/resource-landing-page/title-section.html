@@ -22,7 +22,9 @@
             <ul>
                 <li>Title</li>
                 <li>Authors</li>
-                <li>Content files</li>
+                {% if not current_user.is_superuser %}
+                    <li>Content files</li>
+                {% endif %}
             </ul>
             <span>Changing any of the above requires that you create a new version of the resource.</span>
         </div>

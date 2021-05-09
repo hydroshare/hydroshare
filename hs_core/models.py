@@ -4581,7 +4581,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
         if self.resource.raccess.published:
-            if element_model_name in ('creator', 'format'):
+            if element_model_name == 'creator':
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
             elif element_model_name == 'identifier':
                 name_value = kwargs.get('name', '')
@@ -4614,7 +4614,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         element_model_name = element_model_name.lower()
         if self.resource.raccess.published:
-            if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency'):
+            if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
                 raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
 

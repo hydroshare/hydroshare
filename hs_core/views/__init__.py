@@ -244,11 +244,9 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     :param kwargs:
     :return: HTTP response with status code indicating success or failure
     """
-    resource, _, _ = authorize(request, shortkey,
-                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-
-    if resource.raccess.published:
-        msg = {'validation_error': "Can't add files to a published resource"}
+    resource, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    if resource.raccess.published and not user.is_superuser:
+        msg = {'validation_error': "Only admin can add files to a published resource"}
         return JsonResponse(msg, status=500)
 
     res_files, full_paths = extract_files_with_paths(request)
@@ -702,8 +700,12 @@ def delete_author(request, shortkey, element_id, *args, **kwargs):
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
-    request.session['resource-mode'] = 'edit'
+    try:
+        hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
+    except ValidationError as err:
+        request.session['validation_error'] = str(err)
+    finally:
+        request.session['resource-mode'] = 'edit'
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -717,6 +719,10 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         f_id = f_id.strip()
         try:
             hydroshare.delete_resource_file(shortkey, f_id, user)  # calls resource_modified
+        except ValidationError as err:
+            request.session['resource-mode'] = 'edit'
+            request.session['validation_error'] = str(err)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific

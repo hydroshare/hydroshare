@@ -1483,7 +1483,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit") {
+    if (mode === "edit" && !RESOURCE_PUBLISHED) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +
