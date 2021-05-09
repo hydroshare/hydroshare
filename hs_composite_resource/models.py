@@ -628,12 +628,6 @@ class CompositeResource(BaseResource):
 
         update_target_temporal_coverage(self)
 
-    def get_model_program_aggregations(self):
-        """Gets a list of model program aggregations in this (self) resource"""
-
-        mp_aggregations = [aggr for aggr in self.logical_files if aggr.type_name() == "ModelProgramLogicalFile"]
-        return mp_aggregations
-
     @staticmethod
     def is_path_folder(path):
         _, ext = os.path.splitext(path)

@@ -167,7 +167,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 with dom_tags.select(cls="form-control", id="id_executed_by", name="executed_by"):
                     dom_tags.option("Select a model program", value="0")
                     this_resource = self.logical_file.resource
-                    for mp_aggr in this_resource.get_model_program_aggregations():
+                    for mp_aggr in this_resource.modelprogramlogicalfile_set.all():
                         option = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                         if self.executed_by:
                             if self.executed_by.id == mp_aggr.id:

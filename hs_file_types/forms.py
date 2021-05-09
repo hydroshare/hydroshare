@@ -21,7 +21,7 @@ class ModelInstanceMetadataValidationForm(forms.Form):
         selected_mp_aggr = None
         # if a model program has been selected then this form would have the id of that aggregation
         if executed_by is not None and executed_by > 0:
-            mp_aggregations = self.resource.get_model_program_aggregations()
+            mp_aggregations = self.resource.modelprogramlogicalfile_set.all()
             for mp_aggr in mp_aggregations:
                 if mp_aggr.id == executed_by:
                     selected_mp_aggr = mp_aggr
