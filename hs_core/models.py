@@ -2911,7 +2911,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         if self.exists:
             if delete_logical_file and self.logical_file is not None:
-                self.logical_file.delete()
+                # deleting logical file metadata deletes the logical file as well
+                self.logical_file.metadata.delete()
             if self.fed_resource_file:
                 self.fed_resource_file.delete()
             if self.resource_file:
