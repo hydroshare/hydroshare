@@ -704,6 +704,17 @@ a.thumbnail:focus img {
 	margin-bottom: 50px;
 	padding: 15px 0;
 }
+
+.page-tip-error {
+	background: #f2dede;
+	-webkit-box-shadow: 0 0 16px 0 rgba(50, 50, 50, 0.3);
+	-moz-box-shadow: 0 0 16px 0 rgba(50, 50, 50, 0.3);
+	box-shadow: 0 0 16px 0 rgba(50, 50, 50, 0.3);
+	color: #b94a48;
+	margin-bottom: 50px;
+	padding: 15px 0;
+}
+
 .page-tip p {
 	margin: 0;
 }
