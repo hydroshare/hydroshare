@@ -848,22 +848,6 @@ def delete_format_metadata_after_delete_file(resource, file_name):
             resource.metadata.delete_element(format_element.term, format_element.id)
 
 
-# TODO: test in-folder delete of short path
-def filter_condition(filename_or_id, fl):
-    """
-    Converted lambda definition of filter_condition into def to conform to pep8 E731 rule: do not
-    assign a lambda expression, use a def
-    :param filename_or_id: passed in filename_or id as the filter
-    :param fl: the ResourceFile object to filter against
-    :return: boolean indicating whether fl conforms to filename_or_id
-    """
-    try:
-        file_id = int(filename_or_id)
-        return fl.id == file_id
-    except ValueError:
-        return fl.short_path == filename_or_id
-
-
 # TODO: Remove option for file id, not needed since names are unique.
 # TODO: Test that short_path deletes properly.
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
