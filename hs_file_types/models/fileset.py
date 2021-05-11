@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 
 from django.db import models
 
@@ -49,6 +49,12 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         for File Set).
         """
         return "File Set"
+
+    @property
+    def aggregation_name(self):
+        """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
+
+        return self.folder
 
     def can_contain_aggregation(self, aggregation):
         # fileset can contain any aggregation
@@ -152,6 +158,18 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
             ft_ctx.logical_file = logical_file
             log.info("File set aggregation was created for folder:{}.".format(folder_path))
             return logical_file
+
+    def xml_file_short_path(self, resmap=True):
+        """File path of the aggregation metadata or map xml file relative
+        to {resource_id}/data/contents/
+        :param  resmap  If true file path for aggregation resmap xml file, otherwise file path for
+        aggregation metadata file is returned
+        """
+
+        xml_file_name = self.get_xml_file_name(resmap=resmap)
+        file_folder = self.folder
+        xml_file_name = os.path.join(file_folder, xml_file_name)
+        return xml_file_name
 
     def add_resource_files_in_folder(self, resource, folder):
         """

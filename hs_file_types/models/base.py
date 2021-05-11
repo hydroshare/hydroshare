@@ -41,9 +41,10 @@ class NestedLogicalFileMixin(object):
         """Return a list of aggregation that this (self) aggregation contains"""
         child_aggregations = []
         for aggr in self.resource.logical_files:
-            parent_aggr = aggr.get_parent()
-            if parent_aggr is not None and parent_aggr == self:
-                child_aggregations.append(aggr)
+            if aggr != self:
+                parent_aggr = aggr.get_parent()
+                if parent_aggr is not None and parent_aggr == self:
+                    child_aggregations.append(aggr)
 
         return child_aggregations
 
@@ -1025,26 +1026,10 @@ class AbstractLogicalFile(models.Model):
     def aggregation_name(self):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 
-        if (self.is_model_program or self.is_model_instance) and self.folder:
-            # this model program/instance aggregation has ben created from a folder
-            # aggregation folder path is the aggregation name
-            return self.folder
-        elif self.is_model_program or self.is_model_instance:
-            # this model program/instance aggregation has been created from a single resource file
-            # the path of the resource file is the aggregation name
-            single_res_file = self.files.first()
-            return single_res_file.short_path
-
-        if not self.is_fileset:
-            # any aggregation that is not a fileset type, the path of the aggregation primary file
-            # is the aggregation name
-            primary_file = self.get_primary_resouce_file(self.files.all())
-            if not primary_file:
-                return ""
-            return primary_file.short_path
-
-        # self is a fileset aggregation - aggregation folder path is the aggregation name
-        return self.folder
+        primary_file = self.get_primary_resouce_file(self.files.all())
+        if not primary_file:
+            return ""
+        return primary_file.short_path
 
     @property
     def aggregation_path(self):
@@ -1058,7 +1043,7 @@ class AbstractLogicalFile(models.Model):
     def metadata_short_file_path(self):
         """File path of the aggregation metadata xml file relative to {resource_id}/data/contents/
         """
-        return self._xml_file_short_path(resmap=False)
+        return self.xml_file_short_path(resmap=False)
 
     @property
     def metadata_file_path(self):
@@ -1070,7 +1055,7 @@ class AbstractLogicalFile(models.Model):
     def map_short_file_path(self):
         """File path of the aggregation map xml file relative to {resource_id}/data/contents/
         """
-        return self._xml_file_short_path()
+        return self.xml_file_short_path()
 
     @property
     def map_file_path(self):
@@ -1210,11 +1195,6 @@ class AbstractLogicalFile(models.Model):
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
 
-        # delete schema json file if this a model aggregation
-        if self.is_model_program or self.is_model_instance:
-            if istorage.exists(self.schema_file_path):
-                istorage.delete(self.schema_file_path)
-
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
@@ -1225,11 +1205,6 @@ class AbstractLogicalFile(models.Model):
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
         metadata = self.metadata if self.has_metadata else None
-
-        # if we are deleting a model program aggregation, then we need to set the
-        # metadata of all the associated model instances to dirty
-        if self.is_model_program:
-            self.set_model_instances_dirty()
         self.delete()
 
         if metadata is not None:
@@ -1253,11 +1228,6 @@ class AbstractLogicalFile(models.Model):
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
 
-        # delete schema json file if this a model aggregation
-        if self.is_model_program or self.is_model_instance:
-            if istorage.exists(self.schema_file_path):
-                istorage.delete(self.schema_file_path)
-
         # find if there is a parent aggregation - files in this (self) aggregation
         # need to be added to parent if exists
         parent_aggr = self.get_parent()
@@ -1276,11 +1246,6 @@ class AbstractLogicalFile(models.Model):
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
         metadata = self.metadata if self.has_metadata else None
-
-        # if we are removing a model program aggregation, then we need to set the
-        # metadata of all the associated model instances to dirty
-        if self.is_model_program:
-            self.set_model_instances_dirty()
         self.delete()
 
         if metadata is not None:
@@ -1382,7 +1347,7 @@ class AbstractLogicalFile(models.Model):
 
             if create_map_xml:
                 with open(map_from_file_name, 'w') as out:
-                    out.write(self._generate_map_xml())
+                    out.write(self.generate_map_xml())
                 to_file_name = self.map_file_path
                 istorage.saveFile(map_from_file_name, to_file_name, True)
                 log.debug("Aggregation map xml file:{} created".format(to_file_name))
@@ -1395,7 +1360,7 @@ class AbstractLogicalFile(models.Model):
         finally:
             shutil.rmtree(tmpdir)
 
-    def _generate_map_xml(self):
+    def generate_map_xml(self):
         """Generates the xml needed to write to the aggregation map xml document"""
         from hs_core.hydroshare import encode_resource_url
         from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
@@ -1453,17 +1418,6 @@ class AbstractLogicalFile(models.Model):
             resFiles[n]._ore.isAggregatedBy = ag_url
             resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
 
-        # if this is a model program or model instance, add the metadata schema json exists
-        if (self.is_model_program or self.is_model_instance) and self.metadata_schema_json:
-            n = len(files)
-            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_short_path}'.format(
-                hs_url=current_site_url,
-                res_id=self.resource.short_id,
-                file_short_path=self.schema_short_file_path)
-            resFiles.append(AggregatedResource(res_uri))
-            resFiles[n]._ore.isAggregatedBy = ag_url
-            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(self.schema_short_file_path))
-
         # Add the resource files to the aggregation
         a.add_resource(resMetaFile)
         for f in resFiles:
@@ -1503,12 +1457,7 @@ class AbstractLogicalFile(models.Model):
         xml_string = remdoc.data.replace(xml_element_to_replace, '')
         return xml_string
 
-    def _xml_file_short_path(self, resmap=True):
-        """File path of the aggregation metadata or map xml file relative
-        to {resource_id}/data/contents/
-        :param  resmap  If true file path for aggregation resmap xml file, otherwise file path for
-        aggregation metadata file is returned
-        """
+    def get_xml_file_name(self, resmap=True):
         xml_file_name = self.aggregation_name
         if "/" in xml_file_name:
             xml_file_name = os.path.basename(xml_file_name)
@@ -1519,16 +1468,17 @@ class AbstractLogicalFile(models.Model):
             xml_file_name += RESMAP_FILE_ENDSWITH
         else:
             xml_file_name += METADATA_FILE_ENDSWITH
+        return xml_file_name
 
-        if self.is_fileset:
-            file_folder = self.folder
-        elif self.is_model_instance or self.is_model_instance:
-            if self.folder is not None:
-                file_folder = self.folder
-            else:
-                file_folder = self.files.first().file_folder
-        else:
-            file_folder = self.files.first().file_folder
+    def xml_file_short_path(self, resmap=True):
+        """File path of the aggregation metadata or map xml file relative
+        to {resource_id}/data/contents/
+        :param  resmap  If true file path for aggregation resmap xml file, otherwise file path for
+        aggregation metadata file is returned
+        """
+
+        xml_file_name = self.get_xml_file_name(resmap=resmap)
+        file_folder = self.files.first().file_folder
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name

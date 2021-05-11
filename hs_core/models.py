@@ -2904,10 +2904,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: automagically handle orphaned logical files
     def delete(self, delete_logical_file=False):
         """Delete a resource file record and the file contents.
+        :param  delete_logical_file: if True deletes logical file associated with resource file
 
         model.delete does not cascade to delete files themselves,
         and these must be explicitly deleted.
-
         """
         if self.exists:
             if delete_logical_file and self.logical_file is not None:

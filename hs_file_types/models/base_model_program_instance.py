@@ -7,12 +7,14 @@ from uuid import uuid4
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
+from rdflib import Namespace
 
 from hs_core.models import ResourceFile
-from hydroshare import settings
-
+from hs_core.signals import post_remove_file_aggregation
 from hs_file_types.models import AbstractLogicalFile
 from hs_file_types.models.base import FileTypeContext, SCHEMA_JSON_FILE_ENDSWITH
+from hydroshare import settings
 
 
 class AbstractModelLogicalFile(AbstractLogicalFile):
@@ -27,6 +29,20 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
     class Meta:
         abstract = True
+
+    @property
+    def aggregation_name(self):
+        """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
+
+        if self.folder:
+            # this model program/instance aggregation has ben created from a folder
+            # aggregation folder path is the aggregation name
+            return self.folder
+        else:
+            # this model program/instance aggregation has been created from a single resource file
+            # the path of the resource file is the aggregation name
+            single_res_file = self.files.first()
+            return single_res_file.short_path
 
     @property
     def schema_short_file_path(self):
@@ -130,6 +146,251 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                                                                             res_file.storage_path))
             ft_ctx.logical_file = logical_file
         return logical_file
+
+    def generate_map_xml(self):
+        """Generates the xml needed to write to the aggregation map xml document"""
+        from hs_core.hydroshare import encode_resource_url
+        from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
+
+        current_site_url = current_site_url()
+        # This is the qualified resource url.
+        hs_res_url = os.path.join(current_site_url, 'resource', self.resource.file_path)
+        # this is the path to the resource metadata file for download
+        aggr_metadata_file_path = self.metadata_short_file_path
+        metadata_url = os.path.join(hs_res_url, aggr_metadata_file_path)
+        metadata_url = encode_resource_url(metadata_url)
+        # this is the path to the aggregation resourcemap file for download
+        aggr_map_file_path = self.map_short_file_path
+        res_map_url = os.path.join(hs_res_url, aggr_map_file_path)
+        res_map_url = encode_resource_url(res_map_url)
+
+        # make the resource map:
+        utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
+        utils.namespaceSearchOrder.append('citoterms')
+
+        ag_url = res_map_url + '#aggregation'
+        a = Aggregation(ag_url)
+
+        # Set properties of the aggregation
+        a._dc.title = self.dataset_name
+        agg_type_url = "{site}/terms/{aggr_type}"\
+            .format(site=current_site_url, aggr_type=self.get_aggregation_type_name())
+        a._dcterms.type = URIRef(agg_type_url)
+        a._citoterms.isDocumentedBy = metadata_url
+        a._ore.isDescribedBy = res_map_url
+
+        res_type_aggregation = AggregatedResource(agg_type_url)
+        res_type_aggregation._rdfs.label = self.get_aggregation_term_label()
+        res_type_aggregation._rdfs.isDefinedBy = current_site_url + "/terms"
+
+        a.add_resource(res_type_aggregation)
+
+        # Create a description of the metadata document that describes the whole resource and add it
+        # to the aggregation
+        resMetaFile = AggregatedResource(metadata_url)
+        resMetaFile._citoterms.documents = ag_url
+        resMetaFile._ore.isAggregatedBy = ag_url
+        resMetaFile._dc.format = "application/rdf+xml"
+
+        # Create a description of the content file and add it to the aggregation
+        files = self.files.all()
+        resFiles = []
+        for n, f in enumerate(files):
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                file_name=f.short_path)
+            res_uri = encode_resource_url(res_uri)
+            resFiles.append(AggregatedResource(res_uri))
+            resFiles[n]._ore.isAggregatedBy = ag_url
+            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+
+        # if this is a model program or model instance, add the metadata schema json exists
+        if self.metadata_schema_json:
+            n = len(files)
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_short_path}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                file_short_path=self.schema_short_file_path)
+            resFiles.append(AggregatedResource(res_uri))
+            resFiles[n]._ore.isAggregatedBy = ag_url
+            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(self.schema_short_file_path))
+
+        # Add the resource files to the aggregation
+        a.add_resource(resMetaFile)
+        for f in resFiles:
+            a.add_resource(f)
+
+        # Create a description of the contained aggregations and add it to the aggregation
+        child_ore_aggregations = []
+        for n, child_aggr in enumerate(self.get_children()):
+            res_uri = '{hs_url}/resource/{res_id}/data/contents/{aggr_name}'.format(
+                hs_url=current_site_url,
+                res_id=self.resource.short_id,
+                aggr_name=child_aggr.map_short_file_path + '#aggregation')
+            res_uri = encode_resource_url(res_uri)
+            child_ore_aggr = Aggregation(res_uri)
+            child_ore_aggregations.append(child_ore_aggr)
+            child_ore_aggregations[n]._ore.isAggregatedBy = ag_url
+            child_agg_type_url = "{site}/terms/{aggr_type}"
+            child_agg_type_url = child_agg_type_url.format(
+                site=current_site_url, aggr_type=child_aggr.get_aggregation_type_name())
+            child_ore_aggregations[n]._dcterms.type = URIRef(child_agg_type_url)
+
+        # Add contained aggregations to the aggregation
+        for aggr in child_ore_aggregations:
+            a.add_resource(aggr)
+
+        # Register a serializer with the aggregation, which creates a new ResourceMap that
+        # needs a URI
+        serializer = RdfLibSerializer('xml')
+        # resMap = a.register_serialization(serializer, res_map_url)
+        a.register_serialization(serializer, res_map_url)
+
+        # Fetch the serialization
+        remdoc = a.get_serialization()
+        # remove this additional xml element - not sure why it gets added
+        # <ore:aggregates rdf:resource="https://www.hydroshare.org/terms/[aggregation name]"/>
+        xml_element_to_replace = '<ore:aggregates rdf:resource="{}"/>\n'.format(agg_type_url)
+        xml_string = remdoc.data.replace(xml_element_to_replace, '')
+        return xml_string
+
+    def xml_file_short_path(self, resmap=True):
+        """File path of the aggregation metadata or map xml file relative
+        to {resource_id}/data/contents/
+        :param  resmap  If true file path for aggregation resmap xml file, otherwise file path for
+        aggregation metadata file is returned
+        """
+
+        xml_file_name = self.get_xml_file_name(resmap=resmap)
+        if self.folder is not None:
+            file_folder = self.folder
+        else:
+            file_folder = self.files.first().file_folder
+
+        if file_folder:
+            xml_file_name = os.path.join(file_folder, xml_file_name)
+        return xml_file_name
+
+    def logical_delete(self, user, delete_res_files=True):
+        """
+        Deletes the logical file as well as all resource files associated with this logical file.
+        This function is primarily used by the system to delete logical file object and associated
+        metadata as part of deleting a resource file object. Any time a request is made to
+        deleted a specific resource file object, if the the requested file is part of a
+        logical file then all files in the same logical file group will be deleted. if custom logic
+        requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
+        use LFO.logical_delete()
+        :param  user    user who is deleting file type/aggregation
+        :param delete_res_files If True all resource files that are part of this logical file will
+        be deleted
+        """
+
+        from hs_core.hydroshare.resource import delete_resource_file
+
+        parent_aggr = self.get_parent()
+
+        # delete associated metadata and map xml documents
+        istorage = self.resource.get_irods_storage()
+        if istorage.exists(self.metadata_file_path):
+            istorage.delete(self.metadata_file_path)
+        if istorage.exists(self.map_file_path):
+            istorage.delete(self.map_file_path)
+
+        # delete schema json file if this a model aggregation
+        # if self.is_model_program or self.is_model_instance:
+        if istorage.exists(self.schema_file_path):
+            istorage.delete(self.schema_file_path)
+
+        # delete all resource files associated with this instance of logical file
+        if delete_res_files:
+            for f in self.files.all():
+                delete_resource_file(f.resource.short_id, f.id, user,
+                                     delete_logical_file=False)
+
+        # delete logical file first then delete the associated metadata file object
+        # deleting the logical file object will not automatically delete the associated
+        # metadata file object
+        metadata = self.metadata if self.has_metadata else None
+
+        # if we are deleting a model program aggregation, then we need to set the
+        # metadata of all the associated model instances to dirty
+        if self.is_model_program:
+            self.set_model_instances_dirty()
+        self.delete()
+
+        if metadata is not None:
+            # this should also delete on all metadata elements that have generic relations with
+            # the metadata object
+            metadata.delete()
+
+        # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
+        # aggregation so that the references to the deleted aggregation can be removed
+        if parent_aggr is not None:
+            parent_aggr.create_aggregation_xml_documents()
+
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. However, it doesn't delete any resource files that are part of the aggregation."""
+
+        # delete associated metadata and map xml document
+        istorage = self.resource.get_irods_storage()
+        if istorage.exists(self.metadata_file_path):
+            istorage.delete(self.metadata_file_path)
+        if istorage.exists(self.map_file_path):
+            istorage.delete(self.map_file_path)
+
+        # delete schema json file if this a model aggregation
+        if istorage.exists(self.schema_file_path):
+            istorage.delete(self.schema_file_path)
+
+        # find if there is a parent aggregation - files in this (self) aggregation
+        # need to be added to parent if exists
+        parent_aggr = self.get_parent()
+
+        res_files = []
+        res_files.extend(self.files.all())
+
+        # first need to set the aggregation for each of the associated resource files to None
+        # so that deleting the aggregation (logical file) does not cascade to deleting of
+        # resource files associated with the aggregation
+        for res_file in self.files.all():
+            res_file.logical_file_content_object = None
+            res_file.save()
+
+        # delete logical file (aggregation) first then delete the associated metadata file object
+        # deleting the logical file object will not automatically delete the associated
+        # metadata file object
+        metadata = self.metadata if self.has_metadata else None
+
+        # if we are removing a model program aggregation, then we need to set the
+        # metadata of all the associated model instances to dirty
+        if self.is_model_program:
+            self.set_model_instances_dirty()
+        self.delete()
+
+        if metadata is not None:
+            # this should also delete on all metadata elements that have generic relations with
+            # the metadata object
+            metadata.delete()
+
+        # make all the resource files of this (self) aggregation part of the parent aggregation
+        if parent_aggr is not None:
+            for res_file in res_files:
+                parent_aggr.add_resource_file(res_file)
+
+            # need to regenerate the xml files for the parent so that the references to this deleted aggregation
+            # can be removed from the parent xml files
+            parent_aggr.create_aggregation_xml_documents()
+
+        post_remove_file_aggregation.send(
+            sender=self.__class__,
+            resource=self.resource,
+            res_files=self.files.all()
+        )
+
+        self.resource.setAVU("bag_modified", True)
+        self.resource.setAVU('metadata_dirty', 'true')
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(AbstractModelLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
