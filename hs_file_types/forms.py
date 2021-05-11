@@ -92,11 +92,14 @@ class ModelProgramMetadataValidationForm(forms.Form):
                 # format of 'mp_file_type_string' is as 'resource file short path':'mp file type name'
                 mp_file_type_lst = mp_file_type_string.split(":")
                 if len(mp_file_type_lst) != 2:
-                    self.add_error("mp_file_types", "Model program file type input data invalid")
+                    err_msg = "Input data format ({}) for model program file type " \
+                              "is invalid".format(mp_file_type_string)
+                    self.add_error("mp_file_types", err_msg)
                 if mp_file_type_lst[1].lower() != "none":
                     mp_file_type = ModelProgramResourceFileType.type_from_string(mp_file_type_lst[1].lower())
                     if mp_file_type is None:
-                        self.add_error("mp_file_types", "Not a valid model program file type")
+                        err_msg = "{} not a valid model program file type".format(mp_file_type_lst[1])
+                        self.add_error("mp_file_types", err_msg)
 
                     mp_file_types_dict[mp_file_type_lst[0]] = mp_file_type_lst[1]
                 else:
@@ -168,9 +171,9 @@ class ModelProgramMetadataValidationForm(forms.Form):
         is_schema_valid = True
         try:
             json_schema = json.loads(schema_string)
-        except ValueError as exp:
-            is_schema_valid = False
+        except ValueError:
             self.add_error(field_name, "Not a valid JSON string")
+            return json_schema
 
         if json_schema:
             schema_version = json_schema.get("$schema", "")
@@ -194,7 +197,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
                     is_schema_valid = False
-                    self.add_error(field_name, "Not a valid JSON schema.{}".format(str(ex)))
+                    self.add_error(field_name, "Not a valid JSON schema. Error:{}".format(str(ex)))
 
         if is_schema_valid:
             # custom validation - hydroshare requirements
