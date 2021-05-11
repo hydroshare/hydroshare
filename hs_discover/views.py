@@ -40,6 +40,7 @@ class SearchAPI(APIView):
         "availabilityurl": single value, pass a string to REST client
         "type": single value, pass a string to REST client
         "author": single value, pass a string to REST client first author
+        "authors": list value, one for each author.
         "creator: authors,
                 The reason for the weird name is the DataOne standard. The metadata was designed to be compliant
                 with DataOne standards. These standards do not contain an author field. Instead, the creator field
@@ -52,15 +53,6 @@ class SearchAPI(APIView):
         start = time.time()
 
         sqs = SearchQuerySet().all()
-
-        asc = '-1'
-        if request.GET.get('asc'):
-            asc = request.GET.get('asc')
-
-        sort = 'modified'
-        if request.GET.get('sort'):
-            sort = request.GET.get('sort')
-        sort = sort if asc == '1' else '-{}'.format(sort)
 
         if request.GET.get('q'):
             q = request.GET.get('q')
@@ -169,21 +161,22 @@ class SearchAPI(APIView):
                 availability = [x for x in availability if x[1] > 0]
             filterdata = [authors, owners, subjects, contributors, types, availability]
 
-        if sort == 'author':
-            sqs = sqs.order_by('author')
-        elif sort == '-author':
-            sqs = sqs.order_by('-author')
-        else:
-            sqs = sqs.order_by(sort)
+        sort = 'modified'
+        if request.GET.get('sort'):
+            sort = request.GET.get('sort')
+            # protect against ludicrous sort orders
+            if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created':
+                sort = 'modified'
+
+        asc = '-1'
+        if request.GET.get('asc'):
+            asc = request.GET.get('asc')
+
+        sort = sort if asc == '1' else '-{}'.format(sort)
+
+        sqs = sqs.order_by(sort)
 
         resources = []
-
-        # TODO future release will add title and facilitate order_by title_exact
-        # convert sqs to list after facet operations to allow for Python sorting instead of Haystack order_by
-        if sort == 'title':
-            sqs = sorted(sqs, key=lambda idx: idx.title.lower())
-        elif sort == '-title':
-            sqs = sorted(sqs, key=lambda idx: idx.title.lower(), reverse=True)
 
         p = Paginator(sqs, self.perpage)
 
@@ -209,45 +202,12 @@ class SearchAPI(APIView):
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
-            creator = 'None'
-            author = 'None'
+            authors = result.creator  # SOLR list
+            author = result.author if result.author is not None else 'None'  # SOLR scalar
+            author_link = result.author_url if result.author_url is not None else 'None'  # SOLR scalar
+            contributor = result.contributor  # SOLR list
+            owner = result.owner[0] if len(result.owner) > 0 else 'None'  # SOLR list
 
-            if result.creator:
-                creator = result.creator
-
-            authors = creator  # there is no concept of authors in DataOne standard
-            # authors might be string 'None' here
-
-            if result.author:
-                author_link = result.author_url
-                author = str(result.author)
-                if authors == 'None':
-                    authors = author  # author would override creator in
-            else:
-                if result.organization:
-                    if isinstance(result.organization, list):
-                        author = str(result.organization[0])
-                    else:
-                        author = str(result.organization)
-
-                    author = author.replace('"', '')
-                    author = author.replace('[', '')
-                    author = author.replace(']', '').strip()
-
-                    if authors == 'None':
-                        authors = author
-
-            if result.contributor is not None:
-                try:
-                    contributor = result.contributor
-                except:
-                    pass
-
-            if result.owner is not None:
-                try:
-                    owner = result.owner
-                except:
-                    pass
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
                 if 'box' in result.coverage_type:
@@ -271,6 +231,7 @@ class SearchAPI(APIView):
                 geodata.append(pt)
             except:
                 pass  # HydroShare production contains dirty data, this handling is in place, until data cleaned
+
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,
