@@ -12,6 +12,25 @@
     </div>
 {% endif %}
 
+{# ======= Published resource edit notification =======#}
+{% if cm.raccess.published and resource_edit_mode %}
+    <div class="col-xs-12">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>This resource has been formally published. </strong>
+            <span>You can edit some of the metadata elements for published resources, but you cannot change the followings:</span>
+            <ul>
+                <li>Title</li>
+                <li>Authors</li>
+                {% if not current_user.is_superuser %}
+                    <li>Content files</li>
+                {% endif %}
+            </ul>
+            <span>Changing any of the above requires that you create a new version of the resource.</span>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Resource new version just created notification =======#}
 {% if just_created and is_version_of %}
     <div class="col-xs-12">
@@ -243,25 +262,31 @@
         <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
 
 
-        <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
-              id="id-title" method="post">
-            {% csrf_token %}
-            <fieldset>
-                <div id="div_id_value" class="control-group">
-                    <div class="controls">
-                        <input class="form-control input-sm textinput textInput" id="txt-title"
-                                {% if czo_user %} onfocus="titleClick()" {% endif %}
-                               maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
+        {% if not cm.raccess.published %}
+            <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
+                  id="id-title" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <div id="div_id_value" class="control-group">
+                        <div class="controls">
+                            <input class="form-control input-sm textinput textInput" id="txt-title"
+                                    {% if czo_user %} onfocus="titleClick()" {% endif %}
+                                   maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
-                            style="display: none;">
-                        Save changes
-                    </button>
-                </div>
-            </fieldset>
-        </form>
+                    <div>
+                        <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
+                                style="display: none;">
+                            Save changes
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        {% else %}
+             <div class="flex">
+                <h2 id="resource-title">{{ title }}</h2>
+             </div>
+        {% endif %}
     {% endif %}
 </div>
 

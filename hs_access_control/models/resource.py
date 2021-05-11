@@ -92,6 +92,9 @@ class ResourceAccess(models.Model):
     def __edit_users_from_individual(self):
         return Q(is_active=True,
                  u2urp__resource=self.resource,
+                 u2urp__privilege=PC.OWNER) | \
+               Q(is_active=True,
+                 u2urp__resource=self.resource,
                  u2urp__resource__raccess__immutable=False,
                  u2urp__privilege__lte=PC.CHANGE)
 
@@ -123,17 +126,11 @@ class ResourceAccess(models.Model):
 
         This now accounts for group and community privileges
 
-        If the resource is immutable, an empty QuerySet is returned.
-
         """
-
-        if self.immutable:
-            return User.objects.none()
-        else:
-            return User.objects\
-                       .filter(self.__edit_users_from_individual |
-                               self.__edit_users_from_group |
-                               self.__edit_users_from_community).distinct()
+        return User.objects\
+                   .filter((self.__edit_users_from_individual) |
+                           (self.__edit_users_from_group) |
+                           (self.__edit_users_from_community)).distinct()
 
     @property
     def __view_groups_from_group(self):

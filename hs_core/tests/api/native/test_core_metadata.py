@@ -642,6 +642,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # make the resource public and then add available date
         self.res.raccess.public = True
+        self.res.raccess.published = False
         self.res.raccess.save()
         resource.create_metadata_element(self.res.short_id,'date', type='available',
                                          start_date=parser.parse("8/10/2014"))
@@ -1061,9 +1062,14 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         original_file.close()
 
         original_file = open(original_file_name, 'rb')
-        # add the file to the resource
+        # add the file to the resource - need to unpublish the resource before file can be added to the resource
+        res_with_files.raccess.published = False
+        res_with_files.raccess.save()
         hydroshare.add_resource_files(res_with_files.short_id, original_file)
 
+        # now publish the resource
+        res_with_files.raccess.published = True
+        res_with_files.raccess.save()
         # trying to set publisher someone other than CUAHSI for a resource that has content files
         # should raise exception
         with self.assertRaises(Exception):
@@ -1636,6 +1642,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(FundingAgency.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # delete resource
+        self.res.raccess.published = False
+        self.res.raccess.save()
         hydroshare.delete_resource(self.res.short_id)
         self.assertEqual(CoreMetaData.objects.all().count(), 0, msg="CoreMetadata object was found")
 
