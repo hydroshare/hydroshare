@@ -137,7 +137,7 @@ let manageAccessApp = new Vue({
             else if (accessToGrant == 'owner') {
                 ddClass = {
                     active: user.access === 'owner',
-                    disabled: !this.canChangeResourceFlags || this.selfAccessLevel !== 'owner'
+                    disabled: this.selfAccessLevel !== 'owner'
                 }
             }
 

@@ -117,7 +117,7 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.change %}
+                        {% if page.perms.change or cm.raccess.published %}
                             <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="bottom"
                                     title="Edit this resource"

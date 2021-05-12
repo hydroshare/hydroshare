@@ -93,9 +93,9 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self.res.raccess.save()
 
         parameters = [
-                      # resource owner has no authorization for editing a published resource
+                      # resource owner has authorization for resource edit 4/9/2021 (metadata and content files)
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                       'success': False, 'exception': PermissionDenied},
+                       'success': True, 'exception': None},
                       # resource owner has no authorization for setting resource
                       # flags (public, immutable/published, shareable etc)
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,

@@ -683,11 +683,16 @@ def add_resource_files(pk, *files, **kwargs):
         assert(isinstance(source_names, list))
 
     folder = kwargs.pop('folder', '')
+    user = kwargs.pop('user', None)
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
+
+    if resource.raccess.published:
+        if user is None or not user.is_superuser:
+            raise ValidationError("Only admin can add files to a published resource")
 
     prefix_path = 'data/contents'
     if folder == prefix_path:
@@ -704,12 +709,12 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
 
     for ifname in source_names:
         ret.append(utils.add_file_to_resource(resource, None,
                                               folder=folder,
-                                              source_name=ifname))
+                                              source_name=ifname, user=user))
 
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
@@ -878,6 +883,13 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     Note:  This does not handle immutability as previously intended.
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        if resource.files.count() == 1:
+            raise ValidationError("Resource file delete is not allowed. Published resource must contain at "
+                                  "least one file")
+        elif not user.is_superuser:
+            raise ValidationError("Resource file can be deleted only by admin for a published resource")
+
     res_cls = resource.__class__
     file_by_id = False
     try:
@@ -1011,6 +1023,8 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
 
     # TODO: whether a resource can be published is not considered in can_be_published
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
@@ -1024,16 +1038,16 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 
-    response = deposit_res_metadata_with_crossref(resource)
-    if not response.status_code == status.HTTP_200_OK:
-        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-        # crontab celery task
-        resource.doi = get_resource_doi(pk, 'failure')
-        resource.save()
+    if not __debug__:
+        # only in production environment submit doi request to crossref
+        response = deposit_res_metadata_with_crossref(resource)
+        if not response.status_code == status.HTTP_200_OK:
+            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+            # crontab celery task
+            resource.doi = get_resource_doi(pk, 'failure')
+            resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.immutable = True
-    resource.raccess.shareable = False
     resource.raccess.published = True
     resource.raccess.save()
 

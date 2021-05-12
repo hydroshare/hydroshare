@@ -18,7 +18,8 @@ $(document).ready(function() {
     //                <th>Remove</th>          6
 
     var edit_mode = $("#edit-mode").val();
-    if (edit_mode.toLowerCase() == "false") {
+    var published = $("#published").val();
+    if (edit_mode.toLowerCase() === "false" || published.toLowerCase() === "true") {
         resourceTable = $("#collection-table").DataTable({
             "order": [[2, "asc"]],
             "paging": paging,

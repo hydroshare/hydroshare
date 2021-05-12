@@ -383,15 +383,16 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         publisher_CUAHSI = "Consortium of Universities for the Advancement of " \
                            "Hydrologic Science, Inc. (CUAHSI)"
         url_CUAHSI = 'https://www.cuahsi.org'
-        # publisher element can be added when the resource is published
-        self.composite_resource.raccess.published = True
-        self.composite_resource.raccess.save()
+
         # user can't set CUASHI as the publisher - when the resource has no content file
         # first delete the content file
         res_file = self.composite_resource.files.first()
         hydroshare.delete_resource_file(self.composite_resource.short_id,
                                         res_file.id,
                                         self.user)
+        # publisher element can be added when the resource is published
+        self.composite_resource.raccess.published = True
+        self.composite_resource.raccess.save()
         with self.assertRaises(Exception):
             metadata.create_element('publisher', name=publisher_CUAHSI, url=url_CUAHSI)
 
@@ -418,7 +419,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.extra_metadata,
                          {'key-1': 'value-1', 'key-2': 'value-2'})
 
-        # test update metadata
+        # test update metadata - first unplublish resource to allow metadata update
+        self.composite_resource.raccess.published = False
+        self.composite_resource.raccess.save()
 
         # test update title
         metadata.update_element('title', self.composite_resource.metadata.title.id,
@@ -454,11 +457,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.update_element('language',
                                 self.composite_resource.metadata.language.id, code='fre')
         self.assertEqual(self.composite_resource.metadata.language.code, 'fre')
-        # test that updating publisher element raises exception
-        with self.assertRaises(Exception):
-            metadata.update_element('publisher',
-                                    self.composite_resource.metadata.publisher.id,
-                                    name='USU', url="http://usu.edu")
+
         # test update relation type
         rel_to_update = self.composite_resource.metadata.relations.all().filter(
             type='isPartOf').first()
@@ -504,6 +503,24 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.update_element('contributor', contributor.id, email='LSmith@gmail.com')
         contributor = self.composite_resource.metadata.contributors.first()
         self.assertEqual(contributor.email, 'LSmith@gmail.com')
+
+        # test that updating publisher element raises exception when the resource is published
+        self.composite_resource.raccess.published = True
+        self.composite_resource.raccess.save()
+        with self.assertRaises(Exception):
+            metadata.update_element('publisher',
+                                    self.composite_resource.metadata.publisher.id,
+                                    name='USU', url="http://usu.edu")
+
+        # test that updating/creating creator element raises exception when the resource is published
+        with self.assertRaises(Exception):
+            metadata.update_element('creator', creator.id, email='JSmith@hotmail.com')
+        with self.assertRaises(Exception):
+            metadata.create_element('creator', name='Allen Smith')
+        # test that updating title element raises exception when the resource is published
+        with self.assertRaises(Exception):
+            metadata.update_element('title', self.composite_resource.metadata.title.id,
+                                    value="Updated Title")
 
     def test_delete_coverage(self):
         """Here we are testing deleting of temporal and coverage metadata for composite resource"""

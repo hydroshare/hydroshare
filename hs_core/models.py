@@ -247,11 +247,13 @@ def page_permissions_page_processor(request, page):
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
 
-        if cm.raccess.owners.filter(pk=request.user.pk).exists():
+        # this will get resource access privilege even for admin user
+        user_privilege = cm.raccess.get_effective_user_privilege(request.user)
+        if user_privilege == PrivilegeCodes.OWNER:
             self_access_level = 'owner'
-        elif cm.raccess.edit_users.filter(pk=request.user.pk).exists():
+        elif user_privilege == PrivilegeCodes.CHANGE:
             self_access_level = 'edit'
-        elif cm.raccess.view_users.filter(pk=request.user.pk).exists():
+        elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
     owners = cm.raccess.owners.all()
@@ -328,8 +330,7 @@ def page_permissions_page_processor(request, page):
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
     is_view = self_access_level == 'view'
-    if not cm.raccess.published and \
-            (is_owner or (cm.raccess.shareable and (is_view or is_edit))):
+    if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
     return {
@@ -3635,6 +3636,9 @@ class BaseResource(Page, AbstractResource):
         publication such as the Web App resource
         :return:
         """
+        if self.raccess.published:
+            return False
+
         return self.can_be_public_or_discoverable
 
     @classmethod
@@ -4560,6 +4564,19 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """Create any supported metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name == 'creator':
+                raise ValidationError("{} can't be created for a published resource".format(element_model_name))
+            elif element_model_name == 'identifier':
+                name_value = kwargs.get('name', '')
+                if name_value != 'doi':
+                    # for published resource the 'name' attribute of the identifier must be set to 'doi'
+                    raise ValidationError("For a published resource only a doi identifier can be created")
+            elif element_model_name == 'date':
+                date_type = kwargs.get('type', '')
+                if date_type and date_type not in ('modified', 'published'):
+                    raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
         return element
 
@@ -4567,11 +4584,23 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """Update metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name in ('title', 'creator', 'rights', 'identifier', 'format', 'publisher'):
+                raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
+            elif element_model_name == 'date':
+                date_type = kwargs.get('type', '')
+                if date_type and date_type != 'modified':
+                    raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
+                raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
 
     def _get_metadata_element_model_type(self, element_model_name):

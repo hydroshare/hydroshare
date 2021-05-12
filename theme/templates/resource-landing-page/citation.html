@@ -57,7 +57,7 @@
             <br />
 
             {# ======= Sharing ======= #}
-            {% if not resource_edit_mode %}
+            {% if not resource_edit_mode or cm.raccess.published %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
@@ -152,7 +152,7 @@
             {% endif %}
         </div>
 
-        {% if resource_edit_mode %}
+        {% if resource_edit_mode and not cm.raccess.published %}
         <div class="col-xs-12">
             {# Require license agreement for file download #}
             {% if self_access_level == 'owner' %}

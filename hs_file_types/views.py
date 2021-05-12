@@ -1,5 +1,6 @@
 import json
 import os
+
 import jsonschema
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -7,7 +8,6 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import Error
 from django.http import JsonResponse
 from django.template import Template, Context
-
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -734,6 +734,12 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
+    resource = logical_file.resource
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword',
+                              'message': "Editing of keywords is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_keywords_in_json:
         # if there are keywords in json file, we don't allow adding new keyword
@@ -745,7 +751,7 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     keywords = request.POST['keywords']
     keywords = keywords.split(",")
     existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
-    resource = logical_file.resource
+
     if not any(kw.lower() in keywords for kw in existing_keywords):
         metadata = logical_file.metadata
         metadata.keywords += keywords
@@ -785,11 +791,17 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
-
+    resource = logical_file.resource
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_keywords_in_json:
         # if there are keywords in json file, we don't allow deleting keyword
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'keyword', 'message': "Keyword delete is not allowed"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword',
+                              'message': "Editing of keywords is not allowed for a published resource"}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     keyword = request.POST['keyword']
@@ -801,7 +813,6 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
             metadata = logical_file.metadata
             metadata.is_dirty = True
             metadata.save()
-        resource = logical_file.resource
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'deleted_keyword': keyword,
@@ -827,6 +838,12 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
+    resource = logical_file.resource
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'dataset_name',
+                              'message': "Editing of dataset name is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_title_in_json:
         # if json file has title, we can't update title (dataset name)
@@ -840,7 +857,6 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     metadata = logical_file.metadata
     metadata.is_dirty = True
     metadata.save()
-    resource = logical_file.resource
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'dataset_name', "is_dirty": metadata.is_dirty,
@@ -865,6 +881,13 @@ def update_refts_abstract(request, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
+    resource = logical_file.resource
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract',
+                              'message': "Editing of abstract is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
 
     if logical_file.metadata.has_abstract_in_json:
         # if json file has abstract, we can't update abstract
@@ -873,7 +896,7 @@ def update_refts_abstract(request, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     abstract = request.POST['abstract']
-    resource = logical_file.resource
+
     if abstract.strip():
         logical_file.metadata.abstract = abstract
         logical_file.metadata.is_dirty = True
@@ -902,9 +925,14 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
+    resource = logical_file.resource
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract',
+                              'message': "Editing of abstract is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     abstract = request.POST['abstract']
-    resource = logical_file.resource
     if abstract.strip():
         metadata = logical_file.metadata
         metadata.abstract = abstract
@@ -936,7 +964,11 @@ def update_netcdf_file(request, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
-
+    resource = logical_file.resource
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': "NetCDF file can't be updated for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     try:
         logical_file.update_netcdf_file(request.user)
     except Exception as ex:
@@ -944,7 +976,7 @@ def update_netcdf_file(request, file_type_id, **kwargs):
                               'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
-    resource = logical_file.resource
+
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'message': "NetCDF file update was successful"}
@@ -965,6 +997,11 @@ def update_sqlite_file(request, file_type_id, **kwargs):
 
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
+    resource = logical_file.resource
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': "SQLite file can't be updated for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     try:
         logical_file.update_sqlite_file(request.user)
@@ -973,7 +1010,7 @@ def update_sqlite_file(request, file_type_id, **kwargs):
                               'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
-    resource = logical_file.resource
+
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'message': "SQLite file update was successful"}
