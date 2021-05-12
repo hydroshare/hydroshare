@@ -2,63 +2,84 @@
 
 <div class="col-sm-12 content-block">
     <span id="citation" class="page-anchor"></span>
-    <h3>Data Services</h3>
-    <div class="data-services-description">
-        <em>
-            The following Open Geospatial Consortium Web Services are available for this resource. The links below can be copied and pasted into Geographic Information Systems software programs to access geospatial data included within this resource.
-        </em>
-    </div>
-    <br>
-
-    {%  if data_services_urls.wms_url %}
-    <div class="row">
-        <div class="col-xs-12">
-            <h4>Web Map Service</h4>
-            <div class="flex">
-                <div id="wms-text" class="data-services-link">{{ data_services_urls.wms_url|urlize }}</div>
-
-                <button class="btn btn-default clipboard-copy" data-target="wms-text"
-                        type="button">
-                    <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
-                </button>
-            </div>
-            <br>
+    {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
+        <h3>Data Services</h3>
+        <div class="data-services-description">
+            <em>
+                The following web services are available for data contained in this resource. Geospatial Feature and Raster
+                data are made available via Open Geospatial Consortium Web Services. The provided links can be copied and pasted
+                into GIS software to access these data. Multidimensional NetCDF data are made available via a THREDDS Data Server
+                using remote data access protocols such as OPeNDAP. Other data services may be made available in the future to
+                support additional data types.
+            </em>
         </div>
-    </div>
-    {% endif %}
+        <br>
 
-    {%  if data_services_urls.wfs_url %}
-    <div class="row">
-        <div class="col-xs-12">
-            <h4>Web Feature Service</h4>
-            <div class="flex">
-                <div id="wfs-text" class="data-services-link">{{ data_services_urls.wfs_url|urlize }}</div>
+        {%  if data_services_urls.wms_url %}
+        <div class="row">
+            <div class="col-xs-12">
+                <h4>Web Map Service</h4>
+                <div class="flex">
+                    <div id="wms-text" class="data-services-link">{{ data_services_urls.wms_url|urlize }}</div>
 
-                <button class="btn btn-default clipboard-copy" data-target="wfs-text"
-                        type="button">
-                    <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
-                </button>
+                    <button class="btn btn-default clipboard-copy" data-target="wms-text"
+                            type="button">
+                        <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
+                    </button>
+                </div>
+                <br>
             </div>
-            <br>
         </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    {%  if data_services_urls.wcs_url %}
-    <div class="row">
-        <div class="col-xs-12">
-            <h4>Web Coverage Service</h4>
-            <div class="flex">
-                <div id="wcs-text" class="data-services-link">{{ data_services_urls.wcs_url|urlize }}</div>
+        {%  if data_services_urls.wfs_url %}
+        <div class="row">
+            <div class="col-xs-12">
+                <h4>Web Feature Service</h4>
+                <div class="flex">
+                    <div id="wfs-text" class="data-services-link">{{ data_services_urls.wfs_url|urlize }}</div>
 
-                <button class="btn btn-default clipboard-copy" data-target="wcs-text"
-                        type="button">
-                    <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
-                </button>
+                    <button class="btn btn-default clipboard-copy" data-target="wfs-text"
+                            type="button">
+                        <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
+                    </button>
+                </div>
+                <br>
             </div>
-            <br>
         </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
+        {%  if data_services_urls.wcs_url %}
+        <div class="row">
+            <div class="col-xs-12">
+                <h4>Web Coverage Service</h4>
+                <div class="flex">
+                    <div id="wcs-text" class="data-services-link">{{ data_services_urls.wcs_url|urlize }}</div>
+
+                    <button class="btn btn-default clipboard-copy" data-target="wcs-text"
+                            type="button">
+                        <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
+                    </button>
+                </div>
+                <br>
+            </div>
+        </div>
+        {% endif %}
+        {% if data_services_urls.thredds_url %}
+        <div class="row">
+            <div class="col-xs-12">
+                <h4>THREDDS Data Service</h4>
+                <div class="flex">
+                    <div id="thredds-text" class="data-services-link">{{  data_services_urls.thredds_url|urlize }}</div>
+                    <button class="btn btn-default clipboard-copy" data-target="thredds-text" type="button">
+                        <i class="fa fa-clipboard" aria-hidden="true"></i> Copy
+                    </button>
+                </div>
+                <br>
+                <a href="https://www.unidata.ucar.edu/software/tds/current/TDS.html", target="_blank">THREDDS Documentation </a>&nbsp;&nbsp;
+                <a href="https://opendap.github.io/documentation/UserGuideComprehensive.html", target="_blank">OPeNDAP Documentation</a>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
 </div>
