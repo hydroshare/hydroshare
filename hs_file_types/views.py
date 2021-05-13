@@ -888,7 +888,6 @@ def update_refts_abstract(request, file_type_id, **kwargs):
                               'message': "Editing of abstract is not allowed for a published resource"}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
-
     if logical_file.metadata.has_abstract_in_json:
         # if json file has abstract, we can't update abstract
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
@@ -976,7 +975,6 @@ def update_netcdf_file(request, file_type_id, **kwargs):
                               'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
-
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'message': "NetCDF file update was successful"}
@@ -1009,7 +1007,6 @@ def update_sqlite_file(request, file_type_id, **kwargs):
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'message': str(ex)}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
-
 
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
