@@ -206,7 +206,7 @@ class SearchAPI(APIView):
             author = result.author if result.author is not None else 'None'  # SOLR scalar
             author_link = result.author_url if result.author_url is not None else 'None'  # SOLR scalar
             contributor = result.contributor  # SOLR list
-            owner = result.owner[0] if len(result.owner) > 0 else 'None'  # SOLR list
+            owner = result.owner[0] if result.owner else 'None'  # SOLR list
 
             pt = ''  # pass empty string for the frontend to ensure the attribute exists but can be evaluated for empty
             try:
