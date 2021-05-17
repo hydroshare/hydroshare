@@ -176,16 +176,6 @@ def rating(request, template="generic/rating.html"):
     if rating_form.is_valid():
         rating_form.save()
         return response
-        if request.is_ajax():
-            # Reload the object and return the rating fields as json.
-            obj = obj.__class__.objects.get(id=obj.id)
-            rating_name = obj.get_ratingfield_name()
-            json = {}
-            for f in ("average", "count", "sum"):
-                json["rating_" + f] = getattr(obj, "%s_%s" % (rating_name, f))
-            return HttpResponse(dumps(json))
-        ratings = ",".join(rating_form.previous + [rating_form.current])
-        set_cookie(response, "mezzanine-rating", ratings)
     response = render(request, template)
     return response
 
