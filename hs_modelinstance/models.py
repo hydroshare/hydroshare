@@ -199,7 +199,7 @@ class ModelInstanceMetaData(CoreMetaData):
         xml_string = super(ModelInstanceMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode())
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)

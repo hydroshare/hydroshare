@@ -1,5 +1,3 @@
-from lxml import etree
-
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError

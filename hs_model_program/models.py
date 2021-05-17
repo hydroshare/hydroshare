@@ -176,7 +176,7 @@ class ModelProgramMetaData(CoreMetaData):
         xml_string = super(ModelProgramMetaData, self).get_xml_legacy(pretty_print=pretty_print)
 
         # create  etree element
-        RDF_ROOT = etree.fromstring(xml_string)
+        RDF_ROOT = etree.fromstring(xml_string.encode())
 
         # get the root 'Description' element, which contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)

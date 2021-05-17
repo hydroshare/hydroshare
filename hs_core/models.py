@@ -2307,18 +2307,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Get URL of resource map xml."""
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 
-    def delete(self, using=None):
+    def delete(self, using=None, keep_parents=False):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
         for fl in self.files.all():
-            if fl.logical_file is not None:
-                # delete of metadata file deletes the logical file (one-to-one relation)
-                # so no need for fl.logical_file.delete() and deleting of metadata file
-                # object deletes (cascade delete) all the contained GenericRelated metadata
-                # elements
-                fl.logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
-            fl.delete()
+            fl.delete(delete_logical_file=True)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
@@ -2630,16 +2624,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Check if resource allows associating resource file objects with logical file."""
         return False
 
-    def set_default_logical_file(self):
-        """Do nothing (noop).
-
-        Sets an instance of default logical file type to any resource file objects of
-        this instance of the resource that is not already associated with a logical file.
-        Each specific resource type needs to override this function in order to to support logical
-        file types
-        """
-        pass
-
     def supports_folder_creation(self, folder_full_path):
         """Check if resource supports creation of folder at the specified path."""
         return True
@@ -2919,14 +2903,17 @@ class ResourceFile(ResourceFileIRODSMixin):
         return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
-    def delete(self):
+    def delete(self, delete_logical_file=False):
         """Delete a resource file record and the file contents.
+        :param  delete_logical_file: if True deletes logical file associated with resource file
 
         model.delete does not cascade to delete files themselves,
         and these must be explicitly deleted.
-
         """
         if self.exists:
+            if delete_logical_file and self.logical_file is not None:
+                # deleting logical file metadata deletes the logical file as well
+                self.logical_file.metadata.delete()
             if self.fed_resource_file:
                 self.fed_resource_file.delete()
             if self.resource_file:
@@ -3789,9 +3776,7 @@ Page.get_content_model = new_get_content_model
 class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     """Define CoreMetaData model."""
 
-    XML_HEADER = '''<?xml version="1.0"?>
-<!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
-"http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
+    XML_HEADER = '''<?xml version="1.0" encoding="UTF-8"?>'''
 
     NAMESPACES = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",

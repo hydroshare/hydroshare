@@ -4882,3 +4882,15 @@ a[data-toggle="modal"] {
 .c-pointer {
 	cursor: pointer;
 }
+
+label.form-check-label {
+	margin-left: 5px;
+	margin-bottom: 10px;
+	font-size: 16px;
+}
+div.property-selector {
+	padding: 5px;
+	overflow: scroll;
+	width: max-content;
+	max-height: 160px;
+}

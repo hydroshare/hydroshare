@@ -420,6 +420,14 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
                 tgt_logical_file.save()
             tgt_logical_file.add_resource_file(new_resource_file)
 
+    for lf in map_logical_files:
+        if lf.type_name() == 'ModelProgramLogicalFile':
+            # for any model program logical files in original resource need to copy the model program file types
+            lf.copy_mp_file_types(tgt_logical_file=map_logical_files[lf])
+        elif lf.type_name() == 'ModelInstanceLogicalFile':
+            # for any model instance logical files in original resource need to set the executed_by (FK) relation
+            lf.copy_executed_by(tgt_logical_file=map_logical_files[lf])
+
     if src_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
         # note that new collection resource will not contain "deleted resources"
@@ -955,17 +963,19 @@ def add_file_to_resource(resource, f, folder='', source_name='',
 
     if f:
         if check_target_folder and folder:
-                tgt_full_upload_path = os.path.join(resource.file_path, folder)
-                if not resource.can_add_files(target_full_path=tgt_full_upload_path):
-                    err_msg = "File can't be added to this folder which represents an aggregation"
-                    raise ValidationError(err_msg)
+            tgt_full_upload_path = os.path.join(resource.file_path, folder)
+            if not resource.can_add_files(target_full_path=tgt_full_upload_path):
+                err_msg = "File can't be added to this folder which represents an aggregation"
+                raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
         if add_to_aggregation:
             if folder and resource.resource_type == 'CompositeResource':
-                aggregation = resource.get_fileset_aggregation_in_path(folder)
+                aggregation = resource.get_model_aggregation_in_path(folder)
+                if aggregation is None:
+                    aggregation = resource.get_fileset_aggregation_in_path(folder)
                 if aggregation is not None:
-                    # make the added file part of the fileset aggregation
+                    # make the added file part of the fileset or model program/instance aggregation
                     aggregation.add_resource_file(ret)
 
         # add format metadata element if necessary
@@ -974,7 +984,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     elif source_name:
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource, None, folder=folder, source=source_name)
+            ret = ResourceFile.create(resource, file=None, folder=folder, source=source_name)
         except SessionException as ex:
             try:
                 ret.delete()
@@ -1120,7 +1130,8 @@ def check_aggregations(resource, res_files):
 
         # check files for aggregation creation
         for res_file in res_files:
-            if not res_file.has_logical_file or res_file.logical_file.is_fileset:
+            if not res_file.has_logical_file or (res_file.logical_file.is_fileset or
+                                                 res_file.logical_file.is_model_instance):
                 # create aggregation from file 'res_file'
                 logical_file = set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                                      fail_feedback=False)
