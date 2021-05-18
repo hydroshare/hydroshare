@@ -12,35 +12,30 @@ logger = logging.getLogger(__name__)
 
 def solr_update(instance): 
     """ Update a resource's SOLR record """
-    # work around for failure of super(BaseResource, instance) to work properly.
-    # this always succeeds because this is a post-save object action.
+    from hs_core.models import BaseResource
+    from hs_core.search_indexes import BaseResourceIndex
+    logger.info('updating {}'.format(instance.short_id))
+    index = BaseResourceIndex()
     newbase = BaseResource.objects.get(pk=instance.pk)
-    newsender = BaseResource
-    using_backends = self.connection_router.for_write(instance=newbase)
-    for using in using_backends:
-        logger.info('updating {}'.format(instance.short_id))
-        try:
-            index = self.connections[using].get_unified_index().get_index(newsender)
-            index.update_object(newbase, using=using)
-        except NotHandled:
-            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
-                             str(type(instance)), newbase.short_id)
+    try:
+        index.update_object(newbase)
+    except NotHandled:
+        logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
+                         str(type(instance)), newbase.short_id)
 
 
 def solr_delete(instance): 
     """ Delete a resource from SOLR before deleting from Django """
+    from hs_core.models import BaseResource
+    from hs_core.search_indexes import BaseResourceIndex
     logger.info('deleting {}'.format(instance.short_id))
-    # Rebase to BaseResource from whatever subclass. 
+    index = BaseResourceIndex()
     newbase = BaseResource.objects.get(pk=instance.pk)
-    newsender = BaseResource
-    using_backends = self.connection_router.for_write(instance=newbase)
-    for using in using_backends:
-        try:
-            index = self.connections[using].get_unified_index().get_index(newsender)
-            index.remove_object(newbase, using=using)
-        except NotHandled:
-            logger.exception("Failure: delete of %s with short_id %s failed.",
-                             str(type(instance)), newbase.short_id)
+    try:
+        index.remove_object(newbase)
+    except NotHandled:
+        logger.exception("Failure: delete of %s with short_id %s failed.",
+                         str(type(instance)), newbase.short_id)
 
 
 def solr_batch_update(): 
