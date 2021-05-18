@@ -41,7 +41,7 @@ from hs_collection_resource.models import CollectionDeletedResource
 # for celery tasks (as this seems to be the
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
-logger = logging.getLogger('hydroshare')
+logger = logging.getLogger('django')
 
 
 # Currently there are two different cleanups scheduled.
