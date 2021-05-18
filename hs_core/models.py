@@ -4769,6 +4769,6 @@ class SOLRQueue(models.Model):
     def read_and_clear(cls):
         """ read a list of resources to update -- order unimportant -- and clear the queue """
         with transaction.atomic():
-            everything = [ x.resource for x in cls.objects.all() ]  # force aggressive evaluation
+            everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
             cls.objects.all().delete()
         return everything
