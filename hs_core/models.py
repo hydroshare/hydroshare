@@ -379,7 +379,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in list(kwargs.items()):
-                setattr(element, key, value)
+            setattr(element, key, value)
         element.save()
         return element
 

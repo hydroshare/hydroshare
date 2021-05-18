@@ -710,9 +710,9 @@ def task_notification_cleanup():
     TaskNotification.objects.filter(created__lte=week_ago).delete()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(seconds=5))
-def task_update_solr(): 
-    """ update the queue of all updated resources every 5 seconds """
-    from .hydro_realtime_signal_processor import solr_batch_update 
-    logger.info("updating SOLR")
-    solr_batch_update() 
+# @periodic_task(ignore_result=True, run_every=crontab(seconds=5))
+# def task_update_solr(): 
+#     """ update the queue of all updated resources every 5 seconds """
+#     from .hydro_realtime_signal_processor import solr_batch_update 
+#     logger.info("updating SOLR")
+#     solr_batch_update() 
