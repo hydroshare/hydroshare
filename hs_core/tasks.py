@@ -41,7 +41,7 @@ from hs_collection_resource.models import CollectionDeletedResource
 # for celery tasks (as this seems to be the
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
-logger = logging.getLogger('django')
+logger = logging.getLogger('hydroshare')
 
 
 # Currently there are two different cleanups scheduled.
@@ -538,7 +538,14 @@ def delete_resource_task(resource_id, request_username=None):
     :return: resource_id if delete operation succeeds
              raise an exception if there were errors.
     """
+    from hs_core.hydro_realtime_signal_processor import solr_delete
+
     res = utils.get_resource_by_shortkey(resource_id)
+
+    # inform solr to remove this resource from solr index
+    # deletion of a discoverable resource corrupts SOLR.
+    solr_delete(res)
+
     res_title = res.metadata.title
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
@@ -701,3 +708,11 @@ def task_notification_cleanup():
     """
     week_ago = datetime.today() - timedelta(days=7)
     TaskNotification.objects.filter(created__lte=week_ago).delete()
+
+
+@periodic_task(ignore_result=True, run_every=crontab(seconds=5))
+def task_update_solr(): 
+    """ update the queue of all updated resources every 5 seconds """
+    from .hydro_realtime_signal_processor import solr_batch_update 
+    logger.info("updating SOLR")
+    solr_batch_update() 

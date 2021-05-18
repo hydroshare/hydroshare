@@ -5,8 +5,52 @@ import logging
 import types
 from haystack.query import SearchQuerySet
 from haystack.utils import get_identifier
+from hs_core.models import SOLRQueue
 
 logger = logging.getLogger(__name__)
+
+
+def solr_update(instance): 
+    """ Update a resource's SOLR record """
+    # work around for failure of super(BaseResource, instance) to work properly.
+    # this always succeeds because this is a post-save object action.
+    newbase = BaseResource.objects.get(pk=instance.pk)
+    newsender = BaseResource
+    using_backends = self.connection_router.for_write(instance=newbase)
+    for using in using_backends:
+        logger.info('updating {}'.format(instance.short_id))
+        try:
+            index = self.connections[using].get_unified_index().get_index(newsender)
+            index.update_object(newbase, using=using)
+        except NotHandled:
+            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
+                             str(type(instance)), newbase.short_id)
+
+
+def solr_delete(instance): 
+    """ Delete a resource from SOLR before deleting from Django """
+    logger.info('deleting {}'.format(instance.short_id))
+    newbase = BaseResource.objects.get(pk=instance.pk)
+    newsender = BaseResource
+    using_backends = self.connection_router.for_write(instance=newbase)
+    for using in using_backends:
+        try:
+            index = self.connections[using].get_unified_index().get_index(newsender)
+            index.remove_object(newbase, using=using)
+        except NotHandled:
+            logger.exception("Failure: delete of %s with short_id %s failed.",
+                             str(type(instance)), newbase.short_id)
+
+
+def solr_batch_update(): 
+    """ update SOLR for resources in the SOLRQueue """
+    logger.info('starting batch update') 
+    for instance in SOLRQueue.read_and_clear(): 
+        logger.info('checking {}'.format(instance.short_id))
+        if instance.show_in_discover:  # if object should be displayed now
+            solr_update(instance)
+        else:  # not to be shown in discover
+            solr_delete(instance)
 
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
@@ -29,34 +73,9 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
 
-
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
-                # work around for failure of super(BaseResource, instance) to work properly.
-                # this always succeeds because this is a post-save object action.
-                newbase = BaseResource.objects.get(pk=instance.pk)
-                newsender = BaseResource
-                using_backends = self.connection_router.for_write(instance=newbase)
-                for using in using_backends:
-                    # if object is public/discoverable or becoming public/discoverable, index it
-                    # test whether the object should be exposed.
-                    if instance.show_in_discover:
-                        try:
-                            index = self.connections[using].get_unified_index().get_index(newsender)
-                            index.update_object(newbase, using=using)
-                        except NotHandled:
-                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
-                                             str(type(instance)), newbase.short_id)
-
-
-                    # if object is private or becoming private, delete from index
-                    else:  # not to be shown in discover
-                        try:
-                            index = self.connections[using].get_unified_index().get_index(newsender)
-                            index.remove_object(newbase, using=using)
-                        except NotHandled:
-                            logger.exception("Failure: delete of %s with short_id %s failed.",
-                                             str(type(instance)), newbase.short_id)
+                SOLRQueue.add(instance)
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it.
