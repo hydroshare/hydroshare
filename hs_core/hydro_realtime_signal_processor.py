@@ -30,6 +30,7 @@ def solr_update(instance):
 def solr_delete(instance): 
     """ Delete a resource from SOLR before deleting from Django """
     logger.info('deleting {}'.format(instance.short_id))
+    # Rebase to BaseResource from whatever subclass. 
     newbase = BaseResource.objects.get(pk=instance.pk)
     newsender = BaseResource
     using_backends = self.connection_router.for_write(instance=newbase)

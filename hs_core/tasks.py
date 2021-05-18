@@ -538,13 +538,7 @@ def delete_resource_task(resource_id, request_username=None):
     :return: resource_id if delete operation succeeds
              raise an exception if there were errors.
     """
-    from hs_core.hydro_realtime_signal_processor import solr_delete
-
-    res = utils.get_resource_by_shortkey(resource_id)
-
-    # inform solr to remove this resource from solr index
-    # deletion of a discoverable resource corrupts SOLR.
-    solr_delete(res)
+    res = utils.get_resource_by_shortkey(resource_id)  # TODO: very inefficient
 
     res_title = res.metadata.title
     res_type = res.resource_type
