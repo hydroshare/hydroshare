@@ -1,8 +1,9 @@
 import datetime
+import os
 
 from django.core.validators import RegexValidator
 from django.utils import timezone
-
+from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
@@ -324,4 +325,24 @@ def force_unique_emails(sender, instance, **kwargs):
         if sender.objects.filter(username=username).exclude(pk=instance.id).exists():
             raise ValidationError("Username already in use.")
 
+
 pre_save.connect(force_unique_emails, sender=User)
+
+
+@receiver(models.signals.pre_save, sender=UserProfile)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """
+    Deletes old file from filesystem when corresponding UserProfile object is updated with new file.
+    """
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = UserProfile.objects.get(pk=instance.pk).cv
+    except UserProfile.DoesNotExist:
+        return False
+
+    new_file = instance.cv
+    if not old_file == new_file:
+        if os.path.isfile(old_file.path):
+            os.remove(old_file.path)
