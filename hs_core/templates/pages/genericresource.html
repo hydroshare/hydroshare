@@ -173,7 +173,7 @@
 {% block main %}
     {% keywords_for page as kws %}
     {% set_page_permissions page %}
-    {% if page.perms.change and resource_edit_mode %}
+    {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
     {% csrf_token %}
     {% endif %}
 
@@ -236,7 +236,7 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
                             <span class="fa fa-scissors icon-blue"></span>
@@ -309,7 +309,7 @@
                     </li>
                 {% endif %}
                 <li id="content-type-separator" role="separator" class="divider"></li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published %}
                     {# ADD METADATA TO A FILE #}
                     <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
                         <i class="fa fa-plus icon-green" aria-hidden="true"></i>
@@ -380,7 +380,7 @@
 
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if page.perms.change and resource_edit_mode %}
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
@@ -416,21 +416,23 @@
             <div class="col-xs-12 content-block">
                 <h3>Content</h3>
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                    <div class="alert alert-info alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <div class="flex">
-                            <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                            <em>
-                                If you upload a readme.txt or readme.md file at the root level in your
-                                resource, it will be rendered automatically on the page. Markdown
-                                formatting is allowed in readme.md.<br><strong><a
-                                    href="https://daringfireball.net/projects/markdown/basics"
-                                    target="_blank">Learn more about Markdown</a></strong>
-                            </em>
+                    {% if not cm.raccess.published or current_user.is_superuser %}
+                        <div class="alert alert-info alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em>
+                                    If you upload a readme.txt or readme.md file at the root level in your
+                                    resource, it will be rendered automatically on the page. Markdown
+                                    formatting is allowed in readme.md.<br><strong><a
+                                        href="https://daringfireball.net/projects/markdown/basics"
+                                        target="_blank">Learn more about Markdown</a></strong>
+                                </em>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 {% endif %}
 
                 <div id="ref_file_note" class="alert alert-warning space-top" role="alert"
@@ -449,25 +451,27 @@
                 </div>
 
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                    <div id="fb-alerts">
-                        <div class="alert alert-warning alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                    {% if not cm.raccess.published or current_user.is_superuser %}
+                        <div id="fb-alerts">
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
 
-                            <div class="flex">
-                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                                <em>
-                                    <strong>Uploading</strong>
-                                    <ul>
-                                        <li><span id="file-types"></span></li>
-                                        <li><span id="file-multiple"></span></li>
-                                        {% block upload_message %}{% endblock %}
-                                    </ul>
-                                </em>
+                                <div class="flex">
+                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <em>
+                                        <strong>Uploading</strong>
+                                        <ul>
+                                            <li><span id="file-types"></span></li>
+                                            <li><span id="file-multiple"></span></li>
+                                            {% block upload_message %}{% endblock %}
+                                        </ul>
+                                    </em>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                   {% endif %}
                 {% endif %}
 
                 {% if page.perms.change and resource_edit_mode %}
@@ -512,7 +516,11 @@
                     {# ======= Modal window ends =======#}
 
                     <div id="hs-file-browser" data-current-path=""
-                         {% if page.perms.change and resource_edit_mode %}data-mode="edit"{% endif %}
+                         {% if page.perms.change and resource_edit_mode %}
+                             {% if not cm.raccess.published or current_user.is_superuser %}
+                                data-mode="edit"
+                             {% endif %}
+                         {% endif %}
                          data-supported-files="{{ cm.get_supported_upload_file_types }}"
                          data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                          {% if cm.raccess.require_download_agreement %}
@@ -608,50 +616,52 @@
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                                <a type="button" data-fb-action="uploadFiles"
-                                                   class="btn btn-success btn-xs dz-clickable upload-toggle">
-                                                    <i class="fa fa-plus"></i> Add files
-                                                </a>
+                                                {% if not cm.raccess.published or current_user.is_superuser %}
+                                                    <a type="button" data-fb-action="uploadFiles"
+                                                       class="btn btn-success btn-xs dz-clickable upload-toggle">
+                                                        <i class="fa fa-plus"></i> Add files
+                                                    </a>
 
-                                                <div id="irods-group" class="btn-group">
-                                                    <button type="button"
-                                                            class="btn btn-default btn-xs dropdown-toggle fb-space-right"
-                                                            data-toggle="dropdown" aria-haspopup="true"
-                                                            title="Add files from an iRODS server"
-                                                            aria-expanded="false">
-                                                        <span>iRODS</span>&nbsp;<span class="caret"></span>
-                                                    </button>
+                                                    <div id="irods-group" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default btn-xs dropdown-toggle fb-space-right"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                title="Add files from an iRODS server"
+                                                                aria-expanded="false">
+                                                            <span>iRODS</span>&nbsp;<span class="caret"></span>
+                                                        </button>
 
-                                                    <ul class="dropdown-menu text-left">
-                                                        <li id="btn-signin-irods" data-toggle="modal"
-                                                            data-target="#irodsSignin">
-                                                            <a>
-                                                                <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
-                                                                in to iRODS
-                                                            </a>
-                                                        </li>
+                                                        <ul class="dropdown-menu text-left">
+                                                            <li id="btn-signin-irods" data-toggle="modal"
+                                                                data-target="#irodsSignin">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
+                                                                    in to iRODS
+                                                                </a>
+                                                            </li>
 
-                                                        <li id="btn-select-irods-file" class="dz-clickable hidden"
-                                                            data-fb-action="uploadFiles"
-                                                            data-toggle="modal" data-target="#irodsContent">
-                                                            <a>
-                                                                <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
-                                                                files from iRODS...
-                                                            </a>
-                                                        </li>
+                                                            <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                                data-fb-action="uploadFiles"
+                                                                data-toggle="modal" data-target="#irodsContent">
+                                                                <a>
+                                                                    <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
+                                                                    files from iRODS...
+                                                                </a>
+                                                            </li>
 
-                                                        <li role="separator" class="divider hidden"></li>
-                                                        <li id="btn-signout-irods" class="hidden">
-                                                            <a>
-                                                                <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
-                                                                out of iRODS
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                            <li role="separator" class="divider hidden"></li>
+                                                            <li id="btn-signout-irods" class="hidden">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
+                                                                    out of iRODS
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
                                                 {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
@@ -706,12 +716,14 @@
                                             {% endif %}
 
                                             {% if page.perms.change and resource_edit_mode %}
-                                                <button id="fb-delete" data-fb-action="delete"
-                                                        class="disabled fb-space-right"
-                                                        title="Delete" data-toggle="modal"
-                                                        data-target="#confirm-delete-dialog" onclick="warnExternalContent('{{ cm.short_id }}')">
-                                                    <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                </button>
+                                                {% if not cm.raccess.published or current_user.is_superuser %}
+                                                    <button id="fb-delete" data-fb-action="delete"
+                                                            class="disabled fb-space-right"
+                                                            title="Delete" data-toggle="modal"
+                                                            data-target="#confirm-delete-dialog" onclick="warnExternalContent('{{ cm.short_id }}')">
+                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                    </button>
+                                                {% endif %}
                                             {% endif %}
 
                                             <button id="fb-select-all"
@@ -777,7 +789,7 @@
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
                                     <form id="hsDropzone"
-                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode %}dropzone{% endif %}"
+                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published or cm.raccess.published and current_user.is_superuser %}dropzone{% endif %}"
                                           action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
                                           method="POST">
                                         {% csrf_token %}
@@ -804,11 +816,13 @@
                                     </form>
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
-                                        <div class="fb-upload-caption ">
-                                            <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                            smaller than 1GB in size by dragging & dropping, or click <a
-                                                class="dz-clickable upload-toggle">here</a> to select them.
-                                        </div>
+                                        {% if not cm.raccess.published or current_user.is_superuser %}
+                                            <div class="fb-upload-caption ">
+                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
+                                                smaller than 1GB in size by dragging & dropping, or click <a
+                                                    class="dz-clickable upload-toggle">here</a> to select them.
+                                            </div>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                                 {% if cm.resource_type == "CompositeResource" %}
@@ -842,12 +856,14 @@
                             </div>
 
                             {% if page.perms.change and resource_edit_mode %}
-                                <form id="fb-delete-files-form" class="hidden"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
-                                      method="POST" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="file_ids" value=""/>
-                                </form>
+                                {% if not cm.raccess.published or current_user.is_superuser %}
+                                    <form id="fb-delete-files-form" class="hidden"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
+                                          method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
+                                    </form>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
@@ -885,7 +901,7 @@
         {% endblock %} {# content_block #}
 
         {# ======= Data Services ======= #}
-        {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url  %}
+        {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
             {% include "resource-landing-page/data-services.html" %}
         {% endif %}
 
@@ -899,7 +915,7 @@
                         <h3>Resource Specific</h3>
                         <div id="resourceSpecificTab">
                             <div class="row">
-                                {% if not resource_edit_mode %}
+                                {% if not resource_edit_mode or cm.raccess.published %}
                                     {% block extended_metadata %}{% endblock %}
                                 {% else %}
                                     {% crispy metadata_form  %}
@@ -924,7 +940,7 @@
         {% include "resource-landing-page/credits.html" %}
 
         {# ======= Citation ======= #}
-        {% if resource_edit_mode %}
+        {% if resource_edit_mode and not cm.raccess.published %}
             {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
         {% else %}
             {% include "resource-landing-page/citation.html" with resource_mode="view" %}
@@ -961,6 +977,7 @@
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      const RESOURCE_PUBLISHED = "{{ cm.raccess.published }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};

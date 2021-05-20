@@ -738,6 +738,12 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
                               'element_name': 'keyword', 'message': "Permission denied"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword',
+                              'message': "Editing of keywords is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_keywords_in_json:
         # if there are keywords in json file, we don't allow adding new keyword
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
@@ -799,6 +805,12 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
                               'element_name': 'keyword', 'message': "Permission denied"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword',
+                              'message': "Editing of keywords is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     keyword = request.POST['keyword']
     existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
     if keyword.lower() in existing_keywords:
@@ -835,6 +847,12 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     if not authorized:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'datatset_name', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'dataset_name',
+                              'message': "Editing of dataset name is not allowed for a published resource"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     if hs_file_type == "RefTimeseriesLogicalFile" and logical_file.metadata.has_title_in_json:
@@ -877,6 +895,12 @@ def update_refts_abstract(request, file_type_id, **kwargs):
                               'element_name': 'abstract', 'message': "Permission denied"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract',
+                              'message': "Editing of abstract is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     if logical_file.metadata.has_abstract_in_json:
         # if json file has abstract, we can't update abstract
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
@@ -916,6 +940,12 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
                               'element_name': 'abstract', 'message': "Permission denied"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract',
+                              'message': "Editing of abstract is not allowed for a published resource"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     abstract = request.POST['abstract']
     if abstract.strip():
         metadata = logical_file.metadata
@@ -951,7 +981,12 @@ def update_netcdf_file(request, file_type_id, **kwargs):
                                         raises_exception=False)
     if not authorized:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'datatset_name', 'message': "Permission denied"}
+                              'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': "NetCDF file can't be updated for a published resource"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     try:
@@ -984,7 +1019,12 @@ def update_sqlite_file(request, file_type_id, **kwargs):
                                         raises_exception=False)
     if not authorized:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'datatset_name', 'message': "Permission denied"}
+                              'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    if resource.raccess.published:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': "SQLite file can't be updated for a published resource"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     try:

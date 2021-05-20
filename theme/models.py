@@ -269,7 +269,10 @@ class UserProfile(models.Model):
         help_text="The name of the organization you work for."
     )
     phone_regex = RegexValidator(regex=r'^\d{8,15}$',
-                                 message="Phone number must be entered in the format: '999999999'. Up to 16 digits allowed.")
+                                 message="Our validation for phone numbers has recently changed. Please ensure that "
+                                         "your phone number is entered in the following format: '999999999'. Up to 16 "
+                                         "digits are allowed.  If you made other changes to your profile - please make "
+                                         "sure they saved successfully.")
     phone_1 = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
         ('Home', 'Home'),

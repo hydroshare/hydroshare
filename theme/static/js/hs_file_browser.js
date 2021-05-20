@@ -197,7 +197,7 @@ function updateSelectionMenuContext() {
         "unzip",
         "updateRefUrl",
         "uploadFiles",
-        "zip",
+        "zip"
     ];
     var uiActionStates = {};
 
@@ -265,7 +265,7 @@ function updateSelectionMenuContext() {
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
     }
-    else if (selected.length == 1) {
+    else if (selected.length === 1) {
         // Exactly one item selected
 
         var fileName = $(selected).find(".fb-file-name").text();
@@ -374,7 +374,7 @@ function updateSelectionMenuContext() {
                 // disable remove aggregation option if it is URL file
                 uiActionStates.removeAggregation.disabled = true;
 
-                if (mode != "edit") {
+                if (mode !== "edit") {
                     uiActionStates.updateRefUrl.disabled = true;
                     uiActionStates.updateRefUrl.fileMenu.hidden = true;
                 }
@@ -823,6 +823,9 @@ function showFileTypeMetadata(file_type_time_series, url){
         return;
     }
     resource_mode = resource_mode.toLowerCase();
+    if(RESOURCE_PUBLISHED) {
+        resource_mode = 'view';
+    }
     var $url;
     if (file_type_time_series) {
         $url = url;
@@ -1480,7 +1483,7 @@ $(document).ready(function () {
     var mode = $("#hs-file-browser").attr("data-mode");
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
-    if (mode === "edit") {
+    if (mode === "edit" && !RESOURCE_PUBLISHED) {
         no_metadata_alert +=
         '<div class="text-center">' +
             '<a id="btnSideAddMetadata" type="button" class="btn btn-success" data-fb-action="">' +

@@ -244,8 +244,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     :param kwargs:
     :return: HTTP response with status code indicating success or failure
     """
-    resource, _, _ = authorize(request, shortkey,
-                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    resource, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    if resource.raccess.published and not user.is_superuser:
+        msg = {'validation_error': "Only admin can add files to a published resource"}
+        return JsonResponse(msg, status=500)
 
     res_files, full_paths = extract_files_with_paths(request)
     auto_aggregate = request.POST.get("auto_aggregate", 'true').lower() == 'true'
@@ -422,10 +424,13 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     sender_resource = _get_resource_sender(element_name, res)
     if element_name.lower() == 'subject' and len(request.POST['value']) == 0:
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
-        res.metadata.subjects.all().delete()
-        is_add_success = True
-        res.update_public_and_discoverable()
-        resource_modified(res, request.user, overwrite_bag=False)
+        if res.raccess.published:
+            err_msg = err_msg.format(element_name, "Published resource needs to have at least one subject")
+        else:
+            res.metadata.subjects.all().delete()
+            is_add_success = True
+            res.update_public_and_discoverable()
+            resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
                                                             element_name=element_name,
@@ -695,8 +700,12 @@ def delete_author(request, shortkey, element_id, *args, **kwargs):
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
-    request.session['resource-mode'] = 'edit'
+    try:
+        hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
+    except ValidationError as err:
+        request.session['validation_error'] = str(err)
+    finally:
+        request.session['resource-mode'] = 'edit'
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -710,6 +719,10 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
         f_id = f_id.strip()
         try:
             hydroshare.delete_resource_file(shortkey, f_id, user)  # calls resource_modified
+        except ValidationError as err:
+            request.session['resource-mode'] = 'edit'
+            request.session['validation_error'] = str(err)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
@@ -869,9 +882,20 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     ajax_response_data = {'status': 'error', 'message': ''}
-    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     flag = resolve_request(request).get('flag', None)
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
+                                      raises_exception=False)
+    if not authorized:
+        # for published resource above authorize call will return false
+        # need to then check permission to change shareable flag
+        if flag in ('make_shareable', 'make_not_shareable'):
+            if not user.uaccess.can_change_resource_shareable_flag(res):
+                raise PermissionDenied
+        else:
+            raise PermissionDenied
+
     message = None
+
     if flag == 'make_public':
         message = _set_resource_sharing_status(user, res, flag_to_set='public', flag_value=True)
     elif flag == 'make_private' or flag == 'make_not_discoverable':
@@ -1733,9 +1757,6 @@ def _set_resource_sharing_status(user, resource, flag_to_set, flag_value):
     """
 
     if flag_to_set == 'shareable':  # too simple to deserve a method in AbstractResource
-        # access control is separate from validation logic
-        if not user.uaccess.can_change_resource_flags(resource):
-            return "You don't have permission to change resource sharing status"
         if resource.raccess.shareable != flag_value:
             resource.raccess.shareable = flag_value
             resource.raccess.save()

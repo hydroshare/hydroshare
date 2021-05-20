@@ -859,6 +859,10 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   source_names=[], **kwargs):
     if __debug__:
         assert(isinstance(source_names, list))
+
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Only admin can add files to a published resource")
+
     resource_cls = resource.__class__
     if len(files) > 0:
         size = validate_resource_file_size(files)
@@ -882,12 +886,16 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     from .resource import add_resource_files
     if __debug__:
         assert(isinstance(source_names, list))
+
+    if resource.raccess.published and not user.is_superuser:
+        raise ValidationError("Only admin can add files to a published resource")
+
     folder = kwargs.pop('folder', '')
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names, full_paths=full_paths,
-                                               auto_aggregate=auto_aggregate)
+                                               auto_aggregate=auto_aggregate, user=user)
     resource.refresh_from_db()
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
@@ -914,7 +922,7 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',
-                         check_target_folder=False, add_to_aggregation=True):
+                         check_target_folder=False, add_to_aggregation=True, user=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -933,10 +941,15 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     :param  add_to_aggregation: if true and the resource is a composite resource then the file
     being added to the resource also will be added to a fileset aggregation if such an aggregation
     exists in the file path
+    :param  user: user who is adding file to the resource
     :return: The identifier of the ResourceFile added.
     """
 
     # validate parameters
+    if resource.raccess.published:
+        if user is None or not user.is_superuser:
+            raise ValidationError("Only admin can add files to a published resource")
+
     if check_target_folder and resource.resource_type != 'CompositeResource':
         raise ValidationError("Resource must be a CompositeResource for validating target folder")
 
