@@ -14,7 +14,7 @@ def solr_update(instance, index=None):
     """ Update a resource's SOLR record """
     if not index:
         from hs_core.search_indexes import BaseResourceIndex
-        index = BaseResourceIndex
+        index = BaseResourceIndex()
     logger.debug('updating {}'.format(instance.short_id))
     try:
         index.update_object(instance)
@@ -27,7 +27,7 @@ def solr_delete(instance, index=None):
     """ Delete a resource from SOLR before deleting from Django """
     if not index:
         from hs_core.search_indexes import BaseResourceIndex
-        index = BaseResourceIndex
+        index = BaseResourceIndex()
     logger.debug('deleting {}'.format(instance.short_id))
     try:
         index.remove_object(instance)
