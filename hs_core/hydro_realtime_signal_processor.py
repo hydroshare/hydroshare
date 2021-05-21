@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def solr_update(index, instance):
     """ Update a resource's SOLR record """
-    logger.info('updating {}'.format(instance.short_id))
+    logger.debug('updating {}'.format(instance.short_id))
     try:
         index.update_object(instance)
     except NotHandled:
@@ -22,7 +22,7 @@ def solr_update(index, instance):
 
 def solr_delete(index, instance):
     """ Delete a resource from SOLR before deleting from Django """
-    logger.info('deleting {}'.format(instance.short_id))
+    logger.debug('deleting {}'.format(instance.short_id))
     try:
         index.remove_object(instance)
     except NotHandled:
@@ -37,7 +37,7 @@ def solr_batch_update():
     from hs_core.search_indexes import BaseResourceIndex
     index = BaseResourceIndex()
     for instance in SOLRQueue.read_and_clear():
-        logger.info('checking {}'.format(instance.short_id))
+        logger.debug('checking {}'.format(instance.short_id))
         try:
             newbase = BaseResource.objects.get(pk=instance.pk)
             if newbase.show_in_discover:  # if object should be displayed now
@@ -45,7 +45,7 @@ def solr_batch_update():
             else:  # not to be shown in discover
                 solr_delete(index, newbase)
         except BaseResource.DoesNotExist:
-            logger.info("Failure: %s with short_id %s does not exist, skipping",
+            logger.debug("Failure: %s with short_id %s does not exist, skipping",
                         str(type(instance)), instance.short_id)
         except:  # catch broad exception to continue processing resources in the queue
             logger.exception("Unhandled exception raised when updating solr for %s with shortid %s",
