@@ -52,7 +52,7 @@ urlpatterns = i18n_patterns(
         name='resend_verification_email'),
     url(r'^reset_password_request/$', theme.request_password_reset,
         name='reset_password_request'),
-    url(r'^new_password_for_reset/(?P<token>[-\w]+)/', theme.UserPasswordResetView.as_view(),
+    url(r'^new_password_for_reset/$', theme.UserPasswordResetView.as_view(),
         name='new_password_for_reset'),
     url(r'^confirm_reset_password/$', theme.reset_user_password,
         name='confirm_reset_password'),
