@@ -47,9 +47,9 @@ def solr_batch_update():
         try:
             newbase = BaseResource.objects.get(pk=instance.pk)
             if newbase.show_in_discover:  # if object should be displayed now
-                solr_update(index, newbase)
+                solr_update(newbase, index)
             else:  # not to be shown in discover
-                solr_delete(index, newbase)
+                solr_delete(newbase, index)
         except BaseResource.DoesNotExist:
             logger.debug("Failure: %s with short_id %s does not exist, skipping",
                         str(type(instance)), instance.short_id)
