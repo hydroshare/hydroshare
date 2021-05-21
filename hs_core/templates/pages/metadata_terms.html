@@ -32,76 +32,6 @@
             <li><strong>Label: </strong>Collection Resource</li>
             <li><strong>Description: </strong>A collection resource is a resource that holds a list of other resources in HydroShare. Collections are intended to be a flexible and logical way to combine resources associated with a specific purpose (e.g., a specific study, site, or experiment). HydroShare does not impose restrictions on the purpose for which resources may be placed in a collection or on the number, types, publication status, or permissions settings associated with resources in a collection. A collection resource should be used when it is desirable for each of the component parts to be separately shareable, discoverable, and publishable resources.</li>
         </ul>
-        <a class="scrollTo" name="genericResource"></a>
-        <ul>
-            <li><strong>Term: </strong>GenericResource</li>
-            <li><strong>URI: </strong><a href="#genericResource">http://www.hydroshare.org/terms/GenericResource</a></li>
-            <li><strong>Label: </strong>Generic Resource</li>
-            <li><strong>Description: </strong>A generic resource is an arbitrary file or collection of files that are logically grouped together as a resource. Generic resources have been superseded by composite resources.</li>
-        </ul>
-        <a class="scrollTo" name="geographicFeatureResource"></a>
-        <ul>
-            <li><strong>Term: </strong>GeographicFeatureResource</li>
-            <li><strong>URI: </strong><a href="#geographicFeatureResource">http://www.hydroshare.org/terms/GeographicFeatureResource</a></li>
-            <li><strong>Label: </strong>Geographic Feature Resource</li>
-            <li><strong>Description: </strong>A geographic feature resource is a set of point, line, or polygon features stored in ESRI Shapefile format. The Shapefile format is comprised of multiple files including files with .shp, .shx, .dbf, and .prj extensions. The minmum required files are the following:  .shp, .shx, .dbf, and .prj, but can also include, .sbx, .sbn, .cpg, .xml, .fbn, .fbx, .ain, .aih, .atx, .ixs, and .mxs files. Each of these files stores a different type of data such as the vectors, projection information, attribute data, and metadata. Geographic feature resources have been superseded by the geographic feature aggregation type in composite resources. A single composite resource with a geographic feature aggregation is equivalent to a geographic feature resource.</li>
-        </ul>
-        <a class="scrollTo" name="geographicRasterResource"></a>
-        <ul>
-            <li><strong>Term: </strong>GeographicRasterResource</li>
-            <li><strong>URI: </strong><a href="#geographicRasterResource">http://www.hydroshare.org/terms/GeographicRasterResource</a></li>
-            <li><strong>Label: </strong>Geographic Raster Resource</li>
-            <li><strong>Description: </strong>A geographic raster is a gridded representation of geographic data saved using the GDAL Virtual Raster Dataset (VRT) format. A Virtual Raster dataset (VRT) is an assembly of “.tif” files with a “.vrt” text (XML) file that contains a list of the member “.tif” files that make up the virtual geographic raster. Each of the “.tif” files can have different file names.  Geographic raster resources have been superseded by the geographic raster aggregation type in composite resources. A single composite resource with a geographic raster aggregation is equivalent to a geographic raster resource.</li>
-        </ul>
-        <a class="scrollTo" name="modelProgramResource"></a>
-        <ul>
-            <li><strong>Term: </strong>ModelProgramResource</li>
-            <li><strong>URI: </strong><a href="#modelProgramResource">http://www.hydroshare.org/terms/ModelProgramResource</a></li>
-            <li><strong>Label: </strong>Model Program Resource</li>
-            <li><strong>Description: </strong>A model program resource describes the software component of a generic model within the water domain. It aims to fully describe the software-related metadata of a given model program to enable scientists to seamlessly retrieve all the content and information required to get a model up-and-running on their local or server-side machine. This resource consists of uploaded content such as source code, compiled binaries, and documentation, as well as metadata describing the model's software. The model program resource can be related to many model instance resources to completely describe a simulation and the exact software version used for a particular study to make data replication possible.</li>
-        </ul>
-        <a class="scrollTo" name="modelInstanceResource"></a>
-        <ul>
-            <li><strong>Term: </strong>ModelInstanceResource</li>
-            <li><strong>URI: </strong><a href="#modelInstanceResource">http://www.hydroshare.org/terms/ModelInstanceResource</a></li>
-            <li><strong>Label: </strong>Model Instance Resource</li>
-            <li><strong>Description: </strong>A model instance resource defines the input and output data for a generic hydrological model for a specific time and place. A model instance resource consists of specific metadata to describe the model content as well as a reference to the model program resource that is used to execute a simulation.</li>
-        </ul>
-        <a class="scrollTo" name="mODFLOWModelInstanceResource"></a>
-        <ul>
-            <li><strong>Term: </strong>MODFLOWModelInstanceResource</li>
-            <li><strong>URI: </strong><a href="#mODFLOWModelInstanceResource">http://www.hydroshare.org/terms/MODFLOWModelInstanceResource</a></li>
-            <li><strong>Label: </strong>MODFLOW Model Instance Resource</li>
-            <li><strong>Description: </strong>A MODFLOW model instance resource is a model instance resource that has been enhanced to hold data for the MODFLOW groundwater flow model.</li>
-        </ul>
-        <a class="scrollTo" name="sWATModelInstanceResource"></a>
-        <ul>
-            <li><strong>Term: </strong>SWATModelInstanceResource</li>
-            <li><strong>URI: </strong><a href="#sWATModelInstanceResource">http://www.hydroshare.org/terms/SWATModelInstanceResource</a></li>
-            <li><strong>Label: </strong>SWAT Model Instance Resource</li>
-            <li><strong>Description: </strong>A SWAT model instance resource is a model instance resource that has been enhanced to hold data for the Soil and Water Assessment (SWAT) model.</li>
-        </ul>
-        <a class="scrollTo" name="multidimensionalResource"></a>
-        <ul>
-            <li><strong>Term: </strong>MultidimensionalResource</li>
-            <li><strong>URI: </strong><a href="#multidimensionalResource">http://www.hydroshare.org/terms/MultidimensionalResource</a></li>
-            <li><strong>Label: </strong>Multidimensional Resource</li>
-            <li><strong>Description: </strong>A multidimensional (NetCDF) resource is designed to support multidimensional space-time data using the NetCDF file format. NetCDF contains self-describing metadata and supports the creation of an array-oriented dataset, which may include three spatial dimensions, a time dimension and other user defined dimensions. NetCDF files are binary files, but a readable header file is produced in a “common data language” (CDL) format by the ncdump function. In HydroShare, both this text file and the binary file are saved.  Multidimensional resources have been superseded by the multidimensional aggregation type in composite resources.  A single composite resource with a multidimensional aggregation is equivalent to a multidimensional resource.</li>
-        </ul>
-        <a class="scrollTo" name="referencedTimeSeriesResource"></a>
-        <ul>
-            <li><strong>Term: </strong>ReferencedTimeSeriesResource</li>
-            <li><strong>URI: </strong><a href="#referencedTimeSeriesResource">http://www.hydroshare.org/terms/ReferencedTimeSeriesResource</a></li>
-            <li><strong>Label: </strong>Referenced Time Series Resource</li>
-            <li><strong>Description: </strong>The referenced time series resource was designed to point to, or hold the reference to a time series available in WaterML format on a CUAHSI HydroServer, catalogued in CUAHSI HIS Central, and accessible through data.cuahsi.org.  This resource type has been deprecated and has been replaced by the referenced time series aggregation type in a composite resource.</li>
-        </ul>
-        <a class="scrollTo" name="timeSeriesResource"></a>
-        <ul>
-            <li><strong>Term: </strong>TimeSeriesResource</li>
-            <li><strong>URI: </strong><a href="#timeSeriesResource">http://www.hydroshare.org/terms/TimeSeriesResource</a></li>
-            <li><strong>Label: </strong>Time Series Resource</li>
-            <li><strong>Description: </strong>A time series resource holds time series data stored using Version 2 of the Observations Data Model (ODM2) in a SQLite database file. A time series resource can be created from an ODM2 SQLite file or from a .csv file that becomes part of the resource. Time series resources have been superseded by the time series aggregation type in composite resources. A single composite resource with a time series aggregation is equivalent to a time series resource.</li>
-        </ul>
         <a class="scrollTo" name="webAppResource"></a>
         <ul>
             <li><strong>Term: </strong>WebAppResource</li>
@@ -109,11 +39,9 @@
             <li><strong>Label: </strong>Web App Resource</li>
             <li><strong>Description: </strong>A Web App resource is a shortcut (or reference) to an external web application that functions with HydroShare data resources. A Web App can be a simple webpage, a resource viewer, a data editor, or a complex scientific model. Third-party web applications can access HydroShare data resources using the HydroShare representational state transfer (REST) web service application programming interface (API), link to specific HydroShare resource types, and be made discoverable within HydroShare by registration as a Web App resource.</li>
         </ul>
-    <h3>Metadata terms for the Generic Resource Type</h3>
-    <p>To describe the entities of a Generic resource in HydroShare, we chose the standard Dublin Core metadata elements as the resource science
-        metadata. Each of these elements are defined below. All resource types in HydroShare use the standard Dublin Core metadata elements, but some
-        resource types use additional, resource type-specific metadata terms as defined in the following sections.
-    </p>
+    <p>In prior versions of HydroShare, there were other resource types that are now obsoleted by the Composite resourced and typed aggregations. Generic resource is superseded by Composite resource. Geographic Feature, Geographic Raster, Multidimensional, Time Series, Referenced Time Series, Model Program, and Model Instance resource types are obsoleted by their corresponding aggregation types. Specific Model Instance resource types (SWAT Model Instance and MODFLOW Model Instance) are no longer supported. Users now can use Model Aggregation functionality to describe any model, including SWAT and MODFLOW.</p>
+    <h3>Common Metadata Terms for all HydroShare Resources</h3>
+    <p>We chose the standard Dublin Core metadata elements as the common metadata used by all resources. All resources in HydroShare use the standard Dublin Core metadata elements. Those terms are defined by the Dublin Core Metadata Initiative at <a href="https://www.dublincore.org/specifications/dublin-core/dcmi-terms/">https://www.dublincore.org/specifications/dublin-core/dcmi-terms/</a>. Additionally, we added a few metadata terms at the resource level to meet use cases for which there were no Dublin Core terms. These elements are defined below. Some specific content types within resources use additional, content type-specific metadata terms as defined in the following sections.</p>
         <a class="scrollTo" name="name"></a>
         <ul>
             <li><strong>Term: </strong>name</li>
@@ -173,7 +101,7 @@
             <li><strong>Term: </strong>doi</li>
             <li><strong>URI: </strong><a href="#doi">http://www.hydroshare.org/terms/doi</a></li>
             <li><strong>Label: </strong>DOI</li>
-            <li><strong>Description: </strong>The digitial object identifier for the resource
+            <li><strong>Description: </strong>The digital object identifier for the resource
                 which is published in HydroShare.</li>
         </ul>
         <a class="scrollTo" name="hydroshareIdentifier"></a>
@@ -279,8 +207,154 @@
             <li><strong>Label: </strong>GoogleScholarID</li>
             <li><strong>Description: </strong>Personal <a href="https://scholar.google.com/" target="_blank">Google Scholar</a> profile page URL.</li>
         </ul>
+
+    <h3>Metadata terms for the Web App Resource Type</h3>
+    <a class="scrollTo" name="AppURLPattern"></a>
+        <ul >
+            <li><strong>Term: </strong>AppURLPattern</li>
+            <li><strong>URI: </strong><a href="#AppURLPattern">http://www.hydroshare.org/terms/AppURLPattern</a></li>
+            <li><strong>Label: </strong>App-launching URL Pattern</li>
+            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App-launching URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App-launching URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App-launching URL. <br>Currently, HydroShare supports the following parameters:
+            <ul>
+                <li>Keys available in all launching patterns</li>
+                <ul>
+                    <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
+                    <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>
+                    <li> <strong>${HS_USR_NAME}</strong>: HydroShare username</li>
+                </ul>
+                <li>Keys only available within App-launching URL Pattern</li>
+                <ul>
+                    <li> <strong>${HS_FILE_NAME}</strong>: Fullname of a file in a resource. For example, full name of the '.nc' file in a NetCDF resource or full name of the '.vrt' file in a raster resource.</li>
+                </ul>
+                <li>Keys only available within App-launching File Level URL Pattern</li>
+                <ul>
+                    <li> <strong>${HS_FILE_PATH}</strong>: Path of a file in HydroShare</li>
+                </ul>
+                <li>Keys only available within App-launching Aggregation Level URL Pattern</li>
+                <ul>
+                    <li> <strong>${HS_AGG_PATH}</strong>: Path of an aggregation in HydroShare</li>
+                    <li> <strong>${HS_MAIN_FILE}</strong>: The main file name of an aggregation</li>
+                </ul>
+            </ul>
+                An example:<br>
+ <strong>http://www.my-app-website.org/app_1/?res_id=${HS_RES_ID}</strong>.<br>HydroShare will replace ${HS_RES_ID} with the real resource id.
+            </li>
+        </ul>
+    <a class="scrollTo" name="SupportedResourceType"></a>
+        <ul >
+            <li><strong>Term: </strong>SupportedResourceType</li>
+            <li><strong>URI: </strong><a href="#SupportedResourceType">http://www.hydroshare.org/terms/SupportedResourceType</a></li>
+            <li><strong>Label: </strong>Supported Resource Type</li>
+            <li><strong>Description: </strong>Names of applicable date resource type.</li>
+        </ul>
+    <a class="scrollTo" name="WebAppVersion"></a>
+        <ul >
+            <li><strong>Term: </strong>WebAppVersion</li>
+            <li><strong>URI: </strong><a href="#WebAppVersion">http://www.hydroshare.org/terms/WebAppVersion</a></li>
+            <li><strong>Label: </strong>Version</li>
+            <li><strong>Description: </strong>Web App Version.</li>
+        </ul>
+
+    <h3>Metadata terms for the Script Resource Type</h3>
+    <a class="scrollTo" name="scriptLanguage"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptLanguage</li>
+            <li><strong>URI: </strong><a href="#scriptLanguage">http://www.hydroshare.org/terms/scriptLanguage</a></li>
+            <li><strong>Label: </strong>Programming Language</li>
+            <li><strong>Description: </strong>The programming language that the script is written in.</li>
+        </ul>
+    <a class="scrollTo" name="languageVersion"></a>
+        <ul >
+            <li><strong>Term: </strong>languageVersion</li>
+            <li><strong>URI: </strong><a href="#languageVersion">http://www.hydroshare.org/terms/languageVersion</a></li>
+            <li><strong>Label: </strong>Programming Language Version</li>
+            <li><strong>Description: </strong>The version of the language that the script is written in.</li>
+        </ul>
+    <a class="scrollTo" name="scriptVersion"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptVersion</li>
+            <li><strong>URI: </strong><a href="#scriptVersion">http://www.hydroshare.org/terms/scriptVersion</a></li>
+            <li><strong>Label: </strong>Script Version</li>
+            <li><strong>Description: </strong>The version of the script.</li>
+        </ul>
+    <a class="scrollTo" name="scriptDependencies"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptDependencies</li>
+            <li><strong>URI: </strong><a href="#scriptDependencies">http://www.hydroshare.org/terms/scriptDependencies</a></li>
+            <li><strong>Label: </strong>Script Dependencies</li>
+            <li><strong>Description: </strong>The libraries/modules that the script depends on to execute.</li>
+        </ul>
+    <a class="scrollTo" name="scriptReleaseDate"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptReleaseDate</li>
+            <li><strong>URI: </strong><a href="#scriptReleaseDate">http://www.hydroshare.org/terms/scriptReleaseDate</a></li>
+            <li><strong>Label: </strong>Release Date</li>
+            <li><strong>Description: </strong>The date that this version of the script was released.</li>
+        </ul>
+    <a class="scrollTo" name="scriptCodeRepository"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptCodeRepository</li>
+            <li><strong>URI: </strong><a href="#scriptCodeRepository">http://www.hydroshare.org/terms/scriptCodeRepository</a></li>
+            <li><strong>Label: </strong>Script Repository</li>
+            <li><strong>Description: </strong>The URL to a respository where the script is also stored.</li>
+        </ul>
+
+    <h3>Metadata terms for the Composite Resource Type</h3>
+
+    <p>A Composite resource is a resource that can include multiple files without file format limitations. However, it is also capable of containing typed aggregations of files (e.g., a geographic feature aggregation stored as an ESRI shapefile). The Composite resource is designed to support metadata and data functions at both the aggregation level and resource level to better support data management in HydroShare. Each aggregation contained within a Composite resource may be annotated with general metadata that apply specifically to the aggregation. Aggregations may also have metadata specific to the aggregation type and additional data functions established for that type (e.g., metadata extraction from TIFF or NetCDF file). The resource level metadata for a Composite resource is the same as metadata of the generic resource type.  </p>
+    <p>The following terms define the types of aggregations that can be added to a Composite Resource:</p>
+     <a class="scrollTo" name="singleFileAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>SingleFileAggregation</li>
+            <li><strong>URI: </strong><a href="#singleFileAggregation">http://www.hydroshare.org/terms/SingleFileAggregation</a></li>
+            <li><strong>Label: </strong>Single File Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of a single content file to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a class="scrollTo" name="geographicFeatureAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>GeographicFeatureAggregation</li>
+            <li><strong>URI: </strong><a href="#geographicFeatureAggregation">http://www.hydroshare.org/terms/GeographicFeatureAggregation</a></li>
+            <li><strong>Label: </strong>Geographic Feature Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of the multiple content files that make up an ESRI shapefile containing a geographic feature dataset and to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a class="scrollTo" name="geographicRasterAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>GeographicRasterAggregation</li>
+            <li><strong>URI: </strong><a href="#geographicRasterAggregation">http://www.hydroshare.org/terms/GeographicRasterAggregation</a></li>
+            <li><strong>Label: </strong>Geographic Raster Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of the multiple content files that make up a geographic raster dataset to which aggregation-level metadata have been added. Rasters may have multiple files and multiple bands and are stored in HydroShare as GeoTIFF files.</li>
+        </ul>
+     <a class="scrollTo" name="multidimensionalAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>MultidimensionalAggregation</li>
+            <li><strong>URI: </strong><a href="#multidimensionalAggregation">http://www.hydroshare.org/terms/MultidimensionalAggregation</a></li>
+            <li><strong>Label: </strong>Multidimensional Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of a Network Common Data Form (NetCDF) file that makes up a multidimensional space-time dataset to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a class="scrollTo" name="timeSeriesAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>TimeSeriesAggregation</li>
+            <li><strong>URI: </strong><a href="#timeSeriesAggregation">http://www.hydroshare.org/terms/TimeSeriesAggregation</a></li>
+            <li><strong>Label: </strong>TimeSeriesAggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of one or more time series datasets to which aggregation-level metadata have been added. Time series datasets in HydroShare consist of sequences of individual data values that are ordered in time to record the changing trend of a certain phenomenon. They are stored in HydroShare using ODM2 SQLite database files.</li>
+        </ul>
+     <a class="scrollTo" name="referencedTimeSeriesAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>ReferencedTimeSeriesAggregation</li>
+            <li><strong>URI: </strong><a href="#referencedTimeSeriesAggregation">http://www.hydroshare.org/terms/ReferencedTimeSeriesAggregation</a></li>
+            <li><strong>Label: </strong>Referenced Time Series Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of references to specific time series datasets hosted on an external web service to which aggregation-level metadata have been added.</li>
+        </ul>
+     <a class="scrollTo" name="fileSetAggregation"></a>
+        <ul >
+            <li><strong>Term: </strong>FileSetAggregation</li>
+            <li><strong>URI: </strong><a href="#fileSetAggregation">http://www.hydroshare.org/terms/FileSetAggregation</a></li>
+            <li><strong>Label: </strong>File Set Aggregation</li>
+            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of an arbitrary collection of files that are logically grouped together as an aggregation and to which aggregation-level metadata have been added. There may be any number of files in the aggregation, and files may be of any type.</li>
+        </ul>
+    <h2>Metadata Terms for Aggregation Types</h2>
     <h3>Metadata terms for the Time Series Resource Type</h3>
-    <p>The time series resource type is based on version 2.0 of the Observations data model. You can learn more about ODM2 at htt://www.odm2.org. Some of the metadata terms for the time series resource type are based on controlled vocabularies for ODM2 that are managed at <a href="http://vocabulary.odm2.org">http://vocabulary.odm2.org.</a></p>
+    <p>The time series aggregation type is based on Version 2.0 of the Observations Data Model. You can learn more about ODM2 at htt://www.odm2.org. Some of the metadata terms for the time series aggregation type are based on controlled vocabularies for ODM2 that are managed at <a href="http://vocabulary.odm2.org">http://vocabulary.odm2.org.</a></p>
         <a class="scrollTo" name="site"></a>
         <ul>
             <li><strong>Term: </strong>site</li>
@@ -351,7 +425,7 @@
             <li><strong>Term: </strong>MethodType</li>
             <li><strong>URI: </strong><a href="#MethodType">http://www.hydroshare.org/terms/MethodType</a></li>
             <li><strong>Label: </strong>Method Type </li>
-            <li><strong>Description: </strong>This is choosen from a controlled vocabulary to
+            <li><strong>Description: </strong>This is chosen from a controlled vocabulary to
                 indicate the category of method.</li>
         </ul>
         <a class="scrollTo" name="MethodDescription"></a>
@@ -518,7 +592,7 @@
         </ul>
 
 
-    <h3>Metadata terms for the Reference Time Series Resource Type</h3>
+    <h3>Metadata Terms for the Referenced Time Series Aggregation Type</h3>
 
      <a class="scrollTo" name="refts_ReferenceURL"></a>
         <ul >
@@ -626,7 +700,7 @@
             <li><strong>Description: </strong>Site longitude. </li>
         </ul>
 
-    <h3>Metadata terms for the Multidimensional (NetCDF) Resource Type</h3>
+    <h3>Metadata Terms for the Multidimensional (NetCDF) Aggregation Type</h3>
         <br/>
         <a class="scrollTo" name="nc_spatialReference"></a>
         <ul >
@@ -697,7 +771,7 @@
             <li><strong>Term: </strong>type</li>
             <li><strong>URI: </strong><a href="#type">http://www.hydroshare.org/terms/type</a></li>
             <li><strong>Label: </strong>Type</li>
-            <li><strong>Description: </strong> The data type of the variable which is upported in
+            <li><strong>Description: </strong> The data type of the variable which is supported in
                 the
                 <a href="https://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html"> NetCDF enhanced data model.</a></li>
         </ul>
@@ -733,7 +807,7 @@
                 missing value should be the same as the variable type.</li>
         </ul>
 
-    <h3>Metadata terms for the Geographic Raster Resource Type</h3>
+    <h3>Metadata Terms for the Geographic Raster Aggregation Type</h3>
         <br/>
         <a class="scrollTo" name="rt_spatialReference"></a>
         <ul >
@@ -848,14 +922,22 @@
         <a class="scrollTo" name="noDataValue"></a>
         <ul >
             <li><strong>Term: </strong>noDataValue</li>
-            <li><strong>URI: </strong><a href="#noDataValue">http://www.hydroshare.org/terms/noDtaValue</a></li>
+            <li><strong>URI: </strong><a href="#noDataValue">http://www.hydroshare.org/terms/noDataValue</a></li>
             <li><strong>Label: </strong>No Data Value</li>
             <li><strong>Description: </strong>The value used for the condition when there is no
                 actual data value recorded in the cell.</li>
         </ul>
 
 
-    <h3>Metadata terms for the Model Program Resource Type</h3>
+    <h3>Metadata Terms for the Model Program Aggregation Type</h3>
+    <br/>
+    <a class="scrollTo" name="modelProgramName"></a>
+        <ul >
+            <li><strong>Term: </strong>modelProgramName</li>
+            <li><strong>URI: </strong><a href="#modelVersion">http://www.hydroshare.org/terms/modelProgramName</a></li>
+            <li><strong>Label: </strong>Name</li>
+            <li><strong>Description: </strong>The name of the model program (e.g., SWAT, MODFLOW, etc.)</li>
+        </ul>
     <br/>
     <a class="scrollTo" name="modelVersion"></a>
         <ul >
@@ -946,7 +1028,7 @@
                 engine (e.g., source code, binary, executable, etc.).</li>
         </ul>
 
-    <h3>Metadata terms for the Model Instance Resource Type</h3>
+    <h3>Metadata Terms for the Model Instance Aggregation Type</h3>
     <br/>
     <a class="scrollTo" name="ModelOutput"></a>
         <ul >
@@ -954,7 +1036,7 @@
             <li><strong>URI: </strong><a href="#ModelOutput">http://www.hydroshare.org/terms/ModelOutput</a></li>
             <li><strong>Label: </strong>Model Output</li>
             <li><strong>Description: </strong>A HydroShare class that encapsulates all the
-                metadata elements related to Model Instance resource output files.</li>
+                metadata elements related to Model Instance aggregation output files.</li>
         </ul>
     <a class="scrollTo" name="includesModelOutput"></a>
         <ul >
@@ -965,13 +1047,13 @@
                 are included with the uploaded content.</li>
         </ul>
     <br/>
-    <a class="scrollTo" name="ExecutedBy"></a>
+    <a class="scrollTo" name="ExecutedByModelProgram"></a>
         <ul >
-            <li><strong>Term: </strong>ExecutedBy</li>
-            <li><strong>URI: </strong><a href="#ExecutedBy">http://www.hydroshare.org/terms/ExecutedBy</a></li>
+            <li><strong>Term: </strong>ExecutedByModelProgram</li>
+            <li><strong>URI: </strong><a href="#ExecutedByModelProgram">http://www.hydroshare.org/terms/ExecutedByModelProgram</a></li>
             <li><strong>Label: </strong>Executed By</li>
-            <li><strong>Description: </strong>A HydroShare class that defines the Model Program
-                that executes the current resource.</li>
+            <li><strong>Description: </strong>A HydroShare class that defines the Model Program aggregation
+                that executes the current Model Instance aggregation.</li>
         </ul>
     <a class="scrollTo" name="modelProgramName"></a>
         <ul >
@@ -979,7 +1061,7 @@
             <li><strong>URI: </strong><a href="#modelProgramName">http://www.hydroshare.org/terms/modelProgramName</a></li>
             <li><strong>Label: </strong>Model name</li>
             <li><strong>Description: </strong>The name of the model that executes the current
-                resource.</li>
+                Model Instance aggregation.</li>
         </ul>
     <a class="scrollTo" name="modelProgramIdentifier"></a>
         <ul >
@@ -987,625 +1069,7 @@
             <li><strong>URI: </strong><a href="#modelProgramIdentifier">http://www.hydroshare.org/terms/modelProgramIdentifier</a></li>
             <li><strong>Label: </strong>URI</li>
             <li><strong>Description: </strong>The HydroShare identifier of the Model Program
-                resource that executes the current resource.</li>
+                resource that executes the current Model Instance aggregation.</li>
         </ul>
-
-    <h3>Metadata terms for the SWAT Model Instance Resource Type</h3>
-    <br/>
-    <a class="scrollTo" name="modelObjective"></a>
-        <ul >
-            <li><strong>Term: </strong>modelObjective</li>
-            <li><strong>URI: </strong><a href="#modelObjective">http://www.hydroshare.org/terms/modelObjective</a></li>
-            <li><strong>Label: </strong>Model Objective</li>
-            <li><strong>Description: </strong>The objective of the Model (e.g. Hydrology, Water
-                quality, BMPs, and Climate / Landuse Change, etc.).</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="simulationType"></a>
-        <ul >
-            <li><strong>Term: </strong>simulationType</li>
-            <li><strong>URI: </strong><a href="#simulationType">http://www.hydroshare.org/terms/simulationType</a></li>
-            <li><strong>Label: </strong>Simulation Type</li>
-            <li><strong>Description: </strong>The type of the simulation used (e.g. Normal
-                Simulation, Sensitivity Analysis, and Auto-Calibration).</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="ModelInput"></a>
-        <ul >
-            <li><strong>Term: </strong>ModelInput</li>
-            <li><strong>URI: </strong><a href="#ModelInput">http://www.hydroshare.org/terms/ModelInput</a></li>
-            <li><strong>Label: </strong>Model Input</li>
-            <li><strong>Description: </strong>HydroShare Class that includes all the metadata
-                elements related to Model Instance resource input files.</li>
-        </ul>
-    <a class="scrollTo" name="warmupPeriodType"></a>
-        <ul >
-            <li><strong>Term: </strong>warmupPeriodType</li>
-            <li><strong>URI: </strong><a href="#warmupPeriodType">http://www.hydroshare.org/terms/warmupPeriodType</a></li>
-            <li><strong>Label: </strong>Warm-up period type</li>
-            <li><strong>Description: </strong>The warm-up period type.</li>
-        </ul>
-    <a class="scrollTo" name="warmupPeriodValue"></a>
-        <ul >
-            <li><strong>Term: </strong>warmupPeriodValue</li>
-            <li><strong>URI: </strong><a href="#warmupPeriodValue">http://www.hydroshare.org/terms/warmupPeriodValue</a></li>
-            <li><strong>Label: </strong>Warm-up period in years</li>
-            <li><strong>Description: </strong>The numeric value of the warm-up period in years.</li>
-        </ul>
-    <a class="scrollTo" name="rainfallTimeStepType"></a>
-        <ul >
-            <li><strong>Term: </strong>rainfallTimeStepType</li>
-            <li><strong>URI: </strong><a href="#rainfallTimeStepType">http://www.hydroshare.org/terms/rainfallTimeStepType</a></li>
-            <li><strong>Label: </strong>Rainfall time step type</li>
-            <li><strong>Description: </strong>The type of time step used in the simulation for
-                input rainfall data (e.g. Daily or Sub-hourly).</li>
-        </ul>
-    <a class="scrollTo" name="rainfallTimeStepValue"></a>
-        <ul >
-            <li><strong>Term: </strong>rainfallTimeStepValue</li>
-            <li><strong>URI: </strong><a href="#rainfallTimeStepValue">http://www.hydroshare.org/terms/rainfallTimeStepValue</a></li>
-            <li><strong>Label: </strong>Rainfall time step value</li>
-            <li><strong>Description: </strong>The time step value associated with the rainfall
-                data.</li>
-        </ul>
-    <a class="scrollTo" name="routingTimeStepType"></a>
-        <ul >
-            <li><strong>Term: </strong>routingTimeStepType</li>
-            <li><strong>URI: </strong><a href="#routingTimeStepType">http://www.hydroshare.org/terms/routingTimeStepType</a></li>
-            <li><strong>Label: </strong>Routing time step type</li>
-            <li><strong>Description: </strong>The type of time step used in the simulation for
-                river routing calculations (e.g. Daily or Hourly).</li>
-        </ul>
-    <a class="scrollTo" name="routingTimeStepValue"></a>
-        <ul >
-            <li><strong>Term: </strong>routingTimeStepValue</li>
-            <li><strong>URI: </strong><a href="#routingTimeStepValue">http://www.hydroshare.org/terms/routingTimeStepValue</a></li>
-            <li><strong>Label: </strong>Routing time step value</li>
-            <li><strong>Description: </strong>The time step value used for the river routing
-                calculations.</li>
-        </ul>
-    <a class="scrollTo" name="simulationTimeStepType"></a>
-        <ul >
-            <li><strong>Term: </strong>simulationTimeStepType</li>
-            <li><strong>URI: </strong><a href="#simulationTimeStepType">http://www.hydroshare.org/terms/simulationTimeStepType</a></li>
-            <li><strong>Label: </strong>Simulation time step type</li>
-            <li><strong>Description: </strong>The type of time step type used for model
-                simulation (e.g. Annual, Monthly, Daily, or Hourly).</li>
-        </ul>
-    <a class="scrollTo" name="simulationTimeStepValue"></a>
-        <ul >
-            <li><strong>Term: </strong>simulationTimeStepValue</li>
-            <li><strong>URI: </strong><a href="#simulationTimeStepValue">http://www.hydroshare.org/terms/simulationTimeStepValue</a></li>
-            <li><strong>Label: </strong>Simulation time step value</li>
-            <li><strong>Description: </strong>The time step value used for simulation.</li>
-        </ul>
-    <a class="scrollTo" name="watershedArea"></a>
-        <ul >
-            <li><strong>Term: </strong>watershedArea</li>
-            <li><strong>URI: </strong><a href="#watershedArea">http://www.hydroshare.org/terms/watershedArea</a></li>
-            <li><strong>Label: </strong>Waterhsed area in square kilometers</li>
-            <li><strong>Description: </strong>The watershed area in Km&sup2.</li>
-        </ul>
-    <a class="scrollTo" name="numberOfSubbasins"></a>
-        <ul >
-            <li><strong>Term: </strong>numberOfSubbasins</li>
-            <li><strong>URI: </strong><a href="#numberOfSubbasins">http://www.hydroshare.org/terms/numberOfSubbasins</a></li>
-            <li><strong>Label: </strong>Number of subbasins</li>
-            <li><strong>Description: </strong>The number of the subbasin within the watershed.</li>
-        </ul>
-    <a class="scrollTo" name="numberOfHRUs"></a>
-        <ul >
-            <li><strong>Term: </strong>numberOfHRUs</li>
-            <li><strong>URI: </strong><a href="#numberOfHRUs">http://www.hydroshare.org/terms/numberOfHRUs</a></li>
-            <li><strong>Label: </strong>Number of HRUs</li>
-            <li><strong>Description: </strong>The number of the Hydrologic Response Units within
-                the watershed.</li>
-        </ul>
-    <a class="scrollTo" name="demResolution"></a>
-        <ul >
-            <li><strong>Term: </strong>demResolution</li>
-            <li><strong>URI: </strong><a href="#demResolution">http://www.hydroshare.org/terms/demResolution</a></li>
-            <li><strong>Label: </strong>DEM resolution in meters</li>
-            <li><strong>Description: </strong>The resolution of the Digital Elevation Model in
-                meters.</li>
-        </ul>
-    <a class="scrollTo" name="demSourceName"></a>
-        <ul >
-            <li><strong>Term: </strong>demSourceName</li>
-            <li><strong>URI: </strong><a href="#demSourceName">http://www.hydroshare.org/terms/demSourceName</a></li>
-            <li><strong>Label: </strong>DEM source name</li>
-            <li><strong>Description: </strong>The name of the Digital Elevation Model dataset
-                provider.</li>
-        </ul>
-    <a class="scrollTo" name="demSourceURL"></a>
-        <ul >
-            <li><strong>Term: </strong>demSourceURL</li>
-            <li><strong>URI: </strong><a href="#demSourceURL">http://www.hydroshare.org/terms/demSourceURL</a></li>
-            <li><strong>Label: </strong>DEM source URL</li>
-            <li><strong>Description: </strong>The URL of the Digital Elevation Model dataset (if
-                applicable).</li>
-        </ul>
-    <a class="scrollTo" name="landUseDataSourceName"></a>
-        <ul >
-            <li><strong>Term: </strong>landUseDataSourceName</li>
-            <li><strong>URI: </strong><a href="#landUseDataSourceName">http://www.hydroshare.org/terms/landUseDataSourceName</a></li>
-            <li><strong>Label: </strong>LandUse data source name</li>
-            <li><strong>Description: </strong>The name for the Landuse dataset provider.</li>
-        </ul>
-    <a class="scrollTo" name="landUseDataSourceURL"></a>
-        <ul >
-            <li><strong>Term: </strong>landUseDataSourceURL</li>
-            <li><strong>URI: </strong><a href="#landUseDataSourceURL">http://www.hydroshare.org/terms/landUseDataSourceURL</a></li>
-            <li><strong>Label: </strong>LandUse data source URL</li>
-            <li><strong>Description: </strong>The URL for the Landuse dataset (if applicable).</li>
-        </ul>
-    <a class="scrollTo" name="soilDataSourceName"></a>
-        <ul >
-            <li><strong>Term: </strong>soilDataSourceName</li>
-            <li><strong>URI: </strong><a href="#soilDataSourceName">http://www.hydroshare.org/terms/soilDataSourceName</a></li>
-            <li><strong>Label: </strong>Soil data source name</li>
-            <li><strong>Description: </strong>The name for Soil dataset provider.</li>
-        </ul>
-    <a class="scrollTo" name="soilDataSourceURL"></a>
-        <ul >
-            <li><strong>Term: </strong>soilDataSourceURL</li>
-            <li><strong>URI: </strong><a href="#soilDataSourceURL">http://www.hydroshare.org/terms/soilDataSourceURL</a></li>
-            <li><strong>Label: </strong>Soil data source URL</li>
-            <li><strong>Description: </strong>The URL for Soil dataset (if applicable).</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="ModelMethod"></a>
-        <ul >
-            <li><strong>Term: </strong>ModelMethod</li>
-            <li><strong>URI: </strong><a href="#ModelMethod">http://www.hydroshare.org/terms/ModelMethod</a></li>
-            <li><strong>Label: </strong>Model Method</li>
-            <li><strong>Description: </strong>HydroShare class that includes all the metadata
-                elements related to the model methods used in simulation.</li>
-        </ul>
-    <a class="scrollTo" name="runoffCalculationMethod"></a>
-        <ul >
-            <li><strong>Term: </strong>runoffCalculationMethod</li>
-            <li><strong>URI: </strong><a href="#runoffCalculationMethod">http://www.hydroshare.org/terms/runoffCalculationMethod</a></li>
-            <li><strong>Label: </strong>Runoff calculation method</li>
-            <li><strong>Description: </strong>The runoff calculation method used.</li>
-        </ul>
-    <a class="scrollTo" name="flowRoutingMethod"></a>
-        <ul >
-            <li><strong>Term: </strong>flowRoutingMethod</li>
-            <li><strong>URI: </strong><a href="#flowRoutingMethod">http://www.hydroshare.org/terms/flowRoutingMethod</a></li>
-            <li><strong>Label: </strong>Flow routing method</li>
-            <li><strong>Description: </strong>The flow routing method used.</li>
-        </ul>
-    <a class="scrollTo" name="petEstimationMethod"></a>
-        <ul >
-            <li><strong>Term: </strong>petEstimationMethod</li>
-            <li><strong>URI: </strong><a href="#petEstimationMethod">http://www.hydroshare.org/terms/petEstimationMethod</a></li>
-            <li><strong>Label: </strong>PET estimation method</li>
-            <li><strong>Description: </strong>The Potential EvapoTranspiration estimation method
-                used.</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="modelParameter"></a>
-        <ul >
-            <li><strong>Term: </strong>modelParameter</li>
-            <li><strong>URI: </strong><a href="#modelParameter">http://www.hydroshare.org/terms/modelParameter</a></li>
-            <li><strong>Label: </strong>Model Parameter</li>
-            <li><strong>Description: </strong>The parameters used in the model.</li>
-        </ul>
-
-    <h3>Metadata terms for the MODFLOW Model Instance Resource Type</h3>
-    <br/>
-    <a class="scrollTo" name="StudyArea"></a>
-        <ul >
-            <li><strong>Term: </strong>StudyArea</li>
-            <li><strong>URI: </strong><a href="#StudyArea">http://www.hydroshare.org/terms/StudyArea</a></li>
-            <li><strong>Label: </strong>Study Area</li>
-            <li><strong>Description: </strong>HydroShare class to describe the main properties of
-                the study area.</li>
-        </ul>
-    <a class="scrollTo" name="totalLength"></a>
-        <ul >
-            <li><strong>Term: </strong>totalLength</li>
-            <li><strong>URI: </strong><a href="#totalLength">http://www.hydroshare.org/terms/totalLength</a></li>
-            <li><strong>Label: </strong>Total length</li>
-            <li><strong>Description: </strong>The total length of the study area.</li>
-        </ul>
-    <a class="scrollTo" name="totalWidth"></a>
-        <ul >
-            <li><strong>Term: </strong>totalWidth</li>
-            <li><strong>URI: </strong><a href="#totalWidth">http://www.hydroshare.org/terms/totalWidth</a></li>
-            <li><strong>Label: </strong>Total width</li>
-            <li><strong>Description: </strong>The total width of the study area.</li>
-        </ul>
-    <a class="scrollTo" name="maximumElevation"></a>
-        <ul >
-            <li><strong>Term: </strong>maximumElevation</li>
-            <li><strong>URI: </strong><a href="#maximumElevation">http://www.hydroshare.org/terms/maximumElevation</a></li>
-            <li><strong>Label: </strong>Maximum elevation</li>
-            <li><strong>Description: </strong>The maximum elevation of the study area.</li>
-        </ul>
-    <a class="scrollTo" name="minimumElevation"></a>
-        <ul >
-            <li><strong>Term: </strong>minimumElevation</li>
-            <li><strong>URI: </strong><a href="#minimumElevation">http://www.hydroshare.org/terms/minimumElevation</a></li>
-            <li><strong>Label: </strong>Minimum elevation</li>
-            <li><strong>Description: </strong>The minimum elevation of the study area.</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="GridDimensions"></a>
-        <ul >
-            <li><strong>Term: </strong>GridDimensions</li>
-            <li><strong>URI: </strong><a href="#GridDimensions">http://www.hydroshare.org/terms/GridDimensions</a></li>
-            <li><strong>Label: </strong>Grid Dimensions</li>
-            <li><strong>Description: </strong>HydroShare class that includes the properties of
-                the model grid.</li>
-        </ul>
-    <a class="scrollTo" name="numberOfLayers"></a>
-        <ul >
-            <li><strong>Term: </strong>numberOfLayers</li>
-            <li><strong>URI: </strong><a href="#numberOfLayers">http://www.hydroshare.org/terms/numberOfLayers</a></li>
-            <li><strong>Label: </strong>Number of layers</li>
-            <li><strong>Description: </strong>The number of model grid layers.</li>
-        </ul>
-    <a class="scrollTo" name="typeOfRows"></a>
-        <ul >
-            <li><strong>Term: </strong>typeOfRows</li>
-            <li><strong>URI: </strong><a href="#typeOfRows">http://www.hydroshare.org/terms/typeOfRows</a></li>
-            <li><strong>Label: </strong>Type of rows</li>
-            <li><strong>Description: </strong>If the rows are regular or irregular.</li>
-        </ul>
-    <a class="scrollTo" name="numberOfRows"></a>
-        <ul >
-            <li><strong>Term: </strong>numberOfRows</li>
-            <li><strong>URI: </strong><a href="#numberOfRows">http://www.hydroshare.org/terms/numberOfRows</a></li>
-            <li><strong>Label: </strong>Number of rows</li>
-            <li><strong>Description: </strong>The number of model grid rows.</li>
-        </ul>
-    <a class="scrollTo" name="typeOfColumns"></a>
-        <ul >
-            <li><strong>Term: </strong>typeOfColumns</li>
-            <li><strong>URI: </strong><a href="#typeOfColumns">http://www.hydroshare.org/terms/typeOfColumns</a></li>
-            <li><strong>Label: </strong>Type of columns</li>
-            <li><strong>Description: </strong>If the columns are regular or irregular.</li>
-        </ul>
-    <a class="scrollTo" name="numberOfColumns"></a>
-        <ul >
-            <li><strong>Term: </strong>numberOfColumns</li>
-            <li><strong>URI: </strong><a href="#numberOfColumns">http://www.hydroshare.org/terms/numberOfColumns</a></li>
-            <li><strong>Label: </strong>Number of columns</li>
-            <li><strong>Description: </strong>The number of model grid columns.</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="StressPeriod"></a>
-        <ul >
-            <li><strong>Term: </strong>StressPeriod</li>
-            <li><strong>URI: </strong><a href="#StressPeriod">http://www.hydroshare.org/terms/StressPeriod</a></li>
-            <li><strong>Label: </strong>Stress Period</li>
-            <li><strong>Description: </strong>HydroShare class that includes the information
-                about the stress period.</li>
-        </ul>
-    <a class="scrollTo" name="stressPeriodType"></a>
-        <ul >
-            <li><strong>Term: </strong>stressPeriodType</li>
-            <li><strong>URI: </strong><a href="#stressPeriodType">http://www.hydroshare.org/terms/stressPeriodType</a></li>
-            <li><strong>Label: </strong>Stress period type</li>
-            <li><strong>Description: </strong>Stress period type (Steady, Transient, steady and
-                Transient).</li>
-        </ul>
-    <a class="scrollTo" name="steadyStateValue"></a>
-        <ul >
-            <li><strong>Term: </strong>steadyStateValue</li>
-            <li><strong>URI: </strong><a href="#steadyStateValue">http://www.hydroshare.org/terms/steadyStateValue</a></li>
-            <li><strong>Label: </strong>Steady state value</li>
-            <li><strong>Description: </strong>If stress period = steady, length of steady state
-                stress period(s).</li>
-        </ul>
-    <a class="scrollTo" name="transientStateValueType"></a>
-        <ul >
-            <li><strong>Term: </strong>transientStateValueType</li>
-            <li><strong>URI: </strong><a href="#transientStateValueType">http://www.hydroshare.org/terms/transientStateValueType</a></li>
-            <li><strong>Label: </strong>Transient state value type</li>
-            <li><strong>Description: </strong>Value type if stress period type is Transient or steady and transient
-                (hourly, daily, monthly, yearly, other).</li>
-        </ul>
-    <a class="scrollTo" name="transientStateValue"></a>
-        <ul >
-            <li><strong>Term: </strong>transientStateValue</li>
-            <li><strong>URI: </strong><a href="#transientStateValue">http://www.hydroshare.org/terms/transientStateValue</a></li>
-            <li><strong>Label: </strong>Transient state value</li>
-            <li><strong>Description: </strong>If stress period type is transient or steady and
-                transient, length of transient stress period(s).</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="GroundWaterFlow"></a>
-        <ul >
-            <li><strong>Term: </strong>GroundWaterFlow</li>
-            <li><strong>URI: </strong><a href="#GroundWaterFlow">http://www.hydroshare.org/terms/GroundWaterFlow</a></li>
-            <li><strong>Label: </strong>GroundWater Flow</li>
-            <li><strong>Description: </strong>HydroShare class that includes the information
-                about groundwater flow.</li>
-        </ul>
-    <a class="scrollTo" name="flowPackage"></a>
-        <ul >
-            <li><strong>Term: </strong>flowPackage</li>
-            <li><strong>URI: </strong><a href="#flowPackage">http://www.hydroshare.org/terms/flowPackage</a></li>
-            <li><strong>Label: </strong>Flow package</li>
-            <li><strong>Description: </strong>Groundwater flow package used in the model.</li>
-        </ul>
-    <a class="scrollTo" name="groundwaterFlowParameter"></a>
-        <ul >
-            <li><strong>Term: </strong>groundwaterFlowParameter</li>
-            <li><strong>URI: </strong><a href="#groundwaterFlowParameter">http://www.hydroshare.org/terms/groundwaterFlowParameter</a></li>
-            <li><strong>Label: </strong>Groundwater flow parameter</li>
-            <li><strong>Description: </strong>Indicate which of the following parameter is used in the simulation
-                (Hydraulic Conductivity or Transmissivity).</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="BoundaryCondition"></a>
-        <ul >
-            <li><strong>Term: </strong>BoundaryCondition</li>
-            <li><strong>URI: </strong><a href="#BoundaryCondition">http://www.hydroshare.org/terms/BoundaryCondition</a></li>
-            <li><strong>Label: </strong>Boundary Condition</li>
-            <li><strong>Description: </strong>HydroShare class that includes the information
-                about the boundary condition.</li>
-        </ul>
-    <a class="scrollTo" name="specifiedHeadBoundaryPackages"></a>
-        <ul >
-            <li><strong>Term: </strong>specifiedHeadBoundaryPackages</li>
-            <li><strong>URI: </strong><a href="#specifiedHeadBoundaryPackages">http://www.hydroshare.org/terms/specifiedHeadBoundaryPackages</a></li>
-            <li><strong>Label: </strong>Specified head boundary packages</li>
-            <li><strong>Description: </strong>Specified head boundary package/s used in the
-                simulation.</li>
-        </ul>
-    <a class="scrollTo" name="specifiedFluxBoundaryPackages"></a>
-        <ul >
-            <li><strong>Term: </strong>specifiedFluxBoundaryPackages</li>
-            <li><strong>URI: </strong><a href="#specifiedFluxBoundaryPackages">http://www.hydroshare.org/terms/specifiedFluxBoundaryPackages</a></li>
-            <li><strong>Label: </strong>Specified flux boundary packages</li>
-            <li><strong>Description: </strong>Specified flux boundary package/s used in the
-                simulation.</li>
-        </ul>
-    <a class="scrollTo" name="headDependentFluxBoundaryPackages"></a>
-        <ul >
-            <li><strong>Term: </strong>headDependentFluxBoundaryPackages</li>
-            <li><strong>URI: </strong><a href="#headDependentFluxBoundaryPackages">http://www.hydroshare.org/terms/headDependentFluxBoundaryPackages</a></li>
-            <li><strong>Label: </strong>Head dependent flux boundary packages</li>
-            <li><strong>Description: </strong>Head dependent flux boundary package/s used in the
-                simulation.</li>
-        </ul>
-     <br/>
-    <a class="scrollTo" name="ModelCalibration"></a>
-        <ul >
-            <li><strong>Term: </strong>ModelCalibration</li>
-            <li><strong>URI: </strong><a href="#ModelCalibration">http://www.hydroshare.org/terms/ModelCalibration</a></li>
-            <li><strong>Label: </strong>Model Calibration</li>
-            <li><strong>Description: </strong>HydroShare class to include the main aspects of the
-                model calibration.</li>
-        </ul>
-    <a class="scrollTo" name="calibratedParameter"></a>
-        <ul >
-            <li><strong>Term: </strong>calibratedParameter</li>
-            <li><strong>URI: </strong><a href="#calibratedParameter">http://www.hydroshare.org/terms/calibratedParameter</a></li>
-            <li><strong>Label: </strong>Calibrated parameter</li>
-            <li><strong>Description: </strong>Parameters estimated during model calibration.</li>
-        </ul>
-    <a class="scrollTo" name="observationType"></a>
-        <ul >
-            <li><strong>Term: </strong>observationType</li>
-            <li><strong>URI: </strong><a href="#observationType">http://www.hydroshare.org/terms/observationType</a></li>
-            <li><strong>Label: </strong>Observation type</li>
-            <li><strong>Description: </strong>Data used to constrain the model calibration
-                (heads, stream flow, drawdown).</li>
-        </ul>
-    <a class="scrollTo" name="observationProcessPackage"></a>
-        <ul >
-            <li><strong>Term: </strong>observationProcessPackage</li>
-            <li><strong>URI: </strong><a href="#observationProcessPackage">http://www.hydroshare.org/terms/observationProcessPackage</a></li>
-            <li><strong>Label: </strong>Observation process package</li>
-            <li><strong>Description: </strong>Observation process package used in the simulation.</li>
-        </ul>
-    <a class="scrollTo" name="calibrationMethod"></a>
-        <ul >
-            <li><strong>Term: </strong>calibrationMethod</li>
-            <li><strong>URI: </strong><a href="#calibrationMethod">http://www.hydroshare.org/terms/calibrationMethod</a></li>
-            <li><strong>Label: </strong>Calibration method</li>
-            <li><strong>Description: </strong>Methods used for calibration (software, manual
-                calibration..etc.).</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="inputType"></a>
-        <ul >
-            <li><strong>Term: </strong>inputType</li>
-            <li><strong>URI: </strong><a href="#inputType">http://www.hydroshare.org/terms/inputType</a></li>
-            <li><strong>Label: </strong>Input type</li>
-            <li><strong>Description: </strong>The type of the input data.</li>
-        </ul>
-    <a class="scrollTo" name="inputSourceName"></a>
-        <ul >
-            <li><strong>Term: </strong>inputSourceName</li>
-            <li><strong>URI: </strong><a href="#inputSourceName">http://www.hydroshare.org/terms/inputSourceName</a></li>
-            <li><strong>Label: </strong>Input source name</li>
-            <li><strong>Description: </strong>The input data source name.</li>
-        </ul>
-    <a class="scrollTo" name="inputSourceURL"></a>
-        <ul >
-            <li><strong>Term: </strong>inputSourceURL</li>
-            <li><strong>URI: </strong><a href="#inputSourceURL">http://www.hydroshare.org/terms/inputSourceURL</a></li>
-            <li><strong>Label: </strong>Input source URL</li>
-            <li><strong>Description: </strong>The input data source website.</li>
-        </ul>
-    <br/>
-    <br/>
-    <a class="scrollTo" name="modelSolver"></a>
-        <ul >
-            <li><strong>Term: </strong>modelSolver</li>
-            <li><strong>URI: </strong><a href="#modelSolver">http://www.hydroshare.org/terms/modelSolver</a></li>
-            <li><strong>Label: </strong>Model solver</li>
-            <li><strong>Description: </strong>Used solver for the simulation.</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="outputControlPackage"></a>
-        <ul >
-            <li><strong>Term: </strong>outputControlPackage</li>
-            <li><strong>URI: </strong><a href="#outputControlPackage">http://www.hydroshare.org/terms/outputControlPackage</a></li>
-            <li><strong>Label: </strong>Output control package</li>
-            <li><strong>Description: </strong>Output control package used in the simulation.</li>
-        </ul>
-    <br/>
-    <a class="scrollTo" name="subsidencePackage"></a>
-        <ul >
-            <li><strong>Term: </strong>subsidencePackage</li>
-            <li><strong>URI: </strong><a href="#subsidencePackage">http://www.hydroshare.org/terms/subsidencePackage</a></li>
-            <li><strong>Label: </strong>Subsidence package</li>
-            <li><strong>Description: </strong>Subsidence package used in the simulation.</li>
-        </ul>
-
-    <h3>Metadata terms for the Web App Resource Type</h3>
-    <a class="scrollTo" name="AppURLPattern"></a>
-        <ul >
-            <li><strong>Term: </strong>AppURLPattern</li>
-            <li><strong>URI: </strong><a href="#AppURLPattern">http://www.hydroshare.org/terms/AppURLPattern</a></li>
-            <li><strong>Label: </strong>App-launching URL Pattern</li>
-            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App-launching URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App-launching URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App-launching URL. <br>Currently, HydroShare supports the following parameters:
-            <ul>
-                <li>Keys available in all launching patterns</li>
-                <ul>
-                    <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
-                    <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>
-                    <li> <strong>${HS_USR_NAME}</strong>: HydroShare username</li>
-                </ul>
-                <li>Keys only available within App-launching URL Pattern</li>
-                <ul>
-                    <li> <strong>${HS_FILE_NAME}</strong>: Fullname of a file in a resource. For example, full name of the '.nc' file in a NetCDF resource or full name of the '.vrt' file in a raster resource.</li>
-                </ul>
-                <li>Keys only available within App-launching File Level URL Pattern</li>
-                <ul>
-                    <li> <strong>${HS_FILE_PATH}</strong>: Path of a file in HydroShare</li>
-                </ul>
-                <li>Keys only available within App-launching Aggregation Level URL Pattern</li>
-                <ul>
-                    <li> <strong>${HS_AGG_PATH}</strong>: Path of an aggregation in HydroShare</li>
-                    <li> <strong>${HS_MAIN_FILE}</strong>: The main file name of an aggregation</li>
-                </ul>
-            </ul>
-                An example:<br>
- <strong>http://www.my-app-website.org/app_1/?res_id=${HS_RES_ID}</strong>.<br>HydroShare will replace ${HS_RES_ID} with the real resource id.
-            </li>
-        </ul>
-    <a class="scrollTo" name="SupportedResourceType"></a>
-        <ul >
-            <li><strong>Term: </strong>SupportedResourceType</li>
-            <li><strong>URI: </strong><a href="#SupportedResourceType">http://www.hydroshare.org/terms/SupportedResourceType</a></li>
-            <li><strong>Label: </strong>Supported Resource Type</li>
-            <li><strong>Description: </strong>Names of applicable date resource type.</li>
-        </ul>
-    <a class="scrollTo" name="WebAppVersion"></a>
-        <ul >
-            <li><strong>Term: </strong>WebAppVersion</li>
-            <li><strong>URI: </strong><a href="#WebAppVersion">http://www.hydroshare.org/terms/WebAppVersion</a></li>
-            <li><strong>Label: </strong>Version</li>
-            <li><strong>Description: </strong>Web App Version.</li>
-        </ul>
-
-    <h3>Metadata terms for the Script Resource Type</h3>
-    <a class="scrollTo" name="scriptLanguage"></a>
-        <ul >
-            <li><strong>Term: </strong>scriptLanguage</li>
-            <li><strong>URI: </strong><a href="#scriptLanguage">http://www.hydroshare.org/terms/scriptLanguage</a></li>
-            <li><strong>Label: </strong>Programming Language</li>
-            <li><strong>Description: </strong>The programming language that the script is written in.</li>
-        </ul>
-    <a class="scrollTo" name="languageVersion"></a>
-        <ul >
-            <li><strong>Term: </strong>languageVersion</li>
-            <li><strong>URI: </strong><a href="#languageVersion">http://www.hydroshare.org/terms/languageVersion</a></li>
-            <li><strong>Label: </strong>Programming Language Version</li>
-            <li><strong>Description: </strong>The version of the language that the script is written in.</li>
-        </ul>
-    <a class="scrollTo" name="scriptVersion"></a>
-        <ul >
-            <li><strong>Term: </strong>scriptVersion</li>
-            <li><strong>URI: </strong><a href="#scriptVersion">http://www.hydroshare.org/terms/scriptVersion</a></li>
-            <li><strong>Label: </strong>Script Version</li>
-            <li><strong>Description: </strong>The version of the script.</li>
-        </ul>
-    <a class="scrollTo" name="scriptDependencies"></a>
-        <ul >
-            <li><strong>Term: </strong>scriptDependencies</li>
-            <li><strong>URI: </strong><a href="#scriptDependencies">http://www.hydroshare.org/terms/scriptDependencies</a></li>
-            <li><strong>Label: </strong>Script Dependencies</li>
-            <li><strong>Description: </strong>The libraries/modules that the script depends on to execute.</li>
-        </ul>
-    <a class="scrollTo" name="scriptReleaseDate"></a>
-        <ul >
-            <li><strong>Term: </strong>scriptReleaseDate</li>
-            <li><strong>URI: </strong><a href="#scriptReleaseDate">http://www.hydroshare.org/terms/scriptReleaseDate</a></li>
-            <li><strong>Label: </strong>Release Date</li>
-            <li><strong>Description: </strong>The date that this version of the script was released.</li>
-        </ul>
-    <a class="scrollTo" name="scriptCodeRepository"></a>
-        <ul >
-            <li><strong>Term: </strong>scriptCodeRepository</li>
-            <li><strong>URI: </strong><a href="#scriptCodeRepository">http://www.hydroshare.org/terms/scriptCodeRepository</a></li>
-            <li><strong>Label: </strong>Script Repository</li>
-            <li><strong>Description: </strong>The URL to a respository where the script is also stored.</li>
-        </ul>
-
-    <h3>Metadata terms for the Composite Resource Type</h3>
-
-    <p>A Composite resource is a resource that can include multiple files without file format limitations. However, it is also capable of containing typed aggregations of files (e.g., a geographic feature aggregation stored as an ESRI shapefile). The Composite resource is designed to support metadata and data functions at both the aggregation level and resource level to better support data management in HydroShare. Each aggregation contained within a Composite resource may be annotated with general metadata that apply specifically to the aggregation. Aggregations may also have metadata specific to the aggregation type and additional data functions established for that type (e.g., metadata extraction from TIFF or NetCDF file). The resource level metadata for a Composite resource is the same as metadata of the generic resource type.  </p>
-    <p>The following terms define the types of aggregations that can be added to a Composite Resource:</p>
-     <a class="scrollTo" name="singleFileAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>SingleFileAggregation</li>
-            <li><strong>URI: </strong><a href="#singleFileAggregation">http://www.hydroshare.org/terms/SingleFileAggregation</a></li>
-            <li><strong>Label: </strong>Single File Aggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of a single content file to which aggregation-level metadata have been added.</li>
-        </ul>
-     <a class="scrollTo" name="geographicFeatureAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>GeographicFeatureAggregation</li>
-            <li><strong>URI: </strong><a href="#geographicFeatureAggregation">http://www.hydroshare.org/terms/GeographicFeatureAggregation</a></li>
-            <li><strong>Label: </strong>Geographic Feature Aggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of the multiple content files that make up an ESRI shapefile containing a geographic feature dataset and to which aggregation-level metadata have been added.</li>
-        </ul>
-     <a class="scrollTo" name="geographicRasterAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>GeographicRasterAggregation</li>
-            <li><strong>URI: </strong><a href="#geographicRasterAggregation">http://www.hydroshare.org/terms/GeographicRasterAggregation</a></li>
-            <li><strong>Label: </strong>Geographic Raster Aggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of the multiple content files that make up a geographic raster dataset to which aggregation-level metadata have been added. Rasters may have multiple files and multiple bands and are stored in HydroShare as GeoTIFF files.</li>
-        </ul>
-     <a class="scrollTo" name="multidimensionalAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>MultidimensionalAggregation</li>
-            <li><strong>URI: </strong><a href="#multidimensionalAggregation">http://www.hydroshare.org/terms/MultidimensionalAggregation</a></li>
-            <li><strong>Label: </strong>Multidimensional Aggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of a Network Common Data Form (NetCDF) file that makes up a multidimensional space-time dataset to which aggregation-level metadata have been added.</li>
-        </ul>
-     <a class="scrollTo" name="timeSeriesAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>TimeSeriesAggregation</li>
-            <li><strong>URI: </strong><a href="#timeSeriesAggregation">http://www.hydroshare.org/terms/TimeSeriesAggregation</a></li>
-            <li><strong>Label: </strong>TimeSeriesAggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of one or more time series datasets to which aggregation-level metadata have been added. Time series datasets in HydroShare consist of sequences of individual data values that are ordered in time to record the changing trend of a certain phenomenon. They are stored in HydroShare using ODM2 SQLite database files.</li>
-        </ul>
-     <a class="scrollTo" name="referencedTimeSeriesAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>ReferencedTimeSeriesAggregation</li>
-            <li><strong>URI: </strong><a href="#referencedTimeSeriesAggregation">http://www.hydroshare.org/terms/ReferencedTimeSeriesAggregation</a></li>
-            <li><strong>Label: </strong>Referenced Time Series Aggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of references to specific time series datasets hosted on an external web service to which aggregation-level metadata have been added.</li>
-        </ul>
-     <a class="scrollTo" name="fileSetAggregation"></a>
-        <ul >
-            <li><strong>Term: </strong>FileSetAggregation</li>
-            <li><strong>URI: </strong><a href="#fileSetAggregation">http://www.hydroshare.org/terms/FileSetAggregation</a></li>
-            <li><strong>Label: </strong>File Set Aggregation</li>
-            <li><strong>Description: </strong>An aggregation added to a Composite resource consisting of an arbitrary collection of files that are logically grouped together as an aggregation and to which aggregation-level metadata have been added. There may be any number of files in the aggregation, and files may be of any type.</li>
-        </ul>
-
-        <p>Metadata terms specific to the aggregation type are the same as those used to describe the corresponding resource type listed above.</p>
-
     </div>
 {% endblock %}
