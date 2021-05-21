@@ -10,8 +10,11 @@ from hs_core.models import SOLRQueue
 logger = logging.getLogger(__name__)
 
 
-def solr_update(index, instance):
+def solr_update(instance, index=None):
     """ Update a resource's SOLR record """
+    if not index:
+        from hs_core.search_indexes import BaseResourceIndex
+        index = BaseResourceIndex
     logger.debug('updating {}'.format(instance.short_id))
     try:
         index.update_object(instance)
@@ -20,8 +23,11 @@ def solr_update(index, instance):
                          str(type(instance)), instance.short_id)
 
 
-def solr_delete(index, instance):
+def solr_delete(instance, index=None):
     """ Delete a resource from SOLR before deleting from Django """
+    if not index:
+        from hs_core.search_indexes import BaseResourceIndex
+        index = BaseResourceIndex
     logger.debug('deleting {}'.format(instance.short_id))
     try:
         index.remove_object(instance)
@@ -50,7 +56,6 @@ def solr_batch_update():
         except:  # catch broad exception to continue processing resources in the queue
             logger.exception("Unhandled exception raised when updating solr for %s with shortid %s",
                              str(type(instance)), instance.short_id)
-
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 
