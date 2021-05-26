@@ -338,11 +338,22 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         return False
 
     try:
-        old_file = UserProfile.objects.get(pk=instance.pk).cv
+        up = UserProfile.objects.get(pk=instance.pk)
+        if up:
+            old_file_cv = up.cv
+            old_file_pic = up.picture
+            if not old_file_cv and not old_file_pic:
+                return False
+        else:
+            return False
     except UserProfile.DoesNotExist:
         return False
 
-    new_file = instance.cv
-    if not old_file == new_file:
-        if os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+    new_file_cv = instance.cv
+    if old_file_cv and old_file_cv != new_file_cv:
+        if os.path.isfile(old_file_cv.path):
+            os.remove(old_file_cv.path)
+    new_file_pic = instance.picture
+    if old_file_pic and old_file_pic != new_file_pic:
+        if os.path.isfile(old_file_pic.path):
+            os.remove(old_file_pic.path)
