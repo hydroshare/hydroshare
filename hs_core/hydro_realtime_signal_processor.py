@@ -15,12 +15,10 @@ def solr_update(instance, index=None):
     if not index:
         from hs_core.search_indexes import BaseResourceIndex
         index = BaseResourceIndex()
-    logger.debug('updating {}'.format(instance.short_id))
     try:
         index.update_object(instance)
     except NotHandled:
-        logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
-                         str(type(instance)), instance.short_id)
+        pass  # logging anything crashes celery
 
 
 def solr_delete(instance, index=None):
@@ -28,22 +26,18 @@ def solr_delete(instance, index=None):
     if not index:
         from hs_core.search_indexes import BaseResourceIndex
         index = BaseResourceIndex()
-    logger.debug('deleting {}'.format(instance.short_id))
     try:
         index.remove_object(instance)
     except NotHandled:
-        logger.exception("Failure: delete of %s with short_id %s failed.",
-                         str(type(instance)), instance.short_id)
+        pass  # logging anything crashes celery
 
 
 def solr_batch_update(): 
     """ update SOLR for resources in the SOLRQueue """
-    logger.info('starting batch update')
     from hs_core.models import BaseResource
     from hs_core.search_indexes import BaseResourceIndex
     index = BaseResourceIndex()
     for instance in SOLRQueue.read_and_clear():
-        logger.debug('checking {}'.format(instance.short_id))
         try:
             newbase = BaseResource.objects.get(pk=instance.pk)
             if newbase.show_in_discover:  # if object should be displayed now
@@ -51,11 +45,10 @@ def solr_batch_update():
             else:  # not to be shown in discover
                 solr_delete(newbase, index)
         except BaseResource.DoesNotExist:
-            logger.debug("Failure: %s with short_id %s does not exist, skipping",
-                        str(type(instance)), instance.short_id)
+            pass  # logging anything crashes celery
         except:  # catch broad exception to continue processing resources in the queue
-            logger.exception("Unhandled exception raised when updating solr for %s with shortid %s",
-                             str(type(instance)), instance.short_id)
+            pass  # logging anything crashes celery
+
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
 

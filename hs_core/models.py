@@ -4772,3 +4772,9 @@ class SOLRQueue(models.Model):
             everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
             cls.objects.all().delete()
         return everything
+
+    @classmethod
+    def read(cls):
+        with transaction.atomic():
+            everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
+        return everything

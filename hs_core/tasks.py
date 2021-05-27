@@ -705,9 +705,9 @@ def task_notification_cleanup():
 
 
 # Documentation says that crontab() means "run every minute"
+# Trying to log anything crashes this task!
 @periodic_task(run_every=crontab())
 def task_update_solr():
     """ update the queue of all updated resources every minute """
     from .hydro_realtime_signal_processor import solr_batch_update
-    logger.debug("updating SOLR")
     solr_batch_update()
