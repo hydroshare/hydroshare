@@ -379,7 +379,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in list(kwargs.items()):
-                setattr(element, key, value)
+            setattr(element, key, value)
         element.save()
         return element
 
@@ -2310,6 +2310,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def delete(self, using=None, keep_parents=False):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
+        from .hydro_realtime_signal_processor import solr_delete
+        solr_delete(self)  # avoid SOLR corruption by deleting SOLR record first
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
@@ -4747,3 +4749,32 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+class SOLRQueue(models.Model):
+    """
+    This implements an update queue for SOLR resources.
+    It contains a set of resources -- one element per resource -- that should be updated in SOLR
+    for changes in Django.
+    """
+    resource = models.ForeignKey(BaseResource, unique=True)
+
+    @classmethod
+    def add(cls, resource):
+        """ add a resource to the update queue without duplicates """
+        with transaction.atomic():
+            cls.objects.get_or_create(resource=resource)
+
+    @classmethod
+    def read_and_clear(cls):
+        """ read a list of resources to update -- order unimportant -- and clear the queue """
+        with transaction.atomic():
+            everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
+            cls.objects.all().delete()
+        return everything
+
+    @classmethod
+    def read(cls):
+        with transaction.atomic():
+            everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
+        return everything
