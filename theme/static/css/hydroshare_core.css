@@ -3484,6 +3484,11 @@ button.no-style:focus {
     outline: none;
 }
 
+input.no-style {
+	background: none;
+	border: none;
+}
+
 .blured-out {
     pointer-events: none;
 }
