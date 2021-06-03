@@ -12,6 +12,25 @@
     </div>
 {% endif %}
 
+{# ======= Published resource edit notification =======#}
+{% if cm.raccess.published and resource_edit_mode %}
+    <div class="col-xs-12">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>This resource has been formally published. </strong>
+            <span>You can edit some of the metadata elements for published resources, but you cannot change the followings:</span>
+            <ul>
+                <li>Title</li>
+                <li>Authors</li>
+                {% if not current_user.is_superuser %}
+                    <li>Content files</li>
+                {% endif %}
+            </ul>
+            <span>Changing any of the above requires that you create a new version of the resource.</span>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Resource new version just created notification =======#}
 {% if just_created and is_version_of %}
     <div class="col-xs-12">
@@ -243,25 +262,31 @@
         <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
 
 
-        <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
-              id="id-title" method="post">
-            {% csrf_token %}
-            <fieldset>
-                <div id="div_id_value" class="control-group">
-                    <div class="controls">
-                        <input class="form-control input-sm textinput textInput" id="txt-title"
-                                {% if czo_user %} onfocus="titleClick()" {% endif %}
-                               maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
+        {% if not cm.raccess.published %}
+            <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
+                  id="id-title" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <div id="div_id_value" class="control-group">
+                        <div class="controls">
+                            <input class="form-control input-sm textinput textInput" id="txt-title"
+                                    {% if czo_user %} onfocus="titleClick()" {% endif %}
+                                   maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"/>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
-                            style="display: none;">
-                        Save changes
-                    </button>
-                </div>
-            </fieldset>
-        </form>
+                    <div>
+                        <button type="button" id="title-save-button" class="btn btn-primary pull-right btn-form-submit"
+                                style="display: none;">
+                            Save changes
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        {% else %}
+             <div class="flex">
+                <h2 id="resource-title">{{ title }}</h2>
+             </div>
+        {% endif %}
     {% endif %}
 </div>
 
@@ -314,172 +339,3 @@
     <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
     <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
 {% endblock %}
-
-{% if not page|is_debug %}
-{# ======= JSON-LD Structure ======= #}
-<script type="application/ld+json">
-{
-    "@context": {
-        "@vocab": "https://schema.org/",
-        "datacite": "http://purl.org/spar/datacite/"
-    },
-    {% if cm.raccess.published %}
-    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
-    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-    {% else %}
-    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
-    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
-    {% endif %}
-    "@type": "Dataset",
-    "additionalType": "{{ cm.metadata.type.url }}",
-    "name": "{{ title }}",
-    "description": "{{ cm.metadata.description | escapejs }}",
-    "keywords": {{ keywords|safe }},
-    {% if cm.raccess.published %}
-    "creativeWorkStatus": "Published",
-    {% elif cm.raccess.public %}
-    "creativeWorkStatus": "Public",
-    {% elif cm.raccess.discoverable %}
-    "creativeWorkStatus": "Discoverable",
-    {% elif is_replaced_by %}
-    "creativeWorkStatus": "Obsolete",
-    {% else %}
-    "creativeWorkStatus": "Private",
-    {% endif %}
-    "inLanguage": "en-US",
-    "identifier": {
-        "@type": [
-            "PropertyValue",
-            "datacite:ResourceIdentifier"
-        ],
-        {% if cm.raccess.published %}
-        "datacite:usesIdentifierScheme": {
-            "@id": "datacite:doi"
-        },
-        "propertyId": "DOI",
-        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
-        "value": "10.4211/hs.{{ cm.short_id }}"
-        {% else %}
-        "datacite:usesIdentifierScheme": {
-            "@id": "datacite:local-resource-identifier-scheme"
-        },
-        "propertyId": "UUID",
-        "value": "uuid:{{ cm.short_id }}"
-        {% endif %}
-    },
-    "creator": {{ creators | creator_json_ld_element | safe }},
-    {% if temporal_coverage %}
-    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
-    {% endif %}
-    {% if spatial_coverage.exists %}
-    "spatialCoverage": {
-        "@type": "Place",
-        {% if spatial_coverage.name %}
-        "name": "{{ spatial_coverage.name }}",
-        {% endif %}
-        "geo": {
-            {% if spatial_coverage.type == 'point' %}
-            "@type": "GeoCoordinates",
-            "latitude": {{ spatial_coverage.north|floatformat:"4" }},
-            "longitude": {{ spatial_coverage.east|floatformat:"4" }}
-            {% else %}
-            "@type": "GeoShape",
-            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }}, {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }}, {{ spatial_coverage.eastlimit|floatformat:"4" }}"
-            {% endif %}
-        }
-    },
-    {% endif %}
-    {% if cm.raccess.published %}
-    "publisher": {
-        "@id": "https://www.hydroshare.org"
-    },
-    {% endif %}
-    "provider": {
-        "@id": "https://www.hydroshare.org",
-        "@type": "Organization",
-        "name": "HydroShare",
-        "url": "https://www.hydroshare.org"
-    },
-    "includedInDataCatalog": {
-		"@type": "DataCatalog",
-		"name": "HydroShare",
-    	"url": "https://www.hydroshare.org/search/"
-	},
-	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
-	"license": {
-	    "@type": "CreativeWork",
-	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
-        "text": "{{ cm.metadata.rights.statement }}",
-        "url": "{{ cm.metadata.rights.url }}"
-        {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement }}",
-        "name": "Customized license"
-        {% else %}
-        "url": "{{ cm.metadata.rights.url }}"
-        {% endif %}
-	},
-	{% endif %}
-    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    {% if relations %}
-    "citation": [
-    {% for relation in relations %}
-        "{{ relation.value }}"{%if not forloop.last%},{%endif%}
-    {% endfor %}
-    ],
-    {% endif %}
-    {% if fundingagencies %}
-    "funder": [
-    {% for agency in fundingagencies %}
-        {
-            "@type": "Organization",
-            "name": "{{ agency.agency_name }}",
-            "url": "{{ agency.agency_url }}"
-        }{%if not forloop.last%},{%endif%}
-        {% endfor %}
-    ],
-    {% endif %}
-    "dateCreated": "{{ cm.created | date:"c" }}",
-    "dateModified": "{{ cm.last_updated | date:"c"}}",
-    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
-    "subjectOf": {
-        "@type": "CreativeWork",
-        "name": "Dublin Core Metadata Document Describing the Dataset",
-        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
-        "encodingFormat": "application/rdf+xml"
-    },
-    "distribution": {
-        "@type": "DataDownload",
-        "contentSize": "{{ cm.size|filesizeformat }}",
-        "encodingFormat": "application/zip",
-        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
-        "description": "Zipped BagIt Bag containing the HydroShare Resource",
-        "dateModified": "{{ cm.last_updated | date:"c" }}",
-        {% if cm.raccess.published %}
-        "identifier": [
-        {
-        {% else %}
-        "identifier": {
-        {% endif %}
-            "@type": ["PropertyValue", "datacite:ResourceIdentifier"],
-            "datacite:usesIdentifierScheme": {
-                "@id": "datacite:local-resource-identifier-scheme"
-            },
-            "propertyId": "UUID",
-            "value": "uuid:{{ cm.short_id }}"
-        }{% if cm.raccess.published %},
-        {
-            "@type": "PropertyValue",
-            "additionalType": [
-                "http://www.wikidata.org/entity/Q185235",
-                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
-            ],
-            "identifier": "md5:{{ cm.bag_checksum }}",
-            "propertyID": "MD5",
-            "value": "{{ cm.bag_checksum }}"
-        }
-        ]{% endif %}
-    }
-}
-</script>
-{% endif %}

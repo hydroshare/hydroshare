@@ -11,10 +11,21 @@ esac
 CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 
-# Read hydroshare-config.yaml into environment
+# This might be needed if the file has changed. 
+# git checkout -- $CONFIG_FILE  # refresh this in case overridden otherwise
+
+# Discover user and group under which this shell is running
+HS_UID=`id -u`
+HS_GID=`id -g`
+
+# Set this user and group in hydroshare-config.yaml
+sed -i 's/HS_SERVICE_UID:.*$/HS_SERVICE_UID: '$HS_UID'/' $CONFIG_DIRECTORY/hydroshare-config.yaml
+sed -i 's/HS_SERVICE_GID:.*$/HS_SERVICE_GID: '$HS_GID'/' $CONFIG_DIRECTORY/hydroshare-config.yaml
+
+# Read hydroshare-config.yaml into hydroshare-config.sh
 sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" ${CONFIG_FILE} | grep -v '^#' | grep -v ^$ > $CONFIG_DIRECTORY/hydroshare-config.sh
-sed -i 's/HS_SERVICE_UID=1000/HS_SERVICE_UID='$HS_UID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
-sed -i 's/HS_SERVICE_GID=1000/HS_SERVICE_GID='$HS_GID'/' $CONFIG_DIRECTORY/hydroshare-config.sh
+
+# import hydroshare-config.sh into working environment
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Add color scheme to text | result output
@@ -162,7 +173,7 @@ fi
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(nginx hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
-HYDROSHARE_IMAGES=(hydroshare_nginx hydroshare_defaultworker hydroshare_hydroshare hydroshare/hs-solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+HYDROSHARE_IMAGES=(hydroshare_nginx hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
@@ -396,7 +407,7 @@ docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py migrate s
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput
+docker $DOCKER_PARAM exec hydroshare python manage.py migrate --fake-initial --noinput
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
@@ -407,15 +418,15 @@ echo
 echo '########################################################################################################################'
 echo " Reindexing SOLR"
 echo '########################################################################################################################'
-
+# TODO - fix hydroshare container permissions to allow use of hydro-service user
 echo
 echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
 docker $DOCKER_PARAM exec solr bin/solr create -c collection1 -d basic_configs
 
 echo
-echo "  - docker exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
+echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
+docker $DOCKER_PARAM exec hydroshare python manage.py build_solr_schema -f schema.xml
 
 echo
 echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
@@ -433,11 +444,6 @@ docker $DOCKER_PARAM exec solr rm /opt/solr/server/solr/collection1/conf/managed
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
-
-echo
-echo "  - docker exec -u hydro-service hydroshare python manage.py rebuild_index --noinput"
-echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
 
 docker-compose -f local-dev.yml down
 

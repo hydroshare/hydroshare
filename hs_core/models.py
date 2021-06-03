@@ -247,11 +247,13 @@ def page_permissions_page_processor(request, page):
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
 
-        if cm.raccess.owners.filter(pk=request.user.pk).exists():
+        # this will get resource access privilege even for admin user
+        user_privilege = cm.raccess.get_effective_user_privilege(request.user)
+        if user_privilege == PrivilegeCodes.OWNER:
             self_access_level = 'owner'
-        elif cm.raccess.edit_users.filter(pk=request.user.pk).exists():
+        elif user_privilege == PrivilegeCodes.CHANGE:
             self_access_level = 'edit'
-        elif cm.raccess.view_users.filter(pk=request.user.pk).exists():
+        elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
     owners = cm.raccess.owners.all()
@@ -328,8 +330,7 @@ def page_permissions_page_processor(request, page):
     is_owner = self_access_level == 'owner'
     is_edit = self_access_level == 'edit'
     is_view = self_access_level == 'view'
-    if not cm.raccess.published and \
-            (is_owner or (cm.raccess.shareable and (is_view or is_edit))):
+    if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
     return {
@@ -378,7 +379,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
         """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in list(kwargs.items()):
-                setattr(element, key, value)
+            setattr(element, key, value)
         element.save()
         return element
 
@@ -2306,18 +2307,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Get URL of resource map xml."""
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 
-    def delete(self, using=None):
+    def delete(self, using=None, keep_parents=False):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
+        from .hydro_realtime_signal_processor import solr_delete
+        solr_delete(self)  # avoid SOLR corruption by deleting SOLR record first
         for fl in self.files.all():
-            if fl.logical_file is not None:
-                # delete of metadata file deletes the logical file (one-to-one relation)
-                # so no need for fl.logical_file.delete() and deleting of metadata file
-                # object deletes (cascade delete) all the contained GenericRelated metadata
-                # elements
-                fl.logical_file.metadata.delete()
             # COUCH: delete of file objects now cascades.
-            fl.delete()
+            fl.delete(delete_logical_file=True)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
@@ -2629,16 +2626,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Check if resource allows associating resource file objects with logical file."""
         return False
 
-    def set_default_logical_file(self):
-        """Do nothing (noop).
-
-        Sets an instance of default logical file type to any resource file objects of
-        this instance of the resource that is not already associated with a logical file.
-        Each specific resource type needs to override this function in order to to support logical
-        file types
-        """
-        pass
-
     def supports_folder_creation(self, folder_full_path):
         """Check if resource supports creation of folder at the specified path."""
         return True
@@ -2918,14 +2905,17 @@ class ResourceFile(ResourceFileIRODSMixin):
         return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
-    def delete(self):
+    def delete(self, delete_logical_file=False):
         """Delete a resource file record and the file contents.
+        :param  delete_logical_file: if True deletes logical file associated with resource file
 
         model.delete does not cascade to delete files themselves,
         and these must be explicitly deleted.
-
         """
         if self.exists:
+            if delete_logical_file and self.logical_file is not None:
+                # deleting logical file metadata deletes the logical file as well
+                self.logical_file.metadata.delete()
             if self.fed_resource_file:
                 self.fed_resource_file.delete()
             if self.resource_file:
@@ -3648,6 +3638,9 @@ class BaseResource(Page, AbstractResource):
         publication such as the Web App resource
         :return:
         """
+        if self.raccess.published:
+            return False
+
         return self.can_be_public_or_discoverable
 
     @classmethod
@@ -3785,9 +3778,7 @@ Page.get_content_model = new_get_content_model
 class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     """Define CoreMetaData model."""
 
-    XML_HEADER = '''<?xml version="1.0"?>
-<!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
-"http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
+    XML_HEADER = '''<?xml version="1.0" encoding="UTF-8"?>'''
 
     NAMESPACES = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   'rdfs1': "http://www.w3.org/2000/01/rdf-schema#",
@@ -4575,6 +4566,19 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """Create any supported metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name == 'creator':
+                raise ValidationError("{} can't be created for a published resource".format(element_model_name))
+            elif element_model_name == 'identifier':
+                name_value = kwargs.get('name', '')
+                if name_value != 'doi':
+                    # for published resource the 'name' attribute of the identifier must be set to 'doi'
+                    raise ValidationError("For a published resource only a doi identifier can be created")
+            elif element_model_name == 'date':
+                date_type = kwargs.get('type', '')
+                if date_type and date_type not in ('modified', 'published'):
+                    raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
         return element
 
@@ -4582,11 +4586,23 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """Update metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name in ('title', 'creator', 'rights', 'identifier', 'format', 'publisher'):
+                raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
+            elif element_model_name == 'date':
+                date_type = kwargs.get('type', '')
+                if date_type and date_type != 'modified':
+                    raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
+        element_model_name = element_model_name.lower()
+        if self.resource.raccess.published:
+            if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
+                raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
 
     def _get_metadata_element_model_type(self, element_model_name):
@@ -4733,3 +4749,32 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+class SOLRQueue(models.Model):
+    """
+    This implements an update queue for SOLR resources.
+    It contains a set of resources -- one element per resource -- that should be updated in SOLR
+    for changes in Django.
+    """
+    resource = models.ForeignKey(BaseResource, unique=True)
+
+    @classmethod
+    def add(cls, resource):
+        """ add a resource to the update queue without duplicates """
+        with transaction.atomic():
+            cls.objects.get_or_create(resource=resource)
+
+    @classmethod
+    def read_and_clear(cls):
+        """ read a list of resources to update -- order unimportant -- and clear the queue """
+        with transaction.atomic():
+            everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
+            cls.objects.all().delete()
+        return everything
+
+    @classmethod
+    def read(cls):
+        with transaction.atomic():
+            everything = [x.resource for x in cls.objects.all()]  # force aggressive evaluation
+        return everything

@@ -194,7 +194,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         assertUserResourceState(self, cat, [holes], [], [])
         # protection state for owner
         self.assertTrue(cat.uaccess.owns_resource(holes))
-        self.assertFalse(cat.uaccess.can_change_resource(holes))
+        self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
 
         # composite django state

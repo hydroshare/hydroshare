@@ -51,7 +51,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         elements += list(self.bandInformations.all())
         return elements
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function to generate html needed to display metadata
         in view mode"""
 
@@ -230,6 +230,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     def get_aggregation_display_name():
         return 'Geographic Raster Content: A geographic grid represented by a virtual raster ' \
                'tile (.vrt) file and one or more geotiff (.tif) files'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Geographic Raster Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():

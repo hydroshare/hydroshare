@@ -43,15 +43,20 @@
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
-                            <span v-if="resKeywords.length" class="tag">
-                                {% templatetag openvariable %} k {% templatetag closevariable %}<span
-                                @click="removeKeyword('{{ cm.short_id }}', k )"
-                                class="glyphicon glyphicon-remove-circle icon-remove"></span>
-                            </span>
+                            {% if cm.raccess.published  %}
+                                <span v-if="resKeywords.length" class="tag">
+                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span v-if="resKeywords.length > 1"
+                                        @click="removeKeyword('{{ cm.short_id }}', k )"
+                                        class="glyphicon glyphicon-remove-circle icon-remove"></span>
+                                </span>
+                            {% else %}
+                                <span v-if="resKeywords.length" class="tag">
+                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span
+                                        @click="removeKeyword('{{ cm.short_id }}', k )"
+                                        class="glyphicon glyphicon-remove-circle icon-remove"></span>
+                                </span>
+                            {% endif %}
                         {% else %}
-
-
-
                             <a class='tag' target="_blank"
                                :href="'/search/?subject=' + safeJS(k)">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
                         {% endif %}
@@ -65,17 +70,18 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
-            <span class="alert alert-warning group-title" role="alert">
-                <div class="flex">
-                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                    <em style="padding-right:20px;">
-                        Deleting all keywords will set the resource sharing status to <strong>private</strong>.
-                    </em>
-                </div>
-            </span>
-        </div>
+        {% if not cm.raccess.published %}
+            <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
+                <span class="alert alert-warning group-title" role="alert">
+                    <div class="flex">
+                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                        <em style="padding-right:20px;">
+                            Deleting all keywords will set the resource sharing status to <strong>private</strong>.
+                        </em>
+                    </div>
+                </span>
+            </div>
+       {% endif %}
     </div>
 </div>
 {% block extra_css %}

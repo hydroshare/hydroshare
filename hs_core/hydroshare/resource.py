@@ -434,8 +434,13 @@ def create_resource(
         resource creation.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
-    :return: a new resource which is an instance of BaseResource with specificed resource_type.
+    :return: a new resource which is an instance of BaseResource with specified resource_type.
     """
+    if not __debug__:
+        if resource_type in ("ModelInstanceResource", "ModelProgramResource", "MODFLOWModelInstanceResource",
+                             "SWATModelInstanceResource"):
+            raise ValidationError("Resource type '{}' is no more supported for resource creation".format(resource_type))
+
     with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
@@ -678,11 +683,16 @@ def add_resource_files(pk, *files, **kwargs):
         assert(isinstance(source_names, list))
 
     folder = kwargs.pop('folder', '')
+    user = kwargs.pop('user', None)
 
     if __debug__:  # assure that there are no spurious kwargs left.
         for k in kwargs:
             print("kwargs[{}]".format(k))
         assert len(kwargs) == 0
+
+    if resource.raccess.published:
+        if user is None or not user.is_superuser:
+            raise ValidationError("Only admin can add files to a published resource")
 
     prefix_path = 'data/contents'
     if folder == prefix_path:
@@ -699,12 +709,12 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir))
+        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
 
     for ifname in source_names:
         ret.append(utils.add_file_to_resource(resource, None,
                                               folder=folder,
-                                              source_name=ifname))
+                                              source_name=ifname, user=user))
 
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
@@ -827,7 +837,7 @@ def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
     :param resource: BaseResource object representing a HydroShare resource
-    :param file_name: the file name to be deleted
+    :param file_name: name of the file that got deleted
     :return:
     """
     delete_file_mime_type = utils.get_file_mime_type(file_name)
@@ -841,22 +851,6 @@ def delete_format_metadata_after_delete_file(resource, file_name):
         format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
         if format_element:
             resource.metadata.delete_element(format_element.term, format_element.id)
-
-
-# TODO: test in-folder delete of short path
-def filter_condition(filename_or_id, fl):
-    """
-    Converted lambda definition of filter_condition into def to conform to pep8 E731 rule: do not
-    assign a lambda expression, use a def
-    :param filename_or_id: passed in filename_or id as the filter
-    :param fl: the ResourceFile object to filter against
-    :return: boolean indicating whether fl conforms to filename_or_id
-    """
-    try:
-        file_id = int(filename_or_id)
-        return fl.id == file_id
-    except ValueError:
-        return fl.short_path == filename_or_id
 
 
 # TODO: Remove option for file id, not needed since names are unique.
@@ -889,40 +883,56 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     Note:  This does not handle immutability as previously intended.
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        if resource.files.count() == 1:
+            raise ValidationError("Resource file delete is not allowed. Published resource must contain at "
+                                  "least one file")
+        elif not user.is_superuser:
+            raise ValidationError("Resource file can be deleted only by admin for a published resource")
+
     res_cls = resource.__class__
+    file_by_id = False
+    try:
+        int(filename_or_id)
+        file_by_id = True
+    except ValueError:
+        pass
 
-    for f in ResourceFile.objects.filter(object_id=resource.id):
-        if filter_condition(filename_or_id, f):
-            if delete_logical_file:
-                if f.has_logical_file and not f.logical_file.is_fileset:
-                    # delete logical file if any resource file that belongs to logical file
-                    # gets deleted for any logical file other than fileset logical file
-                    # logical_delete() calls this function (delete_resource_file())
-                    # to delete each of its contained ResourceFile objects
-                    f.logical_file.logical_delete(user)
-                    return filename_or_id
+    try:
+        if file_by_id:
+            f = ResourceFile.objects.get(id=filename_or_id)
+        else:
+            folder, base = os.path.split(filename_or_id)
+            f = ResourceFile.get(resource=resource, file=base, folder=folder)
+    except ObjectDoesNotExist:
+        raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
+                                            resource.short_id, filename_or_id))
 
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
-                                                       resource=resource, user=user)
-
-            file_name = delete_resource_file_only(resource, f)
-
-            # This presumes that the file is no longer in django
-            delete_format_metadata_after_delete_file(resource, file_name)
-
-            signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
-
-            # set to private if necessary -- AFTER post_delete_file handling
-            resource.update_public_and_discoverable()  # set to False if necessary
-
-            # generate bag
-            utils.resource_modified(resource, user, overwrite_bag=False)
-
+    if delete_logical_file and f.has_logical_file:
+        logical_file = f.logical_file
+        if logical_file.can_be_deleted_on_file_delete():
+            # logical_delete() calls this function (delete_resource_file())
+            # to delete each of its contained ResourceFile objects
+            logical_file.logical_delete(user)
             return filename_or_id
 
-    # if execution gets here, file was not found
-    raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
-                                        resource.short_id, filename_or_id))
+    signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
+                                               resource=resource, user=user)
+
+    file_name = delete_resource_file_only(resource, f)
+
+    # This presumes that the file is no longer in django
+    delete_format_metadata_after_delete_file(resource, file_name)
+
+    signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
+
+    # set to private if necessary -- AFTER post_delete_file handling
+    resource.update_public_and_discoverable()  # set to False if necessary
+
+    # generate bag
+    utils.resource_modified(resource, user, overwrite_bag=False)
+
+    return filename_or_id
 
 
 def get_resource_doi(res_id, flag=''):
@@ -1013,6 +1023,8 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
 
     # TODO: whether a resource can be published is not considered in can_be_published
     # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
@@ -1026,16 +1038,16 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 
-    response = deposit_res_metadata_with_crossref(resource)
-    if not response.status_code == status.HTTP_200_OK:
-        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-        # crontab celery task
-        resource.doi = get_resource_doi(pk, 'failure')
-        resource.save()
+    if not __debug__:
+        # only in production environment submit doi request to crossref
+        response = deposit_res_metadata_with_crossref(resource)
+        if not response.status_code == status.HTTP_200_OK:
+            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+            # crontab celery task
+            resource.doi = get_resource_doi(pk, 'failure')
+            resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.immutable = True
-    resource.raccess.shareable = False
     resource.raccess.published = True
     resource.raccess.save()
 

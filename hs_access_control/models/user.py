@@ -1111,6 +1111,7 @@ class UserAccess(models.Model):
         :return: QuerySet of resource objects that can be edited  by this user.
 
         This utilizes effective privilege; immutable resources are not returned.
+        Owners can edit immutable resources 4/9/2021.
 
         Note that this return includes all editable resources, whereas
         get_resources_with_explicit_access only returns those resources that are editable
@@ -1127,7 +1128,10 @@ class UserAccess(models.Model):
         #    contains the user, and the community share preserves edit
 
         return BaseResource.objects.filter(
-            # user has direct access
+            # user owns resource invariant of immutable flag 4/9/2021
+            Q(r2urp__user=self.user,
+              r2urp__privilege=PrivilegeCodes.OWNER) |
+            # user has direct access and resource is not immutable
             Q(raccess__immutable=False,
               r2urp__user=self.user,
               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
@@ -1135,8 +1139,7 @@ class UserAccess(models.Model):
             Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE))\
-            .distinct()
+              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False, via_community=False):
@@ -1340,8 +1343,8 @@ class UserAccess(models.Model):
         Note that
 
         * The ability to change a resource is not just contingent upon sharing,
-          but also upon the resource flag "immutable". Thus "owns" does not imply
-          "can change" privilege.
+          but also upon the resource flag "immutable".
+        * But "owns" now implies "can change" privilege regardless of "immutable" flag 4/9/2021
         * The ability to change a resource applies to its data and metadata, but not to its
           resource state flags: shareable, public, immutable, published, and discoverable.
 
@@ -1360,6 +1363,9 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
+        if self.owns_resource(this_resource):
+            return True
+
         if access_resource.immutable:
             return False
 
@@ -1367,6 +1373,33 @@ class UserAccess(models.Model):
             return True
 
         return False
+
+    def can_change_resource_shareable_flag(self, this_resource):
+        """
+        Whether self can change the shareable resource flag.
+
+        :param this_resource: Resource to check.
+
+        :return: True if user can set shareable flag otherwise false.
+
+        This is not enforced. It is up to the programmer to obey this restriction.
+
+        This is not subject to immutability. Ar present, owns_resource -> can_change_resource_shareable_flag.
+        If we made it subject to immutability, no resources could be made not immutable again.
+        Shareable flag can be set even if the resource is published.
+
+        This is called from hs_core/views/authorize to authorize actions.
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_resource, BaseResource)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if self.user.is_superuser:
+            return True
+
+        return self.owns_resource(this_resource)
 
     def can_change_resource_flags(self, this_resource):
         """
@@ -1390,8 +1423,10 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return self.user.is_superuser or \
-            (not this_resource.raccess.published and self.owns_resource(this_resource))
+        if self.user.is_superuser:
+            return True
+
+        return not this_resource.raccess.published and self.owns_resource(this_resource)
 
     def can_view_resource(self, this_resource):
         """

@@ -1,12 +1,9 @@
-from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-
+from django.db import models
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor,\
-                           CoreMetaData, AbstractMetaDataElement
-
-from lxml import etree
+from hs_core.models import BaseResource, ResourceManager, resource_processor, \
+    CoreMetaData, AbstractMetaDataElement
 
 
 class RefTimeSeriesResource(BaseResource):
@@ -40,20 +37,24 @@ class RefTimeSeriesResource(BaseResource):
 
 processor_for(RefTimeSeriesResource)(resource_processor)
 
+
 class ReferenceURL(AbstractMetaDataElement):
     term = 'ReferenceURL'
     value = models.CharField(max_length=500)
     type = models.CharField(max_length=4)
+
 
 class Method(AbstractMetaDataElement):
     term = 'Method'
     code = models.CharField(max_length=500, default="", blank=True)
     description = models.TextField(default="", blank=True)
 
+
 class QualityControlLevel(AbstractMetaDataElement):
     term = 'QualityControlLevel'
     code = models.CharField(max_length=500, default="", blank=True)
     definition = models.CharField(max_length=500, default="", blank=True)
+
 
 class Variable(AbstractMetaDataElement):
     term = 'Variable'
@@ -61,6 +62,7 @@ class Variable(AbstractMetaDataElement):
     code = models.CharField(max_length=500, default="", blank=True)
     data_type = models.CharField(max_length=500, default="", blank=True)
     sample_medium = models.CharField(max_length=500, default="", blank=True)
+
 
 class Site(AbstractMetaDataElement):
     term = 'Site'
@@ -70,10 +72,12 @@ class Site(AbstractMetaDataElement):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
+
 # source code
 class DataSource(AbstractMetaDataElement):
     term = 'DataSource'
     code = models.CharField(max_length=500, default="", blank=True)
+
 
 class RefTSMetadata(CoreMetaData):
     referenceURLs = GenericRelation(ReferenceURL)

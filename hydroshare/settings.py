@@ -563,6 +563,10 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'matplotlib': { 
+            'handlers': ['hydrosharelog'], 
+            'level': 'INFO'
+        },
         # Catch-all logger for HydroShare apps
         '': {
             'handlers': ['hydrosharelog'],
@@ -701,6 +705,11 @@ DISCOVERY_EXTENSION_CONTENT_TYPES = {
 
 HSWS_ACTIVATED = False
 
+# HydroShare THREDDS Data Server URL
+THREDDS_SERVER_URL = 'https://thredds.hydroshare.org/thredds/'
+# HydroShare Geoserver URL
+HSWS_GEOSERVER_URL = 'https://geoserver.hydroshare.org/geoserver'
+
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
     'hs_core.tasks.create_bag_by_irods',
@@ -750,3 +759,5 @@ else:
 #import codecs
 #sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 #sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = "/hydroshare/hs_file_types/model_meta_schema_templates"

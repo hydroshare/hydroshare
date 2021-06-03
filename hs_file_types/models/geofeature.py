@@ -45,7 +45,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(GeoFeatureFileMetaData, self).get_html()
@@ -196,6 +196,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     def get_aggregation_display_name():
         return 'Geographic Feature Content: The multiple files that are part of a geographic ' \
                'shapefile'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Geographic Feature Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
