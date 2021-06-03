@@ -936,34 +936,56 @@ function showFileTypeMetadata(file_type_time_series, url){
 
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
-         var json_response = JSON.parse(result);
-         if(json_response.status === 'error') {
-             var error_html = '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
-                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                                    '<span aria-hidden="true">&times;</span></button>' +
-                                '<div>' +
-                                    '<strong>File Type Metadata Error</strong>'+
-                                '</div>'+
-                                '<div>'+
-                                    '<span>' + json_response.message + '</span>' +
-                                '</div>'+
-                            '</div>';
-             $("#fileTypeMetaData").html(error_html);
-             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-             return;
-         }
+        var json_response = result;
 
-        $("#fileTypeMetaData").html(json_response.metadata);
+        if(json_response.status === 'error') {
+            let error_html = '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                               '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                                   '<span aria-hidden="true">&times;</span></button>' +
+                               '<div>' +
+                                   '<strong>File Type Metadata Error</strong>'+
+                               '</div>'+
+                               '<div>'+
+                                   '<span>' + json_response.message + '</span>' +
+                               '</div>'+
+                           '</div>';
+            $("#fileTypeMetaData").html(error_html);
+            $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+            return;
+        }
+        if (resource_mode === 'view') {
+            $("#fileTypeMetaData").html('');
+            let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
+                schema: json_response.metadata.json_schema,
+                startval: json_response.metadata.json_value,
+                theme: "bootstrap4",
+                disable_properties: true,
+                disable_edit_json: true,
+                disable_array_add: true,
+                disable_array_delete: true,
+                disable_array_delete_all_rows: true,
+                disable_array_delete_last_row: true,
+                disable_array_reorder: true,
+                object_layout: "table"
+            });
+            editor.disable();
+            // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
+            $(".property-selector").removeAttr("style");
+        }
+        else {
+            $("#fileTypeMetaData").html(json_response.metadata);
+        };
+
         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
 
-         $("#txt-keyword-filetype").keypress(function (e) {
-             e.which = e.which || e.keyCode;
-             if (e.which == 13) {
-                 onAddKeywordFileType();
-                 return false;
-             }
-         });
+        $("#txt-keyword-filetype").keypress(function (e) {
+            e.which = e.which || e.keyCode;
+            if (e.which == 13) {
+                onAddKeywordFileType();
+                return false;
+            }
+        });
 
         if (logical_type === 'TimeSeriesLogicalFile') {
             $("#series_id_file_type").change(function () {

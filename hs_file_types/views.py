@@ -1214,8 +1214,9 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         if metadata_mode == 'view':
             file_path = logical_file.metadata_file_path
             json_value, json_schema = get_logical_file_metadata_json_schema(file_path)
-            metadata = {'json_value': json_value,
-                        'json_schema': json_schema}
+            metadata = {'json_value': json.loads(json_value),
+                        'json_schema': json.loads(json_schema)
+                        }
         else:
             metadata = logical_file.metadata.get_html_forms(user=request.user)
         ajax_response_data = {'status': 'success', 'metadata': metadata}

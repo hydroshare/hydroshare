@@ -450,8 +450,6 @@ function get_file_type_metadata_ajax_submit(url) {
     return $.ajax({
         type: "POST",
         url: url,
-        dataType: 'html',
-        async: false,
         success: function (result) {
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
