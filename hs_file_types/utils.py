@@ -5,12 +5,12 @@ from hsmodels.schemas import load_rdf
 
 from dateutil import parser
 from django.db import transaction
+from django.apps import apps
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
 
 from hs_core.hydroshare import utils, get_resource_file
 from hs_file_types.models.base import AbstractLogicalFile
-from django.apps import apps
 from django_irods.storage import IrodsStorage
 from .models import (
     GenericLogicalFile,
