@@ -4,7 +4,6 @@ from operator import lt, gt
 from hsmodels.schemas import load_rdf
 
 from dateutil import parser
-from django.apps import apps
 from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
