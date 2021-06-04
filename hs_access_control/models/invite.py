@@ -7,19 +7,29 @@ from hs_access_control.models.privilege import PrivilegeCodes
 
 
 class GroupCommunityInvite(models.Model):
+    # target
     group = models.ForeignKey(Group, editable=False, null=False)
+    # source
     community = models.ForeignKey(Community, editable=False, null=False)
+    # inviter
     community_owner = models.ForeignKey(User, editable=False, null=True,
         related_name='invite_gcc')
-    redeemed = models.BooleanField(editable=False, null=False, default=False)
-    approved = models.BooleanField(editable=False, null=False, default=False)
+    # invitee 
     group_owner = models.ForeignKey(User, editable=False, null=True, default=None,
         related_name='invite_gcg')
+    # redeemed is True if already acted upon
+    redeemed = models.BooleanField(editable=False, null=False, default=False)
+    # approved is True if redeemed is True and the request was approved.
+    approved = models.BooleanField(editable=False, null=False, default=False)
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
     unique_together = ['group', 'community']
 
+    def __str__(self): 
+        return "GroupCommunityInvite: community='{}', group='{}' c_owner='{}', g_owner='{}'"\
+            .format(str(self.community), str(self.group), str(self.community_owner), str(self.group_owner))
+       
     @classmethod
     def create_or_update(cls, privilege=PrivilegeCodes.VIEW, **kwargs):
         assert('group' in kwargs)
@@ -52,7 +62,7 @@ class GroupCommunityInvite(models.Model):
 
         # auto-approve if the owner is the group owner
         elif community_owner.uaccess.owns_group(group): 
-            invite_record.act(group_owner=community_owner)
+            invite_record.act(group_owner=community_owner, approved=True)
 
         # auto-approve if auto_approve is True
         elif community.auto_approve:
@@ -94,7 +104,9 @@ class GroupCommunityInvite(models.Model):
 
 class GroupCommunityRequest(models.Model):
 
+    # source
     group = models.ForeignKey(Group, editable=False, null=False)
+    # target
     community = models.ForeignKey(Community, editable=False, null=False)
     # requester
     group_owner = models.ForeignKey(User, editable=False, null=True, related_name='request_gcg')
@@ -106,6 +118,10 @@ class GroupCommunityRequest(models.Model):
     redeemed = models.BooleanField(editable=False, default=False, null=False)
     approved = models.BooleanField(editable=False, null=False, default=False)
     unique_together = ['group', 'community']
+
+    def __str__(self): 
+        return "GroupCommunityRequest: community='{}', group='{}' c_owner='{}', g_owner='{}'"\
+            .format(str(self.community), str(self.group), str(self.community_owner), str(self.group_owner))
 
     @classmethod
     def create_or_update(cls, privilege=PrivilegeCodes.VIEW, **kwargs):
@@ -120,6 +136,8 @@ class GroupCommunityRequest(models.Model):
         group_owner = kwargs['group_owner']
         assert(group_owner.is_active)
         assert(group_owner.uaccess.owns_group(group))
+
+        print("Request: create_or_update: group owner = {}".format(group_owner.username))
 
         del kwargs['group_owner']
         with transaction.atomic():
@@ -136,6 +154,11 @@ class GroupCommunityRequest(models.Model):
         if invite_record is not None:
             invite_record.act(group_owner=group_owner, approved=True)
             request_record.act(community_owner=invite_record.community_owner, approved=True)
+
+        # auto-approve if the owner is the community owner
+        elif group_owner.uaccess.owns_community(community): 
+            request_record.act(community_owner=group_owner, approved=True)
+
         # auto-approve if auto_approve is True
         elif community.auto_approve:
             request_record.act(community_owner=community.first_owner, approved=True)

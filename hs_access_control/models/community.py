@@ -214,10 +214,10 @@ class Community(models.Model):
     @property
     def first_owner(self):
         from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
-        owners = UserCommunityPrivilege.filter(community=self, privilege=PrivilegeCodes.OWNER)\
-            .order_by('start').value_list('user')
-        owners = list(owners)
-        if owners:
-            return owners[0]
+        opriv = UserCommunityPrivilege.objects.filter(community=self, privilege=PrivilegeCodes.OWNER)\
+            .order_by('start')
+        opriv = list(opriv)
+        if opriv:
+            return opriv[0].user
         else:
             return None

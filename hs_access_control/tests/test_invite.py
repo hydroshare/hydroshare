@@ -245,10 +245,14 @@ class TestInvite(TestCase):
         request, created = GroupCommunityRequest.create_or_update(
             group=self.cats, community=self.pets, group_owner=self.cat)
 
+        # refresh objects to pick up async database changes 
+        invite = GroupCommunityInvite.objects.get(pk=invite.pk)
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
+
         self.assertTrue(isinstance(invite, GroupCommunityInvite))
         self.assertEqual(invite.community, self.pets)
         self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner, self.cat)
+        self.assertEqual(invite.group_owner, self.cat)
         self.assertEqual(invite.community_owner, self.dog)
         self.assertTrue(invite.redeemed)
         self.assertTrue(invite.approved)
@@ -257,10 +261,142 @@ class TestInvite(TestCase):
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
         self.assertEqual(request.group, self.cats)
-        self.assertTrue(request.group_owner, self.cat)
+        self.assertEqual(request.group_owner, self.cat)
         self.assertEqual(request.community_owner, self.dog)
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.active_requests()) 
 
         self.assertTrue(self.cats in self.pets.member_groups) 
+
+    def test_request_then_invite(self):
+        "request, then matching invite"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        request, created = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, group_owner=self.cat)
+
+        self.assertTrue(created)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertTrue(request.community_owner is None)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.active_requests()) 
+
+        self.assertFalse(self.cats in self.pets.member_groups) 
+
+        invite, created = GroupCommunityInvite.create_or_update(
+            group=self.cats, community=self.pets, community_owner=self.dog)
+
+        # refresh objects to pick up async database changes 
+        invite = GroupCommunityInvite.objects.get(pk=invite.pk)
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(invite, GroupCommunityInvite))
+        self.assertEqual(invite.community, self.pets)
+        self.assertEqual(invite.group, self.cats)
+        self.assertEqual(invite.group_owner, self.cat)
+        self.assertEqual(invite.community_owner, self.dog)
+        self.assertTrue(invite.redeemed)
+        self.assertTrue(invite.approved)
+        self.assertFalse(invite in GroupCommunityInvite.active_requests()) 
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.active_requests()) 
+
+        self.assertTrue(self.cats in self.pets.member_groups) 
+
+    def test_auto_approve(self):
+        "request with auto-approvale"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        self.pets.auto_approve = True; 
+        self.pets.save()
+
+        request, created = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, group_owner=self.cat)
+
+        self.assertTrue(created)
+
+        # refresh objects to pick up async database changes 
+        # request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.active_requests()) 
+
+        self.assertTrue(self.cats in self.pets.member_groups) 
+
+    def test_invite_owns_both(self):
+        "invite where owner owns both" 
+
+        self.assertTrue(self.dog.uaccess.can_share_community_with_user(
+            self.pets, self.cat, PrivilegeCodes.OWNER))
+        self.dog.uaccess.share_community_with_user(
+            self.pets, self.cat, PrivilegeCodes.OWNER)
+
+        request, created = GroupCommunityInvite.create_or_update(
+            group=self.cats, community=self.pets, community_owner=self.cat)
+
+        self.assertTrue(created)
+
+        # refresh objects to pick up async database changes 
+        # request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityInvite))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.cat)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityInvite.active_requests()) 
+
+        self.assertTrue(self.cats in self.pets.member_groups) 
+
+    def test_request_owns_both(self):
+        "invite where owner owns both" 
+
+        self.assertTrue(self.dog.uaccess.can_share_community_with_user(
+            self.pets, self.cat, PrivilegeCodes.OWNER))
+        self.dog.uaccess.share_community_with_user(
+            self.pets, self.cat, PrivilegeCodes.OWNER)
+
+        request, created = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, group_owner=self.cat)
+
+        self.assertTrue(created)
+
+        # refresh objects to pick up async database changes 
+        # request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.cat)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.active_requests()) 
+
+        self.assertTrue(self.cats in self.pets.member_groups) 
+

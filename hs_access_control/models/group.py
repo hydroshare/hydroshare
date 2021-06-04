@@ -421,3 +421,13 @@ class GroupAccess(models.Model):
         # Thus it is quite brittle and vulnerable to major revisions of Generics.
 
         return res
+
+    @property
+    def first_owner(self):
+        opriv = UserGroupPrivilege.objects.filter(group=self, privilege=PrivilegeCodes.OWNER)\
+            .order_by('start')
+        opriv = list(opriv)
+        if opriv:
+            return opriv[0].user
+        else:
+            return None
