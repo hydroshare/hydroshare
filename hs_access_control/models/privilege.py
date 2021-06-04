@@ -67,6 +67,7 @@ class PrivilegeBase(models.Model):
     share, unshare, undo_share, and ensure that provenance and privilege
     are always in sync with one another.
     """
+
     class Meta:
         abstract = True
 
@@ -392,6 +393,11 @@ class UserResourcePrivilege(PrivilegeBase):
                                 related_name='x2urp',
                                 help_text='grantor of privilege')
 
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
     class Meta:
         unique_together = ('user', 'resource')
 
@@ -500,7 +506,7 @@ class UserResourcePrivilege(PrivilegeBase):
         del kwargs['grantor']
         r = UserResourceProvenance.get_current_record(**kwargs)
         # post to privilege table.
-        cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
+        cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
 
     @classmethod
     def get_undo_users(cls, **kwargs):
@@ -557,6 +563,11 @@ class GroupResourcePrivilege(PrivilegeBase):
                                 editable=False,
                                 related_name='x2grp',
                                 help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
 
     class Meta:
         unique_together = ('group', 'resource')
@@ -651,7 +662,7 @@ class GroupResourcePrivilege(PrivilegeBase):
         GroupResourceProvenance.undo_share(**kwargs)
         del kwargs['grantor']
         r = GroupResourceProvenance.get_current_record(**kwargs)
-        cls.update(group=r.group, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
+        cls.update(group=r.group, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
 
     @classmethod
     def get_undo_groups(cls, **kwargs):
@@ -890,6 +901,11 @@ class GroupCommunityPrivilege(PrivilegeBase):
                                 related_name='x2gcp',
                                 help_text='grantor of privilege')
 
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
     class Meta:
         unique_together = ('community', 'group')
 
@@ -1009,7 +1025,8 @@ class GroupCommunityPrivilege(PrivilegeBase):
         GroupCommunityProvenance.undo_share(grantor=grantor, **kwargs)
         # read that record and post to privilege table.
         r = GroupCommunityProvenance.get_current_record(**kwargs)
-        cls.update(community=r.community, group=r.group, privilege=r.privilege, grantor=r.grantor)
+        cls.update(community=r.community, group=r.group, privilege=r.privilege,
+                   grantor=r.grantor, exhibit=r.exhibit)
 
     @classmethod
     def get_undo_groups(cls, **kwargs):
@@ -1070,6 +1087,11 @@ class CommunityResourcePrivilege(PrivilegeBase):
                                 editable=False,
                                 related_name='x2crp',
                                 help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
 
     class Meta:
         unique_together = ('community', 'resource')

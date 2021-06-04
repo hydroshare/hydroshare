@@ -210,3 +210,14 @@ class Community(models.Model):
                 Q(r2grp__group=group,
                   r2grp__group__g2gcp__community=self,
                   r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()
+
+    @property
+    def first_owner(self):
+        from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
+        owners = UserCommunityPrivilege.filter(community=self, privilege=PrivilegeCodes.OWNER)\
+            .order_by('start').value_list('user')
+        owners = list(owners)
+        if owners:
+            return owners[0]
+        else:
+            return None

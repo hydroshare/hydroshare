@@ -23,6 +23,8 @@ class ProvenanceBase(models.Model):
     called from the specific "provenance" classes when needed.
     """
 
+    exhibit = models.BooleanField(default=False)  # whether to exhibit the result as a product
+
     class Meta:
         abstract = True
 
@@ -339,7 +341,10 @@ class UserGroupProvenance(ProvenanceBase):
                                 related_name='x2ugq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('user', 'group', 'start')
@@ -442,7 +447,15 @@ class UserResourceProvenance(ProvenanceBase):
                                 related_name='x2urq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('user', 'resource', 'start')
@@ -475,7 +488,7 @@ class UserResourceProvenance(ProvenanceBase):
         return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
 
     @classmethod
-    def update(cls, resource, user, privilege, grantor, undone=False):
+    def update(cls, resource, user, privilege, grantor, undone=False, exhibit=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -494,7 +507,8 @@ class UserResourceProvenance(ProvenanceBase):
                                                   user=user,
                                                   privilege=privilege,
                                                   grantor=grantor,
-                                                  undone=undone)
+                                                  undone=undone,
+                                                  exhibit=exhibit)
 
 
 class GroupResourceProvenance(ProvenanceBase):
@@ -542,7 +556,15 @@ class GroupResourceProvenance(ProvenanceBase):
                                 related_name='x2grq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('group', 'resource', 'start')
@@ -578,7 +600,7 @@ class GroupResourceProvenance(ProvenanceBase):
         return Group.objects.filter(pk__in=selected)
 
     @classmethod
-    def update(cls, resource, group, privilege, grantor, undone=False):
+    def update(cls, resource, group, privilege, grantor, undone=False, exhibit=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -594,7 +616,8 @@ class GroupResourceProvenance(ProvenanceBase):
                                                    group=group,
                                                    privilege=privilege,
                                                    grantor=grantor,
-                                                   undone=undone)
+                                                   undone=undone,
+                                                   exhibit=exhibit)
 
 
 class UserCommunityProvenance(ProvenanceBase):
@@ -639,7 +662,10 @@ class UserCommunityProvenance(ProvenanceBase):
                                 related_name='x2ucq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('community', 'user', 'start')
@@ -747,7 +773,10 @@ class GroupCommunityProvenance(ProvenanceBase):
                                 related_name='x2gcq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('community', 'group', 'start')
@@ -855,7 +884,15 @@ class CommunityResourceProvenance(ProvenanceBase):
                                 related_name='x2crq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('resource', 'community', 'start')
@@ -897,7 +934,7 @@ class CommunityResourceProvenance(ProvenanceBase):
         return selected
 
     @classmethod
-    def update(cls, community, resource, privilege, grantor, undone=False):
+    def update(cls, community, resource, privilege, grantor, undone=False, exhibit=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -918,4 +955,5 @@ class CommunityResourceProvenance(ProvenanceBase):
                                                        resource=resource,
                                                        privilege=privilege,
                                                        grantor=grantor,
-                                                       undone=undone)
+                                                       undone=undone,
+                                                       exhibit=exhibit)
