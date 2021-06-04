@@ -1,5 +1,5 @@
 """
-This allows membership control of a group without a graphical user interface.
+This allows creation of a group without a graphical user interface.
 
 WARNING: As these routines run in administrative mode, no access control is used.
 Care must be taken to generate reasonable metadata, specifically, concerning
@@ -7,33 +7,46 @@ who owns what. Non-sensical options are possible to create.
 This code is not a design pattern for actually interacting with communities.
 
 WARNING: This command cannot be executed via 'hsctl' because that doesn't honor
-the strings one needs to embed community names with embedded spaces.
+the strings one needs to embed group names with embedded spaces.
 Please connect to the bash shell for the hydroshare container before running them.
 """
 
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group
+from hs_access_control.models.group import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserGroupPrivilege, GroupResourcePrivilege
-from hs_access_control.management.utilities import \
-        group_from_name_or_id, user_from_name, resource_from_id
+        UserGroupPrivilege, UserCommunityPrivilege, UserGroupPrivilege
+from hs_access_control.management.utilities import group_from_name_or_id, \
+        group_from_name_or_id, user_from_name
 
 
 def usage():
     print("access_group usage:")
-    print("  access_group [{gname} [{request} [{options}]]]")
+    print("  access_group [{uname} [{request} [{options}]]]")
     print("Where:")
-    print("  {gname} is a group name. Use '' to embed spaces.")
+    print("  {uname} is a group name. Use '' to embed spaces.")
     print("  {request} is one of:")
     print("      list: print the configuration of a group.")
-    print("      resource: resource to add or remove.")
-    print("          where options include {guid} {add|remove}.")
-    print("And options include:")
-    print("  --grantor={username} -- grantor of privilege")
+    print("      create: create the group.")
+    print("      update: update metadata for group.")
+    print("      Options for create and update include:")
+    print("          --owner={username}: set an owner for the group.")
+    print("          --description='{description}': set the description to the text provided.")
+    print("          --purpose='{purpose}': set the purpose to the text provided.")
+    print("      group {uname} {request} {options}: group commands.")
+    print("          {uname}: user name.")
+    print("          {request} is one of:")
+    print("              add: add the user to the group.")
+    print("              remove: remove the user from the group.")
+    print("      owner {oname} {request}: owner commands")
+    print("          {oname}: owner name.")
+    print("          {request} is one of:")
+    print("              [blank]: list group owners")
+    print("              add: add an owner for the group.")
+    print("              remove: remove an owner from the group.")
 
 
 class Command(BaseCommand):
-    help = """Manage groups."""
+    help = """Manage groups of users."""
 
     def add_arguments(self, parser):
 
@@ -41,76 +54,116 @@ class Command(BaseCommand):
         parser.add_argument('command', nargs='*', type=str)
 
         parser.add_argument(
-            '--grantor',
-            dest='grantor',
-            help='grantor of privilege'
+            '--owner',
+            dest='owner',
+            help='owner of group (does not affect quota)'
         )
 
-        # parser.add_argument(
-        #     '--description',
-        #     dest='description',
-        #     help='description of group'
-        # )
+        parser.add_argument(
+            '--description',
+            dest='description',
+            help='description of group'
+        )
 
-        # parser.add_argument(
-        #     '--purpose',
-        #     dest='purpose',
-        #     help='purpose of group'
-        # )
+        parser.add_argument(
+            '--purpose',
+            dest='purpose',
+            help='purpose of group'
+        )
 
     def handle(self, *args, **options):
 
         if len(options['command']) > 0:
-            gname = options['command'][0]
+            uname = options['command'][0]
         else:
-            gname = None
+            uname = None
 
         if len(options['command']) > 1:
             command = options['command'][1]
         else:
             command = None
 
-        # resolve grantor:
-        if options['grantor'] is not None:
-            oname = options['grantor']
+        # resolve owner: used in several update commands as grantor
+        if options['owner'] is not None:
+            oname = options['owner']
         else:
             oname = 'admin'
 
-        grantor = user_from_name(oname)
-        if grantor is None:
+        owner = user_from_name(oname)
+        if owner is None:
             usage()
             exit(1)
 
         privilege = PrivilegeCodes.VIEW
 
-        # not specifing a group lists groups
-        if gname is None:
-            print("All groups:")
-            for g in Group.objects.all():
-                print("  '{}' (id={})".format(g.name, str(g.id)))
+        # not specifing a group lists active groups
+        if uname is None:
+            print("All communities:")
+            for c in Community.objects.all():
+                print("  '{}' (id={})".format(c.name, str(c.id)))
             exit(0)
 
         if command is None or command == 'list':
-            group = group_from_name_or_id(gname)
+            group = group_from_name_or_id(uname)
             if group is None:
                 usage()
                 exit(1)
 
             print("group '{}' (id={}):".format(group.name, group.id))
+            print("  description: {}".format(group.description))
+            print("  purpose: {}".format(group.purpose))
             print("  owners:")
-            for ugp in UserGroupPrivilege.objects.filter(group=group,
-                                                         privilege=PrivilegeCodes.OWNER):
-                print("    {} (grantor {})".format(ugp.user.username, ugp.grantor.username))
-            print("  resources:")
-            for grp in GroupResourcePrivilege.objects.filter(group=group):
-                print("    {} '{}' (grantor {}) privilege {}"
-                      .format(grp.resource.short_id, grp.resource.title, grp.grantor.username,
-                              PrivilegeCodes.NAMES[grp.privilege]))
+            for ucp in UserCommunityPrivilege.objects.filter(group=group,
+                                                             privilege=PrivilegeCodes.OWNER):
+                print("    {} (grantor {})".format(ucp.user.username, ucp.grantor.username))
+
+            print("  member groups:")
+            for gcp in UserGroupPrivilege.objects.filter(group=group):
+                if gcp.privilege == PrivilegeCodes.CHANGE:
+                    others = "can edit group resources"
+                else:
+                    others = "can view group resources"
+                print("     '{}' (id={}) (grantor={}):"
+                      .format(gcp.group.name, gcp.group.id, gcp.grantor.username))
+                print("         {}.".format(others))
+                print("         '{}' (id={}) owners are:".format(gcp.group.name, str(gcp.group.id)))
+                for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
+                                                             privilege=PrivilegeCodes.OWNER):
+                    print("             {}".format(ugp.user.username))
             exit(0)
 
-        if command == 'owner':
+        # These are idempotent actions. Creating a group twice does nothing.
+        if command == 'update' or command == 'create':
+            try:
+                group = Community.objects.get(name=uname)
+                if options['description'] is not None:
+                    group.description = options['description']
+                    group.save()
+                if options['purpose'] is not None:
+                    group.purpose = options['purpose']
+                    group.save()
+
+                UserCommunityPrivilege.update(user=owner,
+                                              group=group,
+                                              privilege=PrivilegeCodes.OWNER,
+                                              grantor=owner)
+
+            except Community.DoesNotExist:  # create it
+
+                if options['description'] is not None:
+                    description = options['description']
+                else:
+                    description = "No description"
+                purpose = options['purpose']
+
+                print("creating group '{}' with owner '{}' and description '{}'"
+                      .format(uname, owner, description))
+
+                owner.uaccess.create_group(uname, description, purpose=purpose)
+
+        elif command == 'owner':
             # at this point, group must exist
-            group = group_from_name_or_id(gname)
+            group = group_from_name_or_id(uname)
             if group is None:
                 usage()
                 exit(1)
@@ -118,9 +171,9 @@ class Command(BaseCommand):
             if len(options['command']) < 3:
                 # list owners
                 print("owners of group '{}' (id={})".format(group.name, str(group.id)))
-                for ugp in UserGroupPrivilege.objects.filter(group=group,
+                for ucp in UserGroupPrivilege.objects.filter(group=group,
                                                              privilege=PrivilegeCodes.OWNER):
-                    print("    {}".format(ugp.user.username))
+                    print("    {}".format(ucp.user.username))
                 exit(0)
 
             oname = options['command'][2]
@@ -129,76 +182,97 @@ class Command(BaseCommand):
                 usage()
                 exit(1)
 
+            if len(options['command']) < 4:
+                print("user {} owns group '{}' (id={})"
+                      .format(owner.username, group.name, str(group.id)))
             action = options['command'][3]
+
             if action == 'add':
                 print("adding {} as owner of {} (id={})"
                       .format(owner.username, group.name, str(group.id)))
                 UserGroupPrivilege.share(user=owner, group=group,
-                                         privilege=PrivilegeCodes.VIEW, grantor=grantor)
+                                         privilege=PrivilegeCodes.OWNER, grantor=owner)
 
             elif action == 'remove':
                 print("removing {} as owner of {} (id={})"
                       .format(owner.username, group.name, str(group.id)))
-                UserGroupPrivilege.unshare(user=owner, group=group, grantor=grantor)
+                UserCommunityPrivilege.unshare(user=owner, group=group, grantor=owner)
 
             else:
                 print("unknown owner action '{}'".format(action))
                 usage()
                 exit(1)
 
-        elif command == 'resource':
+        elif command == 'group':
 
-            # at this point, community must exist
-            group = group_from_name_or_id(gname)
+            # at this point, group must exist
+            group = group_from_name_or_id(uname)
             if group is None:
                 usage()
                 exit(1)
 
-            # not specifying a resource should list resources
+            # not specifying a group should list groups
             if len(options['command']) < 3:
-                print("Group '{}' ({}) resources:".format(group.name, group.id))
-                for grp in GroupResourcePrivilege.objects.filter(group=group):
-                    if grp.privilege == PrivilegeCodes.CHANGE:
-                        others = "can edit"
+                print("Community '{}' groups:")
+                for gcp in UserGroupPrivilege.objects.filter(group=group):
+                    if gcp.privilege == PrivilegeCodes.CHANGE:
+                        others = "can edit group resources"
                     else:
-                        others = "can view"
-                    print("    '{}' ({}) (grantor {}):".format(grp.group.name, grp.group.id, grp.grantor.username))
+                        others = "can view group resources"
+                    print("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
                     print("         {}.".format(others))
                 exit(0)
 
-            # next thing is resource ID.
-            rid = options['command'][2]
-            resource = resource_from_id(rid)
-            if resource is None:
+            uname = options['command'][2]
+            group = group_from_name_or_id(uname)
+            if group is None:
                 usage()
                 exit(1)
 
             if len(options['command']) < 4:
-                print("no resource command specified.")
+                print("group groups: no action specified.")
                 usage()
                 exit(1)
 
             action = options['command'][3]
 
-            if action == 'add':
+            if action == 'update' or action == 'add':
                 # resolve privilege of group
                 privilege = PrivilegeCodes.VIEW
-                print("Adding resource {} to group '{}' (id={}) ."
-                      .format(rid, gname, str(group.id)))
-                GroupResourcePrivilege.share(group=group, resource=resource, privilege=privilege, grantor=grantor)
+
+                try:
+                    print("Updating group '{}' (id={}) status in group '{}' (id={})."
+                          .format(uname, str(group.id), uname, str(group.id)))
+                    gcp = UserGroupPrivilege.objects.get(group=group, group=group)
+                    # pass privilege changes through the privilege system to record provenance.
+                    if gcp.privilege != privilege or owner != gcp.grantor:
+                        UserGroupPrivilege.share(group=group, group=group,
+                                                      privilege=privilege, grantor=owner)
+
+                except UserGroupPrivilege.DoesNotExist:
+                    print("Adding user '{}' (id={}) to group '{}' (id={})"
+                          .format(uname, str(group.id), uname, str(group.id)))
+
+                    # create the privilege record
+                    UserGroupPrivilege.share(group=group, user=user,
+                                             privilege=privilege, grantor=owner)
+
+                    # update view status if different than default
+                    gcp = UserGroupPrivilege.objects.get(group=group, group=group)
+
             elif action == 'remove':
 
-                print("removing resource {} from group '{}' (id={})"
-                      .format(rid, group.name, str(group.id)))
-                GroupResourcePrivilege.unshare(group=group, resource=resource, grantor=grantor)
+                print("removing group '{}' (id={}) from group '{}' (id={})"
+                      .format(group.name, str(group.id), group.name, str(group.id)))
+                UserGroupPrivilege.unshare(group=group, group=group, grantor=owner)
 
             else:
-                print("unknown resource command '{}'.".format(action))
+                print("unknown group command '{}'.".format(action))
                 usage()
                 exit(1)
 
         elif command == 'remove':
-            group = group_from_name_or_id(gname)
+            group = group_from_name_or_id(uname)
             if group is None:
                 usage()
                 exit(1)
