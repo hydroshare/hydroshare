@@ -627,7 +627,7 @@ class UserAccess(models.Model):
         :param this_group: group to check
         :param this_privilege: privilege to assign
         :param user: user with which to share.
-        :param community: group with which to share.
+        :param community: community with which to share.
         :return: True if sharing is possible, otherwise false.
 
         This determines whether the current user can share a group, independent of
@@ -3036,23 +3036,27 @@ class UserAccess(models.Model):
     def __check_share_community_with_group(self, this_community, this_group,
                                            this_privilege=PrivilegeCodes.VIEW):
         """
-        Check whether an unshare of a group with a community is permitted.
+        Check whether a share of a group with a community is permitted.
 
-        :param this_community: Community with which to unshare group
-        :param this_group: Group to unshare
+        :param this_community: Community with which to share group
+        :param this_group: Group to share
 
         This utility routine's sole purpose is to ensure that
         can_share_community_with_group and share_community_with_group
         are consistent with one another.
         """
-        self.__check_share_group(this_group, this_privilege)
-        # only owners of the original groups can share a group with a community
+        # only owners of the community can share a group with a community
         if this_privilege != PrivilegeCodes.VIEW:
             raise PermissionDenied("Groups can only view communities")
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
         if not self.owns_community(this_community):
             raise PermissionDenied("User must own the community to be modified")
-        if not self.owns_group(this_group):
-            raise PermissionDenied("User must own the group that will join a community")
 
     def share_community_with_group(self, this_community, this_group,
                                    this_privilege=PrivilegeCodes.VIEW):
@@ -3159,16 +3163,12 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group to be unshared is not active")
+        # Check for sufficient privilege
+        if self.user.is_superuser:
+            return True
 
         if not self.owns_community(this_community):
             raise PermissionDenied("User is not an owner of the target community")
-
-        # Check for sufficient privilege
-        if not self.user.is_superuser \
-                and not self.owns_group(this_group):
-            raise PermissionDenied("You do not have permission to remove this sharing setting")
 
         return True
 

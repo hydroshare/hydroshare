@@ -8,4 +8,5 @@ from .group import GroupAccess, GroupMembershipRequest
 from .resource import ResourceAccess
 from .community import Community
 from .exceptions import PolymorphismError
+from .invite import GroupCommunityInvite, GroupCommunityRequest
 from .utilities import access_provenance, access_permissions, coarse_permissions
