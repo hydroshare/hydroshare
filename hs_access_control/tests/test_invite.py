@@ -2,13 +2,11 @@ from django.test import TestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
-from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
-        GroupCommunityProvenance
+from hs_access_control.models import PrivilegeCodes
 from hs_access_control.models.invite import GroupCommunityInvite, GroupCommunityRequest
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
-from pprint import pprint
 
 
 class TestInvite(TestCase):
@@ -104,6 +102,7 @@ class TestInvite(TestCase):
         self.assertFalse(invite.redeemed)
         self.assertFalse(invite.approved)
         self.assertTrue(invite in GroupCommunityInvite.active_requests())
+        self.assertTrue(invite in GroupCommunityInvite.active_requests(group_owner=self.cat))
         self.assertFalse(self.cats in self.pets.member_groups)
 
         message, invite, success = invite.act(group_owner=self.cat, approved=True)
@@ -144,6 +143,7 @@ class TestInvite(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.active_requests())
+        self.assertTrue(request in GroupCommunityRequest.active_requests(community_owner=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -185,6 +185,7 @@ class TestInvite(TestCase):
         self.assertFalse(invite.redeemed)
         self.assertFalse(invite.approved)
         self.assertTrue(invite in GroupCommunityInvite.active_requests())
+        self.assertTrue(invite in GroupCommunityInvite.active_requests(group_owner=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -226,6 +227,7 @@ class TestInvite(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.active_requests())
+        self.assertTrue(request in GroupCommunityRequest.active_requests(community_owner=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -267,6 +269,7 @@ class TestInvite(TestCase):
         self.assertFalse(invite.redeemed)
         self.assertFalse(invite.approved)
         self.assertTrue(invite in GroupCommunityInvite.active_requests())
+        self.assertTrue(invite in GroupCommunityInvite.active_requests(group_owner=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -325,6 +328,7 @@ class TestInvite(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.active_requests())
+        self.assertTrue(request in GroupCommunityRequest.active_requests(community_owner=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -421,6 +425,7 @@ class TestInvite(TestCase):
         self.assertTrue(invite.redeemed)
         self.assertTrue(invite.approved)
         self.assertFalse(invite in GroupCommunityInvite.active_requests())
+        self.assertFalse(invite in GroupCommunityInvite.active_requests(group_owner=self.cat))
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -475,6 +480,7 @@ class TestInvite(TestCase):
         self.assertFalse(invite.redeemed)
         self.assertFalse(invite.approved)
         self.assertTrue(invite in GroupCommunityInvite.active_requests())
+        self.assertTrue(invite in GroupCommunityInvite.active_requests(group_owner=self.cat))
         self.assertFalse(self.cats in self.pets.member_groups)
 
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
@@ -495,6 +501,7 @@ class TestInvite(TestCase):
         self.assertFalse(invite.redeemed)
         self.assertFalse(invite.approved)
         self.assertTrue(invite in GroupCommunityInvite.active_requests())
+        self.assertTrue(invite in GroupCommunityInvite.active_requests(group_owner=self.cat))
         self.assertFalse(self.cats in self.pets.member_groups)
 
     def test_request_update(self):
@@ -518,6 +525,7 @@ class TestInvite(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.active_requests())
+        self.assertTrue(request in GroupCommunityRequest.active_requests(community_owner=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -540,6 +548,7 @@ class TestInvite(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.active_requests())
+        self.assertTrue(request in GroupCommunityRequest.active_requests(community_owner=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -548,7 +557,7 @@ class TestInvite(TestCase):
 
         message, invite, created = GroupCommunityInvite.create_or_update(
             group=self.cats, community=self.pets, community_owner=self.dog)
-        invite.privilege = PrivilegeCodes.OWNER  # try for owner privleges :) 
+        invite.privilege = PrivilegeCodes.OWNER  # try for owner privleges :)
         invite.save()
         message, invite, success = invite.act(group_owner=self.cat, approved=True)
         self.assertFalse(success)
@@ -581,7 +590,7 @@ class TestInvite(TestCase):
         expected = "Invitation from community '{}' to group '{}': already acted upon."\
             .format(self.pets.name, self.cats.name)
         self.assertEqual(message, expected)
-        
+
         message, invite, created = GroupCommunityInvite.create_or_update(
             group=self.cats, community=self.pets, community_owner=self.dog)
         message, invite, success = invite.act(group_owner=self.dog, approved=True)  # foul up group owner
@@ -597,7 +606,7 @@ class TestInvite(TestCase):
 
         message, request, created = GroupCommunityRequest.create_or_update(
             group=self.cats, community=self.pets, group_owner=self.cat)
-        request.privilege = PrivilegeCodes.OWNER  # try for owner privleges :) 
+        request.privilege = PrivilegeCodes.OWNER  # try for owner privleges :)
         request.save()
         message, request, success = request.act(community_owner=self.dog, approved=True)
         self.assertFalse(success)
@@ -633,10 +642,10 @@ class TestInvite(TestCase):
         expected = "Request from group '{}' to join community '{}': already acted upon."\
             .format(self.cats.name, self.pets.name)
         self.assertEqual(message, expected)
-        
+
         message, request, created = GroupCommunityRequest.create_or_update(
             group=self.cats, community=self.pets, group_owner=self.cat)
-        message, request, success = request.act(community_owner=self.cat, approved=True)  
+        message, request, success = request.act(community_owner=self.cat, approved=True)
         self.assertFalse(success)
         self.assertTrue(request.redeemed)
         self.assertFalse(request.approved)
