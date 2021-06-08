@@ -89,7 +89,7 @@ class GroupCommunityRequest(models.Model):
         Return: returns a triple of values
         * message: a status message for the community owner using this routine.
         * request: the request object of type GroupCommunityRequest.
-        * created: whether the request is new. If False, it existed already.
+        * approved: whether the request was approved. If False, it was only queued. 
 
         Theory of operation: This routine ensures that there is never more than one
         request per group/community pair, by finding existing records and updating
@@ -119,6 +119,7 @@ class GroupCommunityRequest(models.Model):
             assert('requester' in kwargs)
             assert(isinstance(kwargs['requester'], User))
 
+        approved = False  # whether auto-approved
         group = kwargs['group']
         community = kwargs['community']
         requester = kwargs['requester']
@@ -127,7 +128,7 @@ class GroupCommunityRequest(models.Model):
         if group in community.member_groups:
             message = "Group '{}' is already connected to community '{}'."\
                 .format(group.name, community.name)
-            return message, None, True
+            return message, True
 
         # requester owns both.
         if requester.uaccess.owns_community(community) and requester.uaccess.owns_group(group):
@@ -155,6 +156,7 @@ class GroupCommunityRequest(models.Model):
             request.privilege = privilege
             request.when_responded = timezone.now()
             request.save()
+            approved = True
             community_owner.uaccess.share_community_with_group(
                 request.community, request.group, request.privilege)
             message = "Request approved to connect group '{}' to community '{}'"\
@@ -162,7 +164,7 @@ class GroupCommunityRequest(models.Model):
                 .format(request.group.name, request.community.name)
 
             # normal completion
-            return message, request, created
+            return message, approved
 
         elif requester.uaccess.owns_community(community):
             community_owner = requester
@@ -192,6 +194,7 @@ class GroupCommunityRequest(models.Model):
                 request.approved = True
                 request.when_responded = timezone.now()
                 request.save()
+                approved = True
                 community_owner.uaccess.share_community_with_group(
                     request.community, request.group, request.privilege)
                 message = "Request approved to connect group '{}' to community '{}'"\
@@ -211,7 +214,7 @@ class GroupCommunityRequest(models.Model):
                     .format(group.name, community.name)
 
             # normal completion
-            return message, request, created
+            return message, approved
 
         elif requester.uaccess.owns_group(group):
             group_owner = requester
@@ -231,6 +234,7 @@ class GroupCommunityRequest(models.Model):
                 request.approved = True
                 request.when_responded = timezone.now()
                 request.save()
+                approved = True 
                 request.community_owner.uaccess.share_community_with_group(
                     request.community, request.group, request.privilege)
                 message = "Request approved to connect group '{}' to community '{}'"\
@@ -246,6 +250,7 @@ class GroupCommunityRequest(models.Model):
                 request.approved = True
                 request.when_responded = timezone.now()
                 request.save()
+                approved = True 
                 request.community_owner.uaccess.share_community_with_group(
                     request.community, request.group, request.privilege)
                 message = "Request auto-approved to connect group '{}' to community '{}'."\
@@ -263,7 +268,7 @@ class GroupCommunityRequest(models.Model):
                     .format(group.name, community.name)
 
             # normal completion
-            return message, request, created
+            return message, approved
         else:
             raise PermissionDenied("requester owns neither group nor community.")
 
@@ -333,7 +338,7 @@ class GroupCommunityRequest(models.Model):
     @classmethod
     def get_request(cls, **kwargs):
         '''
-        Returns the unique request, if any concerning a Group/Community pair.
+        Returns the unique request, if any, concerning a Group/Community pair.
 
         Arguments
         :community: the Community object
@@ -341,15 +346,17 @@ class GroupCommunityRequest(models.Model):
 
         This either returns a single object or None if there is none.
         '''
-        assert('group' in kwargs)
-        assert('community' in kwargs)
-        matches = cls.objects.filter(group=kwargs['group'],
-                                     community=kwargs['community'])
-        matches = list(matches)
-        if matches:
-            return matches[0]  # unique_together assures there will be only one
-        else:
-            return None
+        if __debug__: 
+            assert('group' in kwargs)
+            assert('community' in kwargs)
+
+        group = kwargs['group']
+        community = kwargs['community']
+
+        try: 
+            return GroupCommunityRequest.objects.get(group=group, community=community)
+        except GroupCommunityRequest.DoesNotExist: 
+            return None 
 
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
         ''' approve a request as the owner of the other side of the transaction '''
@@ -368,7 +375,7 @@ class GroupCommunityRequest(models.Model):
                     self.community, self.group, self.privilege)
                 message = "Request to connect group '{}' to community '{}' approved."\
                     .format(self.group.name, self.community.name)
-                return message, self, True
+                return message, True
             else:
                 message = "You do not own the community and cannot approve this request."
                 return message, False
@@ -382,17 +389,17 @@ class GroupCommunityRequest(models.Model):
                     .format(self.group.name, self.community.name)
                 self.community_owner.uaccess.share_community_with_group(
                     self.community, self.group, self.privilege)
-                return message, self, True
+                return message, True
             else:
                 message = "You do not own the group and cannot approve this request."
-                return message, self, False
+                return message, False
 
     def decline(self, responder):
         ''' decline a request, as the owner of the other side of the transaction '''
         assert(isinstance(responder, User))
         if self.redeemed:
             message = "Request is completed and cannot be declined."
-            return message, self, False
+            return message, False
         if self.community_owner is None:
             if responder.uaccess.owns_community(self.community):
                 self.community_owner = responder
@@ -402,7 +409,7 @@ class GroupCommunityRequest(models.Model):
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
-                return message, self, True
+                return message, True
             else:
                 message = "You do not own the community and cannot decline this request."
                 return message, False
@@ -414,10 +421,10 @@ class GroupCommunityRequest(models.Model):
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
-                return message, self, True
+                return message, True
             else:
                 message = "You do not own the group and cannot decline this request."
-                return message, self, False
+                return message, False
 
     @classmethod
     def remove(cls, requester, **kwargs):
