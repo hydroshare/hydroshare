@@ -18,6 +18,9 @@ class Community(models.Model):
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
 
+    def __str__(self): 
+        return self.name
+
     @property
     def member_groups(self):
         """ This returns all member groups """

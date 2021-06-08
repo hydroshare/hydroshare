@@ -1,17 +1,33 @@
 from django.contrib.auth.models import User, Group
-from django.db import models
-from django.db import transaction
+from django.db import models, transaction
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 
 
-class GroupCommunityInvite(models.Model):
+class InitiatorCodes(object):
+    NONE = 0
+    RESOURCE = 1
+    USER = 2
+    GROUP = 3
+    COMMUNITY = 4
+    CHOICES = (
+        (RESOURCE, 'Resource'),
+        (USER, 'User'),
+        (GROUP, 'Group'),
+        (COMMUNITY, 'Community')
+    )
+    # Names of privileges for printing
+    NAMES = ('Unspecified', 'Resource', 'User', 'Group', 'Community')
+
+
+class GroupCommunityRequest(models.Model):
     '''
     A mechanism for handling Invitations from a community owner to a group owner.
-    * The community owner creates a GroupCommunityInvite.
-    * The group owner uses GroupCommunityInvite.act() to respond.
+    * The community owner creates a GroupCommunityRequest.
+    * The group owner uses GroupCommunityRequest.act() to respond.
     '''
 
     # target
@@ -31,7 +47,7 @@ class GroupCommunityInvite(models.Model):
     # Privilege with which to share: default is VIEW
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
-                                    default=PrivilegeCodes.VIEW)
+                                    null=True)
 
     # redeemed is True if already acted upon
     redeemed = models.BooleanField(editable=False, null=False, default=False)
@@ -43,7 +59,7 @@ class GroupCommunityInvite(models.Model):
     unique_together = ['group', 'community']
 
     def __str__(self):
-        return "GroupCommunityInvite: community='{}' by '{}', group='{}' by '{}'"\
+        return "GroupCommunityRequest: community='{}' owned by '{}', group='{}' owned by '{}'"\
             .format(str(self.community), str(self.community_owner),
                     str(self.group), str(self.group_owner))
 
@@ -54,186 +70,268 @@ class GroupCommunityInvite(models.Model):
         '''
         if not self.id:  # when created
             self.when_requested = timezone.now()
-        return super(GroupCommunityInvite, self).save(*args, **kwargs)
+        return super(GroupCommunityRequest, self).save(*args, **kwargs)
 
     @classmethod
     def create_or_update(cls, **kwargs):
 
         '''
-        Invite a group into a community. This can only be done by a community owner.
+        Request a group to be included in a community. This can only be done by agreement between
+        a community owner and a group owner.
+
         :param group: target Group.
         :param community: target Community.
-        :param community_owner: a User doing the inviting.
+        :param requester: a User doing the requesting. Must own the community or the group.
 
         Usage:
-            GroupCommunityInvite.create_or_update(group={X}, community={Y}, community_owner={Z})
+            GroupCommunityRequest.create_or_update(group={X}, community={Y}, requester={Z})
 
         Return: returns a triple of values
         * message: a status message for the community owner using this routine.
-        * invitation: the invitation object of type GroupCommunityInvite.
-        * created: whether the invitation new. If false, it existed already.
+        * request: the request object of type GroupCommunityRequest.
+        * created: whether the request is new. If False, it existed already.
 
         Theory of operation: This routine ensures that there is never more than one
-        invitation per group/community pair, by finding existing records and updating
-        them as needed.
+        request per group/community pair, by finding existing records and updating
+        them as needed. A record is deemed incomplete until both owners have signed off.
 
-        As well, there are several avenues to automatic acceptance of an invitation.
-        1. If a group owner has independently requested access to the Community.
-        2. If the community owner also owns the group.
+        As well, there are several avenues to automatic approval of an invitation.
+        1. If there is already a signoff by the other owner.
+        2. If the requester owns both community and group.
+        3. If the community owner has checked "auto_accept" in the community configuration.
 
-        The second part, after making the invitation, is that the group owner has to respond.
+        The second part, after making the invitation, is that the other owner has to respond, by
+        making his/her own request, so that the requests can be combined and implemented.
+
         This is enabled by several functions:
-        * GroupCommunityInvite.active_requests(): a list of active requests
-        * request.act(group_owner={X}, approved={Y}): act on a specific request.
+        * GroupCommunityRequest.active_requests(requester=User):
+          active requests awaiting a user's response.
+        * GroupCommunityRequest.pending(requester={X}, group={Y}, community={Z}):
+          requests that are pending for a user.
 
         '''
         if __debug__:
             assert('group' in kwargs)
             assert(isinstance(kwargs['group'], Group))
             assert(kwargs['group'].gaccess.active)
-            assert('community_owner' in kwargs)
-            assert(isinstance(kwargs['community_owner'], User))
-            assert(kwargs['community_owner'].is_active)
             assert('community' in kwargs)
             assert(isinstance(kwargs['community'], Community))
-            assert(kwargs['community_owner'].uaccess.owns_community(kwargs['community']))
-
-        if 'privilege' in kwargs:
-            privilege = kwargs['privilege']
-            privilege = int(privilege)
-            if privilege != PrivilegeCodes.VIEW:
-                raise PermissionDenied("Only view privilege may be requested")
-        else:
-            privilege = PrivilegeCodes.VIEW
+            assert('requester' in kwargs)
+            assert(isinstance(kwargs['requester'], User))
 
         group = kwargs['group']
         community = kwargs['community']
-        community_owner = kwargs['community_owner']
+        requester = kwargs['requester']
 
         # first check whether the group is already in the community (!)
         if group in community.member_groups:
-            message = "Group '{}' is already part of community '{}'."\
+            message = "Group '{}' is already connected to community '{}'."\
                 .format(group.name, community.name)
             return message, None, True
 
-        # default success message
-        message = "Invitation created for group '{}' ({}) to join community '{}' ({})."\
-            .format(group.name, group.id, community.name, community.id)
+        # requester owns both.
+        if requester.uaccess.owns_community(community) and requester.uaccess.owns_group(group):
+            community_owner = requester
+            group_owner = requester
 
-        del kwargs['community_owner']
-        with transaction.atomic():
-            invite_record, created = cls.objects.get_or_create(
-                defaults={'community_owner': community_owner, 'privilege': privilege}, **kwargs)
-            if not created:
-                invite_record.community_owner = community_owner
-                invite_record.privilege = privilege
-                invite_record.redeemed = False
-                invite_record.when_requested = timezone.now()
-                invite_record.when_responded = None
-                invite_record.save()
-                message = "Invitation updated for group '{}' ({}) to join community '{}' ({})."\
-                    .format(group.name, group.id, community.name, community.id)
+            if 'privilege' in kwargs:  # only set by community owner
+                privilege = kwargs['privilege']
+                privilege = int(privilege)
+                if privilege != PrivilegeCodes.VIEW:
+                    raise PermissionDenied("Only view privilege may be requested")
+            else:
+                privilege = PrivilegeCodes.VIEW
 
-        # check for matching request;
-        request_record = GroupCommunityRequest.matching_request(community=community, group=group)
-        # auto-approve if there's already a request(!)
-        if request_record is not None:
-            invite_record.act(group_owner=request_record.group_owner, approved=True)
-            request_record.act(community_owner=community_owner, approved=True)
-            message = "Invitation auto-approved for group '{}' ({}) to join community '{}' ({})"\
-                " because there is a matching request."\
-                .format(group.name, group.id, community.name, community.id)
+            # Get the transaction record, if any
+            with transaction.atomic():
+                request, created = cls.objects.get_or_create(
+                    defaults={'community_owner': community_owner, 'privilege': privilege},
+                    group=group, community=community)
 
-        # auto-approve if the owner is the group owner
-        elif community_owner.uaccess.owns_group(group):
-            invite_record.act(group_owner=community_owner, approved=True)
-            message = "Invitation auto-approved for group '{}' ({}) to join community '{}' ({})"\
-                " because you also own the group."\
-                .format(group.name, group.id, community.name, community.id)
+            request.community_owner = community_owner
+            request.group_owner = group_owner
+            request.redeemed = True
+            request.approved = True
+            request.privilege = privilege
+            request.when_responded = timezone.now()
+            request.save()
+            community_owner.uaccess.share_community_with_group(
+                request.community, request.group, request.privilege)
+            message = "Request approved to connect group '{}' to community '{}'"\
+                " because you own both."\
+                .format(request.group.name, request.community.name)
 
-        # normal completion
-        return message, invite_record, created
+            # normal completion
+            return message, request, created
 
-    def act(self, group_owner, approved=False):
+        elif requester.uaccess.owns_community(community):
+            community_owner = requester
+
+            if 'privilege' in kwargs:  # only set by community owner
+                privilege = kwargs['privilege']
+                privilege = int(privilege)
+                if privilege != PrivilegeCodes.VIEW:
+                    raise PermissionDenied("Only view privilege may be requested")
+            else:
+                privilege = PrivilegeCodes.VIEW
+
+            # default success message
+            message = "Request created to connect group '{}' to community '{}'."\
+                .format(group.name, community.name)
+
+            with transaction.atomic():
+                request, created = cls.objects.get_or_create(
+                    defaults={'community_owner': community_owner, 'privilege': privilege},
+                    group=group, community=community)
+
+            # auto-approve if there's already a request(!)
+            if request.group_owner is not None and request.redeemed is False:
+                request.community_owner = community_owner
+                request.privilege = privilege
+                request.redeemed = True
+                request.approved = True
+                request.when_responded = timezone.now()
+                request.save()
+                community_owner.uaccess.share_community_with_group(
+                    request.community, request.group, request.privilege)
+                message = "Request approved to connect group '{}' to community '{}'"\
+                    " because there is a matching request."\
+                    .format(group.name, community.name)
+
+            # refresh request: this has the side effect of disabling any prior denials
+            elif not created:
+                request.community_owner = community_owner
+                request.privilege = privilege
+                request.redeemed = False
+                request.approved = False
+                request.when_requested = timezone.now()
+                request.when_responded = None
+                request.save()
+                message = "Request updated: connect group '{}' to community '{}'."\
+                    .format(group.name, community.name)
+
+            # normal completion
+            return message, request, created
+
+        elif requester.uaccess.owns_group(group):
+            group_owner = requester
+
+            # default success message
+            message = "Request created to connect group '{}' to community '{}'."\
+                .format(group.name, community.name)
+
+            with transaction.atomic():
+                request, created = cls.objects.get_or_create(
+                    defaults={'group_owner': group_owner}, community=community, group=group)
+
+            # auto-approve if there's already an invite(!)
+            if request.community_owner is not None and request.privilege is not None:
+                request.group_owner = group_owner
+                request.redeemed = True
+                request.approved = True
+                request.when_responded = timezone.now()
+                request.save()
+                request.community_owner.uaccess.share_community_with_group(
+                    request.community, request.group, request.privilege)
+                message = "Request approved to connect group '{}' to community '{}'"\
+                    " because there is a matching request."\
+                    .format(group.name, community.name)
+
+            # auto-approve if auto_approve is True
+            elif community.auto_approve:
+                request.group_owner = group_owner
+                request.community_owner = community.first_owner
+                request.privilege = PrivilegeCodes.VIEW
+                request.redeemed = True
+                request.approved = True
+                request.when_responded = timezone.now()
+                request.save()
+                request.community_owner.uaccess.share_community_with_group(
+                    request.community, request.group, request.privilege)
+                message = "Request auto-approved to connect group '{}' to community '{}'."\
+                    .format(group.name, community.name)
+
+            elif not created:  # refresh request: this has the side effect of disabling any denials
+                request.group_owner = group_owner
+                request.privilege = None
+                request.redeemed = False
+                request.approved = False
+                request.when_requested = timezone.now()
+                request.when_responded = None
+                request.save()
+                message = "Request updated: connect group '{}' to community '{}'."\
+                    .format(group.name, community.name)
+
+            # normal completion
+            return message, request, created
+        else:
+            raise PermissionDenied("requester owns neither group nor community.")
+
+    def cancel(self, requester):
         '''
-        Act on a Group/Community invitation.
+        Cancel a Group/Community request.
 
         Arguments:
-        :param group_owner: owner of the group
-        :param approved: whether the owner accepts the invitation or not.
+        :param self: request in question
+        :param requester: owner of the group or community
 
         Return value: This returns a triple:
-        * message: a message to give to the group owner.
-        * request: the modified request object.
+        * message: a message to give to the requester
         * success: whether the action was taken successfully.
 
-        Theory of operation: This is done by the group owner after the invitation is issued
-        the community owner. As time may have passed, there are multiple ways this can fail,
-        e.g., the community owner in question might not own the community any more!
+        Theory of operation: Either owner can cancel a request.
         '''
-        community_owner = self.community_owner
-
-        if not group_owner.uaccess.owns_group(self.group):
-            self.approved = False
-            self.redeemed = True
-            self.when_responded = timezone.now()
-            self.save()
-            message = "Invitation from community '{}' to group '{}': you do not own the group."\
-                .format(self.community.name, self.group.name)
-            return message, self, False
-
-        if not community_owner.uaccess.owns_community(self.community):
-            self.approved = False
-            self.redeemed = True
-            self.when_responded = timezone.now()
-            self.save()
-            message = "Invitation from community '{}' to group '{}': inviter no longer owns the community."\
-                .format(self.community.name, self.group.name)
-            return message, self, False
-
-        if self.privilege != PrivilegeCodes.VIEW:
-            self.approved = False
-            self.redeemed = True
-            self.when_responded = timezone.now()
-            self.save()
-            message = "Invitation from community '{}' to group '{}': only view privilege is allowed."\
-                .format(self.community.name, self.group.name)
-            return message, self, False
-
         if self.redeemed:
-            message = "Invitation from community '{}' to group '{}': already acted upon."\
-                .format(self.community.name, self.group.name)
-            return message, self, False
-
-        # now we know the request is valid: act on it
-        if approved:
-            community_owner.uaccess.share_community_with_group(self.community, self.group, self.privilege)
-
-        self.group_owner = group_owner
-        self.redeemed = True
-        self.approved = approved
-        self.when_responded = timezone.now()
-        self.save()
-        message = "Invitation from community '{}' to group '{}' {}.".format(
-            self.community.name, self.group.name, 'approved' if approved else 'declined')
-        return message, self, True
+            message = "Connection request between community '{}' and group '{}': "\
+                      "already acted upon."\
+                      .format(self.community.name, self.group.name)
+            return message, False
+        if (self.group_owner is not None and requester == self.group_owner) or \
+           (self.community_owner is not None and requester == self.community_owner):
+            self.delete()
+            message = "Connection request between community '{}' and group '{}' cancelled."\
+                      .format(self.community.name, self.group.name)
+            return message, True
+        else:
+            message = "Connection request between community '{}' and group '{}': "\
+                      "insufficient privilege to cancel request."\
+                      .format(self.community.name, self.group.name)
+            return message, False
 
     @classmethod
-    def active_requests(cls, group_owner=None):
+    def pending(cls, responder=None):
         '''
         Return a list of active requests as class objects. These can be further filtered
-        to determine whether the current user has any requests to act upon. To do this,
-        list the current user as group_owner
+        to determine whether the current user has any requests he/she can approve.
         '''
         requests = cls.objects.filter(redeemed=False)
-        if group_owner is not None:
-            assert(isinstance(group_owner, User))
-            requests = requests.filter(group__g2ugp__user=group_owner,
-                                       group__g2ugp__privilege=PrivilegeCodes.OWNER)
+        if responder is not None:
+            assert(isinstance(responder, User))
+            requests = requests.filter(Q(group_owner__isnull=True,
+                                         group__g2ugp__user=responder,
+                                         group__g2ugp__privilege=PrivilegeCodes.OWNER) |
+                                       Q(community_owner__isnull=True,
+                                         community__c2ucp__user=responder,
+                                         community__c2ucp__privilege=PrivilegeCodes.OWNER))
         return requests
 
     @classmethod
-    def matching_request(cls, **kwargs):
+    def queued(cls, requester=None):
+        '''
+        Return a list of active requests as class objects. These can be further filtered
+        to determine whether the current user has any requests he/she can cancel.
+        '''
+        requests = cls.objects.filter(redeemed=False)
+        if requester is not None:
+            assert(isinstance(requester, User))
+            requests = requests.filter(Q(group__g2ugp__user=requester,
+                                         group__g2ugp__privilege=PrivilegeCodes.OWNER) |
+                                       Q(community__c2ucp__user=requester,
+                                         community__c2ucp__privilege=PrivilegeCodes.OWNER))
+        return requests
+
+    @classmethod
+    def get_request(cls, **kwargs):
         '''
         Returns the unique request, if any concerning a Group/Community pair.
 
@@ -243,22 +341,86 @@ class GroupCommunityInvite(models.Model):
 
         This either returns a single object or None if there is none.
         '''
-        matches = cls.objects.filter(redeemed=False)
-
         assert('group' in kwargs)
-        matches = matches.filter(group=kwargs['group'])
-
         assert('community' in kwargs)
-        matches = matches.filter(community=kwargs['community'])
-
+        matches = cls.objects.filter(group=kwargs['group'],
+                                     community=kwargs['community'])
         matches = list(matches)
         if matches:
-            return matches[0]
+            return matches[0]  # unique_together assures there will be only one
         else:
             return None
 
+    def approve(self, responder, privilege=PrivilegeCodes.VIEW):
+        ''' approve a request as the owner of the other side of the transaction '''
+        assert(isinstance(responder, User))
+        if self.redeemed:
+            message = "Request is completed and cannot be approved."
+            return message, False
+        if self.community_owner is None:
+            if responder.uaccess.owns_community(self.community):
+                self.community_owner = responder
+                self.privilege = privilege
+                self.redeemed = True
+                self.approved = True
+                self.save()
+                self.community_owner.uaccess.share_community_with_group(
+                    self.community, self.group, self.privilege)
+                message = "Request to connect group '{}' to community '{}' approved."\
+                    .format(self.group.name, self.community.name)
+                return message, self, True
+            else:
+                message = "You do not own the community and cannot approve this request."
+                return message, False
+        else:  # if self.group_owner is None:
+            if responder.uaccess.owns_group(self.group):
+                self.group_owner = responder
+                self.redeemed = True
+                self.approved = True
+                self.save()
+                message = "Request to connect group '{}' to community '{}' approved."\
+                    .format(self.group.name, self.community.name)
+                self.community_owner.uaccess.share_community_with_group(
+                    self.community, self.group, self.privilege)
+                return message, self, True
+            else:
+                message = "You do not own the group and cannot approve this request."
+                return message, self, False
+
+    def decline(self, responder):
+        ''' decline a request, as the owner of the other side of the transaction '''
+        assert(isinstance(responder, User))
+        if self.redeemed:
+            message = "Request is completed and cannot be declined."
+            return message, self, False
+        if self.community_owner is None:
+            if responder.uaccess.owns_community(self.community):
+                self.community_owner = responder
+                self.privilege = PrivilegeCodes.VIEW
+                self.redeemed = True
+                self.approved = False
+                self.save()
+                message = "Request to connect group '{}' to community '{}' declined."\
+                    .format(self.group.name, self.community.name)
+                return message, self, True
+            else:
+                message = "You do not own the community and cannot decline this request."
+                return message, False
+        else:  # if self.group_owner is None:
+            if responder.uaccess.owns_group(self.group):
+                self.group_owner = responder
+                self.redeemed = True
+                self.approved = False
+                self.save()
+                message = "Request to connect group '{}' to community '{}' declined."\
+                    .format(self.group.name, self.community.name)
+                return message, self, True
+            else:
+                message = "You do not own the group and cannot decline this request."
+                return message, self, False
+
     @classmethod
-    def remove(cls, **kwargs):
+    def remove(cls, requester, **kwargs):
         '''
         Remove a group from a community. This can only be done by a community owner.
         :param group: target group.
@@ -285,271 +447,32 @@ class GroupCommunityInvite(models.Model):
 
         group = kwargs['group']
         community = kwargs['community']
-        community_owner = kwargs['community_owner']
 
-        # first check whether the group is already in the community (!)
+        # don't allow anything unless the requester is authorized
+        if not requester.owns_community(community):
+            message = "User {} does not own community '{}'"\
+                .format(requester.username, community.name)
+            return message, False
+
+        # delete request from provenance chain
+        try:
+            request = GroupCommunityRequest.get_request(community=community, group=group)
+            request.delete()
+        except cls.DoesNotExist:
+            pass
+
+        # check whether the group is already not in the community (!)
         if group not in community.member_groups:
             message = "Group '{}' is not in community '{}'."\
                 .format(group.name, community.name)
             return message, True
 
-        if not community_owner.owns_community(community):
-            message = "User {} does not own community '{}'"\
-                .format(community_owner.username, community.name)
-            return message, False
-
-        community_owner.uaccess_unshare_community_with_group(community, group)
-        message = "Group '{}' ({}) removed from community '{}' ({})."\
-            .format(group.name, group.id, community.name, community.id)
+        requester.uaccess_unshare_community_with_group(community, group)
+        message = "Group '{}' removed from community '{}'."\
+            .format(group.name, community.name)
         return message, True
 
-
-class GroupCommunityRequest(models.Model):
-    '''
-    A mechanism for handling requests from a group owner to a community owner.
-    * The group owner creates a GroupCommunityRequest
-    * The community owner uses GroupCommunityRequest.act() to respond.
-    '''
-    # source
-    group = models.ForeignKey(Group, editable=False, null=False)
-    # target
-    community = models.ForeignKey(Community, editable=False, null=False)
-    # requester
-    group_owner = models.ForeignKey(User, editable=False, null=True, related_name='request_gcg')
-    # responder
-    community_owner = models.ForeignKey(User, editable=False, null=True, related_name='request_gcc')
-
-    # when request was made
-    when_requested = models.DateTimeField(editable=False, null=True, default=None)
-    # when response was given
-    when_responded = models.DateTimeField(editable=False, null=True, default=None)
-
-    # Privilege with which to share: default is VIEW
-    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
-                                    editable=False,
-                                    default=PrivilegeCodes.VIEW)
-
-    # redeemed is True if already acted upon
-    redeemed = models.BooleanField(editable=False, default=False, null=False)
-
-    # approved is True if redeemed is True and the request was approved.
-    approved = models.BooleanField(editable=False, null=False, default=False)
-
-    # only one request active at a time per pair
-    unique_together = ['group', 'community']
-
-    def __str__(self):
-        return "GroupCommunityRequest: community='{}' by '{}', group='{}' by '{}'"\
-            .format(str(self.community), str(self.community_owner),
-                    str(self.group), str(self.group_owner))
-
-    def save(self, *args, **kwargs):
-        ''' On save, update initial timestamp '''
-        ''' See discussion of auto_now and auto_now_add in stack overflow for details '''
-        if not self.id:  # when created
-            self.when_requested = timezone.now()
-        return super(GroupCommunityRequest, self).save(*args, **kwargs)
-
-    @classmethod
-    def create_or_update(cls, **kwargs):
-
-        '''
-        Request access to a community by a group. This can only be done by a group owner.
-        :param group: target Group.
-        :param community: target Community.
-        :param group_owner: a User making the request.
-
-        Usage:
-            GroupCommunityRequest.create_or_update(group={X}, community={Y}, group_owner={Z})
-
-        Return: returns a triple of values
-        * message: a status message for the group owner using this routine.
-        * invitation: the invitation object of type GroupCommunityRequest.
-        * created: whether the request is new. If false, it existed already.
-
-        Theory of operation: This routine ensures that there is never more than one
-        request per group/community pair, by finding existing records and updating
-        them as needed.
-
-        As well, there are several avenues to automatic acceptance of an invitation.
-        1. If a community owner has independently invited the group.
-        2. If the group owner also owns the community.
-        3. If auto_approve is True for the community.
-
-        The second part, after making the invitation, is that the community owner has to respond.
-        This is enabled by several functions:
-        * GroupCommunityRequest.active_requests(): a list of active requests
-        * request.act(community_owner={X}, approved={Y}): act on a specific request.
-
-        '''
-        if __debug__:
-            assert('group' in kwargs)
-            assert(isinstance(kwargs['group'], Group))
-            assert(kwargs['group'].gaccess.active)
-            assert('group_owner' in kwargs)
-            assert(isinstance(kwargs['group_owner'], User))
-            assert(kwargs['group_owner'].is_active)
-            assert(kwargs['group_owner'].uaccess.owns_group(kwargs['group']))
-            assert('community' in kwargs)
-            assert(isinstance(kwargs['community'], Community))
-
-        if 'privilege' in kwargs:
-            privilege = kwargs['privilege']
-            privilege = int(privilege)
-            if privilege != PrivilegeCodes.VIEW:
-                raise PermissionDenied("Only view privilege may be requested")
-        else:
-            privilege = PrivilegeCodes.VIEW
-
-        group = kwargs['group']
-        group_owner = kwargs['group_owner']
-        community = kwargs['community']
-
-        # first check whether the group is already in the community (!)
-        if group in community.member_groups:
-            message = "Group '{}' is already part of community '{}'."\
-                .format(group.name, community.name)
-            return message, None, True
-
-        # default success message
-        message = "Request created for group '{}' ({}) to join community '{}' ({})."\
-            .format(group.name, group.id, community.name, community.id)
-
-        del kwargs['group_owner']
-        with transaction.atomic():
-            request_record, created = cls.objects.get_or_create(
-                defaults={'group_owner': group_owner, 'privilege': privilege}, **kwargs)
-            if not created:
-                request_record.group_owner = group_owner
-                request_record.privilege = privilege
-                request_record.redeemed = False
-                request_record.when_requested = timezone.now()
-                request_record.when_responded = None
-                request_record.save()
-                message = "Request updated for group '{}' ({}) to join community '{}' ({})."\
-                    .format(group.name, group.id, community.name, community.id)
-
-        # check for matching invitation
-        invite_record = GroupCommunityInvite.matching_request(community=community, group=group)
-        # auto-approve if there's already an invite(!)
-        if invite_record is not None:
-            invite_record.act(group_owner=group_owner, approved=True)
-            request_record.act(community_owner=invite_record.community_owner, approved=True)
-            message = "Request approved for group '{}' ({}) to join community '{}' ({})"\
-                " because there is a matching invitation."\
-                .format(group.name, group.id, community.name, community.id)
-
-        # auto-approve if the owner is the community owner
-        elif group_owner.uaccess.owns_community(community):
-            request_record.act(community_owner=group_owner, approved=True)
-            message = "Request auto-approved for group '{}' ({}) to join community '{}' ({})"\
-                " because you also own the community."\
-                .format(group.name, group.id, community.name, community.id)
-
-        # auto-approve if auto_approve is True
-        elif community.auto_approve:
-            request_record.act(community_owner=community.first_owner, approved=True)
-            message = "Request auto-approved for group '{}' ({}) to join community '{}' ({})."\
-                .format(group.name, group.id, community.name, community.id)
-
-        # normal completion
-        return message, request_record, created
-
-    def act(self, community_owner, approved=False):
-        '''
-        Act on a Group/Community request.
-
-        Arguments:
-        :param community_owner: owner of the community
-        :param approved: whether the community owner accepts the request or not.
-
-        Return value: This returns a triple:
-        * message: a message to give to the community owner.
-        * request: the modified request object.
-        * success: whether the action was taken successfully.
-
-        Theory of operation: This is done by the community owner after the request is made by
-        the group owner. As time may have passed, there are multiple ways this can fail,
-        e.g., the group owner in question might not own the group any more!
-        '''
-        group_owner = self.group_owner
-        if not group_owner.uaccess.owns_group(self.group):
-            self.approved = False
-            self.redeemed = True
-            self.when_responded = timezone.now()
-            self.save()
-            message = "Request from group '{}' to join community '{}': requester no longer owns the group."\
-                .format(self.group.name, self.community.name)
-            return message, self, False
-        if not community_owner.uaccess.owns_community(self.community):
-            self.approved = False
-            self.redeemed = True
-            self.when_responded = timezone.now()
-            self.save()
-            message = "Request from group '{}' to join community '{}': you do not own the community."\
-                .format(self.group.name, self.community.name)
-            return message, self, False
-        if self.privilege != PrivilegeCodes.VIEW:
-            self.approved = False
-            self.redeemed = True
-            self.when_responded = timezone.now()
-            self.save()
-            message = "Request from group '{}' to join community '{}': only view privilege is allowed."\
-                .format(self.group.name, self.community.name)
-            return message, self, False
-        if self.redeemed:
-            message = "Request from group '{}' to join community '{}': already acted upon."\
-                .format(self.group.name, self.community.name)
-            return message, self, False
-
-        # now we know the request is valid: act on it
-        if approved:
-            community_owner.uaccess.share_community_with_group(self.community, self.group, self.privilege)
-        self.community_owner = community_owner
-        self.redeemed = True
-        self.approved = approved
-        self.when_responded = timezone.now()
-        self.save()
-        message = "Request from group '{}' to join community '{}' {}."\
-            .format(self.group.name,
-                    self.community.name,
-                    'approved' if approved else 'declined')
-        return message, self, True
-
-    @classmethod
-    def active_requests(cls, community_owner=None):
-        '''
-        Return a list of active requests as class objects. These can be further filtered
-        to determine whether the current user has any requests to act upon.
-        '''
-        requests = cls.objects.filter(redeemed=False)
-        if community_owner is not None:
-            assert(isinstance(community_owner, User))
-            requests = requests.filter(community__c2ucp__user=community_owner,
-                                       community__c2ucp__privilege=PrivilegeCodes.OWNER)
-        return requests
-
-    @classmethod
-    def matching_request(cls, **kwargs):
-        '''
-        Returns the unique request, if any concerning a Group/Community pair.
-
-        Arguments
-        :community: the Community object
-        :group: the Group object
-
-        This either returns a single object or None if there is none.
-        '''
-        matches = cls.objects.filter(redeemed=False)
-
-        assert('group' in kwargs)
-        matches = matches.filter(group=kwargs['group'])
-
-        assert('community' in kwargs)
-        matches = matches.filter(community=kwargs['community'])
-
-        matches = list(matches)
-        if matches:
-            return matches[0]
-        else:
-            return None
+# TODO: we need some kind of user feedback about what happened when something is denied.
+# TODO: either this is part of the transaction log or it's separate.
+# TODO: it would be nice to know why something's declined.
+# TODO: to avoid request storms, the decline should be sticky unless overridden by an invite.
