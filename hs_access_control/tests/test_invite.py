@@ -103,7 +103,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
         self.assertFalse(self.cats in self.pets.member_groups)
 
         message, approved = GroupCommunityRequest.create_or_update(
@@ -123,6 +125,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -149,7 +152,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -170,6 +175,8 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -196,7 +203,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -215,6 +224,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -240,7 +250,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -259,6 +271,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertFalse(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -284,7 +297,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -303,6 +318,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -328,7 +344,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -348,6 +366,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertFalse(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -374,7 +393,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -399,6 +420,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -425,7 +447,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -450,6 +474,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -482,6 +507,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -514,6 +540,7 @@ class TestRequest(TestCase):
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
         self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
         self.assertTrue(self.cats in self.pets.member_groups)
 
@@ -537,7 +564,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
         self.assertFalse(self.cats in self.pets.member_groups)
 
         message, approved = GroupCommunityRequest.create_or_update(
@@ -557,7 +586,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
         self.assertFalse(self.cats in self.pets.member_groups)
 
     def test_group_request_update(self):
@@ -582,7 +613,9 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)
 
@@ -606,6 +639,8 @@ class TestRequest(TestCase):
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
         self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
         self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
         self.assertFalse(self.cats in self.pets.member_groups)

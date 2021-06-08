@@ -3878,7 +3878,7 @@ class UserAccess(models.Model):
     # ======================
 
     def group_community_invite(self, group, community):
-        message, request, created = GroupCommunityRequest(
+        message, approved = GroupCommunityRequest(
             group=group, community=community, requester=self.user)
         return message
 
