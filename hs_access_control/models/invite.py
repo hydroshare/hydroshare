@@ -89,7 +89,7 @@ class GroupCommunityRequest(models.Model):
         Return: returns a triple of values
         * message: a status message for the community owner using this routine.
         * request: the request object of type GroupCommunityRequest.
-        * approved: whether the request was approved. If False, it was only queued. 
+        * approved: whether the request was approved. If False, it was only queued.
 
         Theory of operation: This routine ensures that there is never more than one
         request per group/community pair, by finding existing records and updating
@@ -234,7 +234,7 @@ class GroupCommunityRequest(models.Model):
                 request.approved = True
                 request.when_responded = timezone.now()
                 request.save()
-                approved = True 
+                approved = True
                 request.community_owner.uaccess.share_community_with_group(
                     request.community, request.group, request.privilege)
                 message = "Request approved to connect group '{}' to community '{}'"\
@@ -250,7 +250,7 @@ class GroupCommunityRequest(models.Model):
                 request.approved = True
                 request.when_responded = timezone.now()
                 request.save()
-                approved = True 
+                approved = True
                 request.community_owner.uaccess.share_community_with_group(
                     request.community, request.group, request.privilege)
                 message = "Request auto-approved to connect group '{}' to community '{}'."\
@@ -346,17 +346,17 @@ class GroupCommunityRequest(models.Model):
 
         This either returns a single object or None if there is none.
         '''
-        if __debug__: 
+        if __debug__:
             assert('group' in kwargs)
             assert('community' in kwargs)
 
         group = kwargs['group']
         community = kwargs['community']
 
-        try: 
+        try:
             return GroupCommunityRequest.objects.get(group=group, community=community)
-        except GroupCommunityRequest.DoesNotExist: 
-            return None 
+        except GroupCommunityRequest.DoesNotExist:
+            return None
 
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
         ''' approve a request as the owner of the other side of the transaction '''

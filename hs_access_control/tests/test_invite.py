@@ -357,7 +357,6 @@ class TestRequest(TestCase):
             self.cats.name, self.pets.name, 'declined')
         self.assertEqual(message, expected)
 
-
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
         self.assertEqual(request.group, self.cats)
