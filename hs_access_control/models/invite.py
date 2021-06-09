@@ -480,6 +480,5 @@ class GroupCommunityRequest(models.Model):
         return message, True
 
 # TODO: we need some kind of user feedback about what happened when something is denied.
-# TODO: either this is part of the transaction log or it's separate.
 # TODO: it would be nice to know why something's declined.
 # TODO: to avoid request storms, the decline should be sticky unless overridden by an invite.
