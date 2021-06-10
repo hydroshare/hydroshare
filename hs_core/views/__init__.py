@@ -665,8 +665,6 @@ def file_download_url_mapper(request, shortkey):
     except PermissionDenied:
         return HttpResponse("access not authorized", status=status.HTTP_401_UNAUTHORIZED)
 
-    if __debug__:
-        logger.debug("request path is {}".format(request.path))
     path_split = request.path.split('/')[2:]  # strip /resource/
     public_file_path = '/'.join(path_split)
 

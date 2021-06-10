@@ -53,7 +53,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     6. a previously zipped file that was zipped asynchronously.
 
     """
-    if __debug__:
+    if not settings.DEBUG:
         logger.debug("request path is {}".format(path))
 
     split_path_strs = path.split('/')
@@ -82,7 +82,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     else:  # regular download request
         res_id = split_path_strs[0]
 
-    if __debug__:
+    if not settings.DEBUG:
         logger.debug("resource id is {}".format(res_id))
 
     # now we have the resource Id and can authorize the request
@@ -134,10 +134,10 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
             irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
-            if __debug__:
+            if not settings.DEBUG:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
         elif istorage.exists(irods_path):
-            if __debug__:
+            if not settings.DEBUG:
                 logger.debug("request for single file {}".format(path))
             is_sf_request = True
 
@@ -157,8 +157,6 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 
     # determine active session
     if icommands.ACTIVE_SESSION:
-        if __debug__:
-            logger.debug("using ACTIVE_SESSION")
         session = icommands.ACTIVE_SESSION
     else:
         raise KeyError('settings must have IRODS_GLOBAL_SESSION set ')
@@ -207,7 +205,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
-        if __debug__:
+        if not settings.DEBUG:
             logger.debug("irods_output_path is {}".format(irods_output_path))
         if bag_modified is None or not bag_modified:
             if not istorage.exists(irods_output_path):
@@ -337,7 +335,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         response['Content-Length'] = flen
         response['X-Accel-Redirect'] = '/'.join([
             getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-        if __debug__:
+        if not settings.DEBUG:
             logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
         return response
 
@@ -347,7 +345,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
 
     options = ('-',)  # we're redirecting to stdout.
     # this unusual way of calling works for streaming federated or local resources
-    if __debug__:
+    if not settings.DEBUG:
         logger.debug("Locally streaming {}".format(output_path))
     # track download count
     res.update_download_count()
