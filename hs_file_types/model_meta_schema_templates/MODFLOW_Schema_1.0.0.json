@@ -7,32 +7,34 @@
             "type": "object",
             "title": "Study Area",
             "properties": {
-                "totalLength": {
-                    "type": "number",
-                    "title": "Total Length (in meters)",
-                    "default": 0,
-                    "description": "Total length of the study area used in creating this model instance.",
-                    "propertyOrder": 1
-                },
                 "totalWidth": {
                     "type": "number",
                     "title": "Total Width (in meters)",
                     "default": 0,
-                    "description": "Total width  of the study area used in creating this model instance.",
+                    "minimum": 0,
+                    "description": "Total width of the study area used in creating this model instance.",
                     "propertyOrder": 2
+                },
+                "totalLength": {
+                    "type": "number",
+                    "title": "Total Length (in meters)",
+                    "default": 0,
+                    "minimum": 0,
+                    "description": "Total length of the study area used in creating this model instance.",
+                    "propertyOrder": 1
                 },
                 "maximumElevation": {
                     "type": "number",
                     "title": "Maximum Elevation (in meters)",
                     "default": 0,
-                    "description": "Maximum elevation  of the study area used in creating this model instance.",
+                    "description": "Maximum elevation of the study area used in creating this model instance.",
                     "propertyOrder": 3
                 },
-                "minimumRlevation": {
+                "minimumElevation": {
                     "type": "number",
                     "title": "Minimum Elevation (in meters)",
                     "default": 0,
-                    "description": "Minimum elevation  of the study area used in creating this model instance.",
+                    "description": "Minimum elevation of the study area used in creating this model instance.",
                     "propertyOrder": 4
                 }
             },
@@ -70,19 +72,20 @@
                     "type": "string",
                     "title": "Type",
                     "default": "",
-                    "description": "Type of stress period useds in creating this model instance.",
+                    "description": "Type of stress period used in creating this model instance.",
                     "propertyOrder": 1
                 },
                 "lengthOfSteadyStateStressPeriod": {
                     "type": "number",
                     "title": "Length of Steady State Stress Periods",
                     "default": 1,
+                    "minimum": 0,
                     "description": "Length of steady state stress periods used in creating this model instance.",
                     "propertyOrder": 2
                 },
                 "TypeOfTransientStateStressPeriod": {
                     "enum": [
-                        "Annullay",
+                        "Annually",
                         "Monthly",
                         "Daily",
                         "Hourly",
@@ -98,6 +101,7 @@
                     "type": "number",
                     "title": "Length of Transient State Stress Periods",
                     "default": 1,
+                    "minimum": 0,
                     "description": "Length of transient state stress periods used in creating this model instance.",
                     "propertyOrder": 4
                 }
@@ -125,6 +129,7 @@
                     "type": "number",
                     "title": "Number of Rows",
                     "default": 1,
+                    "minimum": 0,
                     "description": "Number of rows used in creating this model instance.",
                     "propertyOrder": 3
                 },
@@ -136,13 +141,14 @@
                     "type": "string",
                     "title": "Type of Columns",
                     "default": "",
-                    "description": "Type of rows used in creating this model instance.",
-                    "propertyOrder": 3
+                    "description": "Type of columns used in creating this model instance.",
+                    "propertyOrder": 4
                 },
                 "numberOfLayers": {
                     "type": "number",
                     "title": "Number of Layers",
                     "default": 1,
+                    "minimum": 0,
                     "description": "Number of layers used in creating this model instance.",
                     "propertyOrder": 1
                 },
@@ -150,8 +156,9 @@
                     "type": "number",
                     "title": "Number of Columns",
                     "default": 1,
+                    "minimum": 0,
                     "description": "Number of columns used in creating this model instance.",
-                    "propertyOrder": 4
+                    "propertyOrder": 5
                 }
             },
             "description": "Grid dimensions used in creating this model instance.",
@@ -179,7 +186,7 @@
                     "type": "string",
                     "title": "Flow Package",
                     "default": "",
-                    "description": "Flow package useds in creating this model instance.",
+                    "description": "Flow package used in creating this model instance.",
                     "propertyOrder": 1
                 },
                 "flowParameter": {
@@ -190,7 +197,7 @@
                     "type": "string",
                     "title": "Flow Parameter",
                     "default": "",
-                    "description": "Flow parameter useds in creating this model instance.",
+                    "description": "Flow parameter used in creating this model instance.",
                     "propertyOrder": 5
                 },
                 "IncludesUnsaturatedZonePackage": {
