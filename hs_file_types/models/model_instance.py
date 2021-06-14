@@ -308,6 +308,19 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 return True
             return False
 
+        if self.has_model_output:
+            includes_output = 'true'
+        else:
+            includes_output = 'false'
+        graph.add((subject, HSTERMS.includesModelOutput, Literal(includes_output)))
+
+        if self.executed_by:
+            if self.executed_by:
+                resource = self.logical_file.resource
+                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
+                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
+                graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
+
         valid_schema = False
         resource = self.logical_file.resource
         if self.metadata_json and self.logical_file.metadata_schema_json:
@@ -332,18 +345,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         if self.logical_file.metadata_schema_json:
             model_title = self.logical_file.metadata_schema_json.get('title', "")
         graph.add((model_meta_node, DC.title, Literal(model_title)))
-        if self.has_model_output:
-            includes_output = 'true'
-        else:
-            includes_output = 'false'
-        graph.add((model_meta_node, HSTERMS.includesModelOutput, Literal(includes_output)))
-
-        if self.executed_by:
-            if self.executed_by:
-                resource = self.logical_file.resource
-                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
-                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
-                graph.add((model_meta_node, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
 
         if valid_schema:
             metadata_dict = self.metadata_json
