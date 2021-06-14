@@ -320,7 +320,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
                 aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
                 graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
-                
+
         valid_schema = False
         resource = self.logical_file.resource
         if self.metadata_json and self.logical_file.metadata_schema_json:
