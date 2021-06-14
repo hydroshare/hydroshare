@@ -482,3 +482,13 @@ class ResourceAccess(models.Model):
             return "discoverable"
         else:
             return "private"
+
+    @property
+    def first_owner(self):
+        opriv = UserResourcePrivilege.objects.filter(community=self, privilege=PrivilegeCodes.OWNER)\
+            .order_by('start')
+        opriv = list(opriv)
+        if opriv:
+            return opriv[0].user
+        else:
+            return None

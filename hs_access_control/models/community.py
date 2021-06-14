@@ -18,6 +18,9 @@ class Community(models.Model):
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
 
+    def __str__(self): 
+        return self.name
+
     @property
     def member_groups(self):
         """ This returns all member groups """
@@ -214,10 +217,10 @@ class Community(models.Model):
     @property
     def first_owner(self):
         from hs_access_control.models.privilege import UserCommunityPrivilege, PrivilegeCodes
-        owners = UserCommunityPrivilege.filter(community=self, privilege=PrivilegeCodes.OWNER)\
-            .order_by('start').value_list('user')
-        owners = list(owners)
-        if owners:
-            return owners[0]
+        opriv = UserCommunityPrivilege.objects.filter(community=self, privilege=PrivilegeCodes.OWNER)\
+            .order_by('start')
+        opriv = list(opriv)
+        if opriv:
+            return opriv[0].user
         else:
             return None

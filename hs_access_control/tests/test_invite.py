@@ -2,18 +2,17 @@ from django.test import TestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
-from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
-        GroupCommunityProvenance
-from hs_access_control.models.invite import GroupCommunityInvite, GroupCommunityRequest
+from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models.invite import GroupCommunityRequest
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 from hs_core import hydroshare
-from pprint import pprint
 
-class TestInvite(TestCase):
+
+class TestRequest(TestCase):
 
     def setUp(self):
-        super(TestInvite, self).setUp()
+        super(TestRequest, self).setUp()
         global_reset()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.admin = hydroshare.create_account(
@@ -81,63 +80,42 @@ class TestInvite(TestCase):
                 'all kinds of pets',
                 'collaboration on how to be a better pet.')
 
-    def test_invite_group_to_community(self):
+    def test_community_invite_group_to_community(self):
         "share community with group according to invitation protocol"
 
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
                                                                         PrivilegeCodes.VIEW))
-        invite, created = GroupCommunityInvite.create_or_update(
-            group=self.cats, community=self.pets, community_owner=self.dog)
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
-        self.assertTrue(created)
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
 
-        self.assertTrue(isinstance(invite, GroupCommunityInvite))
-        self.assertEqual(invite.community, self.pets)
-        self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner is None)
-        self.assertEqual(invite.community_owner, self.dog)
-        self.assertFalse(invite.redeemed)
-        self.assertFalse(invite.approved)
-        self.assertTrue(invite in GroupCommunityInvite.active_requests()) 
-        self.assertFalse(self.cats in self.pets.member_groups) 
-
-        invite.act(group_owner=self.cat, approved=True)
-
-        self.assertTrue(isinstance(invite, GroupCommunityInvite))
-        self.assertEqual(invite.community, self.pets)
-        self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner, self.cat)
-        self.assertEqual(invite.community_owner, self.dog)
-        self.assertTrue(invite.redeemed)
-        self.assertTrue(invite.approved)
-        self.assertFalse(invite in GroupCommunityInvite.active_requests()) 
-
-        self.assertTrue(self.cats in self.pets.member_groups) 
-
-    def test_request_group_join_community(self):
-        "share community with group according to invitation protocol"
-
-        # first check permissions
-        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
-                                                                        PrivilegeCodes.VIEW))
-        request, created = GroupCommunityRequest.create_or_update(
-            group=self.cats, community=self.pets, group_owner=self.cat)
-
-        self.assertTrue(created)
+        self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
         self.assertEqual(request.group, self.cats)
-        self.assertEqual(request.group_owner, self.cat)
-        self.assertTrue(request.community_owner is None)
+        self.assertTrue(request.group_owner is None)
+        self.assertEqual(request.community_owner, self.dog)
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
-        self.assertTrue(request in GroupCommunityRequest.active_requests()) 
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
+        self.assertFalse(self.cats in self.pets.member_groups)
 
-        self.assertFalse(self.cats in self.pets.member_groups) 
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
-        request.act(community_owner=self.dog, approved=True)
+        expected = "Request approved to connect group '{}' to community '{}'"\
+                   " because there is a matching request."\
+                   .format(self.cats.name, self.pets.name, 'approved')
+        self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
@@ -146,55 +124,170 @@ class TestInvite(TestCase):
         self.assertEqual(request.community_owner, self.dog)
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
-        self.assertFalse(request in GroupCommunityRequest.active_requests()) 
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
-        self.assertTrue(self.cats in self.pets.member_groups) 
+        self.assertTrue(self.cats in self.pets.member_groups)
 
-    def test_invite_group_to_community_reject(self):
+    def test_group_request_group_join_community(self):
+        "share community with group according to invitation protocol"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertTrue(request.community_owner is None)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
+
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+        message, approved = GroupCommunityRequest.create_or_update(
+                requester=self.dog, community=self.pets, group=self.cats)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request approved to connect group '{}' to community '{}'"\
+                   " because there is a matching request."\
+                   .format(self.cats.name, self.pets.name, 'approved')
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+
+        self.assertTrue(self.cats in self.pets.member_groups)
+
+    def test_community_invite_group_to_community_approve(self):
+        "approve an invitation to join a community"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner is None)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
+
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+        message, success = request.approve(responder=self.cat)
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        expected = "Request to connect group '{}' to community '{}' {}.".format(
+            self.cats.name, self.pets.name, 'approved')
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+
+        self.assertTrue(self.cats in self.pets.member_groups)
+
+    def test_community_invite_group_to_community_decline(self):
         "reject an invitation to join a community"
 
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
                                                                         PrivilegeCodes.VIEW))
-        invite, created = GroupCommunityInvite.create_or_update(
-            group=self.cats, community=self.pets, community_owner=self.dog)
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
-        self.assertTrue(created)
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+        self.assertEqual(message, expected)
 
-        self.assertTrue(isinstance(invite, GroupCommunityInvite))
-        self.assertEqual(invite.community, self.pets)
-        self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner is None)
-        self.assertEqual(invite.community_owner, self.dog)
-        self.assertFalse(invite.redeemed)
-        self.assertFalse(invite.approved)
-        self.assertTrue(invite in GroupCommunityInvite.active_requests()) 
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner is None)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
 
-        self.assertFalse(self.cats in self.pets.member_groups) 
+        self.assertFalse(self.cats in self.pets.member_groups)
 
-        invite.act(group_owner=self.cat, approved=False)
+        message, success = request.decline(responder=self.cat)
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
 
-        self.assertTrue(isinstance(invite, GroupCommunityInvite))
-        self.assertEqual(invite.community, self.pets)
-        self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner, self.cat)
-        self.assertEqual(invite.community_owner, self.dog)
-        self.assertTrue(invite.redeemed)
-        self.assertFalse(invite.approved)
-        self.assertFalse(invite in GroupCommunityInvite.active_requests()) 
+        expected = "Request to connect group '{}' to community '{}' {}.".format(
+            self.cats.name, self.pets.name, 'declined')
+        self.assertEqual(message, expected)
 
-        self.assertFalse(self.cats in self.pets.member_groups) 
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
-    def test_request_group_join_community_reject(self):
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+    def test_group_request_group_join_community_approve(self):
         "reject a request to join a community"
 
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
                                                                         PrivilegeCodes.VIEW))
-        request, created = GroupCommunityRequest.create_or_update(
-            group=self.cats, community=self.pets, group_owner=self.cat)
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
-        self.assertTrue(created)
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+        self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
@@ -203,11 +296,19 @@ class TestInvite(TestCase):
         self.assertTrue(request.community_owner is None)
         self.assertFalse(request.redeemed)
         self.assertFalse(request.approved)
-        self.assertTrue(request in GroupCommunityRequest.active_requests()) 
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
-        self.assertFalse(self.cats in self.pets.member_groups) 
+        self.assertFalse(self.cats in self.pets.member_groups)
 
-        request.act(community_owner=self.dog, approved=True)
+        message, success = request.approve(responder=self.dog)
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        expected = "Request to connect group '{}' to community '{}' {}.".format(
+            self.cats.name, self.pets.name, 'approved')
+        self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
@@ -216,43 +317,45 @@ class TestInvite(TestCase):
         self.assertEqual(request.community_owner, self.dog)
         self.assertTrue(request.redeemed)
         self.assertTrue(request.approved)
-        self.assertFalse(request in GroupCommunityRequest.active_requests()) 
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
-        self.assertTrue(self.cats in self.pets.member_groups) 
+        self.assertTrue(self.cats in self.pets.member_groups)
 
-    def test_invite_then_request(self):
-        "invite, then matching request"
+    def test_group_request_group_join_community_decline(self):
+        "reject a request to join a community"
 
         # first check permissions
         self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
                                                                         PrivilegeCodes.VIEW))
-        invite, created = GroupCommunityInvite.create_or_update(
-            group=self.cats, community=self.pets, community_owner=self.dog)
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
 
-        self.assertTrue(created)
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+        self.assertEqual(message, expected)
 
-        self.assertTrue(isinstance(invite, GroupCommunityInvite))
-        self.assertEqual(invite.community, self.pets)
-        self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner is None)
-        self.assertEqual(invite.community_owner, self.dog)
-        self.assertFalse(invite.redeemed)
-        self.assertFalse(invite.approved)
-        self.assertTrue(invite in GroupCommunityInvite.active_requests()) 
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertTrue(request.community_owner is None)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
 
-        self.assertFalse(self.cats in self.pets.member_groups) 
+        self.assertFalse(self.cats in self.pets.member_groups)
 
-        request, created = GroupCommunityRequest.create_or_update(
-            group=self.cats, community=self.pets, group_owner=self.cat)
+        message, success = request.decline(responder=self.dog)
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
 
-        self.assertTrue(isinstance(invite, GroupCommunityInvite))
-        self.assertEqual(invite.community, self.pets)
-        self.assertEqual(invite.group, self.cats)
-        self.assertTrue(invite.group_owner, self.cat)
-        self.assertEqual(invite.community_owner, self.dog)
-        self.assertTrue(invite.redeemed)
-        self.assertTrue(invite.approved)
-        self.assertFalse(invite in GroupCommunityInvite.active_requests()) 
+        expected = "Request to connect group '{}' to community '{}' {}.".format(
+            self.cats.name, self.pets.name, 'declined')
+        self.assertEqual(message, expected)
 
         self.assertTrue(isinstance(request, GroupCommunityRequest))
         self.assertEqual(request.community, self.pets)
@@ -260,7 +363,283 @@ class TestInvite(TestCase):
         self.assertTrue(request.group_owner, self.cat)
         self.assertEqual(request.community_owner, self.dog)
         self.assertTrue(request.redeemed)
-        self.assertTrue(request.approved)
-        self.assertFalse(request in GroupCommunityRequest.active_requests()) 
+        self.assertFalse(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
 
-        self.assertTrue(self.cats in self.pets.member_groups) 
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+    def test_community_invite_then_request(self):
+        "request, then matching request"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner is None)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
+
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+        message, approved = GroupCommunityRequest.create_or_update(
+           group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request approved to connect group '{}' to community '{}'"\
+            " because there is a matching request."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        # refresh objects to pick up async database changes
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+
+        self.assertTrue(self.cats in self.pets.member_groups)
+
+    def test_group_request_then_invite(self):
+        "request, then matching request"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertTrue(request.community_owner is None)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
+
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request approved to connect group '{}' to community '{}'"\
+            " because there is a matching request."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        # refresh objects to pick up async database changes
+        request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+
+        self.assertTrue(self.cats in self.pets.member_groups)
+
+    def test_auto_approve(self):
+        "request with auto-approvals"
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        self.pets.auto_approve = True
+        self.pets.save()
+
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request auto-approved to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        # refresh objects to pick up async database changes
+        # request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+
+        self.assertTrue(self.cats in self.pets.member_groups)
+
+    def test_group_request_owns_both(self):
+        "request where requester owns both"
+
+        self.assertTrue(self.dog.uaccess.can_share_community_with_user(
+            self.pets, self.cat, PrivilegeCodes.OWNER))
+        self.dog.uaccess.share_community_with_user(
+            self.pets, self.cat, PrivilegeCodes.OWNER)
+
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request approved to connect group '{}' to community '{}'"\
+            " because you own both."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        # refresh objects to pick up async database changes
+        # request = GroupCommunityRequest.objects.get(pk=request.pk)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertEqual(request.community_owner, self.cat)
+        self.assertTrue(request.redeemed)
+        self.assertTrue(request.approved)
+        self.assertFalse(request in GroupCommunityRequest.pending())
+        self.assertFalse(request in GroupCommunityRequest.queued())
+
+        self.assertTrue(self.cats in self.pets.member_groups)
+
+    def test_community_invite_update(self):
+        "test repeated invites, requester from community"
+
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner is None)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.dog)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request updated: connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertTrue(request.group_owner is None)
+        self.assertEqual(request.community_owner, self.dog)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.cat))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+    def test_group_request_update(self):
+        'test repeated requests, requester from group'
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request created to connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertTrue(request.community_owner is None)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
+
+        self.assertFalse(self.cats in self.pets.member_groups)
+
+        # first check permissions
+        self.assertTrue(self.dog.uaccess.can_share_community_with_group(self.pets, self.dogs,
+                                                                        PrivilegeCodes.VIEW))
+        message, approved = GroupCommunityRequest.create_or_update(
+            group=self.cats, community=self.pets, requester=self.cat)
+        request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
+
+        expected = "Request updated: connect group '{}' to community '{}'."\
+            .format(self.cats.name, self.pets.name)
+
+        self.assertEqual(message, expected)
+
+        self.assertTrue(isinstance(request, GroupCommunityRequest))
+        self.assertEqual(request.community, self.pets)
+        self.assertEqual(request.group, self.cats)
+        self.assertEqual(request.group_owner, self.cat)
+        self.assertTrue(request.community_owner is None)
+        self.assertFalse(request.redeemed)
+        self.assertFalse(request.approved)
+        self.assertTrue(request in GroupCommunityRequest.pending())
+        self.assertTrue(request in GroupCommunityRequest.queued())
+        self.assertTrue(request in GroupCommunityRequest.pending(responder=self.dog))
+        self.assertTrue(request in GroupCommunityRequest.queued(requester=self.cat))
+
+        self.assertFalse(self.cats in self.pets.member_groups)
