@@ -64,7 +64,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             if not _dict_has_value(v):
                                 continue
                         elif not v:
-                            # v is either a str or a list
+                            # v is either a str or a list, and empty
                             continue
 
                         k_title = k
@@ -302,6 +302,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 if sub_element_value:
                     sub_value = ", ".join(sub_element_value)
             else:
+                # value is either a bool or a number
                 sub_value = sub_element_value
             if sub_value != '':
                 graph.add((sub_element_node, RDF.value, Literal(sub_value)))
@@ -358,7 +359,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         if not _dict_has_value(v):
                             continue
                     elif not v:
-                        # v is either a str or a list
+                        # v is either a str or a list,  and empty
                         continue
 
                 k_element_node = BNode()
@@ -399,7 +400,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             # remove the sub element node from the graph
                             for _, pred, obj in graph.triples((k_sub_element_node, None, None)):
                                 graph.remove((k_sub_element_node, pred, obj))
-                            graph.remove((k_element_prop_node, None, k_sub_element_node))
                 else:
                     triple_added = add_sub_element_value_triple(k_element_node, v)
                     if not triple_added:
@@ -529,6 +529,8 @@ def _dict_has_value(dct):
         elif isinstance(val, list):
             if val:
                 return True
+        elif type(val) in (int, float, bool):
+            return True
         elif isinstance(val, dict):
             return _dict_has_value(val)
     return False
