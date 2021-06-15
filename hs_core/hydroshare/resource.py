@@ -1040,7 +1040,7 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 
-    if not __debug__:
+    if not settings.DEBUG:
         # only in production environment submit doi request to crossref
         response = deposit_res_metadata_with_crossref(resource)
         if not response.status_code == status.HTTP_200_OK:

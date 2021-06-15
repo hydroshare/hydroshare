@@ -23,8 +23,7 @@ from rest_framework import status
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.hydroshare import utils, create_empty_resource
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bag, create_bagit_files_by_irods
-from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
-    get_crossref_url, deposit_res_metadata_with_crossref
+from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref
 from hs_core.task_utils import get_or_create_task_notification
 from hs_odm2.models import ODM2Variable
 from django_irods.storage import IrodsStorage
@@ -90,7 +89,7 @@ def manage_task_nightly():
             if response.status_code == status.HTTP_200_OK:
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
-                res.doi = get_resource_doi(act_doi, 'pending')
+                res.doi = act_doi
                 res.save()
                 # create bag and compute checksum for published resource to meet DataONE requirement
                 create_bag_by_irods(res.short_id)
