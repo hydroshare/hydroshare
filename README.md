@@ -14,25 +14,168 @@ More information can be found in our [Wiki Pages](https://github.com/hydroshare/
 
 ## Install
 
-This README file is for developers interested in working on the Hydroshare code itself, or for developers or researchers learning about how the application works at a deeper level. If you simply want to _use_ the application, go to http://hydroshare.org and register an account.
+Prerequisites
 
-If you want to install and run the source code of application locally and/or contribute to development, read on.
+    Supported OS (developer laptops): macOS 10.12+, Win10+ Pro, Ent, Edu, Acad Pro, Acad Ent, CentOS 7 and Ubuntu/Lubuntu 18+ LTS
 
-### [VirtualBox](https://www.virtualbox.org/wiki/Downloads) development environment
+        We got some troubles with Lubuntu 16.04 LTS so probably Ubuntu 16.04 LTS also does not work
 
-To quickly get started developing we offer a preconfigured development environment encapsulated within a virtual box Virtual Machine (VM). This includes the appropriate version of Ubuntu, Python, Docker, and other key dependencies and development tools.
+    Familiarity with docker and git are required to work with HydroShare
 
-### Simplified Installation Instructions 
-1. Download the [latest OVA file here](http://distribution.hydroshare.org/public_html/)
-2. Open the .OVA file with VirtualBox, this will create a guest VM
-3. Follow the instructions here to share a local hydroshare folder with your guest VM
-4. Start the guest VM
-5. Log into the guest VM with either ssh or the GUI. The default username/password is hydro:hydro
-6. From the root directory `/home/hydro`, clone this repository into the hydroshare folder
-7. `cd` into the hydroshare folder and run `./hsctl rebuild --db` to build the application and run it
-8. If all goes well, your local version of Hydroshare should be running at http://192.168.56.101:8000
+    Some VM skills such as network settings (Bridge/NAT/Host only) and file sharing are needed if you work with a virtual machine.
 
-For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
+    For Windows, this link is required to proceed - 
+
+     
+
+One-Time Install
+
+Tables are provided (in Courier font) throughout this wiki for copy-paste of entire blocks.
+1. Open a terminal (macOS, Linux) or command prompt (Windows)
+
+Navigate to where you will store the source code, for example /Users/yourname/repo/
+
+
+
+cd ~/repo
+2. Get code
+
+Note it defaults to the develop branch
+
+git clone 
+
+ 
+
+git checkout <branch>
+
+To get current solr revision fixes:
+
+      a. git pull
+
+cd hydroshare
+
+    b. docker exec -u hydro-service -ti hydroshare python manage.py solr_update
+
+ 
+
+    It’s very important that please DO NOT change the directory name after cloned. Let it be “hydroshare”
+
+    If you are running inside a virtual machine such as HydroDev Ubuntu 18.04 from here, you need to:
+
+        Replace all FQDN_OR_IP on the file nginx/config-files/hydroshare-local-nginx.conf.template to be your VM IP address (totally four positions need to be replaced)
+
+        Add a new line into .gitignore file to make sure you will not commit your local setting to GitHub
+
+            /nginx/config-files/hydroshare-local-nginx.conf.template
+
+    If you are running Windows 10, please make sure no process is listening on port 80. This maybe a pain for Windows 10 user, we found a very useful link here. However, if you can't stop the process which is listening on port 80, you need to do these steps:
+
+        Change the nginx port by modify this file: local-dev.yml (change port setting from 80:80 to 8080:80 on nginx section)
+
+        Replace line 26 on the file nginx/config-files/hydroshare-local-nginx.conf.template from
+
+    if ($http_host != "FQDN_OR_IP") {
+
+To
+
+    if ($http_host != "FQDN_OR_IP:8080") {
+
+    Replace line 35 on the file nginx/config-files/hydroshare-local-nginx.conf.template from
+
+    rewrite ^ http://FQDN_OR_IP$request_uri permanent;
+
+To
+
+    rewrite ^ http://FQDN_OR_IP:8080$request_uri permanent;
+
+    Add new two lines into .gitignore file to make sure you will not commit your local setting to GitHub
+
+        local-dev.yml
+
+        /nginx/config-files/hydroshare-local-nginx.conf.template
+
+3. Log into Docker via application and command line.
+
+    Command line : docker login
+
+    You will be asked to enter your username and password.into 
+
+4. Launch the stack
+
+./local-dev-first-start-only.sh
+
+Following the screen instruction to continue.
+
+    Run the following command on completion to launch Hydroshare: docker-compose -f local-dev.yml up 
+
+5. Sanity Checks
+
+    Some WARNINGs are normal. 
+
+    HydroShare is available in your browser at http://localhost or http://localhost:8080  in case you are running inside a VM
+
+    The default admin page is http://localhost/admin
+
+    The default admin account is admin:default
+
+    Swagger API docs http://localhost/hsapi/
+
+6. Start & Stop & Log
+
+To start HydroShare, only need to open a windows shell, change to HydroShare code directory then run
+
+docker-compose -f local-dev.yml (up | down) [-d] [--build]
+
+Note bracketed -d for daemon is optional and you don’t paste in the brackets
+
+    Use -d option in case you want to type new command on this windows or don’t want to see real-time output log.
+
+    Use --build option in case docker keeps image in cache and does not update correctly while modifying the Dockerfile and working with PyCharm
+
+CREATE NEW ACCOUNT - This is the same as it's always been in HydroShare. Ask a teammate or hack at it. Basically open a hydroshare console window then use the UI to sign up for a new account and watch the hydroshare container console (docker logs hydroshare) for a verification link and paste that into your browser and save the new account in the UI.
+
+If your develop machine is slow, the defaultworker container may not work properly because it won’t see iRODS containers alive after timeout. Please wait seconds, open new terminal window then restart this container by the command: docker  restart  defaultworker, or just only start the whole HydroShare system by this command: ./slow-start.sh (no need to run docker-compose  -f  local-dev.yml  up) but by this way, you will not have native log window.
+
+
+
+To stop HydroShare, only need to close the running windows or open a new windows then run
+
+docker-compose -f local-dev.yml down
+
+All data is persisted for the next start.
+
+
+
+To see the logs in case you start with -d option, open a windows then run
+
+docker-compose -f local-dev.yml logs
+
+Or
+
+docker logs <container name>
+
+
+
+Warning Suppression
+
+If you are working on communities, it’s recommended you uncomment lines 197, 198, 207 in local_settings.py (Timezone stuff and silencing Mezz warnings). The Communities Developer Doc is here: https://docs.google.com/document/d/12VXZhqpMZCkaci5QviGqfg_xNZhk1fy-Zl-rFdlR0P8
+Sidenote on working Quickly
+
+Only docker-compose down when you need a deeper change (or maybe never) or are troubleshooting something. This keeps things very fast, especially if you use the PyCharm play/run and debug buttons.
+Python Unit Tests
+
+Some tests may fail this is work in progress as the build evolves...
+
+ 
+
+# when containers are already running in another terminal/shell
+
+docker exec -it hydroshare python manage.py test -v 3 --failfast
+
+
+
+Branching
+When you activate a new branch, just bring the stack down and up again. Sometimes you can get away with a warm restart of the stack or even relying on the Django debug mode (doing nothing but waiting). 
 
 ## Usage
 
