@@ -2,7 +2,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from rdflib import Graph, BNode
 from rdflib.collection import Collection
-from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS, RDF, RDFS
+from rdflib.namespace import Namespace, DC, DCTERMS, RDF, RDFS
 from rdflib.plugin import register
 from rdflib.plugins.serializers.rdfxml import XMLLANG, OWL_NS, XMLBASE
 from rdflib.plugins.serializers.xmlwriter import XMLWriter

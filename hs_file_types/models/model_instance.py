@@ -457,11 +457,11 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
 
     # used in discovery faceting to aggregate native and composite content types
     @staticmethod
-    def get_discovery_content_type(self):
+    def get_discovery_content_type():
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
-        return self.model_instance_type
+        return "Model Instance"
 
     def add_resource_files_in_folder(self, resource, folder):
         """
