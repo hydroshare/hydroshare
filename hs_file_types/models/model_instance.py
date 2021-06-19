@@ -340,7 +340,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         graph.namespace_manager.bind(prefix=ns_prefix, namespace=NS_META_SCHEMA, override=False)
 
         model_meta_node = BNode()
-        graph.add((subject, NS_META_SCHEMA.modelSpecificMetadata, model_meta_node))
+        graph.add((subject, HSTERMS.modelSpecificMetadata, model_meta_node))
         model_title = ""
         if self.logical_file.metadata_schema_json:
             model_title = self.logical_file.metadata_schema_json.get('title', "")
