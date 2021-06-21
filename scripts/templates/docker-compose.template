@@ -19,11 +19,9 @@ solr:
 hydroshare:
   build: .
   container_name: hydroshare
+  privileged: true
   cap_add:
     - SYS_ADMIN
-  devices:
-    - "/dev/fuse"
-  privileged: true
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432
@@ -58,6 +56,9 @@ hydroshare:
 defaultworker:
   build: .
   container_name: defaultworker
+  privileged: true
+  cap_add:
+    - SYS_ADMIN
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432

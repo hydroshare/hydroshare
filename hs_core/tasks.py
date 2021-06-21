@@ -15,6 +15,7 @@ import requests
 from celery import shared_task
 from celery.schedules import crontab
 from celery.task import periodic_task
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -40,7 +41,8 @@ from hs_collection_resource.models import CollectionDeletedResource
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
 # This doesn't work 2021-06-13 ALC
-logger = logging.getLogger('django')
+# logger = logging.getLogger('celery')
+logger = get_task_logger('defaultworker')
 
 
 # Currently there are two different cleanups scheduled.
@@ -708,7 +710,7 @@ def task_notification_cleanup():
 @periodic_task(run_every=crontab())
 def task_update_solr():
     """ update the queue of all updated resources every minute """
+    print("print: updating solr for {}".format(__name__))
+    logger.debug("updating solr")
     from .hydro_realtime_signal_processor import solr_batch_update
-    print("print: updating solr")
-    # logger.info("updating solr")
     solr_batch_update()

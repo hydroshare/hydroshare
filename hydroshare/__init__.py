@@ -1,5 +1,3 @@
-
-
 import logging
 
 
@@ -15,4 +13,4 @@ except ImportError:
            "For more information see: "
            "https://docs.python.org/2.7/library/xml.html#xml-vulnerabilities")
 
-from .hydrocelery import app as celery_app
+from .celery import app as celery_app

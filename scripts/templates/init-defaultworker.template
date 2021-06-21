@@ -12,7 +12,7 @@ userdel hydro-service \
 
 rm -f /hydroshare/celery/celerybeat.pid
 rm -f /hydroshare/celery/celeryworker.pid
-celery beat --uid HS_SERVICE_UID --gid HS_SERVICE_GID -A hydroshare -s /hydroshare/celery/celerybeat-schedule --pidfile=/hydroshare/celery/celerybeat.pid &
-celery worker --uid HS_SERVICE_UID --gid HS_SERVICE_GID -A hydroshare -E -Q default --concurrency=CELERY_CONCURRENCY --pidfile=/hydroshare/celery/celeryworker.pid --logfile=/hydroshare/log/celery.log
+celery beat -A hydroshare --uid HS_SERVICE_UID --gid HS_SERVICE_GID -s /hydroshare/celery/celerybeat-schedule --pidfile=/hydroshare/celery/celerybeat.pid &
+celery worker -A hydroshare --uid HS_SERVICE_UID --gid HS_SERVICE_GID -Q default --concurrency=CELERY_CONCURRENCY --pidfile=/hydroshare/celery/celeryworker.pid -l DEBUG
 # celery flower -A hydroshare --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 
