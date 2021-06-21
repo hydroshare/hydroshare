@@ -559,12 +559,12 @@ LOGGING = {
             'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['django'],
+            'handlers': ['djangolog'],
             'level': 'WARNING',
             'propagate': False,
         },
         'celery': {
-            'handlers': ['celery'],
+            'handlers': ['celerylog'],
             'level': 'WARNING',
             'propagate': False,
         },
