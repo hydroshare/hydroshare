@@ -10,7 +10,7 @@ from dominate import tags as dom_tags
 from rdflib import BNode, Literal, URIRef, RDF
 from rdflib.namespace import Namespace, DC
 
-from hs_core.hs_rdf import NAMESPACE_MANAGER, HSTERMS
+from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare.utils import current_site_url
 from hs_core.models import ResourceFile
 from .base import NestedLogicalFileMixin
@@ -337,11 +337,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         res_xmlns = os.path.join(current_site_url(), 'resource', resource.short_id) + "/"
         ns_prefix = None
         NS_META_SCHEMA = Namespace(res_xmlns)
-        NAMESPACE_MANAGER.bind(prefix=ns_prefix, namespace=NS_META_SCHEMA, override=False)
-        graph.namespace_manager = NAMESPACE_MANAGER
+        graph.namespace_manager.bind(prefix=ns_prefix, namespace=NS_META_SCHEMA, override=False)
 
         model_meta_node = BNode()
-        graph.add((subject, NS_META_SCHEMA.modelSpecificMetadata, model_meta_node))
+        graph.add((subject, HSTERMS.modelSpecificMetadata, model_meta_node))
         model_title = ""
         if self.logical_file.metadata_schema_json:
             model_title = self.logical_file.metadata_schema_json.get('title', "")
@@ -457,11 +456,12 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         return True
 
     # used in discovery faceting to aggregate native and composite content types
-    def get_discovery_content_type(self):
+    @staticmethod
+    def get_discovery_content_type():
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
-        return self.model_instance_type
+        return "Model Instance"
 
     def add_resource_files_in_folder(self, resource, folder):
         """
