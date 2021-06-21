@@ -4758,6 +4758,7 @@ class SOLRQueue(models.Model):
     for changes in Django.
     """
     resource = models.ForeignKey(BaseResource, unique=True)
+    # resource = models.OneToOneField(BaseResource)
 
     @classmethod
     def add(cls, resource):

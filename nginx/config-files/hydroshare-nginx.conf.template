@@ -57,8 +57,9 @@ server {
     aio threads;
 
     access_log      /var/log/nginx/access.log combined;
-    error_log       /var/log/nginx/error.log error;
-    error_log       /var/log/nginx/system.log notice;
+    error_log       /var/log/nginx/notice.log error;
+    # This is causing problems with file ownership June 13, 2021 ALC
+    # error_log       /var/log/nginx/system.log notice;
     # Uncomment the following line to generate debugging log entries
     # error_log       /var/log/nginx/system.log debug;
 

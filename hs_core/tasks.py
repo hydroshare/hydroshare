@@ -35,11 +35,11 @@ from hs_core.models import BaseResource, TaskNotification
 from theme.utils import get_quota_message
 from hs_collection_resource.models import CollectionDeletedResource
 
-
 # Pass 'django' into getLogger instead of __name__
 # for celery tasks (as this seems to be the
 # only way to successfully log in code executed
 # by celery, despite our catch-all handler).
+# This doesn't work 2021-06-13 ALC
 logger = logging.getLogger('django')
 
 
@@ -709,4 +709,6 @@ def task_notification_cleanup():
 def task_update_solr():
     """ update the queue of all updated resources every minute """
     from .hydro_realtime_signal_processor import solr_batch_update
+    print("print: updating solr")
+    # logger.info("updating solr")
     solr_batch_update()

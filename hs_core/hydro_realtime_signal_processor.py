@@ -12,42 +12,48 @@ logger = logging.getLogger(__name__)
 
 def solr_update(instance, index=None):
     """ Update a resource's SOLR record """
-    if not index:
-        from hs_core.search_indexes import BaseResourceIndex
+    from hs_core.search_indexes import BaseResourceIndex
+    if index is None:
         index = BaseResourceIndex()
     try:
         index.update_object(instance)
-    except NotHandled:
-        pass  # logging anything crashes celery
+    except Exception as e: 
+        print("General exception {}: update_object of {} failed: {}".format(type(e), instance.short_id, str(e)))
+        SOLRQueue.add(instance)
+        # pass  # logging anything crashes celery
 
 
 def solr_delete(instance, index=None):
     """ Delete a resource from SOLR before deleting from Django """
-    if not index:
-        from hs_core.search_indexes import BaseResourceIndex
+    from hs_core.search_indexes import BaseResourceIndex
+    if index is None:
         index = BaseResourceIndex()
     try:
         index.remove_object(instance)
-    except NotHandled:
-        pass  # logging anything crashes celery
+    except Exception as e:
+        print("General exception {}: remove_object of {} failed: {}".format(type(e), instance.short_id, str(e)))
+        SOLRQueue.add(instance)
+        # pass  # logging anything crashes celery
 
 
 def solr_batch_update(): 
     """ update SOLR for resources in the SOLRQueue """
     from hs_core.models import BaseResource
     from hs_core.search_indexes import BaseResourceIndex
-    index = BaseResourceIndex()
+    try: 
+        index = BaseResourceIndex()
+    except Exception as e: 
+        print("General exception {}: {}".format(type(e), str(e)))
     for instance in SOLRQueue.read_and_clear():
         try:
             newbase = BaseResource.objects.get(pk=instance.pk)
-            if newbase.show_in_discover:  # if object should be displayed now
-                solr_update(newbase, index)
-            else:  # not to be shown in discover
-                solr_delete(newbase, index)
         except BaseResource.DoesNotExist:
-            pass  # logging anything crashes celery
-        except:  # catch broad exception to continue processing resources in the queue
-            pass  # logging anything crashes celery
+            print("BaseResource {} does not exist".format(instance.short_id))
+            # pass  # logging anything crashes celery
+        if newbase.show_in_discover:  # if object should be displayed now
+            solr_update(newbase, index)
+        else:  # not to be shown in discover
+            solr_delete(newbase, index)
 
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):

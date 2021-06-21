@@ -521,7 +521,7 @@ LOGGING = {
         },
     },
     'handlers': {
-        'syslog': {
+        'systemlog': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/hydroshare/log/system.log',
@@ -545,33 +545,47 @@ LOGGING = {
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
+        'celerylog': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/hydroshare/log/celery.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15,  # 15MB
+            'backupCount': 10,
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['syslog', 'djangolog'],
-            'propagate': True,
+            'handlers': ['djangolog'],
+            'propagate': False,
             'level': 'DEBUG',
         },
         # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
         'django.template': {
-            'handlers': ['syslog', 'djangolog'],
+            'handlers': ['djangolog'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['syslog'],
+            'handlers': ['djangolog'],
             'level': 'WARNING',
             'propagate': False,
         },
         'matplotlib': { 
             'handlers': ['hydrosharelog'], 
-            'level': 'INFO'
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'celery': { 
+            'handlers': ['celerylog'], 
+            'level': 'DEBUG',
+            'propagate': False,
         },
         # Catch-all logger for HydroShare apps
         '': {
             'handlers': ['hydrosharelog'],
             'propagate': False,
-            'level': 'DEBUG'
+            'level': 'WARNING'
         },
     }
 }
