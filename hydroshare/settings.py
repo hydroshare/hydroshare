@@ -521,14 +521,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'systemlog': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/hydroshare/log/system.log',
-            'formatter': 'simple',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-        },
         'djangolog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -571,6 +563,11 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'celery': {
+            'handlers': ['celerylog'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
         'matplotlib': { 
             'handlers': ['hydrosharelog'], 
             'level': 'WARNING',
@@ -580,6 +577,7 @@ LOGGING = {
             'handlers': ['celerylog'], 
             'level': 'DEBUG',
             'propagate': False,
+            'level': 'INFO'
         },
         # Catch-all logger for HydroShare apps
         '': {
