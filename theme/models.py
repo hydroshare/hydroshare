@@ -1,8 +1,10 @@
 import datetime
+import os
+import logging
 
 from django.core.validators import RegexValidator
 from django.utils import timezone
-
+from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
@@ -20,6 +22,7 @@ from mezzanine.utils.models import upload_to
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
+logger = logging.getLogger(__name__)
 
 
 class SiteConfiguration(SiteRelated):
@@ -324,4 +327,35 @@ def force_unique_emails(sender, instance, **kwargs):
         if sender.objects.filter(username=username).exclude(pk=instance.id).exists():
             raise ValidationError("Username already in use.")
 
+
 pre_save.connect(force_unique_emails, sender=User)
+
+
+@receiver(models.signals.pre_save, sender=UserProfile)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """
+    Deletes old file from filesystem when corresponding UserProfile object is updated with new file.
+    instance is a fixed argument name in models.signals.pre_save providing_args signature, so cannot be renamed
+    """
+    if not instance.pk:
+        # if pk is None, it is a new profile instance, no need to check further
+        return
+
+    try:
+        up = UserProfile.objects.get(pk=instance.pk)
+        old_file_cv = up.cv
+        old_file_pic = up.picture
+        if not old_file_cv and not old_file_pic:
+            return
+    except UserProfile.DoesNotExist:
+        logger.warning(f"user profile for {instance.pk} does not exist when trying to update it")
+        return
+
+    updated_profile = instance
+    if old_file_cv and old_file_cv != updated_profile.cv:
+        if os.path.isfile(old_file_cv.path):
+            os.remove(old_file_cv.path)
+    if old_file_pic and old_file_pic != updated_profile.picture:
+        if os.path.isfile(old_file_pic.path):
+            os.remove(old_file_pic.path)
+    return

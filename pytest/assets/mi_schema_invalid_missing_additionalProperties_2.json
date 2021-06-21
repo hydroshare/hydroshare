@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Sample Valid Metadata JSON Schema",
+  "properties": {
+        "properties": {
+              "IncludesOutPut": {
+                "type":  "boolean",
+                "title": "Includes model outputs?"
+              }
+        },
+        "modelMethod": {
+            "type": "object",
+            "title": "Model Method",
+            "properties": {
+                "flowRoutingMethod": {
+                    "type": "string",
+                    "title": "Flow Routing Method",
+                    "description": "Flow routing method used in creating this model instance."
+                },
+                "petEstimationMethod": {
+                    "type": "string",
+                    "title": "PET Estimation Method",
+                    "description": "Potential evapotranspiration estimation method used in creating this model instance."
+                },
+                "runoffCalculationMethod": {
+                    "type": "string",
+                    "title": "Runoff Calculation Method",
+                    "default": 0,
+                    "description": "Runoff calculation method used in creating this model instance."
+                },
+				"simulationInterval":{
+					"type": "string",
+					"title": "Simulation Interval",
+					"enum": ["Min", "Hour", "Day"]
+				}
+            }
+        },
+        "modelObjective": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "title": "Model Objectives",
+            "format": "table",
+            "description": "Objectives of this SWAT model instance.",
+            "uniqueItems": true
+        },
+        "simulationType": {
+            "type": "string",
+            "title": "Simulation Type",
+            "description": "Type of simulation used."
+        }
+     },
+     "additionalProperties": false
+  }

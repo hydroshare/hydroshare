@@ -295,9 +295,9 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
     if res.resource_type == "CompositeResource":
         if '/data/contents/' in input_path:
             short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
-            res.create_aggregation_xml_documents(path=short_path)
+            res.create_aggregation_meta_files(path=short_path)
         else:  # all metadata included, e.g., /data/*
-            res.create_aggregation_xml_documents()
+            res.create_aggregation_meta_files()
 
     if aggregation or sf_zip:
         # input path points to single file aggregation
@@ -307,6 +307,16 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
         out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
         istorage.copyFiles(input_path, out_with_folder)
+        if not aggregation:
+            if '/data/contents/' in input_path:
+                short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
+            else:
+                short_path = input_path
+            try:
+                aggregation = res.get_aggregation_by_name(short_path)
+            except ObjectDoesNotExist:
+                pass
+
         if aggregation:
             try:
                 istorage.copyFiles(aggregation.map_file_path,  temp_folder_name)
@@ -316,6 +326,11 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                 istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            if aggregation.is_model_program or aggregation.is_model_instance:
+                try:
+                    istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
+                except SessionException:
+                    logger.error("cannot copy {}".format(aggregation.schema_file_path))
             for file in aggregation.files.all():
                 try:
                     istorage.copyFiles(file.storage_path, temp_folder_name)
@@ -522,7 +537,8 @@ def delete_resource_task(resource_id, request_username=None):
     :return: resource_id if delete operation succeeds
              raise an exception if there were errors.
     """
-    res = utils.get_resource_by_shortkey(resource_id)
+    res = utils.get_resource_by_shortkey(resource_id)  # TODO: very inefficient
+
     res_title = res.metadata.title
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
@@ -685,3 +701,12 @@ def task_notification_cleanup():
     """
     week_ago = datetime.today() - timedelta(days=7)
     TaskNotification.objects.filter(created__lte=week_ago).delete()
+
+
+# Documentation says that crontab() means "run every minute"
+# Trying to log anything crashes this task!
+@periodic_task(run_every=crontab())
+def task_update_solr():
+    """ update the queue of all updated resources every minute """
+    from .hydro_realtime_signal_processor import solr_batch_update
+    solr_batch_update()

@@ -22,7 +22,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzi
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
     add_reference_url_to_resource, edit_reference_url_in_resource
 
-from hs_file_types.models import FileSetLogicalFile
+from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -95,11 +95,22 @@ def data_store_structure(request):
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
-                if not aggregation_object.is_fileset:
+                if aggregation_object.get_main_file is not None:
                     main_file = aggregation_object.get_main_file.file_name
             else:
-                # find if FileSet aggregation type that can be created from this folder
-                if resource.can_set_folder_to_fileset(dir_path):
+                # check first if ModelProgram/ModelInstance aggregation type can be created from this folder
+                can_set_model_instance = ModelInstanceLogicalFile.can_set_folder_to_aggregation(resource=resource,
+                                                                                                dir_path=dir_path)
+                can_set_model_program = ModelProgramLogicalFile.can_set_folder_to_aggregation(resource=resource,
+                                                                                              dir_path=dir_path)
+                if can_set_model_instance and can_set_model_program:
+                    folder_aggregation_type_to_set = 'ModelProgramOrInstanceLogicalFile'
+                elif can_set_model_program:
+                    folder_aggregation_type_to_set = ModelProgramLogicalFile.__name__
+                elif can_set_model_instance:
+                    folder_aggregation_type_to_set = ModelInstanceLogicalFile.__name__
+                # otherwise, check if FileSet aggregation type that can be created from this folder
+                elif FileSetLogicalFile.can_set_folder_to_aggregation(resource=resource, dir_path=dir_path):
                     folder_aggregation_type_to_set = FileSetLogicalFile.__name__
                 else:
                     folder_aggregation_type_to_set = ""
@@ -137,6 +148,11 @@ def data_store_structure(request):
         logical_file_type = ''
         logical_file_id = ''
         aggregation_name = ''
+        # flag for UI to know if a file is part of a model program aggregation that has been created from a folder
+        # Note: model program aggregation can be created either from a single file of a folder that has one or more
+        # files
+        has_model_program_aggr_folder = False
+        has_model_instance_aggr_folder = False
         if f.has_logical_file:
             main_extension = f.logical_file.get_main_file_type()
             if not main_extension:
@@ -160,11 +176,23 @@ def data_store_structure(request):
             if 'url' in f.logical_file.extra_data:
                 f_ref_url = f.logical_file.extra_data['url']
 
+            # check if this file (f) is part of a model program folder aggregation
+            if logical_file_type == "ModelProgramLogicalFile":
+                if f.file_folder is not None and f.logical_file.folder is not None:
+                    if f.file_folder.startswith(f.logical_file.folder):
+                        has_model_program_aggr_folder = True
+            elif logical_file_type == "ModelInstanceLogicalFile":
+                if f.file_folder is not None and f.logical_file.folder is not None:
+                    if f.file_folder.startswith(f.logical_file.folder):
+                        has_model_instance_aggr_folder = True
+
         files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
-                      'logical_file_id': logical_file_id})
+                      'logical_file_id': logical_file_id,
+                      'has_model_program_aggr_folder': has_model_program_aggr_folder,
+                      'has_model_instance_aggr_folder': has_model_instance_aggr_folder})
 
     return_object = {'files': files,
                      'folders': dirs,

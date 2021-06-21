@@ -3,6 +3,7 @@ import os
 import datetime
 import pytz
 
+from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
@@ -11,13 +12,14 @@ from rest_framework import status
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
-from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException
+from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException, \
+    add_file_to_resource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
     unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource
 from hs_composite_resource.models import CompositeResource
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile, FileSetLogicalFile, NetCDFLogicalFile, TimeSeriesLogicalFile, \
-    GeoFeatureLogicalFile
+    GeoFeatureLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
@@ -983,6 +985,58 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
+
+    def test_can_be_published_with_model_aggregation(self):
+        """Here we are testing the function 'can_be_published()'
+        We are testing the following scenarios:
+        - when the resource contains a model instance aggregation and not linked to any model program aggregation
+          In this case resource can be published
+        - when the resource contains one model instance aggregation and is linked to a model program aggregation
+        within the same resource
+          In this case resource can be published
+        """
+
+        self.create_composite_resource()
+        resource = self.composite_resource
+        # create a model instance aggregation
+        upload_folder = ''
+        file_to_upload = UploadedFile(file=open(self.generic_file, 'rb'),
+                                      name=os.path.basename(self.generic_file))
+
+        res_file = add_file_to_resource(
+            resource, file_to_upload, folder=upload_folder, check_target_folder=True
+        )
+
+        # set file to model instance aggregation type
+        ModelInstanceLogicalFile.set_file_type(resource, self.user, res_file.id)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        self.assertFalse(resource.can_be_published)
+        # create abstract
+        metadata = self.composite_resource.metadata
+        # add Abstract (element name is description)
+        metadata.create_element('description', abstract='new abstract for the resource')
+        # add keywords (element name is subject)
+        metadata.create_element('subject', value='sub-1')
+        self.assertTrue(resource.can_be_published)
+
+        # create a model program aggregation within the same resource and link it to model instance
+        file_to_upload = UploadedFile(file=open(self.zip_file, 'rb'),
+                                      name=os.path.basename(self.zip_file))
+
+        res_file = add_file_to_resource(
+            resource, file_to_upload, folder=upload_folder, check_target_folder=True
+        )
+
+        # set file to model program aggregation type
+        ModelProgramLogicalFile.set_file_type(resource, self.user, res_file.id)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # link model instance to model program
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        mi_aggr.metadata.executed_by = ModelProgramLogicalFile.objects.first()
+        mi_aggr.metadata.save()
+        # since the 2 linked model aggregations are in the same resource it should be possible
+        # to publish this resource
+        self.assertTrue(resource.can_be_published)
 
     def test_supports_folder_creation_non_aggregation_folder(self):
         """Here we are testing the function supports_folder_creation()

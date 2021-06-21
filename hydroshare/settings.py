@@ -563,6 +563,10 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'matplotlib': { 
+            'handlers': ['hydrosharelog'], 
+            'level': 'INFO'
+        },
         # Catch-all logger for HydroShare apps
         '': {
             'handlers': ['hydrosharelog'],
@@ -755,3 +759,5 @@ else:
 #import codecs
 #sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 #sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = "/hydroshare/hs_file_types/model_meta_schema_templates"

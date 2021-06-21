@@ -159,7 +159,7 @@ def comment(request, template="generic/comments.html"):
 
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based rating form and view
-def rating(request):
+def rating(request, template="generic/rating.html"):
     """
     Handle a ``RatingForm`` submission and redirect back to its
     related object.
@@ -175,16 +175,8 @@ def rating(request):
     rating_form = RatingForm(request, obj, post_data)
     if rating_form.is_valid():
         rating_form.save()
-        if request.is_ajax():
-            # Reload the object and return the rating fields as json.
-            obj = obj.__class__.objects.get(id=obj.id)
-            rating_name = obj.get_ratingfield_name()
-            json = {}
-            for f in ("average", "count", "sum"):
-                json["rating_" + f] = getattr(obj, "%s_%s" % (rating_name, f))
-            response = HttpResponse(dumps(json))
-        ratings = ",".join(rating_form.previous + [rating_form.current])
-        set_cookie(response, "mezzanine-rating", ratings)
+        return response
+    response = render(request, template)
     return response
 
 
@@ -347,6 +339,7 @@ def update_user_profile(request, profile_user_id):
         messages.error(request, str(ex))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 def resend_verification_email(request, email):
     user = User.objects.filter(email=email).first()

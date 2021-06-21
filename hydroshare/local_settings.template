@@ -105,7 +105,7 @@ IRODS_AUTH = 'wwwHydroProxy'
 IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
-REMOTE_USE_IRODS = False
+REMOTE_USE_IRODS = True
 
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE = 'hydroshare/irods/ruleGenerateBagIt_HS.r'

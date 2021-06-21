@@ -10,11 +10,18 @@ from rdflib import Graph
 from rdflib.compare import _squashed_graphs_triples
 from rdflib.namespace import DCTERMS, RDF
 
+from hs_core import hydroshare
 from hs_core.hydroshare import resource, add_resource_files, current_site_url
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core import hydroshare
-from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile, GeoFeatureLogicalFile, GeoRasterLogicalFile, \
-    NetCDFLogicalFile, RefTimeseriesLogicalFile, TimeSeriesLogicalFile
+from hs_file_types.models import (
+    GenericLogicalFile,
+    FileSetLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+)
 
 
 class TestCreateResource(MockIRODSTestCaseMixin, TestCase):

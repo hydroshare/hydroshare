@@ -790,34 +790,23 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     src_folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
                                                                 test_exists=False)
     tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
-    file_move = src_folder != tgt_folder
+    file_or_folder_move = src_folder != tgt_folder
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
-        # if the source file is part of a FileSet, we need to remove it from that FileSet in the
-        # case file being moved
-        if file_move and resource.resource_type == 'CompositeResource':
-            if res_file_obj.has_logical_file and res_file_obj.logical_file.is_fileset:
-                try:
-                    aggregation = resource.get_aggregation_by_name(res_file_obj.file_folder)
-                    if aggregation.is_fileset:
-                        # remove aggregation form the file
-                        res_file_obj.logical_file_content_object = None
-                        res_file_obj.save()
-                except ObjectDoesNotExist:
-                    pass
+        # if the source file is part of a FileSet or Model Program/Instance aggregation (based on folder),
+        # we need to remove it from that aggregation in the case the file is being moved out of that aggregation
+        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+            resource.remove_aggregation_from_file(res_file_obj, src_folder, tgt_folder)
 
         # checks tgt_name as a side effect.
         ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
-        # if the file is getting moved into a folder that represents a FileSet or to a folder
-        # inside a fileset folder, then make the file part of that FileSet
-        if file_move and res_file_obj.file_folder and \
-                resource.resource_type == 'CompositeResource':
-            aggregation = resource.get_fileset_aggregation_in_path(res_file_obj.file_folder)
-            if aggregation is not None and not res_file_obj.has_logical_file:
-                # make the moved file part of the fileset aggregation unless the file is
-                # already part of another aggregation (single file aggregation)
-                aggregation.add_resource_file(res_file_obj)
+        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+            # if the file is getting moved into a folder that represents a FileSet or to a folder
+            # inside a fileset folder, then make the file part of that FileSet
+            # if the file is moved into a model program aggregation folder or to a folder inside the model program
+            # folder, make the file as part of the model program aggregation
+            resource.add_file_to_aggregation(res_file_obj)
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
@@ -830,49 +819,48 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             fobj.set_storage_path(new_path)
 
 
-def remove_irods_folder_in_django(resource, istorage, folderpath, user):
+def remove_irods_folder_in_django(resource, folder_path, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     If the folder contains any aggregations, those are also deleted from DB
     :param resource: the BaseResource object representing a HydroShare resource
-    :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
-    :param foldername: the folder name that has been removed from iRODS
-    :user  user who initiated the folder delete operation
+    :param folder_path: full path (starting with resource id) of the folder that has been removed from iRODS
+    :param user: who initiated the folder delete operation
     :return:
     """
-    # TODO: Istorage parameter is redundant; derived from resource; can be deleted.
-    if resource and istorage and folderpath:
-        if not folderpath.endswith('/'):
-            folderpath += '/'
-        res_file_set = ResourceFile.objects.filter(object_id=resource.id)
 
-        # then delete resource file objects
-        for f in res_file_set:
-            filename = f.storage_path
-            if filename.startswith(folderpath):
-                # TODO: integrate deletion of logical file with ResourceFile.delete
-                # delete the logical file (if it's not a fileset) object if the resource file
-                # has one
-                if f.has_logical_file and not f.logical_file.is_fileset:
-                    # this should delete the logical file and any associated metadata
-                    # but does not delete the resource files that are part of the logical file
-                    f.logical_file.logical_delete(user, delete_res_files=False)
-                f.delete()
-                hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+    if folder_path.endswith('/'):
+        folder_path = folder_path.rstrip('/')
 
-        # if the folder getting deleted contains any fileset aggregation those aggregations need to
-        # be deleted
-        # note: for other types of aggregation the aggregation gets deleted as part of deleting
-        # the resource file - see above for resource file delete
-        if resource.resource_type == 'CompositeResource':
-            rel_folder_path = folderpath[len(resource.file_path) + 1:].rstrip('/')
-            filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
-            for fileset in filesets:
-                if fileset.folder.startswith(rel_folder_path):
-                    fileset.logical_delete(user, delete_res_files=True)
+    # we need to delete only the files that are under the folder_path
+    rel_folder_path = folder_path[len(resource.file_path) + 1:]
+    res_file_set = ResourceFile.objects.filter(object_id=resource.id, file_folder__startswith=rel_folder_path)
 
-        # send the post-delete signal
-        post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
+    # then delete resource file objects
+    for f in res_file_set:
+        file_name = f.file_name
+        # TODO: integrate deletion of logical file with ResourceFile.delete
+        # delete the logical file (if it's not a fileset) object if the resource file
+        # has one
+        if f.has_logical_file and not f.logical_file.is_fileset:
+            # this should delete the logical file and any associated metadata
+            # but does not delete the resource files that are part of the logical file
+            f.logical_file.logical_delete(user, delete_res_files=False)
+        f.delete()
+        hydroshare.delete_format_metadata_after_delete_file(resource, file_name)
+
+    # if the folder getting deleted contains any fileset aggregation those aggregations need to
+    # be deleted
+    # note: for other types of aggregation the aggregation gets deleted as part of deleting
+    # the resource file - see above for resource file delete
+    if resource.resource_type == 'CompositeResource':
+        filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
+        for fileset in filesets:
+            if fileset.folder.startswith(rel_folder_path):
+                fileset.logical_delete(user, delete_res_files=True)
+
+    # send the post-delete signal
+    post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
 
 
 # TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible.
@@ -1185,10 +1173,9 @@ def remove_folder(user, res_id, folder_path):
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
-    # TODO: Pabitra - resource should check here if folder can be removed
     istorage.delete(coll_path)
 
-    remove_irods_folder_in_django(resource, istorage, coll_path, user)
+    remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required
 
@@ -1253,7 +1240,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1299,7 +1286,8 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -1339,7 +1327,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
                 raise ValidationError("File/folder move is not allowed. "
-                                      "Target folder seems to contain aggregation(s).")
+                                      "Either the target folder or the source folder represents an aggregation "
+                                      "that doesn't permit file move.")
 
     for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)
@@ -1353,7 +1342,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         if resource.resource_type == "CompositeResource":
             orig_src_path = src_full_path[len(resource.file_path) + 1:]
             new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_xml_docs(orig_path=orig_src_path, new_path=new_tgt_path)
+            resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 

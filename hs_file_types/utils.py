@@ -1,19 +1,26 @@
 import json
 import os
-from dateutil import parser
 from operator import lt, gt
 
+from dateutil import parser
+from django.apps import apps
 from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
 
 from hs_core.hydroshare import utils, get_resource_file
-
-from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
-
 from hs_file_types.models.base import AbstractLogicalFile
-from django.apps import apps
+from .models import (
+    GenericLogicalFile,
+    GeoRasterLogicalFile,
+    NetCDFLogicalFile,
+    GeoFeatureLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    FileSetLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+)
 
 
 def get_SupportedAggTypes_choices():
@@ -51,10 +58,10 @@ def update_target_spatial_coverage(target):
     aggregations (file type). Note: This action will overwrite any existing target spatial
     coverage data.
 
-    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    :param  target: an instance of CompositeResource or FileSetLogicalFile or ModelInstanceLogicalFile
     """
 
-    if isinstance(target, FileSetLogicalFile):
+    if isinstance(target, FileSetLogicalFile) or isinstance(target, ModelInstanceLogicalFile):
         spatial_coverages = [lf.metadata.spatial_coverage for lf in target.get_children()
                              if lf.metadata.spatial_coverage is not None]
     else:
@@ -150,9 +157,9 @@ def update_target_temporal_coverage(target):
     Note: This action will overwrite any existing target temporal
     coverage data.
 
-    :param  target: an instance of CompositeResource or FileSetLogicalFile
+    :param  target: an instance of CompositeResource or FileSetLogicalFile or ModelInstanceLogicalFile
     """
-    if isinstance(target, FileSetLogicalFile):
+    if isinstance(target, FileSetLogicalFile) or isinstance(target, ModelInstanceLogicalFile):
         temporal_coverages = [lf.metadata.temporal_coverage for lf in target.get_children()
                               if lf.metadata.temporal_coverage is not None]
     else:
@@ -221,11 +228,14 @@ def get_logical_file_type(res, file_id, hs_file_type=None, fail_feedback=True):
                      "NetCDF": NetCDFLogicalFile,
                      'GeoFeature': GeoFeatureLogicalFile,
                      'RefTimeseries': RefTimeseriesLogicalFile,
-                     'TimeSeries': TimeSeriesLogicalFile}
+                     'TimeSeries': TimeSeriesLogicalFile,
+                     'ModelProgram': ModelProgramLogicalFile,
+                     'ModelInstance': ModelInstanceLogicalFile}
+
     if hs_file_type not in file_type_map:
         if fail_feedback:
             raise ValueError("Unsupported aggregation type. Supported aggregation types are: {"
-                             "}".format(list(ext_to_type.keys())))
+                             "}".format(list(file_type_map.keys())))
         return None
     logical_file_type_class = file_type_map[hs_file_type]
     return logical_file_type_class
@@ -239,6 +249,8 @@ def get_logical_file(agg_type_name):
                      "GeographicFeatureAggregation": GeoFeatureLogicalFile,
                      "ReferencedTimeSeriesAggregation": RefTimeseriesLogicalFile,
                      "TimeSeriesAggregation": TimeSeriesLogicalFile,
+                     "ModelProgramAggregation": ModelProgramLogicalFile,
+                     "ModelInstanceAggregation": ModelInstanceLogicalFile
                      }
     return file_type_map[agg_type_name]
 

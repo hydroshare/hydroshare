@@ -48,7 +48,7 @@ class TestFolderDownloadZip(TestCase):
         self.refts_file = open('multi_sites_formatted_version1.0.refts.json', 'rb')
 
         add_resource_files(self.res.short_id, self.refts_file)
-        self.res.create_aggregation_xml_documents()
+        self.res.create_aggregation_meta_files()
         self.istorage = IrodsStorage()
 
     def tearDown(self):

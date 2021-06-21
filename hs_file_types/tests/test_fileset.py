@@ -1,5 +1,6 @@
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
@@ -7,7 +8,8 @@ from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
 from .utils import CompositeResourceTestMixin
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
-    GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile
+    GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile, \
+    ModelProgramLogicalFile
 
 
 class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -240,6 +242,36 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         fileset aggregations"""
 
         self._create_nested_fileset_aggregations()
+        self.composite_resource.delete()
+
+    def test_fileset_aggregation_not_allowed_inside_model_program_aggregation(self):
+        """Test that we can't create a fileset aggregation inside a model program aggregation"""
+
+        self.create_composite_resource()
+        # there should be no resource file at this point
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+        parent_folder = 'mp_folder'
+        ResourceFile.create_folder(self.composite_resource, parent_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_folder)
+        # there should be one resource file at this point
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        child_folder = '{}/sub_folder'.format(parent_folder)
+        ResourceFile.create_folder(self.composite_resource, child_folder)
+        # add the the prj file to the resource at the sub folder
+        self.add_file_to_resource(file_to_add=self.states_prj_file, upload_folder=child_folder)
+        # there should be two resource file at this point
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # set the parent folder to model program aggregation
+        ModelProgramLogicalFile.set_file_type(resource=self.composite_resource, user=self.user,
+                                              folder_path=parent_folder)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, parent_folder)
+        # now try to set the child folder to fileset aggregation - which should fail
+        with self.assertRaises(ValidationError):
+            FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
+                                             folder_path=child_folder)
         self.composite_resource.delete()
 
     def test_add_file_to_aggregation(self):

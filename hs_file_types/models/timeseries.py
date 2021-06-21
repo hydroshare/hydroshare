@@ -559,6 +559,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                'file and optional source comma separated (.csv) files'
 
     @staticmethod
+    def get_aggregation_term_label():
+        return "Time Series Aggregation"
+
+    @staticmethod
     def get_aggregation_type_name():
         return "TimeSeriesAggregation"
 

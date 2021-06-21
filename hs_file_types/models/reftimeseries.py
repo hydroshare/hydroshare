@@ -443,7 +443,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 urls.append(service.url)
         return services
 
-    def get_html(self):
+    def get_html(self, **kwargs):
         """overrides the base class function"""
 
         html_string = super(RefTimeseriesFileMetaData, self).get_html()
@@ -496,7 +496,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         return root_div
 
-    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function"""
 
         root_div = div()
@@ -610,11 +610,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         with json_file_content_div:
             legend("Reference Time Series JSON File Content")
             p(json_res_file.full_path[33:])
-            header_info = self.json_file_content
-            if isinstance(header_info, str):
-                header_info = header_info.encode()
-
-            textarea(header_info, readonly="", rows="15",
+            textarea(self.json_file_content, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%; resize: vertical;")
 
         return json_file_content_div
@@ -663,6 +659,10 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     def get_aggregation_display_name():
         return 'Referenced Time Series Content: A reference to one or more time series served ' \
                'from HydroServers outside of HydroShare in WaterML format'
+
+    @staticmethod
+    def get_aggregation_term_label():
+        return "Referenced Time Series Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
