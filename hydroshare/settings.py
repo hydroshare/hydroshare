@@ -563,10 +563,6 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
-        'matplotlib': { 
-            'handlers': ['hydrosharelog'], 
-            'level': 'INFO'
-        },
         # Catch-all logger for HydroShare apps
         '': {
             'handlers': ['hydrosharelog'],
