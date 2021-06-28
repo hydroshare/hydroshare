@@ -19,6 +19,8 @@ from hs_access_control.management.utilities import community_from_name_or_id, \
         group_from_name_or_id, user_from_name
 from hs_access_control.models.invite import GroupCommunityRequest
 
+from pprint import pprint
+
 
 def usage():
     print("access_community usage:")
@@ -61,6 +63,13 @@ class Command(BaseCommand):
         parser.add_argument('command', nargs='*', type=str)
 
         parser.add_argument(
+            '--syntax',
+            action='store_true',  # True for presence, False for absence
+            dest='syntax',  # value is options['syntax']
+            help='print help message',
+        )
+
+        parser.add_argument(
             '--owner',
             dest='owner',
             help='owner of community (does not affect quota)'
@@ -79,6 +88,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+
+        if options['syntax']:
+            usage()
+            exit(1)
 
         if len(options['command']) > 0:
             cname = options['command'][0]
@@ -108,6 +121,7 @@ class Command(BaseCommand):
             print("All communities:")
             for c in Community.objects.all():
                 print("  '{}' (id={})".format(c.name, str(c.id)))
+            usage()
             exit(0)
 
         if command is None or command == 'list':
@@ -137,6 +151,14 @@ class Command(BaseCommand):
                 for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
                                                              privilege=PrivilegeCodes.OWNER):
                     print("             {}".format(ugp.user.username))
+            print("  invitations and requests:")
+            for gcr in GroupCommunityRequest.objects.filter(community=community, redeemed=False):
+                if (gcr.group_owner is None):
+                    print("     '{}' (id={}) invited (by community owner={}):"
+                          .format(gcr.group.name, gcr.group.id, gcr.community_owner.username))
+                else:
+                    print("     '{}' (id={}) requested membership (by group owner={}):"
+                          .format(gcr.group.name, gcr.group.id, gcr.group_owner.username))
             exit(0)
 
         # These are idempotent actions. Creating a community twice does nothing.
@@ -228,12 +250,6 @@ class Command(BaseCommand):
                         others = "can view community resources"
                     print("    '{}' (grantor {}):".format(gcp.group.name, gcp.grantor.username))
                     print("         {}.".format(others))
-                for gcr in GroupCommunityRequest(community=community, community_owner__isnull=False):
-                    print("    group '{}' invited by community owner '{}'"
-                          .format(gcr.group.name, gcr.community_owner.username))
-                for gcr in GroupCommunityRequest(community=community, group_owner__isnull=False):
-                    print("    owner '{}' requested membership for '{}'"
-                          .format(gcr.group_owner.username, gcr.group.name))
                 exit(0)
 
             gname = options['command'][2]
@@ -319,7 +335,7 @@ class Command(BaseCommand):
                     gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
                     # pass privilege changes through the privilege system to record provenance.
                     if gcp.privilege != privilege or owner != gcp.grantor:
-                        group_owner = group.first_owner
+                        group_owner = group.gaccess.first_owner
                         message, _ = GroupCommunityRequest.create_or_update(
                             community=community, requester=group_owner, group=group)
                         print(message)
@@ -328,7 +344,7 @@ class Command(BaseCommand):
                               .format(group.name, community.name))
 
                 except GroupCommunityPrivilege.DoesNotExist:
-                    group_owner = group.first_owner
+                    group_owner = group.gaccess.first_owner
                     message, _ = GroupCommunityRequest.create_or_update(
                         community=community, requester=group_owner, group=group)
 
@@ -338,7 +354,7 @@ class Command(BaseCommand):
                 except GroupCommunityPrivilege.DoesNotExist:
                     gcp = None
 
-            elif action == 'accept':
+            elif action == 'approve':
 
                 try:
                     gcr = GroupCommunityRequest.objects.get(community=community, group=group)
@@ -346,14 +362,20 @@ class Command(BaseCommand):
                     print("GroupCommunityRequest for community '{}' and group '{}' does not exist."
                           .format(cname, gname))
 
-                if (gcr.community_owner is None):
+                if (gcr.redeemed):
+                    print("request connecting '{}' and '{}' is already redeemed."
+                          .format(community.name, group.name))
+                    exit(1)
+                elif (gcr.community_owner is None):
+                    community_owner = community.first_owner
                     print("owner '{}' of community '{}' approves request from group '{}'"
-                          .format(community.first_owner, cname, gname))
-                    message, _ = gcr.approve(responder=community.first_owner)
+                          .format(community_owner.username, cname, gname))
+                    message, _ = gcr.approve(responder=community_owner)
                 else:
+                    group_owner = group.gaccess.first_owner
                     print("owner '{}' of group '{}' approves invitation from community '{}'"
-                          .format(group.first_owner, gname, cname))
-                    message, _ = gcr.approve(responder=group.first_owner)
+                          .format(group_owner.username, gname, cname))
+                    message, _ = gcr.approve(responder=group_owner)
 
                 # update gcp for result of situation
                 try:
@@ -369,14 +391,22 @@ class Command(BaseCommand):
                     print("GroupCommunityRequest for community '{}' and group '{}' does not exist."
                           .format(cname, gname))
 
-                if (gcr.community_owner is None):
+                if (gcr.redeemed):
+                    print("request connecting '{}' and '{}' is already redeemed."
+                          .format(community.name, group.name))
+                    exit(1)
+                elif (gcr.community_owner is None):
+                    community_owner = community.first_owner
                     print("owner '{}' of community '{}' declines request from group '{}'"
-                          .format(community.first_owner, cname, gname))
-                    message, _ = gcr.decline(responder=community.first_owner)
+                          .format(community_owner.username, cname, gname))
+                    message, _ = gcr.decline(responder=community_owner)
                 else:
+                    pprint(group)
+                    pprint(group.gaccess)
+                    group_owner = group.gaccess.first_owner
                     print("owner '{}' of group '{}' declines invitation from community '{}'"
-                          .format(group.first_owner, gname, cname))
-                    message, _ = gcr.decline(responder=group.first_owner)
+                          .format(group_owner.username, gname, cname))
+                    message, _ = gcr.decline(responder=group_owner)
 
                 # update gcp for result of situation
                 try:

@@ -424,7 +424,7 @@ class GroupAccess(models.Model):
 
     @property
     def first_owner(self):
-        opriv = UserGroupPrivilege.objects.filter(group=self, privilege=PrivilegeCodes.OWNER)\
+        opriv = UserGroupPrivilege.objects.filter(group=self.group, privilege=PrivilegeCodes.OWNER)\
             .order_by('start')
         opriv = list(opriv)
         if opriv:
