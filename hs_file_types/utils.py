@@ -414,4 +414,12 @@ def get_logical_file_metadata_json_schema(file_with_path):
         metadata = load_rdf(f.read())
         json_value = metadata.json()
         json_schema = metadata.schema_json()
+        json_schema_dict = json.loads(json_schema)
+        def_prop_list = list(json_schema_dict['properties'])
+        for name in ('url', 'subjects', 'additional_metadata', 'language', 'rights', 'type'):
+            def_prop_list.remove(name)
+            if name in json_schema_dict['required']:
+                json_schema_dict['required'].remove(name)
+        json_schema_dict['defaultProperties'] = def_prop_list
+        json_schema = json.dumps(json_schema_dict)
     return json_value, json_schema

@@ -8,7 +8,8 @@ class Command(BaseCommand):
     help = "This commond can be run to clean up the deleted media files"
 
     def add_arguments(self, parser):
-        parser.add_argument('profile_path', help='profile_path in the container, i.e., /hydroshare/hydroshare/static/media/profile')
+        parser.add_argument('profile_path',
+                            help='profile_path in the container, i.e., /hydroshare/hydroshare/static/media/profile')
 
     def handle(self, *args, **options):
         ups = UserProfile.objects.all()

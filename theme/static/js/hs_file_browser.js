@@ -966,6 +966,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                 disable_array_delete_all_rows: true,
                 disable_array_delete_last_row: true,
                 disable_array_reorder: true,
+                disable_collapse: true,
                 object_layout: "table"
             });
             editor.disable();
