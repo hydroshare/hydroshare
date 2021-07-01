@@ -212,7 +212,7 @@ There are currently over 600 tests in the system, so it is highly recommended th
 
 ### Debugging
 
-You can debug via PyCharm by following the instructions [here](https://github.com/hydroshare/hydroshare/wiki/pycharm-configuration).
+You can debug via PyCharm by following the instructions [here](https://docs.google.com/document/d/1w3hWAPMEUBL4qTjpHb5sYMWEiWFqwaarI0NkpKz3r6w/edit#).
 
 ## Other Configuration Options
 
