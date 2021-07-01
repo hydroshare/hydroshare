@@ -154,26 +154,6 @@ Or
 
 docker logs <container name>
 
-
-
-Warning Suppression
-
-If you are working on communities, it’s recommended you uncomment lines 197, 198, 207 in local_settings.py (Timezone stuff and silencing Mezz warnings). The Communities Developer Doc is here: https://docs.google.com/document/d/12VXZhqpMZCkaci5QviGqfg_xNZhk1fy-Zl-rFdlR0P8
-Sidenote on working Quickly
-
-Only docker-compose down when you need a deeper change (or maybe never) or are troubleshooting something. This keeps things very fast, especially if you use the PyCharm play/run and debug buttons.
-Python Unit Tests
-
-Some tests may fail this is work in progress as the build evolves...
-
- 
-
-# when containers are already running in another terminal/shell
-
-docker exec -it hydroshare python manage.py test -v 3 --failfast
-
-
-
 Branching
 When you activate a new branch, just bring the stack down and up again. Sometimes you can get away with a warm restart of the stack or even relying on the Django debug mode (doing nothing but waiting). 
 
