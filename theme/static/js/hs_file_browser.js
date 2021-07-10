@@ -967,6 +967,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                 disable_array_delete_last_row: true,
                 disable_array_reorder: true,
                 disable_collapse: true,
+                remove_empty_properties: true,
                 object_layout: "table"
             });
             editor.disable();
@@ -974,7 +975,24 @@ function showFileTypeMetadata(file_type_time_series, url){
             $(".property-selector").removeAttr("style");
         }
         else {
-            $("#fileTypeMetaData").html(json_response.metadata);
+            $("#fileTypeMetaData").html('<button type="submit" data-page-mode="edit" ' +
+                '                       class="btn btn-primary pull-right btn-save-metadata btn-form-submit display-none">Save changes' +
+                '                       </button>');
+            let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
+                schema: json_response.metadata.json_schema,
+                startval: json_response.metadata.json_value,
+                theme: "bootstrap4",
+                disable_collapse: true,
+                object_layout: "table"
+            });
+            editor.on("change", function () {
+                $(this).find('.btn-form-submit').show();
+            });
+            // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
+            $(".property-selector").removeAttr("style");
+            $("#fileTypeMetaData").append('<button type="submit" data-page-mode="edit" ' +
+                '                       class="btn btn-primary pull-right btn-save-metadata btn-form-submit display-none">Save changes' +
+                '                       </button>');
         };
 
         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
