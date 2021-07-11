@@ -171,7 +171,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
         is_schema_valid = True
         try:
             json_schema = json.loads(schema_string)
-        except (ValueError, Exception):
+        except ValueError:
             self.add_error(field_name, "Schema is not valid JSON")
             return json_schema
 
