@@ -5,49 +5,8 @@ import logging
 import types
 from haystack.query import SearchQuerySet
 from haystack.utils import get_identifier
-from hs_core.models import SOLRQueue
 
 logger = logging.getLogger(__name__)
-
-
-def solr_update(instance, index=None):
-    """ Update a resource's SOLR record """
-    if not index:
-        from hs_core.search_indexes import BaseResourceIndex
-        index = BaseResourceIndex()
-    try:
-        index.update_object(instance)
-    except NotHandled:
-        pass  # logging anything crashes celery
-
-
-def solr_delete(instance, index=None):
-    """ Delete a resource from SOLR before deleting from Django """
-    if not index:
-        from hs_core.search_indexes import BaseResourceIndex
-        index = BaseResourceIndex()
-    try:
-        index.remove_object(instance)
-    except NotHandled:
-        pass  # logging anything crashes celery
-
-
-def solr_batch_update(): 
-    """ update SOLR for resources in the SOLRQueue """
-    from hs_core.models import BaseResource
-    from hs_core.search_indexes import BaseResourceIndex
-    index = BaseResourceIndex()
-    for instance in SOLRQueue.read_and_clear():
-        try:
-            newbase = BaseResource.objects.get(pk=instance.pk)
-            if newbase.show_in_discover:  # if object should be displayed now
-                solr_update(newbase, index)
-            else:  # not to be shown in discover
-                solr_delete(newbase, index)
-        except BaseResource.DoesNotExist:
-            pass  # logging anything crashes celery
-        except:  # catch broad exception to continue processing resources in the queue
-            pass  # logging anything crashes celery
 
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
@@ -70,9 +29,34 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         from hs_file_types.models import AbstractFileMetaData
         from django.contrib.postgres.fields import HStoreField
 
+
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
-                SOLRQueue.add(instance)
+                # work around for failure of super(BaseResource, instance) to work properly.
+                # this always succeeds because this is a post-save object action.
+                newbase = BaseResource.objects.get(pk=instance.pk)
+                newsender = BaseResource
+                using_backends = self.connection_router.for_write(instance=newbase)
+                for using in using_backends:
+                    # if object is public/discoverable or becoming public/discoverable, index it
+                    # test whether the object should be exposed.
+                    if instance.show_in_discover:
+                        try:
+                            index = self.connections[using].get_unified_index().get_index(newsender)
+                            index.update_object(newbase, using=using)
+                        except NotHandled:
+                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
+                                             str(type(instance)), newbase.short_id)
+
+
+                    # if object is private or becoming private, delete from index
+                    else:  # not to be shown in discover
+                        try:
+                            index = self.connections[using].get_unified_index().get_index(newsender)
+                            index.remove_object(newbase, using=using)
+                        except NotHandled:
+                            logger.exception("Failure: delete of %s with short_id %s failed.",
+                                             str(type(instance)), newbase.short_id)
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it.
