@@ -408,18 +408,22 @@ def get_logical_file_metadata_json_schema(file_with_path):
     :return: metadata JSON values and schema for logical file
     """
     istorage = IrodsStorage()
-    json_value = {}
-    json_schema = {}
     with istorage.open(file_with_path) as f:
         metadata = load_rdf(f.read())
         json_value = metadata.json()
         json_schema = metadata.schema_json()
         json_schema_dict = json.loads(json_schema)
-        def_prop_list = list(json_schema_dict['properties'])
-        for name in ('url', 'subjects', 'additional_metadata', 'language', 'rights', 'type'):
-            def_prop_list.remove(name)
-            if name in json_schema_dict['required']:
-                json_schema_dict['required'].remove(name)
-        json_schema_dict['defaultProperties'] = def_prop_list
-        json_schema = json.dumps(json_schema_dict)
-    return json_value, json_schema
+        json_value_dict = json.loads(json_value)
+        schema_changed = False
+        if 'url' in json_schema_dict['properties']:
+            del json_schema_dict['properties']['url']
+            del json_value_dict['url']
+            schema_changed = True
+        if 'url' in json_schema_dict['required']:
+            json_schema_dict['required'].remove('url')
+            schema_changed = True
+        if schema_changed:
+            json_schema = json.dumps(json_schema_dict)
+            json_value = json.dumps(json_value_dict)
+        return json_value, json_schema
+    return {}, {}
