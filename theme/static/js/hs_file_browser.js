@@ -967,33 +967,42 @@ function showFileTypeMetadata(file_type_time_series, url){
                 disable_array_delete_last_row: true,
                 disable_array_reorder: true,
                 disable_collapse: true,
-                remove_empty_properties: true,
-                object_layout: "table"
+                format: "table",
+                remove_empty_properties: true
             });
             editor.disable();
             // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
             $(".property-selector").removeAttr("style");
         }
         else {
-            $("#fileTypeMetaData").html('<button type="submit" data-page-mode="edit" ' +
-                '                       class="btn btn-primary pull-right btn-save-metadata btn-form-submit display-none">Save changes' +
-                '                       </button>');
+            $("#fileTypeMetaData").html('');
             let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
                 schema: json_response.metadata.json_schema,
+                theme: 'bootstrap4',
                 startval: json_response.metadata.json_value,
-                theme: "bootstrap4",
                 disable_collapse: true,
-                object_layout: "table"
+                format: "table",
+                show_errors: 'change'
             });
-            editor.on("change", function () {
-                $(this).find('.btn-form-submit').show();
+
+            editor.on('change', function() {
+                $('.invalid-feedback').css('color', 'red')
+            });
+            $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" data-page-mode="edit" ' +
+                '                       class="btn btn-primary pull-right btn-save-metadata btn-form-submit">Save changes' +
+                '                       </button>');
+            $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
+                let errors = editor.validate();
+                if (errors.length) {
+                    console.log('validation error');
+                }
+                else {
+                    console.log('can update schema metadata');
+                }
             });
             // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
             $(".property-selector").removeAttr("style");
-            $("#fileTypeMetaData").append('<button type="submit" data-page-mode="edit" ' +
-                '                       class="btn btn-primary pull-right btn-save-metadata btn-form-submit display-none">Save changes' +
-                '                       </button>');
-        };
+        }
 
         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
