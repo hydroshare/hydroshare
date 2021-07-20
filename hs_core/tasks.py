@@ -537,8 +537,7 @@ def delete_resource_task(resource_id, request_username=None):
     :return: resource_id if delete operation succeeds
              raise an exception if there were errors.
     """
-    res = utils.get_resource_by_shortkey(resource_id)  # TODO: very inefficient
-
+    res = utils.get_resource_by_shortkey(resource_id)
     res_title = res.metadata.title
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
@@ -701,12 +700,3 @@ def task_notification_cleanup():
     """
     week_ago = datetime.today() - timedelta(days=7)
     TaskNotification.objects.filter(created__lte=week_ago).delete()
-
-
-# Documentation says that crontab() means "run every minute"
-# Trying to log anything crashes this task!
-@periodic_task(run_every=crontab())
-def task_update_solr():
-    """ update the queue of all updated resources every minute """
-    from .hydro_realtime_signal_processor import solr_batch_update
-    solr_batch_update()
