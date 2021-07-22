@@ -993,11 +993,9 @@ function showFileTypeMetadata(file_type_time_series, url){
                 '                       </button>');
             $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
                 let errors = editor.validate();
-                if (errors.length) {
-                    console.log('validation error');
-                }
-                else {
+                if (!errors.length) {
                     console.log('can update schema metadata');
+                    updateAggrMetaSchema();
                 }
             });
             // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
@@ -1026,71 +1024,6 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
 
         if (RESOURCE_MODE === "Edit") {
-             $("[data-toggle=tooltip]").tooltip();
-             $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
-             $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
-             $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
-             showMetadataFormSaveChangesButton();
-             initializeDatePickers();
-             var bindCoordinatesPicker = true;
-             // show/hide spatial delete option for aggregation in addition to other settings for
-             // aggregation spatial coverage form
-             setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
-             // show/hide temporal data delete option for the aggregation
-             setFileTypeTemporalCoverageDeleteOption(logical_type);
-             // Bind event handler for submit button
-             setFileTypeMetadataFormsClickHandlers();
-
-             var $spatialRadioBox = $("#id_type_filetype").find('input[type="radio"][value="box"]');
-             var $spatialRadioPoint = $("#id_type_filetype").find('input[type="radio"][value="point"]');
-             if (logical_type === "NetCDFLogicalFile") {
-                 // don't let the user open the Projection String Type dropdown list
-                 // when editing Original Coverage element
-                 $("#id_projection_string_type_filetype").css('pointer-events', 'none');
-                 // don't let the user open the Variable type dropdown list when editing
-                 // Variable elements
-                 $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
-             }
-             if (logical_type === "RefTimeseriesLogicalFile"){
-                 var $startDateElement = $("#id_start_filetype");
-                 var $endDateElement = $("#id_end_filetype");
-                 $startDateElement.css('pointer-events', 'none');
-                 $endDateElement.css('pointer-events', 'none');
-             }
-             if (logical_type === 'TimeSeriesLogicalFile') {
-                 if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
-                     $("#div-sqlite-file-update").hide();
-                 }
-                 $(".hs-coordinates-picker").each(function() {
-                        const instance = $(this);
-                        instance.coordinatesPicker();
-                 });
-                 InitializeTimeSeriesFileTypeForms();
-             }
-             if (logical_type === "GeoRasterLogicalFile"){
-                 $spatialRadioBox.prop("checked", true);
-                 $("#id_type_filetype input:radio").trigger("change");
-                 $spatialRadioBox.attr('onclick', 'return false');
-                 $spatialRadioPoint.attr('onclick', 'return false');
-             }
-             else {
-                 if ($spatialRadioBox.attr('checked') === 'checked'){
-                     $spatialRadioBox.prop("checked", true);
-                 }
-                 else {
-                     $spatialRadioPoint.prop("checked", true);
-                 }
-             }
-             if (logical_type === "FileSetLogicalFile" || logical_type === "ModelInstanceLogicalFile") {
-                 // Submit for aggregation spatial coverage update
-                 $("#btn-update-aggregation-spatial-coverage").click(function () {
-                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'spatial');
-                 });
-                 // Submit for aggregation temporal coverage update
-                 $("#btn-update-aggregation-temporal-coverage").click(function () {
-                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'temporal');
-                 });
-             }
              if (logical_type === "ModelProgramLogicalFile") {
                   setupModelProgramFileTypeUI();
                   setupModelProgramTypeUI();

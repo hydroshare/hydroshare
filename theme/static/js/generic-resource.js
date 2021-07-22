@@ -530,8 +530,6 @@ $(document).ready(function () {
         }
     }
 
-    // show "Save changes" button when form editing starts
-    showMetadataFormSaveChangesButton();
 
     // Initialize date pickers
     initializeDatePickers();
