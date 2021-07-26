@@ -54,7 +54,8 @@ server {
 
     access_log      /var/log/nginx/access.log combined;
     error_log       /var/log/nginx/error.log error;
-    error_log       /var/log/nginx/system.log notice;
+    # This clutters logs without usefulness 2021/06/21 ALC
+    # error_log       /var/log/nginx/system.log notice;
     # Uncomment the following line to generate debugging log entries
     # error_log       /var/log/nginx/system.log debug;
 
