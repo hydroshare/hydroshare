@@ -79,7 +79,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         return root_div.render()
 
-    def get_html_forms(self, datatset_name_form=True):
+    def get_html_forms(self, datatset_name_form=True, **kwargs):
         """overrides the base class function to generate html needed for metadata editing"""
 
         root_div = div("{% load crispy_forms_tags %}")
