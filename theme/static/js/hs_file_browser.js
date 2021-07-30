@@ -994,8 +994,7 @@ function showFileTypeMetadata(file_type_time_series, url){
             $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
                 let errors = editor.validate();
                 if (!errors.length) {
-                    console.log('can update schema metadata');
-                    updateAggrMetaSchema();
+                    updateAggrMetaSchema(JSON.stringify(editor.getValue()));
                 }
             });
             // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties

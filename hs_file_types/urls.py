@@ -77,6 +77,10 @@ urlpatterns = [
         views.update_aggregation_coverage,
         name="update_fileset_coverage"),
 
+    url(r'^_internal/(?P<resource_id>[0-9a-f]+)/update-schema-based-metadata/$',
+        views.update_schema_based_metadata,
+        name="update_schema_based_metadata"),
+
     url(r'^_internal/(?P<file_type_id>[0-9]+)/'
         r'update-reftimeseries-abstract/$',
         views.update_refts_abstract,

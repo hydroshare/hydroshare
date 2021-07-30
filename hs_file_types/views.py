@@ -1015,6 +1015,24 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@login_required
+def update_schema_based_metadata(request, resource_id, **kwargs):
+    """update aggregation metadata based on JSON schema
+    """
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
+    metadata_json_str = request.POST.get('metadata_json', None)
+    metadata_json = json.loads(metadata_json_str)
+    # ready to leverage ingest_logical_file_metadata() to ingest updated metadata JSON back to metadata model
+    # resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success',
+                          'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
 @authorise_for_aggregation_edit(file_type="ModelProgramLogicalFile")
 @login_required
 def update_model_program_metadata(request, file_type_id, **kwargs):

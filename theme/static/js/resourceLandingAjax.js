@@ -558,16 +558,31 @@ function updateModelInstanceMetaSchema() {
     });
 }
 
-function updateAggrMetaSchema() {
+function updateAggrMetaSchema(editor_value) {
     var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Metadata update was successful.\
     </div>';
 
-    $("#fb-inner-controls").before($alert_success);
-    $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
-        $("#success-alert").alert('close');
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/' + SHORT_ID + '/update-schema-based-metadata/',
+        data: {'metadata_json': editor_value },
+        success: function (result) {
+            if (result.status === 'success') {
+                $("#fb-inner-controls").before($alert_success);
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
+                });
+            }
+            else {
+                display_error_message("Schema update failed.", json_response.message);
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Schema update failed', xhr.responseText);
+        }
     });
 }
 
