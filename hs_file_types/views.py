@@ -18,7 +18,7 @@ from hs_core.hydroshare.utils import resource_modified
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.views.utils import rename_irods_file_or_folder_in_django
 
-from .utils import set_logical_file_type, get_logical_file_metadata_json_schema
+from .utils import set_logical_file_type, get_logical_file_metadata_json_schema, ingest_logical_file_metadata
 from .forms import ModelProgramMetadataValidationForm, ModelInstanceMetadataValidationForm
 from .models import (
     FileSetLogicalFile,
@@ -1024,9 +1024,11 @@ def update_schema_based_metadata(request, resource_id, **kwargs):
                                         raises_exception=False)
     if not authorized:
         return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
-    metadata_json_str = request.POST.get('metadata_json', None)
-    metadata_json = json.loads(metadata_json_str)
+    # metadata_json_str = request.POST.get('metadata_json', None)
+    # metadata_json = json.loads(metadata_json_str)
     # ready to leverage ingest_logical_file_metadata() to ingest updated metadata JSON back to metadata model
+    # ingest_logical_file_metadata(metadata_json, resource, )
+
     # resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success',
                           'message': "Update was successful"}

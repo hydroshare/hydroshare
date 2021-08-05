@@ -410,27 +410,26 @@ def get_logical_file_metadata_json_schema(file_with_path):
     istorage = IrodsStorage()
     with istorage.open(file_with_path) as f:
         metadata = load_rdf(f.read())
-        json_value = metadata.json()
+        json_value = metadata.json(exclude={'url', 'type'})
         json_schema = metadata.schema_json()
+        # currently json_schema() does not support exclude parameter, so work around it by manually excluding them
+        # while leaving the code here so we can replace the manual work around with it when json_schema() support
+        # it in the future.
+        # json_schema = metadata.schema_json(exclude={'properties': {'url', 'type'}, 'required': {'url', 'type'},
+        #                                             'definitions': {'AggregationType'}})
         json_schema_dict = json.loads(json_schema)
-        json_value_dict = json.loads(json_value)
         schema_changed = False
-        # 'url' should not be part of the schema, delete it if it is
         if 'url' in json_schema_dict['properties']:
             del json_schema_dict['properties']['url']
-            del json_value_dict['url']
             schema_changed = True
             if 'url' in json_schema_dict['required']:
                 json_schema_dict['required'].remove('url')
-        # 'type" should not be editable as part of the aggreation metadata, so remove it
         if 'type' in json_schema_dict['properties']:
             del json_schema_dict['properties']['type']
-            del json_value_dict['type']
             if 'AggregationType' in json_schema_dict['definitions']:
                 del json_schema_dict['definitions']['AggregationType']
             schema_changed = True
         if schema_changed:
             json_schema = json.dumps(json_schema_dict)
-            json_value = json.dumps(json_value_dict)
         return json_value, json_schema
     return {}, {}
