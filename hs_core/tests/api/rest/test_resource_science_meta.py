@@ -30,6 +30,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
     def test_get_scimeta(self):
         # Get the resource system metadata
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+        self.client.logout()
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # content = json.loads(response.content.decode())
