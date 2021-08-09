@@ -33,6 +33,10 @@ $(document).on('click', '.btn-unshare-resource', function () {
     unshare_resource_ajax_submit(formID);
 });
 
+$( "#confirm-res-id-text" ).keyup(function() {
+    $("#btn-delete-resource").prop("disabled", this.value !== "DELETE");
+});
+
 $(document).on('click', '.btn-undo-share', function () {
     var formID = $(this).closest("form").attr("id");
     undo_share_ajax_submit(formID);
