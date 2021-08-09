@@ -37,6 +37,11 @@ $( "#confirm-res-id-text" ).keyup(function() {
     $("#btn-delete-resource").prop("disabled", this.value !== "DELETE");
 });
 
+$("#delete-resource-dialog").on('hidden.bs.modal', function () {
+  $("#confirm-res-id-text").val('');
+  $("#btn-delete-resource").prop("disabled", true);
+});
+
 $(document).on('click', '.btn-undo-share', function () {
     var formID = $(this).closest("form").attr("id");
     undo_share_ajax_submit(formID);
