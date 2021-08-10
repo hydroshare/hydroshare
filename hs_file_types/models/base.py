@@ -702,6 +702,12 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         # - subclass needs to override this
         return None
 
+    @classmethod
+    def check_valid_geoserver_projection(self):
+        # Check whether data file projection is supported by GeoServer.
+        # - subclass needs to override this
+        return None
+
 
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """

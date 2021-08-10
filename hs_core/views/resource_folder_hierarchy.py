@@ -10,6 +10,8 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 from rest_framework.response import Response
 
+from mezzanine.conf import settings
+
 from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
@@ -169,6 +171,7 @@ def data_store_structure(request):
                                         resource=resource,
                                         folder_path=f_store_path
                                      ),
+                                     'valid_geoserver_projection': f.logical_file.metadata.check_valid_geoserver_projection(),
                                      'url': f.logical_file.url})
             logical_file_type = f.logical_file_type_name
             logical_file_id = f.logical_file.id
@@ -197,7 +200,8 @@ def data_store_structure(request):
     return_object = {'files': files,
                      'folders': dirs,
                      'aggregations': aggregations,
-                     'can_be_public': resource.can_be_public_or_discoverable}
+                     'can_be_public': resource.can_be_public_or_discoverable,
+                     'geoserver_url': getattr(settings, 'HSWS_GEOSERVER_URL', None)}
 
     if resource.resource_type == "CompositeResource":
         return_object['spatial_coverage'] = get_coverage_data_dict(resource)

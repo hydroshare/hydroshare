@@ -742,6 +742,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         success: function (result) {
             var files = result.files;
             var folders = result.folders;
+            var aggregations = result.aggregations;
+            var geoserver_url = result.geoserver_url;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
 
@@ -798,6 +800,34 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                         '<span class="text-muted fb-empty-dir">This directory is empty</span>'
                     );
                 }
+            }
+
+            // Display message for unsupported GeoServer projections.
+
+            $('#geoserver-proj-alert').remove();
+
+            if (geoserver_url && aggregations.some((agg) => {
+                return agg.valid_geoserver_projection === false
+            })) {
+                $('#fb-alerts').append(
+                    '<div id="geoserver-proj-alert" class="alert alert-danger alert-dismissible" role="alert">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true">&times;</span>' +
+                        '</button>' +
+                        '<div class="flex">' +
+                            '<i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>' +
+                            '<em>' +
+                                'One or more files are using a projection not supported by GeoServer. ' + 
+                                'If you want access to GeoServer features for those files, please make sure ' + 
+                                'they are using a supported projection. ' + 
+                                '<br><strong><a ' +
+                                    'href="' + geoserver_url + '/hydroshare/wms?request=GetCapabilities" ' +
+                                    'target="_blank">Get a list of supported GeoServer projections' +
+                                '</a></strong>' +
+                            '</em>' +
+                        '</div>' +
+                    '</div>'
+                );
             }
 
             if (can_be_public) {

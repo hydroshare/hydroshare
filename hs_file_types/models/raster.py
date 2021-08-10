@@ -206,6 +206,24 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         return preview_data_url
 
+    def check_valid_geoserver_projection(self):
+        """Check if the content is using a projection supported by GeoServer."""
+
+        try:
+            proj = osr.SpatialReference(wkt=str(self.originalcoverage.projection_string))
+            authority = ':'.join((proj.GetAttrValue('AUTHORITY',0), proj.GetAttrValue('AUTHORITY',1),))
+
+            with open(os.path.dirname(__file__) + '/../geoserver_epsg.txt') as f:
+                if authority in f.read():
+                    valid_proj = True
+                else:
+                    valid_proj = False
+
+        except Exception as e:
+            valid_proj = False
+
+        return valid_proj
+
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
