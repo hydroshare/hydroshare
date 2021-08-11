@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 import gdal
 from gdalconst import GA_ReadOnly
 
+from osgeo import osr
+
 from functools import partial, wraps
 
 from django.db import models, transaction
@@ -210,8 +212,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         """Check if the content is using a projection supported by GeoServer."""
 
         try:
-            proj = osr.SpatialReference(wkt=str(self.originalcoverage.projection_string))
-            authority = ':'.join((proj.GetAttrValue('AUTHORITY',0), proj.GetAttrValue('AUTHORITY',1),))
+            proj = osr.SpatialReference(wkt=str(self.originalCoverage.value.get('projection_string')))
+            authority = ':'.join((proj.GetAttrValue('AUTHORITY', 0), proj.GetAttrValue('AUTHORITY', 1),))
 
             with open(os.path.dirname(__file__) + '/../geoserver_epsg.txt') as f:
                 if authority in f.read():

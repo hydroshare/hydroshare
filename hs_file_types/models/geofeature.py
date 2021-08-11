@@ -160,7 +160,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
         try:
             proj = osr.SpatialReference(wkt=str(self.originalcoverage.projection_string))
-            authority = ':'.join((proj.GetAttrValue('AUTHORITY',0), proj.GetAttrValue('AUTHORITY',1),))
+            authority = ':'.join((proj.GetAttrValue('AUTHORITY', 0), proj.GetAttrValue('AUTHORITY', 1),))
 
             with open(os.path.dirname(__file__) + '/../geoserver_epsg.txt') as f:
                 if authority in f.read():
