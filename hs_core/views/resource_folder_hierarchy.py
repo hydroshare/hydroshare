@@ -171,7 +171,7 @@ def data_store_structure(request):
                                         resource=resource,
                                         folder_path=f_store_path
                                      ),
-                                     'valid_geoserver_projection': \
+                                     'valid_geoserver_projection':
                                         f.logical_file.metadata.check_valid_geoserver_projection(),
                                      'url': f.logical_file.url})
             logical_file_type = f.logical_file_type_name
