@@ -1024,10 +1024,14 @@ def update_schema_based_metadata(request, resource_id, **kwargs):
                                         raises_exception=False)
     if not authorized:
         return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
-    # metadata_json_str = request.POST.get('metadata_json', None)
-    # metadata_json = json.loads(metadata_json_str)
-    # ready to leverage ingest_logical_file_metadata() to ingest updated metadata JSON back to metadata model
-    # ingest_logical_file_metadata(metadata_json, resource, )
+    metadata_json_str = request.POST.get('metadata_json', None)
+    metadata_json = json.loads(metadata_json_str)
+    if 'type' not in metadata_json['spatial_reference']:
+        metadata_json['spatial_reference']['type'] = 'box'
+    if not metadata_json['period_coverage']['start'] or not metadata_json['period_coverage']['end']:
+        metadata_json['period_coverage']['start'] = '2020-11-05T00:00:00'
+        metadata_json['period_coverage']['end'] = '2020-11-26T00:00:00'
+    ingest_logical_file_metadata(metadata_json, resource, None)
 
     # resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success',
@@ -1145,7 +1149,7 @@ def update_model_instance_meta_schema(request, file_type_id, **kwargs):
         try:
             metadata_json_schema = logical_file.metadata_schema_json
             jsonschema.Draft4Validator(metadata_json_schema).validate(metadata.metadata_json)
-        except jsonschema.ValidationError as ex:
+        except jsonschema.ValidationError:
             # delete existing invalid metadata
             metadata.metadata_json = {}
 

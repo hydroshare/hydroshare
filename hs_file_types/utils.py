@@ -1,7 +1,8 @@
 import json
 import os
 from operator import lt, gt
-from hsmodels.schemas import load_rdf
+from hsmodels.schemas import load_rdf, rdf_graph
+from hsmodels.schemas.aggregations import GeographicRasterMetadata
 
 from dateutil import parser
 from django.db import transaction
@@ -311,22 +312,39 @@ def identify_metadata_files(files):
     return res_files, meta_files, map_files
 
 
-def ingest_logical_file_metadata(metadata_file, resource, map_files):
+def ingest_logical_file_metadata(metadata, resource, map_files):
+    """
+    Ingest logical file metadata into Django models
+    :param metadata: a dict object that contains updated metadata element or an uploaded metadata file object
+    :param resource: the resource object to update metadata for
+    :param map_files: uploaded resource map file object. Default is None for metadata update only
+    :return:
+    """
     resource.refresh_from_db()
-    graph = Graph()
-    graph = graph.parse(data=metadata_file.read())
     agg_type_name = None
+    # if metadata is a dict object with updated metadata, create a rdf graph instance directly from it
+    if isinstance(metadata, dict):
+        if metadata['type'] == 'GeoRaster':
+            meta_obj = GeographicRasterMetadata.parse_obj(metadata)
+            graph = rdf_graph(meta_obj)
+        md_name = metadata['title']
+    else:
+        graph = Graph()
+        graph = graph.parse(data=metadata.read())
+        md_name = metadata.name
+
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
-        raise Exception("Could not derive aggregation type from {}".format(metadata_file.name))
+        raise Exception("Could not derive aggregation type from {}".format(md_name))
+
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
-        raise Exception("Could not derive aggregation path from {}".format(metadata_file.name))
+        raise Exception("Could not derive aggregation path from {}".format(md_name))
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
@@ -340,7 +358,7 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
             res_file = resource.files.filter(file_folder=file_path).first()
             if res_file:
                 FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
-        elif logical_file_class is GenericLogicalFile:
+        elif logical_file_class is GenericLogicalFile and map_files:
             map_name = subject.split('data/contents/', 1)[1]
             map_name = map_name.split('#', 1)[0]
             for map_file in map_files:
@@ -362,9 +380,9 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
             res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
-            raise Exception("Could not find aggregation for {}".format(metadata_file.name))
+            raise Exception("Could not find aggregation for {}".format(md_name))
         if not lf:
-            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(md_name))
 
     with transaction.atomic():
         lf.metadata.delete_all_elements()
@@ -410,26 +428,26 @@ def get_logical_file_metadata_json_schema(file_with_path):
     istorage = IrodsStorage()
     with istorage.open(file_with_path) as f:
         metadata = load_rdf(f.read())
-        json_value = metadata.json(exclude={'url', 'type'})
+        json_value = metadata.json()
         json_schema = metadata.schema_json()
         # currently json_schema() does not support exclude parameter, so work around it by manually excluding them
         # while leaving the code here so we can replace the manual work around with it when json_schema() support
         # it in the future.
         # json_schema = metadata.schema_json(exclude={'properties': {'url', 'type'}, 'required': {'url', 'type'},
         #                                             'definitions': {'AggregationType'}})
-        json_schema_dict = json.loads(json_schema)
-        schema_changed = False
-        if 'url' in json_schema_dict['properties']:
-            del json_schema_dict['properties']['url']
-            schema_changed = True
-            if 'url' in json_schema_dict['required']:
-                json_schema_dict['required'].remove('url')
-        if 'type' in json_schema_dict['properties']:
-            del json_schema_dict['properties']['type']
-            if 'AggregationType' in json_schema_dict['definitions']:
-                del json_schema_dict['definitions']['AggregationType']
-            schema_changed = True
-        if schema_changed:
-            json_schema = json.dumps(json_schema_dict)
+        # json_schema_dict = json.loads(json_schema)
+        # schema_changed = False
+        # if 'url' in json_schema_dict['properties']:
+        #     del json_schema_dict['properties']['url']
+        #     schema_changed = True
+        #     if 'url' in json_schema_dict['required']:
+        #         json_schema_dict['required'].remove('url')
+        # if 'type' in json_schema_dict['properties']:
+        #     del json_schema_dict['properties']['type']
+        #     if 'AggregationType' in json_schema_dict['definitions']:
+        #         del json_schema_dict['definitions']['AggregationType']
+        #     schema_changed = True
+        # if schema_changed:
+        #     json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}
