@@ -430,6 +430,15 @@ def get_logical_file_metadata_json_schema(file_with_path):
         metadata = load_rdf(f.read())
         json_value = metadata.json()
         json_schema = metadata.schema_json()
+        json_schema_dict = json.loads(json_schema)
+        json_schema_dict['properties']['url']['options'] = {
+            "hidden": True
+        }
+        json_schema_dict['properties']['type']['options'] = {
+            "hidden": True
+        }
+
+        json_schema = json.dumps(json_schema_dict)
         # currently json_schema() does not support exclude parameter, so work around it by manually excluding them
         # while leaving the code here so we can replace the manual work around with it when json_schema() support
         # it in the future.

@@ -955,6 +955,8 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
         if (resource_mode === 'view') {
             $("#fileTypeMetaData").html('');
+            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime";
+            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime";
             let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
                 schema: json_response.metadata.json_schema,
                 startval: json_response.metadata.json_value,
@@ -976,15 +978,31 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
         else {
             $("#fileTypeMetaData").html('');
+            option_val = {
+                "inputAttributes": {
+                    "placeholder": "Enter datetime"
+                },
+                "flatpickr": {
+                  "wrap": true,
+                  "time_24hr": true,
+                  "allowInput": true
+                }
+            }
+            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime-local";
+            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['options'] = option_val;
+            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
+            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['options'] = option_val;
+
             let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
                 schema: json_response.metadata.json_schema,
                 theme: 'bootstrap4',
                 startval: json_response.metadata.json_value,
+                disable_edit_json: true,
+                disable_properties: true,
                 disable_collapse: true,
                 format: "table",
                 show_errors: 'change'
             });
-
             editor.on('change', function() {
                 $('.invalid-feedback').css('color', 'red')
             });
