@@ -277,14 +277,15 @@ $(document).ready(function () {
         if (indexes.length > 0) {
             var actionWarningTemplate =
             '<div class="alert alert-danger">' +
-                '<strong>THIS IS A PERMANENT ACTION</strong>' +
+                '<strong>WARNING! DELETING RESOURCES IS A PERMANENT ACTION!</strong>' +
                 '<ul>' +
-                    '<li>This will delete any resources you have selected.</li>' +
-                    '<li>HydroShare will not retain copies of any of your content files.</li>' +
-                    '<li>We highly recommend that you download the latest copy of your resource file(s) before deleting.</li>' +
+                    '<li>This will delete any resources you have selected and their content files.</li>' +
+                    '<li>HydroShare will not retain copies of your resources or content files.</li>' +
+                    '<li>We highly recommend that you download the latest copy of your resources before confirming ' +
+                        'this action so that you do not lose any content you might need later.</li>' +
                 '</ul>' +
-                '<p>If you are sure you want to delete your resource, type the word "DELETE" ' +
-                    'in the following text box and then click the "Delete" button below.' +
+                '<p>If you are sure you want to delete the selected resources, type the word "DELETE" in the ' +
+                    'following text box and then click the "Delete" button below. ' +
                 '</p>' +
             '</div>';
 

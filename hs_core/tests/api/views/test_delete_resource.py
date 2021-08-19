@@ -51,7 +51,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
-        response = delete_resource(request, shortkey=self.gen_res.short_id)
+        response = delete_resource(request, shortkey=self.gen_res.short_id, usertext="DELETE")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content.decode())
         self.assertNotEqual(response_dict['status'], 'Failed')
@@ -68,5 +68,5 @@ class TestDeleteResource(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
         self.add_session_to_request(request)
-        response = delete_resource(request, shortkey=self.gen_res.short_id)
+        response = delete_resource(request, shortkey=self.gen_res.short_id, usertext="delete")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
