@@ -202,6 +202,15 @@ $(document).ready(function () {
         }
     }
 
+    $( "#confirm-res-id-text" ).keyup(function() {
+        $("#btn-delete-multiple-resources").prop("disabled", this.value !== "DELETE");
+    });
+
+    $("#delete-multiple-resources-dialog").on('hidden.bs.modal', function () {
+        $("#confirm-res-id-text").val('');
+        $("#btn-delete-multiple-resources").prop("disabled", true);
+    });
+
     $("#btn-delete-multiple-resources").click(function() {
         var indexes = [];   // List of selected resources allowed for deletion
         var notOwned = [];
@@ -221,7 +230,7 @@ $(document).ready(function () {
 
         inspectResources(indexes, notOwned, published);
 
-        var messageBody = $("#delete-multiple-resources-dialog .modal-body");
+        var messageBody = $("#delete-multiple-resources-dialog #delete-resource-messaging");
 
         messageBody.empty();
 
@@ -274,14 +283,17 @@ $(document).ready(function () {
                     '<li>HydroShare will not retain copies of any of your content files.</li>' +
                     '<li>We highly recommend that you download the latest copy of your resource file(s) before deleting.</li>' +
                 '</ul>' +
+                '<p>If you are sure you want to delete your resource, type the word "DELETE" ' +
+                    'in the following text box and then click the "Delete" button below.' +
+                '</p>' +
             '</div>';
 
             messageBody.append(actionWarningTemplate);
-            $("#btn-delete-multiple-resources").attr("disabled", false);
+            $("#confirm-res-id-text").show();
         }
         else {
             messageBody.append('<div>Select resources to delete.</div><br>');
-            $("#btn-delete-multiple-resources").attr("disabled", true);
+            $("#confirm-res-id-text").hide();
         }
 
         messageBody.find("a").attr("target", "_blank"); // Make listed resources open in new tab
@@ -318,7 +330,8 @@ function delete_multiple_resources_ajax_submit(indexes) {
         const row = $(indexes[i]);  // Needs to be a constant so the value doesn't change during the asynchronous calls
         var datastring = $(form).serialize();
         var url = $(form).attr("action");
-
+        let deleteText = $('#confirm-res-id-text').val();
+        url = url + deleteText + "/";
         $("html").css("cursor", "progress");
 
         calls.push(

@@ -409,11 +409,12 @@
                     <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
                 </div>
                 <div class="modal-body">
-                    <div>Select resources to delete</div>
+                    <div id="delete-resource-messaging">Select resources to delete</div>
+                    <input type="text" id="confirm-res-id-text" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button id="btn-delete-multiple-resources" class="btn btn-danger" data-dismiss="modal">Confirm</button>
+                    <button id="btn-delete-multiple-resources" disabled="true" class="btn btn-danger" data-dismiss="modal">Confirm</button>
                 </div>
             </div>
         </div>

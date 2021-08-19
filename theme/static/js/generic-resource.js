@@ -338,9 +338,10 @@ $(document).ready(function () {
         // disable the delete icon to prevent users from clicking it again until it is done
         $('#delete').addClass('disabled');
         $('#delete').removeAttr('data-toggle');
+        let deleteText = $('#confirm-res-id-text').val();
         $.ajax({
             type: "POST",
-            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/",
+            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/" + deleteText + "/",
             success: function (task) {
                 $('#delete-resource-dialog').modal('hide');
                 notificationsApp.registerTask(task);

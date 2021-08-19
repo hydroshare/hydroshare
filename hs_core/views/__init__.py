@@ -733,8 +733,10 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def delete_resource(request, shortkey, *args, **kwargs):
+def delete_resource(request, shortkey, usertext, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    if usertext != "DELETE":
+        raise ValidationError("'usertext' path parameter must be provided with value 'DELETE'")
     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
         raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
                               'cannot be deleted.')
