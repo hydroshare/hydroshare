@@ -2,7 +2,8 @@ import json
 import os
 from operator import lt, gt
 from hsmodels.schemas import load_rdf, rdf_graph
-from hsmodels.schemas.aggregations import GeographicRasterMetadata, GeographicFeatureMetadata
+from hsmodels.schemas.aggregations import GeographicRasterMetadata, GeographicFeatureMetadata, \
+    MultidimensionalMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata, FileSetMetadata, SingleFileMetadata
 
 from dateutil import parser
 from django.db import transaction
@@ -24,6 +25,17 @@ from .models import (
     ModelProgramLogicalFile,
     ModelInstanceLogicalFile,
 )
+
+
+aggregation_type_to_class = {
+    'GeoRaster': GeographicRasterMetadata,
+    'GeoFeature': GeographicFeatureMetadata,
+    'NetCDF': MultidimensionalMetadata,
+    'TimeSeries': TimeSeriesMetadata,
+    'RefTimeseries': ReferencedTimeSeriesMetadata,
+    'FileSet': FileSetMetadata,
+    'Generic': SingleFileMetadata
+}
 
 
 def get_SupportedAggTypes_choices():
@@ -324,13 +336,13 @@ def ingest_logical_file_metadata(metadata, resource, map_files):
     agg_type_name = None
     # if metadata is a dict object with updated metadata, create a rdf graph instance directly from it
     if isinstance(metadata, dict):
-        if metadata['type'] == 'GeoRaster':
-            meta_obj = GeographicRasterMetadata.parse_obj(metadata)
+        if metadata['type'] in aggregation_type_to_class:
+            aggr_class = aggregation_type_to_class[metadata['type']]
+            meta_obj = aggr_class.parse_obj(metadata)
             graph = rdf_graph(meta_obj)
-        elif metadata['type'] == 'GeoFeature':
-            meta_obj = GeographicFeatureMetadata.parse_obj(metadata)
-            graph = rdf_graph(meta_obj)
-        md_name = metadata['title']
+            md_name = metadata['title']
+        else:
+            raise Exception("{} aggregation type is not supported".format(metadata['type']))
     else:
         graph = Graph()
         graph = graph.parse(data=metadata.read())
