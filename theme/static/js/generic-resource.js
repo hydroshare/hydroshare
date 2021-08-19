@@ -341,7 +341,7 @@ $(document).ready(function () {
         let deleteText = $('#confirm-res-id-text').val();
         $.ajax({
             type: "POST",
-            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/" + deleteText + "/",
+            url: "/hsapi/_internal/" + SHORT_ID + "/delete-resource/" + "deleteText" + "/",
             success: function (task) {
                 $('#delete-resource-dialog').modal('hide');
                 notificationsApp.registerTask(task);
