@@ -524,6 +524,29 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
     });
 }
 
+function update_netcdf_file_ajax_submit() {
+    $("#id-update-netcdf-file").text("Updating...");
+    $("#id-update-netcdf-file").attr("disabled", true);
+
+    var url = $('#update-netcdf-file').attr("action");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            let json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#div-netcdf-file-update").hide();
+                customAlert("Success!", json_response.message, "success", 8000);
+                showFileTypeMetadata(false, "");    // refetch file metadata to show the updated header file info
+            }
+            else {
+                display_error_message("File update.", json_response.message);
+            }
+        }
+    });
+}
+
 function updateModelInstanceMetaSchema() {
     var $alert_success = '<div class="alert alert-success" id="success-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
@@ -554,6 +577,37 @@ function updateModelInstanceMetaSchema() {
         },
         error: function(xhr, errmsg, err){
             display_error_message('Schema update failed', xhr.responseText);
+        }
+    });
+}
+
+function update_sqlite_file_ajax_submit() {
+    var $alert_success = '<div class="alert alert-success" id="success-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        File update was successful.\
+    </div>';
+
+    var url = $('#update-sqlite-file').attr("action");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#div-sqlite-file-update").hide();
+                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
+                $("#fb-inner-controls").before($alert_success);
+                $("#success-alert").fadeTo(2000, 500).slideUp(1000, function () {
+                    $("#success-alert").alert('close');
+                });
+                // refetch file metadata to show the updated header file info
+                showFileTypeMetadata(false, "");
+            }
+            else {
+                display_error_message("File update.", json_response.message);
+            }
         }
     });
 }
@@ -1279,6 +1333,18 @@ function BindKeyValueFileTypeClickHandlers(){
         $(this).find("button.btn-danger").click(function (){
             deleteFileTypeExtraMetadata(formId);
         })
+    });
+}
+
+// show "Save changes" button when metadata form editing starts
+function showMetadataFormSaveChangesButton(){
+    $(".form-control").each(function () {
+        $(this).on('input', function (e) {
+            $(this).closest("form").find("button").show();
+        });
+        $(this).on('change', function (e) {
+            $(this).closest("form").find("button").show();
+        });
     });
 }
 

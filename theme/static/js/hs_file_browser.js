@@ -1041,6 +1041,22 @@ function showFileTypeMetadata(file_type_time_series, url){
         }
 
         if (RESOURCE_MODE === "Edit") {
+            $("[data-toggle=tooltip]").tooltip();
+            $("#lst-tags-filetype").find(".icon-remove").click(onRemoveKeywordFileType);
+            $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
+            $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
+            showMetadataFormSaveChangesButton();
+            setFileTypeMetadataFormsClickHandlers();
+            if (logical_type === "FileSetLogicalFile" || logical_type === "ModelInstanceLogicalFile") {
+                 // Submit for aggregation spatial coverage update
+                 $("#btn-update-aggregation-spatial-coverage").click(function () {
+                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'spatial');
+                 });
+                 // Submit for aggregation temporal coverage update
+                 $("#btn-update-aggregation-temporal-coverage").click(function () {
+                    nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'temporal');
+                 });
+             }
              if (logical_type === "ModelProgramLogicalFile") {
                   setupModelProgramFileTypeUI();
                   setupModelProgramTypeUI();
