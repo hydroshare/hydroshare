@@ -2,7 +2,7 @@ import json
 import os
 from operator import lt, gt
 from hsmodels.schemas import load_rdf, rdf_graph
-from hsmodels.schemas.aggregations import GeographicRasterMetadata
+from hsmodels.schemas.aggregations import GeographicRasterMetadata, GeographicFeatureMetadata
 
 from dateutil import parser
 from django.db import transaction
@@ -327,6 +327,9 @@ def ingest_logical_file_metadata(metadata, resource, map_files):
         if metadata['type'] == 'GeoRaster':
             meta_obj = GeographicRasterMetadata.parse_obj(metadata)
             graph = rdf_graph(meta_obj)
+        elif metadata['type'] == 'GeoFeature':
+            meta_obj = GeographicFeatureMetadata.parse_obj(metadata)
+            graph = rdf_graph(meta_obj)
         md_name = metadata['title']
     else:
         graph = Graph()
@@ -431,6 +434,8 @@ def get_logical_file_metadata_json_schema(file_with_path):
         json_value = metadata.json()
         json_schema = metadata.schema_json()
         json_schema_dict = json.loads(json_schema)
+        # hide the url and aggregation type fields since they are required but should be hidden from metadata
+        # view and update
         json_schema_dict['properties']['url']['options'] = {
             "hidden": True
         }
@@ -439,24 +444,5 @@ def get_logical_file_metadata_json_schema(file_with_path):
         }
 
         json_schema = json.dumps(json_schema_dict)
-        # currently json_schema() does not support exclude parameter, so work around it by manually excluding them
-        # while leaving the code here so we can replace the manual work around with it when json_schema() support
-        # it in the future.
-        # json_schema = metadata.schema_json(exclude={'properties': {'url', 'type'}, 'required': {'url', 'type'},
-        #                                             'definitions': {'AggregationType'}})
-        # json_schema_dict = json.loads(json_schema)
-        # schema_changed = False
-        # if 'url' in json_schema_dict['properties']:
-        #     del json_schema_dict['properties']['url']
-        #     schema_changed = True
-        #     if 'url' in json_schema_dict['required']:
-        #         json_schema_dict['required'].remove('url')
-        # if 'type' in json_schema_dict['properties']:
-        #     del json_schema_dict['properties']['type']
-        #     if 'AggregationType' in json_schema_dict['definitions']:
-        #         del json_schema_dict['definitions']['AggregationType']
-        #     schema_changed = True
-        # if schema_changed:
-        #     json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}
