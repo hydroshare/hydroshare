@@ -1604,18 +1604,25 @@
                                     <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
                                 </div>
                                 <div class="modal-body">
-                                    <strong>THIS IS A PERMANENT ACTION. </strong>
-                                    <ul>
-                                        <li>This will delete the resource file.</li>
-                                        <li>A copy of your resource file will not be retained by Hydroshare.</li>
-                                        <li>We highly recommend that you download the latest copy of your resource file before
-                                            confirming this action.
-                                        </li>
-                                    </ul>
+                                    <div class="alert alert-danger">
+                                        <strong>WARNING! DELETING A RESOURCE IS A PERMANENT ACTION!</strong>
+                                        <ul>
+                                            <li>This will delete the resource and all of the content files.</li>
+                                            <li>A copy of the resource will NOT be retained by HydroShare.</li>
+                                            <li>We highly recommend that you download the latest copy of your resource
+                                                before confirming this action so that you do not lose any content you
+                                                might need later.
+                                            </li>
+                                        </ul>
+                                        <p>If you are sure you want to delete your resource, type the word "DELETE"
+                                            in the following text box and then click the "Delete" button below.
+                                        </p>
+                                    </div>
+                                    <input type="text" id="confirm-res-id-text" />
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                    <button id="btn-delete-resource" class="btn btn-danger">Delete</button>
+                                    <button id="btn-delete-resource" class="btn btn-danger" disabled="">Delete</button>
                                 </div>
                             </div>
                         </div>
