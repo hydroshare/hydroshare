@@ -116,7 +116,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.url_to_update_collection = base_url + "/update-collection/"
         self.url_to_collection_member_permission = base_url + "/collection-member-permission/{1}/"
         self.url_to_set_resource_flag = base_url + "/set-resource-flag/"
-        self.url_to_delete_resource = base_url + "/delete-resource/"
+        self.url_to_delete_resource = base_url + "/delete-resource/DELETE/"
         self.url_to_update_collection_for_deleted_resources = \
             base_url + "/update-collection-for-deleted-resources/"
         self.url_to_calculate_collection_coverages = \
