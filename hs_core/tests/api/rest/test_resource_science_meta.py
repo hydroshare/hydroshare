@@ -28,6 +28,11 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.resources_to_delete.append(self.pid2)
 
     def test_get_scimeta(self):
+        # set resource public
+        self.resource.raccess.public = True
+        self.resource.raccess.save()
+        # remove authentication to test public view
+        self.client.logout()
         # Get the resource system metadata
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
         response = self.client.get(sysmeta_url)
