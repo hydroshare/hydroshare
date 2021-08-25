@@ -385,12 +385,14 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @api_view(['POST', 'GET'])
 def update_key_value_metadata_public(request, pk):
-    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-
     if request.method == 'GET':
+        res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         return HttpResponse(status=200, content=json.dumps(res.extra_metadata))
+
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     post_data = request.data.copy()
     res.extra_metadata = post_data
@@ -733,11 +735,14 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def delete_resource(request, shortkey, *args, **kwargs):
+def delete_resource(request, shortkey, usertext, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    if usertext != "DELETE":
+        return HttpResponse("'usertext' path parameter must be provided with value 'DELETE'",
+                            status=status.HTTP_400_BAD_REQUEST)
     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '
-                              'cannot be deleted.')
+        return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
+                            status=status.HTTP_400_BAD_REQUEST)
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
