@@ -1236,11 +1236,20 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return json_response
 
     try:
-        file_path = logical_file.metadata_file_path
-        json_value, json_schema = get_logical_file_metadata_json_schema(file_path)
-        metadata = {'json_value': json.loads(json_value),
-                    'json_schema': json.loads(json_schema)
-                    }
+        logical_file_type = logical_file.data_type
+        if logical_file_type != 'Model Program' and logical_file_type != 'Model Instance':
+            file_path = logical_file.metadata_file_path
+            json_value, json_schema = get_logical_file_metadata_json_schema(file_path)
+            metadata = {'json_value': json.loads(json_value),
+                        'json_schema': json.loads(json_schema)
+                        }
+        else:
+            # use the old implementation for model program and instance aggregations since they are not yet
+            # supported by hsmodels. Once the support is added in hsmodels, this logic can be removed.
+            if metadata_mode == 'view':
+                metadata = logical_file.metadata.get_html()
+            else:
+                metadata = logical_file.metadata.get_html_forms(user=request.user)
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'message': str(ex)}
