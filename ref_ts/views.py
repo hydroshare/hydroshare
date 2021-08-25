@@ -26,7 +26,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 
 PREVIEW_NAME = "preview.png"
-HIS_CENTRAL_URL = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
+HIS_CENTRAL_URL = 'https://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
 
 logger = logging.getLogger(__name__)
 
