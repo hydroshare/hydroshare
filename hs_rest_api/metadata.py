@@ -42,9 +42,9 @@ def metadata_json(resource):
     return json.loads(resource_metadata(resource).json())
 
 
-@swagger_auto_schema(method='post', request_body=serializers.ResourceCreateRequestValidator,
+@swagger_auto_schema(method='put', request_body=serializers.ResourceCreateRequestValidator,
                      operation_description="Create a resource",)
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'PUT'])
 def resource_metadata_json(request, pk):
     if request.method == 'GET':
         resource, _, _ = authorize(request, pk,
