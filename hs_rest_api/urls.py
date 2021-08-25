@@ -5,6 +5,7 @@ from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
     data_store_edit_reference_url_public, ingest_metadata_files
+from .metadata import resource_metadata_json
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
@@ -115,6 +116,10 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/ingest_metadata/$',
         ingest_metadata_files,
         name='ingest_metadata_files'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/json/$',
+        resource_metadata_json,
+        name='resource_metadata_json'),
 
     url(r'^resource/data-store-add-reference/$',
         data_store_add_reference_public),
