@@ -15,7 +15,7 @@ from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import unzip_task
-from hs_core.views import utils as view_utils
+from hs_core.views import utils as view_utils, serializers
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
