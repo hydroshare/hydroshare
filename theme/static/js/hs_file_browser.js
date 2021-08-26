@@ -932,12 +932,17 @@ function showFileTypeMetadata(file_type_time_series, url){
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
     var calls = [];
-    calls.push(get_file_type_metadata_ajax_submit($url));
+    calls.push(get_file_type_metadata_ajax_submit($url, logical_type));
 
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
-        var json_response = result;
-
+        let json_response;
+        if(typeof result === 'string') {
+            json_response = JSON.parse(result);
+        }
+        else {
+            json_response = result;
+        }
         if(json_response.status === 'error') {
             let error_html = '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
@@ -953,90 +958,83 @@ function showFileTypeMetadata(file_type_time_series, url){
             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             return;
         }
-        if (resource_mode === 'view') {
+        if(typeof result !== 'string') {
             $("#fileTypeMetaData").html('');
-            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime";
-            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime";
-            let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
-                schema: json_response.metadata.json_schema,
-                startval: json_response.metadata.json_value,
-                theme: "bootstrap4",
-                disable_properties: true,
-                disable_edit_json: true,
-                disable_array_add: true,
-                disable_array_delete: true,
-                disable_array_delete_all_rows: true,
-                disable_array_delete_last_row: true,
-                disable_array_reorder: true,
-                disable_collapse: true,
-                format: "table",
-                remove_empty_properties: true
-            });
-            editor.disable();
-            // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
-            $(".property-selector").removeAttr("style");
-        }
-        else {
-            $("#fileTypeMetaData").html('');
-            option_val = {
-                "inputAttributes": {
-                    "placeholder": "Enter datetime"
-                },
-                "flatpickr": {
-                  "wrap": true,
-                  "time_24hr": true,
-                  "allowInput": true
-                }
+            if (resource_mode === 'view') {
+                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime";
+                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime";
+                let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
+                    schema: json_response.metadata.json_schema,
+                    startval: json_response.metadata.json_value,
+                    theme: "bootstrap4",
+                    disable_properties: true,
+                    disable_edit_json: true,
+                    disable_array_add: true,
+                    disable_array_delete: true,
+                    disable_array_delete_all_rows: true,
+                    disable_array_delete_last_row: true,
+                    disable_array_reorder: true,
+                    disable_collapse: true,
+                    format: "table",
+                    remove_empty_properties: true
+                });
+                editor.disable();
+                // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
+                $(".property-selector").removeAttr("style");
             }
-            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime-local";
-            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['options'] = option_val;
-            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
-            json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['options'] = option_val;
-
-            let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
-                schema: json_response.metadata.json_schema,
-                theme: 'bootstrap4',
-                startval: json_response.metadata.json_value,
-                disable_edit_json: true,
-                disable_properties: true,
-                disable_collapse: true,
-                format: "table",
-                show_errors: 'change'
-            });
-            editor.on('change', function() {
-                $('.invalid-feedback').css('color', 'red')
-            });
-            $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" data-page-mode="edit" ' +
-                '                       class="btn btn-primary pull-right btn-save-metadata btn-form-submit">Save changes' +
-                '                       </button>');
-            $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
-                let errors = editor.validate();
-                if (!errors.length) {
-                    updateAggrMetaSchema(JSON.stringify(editor.getValue()));
+            else if (resource_mode === 'edit') {
+                option_val = {
+                    "inputAttributes": {
+                        "placeholder": "Enter datetime"
+                    },
+                    "flatpickr": {
+                      "wrap": true,
+                      "time_24hr": true,
+                      "allowInput": true
+                    }
                 }
-            });
-            // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
-            $(".property-selector").removeAttr("style");
-        }
+                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime-local";
+                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['options'] = option_val;
+                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
+                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['options'] = option_val;
 
-        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-        $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
-
-        $("#txt-keyword-filetype").keypress(function (e) {
-            e.which = e.which || e.keyCode;
-            if (e.which == 13) {
-                onAddKeywordFileType();
-                return false;
+                let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
+                    schema: json_response.metadata.json_schema,
+                    theme: 'bootstrap4',
+                    startval: json_response.metadata.json_value,
+                    disable_edit_json: true,
+                    disable_properties: true,
+                    disable_collapse: true,
+                    format: "table",
+                    show_errors: 'change'
+                });
+                editor.on('change', function() {
+                    $('.invalid-feedback').css('color', 'red')
+                });
+                $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" data-page-mode="edit" ' +
+                                           'class="btn btn-primary pull-right btn-save-metadata btn-form-submit">Save changes' +
+                                           '</button>');
+                $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
+                    let errors = editor.validate();
+                    if (!errors.length) {
+                        updateAggrMetaSchema(JSON.stringify(editor.getValue()));
+                    }
+                });
+                // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
+                $(".property-selector").removeAttr("style");
             }
-        });
+        }
+        else { // keep old way of metadata view/edit for MP/MI aggregations which are not yet supported by hsmodels
+            $("#fileTypeMetaData").html(json_response.metadata);
+            $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+            $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
 
-        if (logical_type === 'TimeSeriesLogicalFile') {
-            $("#series_id_file_type").change(function () {
-                var $url = $(this.form).attr('action');
-                $url = $url.replace('series_id', $(this).val());
-                $url = $url.replace('resource_mode', resource_mode);
-                // make a recursive call to this function
-                showFileTypeMetadata(true, $url);
+            $("#txt-keyword-filetype").keypress(function (e) {
+                e.which = e.which || e.keyCode;
+                if (e.which == 13) {
+                    onAddKeywordFileType();
+                    return false;
+                }
             });
         }
 
