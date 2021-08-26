@@ -456,6 +456,7 @@ function get_file_type_metadata_ajax_submit(url, logical_type) {
         type: "POST",
         url: url,
         dataType: data_type,
+        async: false,
         success: function (result) {
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
