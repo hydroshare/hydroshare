@@ -1006,22 +1006,30 @@ function showFileTypeMetadata(file_type_time_series, url){
                     disable_properties: true,
                     disable_collapse: true,
                     format: "table",
-                    show_errors: 'change'
+                    show_errors: "always"
                 });
+
+                $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" ' +
+                    'class="btn btn-primary pull-right btn-form-submit hidden-form">Save changes</button>');
+                var get_editor_ready = true;
                 editor.on('change', function() {
-                    $('.invalid-feedback').css('color', 'red')
+                    $('.invalid-feedback').css('color', 'red');
+                    if (get_editor_ready === true)
+                        get_editor_ready = false
+                    else
+                        $('#metadata_schema_value_submit').show();
                 });
-                $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" data-page-mode="edit" ' +
-                                           'class="btn btn-primary pull-right btn-save-metadata btn-form-submit">Save changes' +
-                                           '</button>');
+
                 $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
                     let errors = editor.validate();
                     if (!errors.length) {
                         updateAggrMetaSchema(JSON.stringify(editor.getValue()));
+                        $(this).hide();
                     }
                 });
                 // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
                 $(".property-selector").removeAttr("style");
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             }
         }
         else { // keep old way of metadata view/edit for MP/MI aggregations which are not yet supported by hsmodels
@@ -1160,35 +1168,6 @@ function showJsonEditorSubmitButton() {
     else {
         $("#id-schema-based-form").find("#id-json-editor-load-status").val("loaded");
     }
-}
-function InitializeTimeSeriesFileTypeForms() {
-    var tsSelect = $(".time-series-forms select");
-
-    tsSelect.append('<option value="Other">Other...</option>');
-
-    tsSelect.parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
-
-    tsSelect.change(function(e){
-        if (e.target.value === "Other") {
-            let name = e.target.name;
-            $(e.target).parent().parent().find(".other-field").show();
-            $(e.target).parent().parent().find(".other-field input").attr("name", name);
-            $(e.target).removeAttr("name");
-        }
-        else {
-            if (!e.target.name.length) {
-                let name = $(e.target).parent().parent().find(".other-field input").attr("name");
-                $(e.target).attr("name", name);
-                $(e.target).parent().parent().find(".other-field input").removeAttr("name");
-                $(e.target).parent().parent().find(".other-field").hide();
-            }
-        }
-    });
-
-    processSiteMetadataElement();
-    processVariableMetadataElement();
-    processMethodMetadataElement();
-    processProcessingLevelMetadataElement();
 }
 
 function setBreadCrumbs(bcPath) {
