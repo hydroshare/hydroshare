@@ -6,8 +6,9 @@ from drf_yasg.utils import swagger_auto_schema
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from rest_framework.decorators import api_view
 
-from hs_core.views import serializers, ACTION_TO_AUTHORIZE
+from hs_core.views import ACTION_TO_AUTHORIZE
 from hs_core.views.utils import authorize
+from hs_rest_api import serializers
 
 
 def resource_metadata(resource):
@@ -42,8 +43,8 @@ def metadata_json(resource):
     return json.loads(resource_metadata(resource).json())
 
 
-@swagger_auto_schema(method='put', request_body=serializers.ResourceCreateRequestValidator,
-                     operation_description="Create a resource",)
+@swagger_auto_schema(method='put', request_body=serializers.ResourceMetadataSerializer,
+                     operation_description="Update Resource level metadata",)
 @api_view(['GET', 'PUT'])
 def resource_metadata_json(request, pk):
     if request.method == 'GET':
