@@ -1028,9 +1028,6 @@ def update_schema_based_metadata(request, resource_id, **kwargs):
     metadata_json = json.loads(metadata_json_str)
     if 'type' not in metadata_json['spatial_reference']:
         metadata_json['spatial_reference']['type'] = 'box'
-    if not metadata_json['period_coverage']['start'] or not metadata_json['period_coverage']['end']:
-        metadata_json['period_coverage']['start'] = '2020-11-05T00:00:00'
-        metadata_json['period_coverage']['end'] = '2020-11-26T00:00:00'
     ingest_logical_file_metadata(metadata_json, resource, None)
 
     # resource_modified(resource, request.user, overwrite_bag=False)
