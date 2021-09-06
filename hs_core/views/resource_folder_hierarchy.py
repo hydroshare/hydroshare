@@ -202,7 +202,11 @@ def data_store_structure(request):
                      'folders': dirs,
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable,
-                     'geoserver_url': getattr(settings, 'HSWS_GEOSERVER_URL', None)}
+                     'geoserver_url': (
+                        getattr(settings, 'HSWS_GEOSERVER_URL', '') +
+                        getattr(settings, 'HSWS_GEOSERVER_GET_CAPABILITIES', '')
+                     )
+                    }
 
     if resource.resource_type == "CompositeResource":
         return_object['spatial_coverage'] = get_coverage_data_dict(resource)

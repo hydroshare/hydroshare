@@ -710,6 +710,7 @@ HSWS_ACTIVATED = False
 THREDDS_SERVER_URL = 'https://thredds.hydroshare.org/thredds/'
 # HydroShare Geoserver URL
 HSWS_GEOSERVER_URL = 'https://geoserver.hydroshare.org/geoserver'
+HSWS_GEOSERVER_GET_CAPABILITIES = '/hydroshare/wms?request=GetCapabilities'
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [

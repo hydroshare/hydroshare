@@ -821,7 +821,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                                 'If you want access to GeoServer features for those files, please make sure ' + 
                                 'they are using a supported projection. ' + 
                                 '<br><strong><a ' +
-                                    'href="' + geoserver_url + '/hydroshare/wms?request=GetCapabilities" ' +
+                                    'href="' + geoserver_url + '" ' +
                                     'target="_blank">Get a list of supported GeoServer projections' +
                                 '</a></strong>' +
                             '</em>' +
