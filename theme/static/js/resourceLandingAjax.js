@@ -807,7 +807,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#geoserver-proj-alert').remove();
 
             if (geoserver_url && aggregations.some((agg) => {
-                return agg.valid_geoserver_projection === false
+                return agg.valid_geoserver_projection === 'False'
             })) {
                 $('#fb-alerts').append(
                     '<div id="geoserver-proj-alert" class="alert alert-danger alert-dismissible" role="alert">' +

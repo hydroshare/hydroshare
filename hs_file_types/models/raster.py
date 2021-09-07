@@ -9,8 +9,6 @@ import xml.etree.ElementTree as ET
 import gdal
 from gdalconst import GA_ReadOnly
 
-from osgeo import osr
-
 from functools import partial, wraps
 
 from django.db import models, transaction
@@ -207,24 +205,6 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             preview_data_url = None
 
         return preview_data_url
-
-    def check_valid_geoserver_projection(self):
-        """Check if the content is using a projection supported by GeoServer."""
-
-        try:
-            proj = osr.SpatialReference(wkt=str(self.originalCoverage.value.get('projection_string')))
-            authority = ':'.join((proj.GetAttrValue('AUTHORITY', 0), proj.GetAttrValue('AUTHORITY', 1),))
-
-            with open(os.path.dirname(__file__) + '/../geoserver_epsg.txt') as f:
-                if authority in f.read():
-                    valid_proj = True
-                else:
-                    valid_proj = False
-
-        except Exception as e:
-            valid_proj = False
-
-        return valid_proj
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):

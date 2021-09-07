@@ -10,6 +10,7 @@ import json
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
 from xml.etree import ElementTree
+from osgeo import osr
 
 import requests
 from celery import shared_task
@@ -594,44 +595,55 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
     True, these endpoints will be added to the extra metadata fields of the
     resource and aggregations.
     """
-    session = requests.Session()
-    session.headers.update(
-        {"Authorization": " ".join(("Token", str(api_token)))}
-    )
-
-    rest_url = str(services_url) + "/" + str(res_id) + "/"
 
     try:
+        session = requests.Session()
+        session.headers.update(
+            {"Authorization": " ".join(("Token", str(api_token)))}
+        )
+
+        rest_url = str(services_url) + "/" + str(res_id) + "/"
+
         response = session.post(rest_url, timeout=timeout)
-
-        if publish_urls and response.status_code == status.HTTP_201_CREATED:
-            try:
-
-                resource = utils.get_resource_by_shortkey(res_id)
-                response_content = json.loads(response.content.decode())
-
-                for key, value in response_content["resource"].items():
-                    resource.extra_metadata[key] = value
-                    resource.save()
-
-                for url in response_content["content"]:
-                    logical_files = list(resource.logical_files)
-                    lf = logical_files[[i.aggregation_name for i in
-                                        logical_files].index(
-                                                    url["layer_name"].encode()
-                                                )]
-                    lf.metadata.extra_metadata["Web Services URL"] = url["message"]
-                    lf.metadata.save()
-
-            except Exception as e:
-                logger.error(e)
-                return e
-
-        return response
 
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)
-        return e
+
+    try:
+        resource = utils.get_resource_by_shortkey(res_id)
+
+        for lf in [
+            logical_file for logical_file in list(resource.logical_files)
+            if logical_file.get_aggregation_type_name()
+            in ['GeographicFeatureAggregation', 'GeographicRasterAggregation']
+        ]:
+            try:
+                if lf.get_aggregation_type_name() == 'GeographicFeatureAggregation':
+                    proj = osr.SpatialReference(wkt=str(lf.metadata.originalcoverage.projection_string))
+                elif lf.get_aggregation_type_name() == 'GeographicRasterAggregation':
+                    proj = osr.SpatialReference(wkt=str(lf.metadata.originalCoverage.value.get('projection_string')))
+                else:
+                    proj = None
+            except:
+                proj = None
+
+            if proj:
+                try:
+                    authority = ':'.join((proj.GetAttrValue('AUTHORITY', 0), proj.GetAttrValue('AUTHORITY', 1),))
+                    with open(os.path.dirname(__file__) + '/../hs_file_types/geoserver_epsg.txt') as f:
+                        if authority in f.read():
+                            valid_proj = True
+                        else:
+                            valid_proj = False
+
+                except Exception as e:
+                    valid_proj = False
+
+                lf.extra_data['valid_geoserver_proj'] = valid_proj
+                lf.save()
+
+    except Exception as e:
+        logger.error(e)
 
 
 @shared_task
