@@ -37,6 +37,7 @@ class TestRefTS(TestCase):
         self.url_to_create_ref_time_series = "/hsapi/_internal/create-ref-time-series/"
         self.url_to_download_resource_files = "/hsapi/_internal/{0}/download-refts-bag/"
 
+    @skip("TODO: This should be mocked, his url is responding with a 403 frequently")
     def test_get_his_central_urls(self):
         self.assertEqual(1, 1)
         resp = self.api_client.get(self.url_to_get_his_urls)
