@@ -5,7 +5,6 @@ import sys
 import traceback
 import zipfile
 import logging
-import json
 
 from celery.signals import task_postrun
 from datetime import datetime, timedelta, date
@@ -604,7 +603,7 @@ def update_web_services(services_url, api_token, timeout, publish_urls, res_id):
 
         rest_url = str(services_url) + "/" + str(res_id) + "/"
 
-        response = session.post(rest_url, timeout=timeout)
+        session.post(rest_url, timeout=timeout)
 
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(e)

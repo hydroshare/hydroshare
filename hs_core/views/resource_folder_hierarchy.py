@@ -205,8 +205,7 @@ def data_store_structure(request):
                      'geoserver_url': (
                         getattr(settings, 'HSWS_GEOSERVER_URL', '') +
                         getattr(settings, 'HSWS_GEOSERVER_GET_CAPABILITIES', '')
-                     )
-                    }
+                     )}
 
     if resource.resource_type == "CompositeResource":
         return_object['spatial_coverage'] = get_coverage_data_dict(resource)
