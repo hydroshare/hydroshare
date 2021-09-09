@@ -471,6 +471,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 
 SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')

@@ -98,20 +98,21 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += [
-    url('^hsapi/', include('hs_rest_api.urls')),
-    url('^hsapi/', include('hs_core.urls')),
+    url('^hsapi2/', include('hs_rest_api2.urls', namespace='hsapi2')),
+    url('^hsapi/', include('hs_rest_api.urls', namespace='hsapi')),
+    url('^hsapi/', include('hs_core.urls', namespace='hsapi')),
     url('', include('hs_core.resourcemap_urls')),
     url('', include('hs_core.metadata_terms_urls')),
     url('', include('hs_core.debug_urls')),
-    url('^hsapi/', include('ref_ts.urls')),
+    url('^hsapi/', include('ref_ts.urls', namespace='hsapi')),
     url('^irods/', include('irods_browser_app.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
-    url('^hsapi/', include('hs_model_program.urls')),
-    url('^hsapi/', include('hs_labels.urls')),
-    url('^hsapi/', include('hs_collection_resource.urls')),
-    url('^hsapi/', include('hs_file_types.urls')),
-    url('^hsapi/', include('hs_app_netCDF.urls')),
-    url('^hsapi/', include('hs_composite_resource.urls')),
+    url('^hsapi/', include('hs_model_program.urls', namespace='hsapi')),
+    url('^hsapi/', include('hs_labels.urls', namespace='hsapi')),
+    url('^hsapi/', include('hs_collection_resource.urls', namespace='hsapi')),
+    url('^hsapi/', include('hs_file_types.urls', namespace='hsapi')),
+    url('^hsapi/', include('hs_app_netCDF.urls', namespace='hsapi')),
+    url('^hsapi/', include('hs_composite_resource.urls', namespace='hsapi')),
 ]
 
 # robots.txt URLs for django-robots
