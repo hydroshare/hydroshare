@@ -366,6 +366,17 @@ function delete_multiple_resources_ajax_submit(indexes) {
 
 function label_ajax_submit() {
     var el = $(this);
+    var labelText = $("#txtLabelName").val();
+    sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
+    if (labelText != sanitizedLabelText){
+        // red outline on the text input for 3 seconds
+        $("#txtLabelName").addClass("invalid-input").delay(3000).queue(function(){
+            $(this).removeClass("invalid-input");
+            $(this).dequeue();
+        });
+        return;
+    }
+    $("#txtLabelName").val(labelText);
     var form = $("form[data-id='" + el.attr("data-form-id") + "']");
     var datastring = form.serialize();
     var url = form.attr('action');
