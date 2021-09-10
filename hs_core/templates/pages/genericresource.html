@@ -1005,7 +1005,7 @@
           {% for author in creators %}
               {
                   "id": "{{ author.id }}",
-                  "name": "{{ author.name|default:"" }}",
+                  "name": "{{ author.name|default:""|escapejs }}",
                   "email": "{{ author.email|default:"" }}",
                   "organization": "{{ author.organization|default:"" }}",
                   "identifiers": {
