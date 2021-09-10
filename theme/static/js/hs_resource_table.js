@@ -53,8 +53,14 @@ $(document).ready(function () {
         $("#item-selectors").width($("#item-selectors").width() - 2);
     }
 
+    function clearLabelErrorMessaging(){
+        $("#txtLabelName").removeClass("invalid-input");
+        $("#txtLabelName").closest(".modal-body").find(".error-label").remove();
+    }
+
     // Trigger label creation when pressing Enter
     $("#txtLabelName").keyup(function (event) {
+        clearLabelErrorMessaging();
         var label = $("#txtLabelName").val().trim();
         if (event.keyCode == 13 && label != "") {
             $("#btn-create-label").click();
@@ -71,6 +77,12 @@ $(document).ready(function () {
     // Autofocus input when modal appears
     $("#modalCreateLabel").on('shown.bs.modal', function () {
         $("#txtLabelName").focus();
+    });
+
+    // remove error messaging and input, if any
+    $("#modalCreateLabel").on('hidden.bs.modal', function () {
+        $("#txtLabelName").val("");
+        clearLabelErrorMessaging();
     });
 
     $("#item-selectors").show();
@@ -364,16 +376,18 @@ function delete_multiple_resources_ajax_submit(indexes) {
       });
 }
 
+function errorLabel(message) {
+    return "<div class='label label-danger error-label'>" + message + "</div>";
+}
+
 function label_ajax_submit() {
     var el = $(this);
     var labelText = $("#txtLabelName").val();
-    sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
+    var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
     if (labelText != sanitizedLabelText){
-        // red outline on the text input for 3 seconds
-        $("#txtLabelName").addClass("invalid-input").delay(3000).queue(function(){
-            $(this).removeClass("invalid-input");
-            $(this).dequeue();
-        });
+        // red outline and messaging for invalid input
+        $("#txtLabelName").closest(".modal-body").append(errorLabel("This label contains HTML and cannot be saved."))
+        $("#txtLabelName").addClass("invalid-input");
         return;
     }
     $("#txtLabelName").val(labelText);
