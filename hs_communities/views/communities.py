@@ -54,7 +54,8 @@ class CommunityView(TemplateView):
             'community_resources': community_resources,
             'groups': groups,
             'grpfilter': grpfilter,
-            'is_admin': is_admin
+            'is_admin': is_admin,
+            'czo_community': "CZO National" in community.name
         }
 
 
