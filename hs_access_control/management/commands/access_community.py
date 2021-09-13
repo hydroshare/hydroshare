@@ -30,7 +30,6 @@ def usage():
     print("      update: update metadata for community.")
     print("      remove: remove community.")
     print("      rename: rename community.")
-    print("      customization: set customization.")
     print("      Options for create and update include:")
     print("          --owner={username}: set an owner for the community.")
     print("          --description='{description}': set the description to the text provided.")
@@ -135,7 +134,6 @@ class Command(BaseCommand):
                 for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
                                                              privilege=PrivilegeCodes.OWNER):
                     print("             {}".format(ugp.user.username))
-            print("  customization: {}".format(community.customization))
             exit(0)
 
         # These are idempotent actions. Creating a community twice does nothing.
@@ -186,19 +184,6 @@ class Command(BaseCommand):
             nname = options['command'][2]
             print("renaming community '{}' (id={}) to '{}'".format(community.name, community.id, nname))
             community.name = nname
-            community.save()
-
-        elif command == 'customization':
-            # at this point, community must exist
-            community = community_from_name_or_id(cname)
-            if community is None:
-                print("community '{}' does not exist".format(cname))
-                exit(1)
-
-            cust = options['command'][2]
-            print("setting  community '{}' (id={}) customization to '{}'"
-                  .format(community.name, community.id, cust))
-            community.customization = cust
             community.save()
 
         elif command == 'owner':

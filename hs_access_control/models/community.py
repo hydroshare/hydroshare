@@ -189,14 +189,3 @@ class Community(models.Model):
                 Q(r2grp__group=group,
                   r2grp__group__g2gcp__community=self,
                   r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()
-
-    @property
-    def customizations(self): 
-        return self.features.all()
-
-
-class Features(models.Model): 
-     feature = models.SlugField(null=False, blank=False)
-     community = models.ForeignKey('Community', null=False, related_name=features)
-
-

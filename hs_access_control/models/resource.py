@@ -482,16 +482,3 @@ class ResourceAccess(models.Model):
             return "discoverable"
         else:
             return "private"
-
-    @property
-    def customization(self):
-        ''' determine community customizations, if any, to apply to this group
-            Note particularly that if there is more than one customization, the last one wins.
-        '''
-        from hs_access_control import Community
-        communities = Community.objects.filter(c2gcp__group__g2grp__resource=self)
-        custom = None
-        for c in communities:
-            if c.customization is not None:
-                custom = c.customization
-        return custom

@@ -421,15 +421,3 @@ class GroupAccess(models.Model):
         # Thus it is quite brittle and vulnerable to major revisions of Generics.
 
         return res
-
-    @property
-    def customization(self):
-        ''' determine community customizations, if any, to apply to this group
-            Note particularly that if there is more than one customization, the last one wins.
-        '''
-        communities = Community.objects.filter(c2gcp__group=self)
-        custom = None
-        for c in communities:
-            if c.customization is not None:
-                custom = c.customization
-        return custom
