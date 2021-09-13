@@ -28,6 +28,8 @@ def usage():
     print("      list: print the configuration of a community.")
     print("      create: create the community.")
     print("      update: update metadata for community.")
+    print("      remove: remove community.")
+    print("      rename: rename community.")
     print("      Options for create and update include:")
     print("          --owner={username}: set an owner for the community.")
     print("          --description='{description}': set the description to the text provided.")
@@ -162,6 +164,27 @@ class Command(BaseCommand):
                       .format(cname, owner, description))
 
                 owner.uaccess.create_community(cname, description, purpose=purpose)
+
+        elif command == 'remove':
+            try:
+                community = Community.objects.get(name=cname)
+            except Community.DoesNotExist:  #
+                print("community '{}' does not exist".format(cname))
+                exit(1)
+            print("removing community '{}' (id={})".format(community.name, community.id))
+            community.delete()
+
+        elif command == 'rename':
+            try:
+                community = Community.objects.get(name=cname)
+            except Community.DoesNotExist:  #
+                print("community '{}' does not exist".format(cname))
+                exit(1)
+
+            nname = options['command'][2]
+            print("renaming communty '{}' (id={}) to '{}'".format(community.name, community.id, nname))
+            community.name = nname
+            community.save()
 
         elif command == 'owner':
             # at this point, community must exist
