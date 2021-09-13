@@ -22,7 +22,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-3">
-		    {% if community.id == 1 %}
+		    {% if community.customization == 'czo' %}
                     <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/czo-logo-wide.png"
                                                                 alt="CZO National"></a></div>
 	            {% else %}
@@ -205,10 +205,14 @@
                     <div role="tabpanel" class="tab-pane fade in" id="admin">
                         <div class="row">
                             <div class="col-sm-12 col-md-3">
+			    {% if community.customization == 'czo' %}
                                 <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
                                                                                             class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
                                     Topics</h4></a>
                                 Someone has requested a topic to be created or modified for use in the Title Assistant
+			    {% else %}
+				Administrative commands for this community: owners only. 
+		            {% endif %} 
                             </div>
                         </div>
                     </div>

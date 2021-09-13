@@ -30,6 +30,7 @@ def usage():
     print("      update: update metadata for community.")
     print("      remove: remove community.")
     print("      rename: rename community.")
+    print("      customization: set customization.")
     print("      Options for create and update include:")
     print("          --owner={username}: set an owner for the community.")
     print("          --description='{description}': set the description to the text provided.")
@@ -134,11 +135,13 @@ class Command(BaseCommand):
                 for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
                                                              privilege=PrivilegeCodes.OWNER):
                     print("             {}".format(ugp.user.username))
+            print("  customization: {}".format(community.customization))
             exit(0)
 
         # These are idempotent actions. Creating a community twice does nothing.
         if command == 'update' or command == 'create':
-            try:
+            community = community_from_name_or_id(cname)
+            if community is not None:
                 community = Community.objects.get(name=cname)
                 if options['description'] is not None:
                     community.description = options['description']
@@ -152,8 +155,7 @@ class Command(BaseCommand):
                                               privilege=PrivilegeCodes.OWNER,
                                               grantor=owner)
 
-            except Community.DoesNotExist:  # create it
-
+            else:  # if it does not exist, create it
                 if options['description'] is not None:
                     description = options['description']
                 else:
@@ -166,24 +168,37 @@ class Command(BaseCommand):
                 owner.uaccess.create_community(cname, description, purpose=purpose)
 
         elif command == 'remove':
-            try:
-                community = Community.objects.get(name=cname)
-            except Community.DoesNotExist:  #
+            # at this point, community must exist
+            community = community_from_name_or_id(cname)
+            if community is None:
                 print("community '{}' does not exist".format(cname))
                 exit(1)
             print("removing community '{}' (id={})".format(community.name, community.id))
             community.delete()
 
         elif command == 'rename':
-            try:
-                community = Community.objects.get(name=cname)
-            except Community.DoesNotExist:  #
+            # at this point, community must exist
+            community = community_from_name_or_id(cname)
+            if community is None:
                 print("community '{}' does not exist".format(cname))
                 exit(1)
 
             nname = options['command'][2]
-            print("renaming communty '{}' (id={}) to '{}'".format(community.name, community.id, nname))
+            print("renaming community '{}' (id={}) to '{}'".format(community.name, community.id, nname))
             community.name = nname
+            community.save()
+
+        elif command == 'customization':
+            # at this point, community must exist
+            community = community_from_name_or_id(cname)
+            if community is None:
+                print("community '{}' does not exist".format(cname))
+                exit(1)
+
+            cust = options['command'][2]
+            print("setting  community '{}' (id={}) customization to '{}'"
+                  .format(community.name, community.id, cust))
+            community.customization = cust
             community.save()
 
         elif command == 'owner':
@@ -295,15 +310,6 @@ class Command(BaseCommand):
                 print("unknown group command '{}'.".format(action))
                 usage()
                 exit(1)
-
-        elif command == 'remove':
-            community = community_from_name_or_id(cname)
-            if community is None:
-                usage()
-                exit(1)
-
-            print("removing community '{}' (id={}).".format(community.name, community.id))
-            community.delete()
 
         else:
             print("unknown command '{}'.".format(command))
