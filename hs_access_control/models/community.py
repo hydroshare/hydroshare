@@ -17,6 +17,7 @@ class Community(models.Model):
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
+    customization = models.TextField(null=True, blank=True)
 
     @property
     def member_groups(self):
