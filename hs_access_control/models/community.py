@@ -4,10 +4,10 @@ from hs_core.models import BaseResource
 from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
 
+
 ###################################
 # Communities of groups
 ###################################
-
 
 class Community(models.Model):
     """ a placeholder class for a community of groups """
@@ -17,7 +17,6 @@ class Community(models.Model):
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
-    customization = models.TextField(null=True, blank=True)
 
     @property
     def member_groups(self):
@@ -190,3 +189,14 @@ class Community(models.Model):
                 Q(r2grp__group=group,
                   r2grp__group__g2gcp__community=self,
                   r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()
+
+    @property
+    def customizations(self): 
+        return self.features.all()
+
+
+class Features(models.Model): 
+     feature = models.SlugField(null=False, blank=False)
+     community = models.ForeignKey('Community', null=False, related_name=features)
+
+
