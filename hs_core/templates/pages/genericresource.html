@@ -1007,13 +1007,13 @@
                   "id": "{{ author.id }}",
                   "name": "{{ author.name|default:""|escapejs }}",
                   "email": "{{ author.email|default:"" }}",
-                  "organization": "{{ author.organization|default:"" }}",
+                  "organization": "{{ author.organization|default:""|escapejs }}",
                   "identifiers": {
                       {% for name, link in author.identifiers.items %}
                           "{{ name }}": "{{ link }}",
                       {% endfor %}
                   },
-                  "address": "{{ author.address|default:"" }}",
+                  "address": "{{ author.address|default:""|escapejs }}",
                   "phone": "{{ author.phone|default:"" }}",
                   "homepage": "{{ author.homepage|default:"" }}",
                   "profileUrl": "{{ author.description|default:"" }}",
@@ -1027,18 +1027,18 @@
           const LAST_CHANGED_BY = {
           "id": {{ usr.id }},
           "pictureUrl": {% if  usr.userprofile.picture %}"{{ usr.userprofile.picture.url }}"{% else %}null{% endif %},
-          "best_name": "{{ usr|best_name }}",
+          "best_name": "{{ usr|best_name|escapejs }}",
           "email": "{{ usr.email|safe }}",
-          "organization": "{{ usr.userprofile.organization }}",
-          "title": "{{ usr.userprofile.title }}",
+          "organization": "{{ usr.userprofile.organization|escapejs }}",
+          "title": "{{ usr.userprofile.title|escapejs }}",
           "contributions": "{{ usr.uaccess.owned_resources|length  }}",
-          "subject_areas": "{{ usr.userprofile.subject_areas }}",
+          "subject_areas": "{{ usr.userprofile.subject_areas|escapejs }}",
           "identifiers": {
               {% for name, link in usr.userprofile.identifiers.items %}
                   "{{ name }}": "{{ link }}",
               {% endfor %}
           },
-          "state": "{{ usr.userprofile.state }}",
+          "state": "{{ usr.userprofile.state|escapejs }}",
           "country": "{{ usr.userprofile.country }}",
           "joined": "{{ usr.date_joined|date:"M d, Y" }}"
       };
