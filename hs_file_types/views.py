@@ -1026,8 +1026,10 @@ def update_schema_based_metadata(request, resource_id, **kwargs):
         return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
     metadata_json_str = request.POST.get('metadata_json', None)
     metadata_json = json.loads(metadata_json_str)
-    if 'type' not in metadata_json['spatial_reference']:
-        metadata_json['spatial_reference']['type'] = 'box'
+    if 'period_coverage' in metadata_json and not metadata_json['period_coverage']['start'] and \
+        not metadata_json['period_coverage']['end']:
+        del metadata_json['period_coverage']
+
     ingest_logical_file_metadata(metadata_json, resource, None)
 
     # resource_modified(resource, request.user, overwrite_bag=False)

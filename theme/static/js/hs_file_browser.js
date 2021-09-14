@@ -1005,6 +1005,8 @@ function showFileTypeMetadata(file_type_time_series, url){
                     disable_edit_json: true,
                     disable_properties: true,
                     disable_collapse: true,
+                    use_default_values: false,
+                    remove_empty_properties: false,
                     format: "table",
                     show_errors: "always"
                 });
