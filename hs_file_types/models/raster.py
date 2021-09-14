@@ -9,14 +9,8 @@ import xml.etree.ElementTree as ET
 import gdal
 from gdalconst import GA_ReadOnly
 
-from functools import partial, wraps
-
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
-from django.forms.models import formset_factory
-from django.template import Template, Context
-
-from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -25,7 +19,7 @@ from hs_core.signals import post_add_raster_aggregation
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
-from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
+from hs_geo_raster_resource.forms import BandInfoValidationForm
 
 from hs_file_types import raster_meta_extract
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext

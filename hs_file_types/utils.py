@@ -445,16 +445,16 @@ def get_logical_file_metadata_json_schema(file_with_path):
         metadata = load_rdf(f.read())
         json_value = metadata.json()
         json_schema = metadata.schema_json()
-        json_value_dict = json.loads(json_value)
         json_schema_dict = json.loads(json_schema)
         # hide the url and aggregation type fields since they are required but should be hidden from metadata
         # view and update
 
-        json_schema_dict['required'].remove('url')
+        json_schema_dict['properties']['url']['options'] = {
+            "hidden": True
+        }
         json_schema_dict['properties']['type']['options'] = {
             "hidden": True
         }
-        json_value = json.dumps(json_value_dict)
         json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}
