@@ -734,6 +734,20 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 raise ValidationError(msg)
             return logical_file
 
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated sqlite file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated sqlite file
+        if self.has_csv_file:
+            # the sqlite file is a system generated file
+            for res_file in self.files.all():
+                if res_file.file_name.lower().endswith(".sqlite"):
+                    res_file.delete()
+                    break
+        super(TimeSeriesLogicalFile, self).remove_aggregation()
+
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
