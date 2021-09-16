@@ -87,6 +87,11 @@ function showRemoveExtraMetaPopup(row_id_str) {
     $('#deleteExtraMetaDialog').modal('show');
 }
 
+// removes html tags from the userInput
+function sanitizeUserInput(userInput) {
+    return $("<div/>").html(userInput.trim()).text();
+}
+
 function addEditExtraMeta2Table() {
     // Restore validation UI state
     $("#extra_meta_msg").hide();
@@ -98,7 +103,7 @@ function addEditExtraMeta2Table() {
     var extra_meta_value = $("#extra_meta_value_input").val().trim();
     var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
 
-    var sanitized_extra_meta_name = $("<div/>").html(extra_meta_name.trim()).text();
+    var sanitized_extra_meta_name = sanitizeUserInput(extra_meta_name)
     if (extra_meta_name !== sanitized_extra_meta_name) {
         $("#extra_meta_name_input").addClass("form-invalid");
         $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
