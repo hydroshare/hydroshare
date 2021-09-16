@@ -5,6 +5,7 @@ import sqlite3
 import csv
 from dateutil import parser
 import tempfile
+import time
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -989,10 +990,10 @@ def add_blank_sqlite_file(resource, upload_folder):
     # add the sqlite file to the resource
     odm2_sqlite_file_name = 'ODM2.sqlite'
     odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    odm2_sqlite_file_name = _get_timestamped_file_name(odm2_sqlite_file_name)
 
     try:
-        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'),
-                                     name=os.path.basename(odm2_sqlite_file))
+        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'), name=odm2_sqlite_file_name)
         new_res_file = utils.add_file_to_resource(
             resource, uploaded_file, folder=upload_folder
         )
@@ -1306,6 +1307,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     temp_dir = tempfile.mkdtemp()
     odm2_sqlite_file_name = 'ODM2.sqlite'
     odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    odm2_sqlite_file_name = _get_timestamped_file_name(odm2_sqlite_file_name)
     target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
     shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
 
@@ -1355,6 +1357,12 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     # cleanup the temp csv file
     if os.path.exists(temp_csv_file):
         shutil.rmtree(os.path.dirname(temp_csv_file))
+
+
+def _get_timestamped_file_name(file_name):
+    name, ext = os.path.splitext(file_name)
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    return "{}_{}{}".format(name, timestr, ext)
 
 
 def _extract_creators_contributors(resource, cur, file_type=False):
