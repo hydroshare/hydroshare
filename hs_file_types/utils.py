@@ -455,6 +455,10 @@ def get_logical_file_metadata_json_schema(file_with_path):
         json_schema_dict['properties']['type']['options'] = {
             "hidden": True
         }
+        # remove all required items in spatial_reference field to work around unintended json editor
+        # front end validation for empty fields
+        json_schema_dict['definitions']['BoxSpatialReference']['required'] = []
+        json_schema_dict['definitions']['PointSpatialReference']['required'] = []
         json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}

@@ -992,7 +992,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                       "time_24hr": true,
                       "allowInput": true
                     }
-                }
+                };
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime-local";
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['options'] = option_val;
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
@@ -1005,6 +1005,8 @@ function showFileTypeMetadata(file_type_time_series, url){
                     disable_edit_json: true,
                     disable_properties: true,
                     disable_collapse: true,
+                    keep_oneof_values: false,
+                    remove_empty_properties: true,
                     format: "table",
                     show_errors: "always"
                 });
