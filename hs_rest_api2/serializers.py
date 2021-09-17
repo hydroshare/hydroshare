@@ -1,3 +1,4 @@
+from drf_yasg.generators import OpenAPISchemaGenerator
 from rest_framework.serializers import Serializer
 
 from hsmodels.schemas import ResourceMetadata, GeographicFeatureMetadata, GeographicRasterMetadata, \
@@ -50,3 +51,19 @@ class ReferencedTimeSeriesMetadataSerializer(Serializer):
     class Meta:
         fields = "__all__"
         swagger_schema_fields = ReferencedTimeSeriesMetadata.schema()
+
+
+class NestedSchemaGenerator(OpenAPISchemaGenerator):
+    """
+    Injects hsmodels metadata models nested definitions into the root definitions swagger instance
+    """
+
+    def get_schema(self, request=None, public=False):
+        swagger = super(NestedSchemaGenerator, self).get_schema(request, public)
+        for model in [ResourceMetadata, GeographicFeatureMetadata, GeographicRasterMetadata, MultidimensionalMetadata,
+                      SingleFileMetadata, FileSetMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata]:
+            schema = model.schema()
+            for d in schema['definitions']:
+                swagger.definitions.update({d: schema['definitions'][d]})
+        return swagger
+
