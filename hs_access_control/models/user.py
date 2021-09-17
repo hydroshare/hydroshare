@@ -307,11 +307,10 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                    Q(gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
-                            .distinct()
+                                      g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
+                                    # Q(gaccess__active=True,
+                                    #   g2gcp__community__c2gcp__group__gaccess__active=True,
+                                    #   g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
 
     @property
     def edit_groups(self):
@@ -421,11 +420,11 @@ class UserAccess(models.Model):
                   g2ugp__privilege=PrivilegeCodes.OWNER) |
                 # everyone else can see only active groups they are in
                 Q(gaccess__active=True,
-                  g2ugp__user=self.user) |
+                  g2ugp__user=self.user)).distinct()
                 # if user has access to a group in a community, grant access to whole community
-                Q(gaccess__active=True,
-                  g2gcp__community__c2gcp__group__gaccess__active=True,
-                  g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
+                # Q(gaccess__active=True,
+                #   g2gcp__community__c2gcp__group__gaccess__active=True,
+                #   g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
 
     def owns_group(self, this_group):
         """
@@ -1082,11 +1081,11 @@ class UserAccess(models.Model):
             Q(r2urp__user=self.user) |
             # access via a group
             Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user) |
+              r2grp__group__g2ugp__user=self.user)).distinct()
             # access via an unprivileged peer group in a community
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
+            # Q(r2grp__group__gaccess__active=True,
+            #   r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+            #   r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
 
     @property
     def owned_resources(self):
@@ -1277,16 +1276,16 @@ class UserAccess(models.Model):
                     excl = gexcl
 
             # community permission is VIEW if community link exists at all.
-            if via_community:
-                cquery = \
-                    Q(r2grp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if incl is not None:
-                    incl = incl | cquery
-                else:
-                    incl = cquery
-                # No CHANGE privilege over community resources.
+            # if via_community:
+            #     cquery = \
+            #         Q(r2grp__group__gaccess__active=True,
+            #           r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+            #           r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
+            #     if incl is not None:
+            #         incl = incl | cquery
+            #     else:
+            #         incl = cquery
+            #     # No CHANGE privilege over community resources.
 
             if incl is not None:
                 if excl:

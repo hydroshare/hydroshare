@@ -162,10 +162,10 @@ class GroupAccess(models.Model):
         return User.objects.filter(
                 Q(is_active=True) &
                 (Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group=self.group) |
-                 Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
+                   u2ugp__group=self.group))).distinct()
+                 # Q(u2ugp__group__gaccess__active=True,
+                 #   u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
+                 #   u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
 
     def communities(self):
         """
