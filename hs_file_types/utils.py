@@ -444,6 +444,11 @@ def get_logical_file_metadata_json_schema(file_with_path):
     with istorage.open(file_with_path) as f:
         metadata = load_rdf(f.read())
         json_value = metadata.json()
+        json_value_dict = json.loads(json_value)
+        if json_value_dict['spatial_reference'] is None:
+            del json_value_dict['spatial_reference']
+        json_value = json.dumps(json_value_dict)
+
         json_schema = metadata.schema_json()
         json_schema_dict = json.loads(json_schema)
         # hide the url and aggregation type fields since they are required but should be hidden from metadata
@@ -455,10 +460,6 @@ def get_logical_file_metadata_json_schema(file_with_path):
         json_schema_dict['properties']['type']['options'] = {
             "hidden": True
         }
-        # remove all required items in spatial_reference field to work around unintended json editor
-        # front end validation for empty fields
-        json_schema_dict['definitions']['BoxSpatialReference']['required'] = []
-        json_schema_dict['definitions']['PointSpatialReference']['required'] = []
         json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}

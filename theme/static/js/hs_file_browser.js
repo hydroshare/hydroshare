@@ -1007,19 +1007,26 @@ function showFileTypeMetadata(file_type_time_series, url){
                     disable_collapse: true,
                     keep_oneof_values: false,
                     remove_empty_properties: true,
+                    display_required_only: false,
                     format: "table",
                     show_errors: "always"
                 });
-
+                $("#fileTypeMetaData").append('<div id="metadata_schema_save_info" class="label-file-name icon-blue hidden-form">' +
+                    'Click anywhere outside the input box after making changes to see the Save button</div>');
                 $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" ' +
                     'class="btn btn-primary pull-right btn-form-submit hidden-form">Save changes</button>');
                 var get_editor_ready = true;
                 editor.on('change', function() {
                     $('.invalid-feedback').css('color', 'red');
-                    if (get_editor_ready === true)
+                    if (get_editor_ready === true) {
                         get_editor_ready = false
-                    else
+                        $('#metadata_schema_save_info').show();
+                    }
+                    else {
+                        $('#metadata_schema_save_info').hide();
                         $('#metadata_schema_value_submit').show();
+                    }
+
                 });
 
                 $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
@@ -1027,6 +1034,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                     if (!errors.length) {
                         updateAggrMetaSchema(JSON.stringify(editor.getValue()));
                         $(this).hide();
+                        $('#metadata_schema_save_info').show();
                     }
                     else {
                         console.log(JSON.stringify(editor.getValue()));
