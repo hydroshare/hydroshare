@@ -447,6 +447,8 @@ def get_logical_file_metadata_json_schema(file_with_path):
         json_value_dict = json.loads(json_value)
         if 'spatial_reference' in json_value_dict and json_value_dict['spatial_reference'] is None:
             del json_value_dict['spatial_reference']
+        if 'spatial_coverage' in json_value_dict and json_value_dict['spatial_coverage'] is None:
+            del json_value_dict['spatial_coverage']
         json_value = json.dumps(json_value_dict)
 
         json_schema = metadata.schema_json()
