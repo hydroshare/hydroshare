@@ -312,6 +312,10 @@ INSTALLED_APPS = (
     "hs_discover"
 )
 
+SWAGGER_SETTINGS = {
+    'DEFAULT_GENERATOR_CLASS': 'hs_rest_api2.serializers.NestedSchemaGenerator'
+}
+
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
