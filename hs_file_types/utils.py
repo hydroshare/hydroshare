@@ -445,7 +445,7 @@ def get_logical_file_metadata_json_schema(file_with_path):
         metadata = load_rdf(f.read())
         json_value = metadata.json()
         json_value_dict = json.loads(json_value)
-        if json_value_dict['spatial_reference'] is None:
+        if 'spatial_reference' in json_value_dict and json_value_dict['spatial_reference'] is None:
             del json_value_dict['spatial_reference']
         json_value = json.dumps(json_value_dict)
 
