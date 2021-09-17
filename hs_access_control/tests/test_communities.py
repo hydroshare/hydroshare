@@ -197,7 +197,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.pets.get_effective_group_privilege(self.dogs), PrivilegeCodes.VIEW)
         self.assertEqual(self.pets.get_effective_group_privilege(self.cats), PrivilegeCodes.VIEW)
 
-        self.assertTrue(self.holes in self.cat.uaccess.view_resources)
+        self.assertTrue(self.holes not in self.cat.uaccess.view_resources)
         self.assertTrue(self.holes not in self.cat.uaccess.edit_resources)
 
         self.assertTrue(self.cats in self.pets.member_groups)
@@ -232,7 +232,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
 
         self.assertTrue(self.holes in self.dog.uaccess.view_resources)
         self.assertTrue(self.holes in self.dog.uaccess.edit_resources)
-        self.assertTrue(self.holes in self.cat.uaccess.view_resources)
+        self.assertTrue(self.holes not in self.cat.uaccess.view_resources)
         self.assertTrue(self.holes not in self.cat.uaccess.edit_resources)
 
         # unshare community with group
@@ -381,22 +381,22 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
 
         self.assertTrue(self.dog2.uaccess.can_view_resource(self.holes))
         self.assertTrue(self.dog2.uaccess.can_view_resource(self.squirrels))
-        self.assertTrue(self.dog2.uaccess.can_view_resource(self.posts))
-        self.assertTrue(self.dog2.uaccess.can_view_resource(self.claus))
-        self.assertTrue(self.dog2.uaccess.can_view_resource(self.wings))
-        self.assertTrue(self.dog2.uaccess.can_view_resource(self.perches))
+        self.assertFalse(self.dog2.uaccess.can_view_resource(self.posts))
+        self.assertFalse(self.dog2.uaccess.can_view_resource(self.claus))
+        self.assertFalse(self.dog2.uaccess.can_view_resource(self.wings))
+        self.assertFalse(self.dog2.uaccess.can_view_resource(self.perches))
 
-        self.assertTrue(self.cat2.uaccess.can_view_resource(self.holes))
-        self.assertTrue(self.cat2.uaccess.can_view_resource(self.squirrels))
+        self.assertFalse(self.cat2.uaccess.can_view_resource(self.holes))
+        self.assertFalse(self.cat2.uaccess.can_view_resource(self.squirrels))
         self.assertTrue(self.cat2.uaccess.can_view_resource(self.posts))
         self.assertTrue(self.cat2.uaccess.can_view_resource(self.claus))
-        self.assertTrue(self.cat2.uaccess.can_view_resource(self.wings))
-        self.assertTrue(self.cat2.uaccess.can_view_resource(self.perches))
+        self.assertFalse(self.cat2.uaccess.can_view_resource(self.wings))
+        self.assertFalse(self.cat2.uaccess.can_view_resource(self.perches))
 
-        self.assertTrue(self.bat2.uaccess.can_view_resource(self.holes))
-        self.assertTrue(self.bat2.uaccess.can_view_resource(self.squirrels))
-        self.assertTrue(self.bat2.uaccess.can_view_resource(self.posts))
-        self.assertTrue(self.bat2.uaccess.can_view_resource(self.claus))
+        self.assertFalse(self.bat2.uaccess.can_view_resource(self.holes))
+        self.assertFalse(self.bat2.uaccess.can_view_resource(self.squirrels))
+        self.assertFalse(self.bat2.uaccess.can_view_resource(self.posts))
+        self.assertFalse(self.bat2.uaccess.can_view_resource(self.claus))
         self.assertTrue(self.bat2.uaccess.can_view_resource(self.wings))
         self.assertTrue(self.bat2.uaccess.can_view_resource(self.perches))
 
@@ -422,26 +422,30 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.bat2.uaccess.can_change_resource(self.perches))
 
         self.assertTrue(is_equal_to_as_set(self.dog2.uaccess.view_groups,
-                                           [self.dogs, self.cats, self.bats]))
+                                           [self.dogs]))
         self.assertTrue(is_equal_to_as_set(self.cat2.uaccess.view_groups,
-                                           [self.dogs, self.cats, self.bats]))
+                                           [self.cats]))
         self.assertTrue(is_equal_to_as_set(self.bat2.uaccess.view_groups,
-                                           [self.dogs, self.cats, self.bats]))
+                                           [self.bats]))
+
         self.assertTrue(self.dog2.uaccess.can_view_group(self.dogs))
-        self.assertTrue(self.dog2.uaccess.can_view_group(self.cats))
-        self.assertTrue(self.dog2.uaccess.can_view_group(self.bats))
+        self.assertFalse(self.dog2.uaccess.can_view_group(self.cats))
+        self.assertFalse(self.dog2.uaccess.can_view_group(self.bats))
 
-        self.assertTrue(self.cat2.uaccess.can_view_group(self.dogs))
+        self.assertFalse(self.cat2.uaccess.can_view_group(self.dogs))
         self.assertTrue(self.cat2.uaccess.can_view_group(self.cats))
-        self.assertTrue(self.cat2.uaccess.can_view_group(self.bats))
+        self.assertFalse(self.cat2.uaccess.can_view_group(self.bats))
 
-        self.assertTrue(self.bat2.uaccess.can_view_group(self.dogs))
-        self.assertTrue(self.bat2.uaccess.can_view_group(self.cats))
+        self.assertFalse(self.bat2.uaccess.can_view_group(self.dogs))
+        self.assertFalse(self.bat2.uaccess.can_view_group(self.cats))
         self.assertTrue(self.bat2.uaccess.can_view_group(self.bats))
 
         self.assertTrue(is_equal_to_as_set(self.dog2.uaccess.edit_groups, []))
         self.assertTrue(is_equal_to_as_set(self.cat2.uaccess.edit_groups, []))
         self.assertTrue(is_equal_to_as_set(self.bat2.uaccess.edit_groups, []))
+        self.assertTrue(is_equal_to_as_set(self.dog2.uaccess.view_groups, [self.dogs]))
+        self.assertTrue(is_equal_to_as_set(self.cat2.uaccess.view_groups, [self.cats]))
+        self.assertTrue(is_equal_to_as_set(self.bat2.uaccess.view_groups, [self.bats]))
 
         self.assertFalse(self.dog2.uaccess.can_change_group(self.dogs))
         self.assertFalse(self.dog2.uaccess.can_change_group(self.cats))
@@ -455,22 +459,13 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.bat2.uaccess.can_change_group(self.cats))
         self.assertFalse(self.bat2.uaccess.can_change_group(self.bats))
 
-        self.assertTrue(self.dogs.gaccess.viewers, [self.cat, self.cat2, self.dog,
-                                                    self.dog2, self.bat, self.bat2])
-        self.assertTrue(self.cats.gaccess.viewers, [self.cat, self.cat2, self.dog,
-                                                    self.dog2, self.bat, self.bat2])
-        self.assertTrue(self.bats.gaccess.viewers, [self.cat, self.cat2, self.dog,
-                                                    self.dog2, self.bat, self.bat2])
+        self.assertTrue(self.dogs.gaccess.viewers, [self.dog, self.dog2])
+        self.assertTrue(self.cats.gaccess.viewers, [self.cat, self.cat2])
+        self.assertTrue(self.bats.gaccess.viewers, [self.bat, self.bat2])
 
-        self.assertTrue(self.cat2.uaccess.view_resources,
-                        [self.posts, self.holes, self.wings,
-                         self.perches, self.claus, self.squirrels])
-        self.assertTrue(self.dog2.uaccess.view_resources,
-                        [self.posts, self.holes, self.wings,
-                         self.perches, self.claus, self.squirrels])
-        self.assertTrue(self.bat2.uaccess.view_resources,
-                        [self.posts, self.holes, self.wings,
-                         self.perches, self.claus, self.squirrels])
+        self.assertTrue(self.cat2.uaccess.view_resources, [self.posts, self.claus])
+        self.assertTrue(self.dog2.uaccess.view_resources, [self.holes, self.squirrels])
+        self.assertTrue(self.bat2.uaccess.view_resources, [self.wings, self.perches])
 
     def test_iteration(self):
         " iterate over resources in a community "

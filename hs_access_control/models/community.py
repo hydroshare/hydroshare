@@ -184,8 +184,4 @@ class Community(models.Model):
         elif privilege == PrivilegeCodes.CHANGE:  # requires superuser
             return BaseResource.objects.none()
         else:  # VIEW is requested for regular user via community
-            return BaseResource.objects.filter(
-                # The only reasonable protection is VIEW; don't check protection.
-                Q(r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()
+            return BaseResource.objects.none()
