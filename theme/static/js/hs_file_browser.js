@@ -1005,8 +1005,6 @@ function showFileTypeMetadata(file_type_time_series, url){
                     disable_edit_json: true,
                     disable_properties: true,
                     disable_collapse: true,
-                    use_default_values: false,
-                    remove_empty_properties: false,
                     format: "table",
                     show_errors: "always"
                 });
@@ -1027,6 +1025,9 @@ function showFileTypeMetadata(file_type_time_series, url){
                     if (!errors.length) {
                         updateAggrMetaSchema(JSON.stringify(editor.getValue()));
                         $(this).hide();
+                    }
+                    else {
+                        console.log(JSON.stringify(editor.getValue()));
                     }
                 });
                 // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
