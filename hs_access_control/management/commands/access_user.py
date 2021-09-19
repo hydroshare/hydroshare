@@ -77,9 +77,9 @@ class Command(BaseCommand):
             exit(0)
 
         if command is None or command == 'list':
-            try: 
+            try:
                 user = User.objects.get(username=uname)
-            except User.DoesNotExist: 
+            except User.DoesNotExist:
                 print("user '{}' does not exist.".format(uname))
                 usage()
                 exit(1)
@@ -110,23 +110,23 @@ class Command(BaseCommand):
                 else:
                     email = "No email"
 
-                if options['first'] is not None: 
+                if options['first'] is not None:
                     first = options['first']
-                else: 
+                else:
                     first = "T.C."
 
-                if options['last'] is not None: 
+                if options['last'] is not None:
                     last = options['last']
-                else: 
-                    last = "Mitts" 
+                else:
+                    last = "Mitts"
 
                 print("creating user '{}'".format(uname))
 
                 user = hydroshare.create_account(
                     email,
                     username=uname,
-                    first_name=first,   
-                    last_name=last, 
+                    first_name=first,
+                    last_name=last,
                     superuser=False,
                     groups=[]
                 )

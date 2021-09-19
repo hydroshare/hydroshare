@@ -15,7 +15,7 @@ from django.core.management.base import BaseCommand
 from hs_access_control.models.privilege import PrivilegeCodes, UserGroupPrivilege
 from hs_access_control.management.utilities import group_from_name_or_id, \
         user_from_name
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
 
 def usage():
@@ -92,8 +92,6 @@ class Command(BaseCommand):
             usage()
             exit(1)
 
-        privilege = PrivilegeCodes.VIEW
-
         # not specifing a group lists active groups
         if gname is None:
             print("All groups:")
@@ -140,9 +138,9 @@ class Command(BaseCommand):
                 else:
                     description = "No description"
 
-                if options['purpose'] is not None: 
+                if options['purpose'] is not None:
                     purpose = options['purpose']
-                else: 
+                else:
                     purpose = "No purpose"
 
                 print("creating group '{}' with owner '{}' and description '{}'"
@@ -194,7 +192,7 @@ class Command(BaseCommand):
 
         elif command == 'user':
             # at this point, group must exist
-            print("DEBUG: user subcommand") 
+            print("DEBUG: user subcommand")
             group = group_from_name_or_id(gname)
             if group is None:
                 usage()
@@ -213,14 +211,14 @@ class Command(BaseCommand):
                 exit(1)
 
             if len(options['command']) < 4 or options['command'][3] == 'list':
-                # list whether the user is a member of the group 
-                if UserGroupPrivilege.objects.filter(group=group, user=user).exists(): 
-                
+                # list whether the user is a member of the group
+                if UserGroupPrivilege.objects.filter(group=group, user=user).exists():
+
                     print("group '{}' (id={}) has member {}"
-                          .format(group.name, str(group.id),user.username))
-                else: 
+                          .format(group.name, str(group.id), user.username))
+                else:
                     print("group '{}' (id={}) does not have member {}"
-                          .format(group.name, str(group.id),user.username))
+                          .format(group.name, str(group.id), user.username))
                 exit(1)
 
             action = options['command'][3]
