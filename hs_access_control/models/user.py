@@ -511,7 +511,7 @@ class UserAccess(models.Model):
         access_group = this_group.gaccess
 
         return self.user.is_superuser or access_group.public \
-            or this_group in self.uaccess.view_groups
+            or this_group in self.view_groups
 
     def can_view_group_metadata(self, this_group):
         """
@@ -1065,7 +1065,7 @@ class UserAccess(models.Model):
         unlike GroupAccess.view_groups and GroupAccess.edit_groups.
 
         This can be subqueried in returns, because it is lazily evaluated.
-        e.g., self.uaccess.view_resources.filter(id=resource.id).exists()
+        e.g., user.uaccess.view_resources.filter(id=resource.id).exists()
         """
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
