@@ -54,7 +54,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
     code_repository = forms.URLField(required=False, max_length=255)
     programming_languages = forms.CharField(required=False)
     operating_systems = forms.CharField(required=False)
-    mp_file_types = forms.CharField(max_length=255, required=False)
+    mp_file_types = forms.CharField(required=False)
     mp_program_type = forms.CharField(max_length=255)
     # allow user to upload a json schema file
     mi_json_schema_file = forms.FileField(required=False)
@@ -172,7 +172,7 @@ class ModelProgramMetadataValidationForm(forms.Form):
         try:
             json_schema = json.loads(schema_string)
         except ValueError:
-            self.add_error(field_name, "Not a valid JSON string")
+            self.add_error(field_name, "Schema is not valid JSON")
             return json_schema
 
         if json_schema:
@@ -192,12 +192,19 @@ class ModelProgramMetadataValidationForm(forms.Form):
                                   "draft-04"
                     self.add_error(field_name, err_message)
 
+            if 'properties' not in json_schema:
+                is_schema_valid = False
+                self.add_error(field_name,
+                               "Not a valid metadata schema. Attribute 'properties' "
+                               "is missing")
+
             if is_schema_valid:
                 try:
                     jsonschema.Draft4Validator.check_schema(json_schema)
                 except jsonschema.SchemaError as ex:
                     is_schema_valid = False
-                    self.add_error(field_name, "Not a valid JSON schema. Error:{}".format(str(ex)))
+                    schema_err_msg = "{}. Schema invalid field path:{}".format(ex.message, str(list(ex.path)))
+                    self.add_error(field_name, "Not a valid JSON schema. Error:{}".format(schema_err_msg))
 
         if is_schema_valid:
             # custom validation - hydroshare requirements

@@ -455,11 +455,12 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         return aggregation.is_model_program and self.id == aggregation.id
 
     # used in discovery faceting to aggregate native and composite content types
-    def get_discovery_content_type(self):
+    @staticmethod
+    def get_discovery_content_type():
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
-        return self.model_program_type
+        return "Model Program"
 
     def copy_mp_file_types(self, tgt_logical_file):
         """helper function to support creating copy or new version of a resource

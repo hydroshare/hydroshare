@@ -340,6 +340,7 @@ def update_user_profile(request, profile_user_id):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 def resend_verification_email(request, email):
     user = User.objects.filter(email=email).first()
     if user is None:

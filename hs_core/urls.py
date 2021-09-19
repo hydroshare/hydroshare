@@ -26,7 +26,7 @@ urlpatterns = [
         views.delete_file, name='delete_file'),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-multiple-files/$',
         views.delete_multiple_files, name='delete_multiple_files'),
-    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource/$',
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource/(?P<usertext>[A-z]+)/$',
         views.delete_resource, name='delete_resource'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/create-new-version-resource/$',
         views.create_new_version_resource, name='create_resource_version'),

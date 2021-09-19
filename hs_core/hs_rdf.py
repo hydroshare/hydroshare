@@ -2,7 +2,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from rdflib import Graph, BNode
 from rdflib.collection import Collection
-from rdflib.namespace import Namespace, NamespaceManager, DC, DCTERMS, RDF, RDFS
+from rdflib.namespace import Namespace, DC, DCTERMS, RDF, RDFS
 from rdflib.plugin import register
 from rdflib.plugins.serializers.rdfxml import XMLLANG, OWL_NS, XMLBASE
 from rdflib.plugins.serializers.xmlwriter import XMLWriter
@@ -12,12 +12,6 @@ from rdflib.util import first
 
 HSTERMS = Namespace("https://www.hydroshare.org/terms/")
 RDFS1 = Namespace("http://www.w3.org/2000/01/rdf-schema#")
-
-NAMESPACE_MANAGER = NamespaceManager(Graph())
-NAMESPACE_MANAGER.bind('hsterms', HSTERMS, override=False)
-NAMESPACE_MANAGER.bind("rdfs1", RDFS1, override=False)
-NAMESPACE_MANAGER.bind('dc', DC, override=False)
-NAMESPACE_MANAGER.bind('dcterms', DCTERMS, override=False)
 
 
 class RDF_MetaData_Mixin(object):
@@ -67,7 +61,10 @@ class RDF_MetaData_Mixin(object):
     def get_rdf_graph(self):
         """adds the rdf triples of all generic relations on the object into an rdflib Graph"""
         graph = Graph()
-        graph.namespace_manager = NAMESPACE_MANAGER
+        graph.namespace_manager.bind('hsterms', HSTERMS, override=False)
+        graph.namespace_manager.bind("rdfs1", RDFS1, override=False)
+        graph.namespace_manager.bind('dc', DC, override=False)
+        graph.namespace_manager.bind('dcterms', DCTERMS, override=False)
 
         subject = self.rdf_subject()
         graph.add((subject, RDF.type, self.rdf_type()))

@@ -522,14 +522,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'syslog': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/hydroshare/log/system.log',
-            'formatter': 'simple',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-        },
         'djangolog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -546,21 +538,34 @@ LOGGING = {
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
+        'celerylog': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/hydroshare/log/celery.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15,  # 15MB
+            'backupCount': 10,
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['syslog', 'djangolog'],
-            'propagate': True,
+            'handlers': ['djangolog'],
+            'propagate': False,
             'level': 'DEBUG',
         },
         # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
         'django.template': {
-            'handlers': ['syslog', 'djangolog'],
+            'handlers': ['djangolog'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['syslog'],
+            'handlers': ['djangolog'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['celerylog'],
             'level': 'WARNING',
             'propagate': False,
         },
