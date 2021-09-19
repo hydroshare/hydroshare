@@ -86,7 +86,6 @@ class ResourceAccess(models.Model):
 
         return User.objects.filter(self.__view_users_from_individual |
                                    self.__view_users_from_group).distinct()
-                                   # self.__view_users_from_community).distinct()
 
     @property
     def __edit_users_from_individual(self):
@@ -130,7 +129,6 @@ class ResourceAccess(models.Model):
         return User.objects\
                    .filter((self.__edit_users_from_individual) |
                            (self.__edit_users_from_group)).distinct()
-                           # (self.__edit_users_from_community)).distinct()
 
     @property
     def __view_groups_from_group(self):
@@ -152,8 +150,7 @@ class ResourceAccess(models.Model):
 
         This is a property so that it is a workalike for a prior explicit list
         """
-        return Group.objects.filter(self.__view_groups_from_group)
-                                    # self.__view_groups_from_community).distinct()
+        return Group.objects.filter(self.__view_groups_from_group).distinct()
 
     @property
     def __edit_groups_from_group(self):
@@ -185,8 +182,7 @@ class ResourceAccess(models.Model):
         if self.immutable:
             return Group.objects.none()
         else:
-            return Group.objects.filter(self.__edit_groups_from_group)
-                                        # self.__edit_groups_from_community).distinct()
+            return Group.objects.filter(self.__edit_groups_from_group).distinct()
 
     @property
     def owners(self):
