@@ -510,7 +510,7 @@ class UserAccess(models.Model):
         access_group = this_group.gaccess
 
         return self.user.is_superuser or access_group.public \
-            or this_group in self.uaccess.view_groups
+            or this_group in self.view_groups
 
     def can_view_group_metadata(self, this_group):
         """
