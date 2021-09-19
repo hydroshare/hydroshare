@@ -1,0 +1,11 @@
+./hsctl managepy access_user foo create --first=foo --last=bar --email=foo@bar.com
+./hsctl managepy access_user bar create --first=cat --last=nap --email=cat@dog.com
+./hsctl managepy access_user bar create --first=cat --last=nap --email=cat@dog.com
+./hsctl managepy access_user frank create --first=frank --last=furter --email=frank@furter.com
+
+./hsctl managepy access_group suckers create --description=doo --purpose=doo --owner=foo
+# ... more group creation requests here ...
+
+./hsctl managepy access_community octopi create --description=foo --purpose=foo --owner=bar
+./hsctl managepy access_community octopi group suckers add 
+./hsctl managepy access_community octopi group list 

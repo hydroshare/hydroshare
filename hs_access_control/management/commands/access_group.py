@@ -139,7 +139,11 @@ class Command(BaseCommand):
                     description = options['description']
                 else:
                     description = "No description"
-                purpose = options['purpose']
+
+                if options['purpose'] is not None: 
+                    purpose = options['purpose']
+                else: 
+                    purpose = "No purpose"
 
                 print("creating group '{}' with owner '{}' and description '{}'"
                       .format(gname, owner, description))
@@ -208,7 +212,7 @@ class Command(BaseCommand):
                 usage()
                 exit(1)
 
-            if len(options['command']) < 4:
+            if len(options['command']) < 4 or options['command'][3] == 'list':
                 # list whether the user is a member of the group 
                 if UserGroupPrivilege.objects.filter(group=group, user=user).exists(): 
                 

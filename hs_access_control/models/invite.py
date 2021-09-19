@@ -370,6 +370,7 @@ class GroupCommunityRequest(models.Model):
                 self.privilege = privilege
                 self.redeemed = True
                 self.approved = True
+                self.when_responded = timezone.now()
                 self.save()
                 self.community_owner.uaccess.share_community_with_group(
                     self.community, self.group, self.privilege)
@@ -384,6 +385,7 @@ class GroupCommunityRequest(models.Model):
                 self.group_owner = responder
                 self.redeemed = True
                 self.approved = True
+                self.when_responded = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' approved."\
                     .format(self.group.name, self.community.name)
@@ -406,6 +408,7 @@ class GroupCommunityRequest(models.Model):
                 self.privilege = PrivilegeCodes.VIEW
                 self.redeemed = True
                 self.approved = False
+                self.when_responded = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
@@ -418,6 +421,7 @@ class GroupCommunityRequest(models.Model):
                 self.group_owner = responder
                 self.redeemed = True
                 self.approved = False
+                self.when_responded = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
