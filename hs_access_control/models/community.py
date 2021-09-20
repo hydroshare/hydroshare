@@ -4,10 +4,10 @@ from hs_core.models import BaseResource
 from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.contenttypes.models import ContentType
 
+
 ###################################
 # Communities of groups
 ###################################
-
 
 class Community(models.Model):
     """ a placeholder class for a community of groups """
@@ -18,7 +18,7 @@ class Community(models.Model):
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
 
-    def __str__(self): 
+    def __str__(self):
         return self.name
 
     @property
@@ -207,12 +207,7 @@ class Community(models.Model):
         elif privilege == PrivilegeCodes.CHANGE:  # requires superuser
             return BaseResource.objects.none()
         else:  # VIEW is requested for regular user via community
-            # The only reasonable protection is VIEW; don't check protection.
-            # One can see a resource if there is access to the group via the community
-            return BaseResource.objects.filter(
-                Q(r2grp__group=group,
-                  r2grp__group__g2gcp__community=self,
-                  r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=user)).distinct()
+            return BaseResource.objects.none()
 
     @property
     def first_owner(self):

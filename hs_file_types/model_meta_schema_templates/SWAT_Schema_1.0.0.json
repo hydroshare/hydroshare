@@ -14,13 +14,14 @@
                     "type": "string",
                     "title": "DEM Source URL",
                     "default": "",
-                    "description": "URL of the source of dem used in creating this model instance.",
+                    "description": "URL of the source of DEM used in creating this model instance.",
                     "propertyOrder": 13
                 },
                 "numberOfHRUs": {
                     "type": "number",
                     "title": "Number of HRUs",
                     "default": 1,
+                    "minimum": 1,
                     "description": "Number of HRUs used in creating this model instance.",
                     "propertyOrder": 10
                 },
@@ -42,6 +43,7 @@
                     "type": "number",
                     "title": "Watershed Area (in square killometers)",
                     "default": 0,
+                    "minimum": 0,
                     "description": "Area of the watershed used in creating this model instance.",
                     "propertyOrder": 8
                 },
@@ -49,6 +51,7 @@
                     "type": "number",
                     "title": "Number of Sub-basins",
                     "default": 1,
+                    "minimum": 1,
                     "description": "Number of sub-basins used in creating this model instance.",
                     "propertyOrder": 9
                 },
@@ -63,6 +66,7 @@
                     "type": "number",
                     "title": "Warmup Period in Years",
                     "default": 0,
+                    "minimum": 0,
                     "description": "Warmup period in years used in creating this model instance.",
                     "propertyOrder": 1
                 },
@@ -106,6 +110,7 @@
                     "type": "number",
                     "title": "Routing Time Step Value",
                     "default": 0,
+                    "minimum": 0,
                     "description": "Routing time step value used in creating this model instance.",
                     "propertyOrder": 5
                 },
@@ -120,6 +125,7 @@
                     "type": "number",
                     "title": "Rainfall Time Step Value",
                     "default": 0,
+                    "minimum": 0,
                     "description": "Rainfall time step value used in creating this model instance.",
                     "propertyOrder": 3
                 },
@@ -140,6 +146,7 @@
                     "type": "number",
                     "title": "Simulation Time Step Value",
                     "default": 1,
+                    "minimum": 0,
                     "description": "Simulation time step value used in creating this model instance.",
                     "propertyOrder": 7
                 }
@@ -180,12 +187,19 @@
         },
         "modelObjective": {
             "type": "object",
+            "title": "Model Objectives",
             "properties": {
+                "BMPs": {
+                    "type": "boolean",
+                    "title": "BMPs",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
                 "hydrology": {
                     "type": "boolean",
                     "title": "Hydrology",
                     "format": "checkbox",
-                   "propertyOrder": 1
+                    "propertyOrder": 1
                 },
                 "waterQuality": {
                     "type": "boolean",
@@ -193,32 +207,38 @@
                     "format": "checkbox",
                     "propertyOrder": 2
                 },
-                "BMPs": {
-                    "type": "boolean",
-                    "title": "BMPs",
-                    "format": "checkbox",
-                    "propertyOrder": 3
+                "OtherObjectives": {
+                    "type": "string",
+                    "title": "Other objectives",
+                    "propertyOrder": 5
                 },
                 "climateLanduseChange": {
                     "type": "boolean",
                     "title": "Climate / Landuse Change",
                     "format": "checkbox",
                     "propertyOrder": 4
-                },
-                "OtherObjectives": {
-                    "type": "string", 
-                    "title": "Other objectives",
-                    "propertyOrder": 5
                 }
             },
-            "propertyOrder": 1,
-            "title": "Model Objectives",
             "description": "Objectives of this SWAT model instance.",
+            "propertyOrder": 1,
             "additionalProperties": false
         },
         "modelParameter": {
             "type": "object",
+            "title": "Model Parameters",
             "properties": {
+                "fertilizer": {
+                    "type": "boolean",
+                    "title": "Fertilizer",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                },
+                "pointSource": {
+                    "type": "boolean",
+                    "title": "Point source",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
                 "cropRotation": {
                     "type": "boolean",
                     "title": "Crop rotation",
@@ -231,17 +251,10 @@
                     "format": "checkbox",
                     "propertyOrder": 2
                 },
-                "pointSource": {
-                    "type": "boolean",
-                    "title": "Point source",
-                    "format": "checkbox",
-                    "propertyOrder": 3
-                },
-                "fertilizer": {
-                    "type": "boolean",
-                    "title": "Fertilizer",
-                    "format": "checkbox",
-                    "propertyOrder": 4
+                "OtherParameters": {
+                    "type": "string",
+                    "title": "Other parameters",
+                    "propertyOrder": 8
                 },
                 "tillageOperation": {
                     "type": "boolean",
@@ -249,27 +262,21 @@
                     "format": "checkbox",
                     "propertyOrder": 5
                 },
-                "inletOfDrainingWatershed": {
-                    "type": "boolean",
-                    "title": "Inlet of draining watershed",
-                    "format": "checkbox",
-                    "propertyOrder": 6
-                },
                 "irrigationOperation": {
                     "type": "boolean",
                     "title": "Irrigation operation",
                     "format": "checkbox",
                     "propertyOrder": 7
                 },
-                "OtherParameters": {
-                    "type": "string", 
-                    "title": "Other parameters",
-                    "propertyOrder": 8
+                "inletOfDrainingWatershed": {
+                    "type": "boolean",
+                    "title": "Inlet of draining watershed",
+                    "format": "checkbox",
+                    "propertyOrder": 6
                 }
             },
-            "propertyOrder": 1,
-            "title": "Model Parameters", 
             "description": "Various model paramters used in this model instance.",
+            "propertyOrder": 1,
             "additionalProperties": false
         },
         "simulationType": {

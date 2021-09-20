@@ -235,20 +235,20 @@
                                             <span><a href="{{ profile.cv.url }}" class="btn btn-default"
                                                     target="_blank"><span
                                                     class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></span>
-
-                                            <div id="group-cv" class="btn-group text-center" role="group"
-                                                 aria-label="CV">
-
-                                            <span class="btn-file icon-button icon-blue" title="Update CV">
-                                                <span class="glyphicon glyphicon-refresh"></span>
-                                                <input type="file" name="cv">
-                                            </span>
-                                                <button id="btn-delete-cv" class="no-style icon-button btn-remove"
+                                            <button id="btn-delete-cv" class="no-style icon-button btn-remove"
                                                         data-toggle="modal"
                                                         data-target="#delete-cv" title="Delete CV"><span
                                                         class="glyphicon glyphicon-trash"></span>
-                                                </button>
-                                            </div>
+                                            </button>
+                                            <div id="group-cv" class="btn-group text-center" role="group"
+                                                 aria-label="CV">
+                                            <span class="input-group">
+                                            <span id="cv-custom-upload" class="btn btn-primary btn-file" title="Update CV">
+                                                <span class="glyphicon glyphicon-edit"></span>
+                                                <input type="file" name="cv">
+                                            </span>
+                                             <input class='no-style' type="text" readonly>
+                                            </span>
                                         {% else %}
                                             <hr>
                                             <fieldset>

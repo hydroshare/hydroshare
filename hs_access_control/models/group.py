@@ -17,12 +17,11 @@ from django.contrib.contenttypes.models import ContentType
 # the display routines for groups to display communities of groups.
 # Rather, communities are exposed through a separate module community.py
 # Only access-list functions have been modified for communities.
-# * GroupAccess.view_resources and GroupAccess.edit_resources do reflect
-#   community privileges, because they are used like access lists, while
+# * GroupAccess.view_resources and GroupAccess.edit_resources
+#   do not reflect community privileges.
 # * GroupAccess.get_resources_with_explicit_access does *not* reflect
-#   community privileges, because it is used to display a group's resources
-#   on the group landing page. Including community resources would confuse this
-#   depiction.
+#   community privileges.
+# (Revised Sept 17, 2021)
 #############################################
 
 
@@ -136,8 +135,8 @@ class GroupAccess(models.Model):
 
         :return: list of users
 
-        This eliminates duplicates due to multiple memberships, and includes community groups that
-        have access, unlike members, which just lists explicit group members.
+        This eliminates duplicates due to multiple memberships,
+        unlike members, which just lists explicit group members.
         """
 
         return User.objects.filter(self.__view_users_of_group)
@@ -151,21 +150,17 @@ class GroupAccess(models.Model):
 
         This eliminates duplicates due to multiple invitations.
         """
-
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
                                    u2ugp__privilege__lte=PrivilegeCodes.VIEW)
 
     @property
     def viewers(self):
-        """ a viewer is not necessarily a member, due to community influence """
+        """ viewers are group members """
         return User.objects.filter(
                 Q(is_active=True) &
                 (Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group=self.group) |
-                 Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                   u2ugp__group__g2gcp__community__c2gcp__group=self.group))).distinct()
+                   u2ugp__group=self.group))).distinct()
 
     def communities(self):
         """
@@ -213,10 +208,6 @@ class GroupAccess(models.Model):
         QuerySet of resources held by group.
 
         :return: QuerySet of resource objects held by group.
-
-        This includes directly accessible objects as well as objects accessible
-        by nature of the fact that the current group is a member of a community
-        containing another group that can access the object.
 
         """
         return BaseResource.objects.filter(self.__view_resources_of_group)

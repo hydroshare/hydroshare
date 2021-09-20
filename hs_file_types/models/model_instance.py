@@ -10,7 +10,7 @@ from dominate import tags as dom_tags
 from rdflib import BNode, Literal, URIRef, RDF
 from rdflib.namespace import Namespace, DC
 
-from hs_core.hs_rdf import NAMESPACE_MANAGER, HSTERMS
+from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare.utils import current_site_url
 from hs_core.models import ResourceFile
 from .base import NestedLogicalFileMixin
@@ -64,7 +64,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             if not _dict_has_value(v):
                                 continue
                         elif not v:
-                            # v is either a str or a list
+                            # v is either a str or a list, and empty
                             continue
 
                         k_title = k
@@ -302,11 +302,25 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 if sub_element_value:
                     sub_value = ", ".join(sub_element_value)
             else:
+                # value is either a bool or a number
                 sub_value = sub_element_value
             if sub_value != '':
                 graph.add((sub_element_node, RDF.value, Literal(sub_value)))
                 return True
             return False
+
+        if self.has_model_output:
+            includes_output = 'true'
+        else:
+            includes_output = 'false'
+        graph.add((subject, HSTERMS.includesModelOutput, Literal(includes_output)))
+
+        if self.executed_by:
+            if self.executed_by:
+                resource = self.logical_file.resource
+                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
+                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
+                graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
 
         valid_schema = False
         resource = self.logical_file.resource
@@ -323,27 +337,14 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         res_xmlns = os.path.join(current_site_url(), 'resource', resource.short_id) + "/"
         ns_prefix = None
         NS_META_SCHEMA = Namespace(res_xmlns)
-        NAMESPACE_MANAGER.bind(prefix=ns_prefix, namespace=NS_META_SCHEMA, override=False)
-        graph.namespace_manager = NAMESPACE_MANAGER
+        graph.namespace_manager.bind(prefix=ns_prefix, namespace=NS_META_SCHEMA, override=False)
 
         model_meta_node = BNode()
-        graph.add((subject, NS_META_SCHEMA.modelSpecificMetadata, model_meta_node))
+        graph.add((subject, HSTERMS.modelSpecificMetadata, model_meta_node))
         model_title = ""
         if self.logical_file.metadata_schema_json:
             model_title = self.logical_file.metadata_schema_json.get('title', "")
         graph.add((model_meta_node, DC.title, Literal(model_title)))
-        if self.has_model_output:
-            includes_output = 'true'
-        else:
-            includes_output = 'false'
-        graph.add((model_meta_node, HSTERMS.includesModelOutput, Literal(includes_output)))
-
-        if self.executed_by:
-            if self.executed_by:
-                resource = self.logical_file.resource
-                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
-                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
-                graph.add((model_meta_node, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
 
         if valid_schema:
             metadata_dict = self.metadata_json
@@ -358,7 +359,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         if not _dict_has_value(v):
                             continue
                     elif not v:
-                        # v is either a str or a list
+                        # v is either a str or a list,  and empty
                         continue
 
                 k_element_node = BNode()
@@ -399,7 +400,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                             # remove the sub element node from the graph
                             for _, pred, obj in graph.triples((k_sub_element_node, None, None)):
                                 graph.remove((k_sub_element_node, pred, obj))
-                            graph.remove((k_element_prop_node, None, k_sub_element_node))
                 else:
                     triple_added = add_sub_element_value_triple(k_element_node, v)
                     if not triple_added:
@@ -456,11 +456,12 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         return True
 
     # used in discovery faceting to aggregate native and composite content types
-    def get_discovery_content_type(self):
+    @staticmethod
+    def get_discovery_content_type():
         """Return a human-readable content type for discovery.
         This must agree between Composite Types and native types).
         """
-        return self.model_instance_type
+        return "Model Instance"
 
     def add_resource_files_in_folder(self, resource, folder):
         """
@@ -529,6 +530,8 @@ def _dict_has_value(dct):
         elif isinstance(val, list):
             if val:
                 return True
+        elif type(val) in (int, float, bool):
+            return True
         elif isinstance(val, dict):
             return _dict_has_value(val)
     return False
