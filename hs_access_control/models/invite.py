@@ -374,8 +374,8 @@ class GroupCommunityRequest(models.Model):
                 self.save()
                 self.community_owner.uaccess.share_community_with_group(
                     self.community, self.group, self.privilege)
-                message = "Request to connect group '{}' to community '{}' approved."\
-                    .format(self.group.name, self.community.name)
+                message = "Request to connect group '{}' to community '{}' approved by '{}'."\
+                    .format(self.group.name, self.community.name, self.community_owner)
                 return message, True
             else:
                 message = "You do not own the community and cannot approve this request."
@@ -393,7 +393,8 @@ class GroupCommunityRequest(models.Model):
                     self.community, self.group, self.privilege)
                 return message, True
             else:
-                message = "You do not own the group and cannot approve this request."
+                message = "You do not own the group and cannot approve this request. Group: '{}' Community: '{}' Responder: '{}' Community Owner: '{}'"\
+                                .format(self.group.name, self.community.name, responder, self.community_owner)
                 return message, False
 
     def decline(self, responder):
@@ -402,7 +403,7 @@ class GroupCommunityRequest(models.Model):
         if self.redeemed:
             message = "Request is completed and cannot be declined."
             return message, False
-        if self.community_owner is None:
+        if self.community_owner is not None:
             if responder.uaccess.owns_community(self.community):
                 self.community_owner = responder
                 self.privilege = PrivilegeCodes.VIEW
@@ -439,7 +440,7 @@ class GroupCommunityRequest(models.Model):
         :param community_owner: community_owner requesting removal of the object.
 
         Usage:
-            GroupCommunityPrivilege.remove(group={X}, community={Y}, community_owner={Z})
+            GroupCommunityRequest.remove(group={X}, community={Y}, community_owner={Z})
 
         Return values: returns a pair of values
         * message: a status message for the user.
@@ -460,7 +461,7 @@ class GroupCommunityRequest(models.Model):
         community = kwargs['community']
 
         # don't allow anything unless the requester is authorized
-        if not requester.owns_community(community):
+        if not requester.uaccess.owns_community(community):
             message = "User {} does not own community '{}'"\
                 .format(requester.username, community.name)
             return message, False
@@ -478,7 +479,7 @@ class GroupCommunityRequest(models.Model):
                 .format(group.name, community.name)
             return message, True
 
-        requester.uaccess_unshare_community_with_group(community, group)
+        requester.uaccess.unshare_community_with_group(community, group)
         message = "Group '{}' removed from community '{}'."\
             .format(group.name, community.name)
         return message, True

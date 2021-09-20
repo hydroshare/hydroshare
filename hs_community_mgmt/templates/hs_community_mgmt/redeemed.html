@@ -1,0 +1,38 @@
+<html>
+<script>
+function delete_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'delete' + '/' + gid + '/';
+}
+</script>
+<h3> Past Requests </h3>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Approving Group Owner  </th>
+      <th> Responding Community Owner </th>
+      <th> Date of Decline </th>
+      <th> Delete Request </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in redeemed %}
+  <tr>
+  <td> {{ i.group.name }}
+  <td> {{ i.group.gaccess.owners }}
+  <td> {{ i.community_owner }}
+  <td> {{ i.when_responded }}
+  <td> <button type="button" id="Cancel"
+        onclick="delete_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</html>

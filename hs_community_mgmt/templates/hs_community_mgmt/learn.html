@@ -1,0 +1,190 @@
+<html>
+<head>
+<style>
+table {
+  border: 1px solid black;
+  vertical-align: top;
+}
+th {
+  border: 1px solid black;
+  vertical-align: top;
+}
+td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+thead {
+  position: sticky;
+  top:0;
+}
+.my-custom-scrollbar {
+  position: relative;
+  height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+#Cancel {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Approve {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Deny {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Delete {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Remove {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <!--<meta name="viewport" content="width=device-width, initial-scale=1"> -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"> </script>
+  <script src= "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"> </script>
+<script>
+$(document).ready(function(){
+//    $("#functions").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/functions/');
+    $("#requests").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/requests/' + {{ uid }} + '/' + {{ cid }} + '/');
+    $("#debug").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/debugging/' + {{ uid }} + '/' + {{ cid }} + '/');
+    $("#invitations").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/invitations/' + {{ uid }} + '/' + {{ cid }} + '/');
+    $("#comm_report").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/comm_report/' + {{ uid }} + '/' + {{ cid }} + '/');
+    $("#denied").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/denied/' + {{ uid }} + '/' + {{ cid }} + '/');
+    $("#redeemed").load('https://dev-hs-3.cuahsi.org/cmgmt/_internal/request/redeemed/' + {{ uid }} + '/' + {{ cid }} + '/');
+});
+</script>
+<script>
+function accept_invite(uid, cid, gid) {
+    console.log("WHY");
+    console.log("Should print uid, cid, gid of accepted group: " + uid + cid + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'approve' + '/' + gid + '/';
+}
+function decline_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'decline' + '/' + gid + '/';
+}
+function delete_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'delete' + '/' + gid + '/';
+}
+function cancel_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'cancel' + '/' + gid + '/';
+}
+function remove_group_from_comm(uid, cid, gid) {
+    console.log("Should print name of group whose request was deleted:");
+    console.log(String(gid));
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'remove_group' + '/' + gid + '/';
+}
+function myFunction() {
+    var x = document.getElementById("uSelect").value;
+    console.log(x);
+}
+function select_curr_user(id) {
+    console.log("Should print name of selected user: " + id);
+    window.location='/cmgmt/_internal/learning/' +
+        id + '/' + {{ community.id }} + '/' + 'change_user' + '/';
+}
+function invite_group(value) {
+    var url = document.getElementById("group_invitations").value;
+    console.log("Should print ID of group being invited : " + url);
+    window.location='/cmgmt/_internal/learning/' + url + 'invite_group/';
+}
+</script>
+
+<div id="functions"></div>
+{{ message }}
+
+</br>
+{% for i in owned_communities %}
+<a href = "https://dev-hs-3.cuahsi.org//cmgmt/_internal/cowned_resources/{{ uid }}/{{ i.id }}/" > Go to {{ i }} management page </a>
+{% endfor %}
+</br>
+<h5> MESSAGE : {{ message }} </h5>
+<div id="requests"> </div>
+<div id="debug"></div>
+<div id="invitations"></div> 
+<div id="comm_report"></div>
+<div id="denied"> </div>
+<div id="redeemed"></div>
+ 
+<h2> Invite Groups </h2>
+<select name='invitations' id='group_invitations'>
+<table>
+<tbody> 
+<tr><td>
+{% for i in all_groups %}
+    {% if i.gaccess.active == True %}
+        <option value="{{ uid }}/{{ cid }}/{{ i.id }}/"> {{i.name}} ({{i.id}}) </option>
+    {% endif %}
+{% endfor %}
+</td><td>
+<input type='submit' value='invite group' onclick='invite_group();'></td></tr>
+</tbody></table> 
+</body>
+
+<h3> More Debugging </h3>
+{{ debugging }}
+{{ message }}
+Community Owners: {% for i in comm_owners %} 
+            {{ i }} (ID: {{ i.id }}), 
+        {% endfor %} </br> 
+{{ community.name }} Member Groups: {% for i in community.member_groups %}
+    {{ i }},  
+{% endfor %}
+</center>
+</html>

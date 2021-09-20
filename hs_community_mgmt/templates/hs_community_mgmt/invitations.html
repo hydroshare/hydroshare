@@ -1,0 +1,35 @@
+<html>
+<script> 
+function cancel_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'cancel' + '/' + gid + '/';
+}
+</script>
+<h2> Status of Invitations </h2>
+<h3> Note: Invitations from a Community to a Group do not exist yet </h3>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Date of Invitation </th>
+      <th> Cancel Invitation </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in gcr %}
+  <tr>
+  <td> {{ i.group.name }}
+  <td> {{ i.when_requested }}
+  <td> <button type="button" id="Deny"
+        onclick="cancel_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+</html>

@@ -1,0 +1,104 @@
+<html>
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+.my-custom-scrollbar {
+  position: relative;
+  height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+
+</style>
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+USER: {{ uinfo.user }} </br>
+ID: {{ hate.id }} </br>
+<h1> Accessible Groups and Resources </h1>
+</div>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+
+<table class = "table-wrapper-scroll-y my-custom-scrollbar">
+  <tr>
+    <th> Groups </th>
+    <th> Editable Resources </th>
+    <th> Viewable Resources </th>
+  </tr>
+  <tr>
+  <td>
+      {% for g in uinfo.groups %}
+          {{ g.name }} </br>
+      {% endfor %}
+  </td>
+  <td>
+      {% for r in uinfo.user.uaccess.edit_resources %}
+          {{ r }} </br>
+      {% endfor %}
+  </td>
+  <td>
+      {% for r in uinfo.user.uaccess.view_resources %}
+          {{ r }} </br>
+      {% endfor %}
+  </td>
+  </tr>
+</table>
+</div>
+<h2> Owned Groups and Resources </h2>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+<table class = "table-wrapper-scroll-y my-custom-scrollbar">
+  <tr>
+    <th> Groups </th>
+    <th> Communities </th>
+    <th> Editable Resources </th>
+    <th> Viewable Resources </th>
+  </tr>
+  <tr>
+  <td>
+      {% for g in uinfo.ogroups %}
+          {{ g.name }} </br>
+      {% endfor %}
+  </td>
+  <td>
+      {% for c in uinfo.ocommunities %}
+          {{ c.name }} </br>
+      {% endfor %}
+  </td>
+  <td>
+      {% for r in uinfo.user.uaccess.edit_resources %}
+          {{ r }} </br>
+      {% endfor %}
+  </td>
+  <td>
+      {% for r in uinfo.user.uaccess.view_resources %}
+          {{ r }} </br>
+      {% endfor %}
+  </td>
+  </tr>
+</table>
+</div>
+<div>
+<h2> Pending Requests </h2>
+{% for i in uinfo.pending %}
+    {{ i }} 
+{% endfor %} </br>
+{{ uinfo.pending }}
+</div>
+</body>
+</html>
+
+
+
+

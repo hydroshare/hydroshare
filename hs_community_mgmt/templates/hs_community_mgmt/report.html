@@ -1,0 +1,39 @@
+<html>
+<script>
+function remove_group_from_comm(uid, cid, gid) {
+    console.log("Should print name of group whose request was deleted:");
+    console.log(String(gid));
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'remove_group' + '/' + gid + '/';
+}
+</script>
+<h2> Community Report </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Group Owner  </th>
+      <th> Responding Community Owner </th>
+      <th> Date of Response </th>
+      <th> Remove Group from Community </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in community.member_groups %}
+  <tr>
+  <td> {{ i.name }}
+  <td> {{ i.gaccess.owners }}
+  <td> {{ community.owners }}
+  <td> {{ i.when_responded }}
+  <td> <button type="button" id="Remove"
+        onclick="remove_group_from_comm({{ uid }}, {{ cid }}, {{ i.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</html>

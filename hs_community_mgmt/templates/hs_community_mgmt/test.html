@@ -1,1 +1,87 @@
-<h1>Hi there</h1> 
+<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title> Community Management Home Page  </title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="jumbotron text-center">
+  <h1> Hydroshare Community Management Home Page </h1>
+  <p> Use the dropdowns to view more information on a Hydroshare entity </p>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+      <h1> Select Group, Display Info [Used for learning] </h1> 
+      <select id="mySelect" onchange="listGroup()">
+      {% for g in teams %}
+          <option value = {{ g.id }} > {{ g }}
+      {% endfor %}
+      </select>
+      <p id = "demo">This should change </p>
+      <p id = "gr"> Group Owned Resources </p>
+    </div>
+    <div class="col-sm-4">
+      <h1> Select User, Display Info [Used for learning] </h1>
+      <select id = "g2u" onchange="listUser()">
+      {% for p in people %}
+          <option value =  {{ p.id }} > {{ p.username }}
+      {% endfor %}
+      </select>
+      <p id = "ur"> This should change </p>
+      <p id = "tester"> Go to User Owned Resources </p>
+    </div>
+
+    <div class="col-sm-4">
+    <h1> ****Select Community, Display Info**** </h1>
+    <select id = "comm" onchange="listComm()">
+      {% for c in comms %}
+          <option value =  {{ c.id }} > {{ c.name }}
+      {% endfor %}
+    </select>
+    <p id = "testerer"> This should change </p>
+    <p id = "test2"> Go to Community Owned Resources </p>
+    </div>
+<script>
+var y = document.getElementById("comm").value;
+document.getElementById("testerer").innerHTML = "<a href = 'https://dev-hs-3.cuahsi.org//cmgmt/_internal/cowned_resources/" +y+"' > View Community Information </a>";
+function listGroup() {
+  var x = document.getElementById("mySelect").value;
+  document.getElementById("demo").innerHTML = "ID selected: " + x;
+  console.log(document.getElementById("gr").value);
+  document.getElementById("gr").innerHTML = "<a href = 'https://dev-hs-3.cuahsi.org//cmgmt/_internal/gowned_resources/" +x+"' > View Group Information </a>";
+  console.log(document.getElementById("gr").innerHTML);
+  listMembers(x);
+}
+
+function listUser() {
+  var x = document.getElementById("g2u").value;
+  document.getElementById("ur").innerHTML = "ID selected: " + x;
+  document.getElementById("tester").innerHTML = "<a href = 'https://dev-hs-3.cuahsi.org//cmgmt/_internal/uowned_resources/" +x+"' > View User Information </a>";
+  console.log(document.getElementById("g2u").value);
+  listMembers(x);
+}
+
+function listComm() {
+  var x = document.getElementById("comm").value;
+  document.getElementById("test2").innerHTML = "<a href = 'https://dev-hs-3.cuahsi.org//cmgmt/_internal/cowned_resources/" +x+"' > View Community Information </a>";
+  console.log(document.getElementById("test2").value);
+  listMembers(x);
+}
+
+
+
+function listMembers(gro) {
+  console.log(typeof gro);
+}
+</script>
+
+</body>
+</html>

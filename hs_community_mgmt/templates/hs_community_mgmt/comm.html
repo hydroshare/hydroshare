@@ -1,0 +1,369 @@
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+thead {
+  position: sticky;
+  top:0;
+}
+.my-custom-scrollbar {
+  position: relative;
+  height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+#Cancel {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Approve {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Deny {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Delete {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Remove {
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"> </script>
+  <script src= "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"> </script>
+
+<script>
+function accept_invite(uid, cid, gid) {
+    console.log("Should print name of accepted group: " + gid);
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        uid + '/' + cid + '/' + 'approve' + '/' + gid + '/';
+}
+function decline_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        uid + '/' + cid + '/' + 'decline' + '/' + gid + '/';
+}
+function delete_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        uid + '/' + cid + '/' + 'delete' + '/' + gid + '/';
+}
+function cancel_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        uid + '/' + cid + '/' + 'cancel' + '/' + gid + '/';
+}
+function remove_group_from_comm(uid, cid, gid) {
+    console.log("Should print name of group whose request was deleted:");
+    console.log(String(gid));
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        uid + '/' + cid + '/' + 'remove_group' + '/' + gid + '/';
+}
+function myFunction() {
+    var x = document.getElementById("uSelect").value;
+    console.log(x);
+}
+function select_curr_user(id) {
+    console.log("Should print name of selected user: " + id);
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        id + '/' + {{ community.id }} + '/' + 'change_user' + '/';
+}
+function invite_group(value) {
+    var url = document.getElementById("group_invitations").value;
+    console.log("Should print ID of group being invited : " + url);
+    window.location='/cmgmt/_internal/cowned_resources/' + url + 'invite_group/';
+}
+</script>
+</head>
+<h1> <center> {{ community.name }} Management Page  </h1>
+<div>
+Owners:
+{% for i in community.owners %}
+    {{ i }} (ID:{{ i.id }})
+{% endfor %}
+</div>
+<h3> Select Current User </h3>
+<select onchange="select_curr_user(value);">
+{% for i in comm_owners %}
+  <option value={{ i.id }}> {{ i }} </option>
+{% endfor %}
+</select>
+</br>
+{% for i in owned_communities %}
+<a href = "https://dev-hs-3.cuahsi.org//cmgmt/_internal/cowned_resources/{{ uid }}/{{ i.id }}/" > Go to {{ i }} management page </a>
+{% endfor %}
+</br>
+ Message: {{ message }}
+ {{ check }}
+<h2> Requests Table </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Group Name </th>
+      <th> Group Owner Requesting Membership  </th>
+      <th> Community Name </th> 
+      <th> Date of Request </th>
+      <th> Approve Request </th>
+      <th> Deny Request </th>
+    </tr>
+  </thead>
+  <tbody> 
+{% for i in gcr %}
+<tr>
+<td> {{ i.group.name }} </td> 
+<td> {{ i.group_owner.username }} </td>
+<td> {{ i.community.name }} </td> 
+<td> {{ i.when_requested }} </td>
+<td> <button type="button" id="Approve" 
+        onclick="accept_invite({{ uid }}, {{ cid }}, {{ i.group.id }})" > ✅ 
+     </button> 
+</td>
+<td> <button type="button" id="Deny" 
+        onclick="decline_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> ❌ 
+     </button>
+</td>
+</tr>
+{% endfor %}
+  </tbody>
+</table>
+
+<h2> Debug past community requests </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name (ID) </th>
+      <th> Group Owner requesting </th>
+      <th> Community Name (ID) </th>
+      <th> Community Owner Responding  </th>
+      <th> Date of Request </th>
+      <th> Date of Response </th>
+      <th> Approved </th>
+      <th> Redeemed </th>
+    </tr>
+  </thead>
+  <tbody> 
+{% for i in gcall %}
+<tr>
+<td> {{ i.group.name }} ( {{ i.group.id }} )  </td> 
+<td> {{ i.group_owner.username }} </td>
+<td> {{ i.community.name }} ( {{ i.community.id }} ) </td> 
+<td> {{ i.community_owner.username }} </td>
+<td> {{ i.when_requested }} </td>
+<td> {{ i.when_responded }} </td>
+<td> {{ i.approved }} </td>
+<td> {{ i.redeemed }} </td>
+</tr>
+{% endfor %}
+  </tbody>
+</table>
+
+
+<h2> Status of Invitations </h2>
+<h3> Note: Invitations from a Community to a Group do not exist yet </h3>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Date of Invitation </th>
+      <th> Cancel Invitation </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in gcr %}
+  <tr>
+  <td> {{ i.group.name }}
+  <td> {{ i.when_requested }}
+  <td> <button type="button" id="Deny"
+        onclick="cancel_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+<h2> Review Past Requests </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Approving Group Owner  </th>
+      <th> Responding Community Owner </th>
+      <th> Date of Decline </th>
+      <th> Delete Request </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in redeemed %}
+  <tr>
+  <td> {{ i.group.name }}
+  <td> {{ i.group.gaccess.owners }}
+  <td> {{ i.community_owner }}
+  <td> {{ i.when_responded }}
+  <td> <button type="button" id="Cancel"
+        onclick="delete_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<h2> Community Report </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Group Owner  </th>
+      <th> Responding Community Owner </th>
+      <th> Date of Response </th>
+      <th> Remove Group from Community </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in community.member_groups %}
+  <tr>
+  <td> {{ i.name }}
+  <td> {{ i.gaccess.owners }}
+  <td> {{ community.owners }}
+  <td> {{ i.when_responded }}
+  <td> <button type="button" id="Remove"
+        onclick="remove_group_from_comm({{ uid }}, {{ cid }}, {{ i.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<h2>  Denied Requests </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Approving Group Owner  </th>
+      <th> Responding Community Owner </th>
+      <th> Date of Decline </th>
+      <th> Delete Record of Request </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in denied %}
+  <tr>
+  <td> {{ i.group.name }}
+  <td> {{ i.group.gaccess.owners }}
+  <td> {{ i.community_owner }}
+  <td> {{ i.when_responded }}
+  <td> <button type="button" id="Delete"
+        onclick="delete_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> ❌
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2> Invite Groups </h2>
+<select name='invitations' id='group_invitations'>
+<table>
+<tbody> 
+<tr><td>
+{% for i in all_groups %}
+    {% if i.gaccess.active == True %}
+        <option value="{{ uid }}/{{ cid }}/{{ i.id }}/"> {{i.name}} ({{i.id}}) </option>
+    {% endif %}
+{% endfor %}
+</td><td>
+<input type='submit' value='invite group' onclick='invite_group();'></td></tr>
+</tbody></table> 
+</body>
+
+<h3> More Debugging </h3>
+Community Owners: {% for i in comm_owners %} 
+            {{ i }} (ID: {{ i.id }}), 
+        {% endfor %} </br> 
+{{ community.name }} Member Groups: {% for i in community.member_groups %}
+    {{ i }} 
+{% endfor %}
+</br>
+{{ help }} </br> 
+{{ debugging }} </br> 
+{{ debug }} </br> 
+{{ message }} </br>
+</center>
+
+</html>

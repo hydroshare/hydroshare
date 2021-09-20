@@ -1,0 +1,42 @@
+<html>
+<h2> Requests Table </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Group Name </th>
+      <th> UID </th>
+      <th> CID </th>
+      <th> Group Owner Requesting Membership  </th>
+      <th> Community Name </th>
+      <th> Date of Request </th>
+      <th> Approve Request </th>
+      <th> Deny Request </th>
+    </tr>
+  </thead>
+  <tbody>
+{% for i in gcr %}
+<tr>
+<td> {{ i.group.name }} </td>
+<td> {{ uid }} </td>
+<td> {{ cid }} </td>
+<td> {{ i.group_owner.username }} </td>
+<td> {{ i.community.name }} </td>
+<td> {{ i.when_requested }} </td>
+<td> <button type="button" id="Approve"
+        onclick="accept_invite({{ uid }}, {{ cid }}, {{ i.group.id }});"> ✅✅
+     </button>
+</td>
+<td> <button type="button" id="Deny"
+        onclick="decline_invite({{ uid }}, {{ cid }}, {{ i.group.id }});"> ❌
+     </button>
+</td>
+</tr>
+{% endfor %}
+  </tbody>
+</table>
+</html>

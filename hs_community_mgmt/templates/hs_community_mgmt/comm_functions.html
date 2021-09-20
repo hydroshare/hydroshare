@@ -1,0 +1,46 @@
+<html>
+<script>
+function accept_invite(uid, cid, gid) {
+    console.log("WHY");
+    console.log("Should print uid, cid, gid  of accepted group: " + uid + cid + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'approve' + '/' + gid + '/';
+}
+function decline_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'decline' + '/' + gid + '/';
+}
+function delete_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'delete' + '/' + gid + '/';
+}
+function cancel_invite(uid, cid, gid) {
+    console.log("Should print name of group whose request was declined: " + gid);
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'cancel' + '/' + gid + '/';
+}
+function remove_group_from_comm(uid, cid, gid) {
+    console.log("Should print name of group whose request was deleted:");
+    console.log(String(gid));
+    window.location='/cmgmt/_internal/learning/' +
+        uid + '/' + cid + '/' + 'remove_group' + '/' + gid + '/';
+}
+function myFunction() {
+    var x = document.getElementById("uSelect").value;
+    console.log(x);
+}
+function select_curr_user(id) {
+    console.log("Should print name of selected user: " + id);
+    window.location='/cmgmt/_internal/learning/' +
+        id + '/' + {{ community.id }} + '/' + 'change_user' + '/';
+}
+function invite_group(value) {
+    var url = document.getElementById("group_invitations").value;
+    console.log("Should print ID of group being invited : " + url);
+    window.location='/cmgmt/_internal/cowned_resources/' + url + 'invite_group/';
+}
+</script>
+
+</html>

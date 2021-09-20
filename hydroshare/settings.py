@@ -556,7 +556,7 @@ LOGGING = {
         # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
         'django.template': {
             'handlers': ['syslog', 'djangolog'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'django.db.backends': {

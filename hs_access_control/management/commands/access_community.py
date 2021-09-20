@@ -14,7 +14,9 @@ Please connect to the bash shell for the hydroshare container before running the
 from django.core.management.base import BaseCommand
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
-        UserGroupPrivilege, UserCommunityPrivilege, GroupCommunityPrivilege
+        UserGroupPrivilege, UserCommunityPrivilege, \
+        GroupCommunityPrivilege
+from hs_access_control.models.provenance import GroupCommunityProvenance
 from hs_access_control.management.utilities import community_from_name_or_id, \
         group_from_name_or_id, user_from_name
 from hs_access_control.models.invite import GroupCommunityRequest
@@ -26,6 +28,7 @@ def usage():
     print("access_community usage:")
     print("  access_community [{cname} [{request} [{options}]]]")
     print("Where:")
+    print("  clear : clear all requests and memberships")
     print("  {cname} is a community name. Use '' to embed spaces.")
     print("  {request} is one of:")
     print("      list: print the configuration of a community.")
@@ -122,6 +125,13 @@ class Command(BaseCommand):
             for c in Community.objects.all():
                 print("  '{}' (id={})".format(c.name, str(c.id)))
             usage()
+            exit(0)
+
+        elif cname == 'clear':
+            GroupCommunityRequest.objects.all().delete()
+            GroupCommunityPrivilege.objects.all().delete()
+            GroupCommunityProvenance.objects.all().delete()
+            print("communities cleared :(")
             exit(0)
 
         if command is None or command == 'list':
@@ -231,6 +241,12 @@ class Command(BaseCommand):
                 print("unknown owner action '{}'".format(action))
                 usage()
                 exit(1)
+
+        elif command == 'clear':
+            GroupCommunityRequest.objects.all().delete()
+            GroupCommunityPrivilege.objects.all().delete()
+            GroupCommunityProvenance.objects.all().delete()
+            print("community cleared :(")
 
         elif command == 'group':
 
@@ -347,6 +363,7 @@ class Command(BaseCommand):
                     group_owner = group.gaccess.first_owner
                     message, _ = GroupCommunityRequest.create_or_update(
                         community=community, requester=group_owner, group=group)
+                    print(message)
 
                 # update gcp for result of situation
                 try:

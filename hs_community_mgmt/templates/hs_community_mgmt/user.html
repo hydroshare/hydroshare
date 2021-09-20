@@ -1,0 +1,70 @@
+<html>
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+.my-custom-scrollbar {
+  position: relative;
+  height: 500px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+
+</style>
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body onload="renderTable()">
+<div class="container-fluid">
+USER: {{ uinfo.user.first_name }} {{ uinfo.user.last_name }} </br>
+ID: {{ hate.id }} </br>
+</div>
+<div class="table-wrapper-scroll-y my-custom-scrollbar" id="t1">
+
+<table class = "table-wrapper-scroll-y my-custom-scrollbar">
+  <tr>
+    <th> Groups </th>
+    <th> Editable Resources </th>
+    <th> Viewable Resources </th>
+  </tr>
+  <tr>
+  <td> 
+      {% for g in uinfo.groups %} 
+      <a href="'https://dev-hs-3.cuahsi.org//cmgmt/_internal/gowned_resources/'{{ g.id }}/"> {{ g.name }} </a> </br>
+      {% endfor %}
+  </td>
+  <td>  
+      {% for r in uinfo.user.uaccess.edit_resources %}
+          {{ r }} </br>
+      {% endfor %}
+  </td>
+  <td>
+      {% for r in uinfo.user.uaccess.view_resources %}
+          {{ r }} </br>
+      {% endfor %}
+  </td>
+  </tr>
+</table> 
+</div>
+</body>
+
+
+<script>
+function renderTable() {
+  //var t = document.getElementById("t1");
+  //var tbl = document.createElement("table");
+  //var tblBody = document.createElement("tbody");
+  console.log("Hello World");
+}
+
+</script>
+</html>

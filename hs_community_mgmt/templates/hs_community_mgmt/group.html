@@ -1,0 +1,196 @@
+<html>
+<head>
+<link rel="stylesheet" href="teststyle.css">
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+.my-custom-scrollbar {
+  position: relative;
+  height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+#Approve {
+  border: none;
+  background-color: green;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Deny {
+  border: none;
+  background-color: red;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"> </script>
+  <script src= "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"> </script>
+</head>
+<script>
+function accept_invite(uid, gid, nuid) {
+    console.log("Should print name of accepted user: " + nuid);
+    window.location='/cmgmt/_internal/gowned_resources/' +
+        uid + '/' + gid + '/' + 'approve' + '/' + nuid  + '/';
+}
+function decline_invite(uid, gid, nuid) {
+    console.log("Should print name of user whose request was declined: " + nuid);
+    window.location='/cmgmt/_internal/gowned_resources/' +
+        uid + '/' + gid + '/' + 'decline' + '/' + nuid + '/';
+}
+function select_curr_user_comm(user) {
+    console.log("Should print name of selected user: " + user.id);
+    window.location='/cmgmt/_internal/cowned_resources/' +
+        user.id + '/' + {{ user.communities.id }} + '/' + 'change_user' + '/';
+}
+function invite_user(val) {
+    var url = document.getElementById("user_invitations").value;
+    console.log("Should print ID of group being invited : " + url);
+    window.location='/cmgmt/_internal/gowned_resources/' + url;
+}
+</script>
+<body>
+NAME: {{ group.name }} </br>
+ID: {{ gid }} </br>
+SIZE: {{ size }} </br>
+OWNERS: {{ gowners }} </br> 
+UGR : {{ ugr }} </br> 
+MESSAGE: {{ message }} </br>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+<h2> Requests Table </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Username </th>
+      <th> Date of Request </th>
+      <th> Approve Request </th>
+      <th> Deny Request </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in requests %}
+  <tr>
+  <td> {{ i.request_from.username }} </td>
+  <td> {{ i.date_requested }} </td>
+  <td> <button type="button" id="Approve"
+        onclick="accept_invite({{ uid }}, {{ gid }}, {{ i.request_from.id }})" > Approve {{ i.username }}
+     </button>
+  </td>
+  <td> <button type="button" id="Deny"
+        onclick="decline_invite({{ uid }}, {{ gid }}, {{ i.request_from.id }})"> Deny {{ i.username }}
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+ </table>
+</div>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+<h2> Invitations Table </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Username </th>
+      <th> Date of Request </th>
+      <th> Approve Request </th>
+      <th> Deny Request </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in invitations %}
+  <tr>
+  <td> {{ i.request_from.username }} </td>
+  <td> {{ i.date_requested }} </td>
+  <td> <button type="button" id="Approve"
+        onclick="accept_invite({{ uid }}, {{ gid }}, {{ i.request_from.id }})" > Approve {{ i.username }}
+     </button>
+  </td>
+  <td> <button type="button" id="Deny"
+        onclick="decline_invite({{ uid }}, {{ gid }}, {{ i.request_from.id }})"> Deny {{ i.username }}
+     </button>
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+ </table>
+</div>
+<h2> Invite Members </h2>
+<select name='invitations' id='user_invitations'>
+<table>
+<tbody>
+<tr><td>
+{% for i in all_users %}
+    {% if i.is_active == True %}
+        <option value="{{ uid }}/{{ gid }}/invite_user/{{ i.id }}/"> {{i.username}} ({{i.id}}) </option>
+    {% endif %}
+{% endfor %}
+</td><td>
+<input type='submit' value='invite user' onclick='invite_user();'></td></tr>
+</tbody></table>
+</body>
+
+<h2> Debugging </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Username (ID) </th>
+      <th> Group Owner Responding  </th>
+      <th> Date of Request </th>
+      <th> Date of Response </th>
+      <th> Approved </th>
+      <th> Redeemed </th>
+    </tr>
+  </thead>
+  <tbody>
+{% for i in requests %}
+<tr>
+<td> {{ i.username }} ({{ i.id }})  </td>
+<td> {{ gowners }} </td>
+<td> {{ i.date_requested }} </td>
+<td> {{ i.when_responded }} </td>
+<td> {{ i.approved }} </td>
+<td> {{ i.redeemed }} </td>
+</tr>
+{% endfor %}
+  </tbody>
+</table>
+
+</br>
+</br>
+</body>
+</html>

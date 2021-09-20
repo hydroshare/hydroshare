@@ -1,0 +1,317 @@
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+.my-custom-scrollbar {
+  position: relative;
+  height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+#Cancel {
+  border: none;
+  background-color: #0000FF;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Approve {
+  border: none;
+  background-color: green;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Deny {
+  border: none;
+  background-color: red;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Delete {
+  border: none;
+  background-color: purple;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Remove {
+  border: none;
+  background-color: red;
+  color: white;
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"> </script>
+  <script src= "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"> </script>
+<script type = "text/javascript" language="javascript">
+        $(document).ready(function() {
+            $('[data-toggle="tooltip"]').tooltip();
+            $('#Delete').click(function() {
+                alert($(this).attr("value"));
+            });
+            $('#Approve').click(function() {
+                alert($(this).attr("value"));
+            });
+            $('#Cancel').click(function() {
+                alert($(this).attr("value"));
+            });
+            $('#Deny').click(function() {
+                alert($(this).attr("value"));
+            });
+            $('#Remove').click(function() {
+                alert($(this).attr("value"));
+            });
+        });
+</script>
+</head>
+<h1> <center> {{ name }} Management Page  </h1>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Owners </th>
+      <th> Member Groups  </th>
+      <th> Member Users </th>
+      <th> Public Resources </th>
+      <th> Remove Groups </th>
+    </tr>
+  </thead>
+<tr>
+<td>
+{% for i in owners %}
+    {{ i }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in member_groups %}
+<a href = 'https://dev-hs-3.cuahsi.org//cmgmt/_internal/gowned_resources/{{ i.id }}'\
+                                                value={{ i }} id="tool"title="'Owner:'{{ i.owner }}"> {{ i.name }} </a> 
+    </br>
+{% endfor %}
+<div>
+</td>
+<td>
+{% for i in member_users %}
+        {{ i.first_name }}  {{ i.last_name }} (ID: {{ i.id }} )</br>
+{% endfor %}
+</td>
+<td>
+{% for i in public_resources %}
+    {{ i }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in member_groups %}
+    <button type="button" id="Remove" value={{ i.name }} onclick="remove_group()" >Remove {{ i.name }} from {{ name }} </button> </br>
+{% endfor %}
+</td>
+</tr>
+</table>
+</div>
+<h2> Requests Table </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Group Owner Requesting Membership  </th>
+      <th> Date of Request </th>
+      <th> Approve Request </th>
+      <th> Deny Request </th>
+    </tr>
+  </thead>
+<tr>
+<td>
+{% for i in requests %}
+    {{ i.gname }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in requests %}
+    {{ i.gowner }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in requests %}
+    {{ i.dateofreq }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in requests %}
+    <button type="button" id="Approve" value={{ i.gname }} onclick="accept_invite()" >Approve Request from {{ i.gname }} </button> </br>
+{% endfor %}
+</td>
+<td>
+{% for i in requests %}
+    <button type="button" id="Deny" value={{ i.gname }} onclick="decline_invite()">Deny Request from {{ i.gname }} </button> </br>
+{% endfor %}
+</td>
+</table>
+<h2> Status of Invitations </h2>
+<h3> Note: Invitations from a Community to a Group do not exist yet </h3>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Date of Invitation </th>
+      <th> Cancel Invitation </th>
+    </tr>
+  </thead>
+<tr>
+<td>
+{% for i in requests %}
+    {{ i.gname }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in requests %}
+    {{ i.dateofreq }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in requests %}
+    <button type="button" id="Cancel" value={{ i.gname }} onclick="cancel_invite()">Cancel Invitation to {{ i.gname }} </button> </br>
+{% endfor %}
+</td>
+</tr>
+</table>
+<h2> Review Past Requests </h2>
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead>
+    <tr>
+      <th> Group Name </th>
+      <th> Approving Group Owner  </th>
+      <th> Approving Community Owner </th>
+      <th> Date of Decline </th>
+      <th> Delete Request </th>
+    </tr>
+  </thead>
+<tr>
+<td>
+{% for i in redeemed %}
+    {{ i.gname }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in redeemed %}
+    {{ i.gowner }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in redeemed %}
+    {{ i.cowner }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in redeemed %}
+    {{ i.dateofred }} </br>
+{% endfor %}
+</td>
+<td>
+{% for i in redeemed %}
+    <button type="button" id="Delete" value={{ i.gname }} onclick="delete_invite()">Delete Request from {{ i.gname }} </button>
+{% endfor %}
+</td>
+</tr>
+</table>
+</body>
+<h3> Checking Data </h3>
+Redeemed List: </br> 
+{% for i in redeemed %}
+    {{ i }} </br>
+{% endfor %}
+Requests List: </br>
+{% for i in requests %}
+    {{ i }} </br> 
+{% endfor %}
+</center>
+<script>
+function accept_invite() {
+    console.log("Should print name of accepted group:");
+    var x = document.getElementById("Approve");
+    console.log(String(x.value));
+}
+function decline_invite() {
+    console.log("Should print name of group whose request was declined:");
+    var x = document.getElementById("Deny");
+    console.log(String(x.value));
+}
+function cancel_invite() {
+    console.log("Should print name of group whose request was cancelled:");
+    var x = document.getElementById("Cancel");
+    console.log(String(x.value));
+}
+function delete_invite() {
+    console.log("Should print name of group whose request was deleted:");
+    var x = document.getElementById("Delete");
+    console.log(String(x.value));
+}
+function remove_group_from_comm() {
+    console.log("Should print name of group whose request was deleted:");
+    var x = document.getElementById("Remove");
+    console.log(String(x.value));
+}
+function myFunction() {
+    var x = document.getElementById("uSelect").value;
+    console.log(x);
+}
+
+</script>
+
+
+</html>
