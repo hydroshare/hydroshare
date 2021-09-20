@@ -428,7 +428,7 @@ class TestCommunities(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set(self.bat2.uaccess.view_groups,
                                            [self.bats]))
 
-        # all groups are public --> can view all of them. 
+        # all groups are public --> can view all of them.
         self.assertTrue(self.dog2.uaccess.can_view_group(self.dogs))
         self.assertTrue(self.dog2.uaccess.can_view_group(self.cats))
         self.assertTrue(self.dog2.uaccess.can_view_group(self.bats))
