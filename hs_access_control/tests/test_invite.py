@@ -1,11 +1,10 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
-from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import PrivilegeCodes
 from hs_access_control.models.invite import GroupCommunityRequest
 
-from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
+from hs_access_control.tests.utilities import global_reset
 from hs_core import hydroshare
 
 
@@ -67,13 +66,13 @@ class TestRequest(TestCase):
             purpose="Our purpose to collaborate on barking."
         )
         # self.dog.uaccess.share_group_with_user(self.dogs, self.dog2, PrivilegeCodes.VIEW)
+        # self.cat.uaccess.share_group_with_user(self.cats, self.cat2, PrivilegeCodes.VIEW)
 
         # user 'cat' creates a new group called 'cats'
         self.cats = self.cat.uaccess.create_group(
             title='cats',
             description="This is the cats group",
             purpose="Our purpose to collaborate on begging.")
-        # self.cat.uaccess.share_group_with_user(self.cats, self.cat2, PrivilegeCodes.VIEW)
 
         # communities to use
         self.pets = self.dog.uaccess.create_community(
@@ -108,6 +107,7 @@ class TestRequest(TestCase):
         self.assertTrue(request in GroupCommunityRequest.queued(requester=self.dog))
         self.assertFalse(self.cats in self.pets.member_groups)
 
+        # colliding requests: approve instantly.
         message, approved = GroupCommunityRequest.create_or_update(
             group=self.cats, community=self.pets, requester=self.cat)
         request = GroupCommunityRequest.get_request(community=self.pets, group=self.cats)
