@@ -740,13 +740,19 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         deleted."""
 
         # need to delete the system generated sqlite file
+        sqlite_file = None
         if self.has_csv_file:
             # the sqlite file is a system generated file
             for res_file in self.files.all():
                 if res_file.file_name.lower().endswith(".sqlite"):
-                    res_file.delete()
+                    sqlite_file = res_file
                     break
+
         super(TimeSeriesLogicalFile, self).remove_aggregation()
+
+        if sqlite_file is not None:
+            sqlite_file.delete()
+
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
