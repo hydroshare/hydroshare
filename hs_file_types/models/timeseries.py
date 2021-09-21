@@ -752,7 +752,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
         if sqlite_file is not None:
             sqlite_file.delete()
-            
+
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
