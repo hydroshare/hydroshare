@@ -144,11 +144,11 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         if self.code_repository:
             graph.add((subject, HSTERMS.modelCodeRepository, Literal(self.code_repository)))
         if self.programming_languages:
-            model_program_languages = ", ".join(self.programming_languages)
-            graph.add((subject, HSTERMS.modelProgramLanguage, Literal(model_program_languages)))
+            for model_program_languages in self.programming_languages:
+                graph.add((subject, HSTERMS.modelProgramLanguage, Literal(model_program_languages)))
         if self.operating_systems:
-            model_os = ", ".join(self.operating_systems)
-            graph.add((subject, HSTERMS.modelOperatingSystem, Literal(model_os)))
+            for model_os in self.operating_systems:
+                graph.add((subject, HSTERMS.modelOperatingSystem, Literal(model_os)))
 
         return graph
 
