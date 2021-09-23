@@ -28,7 +28,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
                 if tl:
                     tool_list.append(tl)
                     tool_res_id_list.append(tl['res_id'])
-                    if tl['url']:
+                    if tl['url_res_path']:
                         resource_level_app_counter += 1
 
     for choice_obj in SupportedResTypeChoices.objects.filter(description__iexact=res_type_str):
@@ -42,7 +42,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
                 tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
                 if tl:
                     tool_list.append(tl)
-                    if tl['url']:
+                    if tl['url_res_path']:
                         resource_level_app_counter += 1
 
     if len(tool_list) > 0:
@@ -66,6 +66,18 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
                       open with list
     :return: an info dict of web tool resource
     """
+    def split_url(url):
+        # splits the given url to path component and query string component
+        if url is None:
+            return None, None
+
+        path = url
+        query = ""
+        if "?" in url:
+            path, query = url.split("?", maxsplit=1)
+
+        return path.strip(), query.strip()
+
     tool_url_resource = tool_res_obj.metadata.url_base.value \
         if tool_res_obj.metadata.url_base else None
     tool_url_aggregation = tool_res_obj.metadata.url_base_aggregation.value \
@@ -80,6 +92,10 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
     tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
     tool_url_file_new = parse_app_url_template(tool_url_file, url_key_values)
+
+    tool_url_resource_path, tool_url_resource_query = split_url(tool_url_resource_new)
+    tool_url_agg_path, tool_url_agg_query = split_url(tool_url_agg_new)
+    tool_url_file_path, tool_url_file_query = split_url(tool_url_file_new)
 
     is_open_with_app = True if open_with else _check_open_with_app(tool_res_obj, request_obj)
     is_approved_app = _check_webapp_is_approved(tool_res_obj)
@@ -98,9 +114,12 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
             tl = {'title': str(tool_res_obj.metadata.title.value),
                   'res_id': tool_res_obj.short_id,
                   'icon_url': tool_icon_url,
-                  'url': tool_url_resource_new,
-                  'url_aggregation': tool_url_agg_new,
-                  'url_file': tool_url_file_new,
+                  'url_res_path': tool_url_resource_path,
+                  'url_res_query': tool_url_resource_query,
+                  'url_aggregation_path': tool_url_agg_path,
+                  'url_aggregation_query': tool_url_agg_query,
+                  'url_file_path': tool_url_file_path,
+                  'url_file_query': tool_url_file_query,
                   'agg_types': agg_types,
                   'file_extensions': file_extensions
                   }
