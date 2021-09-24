@@ -20,7 +20,7 @@ from hs_file_types.models import (
     GeoRasterLogicalFile,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile,
+    TimeSeriesLogicalFile, ModelProgramLogicalFile,
 )
 
 
@@ -118,3 +118,5 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                           "msf_version.refts_meta.xml")
         compare_metadatas(res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "ODM2_Multi_Site_One_Variable_meta.xml")
+        compare_metadatas(res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
+                          "setup_meta.xml")

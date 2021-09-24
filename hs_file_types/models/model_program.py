@@ -9,6 +9,7 @@ from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
 from rdflib import Literal
+from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
 from hs_core.models import ResourceFile
@@ -40,10 +41,10 @@ class ModelProgramResourceFileType(models.Model):
         res_file = kwargs['res_file']
         # check that the resource file is part of this aggregation
         if res_file not in logical_file.files.all():
-            raise ValidationError("Resource file is not part of the aggregation")
+            raise ValidationError(f"Resource file {res_file} is not part of the aggregation")
         # check that the res_file is not already set to a model program file type
         if mp_metadata.mp_file_types.filter(res_file=res_file).exists():
-            raise ValidationError("Resource file is already set to model program file type")
+            raise ValidationError(f"Resource file {res_file} is already set to model program file type")
         # validate mp_file_type
         mp_file_type = ModelProgramResourceFileType.type_from_string(mp_file_type)
         if mp_file_type is None:
@@ -151,6 +152,47 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 graph.add((subject, HSTERMS.modelOperatingSystem, Literal(model_os)))
 
         return graph
+
+    def ingest_metadata(self, graph):
+
+        def set_field(term, field_name, obj, is_date=False):
+            val = graph.value(subject=subject, predicate=term)
+            if val:
+                if is_date:
+                    date = parser.parse(str(val))
+                    setattr(obj, field_name, date)
+                else:
+                    setattr(obj, field_name, str(val.toPython()))
+
+        def set_field_array(term, field_name, obj):
+            vals = []
+            for val in graph.objects(subject=subject, predicate=term):
+                vals.append(val)
+            setattr(obj, field_name, vals)
+
+        subject = self.rdf_subject_from_graph(graph)
+
+        set_field(HSTERMS.modelProgramName, "model_program_type", self.logical_file)
+        set_field(HSTERMS.modelVersion, "version", self)
+        set_field(HSTERMS.modelReleaseDate, "release_date", self, is_date=True)
+        set_field(HSTERMS.modelWebsite, "website", self)
+        set_field(HSTERMS.modelCodeRepository, "code_repository", self)
+        set_field(HSTERMS.modelWebsite, "website", self)
+
+        set_field_array(HSTERMS.modelProgramLanguage, "programming_languages", self)
+        set_field_array(HSTERMS.modelOperatingSystem, "operating_systems", self)
+
+        xml_name_map = {"release notes": HSTERMS.modelReleaseNotes,
+                        "documentation": HSTERMS.modelDocumentation,
+                        "software": HSTERMS.modelSoftware,
+                        "computational engine": HSTERMS.modelEngine
+                        }
+
+        for mp_file_type, term in xml_name_map.items():
+            for val in graph.objects(subject=subject, predicate=term):
+                filename = str(val.toPython())
+                ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=self.logical_file.files.all().first(),
+                                                    mp_metadata=self)
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""
