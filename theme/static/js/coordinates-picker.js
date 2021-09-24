@@ -97,10 +97,10 @@ var drawingManagerFileType;
                 drawingManagerFileType.drawingMode = null;  // Set the default hand control
                 drawingManagerFileType.setMap(coordinatesPicker);
                 var bounds = {
-                    north: parseFloat($(".coord_picker_class").filter("[data-id='north']").val()),
-                    south: parseFloat($(".coord_picker_class").filter("[data-id='south']").val()),
-                    east: parseFloat($(".coord_picker_class").filter("[data-id='east']").val()),
-                    west: parseFloat($(".coord_picker_class").filter("[data-id='west']").val())
+                    north: parseFloat($(".coord_picker_class").filter("[data-id='northlimit']").val()),
+                    south: parseFloat($(".coord_picker_class").filter("[data-id='southlimit']").val()),
+                    east: parseFloat($(".coord_picker_class").filter("[data-id='eastlimit']").val()),
+                    west: parseFloat($(".coord_picker_class").filter("[data-id='westlimit']").val())
                 };
                 if (bounds.north && bounds.south && bounds.east && bounds.west) {
                     var rectangle = new google.maps.Rectangle({
@@ -225,10 +225,10 @@ function processDrawingFileType(coordinates, shape) {
 
         $("#btn-confirm-coordinates").unbind("click");
         $("#btn-confirm-coordinates").click(function () {
-            currentInstance.filter("[data-id='north']").val(bounds.north.toFixed(4));
-            currentInstance.filter("[data-id='east']").val(bounds.east.toFixed(4));
-            currentInstance.filter("[data-id='south']").val(bounds.south.toFixed(4));
-            currentInstance.filter("[data-id='west']").val(bounds.west.toFixed(4));
+            currentInstance.filter("[data-id='northlimit']").val(bounds.north.toFixed(4));
+            currentInstance.filter("[data-id='eastlimit']").val(bounds.east.toFixed(4));
+            currentInstance.filter("[data-id='southlimit']").val(bounds.south.toFixed(4));
+            currentInstance.filter("[data-id='westlimit']").val(bounds.west.toFixed(4));
 
             $('#metadata_schema_save_info').hide();
             $('#metadata_schema_value_submit').show();
