@@ -153,6 +153,16 @@ function formatBytes(bytes) {
     else return(bytes / 1073741824).toFixed(1) + " GB";
 }
 
+function get_coord_je_option(data_id) {
+    return {
+        "inputAttributes": {
+            'class': 'coord_picker_class',
+            'data-coordinates-type': 'rectangle',
+            'data-id': data_id
+        }
+    }
+}
+
 // Initial state for actions where they can appear.
 var initActionState = {
     disabled: false, // When an item is disabled, it is disabled everywhere
@@ -998,6 +1008,13 @@ function showFileTypeMetadata(file_type_time_series, url){
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['options'] = option_val;
 
+                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['northlimit']['options'] = get_coord_je_option('north');
+                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['southlimit']['options'] = get_coord_je_option('south');
+                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['eastlimit']['options'] = get_coord_je_option('east');
+                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['westlimit']['options'] = get_coord_je_option('west');
+
+                json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['north']['options'] = get_coord_je_option('north');
+                json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['east']['options'] = get_coord_je_option('east');
                 let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
                     schema: json_response.metadata.json_schema,
                     theme: 'bootstrap4',
@@ -1011,6 +1028,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                     format: "table",
                     show_errors: "always"
                 });
+                $(".coord_picker_class").coordinatesPicker();
                 $("#fileTypeMetaData").append('<div id="metadata_schema_save_info" class="label-file-name icon-blue hidden-form">' +
                     'Click anywhere outside the input box after making changes to see the Save button</div>');
                 $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" ' +
