@@ -307,11 +307,7 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                    Q(gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__gaccess__active=True,
-                                      g2gcp__community__c2gcp__group__g2ugp__user=self.user))\
-                            .distinct()
+                                      g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
 
     @property
     def edit_groups(self):
@@ -421,11 +417,7 @@ class UserAccess(models.Model):
                   g2ugp__privilege=PrivilegeCodes.OWNER) |
                 # everyone else can see only active groups they are in
                 Q(gaccess__active=True,
-                  g2ugp__user=self.user) |
-                # if user has access to a group in a community, grant access to whole community
-                Q(gaccess__active=True,
-                  g2gcp__community__c2gcp__group__gaccess__active=True,
-                  g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
+                  g2ugp__user=self.user)).distinct()
 
     def owns_group(self, this_group):
         """
@@ -518,7 +510,7 @@ class UserAccess(models.Model):
         access_group = this_group.gaccess
 
         return self.user.is_superuser or access_group.public \
-            or this_group.gaccess.view_users.filter(id=self.user.id).exists()
+            or this_group in self.view_groups
 
     def can_view_group_metadata(self, this_group):
         """
@@ -1082,11 +1074,7 @@ class UserAccess(models.Model):
             Q(r2urp__user=self.user) |
             # access via a group
             Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user) |
-            # access via an unprivileged peer group in a community
-            Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-              r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)).distinct()
+              r2grp__group__g2ugp__user=self.user)).distinct()
 
     @property
     def owned_resources(self):
@@ -1124,8 +1112,6 @@ class UserAccess(models.Model):
         # a resource is editable if
         # 1. it's shared with the user and editable.
         # 2. it's shared with a group that has edit privilege and contains the user,
-        # 3. it's shared with a group that has edit privilege and a community that
-        #    contains the user, and the community share preserves edit
 
         return BaseResource.objects.filter(
             # user owns resource invariant of immutable flag 4/9/2021
@@ -1150,7 +1136,7 @@ class UserAccess(models.Model):
         :param this_privilege: A privilege code 1-3
         :param via_user: True to incorporate user privilege
         :param via_group: True to incorporate group privilege
-        :param via_community: True to incorporate member group privileges
+        :param via_community: True to incorporate member group privileges (disabled)
 
         Returns: list of resource objects (QuerySet)
 
@@ -1275,18 +1261,6 @@ class UserAccess(models.Model):
                     excl = excl | gexcl
                 else:
                     excl = gexcl
-
-            # community permission is VIEW if community link exists at all.
-            if via_community:
-                cquery = \
-                    Q(r2grp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__gaccess__active=True,
-                      r2grp__group__g2gcp__community__c2gcp__group__g2ugp__user=self.user)
-                if incl is not None:
-                    incl = incl | cquery
-                else:
-                    incl = cquery
-                # No CHANGE privilege over community resources.
 
             if incl is not None:
                 if excl:
@@ -1442,8 +1416,6 @@ class UserAccess(models.Model):
           view_resources.
         * This is not sensitive to the setting for the "immutable" flag. That only affects editing.
         * This is called from hs_core/views/authorize to authorize actions.
-        * This includes group-to-community, community-to-group, and community-to-group-to-community
-          permissions
 
         """
         if __debug__:  # during testing only, check argument types and preconditions

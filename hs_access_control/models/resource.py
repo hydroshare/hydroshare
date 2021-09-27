@@ -85,8 +85,7 @@ class ResourceAccess(models.Model):
         """
 
         return User.objects.filter(self.__view_users_from_individual |
-                                   self.__view_users_from_group |
-                                   self.__view_users_from_community).distinct()
+                                   self.__view_users_from_group).distinct()
 
     @property
     def __edit_users_from_individual(self):
@@ -129,8 +128,7 @@ class ResourceAccess(models.Model):
         """
         return User.objects\
                    .filter((self.__edit_users_from_individual) |
-                           (self.__edit_users_from_group) |
-                           (self.__edit_users_from_community)).distinct()
+                           (self.__edit_users_from_group)).distinct()
 
     @property
     def __view_groups_from_group(self):
@@ -152,8 +150,7 @@ class ResourceAccess(models.Model):
 
         This is a property so that it is a workalike for a prior explicit list
         """
-        return Group.objects.filter(self.__view_groups_from_group |
-                                    self.__view_groups_from_community).distinct()
+        return Group.objects.filter(self.__view_groups_from_group).distinct()
 
     @property
     def __edit_groups_from_group(self):
@@ -185,8 +182,7 @@ class ResourceAccess(models.Model):
         if self.immutable:
             return Group.objects.none()
         else:
-            return Group.objects.filter(self.__edit_groups_from_group |
-                                        self.__edit_groups_from_community)
+            return Group.objects.filter(self.__edit_groups_from_group).distinct()
 
     @property
     def owners(self):
@@ -252,17 +248,16 @@ class ResourceAccess(models.Model):
                 else:
                     excl = e
 
-            if include_community_granted_access:
-                # view privilege results if either group or community privilege is view,
-                # include exact privilege
-                i = Q(u2ugp__group__gaccess__active=True,
-                      u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
-                      u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True)
-
-                if incl is not None:
-                    incl = incl | i
-                else:
-                    incl = i
+            # if include_community_granted_access:
+            #     # view privilege results if either group or community privilege is view,
+            #     # include exact privilege
+            #     i = Q(u2ugp__group__gaccess__active=True,
+            #           u2ugp__group__g2gcp__community__c2gcp__group__g2grp__resource=self.resource,
+            #           u2ugp__group__g2gcp__community__c2gcp__group__gaccess__active=True)
+            #     if incl is not None:
+            #         incl = incl | i
+            #     else:
+            #         incl = i
 
             if incl is not None:
                 if excl is not None:
@@ -468,8 +463,8 @@ class ResourceAccess(models.Model):
 
         user_priv = self.get_effective_user_privilege(this_user)
         group_priv = self.get_effective_group_privilege(this_user)
-        community_priv = self.get_effective_community_privilege(this_user)
-        return min(user_priv, group_priv, community_priv)
+        # community_priv = self.get_effective_community_privilege(this_user)
+        return min(user_priv, group_priv)  # , community_priv)
 
     @property
     def sharing_status(self):

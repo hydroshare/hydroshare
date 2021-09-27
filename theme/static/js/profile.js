@@ -70,7 +70,7 @@ function validateForm() {
 function validateRequiredElements() {
     var requiredElements = $(".form-required");
     for (var i = 0; i < requiredElements.length; i++) {
-        if (!$(requiredElements[i]).val().trim()) {
+        if (!$(requiredElements[i]).val() || !$(requiredElements[i]).val().trim()) {
             $(requiredElements[i]).addClass("form-invalid");
             $(requiredElements[i]).parent().find(".error-label").remove();
             $(requiredElements[i]).parent().append(errorLabel("This field is required."));

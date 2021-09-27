@@ -28,6 +28,7 @@ def usage():
     print("      list: print the configuration of a group.")
     print("      resource: resource to add or remove.")
     print("          where options include {guid} {add|remove}.")
+    print("      owner: owner to add or remove.")
     print("And options include:")
     print("  --grantor={username} -- grantor of privilege")
 
