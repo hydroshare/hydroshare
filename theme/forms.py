@@ -332,19 +332,19 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_organization(self):
         data = self.cleaned_data['organization']
-        if len(data.strip()) == 0:
+        if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("Organization is a required field.")
         return data
 
     def clean_country(self):
         data = self.cleaned_data['country']
-        if len(data.strip()) == 0:
+        if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("Country is a required field.")
         return data
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if len(data.strip()) == 0:
+        if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
 
