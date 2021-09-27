@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 {% load comment_tags %}
-{% block meta_title %}CZO Community {% endblock %}
+{% block meta_title %}{{ community.name }}{% endblock %}
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
 {% endblock %}
