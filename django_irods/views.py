@@ -1,6 +1,7 @@
 import datetime
 import mimetypes
 import os
+import urllib
 from uuid import uuid4
 from celery.result import AsyncResult
 
@@ -330,8 +331,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
         res.update_download_count()
         # invoke X-Accel-Redirect on physical vault file in nginx
         response = HttpResponse(content_type=mtype)
-        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-            name=output_path.split('/')[-1])
+        filename = output_path.split('/')[-1]
+        filename = urllib.parse.quote(filename)
+        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
         response['Content-Length'] = flen
         response['X-Accel-Redirect'] = '/'.join([
             getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
@@ -351,8 +353,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
     response = FileResponse(proc.stdout, content_type=mtype)
-    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(
-        name=output_path.split('/')[-1])
+    filename = output_path.split('/')[-1]
+    filename = urllib.parse.quote(filename)
+    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
     response['Content-Length'] = flen
     return response
 
