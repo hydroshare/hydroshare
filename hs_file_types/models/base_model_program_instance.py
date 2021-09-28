@@ -42,7 +42,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             # this model program/instance aggregation has been created from a single resource file
             # the path of the resource file is the aggregation name
             single_res_file = self.files.first()
-            return single_res_file.short_path
+            if single_res_file:
+                return single_res_file.short_path
+            return ""
 
     @property
     def schema_short_file_path(self):
@@ -50,6 +52,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """
 
         json_file_name = self.aggregation_name
+        if not json_file_name:
+            return json_file_name
+
         if "/" in json_file_name:
             json_file_name = os.path.basename(json_file_name)
 
