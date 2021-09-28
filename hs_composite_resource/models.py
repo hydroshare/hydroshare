@@ -124,7 +124,10 @@ class CompositeResource(BaseResource):
          for which the aggregation object to be retrieved
         """
 
-        aggregation_path = dir_path[len(self.file_path) + 1:]
+        aggregation_path = dir_path
+        if dir_path.startswith(self.file_path):
+            aggregation_path = dir_path[len(self.file_path) + 1:]
+
         for lf in self.logical_files:
             if hasattr(lf, 'folder'):
                 if lf.folder == aggregation_path:
@@ -164,7 +167,11 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        relative_file_path = file_path[len(self.file_path) + 1:]
+
+        relative_file_path = file_path
+        if file_path.startswith(self.file_path):
+            relative_file_path = file_path[len(self.file_path) + 1:]
+
         folder, base = os.path.split(relative_file_path)
         try:
             res_file = ResourceFile.get(self, file=base, folder=folder)
