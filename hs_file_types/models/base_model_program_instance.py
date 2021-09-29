@@ -325,8 +325,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         self.delete()
 
         if metadata is not None:
-            # this should also delete on all metadata elements that have generic relations with
-            # the metadata object
+            # this should also delete on all metadata elements that have generic relations with the metadata object
             metadata.delete()
 
         # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
