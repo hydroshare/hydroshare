@@ -293,6 +293,17 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         return graph
 
+    def ingest_metadata(self, graph):
+        subject = self.rdf_subject_from_graph(graph)
+
+        has_model_output = graph.value(subject=subject, predicate=HSTERMS.includesModelOutput)
+        if has_model_output:
+            self.has_model_output = has_model_output
+
+        executed_by = graph.value(subject=subject, predicate=HSTERMS.executedByModelProgram)
+        if executed_by:
+            self.executed_by = executed_by
+
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
