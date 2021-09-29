@@ -1,6 +1,11 @@
+import os
+import tempfile
+
 from django.contrib.auth.models import Group
 from django.test import TestCase
+from haystack.query import SearchQuerySet
 
+from hs_composite_resource.models import CompositeResource
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import GenericResource
@@ -12,6 +17,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestDeleteResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.tmp_dir = tempfile.mkdtemp()
         # create a user
         self.user = users.create_account(
             'test_user@email.com',
@@ -36,6 +42,33 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
 
         # there should be no resource at this point
         self.assertEqual(GenericResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
+
+    def test_delete_resource_public(self):
+        # create files
+        file_one = os.path.join(self.tmp_dir, "test1.txt")
+
+        file_one_write = open(file_one, "w")
+        file_one_write.write("Putting something inside")
+        file_one_write.close()
+
+        # open files for read and upload
+        self.file_one = open(file_one, "rb")
+
+        new_res = resource.create_resource(
+            'GenericResource',
+            self.user,
+            'My Test Resource',
+            files=(self.file_one,),
+            keywords=("one", "two",),
+            metadata=[{"description": {"abstract": "myabstract"}}]
+        )
+        self.assertEqual(len(SearchQuerySet().all()), 0)
+
+        new_res.set_public(True)
+        self.assertEqual(len(SearchQuerySet().all()), 1)
+
+        resource.delete_resource(new_res.short_id)
+        self.assertEqual(len(SearchQuerySet().all()), 0)
 
 
 
