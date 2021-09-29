@@ -447,7 +447,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if dir_path.startswith(resource.file_path):
             aggregation_path = dir_path[len(resource.file_path) + 1:]
 
-       # checking sub-folders for fileset aggregation
+        # checking sub-folders for fileset aggregation
         # check that we don't have any sub folder of dir_path representing a fileset aggregation
         # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation
         if resource.filesetlogicalfile_set.filter(folder__startswith=aggregation_path).exists():
