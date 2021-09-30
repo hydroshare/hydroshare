@@ -13,7 +13,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \
     update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
     delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
-    update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata, remove_aggregation, \
+    update_sqlite_file, update_timeseries_abstract, remove_aggregation, \
     delete_coverage_element, update_aggregation_coverage, move_aggregation, delete_aggregation
 from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, NetCDFFileMetaData, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
@@ -1193,37 +1193,6 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         # abstract should have changed
         self.assertEqual(logical_file.metadata.abstract, new_abstract)
-        self.composite_resource.delete()
-
-    def test_get_timeseries_aggregation_metadata(self):
-        # here we are testing the view function 'get_timeseries_metadata'
-        # we should be able to update abstract for time series file type
-        # that does't have the abstract element
-
-        self.create_composite_resource(file_to_upload=self.sqlite_file)
-
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-
-        # set the sqlite file to TimeSeries file type
-        TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-
-        self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
-        series_id = logical_file.metadata.sites.first().series_ids[0]
-        url_params = {'file_type_id': logical_file.id, 'series_id': series_id,
-                      'resource_mode': 'edit'}
-        url = reverse('get_timeseries_file_metadata', kwargs=url_params)
-        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
-        request = self.factory.post(url, data={'abstract': new_abstract})
-        request.user = self.user
-        # this is the view function we are testing
-        response = get_timeseries_metadata(request, file_type_id=logical_file.id,
-                                           series_id=series_id, resource_mode='edit')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_dict = json.loads(response.content.decode())
-        self.assertEqual('success', response_dict['status'])
         self.composite_resource.delete()
 
     def test_add_delete_keywords_refts_aggregation_failure(self):

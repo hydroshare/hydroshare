@@ -1015,6 +1015,14 @@ function showFileTypeMetadata(file_type_time_series, url){
 
                 json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['north']['options'] = get_coord_je_option('north');
                 json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['east']['options'] = get_coord_je_option('east');
+
+                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['northlimit']['options'] = get_coord_je_option('northlimit');
+                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['southlimit']['options'] = get_coord_je_option('southlimit');
+                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['eastlimit']['options'] = get_coord_je_option('eastlimit');
+                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['westlimit']['options'] = get_coord_je_option('westlimit');
+
+                json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['north']['options'] = get_coord_je_option('north');
+                json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['east']['options'] = get_coord_je_option('east');
                 let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
                     schema: json_response.metadata.json_schema,
                     theme: 'bootstrap4',
@@ -1084,7 +1092,7 @@ function showFileTypeMetadata(file_type_time_series, url){
             $("#id-update-sqlite-file").click(update_sqlite_file_ajax_submit);
             showMetadataFormSaveChangesButton();
             setFileTypeMetadataFormsClickHandlers();
-            if (logical_type === "FileSetLogicalFile" || logical_type === "ModelInstanceLogicalFile") {
+            if (logical_type === "ModelInstanceLogicalFile") {
                  // Submit for aggregation spatial coverage update
                  $("#btn-update-aggregation-spatial-coverage").click(function () {
                     nested_aggregation_coverage_update_ajax_submit(logical_file_id, 'spatial');

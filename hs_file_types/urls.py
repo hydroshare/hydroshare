@@ -123,10 +123,4 @@ urlpatterns = [
         r'get-file-metadata/$',
         views.get_metadata,
         name="get_file_metadata"),
-
-    url(r'^_internal/(?P<file_type_id>[0-9]+)/(?P<series_id>[A-Za-z0-9-]+)/'
-        r'(?P<resource_mode>[a-z]+)/'
-        r'get-timeseries-file-metadata/$',
-        views.get_timeseries_metadata,
-        name="get_timeseries_file_metadata"),
 ]
