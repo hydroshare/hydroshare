@@ -354,7 +354,7 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
                             res_file = get_resource_file(resource.short_id, file_path)
                             if res_file:
                                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+                                                      logical_file_type_class=logical_file_class, fail_feedback=True)
         if res_file:
             res_file.refresh_from_db()
             lf = res_file.logical_file

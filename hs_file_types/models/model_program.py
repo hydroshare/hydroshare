@@ -191,8 +191,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         for mp_file_type, term in xml_name_map.items():
             for val in graph.objects(subject=subject, predicate=term):
                 filename = str(val.toPython())
-                ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=self.logical_file.files.all().first(),
-                                                    mp_metadata=self)
+                file = self.logical_file.files.filter(resource_file__name=filename)
+                ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""
