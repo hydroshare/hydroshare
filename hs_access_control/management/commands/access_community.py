@@ -12,11 +12,13 @@ Please connect to the bash shell for the hydroshare container before running the
 """
 
 from django.core.management.base import BaseCommand
+from django.core.files import File
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
         UserGroupPrivilege, UserCommunityPrivilege, GroupCommunityPrivilege
 from hs_access_control.management.utilities import community_from_name_or_id, \
         group_from_name_or_id, user_from_name
+import os
 
 
 def usage():
@@ -41,12 +43,12 @@ def usage():
     print("              update: update community metadata for the group.")
     print("              remove: remove the group from the community.")
     print("      owner {oname} {request}: owner commands")
-    print("      owner {oname} {request}: owner commands")
     print("          {oname}: owner name.")
     print("          {request} is one of:")
     print("              [blank]: list community owners")
     print("              add: add an owner for the community.")
     print("              remove: remove an owner from the community.")
+    print("      banner {path-to-banner}: upload a banner.")
 
 
 class Command(BaseCommand):
@@ -295,6 +297,30 @@ class Command(BaseCommand):
                 print("unknown group command '{}'.".format(action))
                 usage()
                 exit(1)
+
+        elif command == 'banner':
+            # upload a banner
+            community = community_from_name_or_id(cname)
+            if community is None:
+                usage()
+                exit(1)
+            if len(options['command']) > 2:
+                pname = options['command'][2]
+                nname = os.path.basename(pname)
+                community.picture.save(nname, File(open(pname, 'rb')))
+            else:
+                print("no file name given for banner image")
+                usage()
+                exit(1)
+
+        elif command == 'remove':
+            community = community_from_name_or_id(cname)
+            if community is None:
+                usage()
+                exit(1)
+
+            print("removing community '{}' (id={}).".format(community.name, community.id))
+            community.delete()
 
         else:
             print("unknown command '{}'.".format(command))
