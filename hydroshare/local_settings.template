@@ -94,7 +94,7 @@ SHARED_NEG_KEY = 'hydroshareZonehydroshareuserZone'
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'data.local.org'
+IRODS_HOST = '127.0.0.1'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydroshareReplResc'
 IRODS_HOME_COLLECTION = '/hydroshareZone/home/wwwHydroProxy'
@@ -132,7 +132,7 @@ HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST = 'users.local.org'
+HS_USER_ZONE_HOST = '127.0.0.1'
 LINUX_ADMIN_USER_FOR_HS_USER_ZONE = 'hsuserproxy'
 LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE = 'hsuserproxy'
 LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/create_user.sh'
