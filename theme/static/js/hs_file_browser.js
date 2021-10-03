@@ -362,20 +362,31 @@ function updateSelectionMenuContext() {
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
                 // The file is already part of an aggregation
-                uiActionStates.setGenericFileType.disabled = true;
-                uiActionStates.setGenericFileType.fileMenu.hidden = true;
-
+                if (logicalFileType === "GenericLogicalFile") {
+                    uiActionStates.setGenericFileType.disabled = true;
+                    uiActionStates.setGenericFileType.fileMenu.hidden = true;
+                }
+                if (logicalFileType !== "ModelInstanceLogicalFile") {
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
+                if ((logicalFileType === "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder !== 'true')
+                    || logicalFileType === "ModelProgramLogicalFile") {
+                    // the file is part of a model instance aggregation based on a single file or the file is part of
+                    // a model program aggregation
+                    uiActionStates.setGenericFileType.disabled = true;
+                    uiActionStates.setGenericFileType.fileMenu.hidden = true;
+                    uiActionStates.subMenuSetContentType.disabled = true;
+                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                }
                 if (logicalFileType !== "ModelInstanceLogicalFile" && fileHasModelInstanceAggrFolder === 'true'){
+                    // the file is not a model instance aggregation but part of a model instance aggregation
+                    // based on a folder - e.g., a single file aggregation living inside a folder that represents
+                    // a model instance aggregation
                     uiActionStates.subMenuSetContentType.disabled = true;
                     uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
-                }
-                if (logicalFileType === "ModelProgramLogicalFile"){
-                    uiActionStates.subMenuSetContentType.disabled = true;
-                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
-                }
-                else if (logicalFileType === "ModelInstanceLogicalFile"){
-                    uiActionStates.subMenuSetContentType.disabled = true;
-                    uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+                    uiActionStates.setGenericFileType.disabled = true;
+                    uiActionStates.setGenericFileType.fileMenu.hidden = true;
                 }
             }
 
@@ -443,7 +454,7 @@ function updateSelectionMenuContext() {
                 if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"
                     && logicalFileType !== "ModelProgramLogicalFile" && logicalFileType !== "ModelInstanceLogicalFile") {
                     // if the selected file is not part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation)
-                    // ModelInstanceLogicalFile or ModelProgramLogicalFile dont't show the Remove Aggregation option
+                    // ModelInstanceLogicalFile or ModelProgramLogicalFile don't show the Remove Aggregation option
                     uiActionStates.removeAggregation.disabled = true;
                     uiActionStates.removeAggregation.fileMenu.hidden = true;
                 }
