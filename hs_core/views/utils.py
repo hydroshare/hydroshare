@@ -836,28 +836,20 @@ def remove_irods_folder_in_django(resource, folder_path, user):
     rel_folder_path = folder_path[len(resource.file_path) + 1:]
     res_file_set = ResourceFile.objects.filter(object_id=resource.id, file_folder__startswith=rel_folder_path)
 
-    # then delete resource file objects
+    if resource.resource_type == 'CompositeResource':
+        # delete all aggregation objects that are under the folder_path
+        for lf in resource.logical_files:
+            if lf.aggregation_name.startswith(rel_folder_path):
+                lf.logical_delete(user, delete_res_files=False)
+
+    # delete resource files
     for f in res_file_set:
         file_name = f.file_name
-        # TODO: integrate deletion of logical file with ResourceFile.delete
-        # delete the logical file (if it's not a fileset) object if the resource file
-        # has one
-        if f.has_logical_file and not f.logical_file.is_fileset:
-            # this should delete the logical file and any associated metadata
-            # but does not delete the resource files that are part of the logical file
-            f.logical_file.logical_delete(user, delete_res_files=False)
         f.delete()
         hydroshare.delete_format_metadata_after_delete_file(resource, file_name)
 
-    # if the folder getting deleted contains any fileset aggregation those aggregations need to
-    # be deleted
-    # note: for other types of aggregation the aggregation gets deleted as part of deleting
-    # the resource file - see above for resource file delete
     if resource.resource_type == 'CompositeResource':
-        filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
-        for fileset in filesets:
-            if fileset.folder.startswith(rel_folder_path):
-                fileset.logical_delete(user, delete_res_files=True)
+        resource.cleanup_aggregations()
 
     # send the post-delete signal
     post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
