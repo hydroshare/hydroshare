@@ -1224,6 +1224,8 @@ class AbstractLogicalFile(models.Model):
         if parent_aggr is not None:
             parent_aggr.create_aggregation_xml_documents()
 
+        resource.cleanup_aggregations()
+
     def remove_aggregation(self):
         """Deletes the aggregation object (logical file) *self* and the associated metadata
         object. However, it doesn't delete any resource files that are part of the aggregation."""
@@ -1569,6 +1571,7 @@ class FileTypeContext(object):
         for res_file in self.res_files_to_delete:
             delete_resource_file(self.resource.short_id, res_file.id, self.user)
 
+        self.resource.cleanup_aggregations()
         resource_modified(self.resource, self.user, overwrite_bag=False)
 
         # delete temp dir
