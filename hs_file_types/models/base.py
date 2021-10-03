@@ -1195,7 +1195,7 @@ class AbstractLogicalFile(models.Model):
         from hs_core.hydroshare.resource import delete_resource_file
 
         parent_aggr = self.get_parent()
-
+        resource = self.resource
         # delete associated metadata and map xml documents
         istorage = self.resource.get_irods_storage()
         if istorage.exists(self.metadata_file_path):
@@ -1206,8 +1206,7 @@ class AbstractLogicalFile(models.Model):
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(f.resource.short_id, f.id, user,
-                                     delete_logical_file=False)
+                delete_resource_file(f.resource.short_id, f.id, user, delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
@@ -1486,7 +1485,8 @@ class AbstractLogicalFile(models.Model):
         """
 
         xml_file_name = self.get_xml_file_name(resmap=resmap)
-        file_folder = self.files.first().file_folder
+        aggr_file = self.files.first()
+        file_folder = aggr_file.file_folder if aggr_file else ""
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
