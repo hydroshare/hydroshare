@@ -97,6 +97,7 @@ class CompositeResource(BaseResource):
                         # to delete any associated ModelProgramResourceFileType object
                         if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
                             ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                    self.cleanup_aggregations()
             except ObjectDoesNotExist:
                 pass
 
@@ -633,6 +634,46 @@ class CompositeResource(BaseResource):
         """
 
         update_target_temporal_coverage(self)
+
+    def cleanup_aggregations(self):
+        """Deletes any dangling aggregations (aggregation without resource files or folder) the resource may have"""
+
+        istorage = self.get_irods_storage()
+        for lf in self.logical_files:
+            # we allow only folder based aggregations to not have any resource files
+            if lf.files.count() == 0:
+                if any([lf.is_fileset, lf.is_model_instance, lf.is_model_program]):
+                    # check folder exist in irods
+                    if lf.folder:
+                        path = os.path.join(self.file_path, lf.folder)
+                        if istorage.exists(path):
+                            continue
+
+                agg_cls_name = lf.type_name()
+                lf.remove_aggregation()
+                msg = "Deleted a dangling aggregation of type:{} for resource:{}".format(agg_cls_name, self.short_id)
+                logger.warning(msg)
+
+    def dangling_aggregations_exist(self):
+        """Checks if there are any dangling aggregations
+        Note: This function used only in tests
+        """
+
+        istorage = self.get_irods_storage()
+        for lf in self.logical_files:
+            # we allow only folder based aggregations to not have any resource files
+            if lf.files.count() == 0:
+                if any([lf.is_fileset, lf.is_model_instance, lf.is_model_program]):
+                    # check folder exist in irods
+                    if lf.folder:
+                        path = os.path.join(self.file_path, lf.folder)
+                        if not istorage.exists(path):
+                            return True
+                    else:
+                        return True
+                else:
+                    return True
+        return False
 
     @staticmethod
     def is_path_folder(path):
