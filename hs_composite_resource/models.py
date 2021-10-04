@@ -644,6 +644,7 @@ class CompositeResource(BaseResource):
         """Deletes any dangling aggregations (aggregation without resource files or folder) the resource may have"""
 
         istorage = self.get_irods_storage()
+        count = 0
         for lf in self.logical_files:
             # we allow only folder based aggregations to not have any resource files
             if lf.files.count() == 0:
@@ -656,8 +657,10 @@ class CompositeResource(BaseResource):
 
                 agg_cls_name = lf.type_name()
                 lf.remove_aggregation()
+                count += 1
                 msg = "Deleted a dangling aggregation of type:{} for resource:{}".format(agg_cls_name, self.short_id)
                 logger.warning(msg)
+        return count
 
     def dangling_aggregations_exist(self):
         """Checks if there are any dangling aggregations
