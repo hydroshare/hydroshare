@@ -91,15 +91,18 @@ for pc in $(seq 20 -1 1); do
     echo -ne "$pc ...\033[0K\r" && sleep 1;
 done
 
-# Install OpenSSH on ${HS_USER_ZONE_HOST}
-echo "INFO: running apt-get update on ${HS_USER_ZONE_HOST}"
-docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
+# Install iproute2 on ${IRODS_HOST}
+echo "INFO: running apt-get update on ${IRODS_HOST}"
+docker exec ${IRODS_HOST} sh -c "apt-get update"
+echo "[root@${IRODS_HOST}]$ apt-get install -y iproute2"
+docker exec ${IRODS_HOST} sh -c "apt-get install -y iproute2"
 
+# Install OpenSSH on ${HS_USER_ZONE_HOST}
 echo "INFO: Install OpenSSH on ${HS_USER_ZONE_HOST}"
 echo "[root@${HS_USER_ZONE_HOST}]$ apt-get update"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
-echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
-docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
+echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y openssh-client openssh-server iproute2 && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
+docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y openssh-client openssh-server iproute2 && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
 
 # Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}
 echo "INFO: Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}"
