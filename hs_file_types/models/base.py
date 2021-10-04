@@ -1487,7 +1487,11 @@ class AbstractLogicalFile(models.Model):
         """
 
         xml_file_name = self.get_xml_file_name(resmap=resmap)
-        file_folder = self.files.first().file_folder
+        file_folder = ''
+        aggr_file = self.files.first()
+        if aggr_file:
+            file_folder = aggr_file.file_folder
+
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name

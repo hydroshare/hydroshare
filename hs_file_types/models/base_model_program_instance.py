@@ -268,10 +268,13 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """
 
         xml_file_name = self.get_xml_file_name(resmap=resmap)
+        file_folder = ''
         if self.folder is not None:
             file_folder = self.folder
         else:
-            file_folder = self.files.first().file_folder
+            aggr_file = self.files.first()
+            if aggr_file:
+                file_folder = aggr_file.file_folder
 
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
