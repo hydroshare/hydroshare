@@ -132,12 +132,12 @@ echo "INFO: make remote zone for each"
 echo "[rods@${IRODS_HOST}]$ iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247"
 sleep 1s
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}"
 sleep 1s
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     iadmin mkzone ${IRODS_ZONE} remote ${ICAT1IP}:${IRODS_PORT}
 
 # modify /etc/irods/server_config.json
@@ -154,33 +154,33 @@ docker exec ${HS_USER_ZONE_HOST} sh -c "cat /etc/irods/server_config.json | jq '
 # make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 
 # make user ${IRODS_USERNAME} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkuser ${IRODS_USERNAME} rodsuser"
 echo "[rods@${IRODS_HOST}]$ iadmin moduser ${IRODS_USERNAME} password ${IRODS_AUTH}"
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "iadmin mkuser ${IRODS_USERNAME} rodsuser && iadmin moduser ${IRODS_USERNAME} password ${IRODS_AUTH}"
 
 # make ${HS_IRODS_PROXY_USER_IN_USER_ZONE} and ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} rodsuser"
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} password ${IRODS_AUTH}"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "iadmin mkuser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} rodsuser && iadmin moduser ${HS_IRODS_PROXY_USER_IN_USER_ZONE} password ${IRODS_AUTH}"
 
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin"
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin && iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
 
 # make resource ${HS_IRODS_USER_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkresc ${HS_IRODS_USER_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "iadmin mkresc ${HS_IRODS_USER_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 
 # iint the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}
@@ -194,24 +194,24 @@ docker exec ${HS_USER_ZONE_HOST} chown ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LI
 # give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home
 echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${IRODS_USERNAME}#${IRODS_ZONE} rodsuser"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "iadmin mkuser "${IRODS_USERNAME}"#"${IRODS_ZONE}" rodsuser"
 
 echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M own ${IRODS_USERNAME}#${IRODS_ZONE} /${HS_USER_IRODS_ZONE}/home"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "ichmod -r -M own "${IRODS_USERNAME}"#"${IRODS_ZONE}" /${HS_USER_IRODS_ZONE}/home"
 
 # give ${HS_IRODS_PROXY_USER_IN_USER_ZONE} own rights over ${HS_USER_IRODS_ZONE}/home
 echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M own ${HS_IRODS_PROXY_USER_IN_USER_ZONE} /${HS_USER_IRODS_ZONE}/home"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "ichmod -r -M own "${HS_IRODS_PROXY_USER_IN_USER_ZONE}" /${HS_USER_IRODS_ZONE}/home"
 
 # set ${HS_USER_IRODS_ZONE}/home to inherit
 echo "[rods@${HS_USER_ZONE_HOST}]$ ichmod -r -M inherit /${HS_USER_IRODS_ZONE}/home"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/irods-provider-postgres:4.2.4 \
+    mjstealey/irods-provider-postgres:4.2.0 \
     sh -c "ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home"
 
 # configure local_settings.py
