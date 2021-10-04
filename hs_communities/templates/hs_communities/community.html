@@ -21,14 +21,22 @@
         </div>
         <div class="container">
             <div class="row">
+                {% if czo_community %}
                 <div class="col-sm-3">
-		    {% if czo_community %}
-                    <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/czo-logo-wide.png"
-                                                                alt="CZO National"></a></div>
-	            {% else %}
-		    <div><h1>{{ community.name }}</h1></div>
-	            {% endif %}
+                    <div><a href="http://criticalzone.org">
+                         <img src="{{ STATIC_URL }}img/czo-logo-wide.png"
+                              alt="CZO National"></a></div>
                 </div>
+                {% else %}
+                    <div class="col-sm-12">
+                    {% if community.picture.url %}
+                    <div><center><img src='{{ community.picture.url }}' height=200></center></div>
+                    {% else %}
+                    <div><h1>{{ community.name }}</h1></div>
+                    {% endif %}
+                    <div><p>{{ community.description }}</p></div>
+                    </div>
+                {% endif %}
                 <div class="col-sm-7">
                 </div>
                 <div><!-- [Modals] --></div>
