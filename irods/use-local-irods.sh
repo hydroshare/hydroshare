@@ -46,7 +46,7 @@ if [[ "${1}" == "--persist" ]]; then
         -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
         -p ${IRODS_PORT} \
         --hostname ${IRODS_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        hydroshare/hs-irods:latest
 
     # Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
     echo "CREATE: ${HS_USER_ZONE_HOST} container"
@@ -61,7 +61,7 @@ if [[ "${1}" == "--persist" ]]; then
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        hydroshare/hs-irods:latest
 else
     # Create ${IRODS_HOST} container from irods v.4.1.8
     echo "CREATE: ${IRODS_HOST} container"
@@ -71,7 +71,7 @@ else
         -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
         -p ${IRODS_PORT} \
         --hostname ${IRODS_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        hydroshare/hs-irods:latest
 
     # Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
     echo "CREATE: ${HS_USER_ZONE_HOST} container"
@@ -82,7 +82,7 @@ else
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        mjstealey/docker-irods-icat:4.1.8
+        hydroshare/hs-irods:latest
 fi
 
 # wait for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} to finish standing up
@@ -92,8 +92,16 @@ for pc in $(seq 20 -1 1); do
 done
 
 # Install OpenSSH on ${HS_USER_ZONE_HOST}
+echo "INFO: running apt-get update on ${IRODS_HSOT}"
+docker exec ${IRODS_HSOT} sh -c "apt-get update"
+echo "[root@${IRODS_HSOT}]$ apt-get install -y iproute2 jq"
+docker exec ${IRODS_HSOT} sh -c "apt-get install -y iproute2 jq"
+
+# Install OpenSSH on ${HS_USER_ZONE_HOST}
 echo "INFO: running apt-get update on ${HS_USER_ZONE_HOST}"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
+echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y iproute2 jq"
+docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y iproute2 jq"
 
 echo "INFO: Install OpenSSH on ${HS_USER_ZONE_HOST}"
 echo "[root@${HS_USER_ZONE_HOST}]$ apt-get update"
