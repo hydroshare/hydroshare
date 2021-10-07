@@ -91,13 +91,13 @@ for pc in $(seq 20 -1 1); do
     echo -ne "$pc ...\033[0K\r" && sleep 1;
 done
 
-# Install OpenSSH on ${HS_USER_ZONE_HOST}
-echo "INFO: running apt-get update on ${IRODS_HSOT}"
-docker exec ${IRODS_HSOT} sh -c "apt-get update"
-echo "[root@${IRODS_HSOT}]$ apt-get install -y iproute2 jq"
-docker exec ${IRODS_HSOT} sh -c "apt-get install -y iproute2 jq"
+# Install iproute2 and jq on ${HS_USER_ZONE_HOST}
+echo "INFO: running apt-get update on ${IRODS_HOST}"
+docker exec ${IRODS_HOST} sh -c "apt-get update"
+echo "[root@${IRODS_HOST}]$ apt-get install -y iproute2 jq"
+docker exec ${IRODS_HOST} sh -c "apt-get install -y iproute2 jq"
 
-# Install OpenSSH on ${HS_USER_ZONE_HOST}
+# Install OpenSSH iproute2 and jq on ${HS_USER_ZONE_HOST}
 echo "INFO: running apt-get update on ${HS_USER_ZONE_HOST}"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
 echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y iproute2 jq"
