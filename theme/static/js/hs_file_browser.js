@@ -2077,14 +2077,18 @@ $(document).ready(function () {
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
 
-            function afterRequest() {
+            function afterRequestSuccess() {
                 refreshFileBrowser();
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             }
+            function afterRequestFail() {
+                $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
+                $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+            }
 
-            $.when.apply($, calls).done(afterRequest);
-            $.when.apply($, calls).fail(afterRequest);
+            $.when.apply($, calls).done(afterRequestSuccess);
+            $.when.apply($, calls).fail(afterRequestFail);
         }
         return false;
     });
@@ -2112,7 +2116,7 @@ $(document).ready(function () {
         else if (refName && newRefURL) {
             var file = $("#fb-files-container li.ui-selected");
             var oldurl = file.attr("data-ref-url");
-            if (oldurl != newRefURL) {
+            if (oldurl !== newRefURL) {
                 calls.push(update_ref_url_ajax_submit(SHORT_ID, getCurrentPath().path.join('/'), refName, newRefURL, false));
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
@@ -2132,15 +2136,11 @@ $(document).ready(function () {
         var oldurl = file.attr("data-ref-url");
         var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var newurl = $("#txtNewRefURL").val().trim();
-        if (oldurl != newurl) {
+        if (oldurl !== newurl) {
             var calls = [];
             calls.push(update_ref_url_ajax_submit(SHORT_ID, getCurrentPath().path.join('/'), oldName, newurl, true));
 
             $.when.apply($, calls).done(function () {
-                refreshFileBrowser();
-            });
-
-            $.when.apply($, calls).fail(function () {
                 refreshFileBrowser();
             });
         }
