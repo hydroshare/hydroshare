@@ -91,7 +91,7 @@ for pc in $(seq 20 -1 1); do
     echo -ne "$pc ...\033[0K\r" && sleep 1;
 done
 
-# Install iproute2 and jq on ${HS_USER_ZONE_HOST}
+# Install iproute2 and jq on ${IRODS_HOST}
 echo "INFO: running apt-get update on ${IRODS_HOST}"
 docker exec ${IRODS_HOST} sh -c "apt-get update"
 echo "[root@${IRODS_HOST}]$ apt-get install -y iproute2 jq"
