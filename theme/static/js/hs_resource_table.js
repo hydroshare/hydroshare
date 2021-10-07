@@ -357,6 +357,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
                     task = JSON.parse(task);
                     notificationsApp.registerTask(task);
                     notificationsApp.show();
+
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log(textStatus, errorThrown);
@@ -368,6 +369,8 @@ function delete_multiple_resources_ajax_submit(indexes) {
     // Wait for all asynchronous calls to finish
     $.when.apply($, calls)
       .done(function () {
+          resourceTable.draw();
+          updateLabelCount();
           $("html").css("cursor", "initial"); // Restore default cursor
       })
       .fail(function () {

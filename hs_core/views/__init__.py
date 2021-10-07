@@ -751,6 +751,10 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             # Fix by making the resource undiscoverable.
             # This has the side-effect of deleting the resource from SOLR.
             res.set_discoverable(False)
+            extra_data = res.extra_data
+            extra_data['to_be_deleted'] = True
+            res.extra_data = extra_data
+            res.save()
             task = delete_resource_task.apply_async((shortkey, user.username))
             task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
