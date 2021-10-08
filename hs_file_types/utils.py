@@ -309,16 +309,37 @@ def identify_metadata_files(files):
     return res_files, meta_files, map_files
 
 
+def get_map_graph(subject, map_files):
+    map_name = subject.split('data/contents/', 1)[1]
+    map_name = map_name.split('#', 1)[0]
+    for map_file in map_files:
+        if map_file.name.endswith(map_name):
+            return Graph().parse(data=map_file.read())
+    raise Exception(f"Could not find _resmap.xml for {subject}")
+
+
+def get_aggregation_files(map_graph):
+    ORE = Namespace("http://www.openarchives.org/ore/terms/")
+    files = []
+    for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
+        file_path = str(o)
+        if not file_path.endswith("_meta.xml"):
+            files.append(file_path)
+    return files
+
+
 def ingest_logical_file_metadata(metadata_file, resource, map_files):
     resource.refresh_from_db()
     graph = Graph()
     graph = graph.parse(data=metadata_file.read())
+
     agg_type_name = None
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
         raise Exception("Could not derive aggregation type from {}".format(metadata_file.name))
+
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
@@ -331,32 +352,26 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
 
     if not lf:
         # see if the files exist and create it
-        res_file = None
-        if logical_file_class is FileSetLogicalFile:
+        map_graph = get_map_graph(subject, map_files)
+        aggregation_files = get_aggregation_files(map_graph)
+        # making an assumption that model program/instance is not folder based when there is only one file
+        is_folder_based = logical_file_class is FileSetLogicalFile or len(aggregation_files) > 1
+
+        if is_folder_based:
             file_path = subject.rsplit('/', 1)[0]
             file_path = file_path.split('data/contents/', 1)[1]
             res_file = resource.files.filter(file_folder=file_path).first()
             if res_file:
-                FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
-        elif logical_file_class in [GenericLogicalFile, ModelProgramLogicalFile, ModelInstanceLogicalFile]:
-            map_name = subject.split('data/contents/', 1)[1]
-            map_name = map_name.split('#', 1)[0]
-            for map_file in map_files:
-                if map_file.name.endswith(map_name):
-                    ORE = Namespace("http://www.openarchives.org/ore/terms/")
-                    map_graph = Graph().parse(data=map_file.read())
-                    for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
-                        file_path = str(o)
-                        if not file_path.endswith("_meta.xml"):
-                            if not file_path:
-                                raise Exception("Could not determine the logical file name")
-                            file_path = file_path.split('data/contents/', 1)[1]
-                            res_file = get_resource_file(resource.short_id, file_path)
-                            if res_file:
-                                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                                      logical_file_type_class=logical_file_class, fail_feedback=True)
-                            else:
-                                raise ValueError(f"Could not find {file_path} referenced in logical file _meta.xml file {map_name}")
+                set_logical_file_type(res=resource, user=None, file_id=None, folder_path=file_path,
+                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+        else:
+            file_path = aggregation_files[0].split('data/contents/', 1)[1]
+            res_file = get_resource_file(resource.short_id, file_path)
+            if res_file:
+                set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                      logical_file_type_class=logical_file_class, fail_feedback=True)
+            else:
+                raise ValueError(f"Could not find {file_path} referenced in logical file _meta.xml file {subject}")
         if res_file:
             res_file.refresh_from_db()
             lf = res_file.logical_file
