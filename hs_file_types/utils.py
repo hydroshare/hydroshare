@@ -338,7 +338,7 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
             res_file = resource.files.filter(file_folder=file_path).first()
             if res_file:
                 FileSetLogicalFile.set_file_type(resource, None, folder_path=file_path)
-        elif logical_file_class in [GenericLogicalFile, ModelProgramLogicalFile]:
+        elif logical_file_class in [GenericLogicalFile, ModelProgramLogicalFile, ModelInstanceLogicalFile]:
             map_name = subject.split('data/contents/', 1)[1]
             map_name = map_name.split('#', 1)[0]
             for map_file in map_files:
@@ -346,15 +346,17 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
                     ORE = Namespace("http://www.openarchives.org/ore/terms/")
                     map_graph = Graph().parse(data=map_file.read())
                     for _, _, o in map_graph.triples((None, ORE.aggregates, None)):
-                        if not str(o).endswith("_meta.xml"):
-                            file_path = str(o)
+                        file_path = str(o)
+                        if not file_path.endswith("_meta.xml"):
                             if not file_path:
-                                raise Exception("Could not determine the generic logical file name")
+                                raise Exception("Could not determine the logical file name")
                             file_path = file_path.split('data/contents/', 1)[1]
                             res_file = get_resource_file(resource.short_id, file_path)
                             if res_file:
                                 set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
                                                       logical_file_type_class=logical_file_class, fail_feedback=True)
+                            else:
+                                raise ValueError(f"Could not find {file_path} referenced in logical file _meta.xml file {map_name}")
         if res_file:
             res_file.refresh_from_db()
             lf = res_file.logical_file

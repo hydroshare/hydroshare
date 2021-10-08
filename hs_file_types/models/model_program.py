@@ -8,10 +8,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
-from rdflib import Literal
+from rdflib import Literal, URIRef
 from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
+from hs_core.hydroshare import get_resource_file
 from hs_core.models import ResourceFile
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
@@ -134,6 +135,9 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             mp_file_type_xml_name = mp_file_type.get_xml_name()
             graph.add((subject, mp_file_type_xml_name, Literal(mp_file_type.res_file.short_path)))
 
+        if self.logical_file.metadata_schema_json:
+            graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_path)))
+
         if self.logical_file.model_program_type:
             graph.add((subject, HSTERMS.modelProgramName, Literal(self.logical_file.model_program_type)))
         if self.version:
@@ -191,8 +195,20 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         for mp_file_type, term in xml_name_map.items():
             for val in graph.objects(subject=subject, predicate=term):
                 filename = str(val.toPython())
-                file = self.logical_file.files.filter(resource_file__name=filename)
-                ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
+                try:
+                    file = self.logical_file.files.get(resource_file=filename)
+                    ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
+                except ResourceFile.DoesNotExist:
+                    pass
+
+        schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
+        if schema_file:
+            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_short_file_path)
+            schema_json_str = res_file.read()
+            schema_json = json.loads(schema_json_str)
+            self.logical_file.metadata_schema_json = schema_json
+            # schema file is related to the aggregation, not to the resource directly
+            res_file.delete()
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""

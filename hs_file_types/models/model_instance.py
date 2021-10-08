@@ -13,6 +13,7 @@ from dominate import tags as dom_tags
 from rdflib import Literal, URIRef
 
 from hs_core.hs_rdf import HSTERMS
+from hs_core.hydroshare import get_resource_file
 from hs_core.hydroshare.utils import current_site_url
 from hs_core.models import ResourceFile
 from .base import NestedLogicalFileMixin
@@ -285,24 +286,51 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         graph.add((subject, HSTERMS.includesModelOutput, Literal(self.has_model_output)))
 
         if self.executed_by:
-            if self.executed_by:
-                resource = self.logical_file.resource
-                hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
-                aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
-                graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
+            resource = self.logical_file.resource
+            hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
+            aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
+            graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
+
+        if self.logical_file.metadata_schema_json:
+            graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_path)))
+
+        if self.metadata_json:
+            graph.add((subject, HSTERMS.modelProgramSchemaValues, URIRef(self.logical_file.schema_values_file_path)))
 
         return graph
 
     def ingest_metadata(self, graph):
+        from ..utils import get_logical_file_by_map_file_path
+
         subject = self.rdf_subject_from_graph(graph)
 
         has_model_output = graph.value(subject=subject, predicate=HSTERMS.includesModelOutput)
         if has_model_output:
-            self.has_model_output = has_model_output
+            self.has_model_output = str(has_model_output)
 
         executed_by = graph.value(subject=subject, predicate=HSTERMS.executedByModelProgram)
         if executed_by:
-            self.executed_by = executed_by
+            aggr_map_path = executed_by.split('/resource/', 1)[1].split("#")[0]
+            mp_aggr = get_logical_file_by_map_file_path(self.logical_file.resource, ModelProgramLogicalFile, aggr_map_path)
+            self.executed_by = mp_aggr
+
+        schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
+        if schema_file:
+            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_short_file_path)
+            schema_json_str = res_file.read()
+            schema_json = json.loads(schema_json_str)
+            self.logical_file.metadata_schema_json = schema_json
+            # schema file is related to the aggregation, not to the resource directly
+            res_file.delete()
+
+        schema_values_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchemaValues)
+        if schema_values_file:
+            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_values_short_file_path)
+            schema_values_json_str = res_file.read()
+            schema_values_json = json.loads(schema_values_json_str)
+            self.metadata_json = schema_values_json
+            # schema values file is related to the aggregation, not to the resource directly
+            res_file.delete()
 
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):

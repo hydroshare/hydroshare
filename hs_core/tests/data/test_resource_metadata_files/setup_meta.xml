@@ -24,6 +24,7 @@
     </dc:rights>
     <hsterms:modelCodeRepository>https://www.github.com</hsterms:modelCodeRepository>
     <hsterms:modelProgramName>Unknown Model Program</hsterms:modelProgramName>
+    <hsterms:modelProgramSchema rdf:resource="636729f24c03497e9b844ec3be63e823/data/contents/setup_schema.json"/>
     <hsterms:extendedMetadata>
       <rdf:Description>
         <hsterms:value>2</hsterms:value>

@@ -22,7 +22,6 @@
     <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
     <dcterms:type rdf:resource="http://localhost:8000/terms/ModelProgramAggregation"/>
     <citoterms:isDocumentedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup_meta.xml</citoterms:isDocumentedBy>
-    <ore:aggregates rdf:resource="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup_schema.json"/>
     <ore:aggregates rdf:resource="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup.cfg"/>
     <dc:title>setup againas</dc:title>
   </rdf:Description>
@@ -37,10 +36,6 @@
   </rdf:Description>
   <rdf:Description rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup.cfg">
     <dc:format>application/cfg</dc:format>
-    <ore:isAggregatedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup_resmap.xml#aggregation</ore:isAggregatedBy>
-  </rdf:Description>
-  <rdf:Description rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup_schema.json">
-    <dc:format>application/json</dc:format>
     <ore:isAggregatedBy>http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup_resmap.xml#aggregation</ore:isAggregatedBy>
   </rdf:Description>
   <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/ResourceMap">
