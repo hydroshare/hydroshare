@@ -2,22 +2,19 @@ import logging
 import os
 import re
 import shutil
-from functools import partial, wraps
 
 import netCDF4
 import numpy as np
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db import models, transaction
-from django.forms.models import formset_factory, BaseFormSet
-from django.template import Template, Context
-from dominate.tags import div, legend, form, button, p, em, a, textarea, _input
+from dominate.tags import div, legend, em, a
 
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
 import hs_file_types.nc_functions.nc_utils as nc_utils
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
-from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
+from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare import utils

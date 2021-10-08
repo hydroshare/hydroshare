@@ -9,9 +9,6 @@ from osgeo import ogr, osr
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.utils.html import strip_tags
-from django.template import Template, Context
-
-from dominate.tags import legend, table, tbody, tr, th, div
 
 from hs_core.models import Title
 from hs_core.hydroshare import utils

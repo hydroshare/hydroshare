@@ -8,10 +8,8 @@ import jsonschema
 from dateutil import parser
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.template import Template, Context
 from django.utils import timezone
-from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
-    th, td, a
+from dominate.tags import div, table, tbody, tr, th, td
 
 from hs_core.signals import post_add_reftimeseries_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext

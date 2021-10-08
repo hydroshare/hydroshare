@@ -10,10 +10,6 @@ import time
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.template import Template, Context
-
-from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
-    textarea, span
 from rdflib import BNode, Literal
 from rdflib.namespace import DCTERMS, DC
 
