@@ -311,7 +311,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         executed_by = graph.value(subject=subject, predicate=HSTERMS.executedByModelProgram)
         if executed_by:
             aggr_map_path = executed_by.split('/resource/', 1)[1].split("#")[0]
-            mp_aggr = get_logical_file_by_map_file_path(self.logical_file.resource, ModelProgramLogicalFile, aggr_map_path)
+            mp_aggr = get_logical_file_by_map_file_path(self.logical_file.resource, ModelProgramLogicalFile,
+                                                        aggr_map_path)
             self.executed_by = mp_aggr
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
@@ -325,7 +326,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         schema_values_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchemaValues)
         if schema_values_file:
-            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_values_short_file_path)
+            res_file = get_resource_file(self.logical_file.resource.short_id,
+                                         self.logical_file.schema_values_short_file_path)
             schema_values_json_str = res_file.read()
             schema_values_json = json.loads(schema_values_json_str)
             self.metadata_json = schema_values_json
