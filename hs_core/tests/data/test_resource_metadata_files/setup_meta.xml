@@ -8,7 +8,7 @@
   <hsterms:ModelProgramAggregation rdf:about="http://localhost:8000/resource/526e62aac1044285abc2cae4e2f463da/data/contents/setup_resmap.xml#aggregation">
     <hsterms:modelOperatingSystem>linux</hsterms:modelOperatingSystem>
     <dc:title>setup againas</dc:title>
-    <hsterms:modelWebsite>https://www.hydroshare.org</hsterms:modelWebsite>
+    <hsterms:modelWebsite rdf:resource="https://www.hydroshare.org"/>
     <hsterms:modelReleaseNotes>setup.cfg</hsterms:modelReleaseNotes>
     <hsterms:extendedMetadata>
       <rdf:Description>
@@ -22,7 +22,7 @@
         <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
       </rdf:Description>
     </dc:rights>
-    <hsterms:modelCodeRepository>https://www.github.com</hsterms:modelCodeRepository>
+    <hsterms:modelCodeRepository rdf:resource="https://www.github.com"/>
     <hsterms:modelProgramName>Unknown Model Program</hsterms:modelProgramName>
     <hsterms:modelProgramSchema rdf:resource="636729f24c03497e9b844ec3be63e823/data/contents/setup_schema.json"/>
     <hsterms:extendedMetadata>

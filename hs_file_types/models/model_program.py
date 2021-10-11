@@ -145,9 +145,9 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         if self.release_date:
             graph.add((subject, HSTERMS.modelReleaseDate, Literal(self.release_date.isoformat())))
         if self.website:
-            graph.add((subject, HSTERMS.modelWebsite, Literal(self.website)))
+            graph.add((subject, HSTERMS.modelWebsite, URIRef(self.website)))
         if self.code_repository:
-            graph.add((subject, HSTERMS.modelCodeRepository, Literal(self.code_repository)))
+            graph.add((subject, HSTERMS.modelCodeRepository, URIRef(self.code_repository)))
         if self.programming_languages:
             for model_program_languages in self.programming_languages:
                 graph.add((subject, HSTERMS.modelProgramLanguage, Literal(model_program_languages)))
