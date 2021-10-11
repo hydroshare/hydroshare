@@ -763,7 +763,6 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         # there should be no resource file
         self.assertEqual(self.composite_resource.files.all().count(), 0)
-        normal_folder = 'normal_folder'
         fileset_folder = 'fileset_folder'
         ResourceFile.create_folder(self.composite_resource, fileset_folder)
         # add the the txt file to the resource at the above folder
