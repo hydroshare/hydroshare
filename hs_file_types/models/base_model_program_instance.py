@@ -72,6 +72,13 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """
         return os.path.join(self.resource.file_path, self.schema_short_file_path)
 
+    @property
+    def schema_file_url(self):
+        """URL to the aggregation metadata schema json file
+        """
+        from hs_core.hydroshare.utils import current_site_url
+        return "{}/resource/{}".format(current_site_url(), self.schema_file_path)
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""

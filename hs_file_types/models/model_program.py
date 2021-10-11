@@ -136,7 +136,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             graph.add((subject, mp_file_type_xml_name, Literal(mp_file_type.res_file.short_path)))
 
         if self.logical_file.metadata_schema_json:
-            graph.add((subject, HSTERMS.modelProgramSchema, Literal(self.logical_file.schema_file_path)))
+            graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
 
         if self.logical_file.model_program_type:
             graph.add((subject, HSTERMS.modelProgramName, Literal(self.logical_file.model_program_type)))
