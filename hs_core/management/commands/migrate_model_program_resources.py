@@ -11,19 +11,17 @@ from ..utils import migrate_core_meta_elements
 
 
 class Command(BaseCommand):
-    help = "Convert all model program resources to composite resource"
+    help = "Convert all model program resources to composite resource with model program aggregation"
 
-    # def add_arguments(self, parser):
-    #
-    #     # Number of resources to create
-    #     parser.add_argument('resource_id', type=str, required=False, help='ID of the resource to migrate')
-
-    def create_aggr_folder(self, mp_aggr, comp_res):
+    def create_aggr_folder(self, mp_aggr, comp_res, logger):
         new_folder = "mp"
         ResourceFile.create_folder(comp_res, new_folder)
         mp_aggr.folder = new_folder
         mp_aggr.dataset_name = new_folder
         mp_aggr.save()
+        msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
+        logger.info(msg)
+        self.stdout.write(self.style.SUCCESS(msg))
         # move files to the new folder
         istorage = comp_res.get_irods_storage()
 
@@ -33,8 +31,8 @@ class Command(BaseCommand):
                 tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.file_name)
                 istorage.moveFile(src_full_path, tgt_full_path)
                 res_file.set_storage_path(tgt_full_path)
-
-        print(">> Created aggregation folder:{} and moved files to the new folder\n".format(new_folder))
+                msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
+                self.stdout.write(self.style.SUCCESS(msg))
 
     def create_mp_file_type(self, file_name, file_type, mp_aggr):
         for aggr_file in mp_aggr.files.all():
@@ -50,16 +48,18 @@ class Command(BaseCommand):
                 break
 
     def handle(self, *args, **options):
-        # res_id = options['resource_id']
         logger = logging.getLogger(__name__)
         resource_counter = 0
         to_resource_type = 'CompositeResource'
-        msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES PRIOR TO CONVERSION.".format(
+        msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES PRIOR TO CONVERSION TO COMPOSITE RESOURCE.".format(
             ModelProgramResource.objects.count())
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
 
         for mp_res in ModelProgramResource.objects.all():
+            msg = "Migrating model program resource:{}".format(mp_res.short_id)
+            self.stdout.write(self.style.SUCCESS(msg))
+
             # check resource exists on irods
             istorage = mp_res.get_irods_storage()
             if not istorage.exists(mp_res.root_path):
@@ -117,40 +117,31 @@ class Command(BaseCommand):
                 continue
 
             if comp_res.files.count() == 0:
-                self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res)
+                self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
             elif comp_res.readme_file is not None:
-                if comp_res.files.count() > 2:
-                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res)
+                if comp_res.files.count() > 2 or comp_res.files.count() == 1:
+                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
                 # make the all res files part of the aggregation excluding the readme file
                 for res_file in comp_res.files.all():
                     if res_file != comp_res.readme_file:
-                        print(">> Adding file {} to mp aggregation\n".format(res_file.file_name))
                         mp_aggr.add_resource_file(res_file)
+                        msg = "Added file {} to mp aggregation".format(res_file.file_name)
+                        self.stdout.write(self.style.SUCCESS(msg))
             else:
                 if comp_res.files.count() > 1:
-                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res)
+                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
                 # make the all res files part of the aggregation
                 for res_file in comp_res.files.all():
-                    print(">> Adding file {} to mp aggregation\n".format(res_file.file_name))
                     mp_aggr.add_resource_file(res_file)
+                    msg = "Added file {} to mp aggregation".format(res_file.file_name)
+                    self.stdout.write(self.style.SUCCESS(msg))
 
-            if mp_aggr.files.count() > 0:
-                print(">> 1. Aggregation contains files.")
-
-            # set the dataset_name field of the aggregation in the case of file based aggregation
+            # set the dataset_name field of the aggregation in the case of file based mp aggregation
             if not mp_aggr.folder:
-                print(">> Setting aggregation title based on aggregation filename\n")
-                if mp_aggr.files.count() > 0:
-                    print(">> 2. Aggregation contains files.")
                 aggr_file = mp_aggr.files.first()
                 aggr_filename, _ = os.path.splitext(aggr_file.file_name)
-                print(">>> aggregation dataset name:{}".format(aggr_filename))
                 mp_aggr.dataset_name = aggr_filename
                 mp_aggr.save()
-                if mp_aggr.files.count() > 0:
-                    print(">> 3. Aggregation contains files.")
-                if mp_aggr.files.first() is not None:
-                    print(">> 4. Aggregation contains files.")
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
@@ -195,11 +186,8 @@ class Command(BaseCommand):
                 mp_aggr.save()
 
             # create aggregation level xml files
-            if mp_aggr.files.count() > 0:
-                print(">> 5. Aggregation contains files.")
-
             mp_aggr.create_aggregation_xml_documents()
-            msg = 'One Model program aggregation was created in resource (ID: {})'
+            msg = 'One model program aggregation was created in resource (ID:{})'
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
@@ -223,8 +211,7 @@ class Command(BaseCommand):
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
-            if resource_counter > 0:
-                break
+            print("_______________________________________________")
 
         if resource_counter > 0:
             msg = "{} MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
@@ -235,8 +222,8 @@ class Command(BaseCommand):
         if ModelProgramResource.objects.all().count() > 0:
             msg = "NOT ALL MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
             logger.error(msg)
-            self.stdout.write(self.style.WARNNG(msg))
+            self.stdout.write(self.style.WARNING(msg))
             msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES AFTER CONVERSION.".format(
                 ModelProgramResource.objects.all().count())
             logger.info(msg)
-            self.stdout.write(self.style.WARNNG(msg))
+            self.stdout.write(self.style.WARNING(msg))
