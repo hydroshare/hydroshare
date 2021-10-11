@@ -8,9 +8,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as dom_tags
-from rdflib import Literal
+from rdflib import Literal, URIRef
+from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
+from hs_core.hydroshare import get_resource_file
 from hs_core.models import ResourceFile
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
@@ -40,10 +42,10 @@ class ModelProgramResourceFileType(models.Model):
         res_file = kwargs['res_file']
         # check that the resource file is part of this aggregation
         if res_file not in logical_file.files.all():
-            raise ValidationError("Resource file is not part of the aggregation")
+            raise ValidationError(f"Resource file {res_file} is not part of the aggregation")
         # check that the res_file is not already set to a model program file type
         if mp_metadata.mp_file_types.filter(res_file=res_file).exists():
-            raise ValidationError("Resource file is already set to model program file type")
+            raise ValidationError(f"Resource file {res_file} is already set to model program file type")
         # validate mp_file_type
         mp_file_type = ModelProgramResourceFileType.type_from_string(mp_file_type)
         if mp_file_type is None:
@@ -133,6 +135,9 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             mp_file_type_xml_name = mp_file_type.get_xml_name()
             graph.add((subject, mp_file_type_xml_name, Literal(mp_file_type.res_file.short_path)))
 
+        if self.logical_file.metadata_schema_json:
+            graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_path)))
+
         if self.logical_file.model_program_type:
             graph.add((subject, HSTERMS.modelProgramName, Literal(self.logical_file.model_program_type)))
         if self.version:
@@ -144,13 +149,66 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         if self.code_repository:
             graph.add((subject, HSTERMS.modelCodeRepository, Literal(self.code_repository)))
         if self.programming_languages:
-            model_program_languages = ", ".join(self.programming_languages)
-            graph.add((subject, HSTERMS.modelProgramLanguage, Literal(model_program_languages)))
+            for model_program_languages in self.programming_languages:
+                graph.add((subject, HSTERMS.modelProgramLanguage, Literal(model_program_languages)))
         if self.operating_systems:
-            model_os = ", ".join(self.operating_systems)
-            graph.add((subject, HSTERMS.modelOperatingSystem, Literal(model_os)))
+            for model_os in self.operating_systems:
+                graph.add((subject, HSTERMS.modelOperatingSystem, Literal(model_os)))
 
         return graph
+
+    def ingest_metadata(self, graph):
+
+        def set_field(term, field_name, obj, is_date=False):
+            val = graph.value(subject=subject, predicate=term)
+            if val:
+                if is_date:
+                    date = parser.parse(str(val))
+                    setattr(obj, field_name, date)
+                else:
+                    setattr(obj, field_name, str(val.toPython()))
+
+        def set_field_array(term, field_name, obj):
+            vals = []
+            for val in graph.objects(subject=subject, predicate=term):
+                vals.append(val)
+            setattr(obj, field_name, vals)
+
+        subject = self.rdf_subject_from_graph(graph)
+
+        set_field(HSTERMS.modelProgramName, "model_program_type", self.logical_file)
+        set_field(HSTERMS.modelVersion, "version", self)
+        set_field(HSTERMS.modelReleaseDate, "release_date", self, is_date=True)
+        set_field(HSTERMS.modelWebsite, "website", self)
+        set_field(HSTERMS.modelCodeRepository, "code_repository", self)
+        set_field(HSTERMS.modelWebsite, "website", self)
+
+        set_field_array(HSTERMS.modelProgramLanguage, "programming_languages", self)
+        set_field_array(HSTERMS.modelOperatingSystem, "operating_systems", self)
+
+        xml_name_map = {"release notes": HSTERMS.modelReleaseNotes,
+                        "documentation": HSTERMS.modelDocumentation,
+                        "software": HSTERMS.modelSoftware,
+                        "computational engine": HSTERMS.modelEngine
+                        }
+
+        for mp_file_type, term in xml_name_map.items():
+            for val in graph.objects(subject=subject, predicate=term):
+                filename = str(val.toPython())
+                try:
+                    file = self.logical_file.files.get(resource_file=filename)
+                    ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
+                except ResourceFile.DoesNotExist:
+                    pass
+
+        schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
+        if schema_file:
+            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_short_file_path)
+            schema_json_str = res_file.read()
+            schema_json = json.loads(schema_json_str)
+            self.logical_file.metadata_schema_json = schema_json
+            # schema file is related to the aggregation, not to the resource directly
+            res_file.delete()
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""
