@@ -1,20 +1,19 @@
 import json
 import logging
-from dateutil import parser
-from urllib.request import Request, urlopen
+import ssl
 from urllib.error import URLError
+from urllib.request import Request, urlopen
+
 import jsonschema
-
-from django.utils import timezone
-from django.db import models, transaction
+from dateutil import parser
 from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.template import Template, Context
-
+from django.utils import timezone
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
 from hs_core.signals import post_add_reftimeseries_aggregation
-
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
@@ -939,11 +938,14 @@ def _validate_json_data(json_data):
             if not url:
                 raise ValidationError("methodLink has a value of empty string")
             if url.lower() != 'unknown':
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
                 url = Request(url)
                 if url not in urls:
                     urls.append(url)
                     try:
-                        urlopen(url)
+                        urlopen(url, context=ctx)
                     except URLError:
                         raise Exception(err_msg.format("Invalid method link found"))
 
