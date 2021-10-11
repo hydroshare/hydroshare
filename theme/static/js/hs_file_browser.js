@@ -2077,14 +2077,18 @@ $(document).ready(function () {
             // Disable the Cancel button until request has finished
             $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
 
-            function afterRequestSuccess() {
-                refreshFileBrowser();
+            function enableControls() {
                 $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
                 $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
             }
+
+            function afterRequestSuccess() {
+                refreshFileBrowser();
+                enableControls();
+            }
+
             function afterRequestFail() {
-                $("#btn-add-reference-url").removeClass("disabled").text("Add Content");
-                $("#btn-add-reference-url").parent().find(".btn[data-dismiss='modal']").removeClass("disabled");
+                enableControls();
             }
 
             $.when.apply($, calls).done(afterRequestSuccess);
