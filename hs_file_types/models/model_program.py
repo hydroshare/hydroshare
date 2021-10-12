@@ -2,6 +2,7 @@ import glob
 import json
 import os
 
+from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -133,7 +134,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         for mp_file_type in self.mp_file_types.all():
             mp_file_type_xml_name = mp_file_type.get_xml_name()
-            graph.add((subject, mp_file_type_xml_name, Literal(mp_file_type.res_file.short_path)))
+            graph.add((subject, mp_file_type_xml_name, URIRef(mp_file_type.res_file.url)))
 
         if self.logical_file.metadata_schema_json:
             graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
@@ -194,7 +195,9 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         for mp_file_type, term in xml_name_map.items():
             for val in graph.objects(subject=subject, predicate=term):
-                filename = str(val.toPython())
+                file_url = str(val.toPython())
+                path = urlparse(file_url).path
+                filename = os.path.basename(path)
                 try:
                     file = self.logical_file.files.get(resource_file=filename)
                     ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)

@@ -9,7 +9,7 @@
     <hsterms:modelOperatingSystem>linux</hsterms:modelOperatingSystem>
     <dc:title>setup againas</dc:title>
     <hsterms:modelWebsite rdf:resource="https://www.hydroshare.org"/>
-    <hsterms:modelReleaseNotes>setup.cfg</hsterms:modelReleaseNotes>
+    <hsterms:modelReleaseNotes rdf:resource="https://www.hydroshare.org/resource/636729f24c03497e9b844ec3be63e823/data/contents/setup.cfg"/>
     <hsterms:extendedMetadata>
       <rdf:Description>
         <hsterms:value>4</hsterms:value>
