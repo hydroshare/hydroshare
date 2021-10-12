@@ -302,7 +302,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         parent_aggr = self.get_parent()
         resource = self.resource
         # delete associated metadata and map xml documents
-        istorage = self.resource.get_irods_storage()
+        istorage = resource.get_irods_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -316,7 +316,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(f.resource.short_id, f.id, user, delete_logical_file=False)
+                delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated

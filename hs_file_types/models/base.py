@@ -1225,7 +1225,7 @@ class AbstractLogicalFile(models.Model):
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(f.resource.short_id, f.id, user, delete_logical_file=False)
+                delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
