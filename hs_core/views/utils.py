@@ -565,7 +565,7 @@ def get_my_resources_list(user, annotate=True):
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
 
     # get a list of resources with effective CHANGE privilege (should include resources that the
     # user has access to via group
@@ -621,7 +621,7 @@ def get_my_resources_list(user, annotate=True):
             When(short_id__in=labeled_resources.values_list('short_id', flat=True),
                  then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created', 'extra_data')
+        resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
         resource_collection = resource_collection.select_related('raccess')

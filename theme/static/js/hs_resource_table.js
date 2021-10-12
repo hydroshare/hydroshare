@@ -357,7 +357,6 @@ function delete_multiple_resources_ajax_submit(indexes) {
                     task = JSON.parse(task);
                     notificationsApp.registerTask(task);
                     notificationsApp.show();
-
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log(textStatus, errorThrown);
@@ -372,6 +371,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
           resourceTable.draw();
           updateLabelCount();
           $("html").css("cursor", "initial"); // Restore default cursor
+          window.location.href = "/my-resources/";
       })
       .fail(function () {
           customAlert("Error", 'Failed to delete resource(s).', "error", 10000);
