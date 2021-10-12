@@ -6,12 +6,12 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
   <hsterms:ModelInstanceAggregation rdf:about="http://localhost:8000/resource/636729f24c03497e9b844ec3be63e823/data/contents/model_instance/model_instance_resmap.xml#aggregation">
-    <hsterms:modelProgramSchema rdf:resource="636729f24c03497e9b844ec3be63e823/data/contents/model_instance/model_instance_schema.json"/>
+    <hsterms:modelProgramSchema rdf:resource="http://localhost:8000/resource/636729f24c03497e9b844ec3be63e823/data/contents/model_instance/model_instance_schema.json"/>
     <dc:type rdf:resource="https://www.hydroshare.org/terms/ModelInstanceAggregation"/>
     <hsterms:executedByModelProgram rdf:resource="http://localhost:8000/resource/636729f24c03497e9b844ec3be63e823/data/contents/model_program/model_program_resmap.xml#aggregation"/>
     <dc:title>model_instance</dc:title>
     <dc:language>eng</dc:language>
-    <hsterms:modelProgramSchemaValues rdf:resource="636729f24c03497e9b844ec3be63e823/data/contents/model_instance/model_instance_schema_values.json"/>
+    <hsterms:modelProgramSchemaValues rdf:resource="http://localhost:8000/resource/636729f24c03497e9b844ec3be63e823/data/contents/model_instance/model_instance_schema_values.json"/>
     <hsterms:includesModelOutput rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</hsterms:includesModelOutput>
     <dc:rights>
       <rdf:Description>

@@ -292,7 +292,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
 
         if self.logical_file.metadata_schema_json:
-            graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_path)))
+            graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
 
         if self.metadata_json:
             graph.add((subject, HSTERMS.modelProgramSchemaValues, URIRef(self.logical_file.schema_values_file_path)))
@@ -390,6 +390,13 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         """Full path of the aggregation schema values json file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.schema_values_short_file_path)
+
+    @property
+    def schema_values_file_url(self):
+        """URL to the aggregation metadata schema values json file
+        """
+        from hs_core.hydroshare.utils import current_site_url
+        return "{}/resource/{}".format(current_site_url(), self.schema_values_file_path)
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
