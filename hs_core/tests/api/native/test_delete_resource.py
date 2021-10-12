@@ -62,13 +62,13 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
             keywords=("one", "two",),
             metadata=[{"description": {"abstract": "myabstract"}}]
         )
-        self.assertEqual(len(SearchQuerySet().all()), 0)
+        current_index_count = len(SearchQuerySet().all())
 
         new_res.set_public(True)
-        self.assertEqual(len(SearchQuerySet().all()), 1)
+        self.assertEqual(len(SearchQuerySet().all()), current_index_count + 1)
 
         resource.delete_resource(new_res.short_id)
-        self.assertEqual(len(SearchQuerySet().all()), 0)
+        self.assertEqual(len(SearchQuerySet().all()), current_index_count)
 
 
 
