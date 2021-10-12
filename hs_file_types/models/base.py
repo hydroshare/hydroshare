@@ -974,6 +974,25 @@ class AbstractLogicalFile(models.Model):
         """Return True if this aggregation is a model instance aggregation, otherwise False"""
         return self.get_aggregation_class_name() == 'ModelInstanceLogicalFile'
 
+    @property
+    def is_dangling(self):
+        """Checks if this aggregation is a dangling aggregation or not"""
+
+        resource = self.resource
+        istorage = resource.get_irods_storage()
+        if self.files.count() == 0:
+            if any([self.is_fileset, self.is_model_instance, self.is_model_program]):
+                # check folder exist in irods
+                if self.folder:
+                    path = os.path.join(resource.file_path, self.folder)
+                    if not istorage.exists(path):
+                        return True
+                else:
+                    return True
+            else:
+                return True
+        return False
+
     @staticmethod
     def get_aggregation_type_name():
         """Return the appropriate aggregation name needed for aggregation xml metadata and
@@ -1197,7 +1216,7 @@ class AbstractLogicalFile(models.Model):
         parent_aggr = self.get_parent()
         resource = self.resource
         # delete associated metadata and map xml documents
-        istorage = self.resource.get_irods_storage()
+        istorage = resource.get_irods_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
