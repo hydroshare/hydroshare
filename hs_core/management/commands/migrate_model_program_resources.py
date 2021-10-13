@@ -103,94 +103,108 @@ class Command(BaseCommand):
             type_element = comp_res.metadata.type
             type_element.url = '{0}/terms/{1}'.format(current_site_url(), to_resource_type)
             type_element.save()
+            create_aggregation = True
+            if not mp_metadata_obj.program:
+                msg = "Resource has no model program specific metadata and no data files. " \
+                      "No model program aggregation created for this resource:{}".format(comp_res.short_id)
+                if comp_res.files.count() == 0:
+                    # original mp resource has no files and no mp specific metadata - no need to create mp aggregation
+                    print(msg)
+                    create_aggregation = False
+                elif comp_res.readme_file is not None and comp_res.files.count() == 1:
+                    # original mp resource contains only a readme file and no mp specific metadata - no need to
+                    # create mp aggregation
+                    print(msg)
+                    create_aggregation = False
 
-            # create a mp aggregation
-            try:
-                mp_aggr = ModelProgramLogicalFile.create(resource=comp_res)
-                mp_aggr.save()
-            except Exception as ex:
-                err_msg = 'Failed to create model program aggregation for resource (ID: {})'
-                err_msg = err_msg.format(mp_res.short_id)
-                err_msg = err_msg + '\n' + str(ex)
-                logger.error(err_msg)
-                self.stdout.write(self.style.ERROR(err_msg))
-                continue
+            if create_aggregation:
+                # create a mp aggregation
+                try:
+                    mp_aggr = ModelProgramLogicalFile.create(resource=comp_res)
+                    mp_aggr.save()
+                except Exception as ex:
+                    err_msg = 'Failed to create model program aggregation for resource (ID: {})'
+                    err_msg = err_msg.format(mp_res.short_id)
+                    err_msg = err_msg + '\n' + str(ex)
+                    logger.error(err_msg)
+                    self.stdout.write(self.style.ERROR(err_msg))
+                    continue
 
-            if comp_res.files.count() == 0:
-                self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
-            elif comp_res.readme_file is not None:
-                if comp_res.files.count() > 2 or comp_res.files.count() == 1:
+                if comp_res.files.count() == 0:
                     self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
-                # make the all res files part of the aggregation excluding the readme file
-                for res_file in comp_res.files.all():
-                    if res_file != comp_res.readme_file:
+                elif comp_res.readme_file is not None:
+                    if comp_res.files.count() > 2 or comp_res.files.count() == 1:
+                        self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
+                    # make the all res files part of the aggregation excluding the readme file
+                    for res_file in comp_res.files.all():
+                        if res_file != comp_res.readme_file:
+                            mp_aggr.add_resource_file(res_file)
+                            msg = "Added file {} to mp aggregation".format(res_file.file_name)
+                            self.stdout.write(self.style.SUCCESS(msg))
+                else:
+                    if comp_res.files.count() > 1:
+                        self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
+                    # make the all res files part of the aggregation
+                    for res_file in comp_res.files.all():
                         mp_aggr.add_resource_file(res_file)
                         msg = "Added file {} to mp aggregation".format(res_file.file_name)
                         self.stdout.write(self.style.SUCCESS(msg))
-            else:
-                if comp_res.files.count() > 1:
-                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
-                # make the all res files part of the aggregation
-                for res_file in comp_res.files.all():
-                    mp_aggr.add_resource_file(res_file)
-                    msg = "Added file {} to mp aggregation".format(res_file.file_name)
-                    self.stdout.write(self.style.SUCCESS(msg))
 
-            # set the dataset_name field of the aggregation in the case of file based mp aggregation
-            if not mp_aggr.folder:
-                aggr_file = mp_aggr.files.first()
-                aggr_filename, _ = os.path.splitext(aggr_file.file_name)
-                mp_aggr.dataset_name = aggr_filename
-                mp_aggr.save()
+                # set the dataset_name field of the aggregation in the case of file based mp aggregation
+                if not mp_aggr.folder:
+                    aggr_file = mp_aggr.files.first()
+                    aggr_filename, _ = os.path.splitext(aggr_file.file_name)
+                    mp_aggr.dataset_name = aggr_filename
+                    mp_aggr.save()
 
-            # copy the resource level keywords to aggregation level
-            if comp_res.metadata.subjects:
-                keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
-                mp_aggr.metadata.keywords = keywords
-                mp_aggr.metadata.save()
+                # copy the resource level keywords to aggregation level
+                if comp_res.metadata.subjects:
+                    keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
+                    mp_aggr.metadata.keywords = keywords
+                    mp_aggr.metadata.save()
 
-            if mp_metadata_obj.program:
-                if mp_aggr.files.count() > 0:
-                    # create mp program file types
-                    file_type = ModelProgramResourceFileType.ENGINE
-                    for file_name in mp_metadata_obj.program.get_engine_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                if mp_metadata_obj.program:
+                    if mp_aggr.files.count() > 0:
+                        # create mp program file types
+                        file_type = ModelProgramResourceFileType.ENGINE
+                        for file_name in mp_metadata_obj.program.get_engine_list():
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
 
-                    file_type = ModelProgramResourceFileType.SOFTWARE
-                    for file_name in mp_metadata_obj.program.get_software_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        file_type = ModelProgramResourceFileType.SOFTWARE
+                        for file_name in mp_metadata_obj.program.get_software_list():
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
 
-                    file_type = ModelProgramResourceFileType.DOCUMENTATION
-                    for file_name in mp_metadata_obj.program.get_documentation_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        file_type = ModelProgramResourceFileType.DOCUMENTATION
+                        for file_name in mp_metadata_obj.program.get_documentation_list():
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
 
-                    file_type = ModelProgramResourceFileType.RELEASE_NOTES
-                    for file_name in mp_metadata_obj.program.get_releasenotes_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        file_type = ModelProgramResourceFileType.RELEASE_NOTES
+                        for file_name in mp_metadata_obj.program.get_releasenotes_list():
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
 
-                if mp_metadata_obj.program.modelReleaseDate:
-                    mp_aggr.metadata.release_date = mp_metadata_obj.program.modelReleaseDate
-                if mp_metadata_obj.program.modelVersion:
-                    mp_aggr.metadata.version = mp_metadata_obj.program.modelVersion
-                if mp_metadata_obj.program.modelWebsite:
-                    mp_aggr.metadata.website = mp_metadata_obj.program.modelWebsite
-                if mp_metadata_obj.program.modelCodeRepository:
-                    mp_aggr.metadata.code_repository = mp_metadata_obj.program.modelCodeRepository
-                if mp_metadata_obj.program.modelProgramLanguage:
-                    languages = mp_metadata_obj.program.modelProgramLanguage.split(',')
-                    mp_aggr.metadata.programming_languages = languages
-                if mp_metadata_obj.program.modelOperatingSystem:
-                    op_systems = mp_metadata_obj.program.modelOperatingSystem.split(',')
-                    mp_aggr.metadata.operating_systems = op_systems
+                    if mp_metadata_obj.program.modelReleaseDate:
+                        mp_aggr.metadata.release_date = mp_metadata_obj.program.modelReleaseDate
+                    if mp_metadata_obj.program.modelVersion:
+                        mp_aggr.metadata.version = mp_metadata_obj.program.modelVersion
+                    if mp_metadata_obj.program.modelWebsite:
+                        mp_aggr.metadata.website = mp_metadata_obj.program.modelWebsite
+                    if mp_metadata_obj.program.modelCodeRepository:
+                        mp_aggr.metadata.code_repository = mp_metadata_obj.program.modelCodeRepository
+                    if mp_metadata_obj.program.modelProgramLanguage:
+                        languages = mp_metadata_obj.program.modelProgramLanguage.split(',')
+                        mp_aggr.metadata.programming_languages = languages
+                    if mp_metadata_obj.program.modelOperatingSystem:
+                        op_systems = mp_metadata_obj.program.modelOperatingSystem.split(',')
+                        mp_aggr.metadata.operating_systems = op_systems
 
-                mp_aggr.save()
+                    mp_aggr.save()
 
-            # create aggregation level xml files
-            mp_aggr.create_aggregation_xml_documents()
-            msg = 'One model program aggregation was created in resource (ID:{})'
-            msg = msg.format(comp_res.short_id)
-            logger.info(msg)
-            self.stdout.write(self.style.SUCCESS(msg))
+                # create aggregation level xml files
+                mp_aggr.create_aggregation_xml_documents()
+                msg = 'One model program aggregation was created in resource (ID:{})'
+                msg = msg.format(comp_res.short_id)
+                logger.info(msg)
+                self.stdout.write(self.style.SUCCESS(msg))
 
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
