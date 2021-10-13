@@ -14,6 +14,19 @@ class WebAppLaunchException(Exception):
     pass
 
 
+def split_url(url):
+    """Splits the given url to path component and query string component"""
+    if url is None:
+        return None, None
+
+    path = url
+    query = ""
+    if "?" in url:
+        path, query = url.split("?", maxsplit=1)
+
+    return path.strip(), query.strip()
+
+
 def parse_app_url_template(url_template_string, term_dict_list=()):
     """
     This func replaces pre-defined HS Terms in url_template_string with real values;

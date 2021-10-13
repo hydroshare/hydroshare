@@ -1,7 +1,7 @@
 from hs_core.models import get_user, BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_tools_resource.models import SupportedResTypeChoices, ToolResource
-from hs_tools_resource.utils import parse_app_url_template
+from hs_tools_resource.utils import parse_app_url_template, split_url
 from hs_tools_resource.app_keys import tool_app_key
 
 
@@ -66,17 +66,6 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
                       open with list
     :return: an info dict of web tool resource
     """
-    def split_url(url):
-        # splits the given url to path component and query string component
-        if url is None:
-            return None, None
-
-        path = url
-        query = ""
-        if "?" in url:
-            path, query = url.split("?", maxsplit=1)
-
-        return path.strip(), query.strip()
 
     tool_url_resource = tool_res_obj.metadata.url_base.value \
         if tool_res_obj.metadata.url_base else None
