@@ -1,4 +1,5 @@
 import os
+import urllib
 from string import Template
 import logging
 from hs_core.models import BaseResource
@@ -25,6 +26,19 @@ def split_url(url):
         path, query = url.split("?", maxsplit=1)
 
     return path.strip(), query.strip()
+
+
+def encode_url(url):
+    """Encodes app launch url"""
+
+    path, query = split_url(url)
+    path = urllib.parse.quote(path).replace('%3A', ':')
+    if query:
+        query = urllib.parse.quote(query, safe='')
+        url = "{}?{}".format(path, query)
+    else:
+        url = path
+    return url
 
 
 def parse_app_url_template(url_template_string, term_dict_list=()):
