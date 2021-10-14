@@ -192,9 +192,11 @@ class Command(BaseCommand):
                         mp_aggr.metadata.code_repository = mp_metadata_obj.program.modelCodeRepository
                     if mp_metadata_obj.program.modelProgramLanguage:
                         languages = mp_metadata_obj.program.modelProgramLanguage.split(',')
+                        languages = [lang.strip() for lang in languages]
                         mp_aggr.metadata.programming_languages = languages
                     if mp_metadata_obj.program.modelOperatingSystem:
                         op_systems = mp_metadata_obj.program.modelOperatingSystem.split(',')
+                        op_systems = [op.strip() for op in op_systems]
                         mp_aggr.metadata.operating_systems = op_systems
 
                     mp_aggr.save()
