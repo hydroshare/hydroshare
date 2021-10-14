@@ -84,7 +84,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.keywords, [])
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
@@ -133,7 +133,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.keywords, [])
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
@@ -195,7 +195,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         for key in ('Logan River', 'TauDEM'):
             self.assertIn(key, logical_file.metadata.keywords)
         self.assertEqual(len(logical_file.metadata.keywords), 2)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
@@ -262,7 +262,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # there should not be any file level keywords
         self.assertEqual(logical_file.metadata.keywords, [])
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
@@ -305,6 +305,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             # test that the each resource file has the same folder - no new folder created
             self.assertEqual(res_file.file_folder, new_folder)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_shp_file_required_3(self):
@@ -355,6 +356,8 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             # test that the each resource file has the same folder - no new folder created
             self.assertEqual(res_file.file_folder, new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 4)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_shp_file_required_4(self):
@@ -402,6 +405,8 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         for res_file in logical_file.files.all():
             # test that the each resource file has the same folder - no new folder created
             self.assertEqual(res_file.file_folder, expected_file_folder)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_zip_invalid_set_file_type_to_geo_feature(self):
@@ -428,6 +433,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_logical_file_delete(self):
@@ -452,7 +458,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # delete the logical file using the custom delete function - logical_delete()
         logical_file.logical_delete(self.user)
         self.assertEqual(self.composite_resource.files.all().count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
@@ -488,12 +494,14 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check the file folder is not deleted
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, file_folder)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_content_file_delete(self):
         # test that when any file in GeoFeatureLogicalFile type is deleted
         # all metadata associated with GeoFeatureLogicalFile is deleted
-        # test for all 15 file extensions
+        # test for all 15 file extensions (this one test is kind of running 15 tests - takes a while to finish)
 
         for ext in GeoFeatureLogicalFile.get_allowed_storage_file_types():
             self._test_file_metadata_on_file_delete(ext=ext)
@@ -534,6 +542,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # of folder deletion
         self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
         self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_file_rename(self):
@@ -571,6 +580,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_file_move(self):
@@ -595,6 +605,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_rename(self):
@@ -650,7 +661,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         expected_map_file_path = '{0}{1}'.format(new_shp_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_parent_folder_rename(self):
@@ -722,7 +733,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         expected_map_file_path = '{0}{1}'.format(new_shp_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_move(self):
@@ -780,7 +791,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         expected_map_file_path = '{0}{1}'.format(shp_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_metadata_on_resource_delete(self):
@@ -805,6 +816,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(OriginalCoverage.objects.count(), 1)
         self.assertEqual(FieldInformation.objects.count(), 5)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         # delete resource
         hydroshare.delete_resource(self.composite_resource.short_id)
 
@@ -865,6 +877,7 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # there should not be any files left
         self.assertEqual(self.composite_resource.files.count(), 0)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_main_file(self):
@@ -879,3 +892,5 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(".shp", GeoFeatureLogicalFile.objects.first().get_main_file_type())
         self.assertEqual(self.states_shp_file_name,
                          GeoFeatureLogicalFile.objects.first().get_main_file.file_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
