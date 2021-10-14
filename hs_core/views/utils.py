@@ -565,7 +565,7 @@ def get_my_resources_list(user, annotate=True):
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
 
     # get a list of resources with effective CHANGE privilege (should include resources that the
     # user has access to via group
