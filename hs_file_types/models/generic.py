@@ -2,6 +2,7 @@ import os
 import logging
 
 from django.db import models
+from django.db.models.signals import post_save
 from django.template import Template, Context
 
 from dominate.tags import div, form, button, hr, i
@@ -9,7 +10,7 @@ from dominate.tags import div, form, button, hr, i
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.signals import post_add_generic_aggregation
 
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):
@@ -281,3 +282,6 @@ class GenericLogicalFile(AbstractLogicalFile):
         # a singel file extension in the group which is considered the main file
         # - subclass needs to override this
         return ".*"
+
+
+post_save.connect(create_logical_file, sender=GenericLogicalFile)

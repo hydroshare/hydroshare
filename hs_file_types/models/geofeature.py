@@ -3,6 +3,7 @@ import logging
 import shutil
 import zipfile
 import xmltodict
+from django.db.models.signals import post_save
 
 from osgeo import ogr, osr
 
@@ -22,7 +23,7 @@ from hs_core.signals import post_add_geofeature_aggregation
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, FieldInformation
 
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
 
 UNKNOWN_STR = "unknown"
 
@@ -333,6 +334,9 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         super(GeoFeatureLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+
+post_save.connect(create_logical_file, sender=GeoFeatureLogicalFile)
 
 
 def extract_metadata_and_files(resource, res_file, file_type=True):

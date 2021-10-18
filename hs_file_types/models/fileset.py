@@ -2,9 +2,10 @@ import logging
 import os
 
 from django.db import models
+from django.db.models.signals import post_save
 
 from hs_core.models import ResourceFile
-from .base import AbstractLogicalFile, FileTypeContext, NestedLogicalFileMixin
+from .base import AbstractLogicalFile, FileTypeContext, NestedLogicalFileMixin, create_logical_file
 from .generic import GenericFileMetaDataMixin
 
 
@@ -219,3 +220,6 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
+
+post_save.connect(create_logical_file, sender=FileSetLogicalFile)

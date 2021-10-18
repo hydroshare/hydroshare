@@ -9,6 +9,7 @@ import numpy as np
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db import models, transaction
+from django.db.models.signals import post_save
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
 from dominate.tags import div, legend, form, button, p, em, a, textarea, _input
@@ -16,7 +17,7 @@ from dominate.tags import div, legend, form, button, p, em, a, textarea, _input
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
 import hs_file_types.nc_functions.nc_utils as nc_utils
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
@@ -500,6 +501,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
         res_files = [f for f in resource_files if f.extension.lower() == '.nc']
         return res_files[0] if res_files else None
+
+
+post_save.connect(create_logical_file, sender=NetCDFLogicalFile)
 
 
 def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_meta,

@@ -6,12 +6,14 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
 from django.template import Template, Context
 from dominate import tags as dom_tags
 from rdflib import Literal
 
 from hs_core.hs_rdf import HSTERMS
 from hs_core.models import ResourceFile
+from .base import create_logical_file
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 
@@ -500,3 +502,6 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
             mi_meta.save()
+
+
+post_save.connect(create_logical_file, sender=ModelProgramLogicalFile)

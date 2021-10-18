@@ -10,6 +10,7 @@ import time
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.db.models.signals import post_save
 from django.template import Template, Context
 
 from dominate.tags import div, legend, strong, form, select, option, button, _input, p, \
@@ -27,7 +28,7 @@ from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, 
     MethodValidationForm, ProcessingLevelValidationForm, TimeSeriesResultValidationForm, \
     UTCOffSetValidationForm
 
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
 
 
 class CVVariableType(AbstractCVLookupTable):
@@ -785,6 +786,9 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             # sqlite or csv file
             raise ValidationError("Not a valid timeseries file.")
         return res_file, folder_path
+
+
+post_save.connect(create_logical_file, sender=TimeSeriesLogicalFile)
 
 
 def copy_cv_terms(src_metadata, tgt_metadata):

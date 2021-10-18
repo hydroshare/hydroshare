@@ -7,6 +7,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 
 import gdal
+from django.db.models.signals import post_save
 from gdalconst import GA_ReadOnly
 
 from functools import partial, wraps
@@ -28,7 +29,7 @@ from hs_geo_raster_resource.models import CellInformation, BandInformation, Orig
 from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
 
 from hs_file_types import raster_meta_extract
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
@@ -394,6 +395,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         super(GeoRasterLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+
+post_save.connect(create_logical_file, sender=GeoRasterLogicalFile)
 
 
 def raster_file_validation(raster_file, resource, raster_folder=''):

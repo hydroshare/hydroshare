@@ -4,6 +4,7 @@ from dateutil import parser
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 import jsonschema
+from django.db.models.signals import post_save
 
 from django.utils import timezone
 from django.db import models, transaction
@@ -15,7 +16,7 @@ from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbo
 
 from hs_core.signals import post_add_reftimeseries_aggregation
 
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
 
 
 class TimeSeries(object):
@@ -763,6 +764,9 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         super(RefTimeseriesLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
+
+
+post_save.connect(create_logical_file, sender=RefTimeseriesLogicalFile)
 
 
 def _extract_metadata(resource, logical_file):

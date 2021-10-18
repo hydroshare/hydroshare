@@ -5,6 +5,7 @@ import jsonschema
 from deepdiff import DeepDiff
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.db.models.signals import post_save
 from django.template import Template, Context
 from dominate import tags as dom_tags
 from rdflib import BNode, Literal, URIRef, RDF
@@ -13,7 +14,7 @@ from rdflib.namespace import Namespace, DC
 from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare.utils import current_site_url
 from hs_core.models import ResourceFile
-from .base import NestedLogicalFileMixin
+from .base import NestedLogicalFileMixin, create_logical_file
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 from .model_program import ModelProgramLogicalFile
@@ -519,6 +520,9 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
                         tgt_logical_file.metadata.executed_by = tgt_mp_logical_file
                         tgt_logical_file.metadata.save()
                         break
+
+
+post_save.connect(create_logical_file, sender=ModelInstanceLogicalFile)
 
 
 def _dict_has_value(dct):
