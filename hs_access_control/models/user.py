@@ -1074,7 +1074,7 @@ class UserAccess(models.Model):
             Q(r2urp__user=self.user) |
             # access via a group
             Q(r2grp__group__gaccess__active=True,
-              r2grp__group__g2ugp__user=self.user)).distinct()
+              r2grp__group__g2ugp__user=self.user)).distinct().select_related('raccess')
 
     @property
     def owned_resources(self):
@@ -1089,7 +1089,7 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         return BaseResource.objects.filter(r2urp__user=self.user,
-                                           r2urp__privilege=PrivilegeCodes.OWNER)
+                                           r2urp__privilege=PrivilegeCodes.OWNER).select_related('raccess')
 
     @property
     def edit_resources(self):
@@ -1125,7 +1125,7 @@ class UserAccess(models.Model):
             Q(raccess__immutable=False,
               r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user,
-              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct()
+              r2grp__privilege=PrivilegeCodes.CHANGE)).distinct().select_related('raccess')
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False, via_community=False):
@@ -1185,7 +1185,7 @@ class UserAccess(models.Model):
             if via_user:
                 return BaseResource.objects\
                     .filter(r2urp__privilege=this_privilege,
-                            r2urp__user=self.user)
+                            r2urp__user=self.user).select_related('raccess')
             else:
                 # groups and communities can't own resources
                 return BaseResource.objects.none()
@@ -1218,9 +1218,9 @@ class UserAccess(models.Model):
                     excluded = BaseResource.objects.filter(excl).values('pk')
                     return BaseResource.objects.filter(incl)\
                                                .exclude(pk__in=Subquery(excluded))\
-                                               .distinct()
+                                               .distinct().select_related('raccess')
                 else:
-                    return BaseResource.objects.filter(incl).distinct()
+                    return BaseResource.objects.filter(incl).distinct().select_related('raccess')
             else:
                 return BaseResource.objects.none()
 
@@ -1271,9 +1271,9 @@ class UserAccess(models.Model):
 
                     return BaseResource.objects.filter(incl)\
                                                .exclude(pk__in=Subquery(excluded))\
-                                               .distinct()
+                                               .distinct().select_related('raccess')
                 else:
-                    return BaseResource.objects.filter(incl).distinct()
+                    return BaseResource.objects.filter(incl).distinct().select_related('raccess')
             else:
                 return BaseResource.objects.none()
 

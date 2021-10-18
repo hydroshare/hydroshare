@@ -96,7 +96,7 @@ class GroupAccess(models.Model):
 
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege=PrivilegeCodes.OWNER)
+                                   u2ugp__privilege=PrivilegeCodes.OWNER).select_related('uaccess')
 
     @property
     def __edit_users_of_group(self):
@@ -117,7 +117,7 @@ class GroupAccess(models.Model):
         This eliminates duplicates due to multiple invitations.
         """
 
-        return User.objects.filter(self.__edit_users_of_group)
+        return User.objects.filter(self.__edit_users_of_group).select_related('uaccess')
 
     @property
     def __view_users_of_group(self):
@@ -139,7 +139,7 @@ class GroupAccess(models.Model):
         unlike members, which just lists explicit group members.
         """
 
-        return User.objects.filter(self.__view_users_of_group)
+        return User.objects.filter(self.__view_users_of_group).select_related('uaccess')
 
     @property
     def members(self):
@@ -152,7 +152,7 @@ class GroupAccess(models.Model):
         """
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW)
+                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW).select_related('uaccess')
 
     @property
     def viewers(self):
@@ -160,7 +160,7 @@ class GroupAccess(models.Model):
         return User.objects.filter(
                 Q(is_active=True) &
                 (Q(u2ugp__group__gaccess__active=True,
-                   u2ugp__group=self.group))).distinct()
+                   u2ugp__group=self.group))).distinct().select_related('uaccess')
 
     def communities(self):
         """
@@ -210,7 +210,7 @@ class GroupAccess(models.Model):
         :return: QuerySet of resource objects held by group.
 
         """
-        return BaseResource.objects.filter(self.__view_resources_of_group)
+        return BaseResource.objects.filter(self.__view_resources_of_group).select_related('raccess')
 
     @property
     def edit_resources(self):
@@ -222,7 +222,7 @@ class GroupAccess(models.Model):
         These include resources that are directly editable, as well as those editable
         via membership in a group.
         """
-        return BaseResource.objects.filter(self.__edit_resources_of_group)
+        return BaseResource.objects.filter(self.__edit_resources_of_group).select_related('raccess')
 
     @property
     def owned_resources(self):
@@ -234,7 +234,7 @@ class GroupAccess(models.Model):
         This is independent of whether the resource is editable by the group.
 
         """
-        return BaseResource.objects.filter(self.__owned_resources_of_group)
+        return BaseResource.objects.filter(self.__owned_resources_of_group).select_related('raccess')
 
     @property
     def group_membership_requests(self):
@@ -273,7 +273,7 @@ class GroupAccess(models.Model):
             # CHANGE does not include immutable resources
             return BaseResource.objects.filter(raccess__immutable=False,
                                                r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group)
+                                               r2grp__group=self.group).select_related('raccess')
             # there are no excluded resources; maximum privilege is CHANGE
 
         else:  # this_privilege == PrivilegeCodes.VIEW
@@ -282,7 +282,7 @@ class GroupAccess(models.Model):
                                                  r2grp__group=self.group) |
                                                Q(raccess__immutable=True,
                                                  r2grp__privilege=PrivilegeCodes.CHANGE,
-                                                 r2grp__group=self.group)).distinct()
+                                                 r2grp__group=self.group)).distinct().select_related('raccess')
 
     def get_users_with_explicit_access(self, this_privilege):
         """
@@ -302,11 +302,11 @@ class GroupAccess(models.Model):
         elif this_privilege == PrivilegeCodes.CHANGE:
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
-                                       u2ugp__privilege=PrivilegeCodes.CHANGE)
+                                       u2ugp__privilege=PrivilegeCodes.CHANGE).select_related('uaccess')
         else:  # this_privilege == PrivilegeCodes.VIEW
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
-                                       u2ugp__privilege=PrivilegeCodes.VIEW)
+                                       u2ugp__privilege=PrivilegeCodes.VIEW).select_related('uaccess')
 
     def get_effective_privilege(self, this_user):
         """
@@ -352,7 +352,7 @@ class GroupAccess(models.Model):
                         r2urp__user__u2ugp__group__id=OuterRef('id'),
                         r2urp__privilege=PrivilegeCodes.OWNER)))\
             .filter(has_public_resources=True)\
-            .order_by('name')
+            .order_by('name').select_related('gaccess')
 
     @property
     def public_resources(self):

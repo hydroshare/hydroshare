@@ -85,7 +85,7 @@ class ResourceAccess(models.Model):
         """
 
         return User.objects.filter(self.__view_users_from_individual |
-                                   self.__view_users_from_group).distinct()
+                                   self.__view_users_from_group).distinct().select_related('uaccess')
 
     @property
     def __edit_users_from_individual(self):
@@ -128,7 +128,7 @@ class ResourceAccess(models.Model):
         """
         return User.objects\
                    .filter((self.__edit_users_from_individual) |
-                           (self.__edit_users_from_group)).distinct()
+                           (self.__edit_users_from_group)).distinct().select_related('uaccess')
 
     @property
     def __view_groups_from_group(self):
@@ -197,7 +197,7 @@ class ResourceAccess(models.Model):
         """
         return User.objects.filter(is_active=True,
                                    u2urp__privilege=PC.OWNER,
-                                   u2urp__resource=self.resource)
+                                   u2urp__resource=self.resource).select_related('uaccess')
 
     def get_users_with_explicit_access(self, this_privilege,
                                        include_user_granted_access=True,
