@@ -26,7 +26,7 @@ def usage():
     print("      create: create the user.")
     print("      update: update metadata for user.")
     print("      Options for create and update include:")
-    print("          --email={email}: email of user.")
+    print("          --email={email}: email of user. Required when creating a user.")
     print("          --first='{first name}': first name of user.")
     print("          --last='{last name}': last name of user.")
 
@@ -93,13 +93,13 @@ class Command(BaseCommand):
         elif command == 'update' or command == 'create':
             try:
                 user = User.objects.get(username=uname)
-                if options['email'] is not None:
+                if 'email' in options:
                     user.email = options['email']
                     user.save()
-                if options['first'] is not None:
+                if 'first' in options:
                     user.first_name = options['first']
                     user.save()
-                if options['last'] is not None:
+                if 'last' in options:
                     user.last_name = options['last']
                     user.save()
 
@@ -108,8 +108,9 @@ class Command(BaseCommand):
                 if options['email'] is not None:
                     email = options['email']
                 else:
-                    email = "No email"
-
+                    print("Email must be specified to create a user.")
+                    usage()
+                    exit(1)
                 if options['first'] is not None:
                     first = options['first']
                 else:
@@ -130,9 +131,6 @@ class Command(BaseCommand):
                     superuser=False,
                     groups=[]
                 )
-
-        elif command == 'remove':
-            print("remove currently not implemented")
 
         else:
             print("unknown command '{}'.".format(command))
