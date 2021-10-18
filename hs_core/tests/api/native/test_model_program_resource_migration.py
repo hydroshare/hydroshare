@@ -2,16 +2,15 @@ import os
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
-from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.core.management import call_command
 
 from hs_composite_resource.models import CompositeResource
-from hs_core.hydroshare import add_file_to_resource
-from hs_model_program.models import ModelProgramResource
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
+from hs_core.hydroshare import add_file_to_resource
+from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.models import ModelProgramLogicalFile, ModelProgramResourceFileType
-from django.core.management import call_command
+from hs_model_program.models import ModelProgramResource
 
 
 class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
