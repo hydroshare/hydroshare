@@ -31,13 +31,20 @@ class GroupCommunityRequest(models.Model):
     '''
 
     # target
-    group = models.ForeignKey(Group, editable=False, null=False)
+    group = models.ForeignKey(Group, editable=False, 
+        null=False, related_name='invite_gcr_group')
+
     # source
-    community = models.ForeignKey(Community, editable=False, null=False)
+    community = models.ForeignKey(Community, editable=False, 
+        null=False, related_name='invite_gcr_community')
+
     # invitee
-    group_owner = models.ForeignKey(User, editable=False, null=True, default=None, related_name='invite_gcg')
+    group_owner = models.ForeignKey(User, editable=False, 
+        null=True, default=None, related_name='invite_gcr_gowner')
+
     # inviter
-    community_owner = models.ForeignKey(User, editable=False, null=True, related_name='invite_gcc')
+    community_owner = models.ForeignKey(User, editable=False, 
+        null=True, related_name='invite_gcr_cowner')
 
     # when request was made
     when_requested = models.DateTimeField(editable=False, null=True, default=None)

@@ -71,6 +71,29 @@ class CommunityApprovalView(TemplateView):
         return context
 
 
+class CommunityInviteView(TemplateView): 
+    template_name = 'hs_access_control/community_invite.html'
+    
+    def get_context_data(request, uid, cid, *args, **kwargs):
+        message = ''
+        context = {}
+        if 'action' in kwargs:
+            if kwargs['action'] == 'invite':
+                message, worked = GroupCommunityRequest.create_or_update(
+                    group=Group.objects.get(id=int(kwargs['gid'])), 
+                    community=Community.objects.get(id=int(cid)),
+                    requester=User.objects.get(id=int(uid)))
+            else:
+                message = "improper action '{}'".format(kwargs['action'])
+                logger.error(message)
+        context['message'] = message
+        context['community'] = Community.objects.get(id=int(cid))
+        context['groups'] = Group.objects.filter(gaccess__active=True)\
+            .exclude(g2gcp__community=context['community'])\
+            .exclude(g2gcr__community=context['community']) 
+        return context
+
+
 class TestCommunityApproval(TemplateView):
     template_name = 'hs_access_control/community_approval_test.html'
 
