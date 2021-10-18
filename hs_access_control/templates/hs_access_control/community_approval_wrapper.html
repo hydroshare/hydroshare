@@ -23,7 +23,7 @@ $(document).ready(loader);
 
 function community_accept_group_request(uid, cid, gid) { 
     url = '/access/_internal/community/respond/' 
-        + uid + '/' + cid + '/accept/' + gid + '/';
+        + uid + '/' + cid + '/approve/' + gid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
