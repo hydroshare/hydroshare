@@ -77,7 +77,7 @@ thead {
 }
 </style>
 <div>
-<h2> Invitations to <em>{{ group.name }}</em> from communities </h2>
+<h2> Communities that <em>{{ group.name }}</em> can join </h2>
 {{ message }}
 <table
      class = "table-wrapper-scroll-y my-custom-scrollbar"
@@ -88,27 +88,17 @@ thead {
      top:0>
     <tr>
       <th> Community Name </th>
-      <th> Community Owner </th>
-      <th> Date </th>
-      <th> Approve </th>
-      <th> Decline  </th>
+      <th> Join </th>
     </tr>
   </thead>
   <tbody> 
-{% for i in gcr %}
+{% for i in communities %}
 <tr>
-<td> {{ i.community.name }} </td> 
-<td> {{ i.community_owner.username }} </td>
-<td> {{ i.when_requested }} </td>
-<td> <button type="button" id="Approve" 
-        onclick="group_approve_community_request({{ uid }}, {{ gid }}, {{ i.community.id }})" > 
-approve
+<td> {{ i.name }} </td> 
+<td> <button type="button" id="Join" 
+        onclick="group_make_community_request({{ uid }}, {{ gid }}, {{ i.id }})" > 
+Join
      </button> 
-</td>
-<td> <button type="button" id="Decline" 
-        onclick="group_decline_community_request({{ uid }}, {{ gid }}, {{ i.community.id }})"> 
-decline
-     </button>
 </td>
 </tr>
 {% endfor %}

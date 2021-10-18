@@ -12,6 +12,9 @@ urlpatterns = [
     url(r'^test/group/approval/(?P<uid>[0-9]+)/(?P<gid>[0-9]+)/$',
         views.TestGroupApproval.as_view()),
 
+    url(r'^test/group/request/(?P<uid>[0-9]+)/(?P<gid>[0-9]+)/$',
+        views.TestGroupRequest.as_view()),
+
     url(r'^test/debug/$', 
         views.DebugView.as_view()),
 
@@ -30,5 +33,10 @@ urlpatterns = [
         views.CommunityInviteView.as_view()),
     url(r'^_internal/community/invite/(?P<uid>[0-9]+)/(?P<cid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<gid>[0-9]+)/$',
         views.CommunityInviteView.as_view()),
+
+    url(r'^_internal/group/request/(?P<uid>[0-9]+)/(?P<gid>[0-9]+)/$',
+        views.GroupRequestView.as_view()),
+    url(r'^_internal/group/request/(?P<uid>[0-9]+)/(?P<gid>[0-9]+)/(?P<action>[a-z_ ]*)/(?P<cid>[0-9]+)/$',
+        views.GroupRequestView.as_view()),
 
 ]
