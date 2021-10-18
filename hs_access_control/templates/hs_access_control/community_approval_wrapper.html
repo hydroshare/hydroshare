@@ -1,0 +1,55 @@
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
+<script language='JavaScript'> 
+
+function loader() { 
+    // const axios = require('axios');
+    url = '/access/_internal/community/respond/' 
+        + {{ uid }} + '/' + {{ cid }} + '/';
+    container = document.getElementById("community_approval");
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        alert(error);
+        container.innerHtml = error; 
+      });
+} 
+
+$(document).ready(loader); 
+
+function community_accept_group_request(uid, cid, gid) { 
+    url = '/access/_internal/community/respond/' 
+        + uid + '/' + cid + '/accept/' + gid + '/';
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container = document.getElementById("community_approval");
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function community_decline_group_request(uid, cid, gid) { 
+    url = '/access/_internal/community/respond/' 
+        + uid + '/' + cid + '/decline/' + gid + '/';
+    // Make a request for a user with a given ID
+    container = document.getElementById("community_approval");
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+</script> 
+
+<div id='community_approval'>
+<em>Please wait for the group approval table to be loaded</em>
+</div> 
