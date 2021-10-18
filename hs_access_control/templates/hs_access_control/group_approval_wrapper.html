@@ -22,7 +22,7 @@ function loader() {
 
 $(document).ready(loader); 
 
-function group_accept_community_request(uid, gid, cid) { 
+function group_approve_community_request(uid, gid, cid) { 
     url = '/access/_internal/group/respond/' 
         + uid + '/' + gid + '/approve/' + cid + '/';
     // Make a request for a user with a given ID
