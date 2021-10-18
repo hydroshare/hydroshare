@@ -13,10 +13,10 @@ class GroupApprovalView(TemplateView):
     def hydroshare_permissions(request, uid, gid, cid=None):
         try:
             user = User.objects.get(id=uid)
-            ## when in production:
+            # # when in production:
             # user = request.user
-            # if not user.is_authenticated: 
-            #     message = "You must be logged in to access this function." 
+            # if not user.is_authenticated:
+            #     message = "You must be logged in to access this function."
             #     return message
             group = Group.objects.get(id=gid)
             if user.uaccess.owns_group(group):
@@ -88,10 +88,10 @@ class GroupRequestView(TemplateView):
     def hydroshare_permissions(request, uid, gid, cid=None):
         try:
             user = User.objects.get(id=uid)
-            ## when in production:
+            # # when in production:
             # user = request.user
-            # if not user.is_authenticated: 
-            #     message = "You must be logged in to access this function." 
+            # if not user.is_authenticated:
+            #     message = "You must be logged in to access this function."
             #     return message
             group = Group.objects.get(id=gid)
             if user.uaccess.owns_group(group):
@@ -118,7 +118,7 @@ class GroupRequestView(TemplateView):
             if 'action' in kwargs:
                 if kwargs['action'] == 'request':
                     message, worked = GroupCommunityRequest.create_or_update(
-                        group=Group.objects.get(id=int(gid),
+                        group=Group.objects.get(id=int(gid)),
                         community=Community.objects.get(id=int(cid)),
                         requester=User.objects.get(id=int(uid)))
                 else:
@@ -130,13 +130,15 @@ class GroupRequestView(TemplateView):
             context['uid'] = uid
             context['gid'] = gid
             context['group'] = Group.objects.get(id=int(gid))
-            context['communities'] = Group.objects.filter()\
-                .exclude(invite_c2gcr__community=context['community'])\
-                .exclude(g2gcp__community=context['community'])
+            # Exclude communities already joined and those with standing invitations
+            context['communities'] = Community.objects.filter()\
+                .exclude(invite_c2gcr__group=context['group'])\
+                .exclude(c2gcp__group=context['group'])
             return context
         else:
             context['status'] = status
             return context
+
 
 class CommunityApprovalView(TemplateView):
     template_name = 'hs_access_control/community_approval.html'
@@ -144,10 +146,10 @@ class CommunityApprovalView(TemplateView):
     def hydroshare_permissions(request, uid, cid, gid=None):
         try:
             user = User.objects.get(id=uid)  # becomes request.user
-            ## when in production:
+            # # when in production:
             # user = request.user
-            # if not user.is_authenticated: 
-            #     message = "You must be logged in to access this function." 
+            # if not user.is_authenticated:
+            #     message = "You must be logged in to access this function."
             #     return message
             community = Community.objects.get(id=gid)
             if user.uaccess.owns_community(community):
@@ -217,13 +219,13 @@ class CommunityInviteView(TemplateView):
 
     def hydroshare_permissions(request, uid, cid, gid=None):
         try:
-            user = User.objects.get(id=uid)  
-            ## when in production:
+            user = User.objects.get(id=uid)
+            # # when in production:
             # user = request.user
-            # if not user.is_authenticated: 
-            #     message = "You must be logged in to access this function." 
+            # if not user.is_authenticated:
+            #     message = "You must be logged in to access this function."
             #     return message
-                
+
             community = Community.objects.get(id=cid)
             if user.uaccess.owns_community(community):
                 return ""
@@ -292,6 +294,16 @@ class TestCommunityInvite(TemplateView):
 
 class TestGroupApproval(TemplateView):
     template_name = 'hs_access_control/group_approval_test.html'
+
+    def get_context_data(request, uid, gid, *args, **kwargs):
+        context = {}
+        context['uid'] = uid
+        context['gid'] = gid
+        return context
+
+
+class TestGroupRequest(TemplateView):
+    template_name = 'hs_access_control/group_request_test.html'
 
     def get_context_data(request, uid, gid, *args, **kwargs):
         context = {}
