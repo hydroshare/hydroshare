@@ -64,8 +64,7 @@ class GroupApprovalView(TemplateView):
                         community__id=int(kwargs['cid']))
                     message, worked = gcr.decline(responder=User.objects.get(id=int(uid)))
                 else:
-                    message = "improper action '{}'".format(kwargs['action'])
-                    status = 'improper action'
+                    message = "unknown action '{}'".format(kwargs['action'])
                     logger.error(message)
             context['status'] = status  # empty string = ok
             context['message'] = message
@@ -86,6 +85,58 @@ class GroupApprovalView(TemplateView):
 class GroupRequestView(TemplateView):
     template_name = 'hs_access_control/group_request.html'
 
+    def hydroshare_permissions(request, uid, gid, cid=None):
+        try:
+            user = User.objects.get(id=uid)
+            ## when in production:
+            # user = request.user
+            # if not user.is_authenticated: 
+            #     message = "You must be logged in to access this function." 
+            #     return message
+            group = Group.objects.get(id=gid)
+            if user.uaccess.owns_group(group):
+                return ""
+            else:
+                message = "user {} ({}) does not own group {} ({})"\
+                          .format(user.username, user.id, group.name, group.id)
+                logger.error(message)
+                return message
+        except Exception as e:
+            message = "invalid user id {} or group id {}".format(uid, gid)
+            logger.error("{}: exception {}".format(message, e))
+            return message
+
+    def get_context_data(request, uid, gid, *args, **kwargs):
+        message = ''
+        context = {}
+        if 'cid' in kwargs:
+            cid = kwargs['cid']
+        else:
+            cid = None
+        status = request.hydroshare_permissions(uid, gid, cid=cid)
+        if status == "":
+            if 'action' in kwargs:
+                if kwargs['action'] == 'request':
+                    message, worked = GroupCommunityRequest.create_or_update(
+                        group=Group.objects.get(id=int(gid),
+                        community=Community.objects.get(id=int(cid)),
+                        requester=User.objects.get(id=int(uid)))
+                else:
+                    message = "unknown action '{}'".format(kwargs['action'])
+                    logger.error(message)
+
+            context['status'] = status
+            context['message'] = message
+            context['uid'] = uid
+            context['gid'] = gid
+            context['group'] = Group.objects.get(id=int(gid))
+            context['communities'] = Group.objects.filter()\
+                .exclude(invite_c2gcr__community=context['community'])\
+                .exclude(g2gcp__community=context['community'])
+            return context
+        else:
+            context['status'] = status
+            return context
 
 class CommunityApprovalView(TemplateView):
     template_name = 'hs_access_control/community_approval.html'
@@ -145,7 +196,7 @@ class CommunityApprovalView(TemplateView):
                         group__id=int(kwargs['gid']))
                     message, worked = gcr.decline(responder=User.objects.get(id=int(uid)))
                 else:
-                    message = "improper action '{}'".format(kwargs['action'])
+                    message = "unknown action '{}'".format(kwargs['action'])
                     logger.error(message)
             context['status'] = status
             context['message'] = message
@@ -202,7 +253,7 @@ class CommunityInviteView(TemplateView):
                         community=Community.objects.get(id=int(cid)),
                         requester=User.objects.get(id=int(uid)))
                 else:
-                    message = "improper action '{}'".format(kwargs['action'])
+                    message = "unknown action '{}'".format(kwargs['action'])
                     logger.error(message)
 
             context['status'] = status

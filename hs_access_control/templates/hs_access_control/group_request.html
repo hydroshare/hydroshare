@@ -77,48 +77,42 @@ thead {
 }
 </style>
 <div>
-{% if status != "" %}
-    <p> {{ status }} </p> 
-{% else %}
-    <h2> Community invitations for <em>{{ group.name }}</em> </h2>
-    {{ message }}
-    {% if gcr.count == 0 %}
-        <p><em>There are no community invitations at this time. </em></p> 
-    {% else %}
-      <table
-         class = "table-wrapper-scroll-y my-custom-scrollbar"
-         data-pagination="true"
-         data-search="true">
-      <thead
-         position: sticky;
-         top:0>
-        <tr>
-          <th> Community Name </th>
-          <th> Community Owner </th>
-          <th> Date </th>
-          <th> Approve </th>
-          <th> Decline  </th>
-        </tr>
-      </thead>
-      <tbody> 
-    {% for i in gcr %}
-        <tr>
-        <td> {{ i.community.name }} </td> 
-        <td> {{ i.community_owner.username }} </td>
-        <td> {{ i.when_requested }} </td>
-        <td> <button type="button" id="Approve" 
-                onclick="group_approve_community_request({{ uid }}, {{ gid }}, {{ i.community.id }})" > 
-                approve </button> 
-        </td>
-        <td> <button type="button" id="Decline" 
-                onclick="group_decline_community_request({{ uid }}, {{ gid }}, {{ i.community.id }})"> 
-                decline </button>
-        </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-    {% endif %}
-{% endif %}
+<h2> Invitations to <em>{{ group.name }}</em> from communities </h2>
+{{ message }}
+<table
+     class = "table-wrapper-scroll-y my-custom-scrollbar"
+     data-pagination="true"
+     data-search="true">
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Community Name </th>
+      <th> Community Owner </th>
+      <th> Date </th>
+      <th> Approve </th>
+      <th> Decline  </th>
+    </tr>
+  </thead>
+  <tbody> 
+{% for i in gcr %}
+<tr>
+<td> {{ i.community.name }} </td> 
+<td> {{ i.community_owner.username }} </td>
+<td> {{ i.when_requested }} </td>
+<td> <button type="button" id="Approve" 
+        onclick="group_approve_community_request({{ uid }}, {{ gid }}, {{ i.community.id }})" > 
+approve
+     </button> 
+</td>
+<td> <button type="button" id="Decline" 
+        onclick="group_decline_community_request({{ uid }}, {{ gid }}, {{ i.community.id }})"> 
+decline
+     </button>
+</td>
+</tr>
+{% endfor %}
+  </tbody>
+</table>
 </div>
 

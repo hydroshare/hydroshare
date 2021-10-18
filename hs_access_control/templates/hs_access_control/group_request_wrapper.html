@@ -5,9 +5,9 @@
 
 function loader() { 
     // const axios = require('axios');
-    url = '/access/_internal/community/respond/' 
-        + {{ uid }} + '/' + {{ cid }} + '/';
-    container = document.getElementById("community_approval");
+    url = '/access/_internal/group/respond/' 
+        + {{ uid }} + '/' + {{ gid }} + '/';
+    container = document.getElementById("group_approval");
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
@@ -21,13 +21,13 @@ function loader() {
 
 $(document).ready(loader); 
 
-function community_approve_group_request(uid, cid, gid) { 
-    url = '/access/_internal/community/respond/' 
-        + uid + '/' + cid + '/approve/' + gid + '/';
+function group_approve_community_request(uid, gid, cid) { 
+    url = '/access/_internal/group/respond/' 
+        + uid + '/' + gid + '/accept/' + cid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
-        container = document.getElementById("community_approval");
+        container = document.getElementById("group_approval");
         container.innerHTML = response.data; 
       })
       .catch(function (error) {
@@ -35,11 +35,11 @@ function community_approve_group_request(uid, cid, gid) {
       });
 } 
 
-function community_decline_group_request(uid, cid, gid) { 
-    url = '/access/_internal/community/respond/' 
-        + uid + '/' + cid + '/decline/' + gid + '/';
+function group_decline_community_request(uid, gid, cid) { 
+    url = '/access/_internal/group/respond/' 
+        + uid + '/' + gid + '/decline/' + cid + '/';
     // Make a request for a user with a given ID
-    container = document.getElementById("community_approval");
+    container = document.getElementById("group_approval");
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
         container.innerHTML = response.data; 
@@ -50,6 +50,6 @@ function community_decline_group_request(uid, cid, gid) {
 } 
 </script> 
 
-<div id='community_approval'>
+<div id='group_approval'>
 <em>Please wait for the group approval table to be loaded</em>
 </div> 
