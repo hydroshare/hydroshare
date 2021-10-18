@@ -10,7 +10,7 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from django.db import models
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.forms.models import model_to_dict
 from django.contrib.postgres.fields import HStoreField, ArrayField
@@ -32,6 +32,26 @@ from rdflib.namespace import DC
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 SCHEMA_JSON_FILE_ENDSWITH = "_schema.json"
+
+
+class LogicalFile(models.Model):
+    resource = models.ForeignKey('hs_composite_resource.CompositeResource')
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+
+def create_logical_file(sender, instance, created, **kwargs):
+    """
+    Post save handler to create/update LogicalFile instances when
+    an instance of an AbstractLogicalFile is created
+    """
+    content_type = ContentType.objects.get_for_model(instance)
+    try:
+        lf = LogicalFile.objects.get(content_type=content_type, object_id=instance.id)
+    except LogicalFile.DoesNotExist:
+        lf = LogicalFile(content_type=content_type, object_id=instance.id, resource=instance.resource)
+    lf.save()
 
 
 class NestedLogicalFileMixin(object):
