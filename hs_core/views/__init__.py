@@ -429,7 +429,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         if res.raccess.published:
             err_msg = err_msg.format(element_name, "Published resource needs to have at least one subject")
         else:
-            res.metadata.subjects.all().delete()
+            for sub in res.metadata.subjects:
+                sub.delete()
+            # res.metadata.subjects.all().delete()
             is_add_success = True
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
@@ -455,7 +457,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                 keywords_to_add.append(kw)
 
                         if len(keywords_to_add) > 0:
-                            res.metadata.subjects.all().delete()
+                            for sub in res.metadata.subjects:
+                                sub.delete()
+                            # res.metadata.subjects.all().delete()
                             for kw in keywords_to_add:
                                 res.metadata.create_element(element_name, value=kw)
                         is_add_success = True
@@ -485,6 +489,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
+            res.metadata.refresh_from_db()
+
             res_public_status = 'public' if res.raccess.public else 'not public'
             res_discoverable_status = 'discoverable' if res.raccess.discoverable \
                 else 'not discoverable'
@@ -557,10 +563,10 @@ def get_resource_metadata(request, shortkey, *args, **kwargs):
     else:
         res_metadata['abstract'] = None
     creators = []
-    for creator in resource.metadata.creators.all():
+    for creator in resource.metadata.creators:
         creators.append(model_to_dict(creator))
     res_metadata['creators'] = creators
-    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
+    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects]
     res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
     res_metadata['temporal_coverage'] = get_coverage_data_dict(resource, coverage_type='temporal')
     return JsonResponse(res_metadata, status=200)
@@ -610,6 +616,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
+            res.metadata.refresh_from_db()
+
             res_public_status = 'public' if res.raccess.public else 'not public'
             res_discoverable_status = 'discoverable' if res.raccess.discoverable \
                 else 'not discoverable'
@@ -681,6 +689,7 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     res.metadata.delete_element(element_name, element_id)
+    res.metadata.refresh_from_db()
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
@@ -691,6 +700,7 @@ def delete_author(request, shortkey, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     try:
         res.metadata.delete_element('creator', element_id)
+        res.metadata.refresh_from_db()
         resource_modified(res, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'message': "Author was deleted successfully"}
     except Error as exp:
@@ -740,9 +750,15 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
     if usertext != "DELETE":
         return HttpResponse("'usertext' path parameter must be provided with value 'DELETE'",
                             status=status.HTTP_400_BAD_REQUEST)
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
-                            status=status.HTTP_400_BAD_REQUEST)
+
+    for rel in res.metadata.relations:
+        if rel.type == 'isReplacedBy':
+            return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
+                                status=status.HTTP_400_BAD_REQUEST)
+
+    # if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+    #     return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
+    #                         status=status.HTTP_400_BAD_REQUEST)
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:

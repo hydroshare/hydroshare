@@ -120,7 +120,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
-    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
+    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
 
@@ -183,17 +183,17 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'title': title,
                    'readme': readme,
                    'abstract': abstract,
-                   'creators': content_model.metadata.creators.all(),
-                   'contributors': content_model.metadata.contributors.all(),
+                   'creators': content_model.metadata.creators,
+                   'contributors': content_model.metadata.contributors,
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
                    'keywords': keywords,
                    'language': language,
                    'rights': content_model.metadata.rights,
-                   'sources': content_model.metadata.sources.all(),
-                   'relations': content_model.metadata.relations.all(),
+                   'sources': content_model.metadata.sources,
+                   'relations': content_model.metadata.relations,
                    'show_relations_section': show_relations_section(content_model),
-                   'fundingagencies': content_model.metadata.funding_agencies.all(),
+                   'fundingagencies': content_model.metadata.funding_agencies,
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': missing_metadata_elements,
                    'validation_error': validation_error if validation_error else None,
@@ -270,7 +270,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
     grps_member_of = []
-    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author").select_related('gaccess')
     # for each group set group dynamic attributes
     for g in groups:
         g.is_user_member = user in g.gaccess.members
@@ -285,13 +285,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'cm': content_model,
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
-               'creators': content_model.metadata.creators.all(),
+               'creators': content_model.metadata.creators,
                'title': content_model.metadata.title,
                'readme': readme,
-               'contributors': content_model.metadata.contributors.all(),
-               'relations': content_model.metadata.relations.all(),
-               'sources': content_model.metadata.sources.all(),
-               'fundingagencies': content_model.metadata.funding_agencies.all(),
+               'contributors': content_model.metadata.contributors,
+               'relations': content_model.metadata.relations,
+               'sources': content_model.metadata.sources,
+               'fundingagencies': content_model.metadata.funding_agencies,
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
                'keywords': keywords,

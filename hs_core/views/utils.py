@@ -632,10 +632,10 @@ def get_my_resources_list(user, annotate=True):
             # metadata class (e.g., CoreMetaData)
             res_list = [res for res in resource_collection if res.content_type == ct]
             prefetch_related_objects(res_list,
-                                     Prefetch('content_object__creators'),
-                                     Prefetch('content_object__subjects'),
+                                     Prefetch('content_object___creators'),
+                                     Prefetch('content_object___subjects'),
                                      Prefetch('content_object___title'),
-                                     Prefetch('content_object__dates'))
+                                     Prefetch('content_object___dates'))
     return resource_collection
 
 
@@ -691,8 +691,9 @@ def show_relations_section(res_obj):
     :return: Bool
     """
 
-    all_relation_count = res_obj.metadata.relations.count()
-    has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    all_relation_count = len(res_obj.metadata.relations)
+    has_part_count = len([rel for rel in res_obj.metadata.relations if rel.type == 'hasPart'])
+    # has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
     if all_relation_count > has_part_count:
         return True
     return False

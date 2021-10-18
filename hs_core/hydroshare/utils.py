@@ -12,6 +12,7 @@ import urllib
 from urllib.request import pathname2url, url2pathname
 
 from django.apps import apps
+from django.db.models.query import prefetch_related_objects, Prefetch
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -86,6 +87,7 @@ def get_resource_instance(app, model_name, pk, or_404=True):
 def get_resource_by_shortkey(shortkey, or_404=True):
     try:
         res = BaseResource.objects.get(short_id=shortkey)
+        prefetch_related_objects([res], Prefetch('files'),)
     except BaseResource.DoesNotExist:
         if or_404:
             raise Http404(shortkey)
@@ -431,7 +433,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     if src_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
         # note that new collection resource will not contain "deleted resources"
-        tgt_res.resources = src_res.resources.all()
+        tgt_res.resources = src_res.resources
 
 
 def copy_and_create_metadata(src_res, dest_res):
@@ -457,18 +459,30 @@ def copy_and_create_metadata(src_res, dest_res):
     dest_res.metadata.create_element('date', type='modified', start_date=dest_res.updated)
 
     # copy date element to the new resource if exists
-    src_res_valid_date_filter = src_res.metadata.dates.all().filter(type='valid')
-    if src_res_valid_date_filter:
-        res_valid_date = src_res_valid_date_filter[0]
-        dest_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date,
-                                         end_date=res_valid_date.end_date)
+    for dt in src_res.metadata.dates:
+        if dt.type == 'valid':
+            dest_res.metadata.create_element('date', type='valid', start_date=dt.start_date,
+                                             end_date=dt.end_date)
+            break
 
-    src_res_avail_date_filter = src_res.metadata.dates.all().filter(type='available')
-    if src_res_avail_date_filter:
-        res_avail_date = src_res_avail_date_filter[0]
-        dest_res.metadata.create_element('date', type='available',
-                                         start_date=res_avail_date.start_date,
-                                         end_date=res_avail_date.end_date)
+    # src_res_valid_date_filter = src_res.metadata.dates.all().filter(type='valid')
+    # if src_res_valid_date_filter:
+    #     res_valid_date = src_res_valid_date_filter[0]
+    #     dest_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date,
+    #                                      end_date=res_valid_date.end_date)
+
+    for dt in src_res.metadata.dates:
+        if dt.type == 'available':
+            dest_res.metadata.create_element('date', type='available', start_date=dt.start_date,
+                                             end_date=dt.end_date)
+            break
+
+    # src_res_avail_date_filter = src_res.metadata.dates.all().filter(type='available')
+    # if src_res_avail_date_filter:
+    #     res_avail_date = src_res_avail_date_filter[0]
+    #     dest_res.metadata.create_element('date', type='available',
+    #                                      start_date=res_avail_date.start_date,
+    #                                      end_date=res_avail_date.end_date)
     # create the key/value metadata
     dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
     dest_res.save()
@@ -503,9 +517,14 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # seems this is the best place to sync resource title with metadata title
     resource.title = resource.metadata.title.value
     resource.save()
-    if resource.metadata.dates.all().filter(type='modified'):
-        res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
-        resource.metadata.update_element('date', res_modified_date.id)
+    for dt in resource.metadata.dates:
+        if dt.type == 'modified':
+            resource.metadata.update_element('date', dt.id)
+            break
+
+    # if resource.metadata.dates.all().filter(type='modified'):
+    #     res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
+    #     resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
         create_bag_metadata_files(resource)
@@ -1001,7 +1020,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
                          'function')
 
     # TODO: generate this from data in ResourceFile rather than extension
-    if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+    if file_format_type not in [mime.value for mime in resource.metadata.formats]:
         resource.metadata.create_element('format', value=file_format_type)
     ret.calculate_size()
 
