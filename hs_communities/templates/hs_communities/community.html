@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 {% load comment_tags %}
-{% block meta_title %}CZO Community {% endblock %}
+{% block meta_title %}{{ community.name }}{% endblock %}
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
 {% endblock %}
@@ -21,10 +21,22 @@
         </div>
         <div class="container">
             <div class="row">
+                {% if czo_community %}
                 <div class="col-sm-3">
-                    <div><a href="http://criticalzone.org"><img src="{{ STATIC_URL }}img/czo-logo-wide.png"
-                                                                alt="CZO National"></a></div>
+                    <div><a href="http://criticalzone.org">
+                         <img src="{{ STATIC_URL }}img/czo-logo-wide.png"
+                              alt="CZO National"></a></div>
                 </div>
+                {% else %}
+                    <div class="col-sm-12">
+                    {% if community.picture.url %}
+                    <div><center><img src='{{ community.picture.url }}' height=200></center></div>
+                    {% else %}
+                    <div><h1>{{ community.name }}</h1></div>
+                    {% endif %}
+                    <div><p>{{ community.description }}</p></div>
+                    </div>
+                {% endif %}
                 <div class="col-sm-7">
                 </div>
                 <div><!-- [Modals] --></div>
@@ -201,10 +213,14 @@
                     <div role="tabpanel" class="tab-pane fade in" id="admin">
                         <div class="row">
                             <div class="col-sm-12 col-md-3">
+			    {% if czo_community %}
                                 <a style="text-decoration: none;" href="/topics/"><h4><span style="::before"
                                                                                             class="glyphicon glyphicon-pencil"></span>&nbsp;Edit
                                     Topics</h4></a>
                                 Someone has requested a topic to be created or modified for use in the Title Assistant
+			    {% else %}
+				Administrative commands for this community: owners only. 
+		            {% endif %} 
                             </div>
                         </div>
                     </div>

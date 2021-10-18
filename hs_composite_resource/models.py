@@ -97,6 +97,7 @@ class CompositeResource(BaseResource):
                         # to delete any associated ModelProgramResourceFileType object
                         if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
                             ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                    self.cleanup_aggregations()
             except ObjectDoesNotExist:
                 pass
 
@@ -123,8 +124,10 @@ class CompositeResource(BaseResource):
          :param dir_path: Resource file directory path (full folder path starting with resource id)
          for which the aggregation object to be retrieved
         """
+        aggregation_path = dir_path
+        if dir_path.startswith(self.file_path):
+            aggregation_path = dir_path[len(self.file_path) + 1:]
 
-        aggregation_path = dir_path[len(self.file_path) + 1:]
         for lf in self.logical_files:
             if hasattr(lf, 'folder'):
                 if lf.folder == aggregation_path:
@@ -164,7 +167,10 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        relative_file_path = file_path[len(self.file_path) + 1:]
+        relative_file_path = file_path
+        if file_path.startswith(self.file_path):
+            relative_file_path = file_path[len(self.file_path) + 1:]
+
         folder, base = os.path.split(relative_file_path)
         try:
             res_file = ResourceFile.get(self, file=base, folder=folder)
@@ -633,6 +639,29 @@ class CompositeResource(BaseResource):
         """
 
         update_target_temporal_coverage(self)
+
+    def cleanup_aggregations(self):
+        """Deletes any dangling aggregations (aggregation without resource files or folder) the resource may have"""
+
+        count = 0
+        for lf in self.logical_files:
+            if lf.is_dangling:
+                agg_cls_name = lf.type_name()
+                lf.remove_aggregation()
+                count += 1
+                msg = "Deleted a dangling aggregation of type:{} for resource:{}".format(agg_cls_name, self.short_id)
+                logger.warning(msg)
+        return count
+
+    def dangling_aggregations_exist(self):
+        """Checks if there are any dangling aggregations in this resource
+        Note: This function used only in tests
+        """
+
+        for lf in self.logical_files:
+            if lf.is_dangling:
+                return True
+        return False
 
     @staticmethod
     def is_path_folder(path):

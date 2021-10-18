@@ -42,7 +42,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             # this model program/instance aggregation has been created from a single resource file
             # the path of the resource file is the aggregation name
             single_res_file = self.files.first()
-            return single_res_file.short_path
+            if single_res_file:
+                return single_res_file.short_path
+            return ""
 
     @property
     def schema_short_file_path(self):
@@ -50,6 +52,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """
 
         json_file_name = self.aggregation_name
+        if not json_file_name:
+            return json_file_name
+
         if "/" in json_file_name:
             json_file_name = os.path.basename(json_file_name)
 
@@ -60,7 +65,10 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if self.folder:
             file_folder = self.folder
         else:
-            file_folder = self.files.first().file_folder
+            file_folder = ''
+            aggr_file = self.files.first()
+            if aggr_file is not None:
+                file_folder = aggr_file.file_folder
         if file_folder:
             json_file_name = os.path.join(file_folder, json_file_name)
 
@@ -266,7 +274,10 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if self.folder is not None:
             file_folder = self.folder
         else:
-            file_folder = self.files.first().file_folder
+            file_folder = ''
+            aggr_file = self.files.first()
+            if aggr_file is not None:
+                file_folder = aggr_file.file_folder
 
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
@@ -289,9 +300,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         from hs_core.hydroshare.resource import delete_resource_file
 
         parent_aggr = self.get_parent()
-
+        resource = self.resource
         # delete associated metadata and map xml documents
-        istorage = self.resource.get_irods_storage()
+        istorage = resource.get_irods_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -305,8 +316,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(f.resource.short_id, f.id, user,
-                                     delete_logical_file=False)
+                delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
@@ -328,6 +338,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         # aggregation so that the references to the deleted aggregation can be removed
         if parent_aggr is not None:
             parent_aggr.create_aggregation_xml_documents()
+
+        resource.cleanup_aggregations()
 
     def remove_aggregation(self):
         """Deletes the aggregation object (logical file) *self* and the associated metadata
@@ -438,7 +450,10 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             # target folder is already an aggregation
             return False
 
-        aggregation_path = dir_path[len(resource.file_path) + 1:]
+        aggregation_path = dir_path
+        if dir_path.startswith(resource.file_path):
+            aggregation_path = dir_path[len(resource.file_path) + 1:]
+
         # checking sub-folders for fileset aggregation
         # check that we don't have any sub folder of dir_path representing a fileset aggregation
         # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation

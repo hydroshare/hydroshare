@@ -1073,7 +1073,7 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(
             # direct access
             Q(r2urp__user=self.user) |
-            # access via a group share
+            # access via a group
             Q(r2grp__group__gaccess__active=True,
               r2grp__group__g2ugp__user=self.user)).distinct()
 

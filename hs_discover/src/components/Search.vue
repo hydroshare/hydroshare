@@ -258,6 +258,8 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 export default {
   data() {
     return {
+      initialSearch: true,
+      showPopup: true,
       loading: true,
       prefiltered: false,
       columns: ['name', 'author', 'created', 'modified'],
@@ -377,6 +379,13 @@ export default {
   },
   methods: {
     searchClick(paging, dofilters, reset) { // paging flag to skip the page reset after data retrieval
+      if (!this.initialSearch && this.showPopup) {
+        this.$delayPopOutSurvey();
+        this.showPopup = false;
+      }
+      if (this.initialSearch) {
+        this.initialSearch = false;
+      }
       if (!this.pagenum) return; // user has cleared input box with intent do manually input an integer and subsequently caused a search event
       document.body.style.cursor = 'wait';
       if (reset) {
