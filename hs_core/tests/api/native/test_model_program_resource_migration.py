@@ -28,6 +28,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[self.hs_group],
         )
+        self.migration_command = "migrate_model_program_resources"
 
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
@@ -44,12 +45,11 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """Migrate a mp resource that has no files and no mp specific metadata"""
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource does not contain any aggregations
@@ -66,15 +66,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
         mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
 
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
@@ -95,8 +94,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -110,7 +109,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
         self.assertEqual(mp_res.files.count(), 1)
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
@@ -124,6 +123,9 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.folder, None)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
 
     def test_migrate_mp_resource_4(self):
         """Migrate a mp resource that has more than one file
@@ -132,8 +134,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -155,7 +157,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         self.assertEqual(mp_res.files.count(), 2)
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
 
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
@@ -170,13 +172,15 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.folder, 'mp')
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
 
     def test_migrate_mp_resource_5(self):
         """Migrate a mp resource that has a readme file only and no mp specific metadata"""
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # upload a file to mp resource
@@ -188,7 +192,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
         self.assertEqual(mp_res.files.count(), 1)
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource does not contain any aggregations
@@ -206,8 +210,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -222,7 +225,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_res.files.count(), 1)
 
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
@@ -244,8 +247,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -266,7 +268,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_res.files.count(), 2)
 
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
@@ -288,8 +290,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -318,7 +319,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_res.files.count(), 3)
 
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
@@ -340,8 +341,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
 
         # create a mp resource
-        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
-                                            "Testing migrating to composite resource")
+        mp_res = self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
 
@@ -366,7 +366,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
                                        )
 
         # run  migration command
-        call_command("migrate_model_program_resources")
+        call_command(self.migration_command)
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
@@ -388,3 +388,11 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.metadata.code_repository, 'http://www.github.com')
         mp_file_type = ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).first()
         self.assertEqual(mp_file_type.file_type, ModelProgramResourceFileType.RELEASE_NOTES)
+
+    def _create_mp_resource(self, add_keywords=False):
+        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
+                                            "Testing migrating to composite resource")
+        if add_keywords:
+            mp_res.metadata.create_element('subject', value='kw-1')
+            mp_res.metadata.create_element('subject', value='kw-2')
+        return mp_res
