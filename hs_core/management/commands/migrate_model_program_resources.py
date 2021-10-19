@@ -51,12 +51,18 @@ class Command(BaseCommand):
         logger = logging.getLogger(__name__)
         resource_counter = 0
         to_resource_type = 'CompositeResource'
+        mp_resource_count = ModelProgramResource.objects.count()
         msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES PRIOR TO CONVERSION TO COMPOSITE RESOURCE.".format(
-            ModelProgramResource.objects.count())
+            mp_resource_count)
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
+        if mp_resource_count == 0:
+            msg = "THERE ARE NO MODEL PROGRAM RESOURCES TO MIGRATE."
+            logger.info(msg)
+            self.stdout.write(self.style.SUCCESS(msg))
+            return
 
-        for mp_res in ModelProgramResource.objects.all():
+        for mp_res in ModelProgramResource.objects.all().iterator():
             msg = "Migrating model program resource:{}".format(mp_res.short_id)
             self.stdout.write(self.style.SUCCESS(msg))
 
@@ -221,7 +227,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(err_msg))
 
             resource_counter += 1
-            # delete the instance of model program metadata that was part of the original raster resource
+            # delete the instance of model program metadata that was part of the original model instance resource
             mp_metadata_obj.delete()
             msg = 'Model program resource (ID: {}) was converted to Composite Resource type'
             msg = msg.format(comp_res.short_id)
@@ -235,11 +241,12 @@ class Command(BaseCommand):
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
-        if ModelProgramResource.objects.all().count() > 0:
-            msg = "NOT ALL MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
+        if mp_resource_count > resource_counter:
+            msg = "{} MODEL PROGRAM RESOURCE(S) WAS/WERE NOT CONVERTED TO COMPOSITE RESOURCE TYPE"
+            msg = msg.format(mp_resource_count - resource_counter)
             logger.error(msg)
             self.stdout.write(self.style.WARNING(msg))
-            msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES AFTER CONVERSION.".format(
-                ModelProgramResource.objects.all().count())
+        elif mp_resource_count > 0:
+            msg = "ALL MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
             logger.info(msg)
-            self.stdout.write(self.style.WARNING(msg))
+            self.stdout.write(self.style.SUCCESS(msg))
