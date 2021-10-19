@@ -497,6 +497,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         copy_of_logical_file.metadata.metadata_json = self.metadata.metadata_json
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.metadata_schema_json = self.metadata_schema_json
         copy_of_logical_file.save()
         return copy_of_logical_file
 
