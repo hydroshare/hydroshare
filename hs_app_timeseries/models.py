@@ -65,7 +65,8 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 
     def get_field_terms_and_values(self, extra_ignored_fields=[]):
         """Method that returns the field terms and field values on an object"""
-        return super(TimeSeriesAbstractMetaDataElement, self).get_field_terms_and_values(extra_ignored_fields=['is_dirty'])
+        return super(TimeSeriesAbstractMetaDataElement,
+                     self).get_field_terms_and_values(extra_ignored_fields=['is_dirty'])
 
     @classmethod
     def update(cls, element_id, **kwargs):

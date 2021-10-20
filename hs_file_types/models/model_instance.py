@@ -13,7 +13,6 @@ from dominate import tags as dom_tags
 from rdflib import Literal, URIRef
 
 from hs_core.hs_rdf import HSTERMS
-from hs_core.hydroshare import get_resource_file
 from hs_core.hydroshare.utils import current_site_url
 from hs_core.models import ResourceFile
 from .base import NestedLogicalFileMixin

@@ -7,7 +7,7 @@ import logging
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 
-from django.db import models, transaction
+from django.db import models
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -23,7 +23,7 @@ from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
 from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
     set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, Rights
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph

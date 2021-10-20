@@ -127,8 +127,6 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
 
-
-
     def tearDown(self):
         super(TestIngestMetadata, self).tearDown()
         os.remove(self.test_bag_path)
@@ -138,38 +136,45 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
     def test_modelinstance_ingestion(self):
         prepare_resource(self, "model_program")
         prepare_resource(self, "model_instance")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
                           "model_instance/generic_file_meta.xml")
 
     def test_modelinstance_folder_ingestion(self):
         prepare_resource(self, "model_program_folder")
         prepare_resource(self, "model_instance_folder")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(ModelInstanceLogicalFile.type_name())[0].metadata.get_xml(),
                           "model_instance_folder/model_instance/model_instance_meta.xml")
 
     def test_modelprogram_ingestion(self):
         prepare_resource(self, "model_program")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
                           "model_program/setup_meta.xml")
 
     def test_modelprogram_folder_ingestion(self):
         prepare_resource(self, "model_program_folder")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(ModelProgramLogicalFile.type_name())[0].metadata.get_xml(),
                           "model_program_folder/model_program/model_program_meta.xml")
 
     def test_timeseries_ingestion(self):
         prepare_resource(self, "timeseries")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(TimeSeriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "timeseries/ODM2_Multi_Site_One_Variable_meta.xml")
 
     def test_netcdf_ingestion(self):
         prepare_resource(self, "netcdf")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(NetCDFLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(NetCDFLogicalFile.type_name())[0].metadata.get_xml(),
                           "netcdf/SWE_time_meta.xml")
 
     def test_geofeature_ingestion(self):
         prepare_resource(self, "geographic_feature")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(GeoFeatureLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GeoFeatureLogicalFile.type_name())[0].metadata.get_xml(),
                           "geographic_feature/watersheds_meta.xml")
 
     def test_resource_ingestion(self):
@@ -178,20 +183,24 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
 
     def test_singlefile_ingestion(self):
         prepare_resource(self, "single_file")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
                           "single_file/test_meta.xml")
 
     def test_fileset_ingestion(self):
         prepare_resource(self, "file_set")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(FileSetLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(FileSetLogicalFile.type_name())[0].metadata.get_xml(),
                           "file_set/asdf/asdf_meta.xml")
 
     def test_georaster_ingestion(self):
         prepare_resource(self, "geographic_raster")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(GeoRasterLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GeoRasterLogicalFile.type_name())[0].metadata.get_xml(),
                           "geographic_raster/logan_meta.xml")
 
     def test_reftimeseries_ingestion(self):
         prepare_resource(self, "reference_timeseries")
-        compare_metadatas(self, self.res.short_id, self.res.get_logical_files(RefTimeseriesLogicalFile.type_name())[0].metadata.get_xml(),
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(RefTimeseriesLogicalFile.type_name())[0].metadata.get_xml(),
                           "reference_timeseries/msf_version.refts_meta.xml")

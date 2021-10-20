@@ -13,7 +13,7 @@ from rdflib import Literal, URIRef
 from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
-from hs_core.hydroshare import get_resource_file, current_site_url
+from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
