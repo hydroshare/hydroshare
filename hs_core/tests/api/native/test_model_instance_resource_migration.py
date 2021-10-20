@@ -9,7 +9,8 @@ from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_file_types.models import ModelInstanceLogicalFile
+from hs_file_types.models import ModelInstanceLogicalFile, ModelProgramLogicalFile
+from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceResource
 
 
@@ -28,7 +29,9 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[self.hs_group],
         )
-        self.migration_command = "migrate_model_instance_resources"
+        self.mi_migration_command = "migrate_model_instance_resources"
+        self.mp_migration_command = "migrate_model_program_resources"
+        self.prepare_mi_migration_command = "prepare_model_instance_resources_for_migration"
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
         ModelInstanceResource.objects.all().delete()
@@ -39,6 +42,27 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.hs_group.delete()
         CompositeResource.objects.all().delete()
         ModelInstanceResource.objects.all().delete()
+        ModelProgramResource.objects.all().delete()
+
+    def test_prepare_for_migration(self):
+        """Here we are testing that model instance resource that have a link to a model program resource
+        the id of the mp resource gets saved in the mi resource extra_metadata field
+        """
+        _EXTRA_META_KEY = "MIGRATED_PROGRAM_RES_ID"
+        # create a mi resource
+        mi_res = self._create_mi_resource()
+        self.assertEqual(ModelInstanceResource.objects.count(), 1)
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertFalse(_EXTRA_META_KEY in mi_res.extra_metadata)
+        # run  prepare migration command
+        call_command(self.prepare_mi_migration_command)
+        mi_res.refresh_from_db()
+        self.assertTrue(_EXTRA_META_KEY in mi_res.extra_metadata)
+        self.assertEqual(mi_res.extra_metadata[_EXTRA_META_KEY], mp_res.short_id)
 
     def test_migrate_mi_resource_1(self):
         """Migrate a mi resource that has no files and no mi specific metadata"""
@@ -48,7 +72,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource does not contain any aggregations
@@ -72,7 +96,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_res.metadata.create_element('modeloutput', includes_output=True)
 
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
@@ -108,7 +132,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         add_file_to_resource(mi_res, file_to_upload, folder=upload_folder)
         self.assertEqual(mi_res.files.count(), 1)
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
@@ -157,7 +181,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         self.assertEqual(mi_res.files.count(), 2)
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
 
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
@@ -193,7 +217,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         add_file_to_resource(mi_res, file_to_upload, folder=upload_folder)
         self.assertEqual(mi_res.files.count(), 1)
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource does not contain any aggregations
@@ -226,7 +250,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_res.files.count(), 1)
 
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
@@ -269,7 +293,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_res.files.count(), 2)
 
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
@@ -320,7 +344,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_res.files.count(), 3)
 
         # run  migration command
-        call_command(self.migration_command)
+        call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
@@ -335,11 +359,68 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.folder, 'mi')
         self.assertTrue(mi_aggr.metadata.has_model_output)
 
-    def _create_mi_resource(self, add_keywords=False):
+    def test_executed_by_aggr_copy(self):
+        """Migrate a mi resource that has a link (executed_by) to a composite resource
+        If the linked resource has a mp aggregation that aggregation is copied over to the migrated resource
+        """
 
+        # create a mi resource
+        mi_res = self._create_mi_resource()
+        self.assertEqual(ModelInstanceResource.objects.count(), 1)
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        upload_folder = ''
+        file_path = 'hs_core/tests/data/cea.tif'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        mi_res.metadata.create_element('modeloutput', includes_output=True)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertNotEqual(mi_res.metadata.model_output, None)
+
+        # run  prepare migration command for preparing mi resource for migration
+        call_command(self.prepare_mi_migration_command)
+        # run migration command to migrate mp resource
+        call_command(self.mp_migration_command)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+
+        # run  migration command to migrate mi resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(ModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        # test that the converted mi resource contains one mi aggregations
+        cmp_res = CompositeResource.objects.get(short_id=mi_res.short_id)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        # there should be two aggregations in the migrated mi resource - one mi and one copied mp
+        self.assertEqual(len(list(cmp_res.logical_files)), 2)
+        self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_program])
+        self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_instance])
+
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 2)
+        # check the copied mp aggregation is folder based
+        mp_aggr = [lf for lf in cmp_res.logical_files if lf.is_model_program][0]
+        self.assertEqual(mp_aggr.folder, 'executed_by_mp')
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertTrue(mi_aggr.metadata.has_model_output)
+
+    def _create_mi_resource(self, add_keywords=False):
         res = hydroshare.create_resource("ModelInstanceResource", self.user,
                                          "Testing migrating to composite resource")
         if add_keywords:
             res.metadata.create_element('subject', value='kw-1')
             res.metadata.create_element('subject', value='kw-2')
         return res
+
+    def _create_mp_resource(self, add_keywords=False):
+        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
+                                            "Testing migrating to composite resource")
+        if add_keywords:
+            mp_res.metadata.create_element('subject', value='kw-1')
+            mp_res.metadata.create_element('subject', value='kw-2')
+        return mp_res
