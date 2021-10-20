@@ -3,7 +3,7 @@ import os
 
 from django.core.management.base import BaseCommand
 
-from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
+from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_file_mime_type, get_resource_by_shortkey
 from hs_core.models import CoreMetaData, ResourceFile
 from hs_file_types.models import ModelInstanceLogicalFile
 from hs_modelinstance.models import ModelInstanceResource
@@ -12,6 +12,7 @@ from ..utils import migrate_core_meta_elements
 
 class Command(BaseCommand):
     help = "Convert all model instance resources to composite resource with model instance aggregation"
+    _EXTRA_META_KEY = 'MIGRATED_PROGRAM_RES_ID'
 
     def create_aggr_folder(self, mi_aggr, comp_res, logger):
         new_folder = "mi"
@@ -34,10 +35,56 @@ class Command(BaseCommand):
                 msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
                 self.stdout.write(self.style.SUCCESS(msg))
 
+    def copy_linked_mp_aggregation(self, mi_aggr, comp_res, logger):
+        linked_res_id = comp_res.extra_metadata[self._EXTRA_META_KEY]
+        try:
+            linked_res = get_resource_by_shortkey(linked_res_id)
+        except Exception as err:
+            msg = "Linked resource (ID:{}) was not found. Error:{}".format(linked_res_id, str(err))
+            logger.warning(msg)
+            self.stdout.write(self.style.WARNING(msg))
+            return
+
+        # check the linked resource is a composite resource
+        if linked_res.resource_type == 'CompositeResource':
+            # get the mp aggregation
+            mp_aggr = linked_res.modelprogramlogicalfile_set.first()
+            if mp_aggr:
+                copy_mp_aggr = mp_aggr.get_copy(comp_res)
+                # copy the files of the mp aggregation to the migrated resource
+                # first create a folder to host the copied mp aggregation to avoid potential
+                # file copy path collision
+                executed_by_mp_folder = "executed_by_mp"
+                ResourceFile.create_folder(comp_res, executed_by_mp_folder)
+                for f in mp_aggr.files.all():
+                    _, base = os.path.split(f.short_path)  # strips object information.
+                    new_resource_file = ResourceFile.create(comp_res, base, folder=executed_by_mp_folder)
+                    copy_mp_aggr.add_resource_file(new_resource_file)
+                    # add format metadata element if necessary
+                    file_format_type = get_file_mime_type(f.short_path)
+                    if file_format_type not in [mime.value for mime in comp_res.metadata.formats.all()]:
+                        comp_res.metadata.create_element('format', value=file_format_type)
+                    new_resource_file.calculate_size()
+
+                copy_mp_aggr.folder = executed_by_mp_folder
+                copy_mp_aggr.save()
+                mi_aggr.executed_by = copy_mp_aggr
+                mi_aggr.save()
+                copy_mp_aggr.create_aggregation_xml_documents()
+                msg = "Copied model program aggregation from composite resource ID:{}".format(linked_res.short_id)
+                logger.info(msg)
+                self.stdout.write(self.style.SUCCESS(msg))
+            else:
+                msg = "No model program aggregation was found in linked composite resource ID:{}"
+                msg = msg.format(linked_res.short_id)
+                logger.warning(msg)
+                self.stdout.write(self.style.WARNING(msg))
+
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
         resource_counter = 0
         to_resource_type = 'CompositeResource'
+
         msg = "THERE ARE CURRENTLY {} MODEL INSTANCE RESOURCES PRIOR TO CONVERSION TO COMPOSITE RESOURCE.".format(
             ModelInstanceResource.objects.count())
         logger.info(msg)
@@ -91,7 +138,7 @@ class Command(BaseCommand):
             type_element.url = '{0}/terms/{1}'.format(current_site_url(), to_resource_type)
             type_element.save()
             create_aggregation = True
-            if not mi_metadata_obj.model_output and not mi_metadata_obj.executed_by:
+            if not mi_metadata_obj.model_output and self._EXTRA_META_KEY not in comp_res.extra_metadata:
                 msg = "Resource has no model instance specific metadata and no data files. " \
                       "No model instance aggregation created for this resource:{}".format(comp_res.short_id)
                 if comp_res.files.count() == 0:
@@ -152,12 +199,10 @@ class Command(BaseCommand):
                 # copy the model specific metadata to the mi aggregation
                 if mi_metadata_obj.model_output:
                     mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
-                if mi_metadata_obj.executed_by:
-                    # need to copy the mi aggregation from the linked composite resource to over to this resource
-                    linked_res = comp_res.metadata.executed_by.model_program_fk
-                    # TODO: need to copy the mp aggregation from the linked_res
-                    pass
 
+                if self._EXTRA_META_KEY in comp_res.extra_metadata:
+                    self.copy_linked_mp_aggregation(mi_aggr, comp_res, logger)
+                    comp_res.extra_metadata.pop(self._EXTRA_META_KEY)
                 mi_aggr.save()
 
                 # create aggregation level xml files
