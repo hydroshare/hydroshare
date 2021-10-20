@@ -52,6 +52,7 @@ def migrate_core_meta_elements(orig_meta_obj, comp_res):
         for meta_element in meta_elements.all():
             meta_element.content_object = comp_res.metadata
             meta_element.save()
+    comp_res.save()
 
 
 def check_relations(resource):
