@@ -13,7 +13,7 @@ from rdflib import Literal, URIRef
 from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
-from hs_core.hydroshare import get_resource_file
+from hs_core.hydroshare import get_resource_file, current_site_url
 from hs_core.models import ResourceFile
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
@@ -131,10 +131,10 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     def get_rdf_graph(self):
         graph = super(ModelProgramFileMetaData, self).get_rdf_graph()
         subject = self.rdf_subject()
-
+        site_url = current_site_url()
         for mp_file_type in self.mp_file_types.all():
             mp_file_type_xml_name = mp_file_type.get_xml_name()
-            graph.add((subject, mp_file_type_xml_name, URIRef(mp_file_type.res_file.url)))
+            graph.add((subject, mp_file_type_xml_name, URIRef(site_url + mp_file_type.res_file.url)))
 
         if self.logical_file.metadata_schema_json:
             graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
@@ -175,6 +175,8 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 vals.append(val)
             setattr(obj, field_name, vals)
 
+        super(ModelProgramFileMetaData, self).ingest_metadata(graph)
+
         subject = self.rdf_subject_from_graph(graph)
 
         set_field(HSTERMS.modelProgramName, "model_program_type", self.logical_file)
@@ -199,19 +201,22 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 path = urlparse(file_url).path
                 filename = os.path.basename(path)
                 try:
-                    file = self.logical_file.files.get(resource_file=filename)
-                    ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
+                    file = self.logical_file.files.get(resource_file__endswith=filename)
+                    if not ModelProgramResourceFileType.objects.filter(res_file=file).exists():
+                        ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
                 except ResourceFile.DoesNotExist:
                     pass
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
         if schema_file:
-            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_short_file_path)
-            schema_json_str = res_file.read()
-            schema_json = json.loads(schema_json_str)
-            self.logical_file.metadata_schema_json = schema_json
-            # schema file is related to the aggregation, not to the resource directly
-            res_file.delete()
+            istorage = self.logical_file.resource.get_irods_storage()
+            if istorage.exists(self.logical_file.schema_file_path):
+                with istorage.download(self.logical_file.schema_file_path) as f:
+                    json_bytes = f.read()
+                json_str = json_bytes.decode('utf-8')
+                metadata_schema_json = json.loads(json_str)
+                self.logical_file.metadata_schema_json = metadata_schema_json
+                self.logical_file.save()
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""

@@ -295,18 +295,20 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             graph.add((subject, HSTERMS.modelProgramSchema, URIRef(self.logical_file.schema_file_url)))
 
         if self.metadata_json:
-            graph.add((subject, HSTERMS.modelProgramSchemaValues, URIRef(self.logical_file.schema_values_file_path)))
+            graph.add((subject, HSTERMS.modelProgramSchemaValues, URIRef(self.logical_file.schema_values_file_url)))
 
         return graph
 
     def ingest_metadata(self, graph):
         from ..utils import get_logical_file_by_map_file_path
 
+        super(ModelInstanceFileMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)
 
         has_model_output = graph.value(subject=subject, predicate=HSTERMS.includesModelOutput)
         if has_model_output:
-            self.has_model_output = str(has_model_output)
+            self.has_model_output = str(has_model_output).lower() == 'true'
+            self.save()
 
         executed_by = graph.value(subject=subject, predicate=HSTERMS.executedByModelProgram)
         if executed_by:
@@ -314,25 +316,29 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             mp_aggr = get_logical_file_by_map_file_path(self.logical_file.resource, ModelProgramLogicalFile,
                                                         aggr_map_path)
             self.executed_by = mp_aggr
+            self.save()
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
         if schema_file:
-            res_file = get_resource_file(self.logical_file.resource.short_id, self.logical_file.schema_short_file_path)
-            schema_json_str = res_file.read()
-            schema_json = json.loads(schema_json_str)
-            self.logical_file.metadata_schema_json = schema_json
-            # schema file is related to the aggregation, not to the resource directly
-            res_file.delete()
+            istorage = self.logical_file.resource.get_irods_storage()
+            if istorage.exists(self.logical_file.schema_file_path):
+                with istorage.download(self.logical_file.schema_file_path) as f:
+                    json_bytes = f.read()
+                json_str = json_bytes.decode('utf-8')
+                metadata_schema_json = json.loads(json_str)
+                self.logical_file.metadata_schema_json = metadata_schema_json
+                self.logical_file.save()
 
         schema_values_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchemaValues)
         if schema_values_file:
-            res_file = get_resource_file(self.logical_file.resource.short_id,
-                                         self.logical_file.schema_values_short_file_path)
-            schema_values_json_str = res_file.read()
-            schema_values_json = json.loads(schema_values_json_str)
-            self.metadata_json = schema_values_json
-            # schema values file is related to the aggregation, not to the resource directly
-            res_file.delete()
+            istorage = self.logical_file.resource.get_irods_storage()
+            if istorage.exists(self.logical_file.schema_values_file_path):
+                with istorage.download(self.logical_file.schema_values_file_path) as f:
+                    json_bytes = f.read()
+                json_str = json_bytes.decode('utf-8')
+                metadata_schema_json = json.loads(json_str)
+                self.metadata_json = metadata_schema_json
+                self.save()
 
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
