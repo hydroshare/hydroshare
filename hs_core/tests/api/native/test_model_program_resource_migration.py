@@ -413,6 +413,39 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_file_type = ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).first()
         self.assertEqual(mp_file_type.file_type, ModelProgramResourceFileType.RELEASE_NOTES)
 
+    def test_migrate_mp_resource_10(self):
+        """
+        Migrate a published mp resource that has no files but has mp specific metadata
+        When converted to composite resource, it should have a mp aggregation (based on folder)
+        and should have aggregation level metadata
+        """
+
+        # create a mp resource
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(CompositeResource.objects.count(), 0)
+        # create Model program metadata
+        mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
+        # set the resource to published
+        mp_res.raccess.published = True
+        mp_res.raccess.save()
+        # run  migration command
+        call_command(self.migration_command)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # test that the converted resource contains one mp aggregations
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(mp_res.short_id, cmp_res.short_id)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertTrue(cmp_res.raccess.published)
+        # there should one mp aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check mp aggregation is folder based
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+
     def _create_mp_resource(self, add_keywords=False):
         mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
                                             "Testing migrating to composite resource")
