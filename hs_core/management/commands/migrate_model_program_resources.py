@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
     def create_aggr_folder(self, mp_aggr, comp_res, logger):
         new_folder = "mp"
-        ResourceFile.create_folder(comp_res, new_folder)
+        ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mp_aggr.folder = new_folder
         mp_aggr.dataset_name = new_folder
         mp_aggr.save()
@@ -88,7 +88,7 @@ class Command(BaseCommand):
                     file_missing = True
                     break
             if file_missing:
-                # skip this corrupt raster resource for migration
+                # skip this corrupt model program resource for migration
                 continue
 
             # change the resource_type
@@ -102,6 +102,7 @@ class Command(BaseCommand):
             # set CoreMetaData object for the composite resource
             core_meta_obj = CoreMetaData.objects.create()
             comp_res.content_object = core_meta_obj
+            comp_res.save()
             # migrate mp resource core metadata elements to composite resource
             migrate_core_meta_elements(mp_metadata_obj, comp_res)
 
@@ -214,9 +215,10 @@ class Command(BaseCommand):
                 logger.info(msg)
                 self.stdout.write(self.style.SUCCESS(msg))
 
+            comp_res.extra_metadata['MIGRATED_FROM'] = 'ModelProgramResource'
+            comp_res.save()
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
-            comp_res.save()
             try:
                 set_dirty_bag_flag(comp_res)
             except Exception as ex:
