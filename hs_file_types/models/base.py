@@ -963,11 +963,6 @@ class AbstractLogicalFile(models.Model):
         return self.__class__.__name__
 
     @property
-    def is_folder_based(self):
-        """Return True if this aggregation is a type that can support folders"""
-        return self.is_fileset or self.is_model_program or self.is_model_instance
-
-    @property
     def is_fileset(self):
         """Return True if this aggregation is a fileset aggregation, otherwise False"""
         return self.get_aggregation_class_name() == 'FileSetLogicalFile'
