@@ -51,7 +51,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """Here we are testing that model instance resource that have a link to a model program resource
         the id of the mp resource gets saved in the mi resource extra_metadata field
         """
-        # _EXECUTED_BY_EXTRA_META_KEY = "'EXECUTED_BY_RES_ID'"
+
         # create a mi resource
         mi_res = self._create_mi_resource()
         self.assertEqual(ModelInstanceResource.objects.count(), 1)
@@ -71,7 +71,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """Here we are testing that model instance resource that does not have a link to a model program resource
         the id of the mp resource is NOT saved in the mi resource extra_metadata field
         """
-        # _EXECUTED_BY_EXTRA_META_KEY = "'EXECUTED_BY_RES_ID'"
+
         # create a mi resource
         mi_res = self._create_mi_resource()
         self.assertEqual(ModelInstanceResource.objects.count(), 1)

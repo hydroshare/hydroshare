@@ -138,6 +138,7 @@ class Command(BaseCommand):
             # set CoreMetaData object for the composite resource
             core_meta_obj = CoreMetaData.objects.create()
             comp_res.content_object = core_meta_obj
+            comp_res.save()
             # migrate mi resource core metadata elements to composite resource
             migrate_core_meta_elements(mi_metadata_obj, comp_res)
 
