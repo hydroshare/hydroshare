@@ -40,9 +40,9 @@ class Command(BaseCommand):
                     logger.error(err_msg)
                     self.stdout.write(self.style.ERROR(err_msg))
                 else:
-                    # extra_meta = mi_res.extra_metadata
-                    # extra_meta['MIGRATED_PROGRAM_RES_ID'] = linked_mp_res.short_id
-                    mi_res.extra_metadata['MIGRATED_PROGRAM_RES_ID'] = linked_mp_res.short_id
+                    # store the id of the linked mp resource in mi resource so that we can access the resource
+                    # after the mp resource gets migrated to composite resource
+                    mi_res.extra_metadata['EXECUTED_BY_RES_ID'] = linked_mp_res.short_id
                     mi_res.save()
                     resource_counter_modified += 1
                     msg = "Saved the ID:{} of the linked model program resource in model instance resource"
