@@ -212,9 +212,10 @@ class Command(BaseCommand):
                 logger.info(msg)
                 self.stdout.write(self.style.SUCCESS(msg))
 
+            comp_res.extra_metadata['MIGRATED_FROM'] = 'ModelInstanceResource'
+            comp_res.save()
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
-            comp_res.save()
             try:
                 set_dirty_bag_flag(comp_res)
             except Exception as ex:
