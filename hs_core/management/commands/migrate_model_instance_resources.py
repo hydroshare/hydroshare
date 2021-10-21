@@ -12,11 +12,12 @@ from ..utils import migrate_core_meta_elements
 
 class Command(BaseCommand):
     help = "Convert all model instance resources to composite resource with model instance aggregation"
-    _EXTRA_META_KEY = 'MIGRATED_PROGRAM_RES_ID'
+    _EXECUTED_BY_EXTRA_META_KEY = 'EXECUTED_BY_RES_ID'
 
     def create_aggr_folder(self, mi_aggr, comp_res, logger):
         new_folder = "mi"
-        ResourceFile.create_folder(comp_res, new_folder)
+        # passing 'migrating' as True so that folder can be created even in published resource
+        ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mi_aggr.folder = new_folder
         mi_aggr.dataset_name = new_folder
         mi_aggr.save()
@@ -36,7 +37,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(msg))
 
     def copy_linked_mp_aggregation(self, mi_aggr, comp_res, logger):
-        linked_res_id = comp_res.extra_metadata[self._EXTRA_META_KEY]
+        linked_res_id = comp_res.extra_metadata[self._EXECUTED_BY_EXTRA_META_KEY]
         try:
             linked_res = get_resource_by_shortkey(linked_res_id)
         except Exception as err:
@@ -50,30 +51,37 @@ class Command(BaseCommand):
             # get the mp aggregation
             mp_aggr = linked_res.modelprogramlogicalfile_set.first()
             if mp_aggr:
-                copy_mp_aggr = mp_aggr.get_copy(comp_res)
-                # copy the files of the mp aggregation to the migrated resource
-                # first create a folder to host the copied mp aggregation to avoid potential
-                # file copy path collision
-                executed_by_mp_folder = "executed_by_mp"
-                ResourceFile.create_folder(comp_res, executed_by_mp_folder)
-                for f in mp_aggr.files.all():
-                    _, base = os.path.split(f.short_path)  # strips object information.
-                    new_resource_file = ResourceFile.create(comp_res, base, folder=executed_by_mp_folder)
-                    copy_mp_aggr.add_resource_file(new_resource_file)
-                    # add format metadata element if necessary
-                    file_format_type = get_file_mime_type(f.short_path)
-                    if file_format_type not in [mime.value for mime in comp_res.metadata.formats.all()]:
-                        comp_res.metadata.create_element('format', value=file_format_type)
-                    new_resource_file.calculate_size()
+                if not comp_res.raccess.published:
+                    copy_mp_aggr = mp_aggr.get_copy(comp_res)
+                    # copy the files of the mp aggregation to the migrated resource
+                    # first create a folder to host the copied mp aggregation to avoid potential
+                    # file copy path collision
+                    executed_by_mp_folder = "executed_by_mp"
+                    ResourceFile.create_folder(comp_res, executed_by_mp_folder)
+                    for f in mp_aggr.files.all():
+                        _, base = os.path.split(f.short_path)  # strips object information.
+                        new_resource_file = ResourceFile.create(comp_res, base, folder=executed_by_mp_folder)
+                        copy_mp_aggr.add_resource_file(new_resource_file)
+                        # add format metadata element if necessary
+                        file_format_type = get_file_mime_type(f.short_path)
+                        if file_format_type not in [mime.value for mime in comp_res.metadata.formats.all()]:
+                            comp_res.metadata.create_element('format', value=file_format_type)
+                        new_resource_file.calculate_size()
 
-                copy_mp_aggr.folder = executed_by_mp_folder
-                copy_mp_aggr.save()
-                mi_aggr.executed_by = copy_mp_aggr
-                mi_aggr.save()
-                copy_mp_aggr.create_aggregation_xml_documents()
-                msg = "Copied model program aggregation from composite resource ID:{}".format(linked_res.short_id)
-                logger.info(msg)
-                self.stdout.write(self.style.SUCCESS(msg))
+                    copy_mp_aggr.folder = executed_by_mp_folder
+                    copy_mp_aggr.save()
+                    mi_aggr.metadata.executed_by = copy_mp_aggr
+                    mi_aggr.save()
+                    copy_mp_aggr.create_aggregation_xml_documents()
+                    msg = "Copied model program aggregation from composite resource ID:{}".format(linked_res.short_id)
+                    logger.info(msg)
+                    self.stdout.write(self.style.SUCCESS(msg))
+                else:
+                    # migrating a published mi resource
+                    # TODO: need to figure out how we can create a ref type mp aggregation and store the url
+                    #  path of the mp aggregation that lives in linked mp resource
+                    pass
+
             else:
                 msg = "No model program aggregation was found in linked composite resource ID:{}"
                 msg = msg.format(linked_res.short_id)
@@ -138,7 +146,7 @@ class Command(BaseCommand):
             type_element.url = '{0}/terms/{1}'.format(current_site_url(), to_resource_type)
             type_element.save()
             create_aggregation = True
-            if not mi_metadata_obj.model_output and self._EXTRA_META_KEY not in comp_res.extra_metadata:
+            if not mi_metadata_obj.model_output and self._EXECUTED_BY_EXTRA_META_KEY not in comp_res.extra_metadata:
                 msg = "Resource has no model instance specific metadata and no data files. " \
                       "No model instance aggregation created for this resource:{}".format(comp_res.short_id)
                 if comp_res.files.count() == 0:
@@ -200,9 +208,9 @@ class Command(BaseCommand):
                 if mi_metadata_obj.model_output:
                     mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
 
-                if self._EXTRA_META_KEY in comp_res.extra_metadata:
+                if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_metadata and not comp_res.raccess.published:
                     self.copy_linked_mp_aggregation(mi_aggr, comp_res, logger)
-                    comp_res.extra_metadata.pop(self._EXTRA_META_KEY)
+                    # comp_res.extra_metadata.pop(self._EXECUTED_BY_EXTRA_META_KEY)
                 mi_aggr.save()
 
                 # create aggregation level xml files
