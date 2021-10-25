@@ -46,10 +46,11 @@ class GroupCommunityRequest(models.Model):
     community_owner = models.ForeignKey(
         User, editable=False, null=True, related_name='invite_co2gcr')
 
-    # when request was made
-    when_requested = models.DateTimeField(editable=False, null=True, default=None)
-    # when response was given
-    when_responded = models.DateTimeField(editable=False, null=True, default=None)
+    # when community action was taken
+    when_community = models.DateTimeField(editable=False, null=True, default=None)
+
+    # when group action was taken
+    when_group = models.DateTimeField(editable=False, null=True, default=None)
 
     # Privilege with which to share: default is VIEW
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
@@ -76,7 +77,10 @@ class GroupCommunityRequest(models.Model):
         See discussion of auto_now and auto_now_add in stack overflow for details
         '''
         if not self.id:  # when created
-            self.when_requested = timezone.now()
+            if self.group_owner:
+                self.when_group = timezone.now()
+            else:
+                self.when_community = timezone.now()
         return super(GroupCommunityRequest, self).save(*args, **kwargs)
 
     @classmethod
@@ -161,7 +165,8 @@ class GroupCommunityRequest(models.Model):
             request.redeemed = True
             request.approved = True
             request.privilege = privilege
-            request.when_responded = timezone.now()
+            request.when_group = timezone.now()
+            request.when_community = timezone.now()
             request.save()
             approved = True
             community_owner.uaccess.share_community_with_group(
@@ -199,7 +204,7 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = privilege
                 request.redeemed = True
                 request.approved = True
-                request.when_responded = timezone.now()
+                request.when_community = timezone.now()
                 request.save()
                 approved = True
                 community_owner.uaccess.share_community_with_group(
@@ -214,8 +219,8 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = privilege
                 request.redeemed = False
                 request.approved = False
-                request.when_requested = timezone.now()
-                request.when_responded = None
+                request.when_community = timezone.now()
+                request.when_group = None
                 request.save()
                 message = "Request updated: connect group '{}' to community '{}'."\
                     .format(group.name, community.name)
@@ -239,7 +244,7 @@ class GroupCommunityRequest(models.Model):
                 request.group_owner = group_owner
                 request.redeemed = True
                 request.approved = True
-                request.when_responded = timezone.now()
+                request.when_group = timezone.now()
                 request.save()
                 approved = True
                 request.community_owner.uaccess.share_community_with_group(
@@ -255,7 +260,8 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = PrivilegeCodes.VIEW
                 request.redeemed = True
                 request.approved = True
-                request.when_responded = timezone.now()
+                request.when_group = timezone.now()
+                request.when_community = timezone.now()
                 request.save()
                 approved = True
                 request.community_owner.uaccess.share_community_with_group(
@@ -268,8 +274,8 @@ class GroupCommunityRequest(models.Model):
                 request.privilege = None
                 request.redeemed = False
                 request.approved = False
-                request.when_requested = timezone.now()
-                request.when_responded = None
+                request.when_group = timezone.now()
+                request.when_community = None
                 request.save()
                 message = "Request updated: connect group '{}' to community '{}'."\
                     .format(group.name, community.name)
@@ -365,6 +371,23 @@ class GroupCommunityRequest(models.Model):
         except GroupCommunityRequest.DoesNotExist:
             return None
 
+    def reset(self, responder):
+        ''' make a completed request approvable again '''
+        if not self.redeemed:
+            message = "One can only reset a redeemed request."
+            return message, False
+        elif responder.uaccess.owns_community(self.community):
+            self.community_owner = None
+            self.when_community = None
+            self.approved = False
+            self.redeemed = False
+            self.save()
+        elif responder.uaccess.owns_group(self.group):
+            self.group_owner = None
+            self.when_group = None
+            self.approved = False
+            self.redeemed = False
+
     def approve(self, responder, privilege=PrivilegeCodes.VIEW):
         ''' approve a request as the owner of the other side of the transaction '''
         assert(isinstance(responder, User))
@@ -377,7 +400,7 @@ class GroupCommunityRequest(models.Model):
                 self.privilege = privilege
                 self.redeemed = True
                 self.approved = True
-                self.when_responded = timezone.now()
+                self.when_community = timezone.now()
                 self.save()
                 self.community_owner.uaccess.share_community_with_group(
                     self.community, self.group, self.privilege)
@@ -392,7 +415,7 @@ class GroupCommunityRequest(models.Model):
                 self.group_owner = responder
                 self.redeemed = True
                 self.approved = True
-                self.when_responded = timezone.now()
+                self.when_group = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' approved."\
                     .format(self.group.name, self.community.name)
@@ -415,7 +438,7 @@ class GroupCommunityRequest(models.Model):
                 self.privilege = PrivilegeCodes.VIEW
                 self.redeemed = True
                 self.approved = False
-                self.when_responded = timezone.now()
+                self.when_community = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)
@@ -428,7 +451,7 @@ class GroupCommunityRequest(models.Model):
                 self.group_owner = responder
                 self.redeemed = True
                 self.approved = False
-                self.when_responded = timezone.now()
+                self.when_group = timezone.now()
                 self.save()
                 message = "Request to connect group '{}' to community '{}' declined."\
                     .format(self.group.name, self.community.name)

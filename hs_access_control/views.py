@@ -1,5 +1,6 @@
 from django.views.generic import TemplateView
 from django.contrib.auth.models import User, Group
+from django.db.models import F
 from hs_access_control.models import Community, GroupCommunityRequest
 import logging
 
@@ -69,6 +70,8 @@ class GroupView(TemplateView):
                 if action == 'approve':
                     gcr = GroupCommunityRequest.objects.get(
                         group=group, community=community)
+                    if gcr.redeemed: 
+                        gcr.reset(responder=user) 
                     message, worked = gcr.approve(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
@@ -129,7 +132,16 @@ class GroupView(TemplateView):
             # Communities that can be joined.
             context['communities'] = Community.objects.filter()\
                 .exclude(invite_c2gcr__group=group)\
-                .exclude(c2gcp__group=group)
+                .exclude(c2gcp__group=group)\
+                .exclude(closed=True)
+
+            # requests that were declined by others
+            context['they_declined'] = GroupCommunityRequest.objects.filter(
+                group=group, redeemed=True, approved=False, when_group__lt=F('when_community')) 
+
+            # requests that were declined by us
+            context['we_declined'] = GroupCommunityRequest.objects.filter(
+                group=group, redeemed=True, approved=False, when_group__gt=F('when_community')) 
 
             return context
 
@@ -203,9 +215,9 @@ class CommunityView(TemplateView):
                 group = Group.objects.get(id=int(gid))
                 if action == 'approve':  # approve a request from a group
                     gcr = GroupCommunityRequest.objects.get(
-                        community__id=int(cid),
-                        group__id=int(kwargs['gid'])
-                    )
+                        community=community, group=group)
+                    if gcr.redeemed:  # make it possible to approve a formerly declined request. 
+                        gcr.reset(responder=user)
                     message, worked = gcr.approve(responder=User.objects.get(id=int(uid)))
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
@@ -252,7 +264,7 @@ class CommunityView(TemplateView):
             context['cid'] = cid
             context['denied'] = denied
             context['message'] = message
-            context['community'] = Community.objects.get(id=int(cid))
+            context['community'] = community
 
             # groups that can be invited are those that are not already invited or members.
             context['groups'] = Group.objects.filter(gaccess__active=True)\
@@ -260,8 +272,15 @@ class CommunityView(TemplateView):
                 .exclude(g2gcp__community=context['community']).order_by('name')
 
             context['pending'] = GroupCommunityRequest.objects.filter(
-                community=Community.objects.get(id=int(cid)),
-                redeemed=False, group_owner__isnull=True)
+                community=community, redeemed=False, group_owner__isnull=True)
+
+            # requests that were declined by us
+            context['we_declined'] = GroupCommunityRequest.objects.filter(
+                community=community, redeemed=True, approved=False, when_group__lt=F('when_community')) 
+
+            # requests that were declined by others
+            context['they_declined'] = GroupCommunityRequest.objects.filter(
+                community=community, redeemed=True, approved=False, when_group__gt=F('when_community')) 
 
             # debugging
             context['debug'] = GroupCommunityRequest.objects.all()
