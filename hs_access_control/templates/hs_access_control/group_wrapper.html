@@ -1,0 +1,98 @@
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+ 
+<script language='JavaScript'> 
+
+function loader() { 
+    // const axios = require('axios');
+    url = '/access/_internal/group/' 
+        + {{ uid }} + '/' + {{ gid }} + '/';
+    container = document.getElementById("group_management");
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        alert(error);
+        container.innerHtml = error; 
+      });
+} 
+
+$(document).ready(loader); 
+
+function group_approve_community_invite(uid, gid, cid) { 
+    url = '/access/_internal/group/' 
+        + uid + '/' + gid + '/approve/' + cid + '/';
+    // Make a request for a user with a given ID
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container = document.getElementById("group_management");
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function group_decline_community_invite(uid, gid, cid) { 
+    url = '/access/_internal/group/' 
+        + uid + '/' + gid + '/decline/' + cid + '/';
+    // Make a request for a user with a given ID
+    container = document.getElementById("group_management");
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function group_retract_community_request(uid, gid, cid) { 
+    url = '/access/_internal/group/' 
+        + uid + '/' + gid + '/retract/' + cid + '/';
+    // Make a request for a user with a given ID
+    container = document.getElementById("group_management");
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function group_leave_community(uid, gid, cid) { 
+    url = '/access/_internal/group/' 
+        + uid + '/' + gid + '/leave/' + cid + '/';
+    // Make a request for a user with a given ID
+    container = document.getElementById("group_management");
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+function group_join_community(uid, gid, cid) { 
+    url = '/access/_internal/group/' 
+        + uid + '/' + gid + '/join/' + cid + '/';
+    // Make a request for a user with a given ID
+    container = document.getElementById("group_management");
+    axios.get(url, {'responseType': 'text'} )
+      .then(function (response) {
+        container.innerHTML = response.data; 
+      })
+      .catch(function (error) {
+        container.innerHtml = error; 
+      });
+} 
+
+</script> 
+
+<div id='group_management'>
+<em>Please wait for the group approval table to be loaded</em>
+</div> 

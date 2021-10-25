@@ -31,20 +31,20 @@ class GroupCommunityRequest(models.Model):
     '''
 
     # target
-    group = models.ForeignKey(Group, editable=False, 
-        null=False, related_name='invite_g2gcr')
+    group = models.ForeignKey(
+        Group, editable=False, null=False, related_name='invite_g2gcr')
 
     # source
-    community = models.ForeignKey(Community, editable=False, 
-        null=False, related_name='invite_c2gcr')
+    community = models.ForeignKey(
+        Community, editable=False, null=False, related_name='invite_c2gcr')
 
     # invitee
-    group_owner = models.ForeignKey(User, editable=False, 
-        null=True, default=None, related_name='invite_go2gcr')
+    group_owner = models.ForeignKey(
+        User, editable=False, null=True, default=None, related_name='invite_go2gcr')
 
     # inviter
-    community_owner = models.ForeignKey(User, editable=False, 
-        null=True, related_name='invite_co2gcr')
+    community_owner = models.ForeignKey(
+        User, editable=False, null=True, related_name='invite_co2gcr')
 
     # when request was made
     when_requested = models.DateTimeField(editable=False, null=True, default=None)
@@ -440,10 +440,9 @@ class GroupCommunityRequest(models.Model):
     @classmethod
     def remove(cls, requester, **kwargs):
         '''
-        Remove a group from a community. This can only be done by a community owner.
+        Remove a group from a community. This can only be done by a community or group owner.
         :param group: target group.
         :param community: target community.
-        :param community_owner: community_owner requesting removal of the object.
 
         Usage:
             GroupCommunityPrivilege.remove(group={X}, community={Y}, community_owner={Z})
@@ -457,9 +456,6 @@ class GroupCommunityRequest(models.Model):
             assert('group' in kwargs)
             assert(isinstance(kwargs['group'], Group))
             assert(kwargs['group'].gaccess.active)
-            assert('community_owner' in kwargs)
-            assert(isinstance(kwargs['community_owner'], User))
-            assert(kwargs['community_owner'].is_active)
             assert('community' in kwargs)
             assert(isinstance(kwargs['community'], Community))
 
@@ -467,9 +463,10 @@ class GroupCommunityRequest(models.Model):
         community = kwargs['community']
 
         # don't allow anything unless the requester is authorized
-        if not requester.owns_community(community):
-            message = "User {} does not own community '{}'"\
-                .format(requester.username, community.name)
+        if not requester.uaccess.owns_community(community) and\
+                not requester.uaccess.owns_group(group):
+            message = "User {} does not own community '{}' or group '{}'"\
+                .format(requester.username, community.name, group.name)
             return message, False
 
         # delete request from provenance chain

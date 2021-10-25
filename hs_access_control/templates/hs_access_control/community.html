@@ -1,0 +1,273 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  vertical-align: top;
+}
+thead {
+  position: sticky;
+  top:0;
+}
+.my-custom-scrollbar {
+  position: relative;
+  max-height: 200px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+
+#Cancel {
+  border: none;
+  color: white;
+  background-color: red; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+#Invite {
+  border: none;
+  color: white;
+  background-color: green; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Approve {
+  border: none;
+  color: white;
+  background-color: green; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Decline {
+  border: none;
+  color: white;
+  background-color: red; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Retract {
+  border: none;
+  color: white;
+  background-color: red; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Delete {
+  border: none;
+  color: white;
+  background-color: red; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+#Remove {
+  border: none;
+  color: white;
+  background-color: red; 
+  padding: 6px 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+</style>
+<div>
+<h2> Management functions for {{ community.name }} ({{ community.id }}) </h2> 
+{% if message %} <p>{{ message }}</p> {% endif %}
+{% if denied %} 
+    <h2>{{ denied }}</h2> 
+{% else %}
+
+<h3> Member groups </h3> 
+{% if members %} 
+
+    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table>
+      <thead
+         position: sticky;
+         top:0>
+        <tr>
+          <th> Group Name </th>
+          <th> Remove </th>
+        </tr>
+      </thead>
+      <tbody> 
+    {% for i in members %}
+    <tr>
+    <td> {{ i.name }} </td> 
+    <td> <button type="button" id="Remove" 
+            onclick="community_remove_group({{ uid }}, {{ cid }}, {{ i.id }})" > Remove </button> 
+    </td>
+    </tr>
+    {% endfor %}
+      </tbody>
+    </table>
+    </div>
+{% else %}
+    <em>No requests to join community at present.</em> 
+{% endif %}
+
+
+<h3> Membership requests</h3>
+{% if approvals %}
+    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table>
+      <thead
+         position: sticky;
+         top:0>
+        <tr>
+          <th> Group Name </th>
+          <th> Group Owner </th>
+          <th> Date </th>
+          <th> Approve </th>
+          <th> Decline  </th>
+        </tr>
+      </thead>
+      <tbody> 
+    {% for i in approvals %}
+    <tr>
+    <td> {{ i.group.name }} </td> 
+    <td> {{ i.group_owner.username }} </td>
+    <td> {{ i.when_requested }} </td>
+    <td> <button type="button" id="Approve" 
+            onclick="community_approve_group_request({{ uid }}, {{ cid }}, {{ i.group.id }})" > 
+    approve
+         </button> 
+    </td>
+    <td> <button type="button" id="Decline" 
+            onclick="community_decline_group_request({{ uid }}, {{ cid }}, {{ i.group.id }})"> 
+    decline
+         </button>
+    </td>
+    </tr>
+    {% endfor %}
+      </tbody>
+    </table>
+    </div> 
+{% else %}
+    <em>No requests to join community at present.</em> 
+{% endif %}
+
+<h3> Pending invitations </h3>
+{% if pending %} 
+    <div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table>
+      <thead>
+        <tr>
+          <th> Group Name </th>
+          <th> Community Owner </th>
+          <th> Date of Request </th>
+          <th> Retract </th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in pending %}
+      <tr>
+      <td> {{ i.group.name }} ( {{i.group.id}} ) </td> 
+      <td> {{ i.community_owner.username }} </td>
+      <td> {{ i.when_requested }} </td>
+      <td> <button type="button" id="Retract"
+            onclick="community_retract_invite({{ uid }}, {{ cid }}, {{ i.group.id }})"> Retract 
+         </button> </td> 
+      </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table> 
+    </div>
+{% else %} 
+    <em>No pending invitations at present.</em> 
+{% endif %}
+
+<h3> Invite groups </h3>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+<table>
+  <thead
+     position: sticky;
+     top:0>
+    <tr>
+      <th> Group Name </th>
+      <th> Invite </th>
+    </tr>
+  </thead>
+    <tbody> 
+    {% for g in groups %}
+    <tr>
+    <td> {{ g.name }} </td> 
+    <td> <button type="button" id="Invite" 
+            onclick="community_invite_group({{ uid }}, {{ cid }}, {{ g.id }})" > 
+    Invite </button> 
+    </td>
+    </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<h3> Debug invitations </h3>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+<table>
+<thead>
+  <tr>
+    <th> Group Name (ID) </th>
+    <th> Group Owner </th>
+    <th> Community Name (ID) </th>
+    <th> Community Owner </th>
+    <th> Date of Request </th>
+    <th> Date of Response </th>
+    <th> Approved </th>
+    <th> Redeemed </th>
+  </tr>
+</thead>
+<tbody>
+{% for i in debug %}
+<tr>
+<td> {{ i.group.name }} ( {{ i.group.id }} )  </td>
+<td> {{ i.group_owner.username }} </td>
+<td> {{ i.community.name }} ( {{ i.community.id }} ) </td>
+<td> {{ i.community_owner.username }} </td>
+<td> {{ i.when_requested }} </td>
+<td> {{ i.when_responded }} </td>
+<td> {{ i.approved }} </td>
+<td> {{ i.redeemed }} </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %} 
+
+</div>
+
