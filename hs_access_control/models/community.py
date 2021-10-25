@@ -17,6 +17,8 @@ class Community(models.Model):
     auto_approve = models.BooleanField(null=False, default=False, blank=False, editable=False)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
     picture = models.ImageField(upload_to='community', null=True, blank=True)
+    # whether community is available to be joined
+    closed = models.BooleanField(null=False, default=True, blank=False, editable=False)
 
     def __str__(self):
         return self.name
