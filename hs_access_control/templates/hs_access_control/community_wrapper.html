@@ -1,12 +1,13 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
  
 <script language='JavaScript'> 
 
 function loader() { 
     // const axios = require('axios');
     url = '/access/_internal/community/' 
-        + {{ uid }} + '/' + {{ cid }} + '/';
+        + {{ cid }} + '/';
     container = document.getElementById("community_management");
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
@@ -21,9 +22,9 @@ function loader() {
 
 $(document).ready(loader); 
 
-function community_approve_group_request(uid, cid, gid) { 
+function community_approve_group_request(cid, gid) { 
     url = '/access/_internal/community/' 
-        + uid + '/' + cid + '/approve/' + gid + '/';
+        + cid + '/approve/' + gid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
@@ -35,9 +36,9 @@ function community_approve_group_request(uid, cid, gid) {
       });
 } 
 
-function community_decline_group_request(uid, cid, gid) { 
+function community_decline_group_request(cid, gid) { 
     url = '/access/_internal/community/' 
-        + uid + '/' + cid + '/decline/' + gid + '/';
+        + cid + '/decline/' + gid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("community_management");
     axios.get(url, {'responseType': 'text'} )
@@ -49,9 +50,9 @@ function community_decline_group_request(uid, cid, gid) {
       });
 } 
 
-function community_invite_group(uid, cid, gid) { 
+function community_invite_group(cid, gid) { 
     url = '/access/_internal/community/' 
-        + uid + '/' + cid + '/invite/' + gid + '/';
+        + cid + '/invite/' + gid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
@@ -62,9 +63,9 @@ function community_invite_group(uid, cid, gid) {
       });
 } 
 
-function community_retract_invite(uid, cid, gid) { 
+function community_retract_invite(cid, gid) { 
     url = '/access/_internal/community/' 
-        + uid + '/' + cid + '/retract/' + gid + '/';
+        + cid + '/retract/' + gid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
@@ -75,9 +76,9 @@ function community_retract_invite(uid, cid, gid) {
       });
 } 
 
-function community_remove_group(uid, cid, gid) { 
+function community_remove_group(cid, gid) { 
     url = '/access/_internal/community/' 
-        + uid + '/' + cid + '/remove/' + gid + '/';
+        + cid + '/remove/' + gid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
@@ -89,6 +90,6 @@ function community_remove_group(uid, cid, gid) {
 } 
 </script> 
 
-<div id='community_management'>
+<div id='community_management' class='col-sm-12'>
 <em>Please wait for community management to be loaded.</em>
 </div> 
