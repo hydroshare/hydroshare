@@ -277,6 +277,8 @@ function updateSelectionMenuContext() {
             uiActionStates.removeAggregation.disabled = true;
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
+        // hide preview option on multiple file selection
+        uiActionStates.preview.fileMenu.hidden = true;
     }
     else if (selected.length === 1) {
         // Exactly one item selected
