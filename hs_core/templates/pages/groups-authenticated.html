@@ -198,9 +198,15 @@
                         <div class="row">
                             {# Group Name #}
                             <fieldset class="col-sm-12">
-                                <label>Group Name *</label>
+                                <label>Group name *</label>
                                 <small class="text-muted">79 characters or less</small>
-                                <textarea class="form-control" required="required" name="name" maxlength="79"></textarea>
+                                <input class="form-control" required="required" name="name" maxlength="79"></input>
+                            </fieldset>
+
+                            {# Group Description #}
+                            <fieldset class="col-sm-12">
+                                <label>About this group *</label>
+                                <textarea class="form-control" required="required" name="description"></textarea>
                             </fieldset>
 
                             {# Purpose #}
@@ -210,10 +216,16 @@
                                 <textarea class="form-control" name="purpose" maxlength="300"></textarea>
                             </fieldset>
 
-                            {# Group Description #}
+                            {# Group Contact Email #}
                             <fieldset class="col-sm-12">
-                                <label>About this group *</label>
-                                <textarea class="form-control" required="required" name="description"></textarea>
+                                <label>Group contact email</label>
+                                <input class="form-control" type="email" name="email"></input>
+                            </fieldset>
+
+                            {# Group Url #}
+                            <fieldset class="col-sm-12">
+                                <label>Group URL</label>
+                                <input class="form-control" type="url" name="url"></input>
                             </fieldset>
 
                             {# auto approve #}
