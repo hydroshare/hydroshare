@@ -36,8 +36,8 @@ class Command(BaseCommand):
                 msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
                 self.stdout.write(self.style.SUCCESS(msg))
 
-    def copy_linked_mp_aggregation(self, mi_aggr, comp_res, logger):
-        linked_res_id = comp_res.extra_metadata[self._EXECUTED_BY_EXTRA_META_KEY]
+    def set_executed_by(self, mi_aggr, comp_res, logger):
+        linked_res_id = comp_res.extra_data[self._EXECUTED_BY_EXTRA_META_KEY]
         try:
             linked_res = get_resource_by_shortkey(linked_res_id)
         except Exception as err:
@@ -71,17 +71,19 @@ class Command(BaseCommand):
                     copy_mp_aggr.folder = executed_by_mp_folder
                     copy_mp_aggr.save()
                     mi_aggr.metadata.executed_by = copy_mp_aggr
-                    mi_aggr.save()
+                    mi_aggr.metadata.save()
                     copy_mp_aggr.create_aggregation_xml_documents()
                     msg = "Copied model program aggregation from composite resource ID:{}".format(linked_res.short_id)
                     logger.info(msg)
                     self.stdout.write(self.style.SUCCESS(msg))
                 else:
                     # migrating a published mi resource
-                    # TODO: need to figure out how we can create a ref type mp aggregation and store the url
-                    #  path of the mp aggregation that lives in linked mp resource
-                    pass
-
+                    # use the external mp aggregation for executed_by
+                    mi_aggr.metadata.executed_by = mp_aggr
+                    if mp_aggr.metadata_schema_json:
+                        mi_aggr.metadata_schema_json = mp_aggr.metadata_schema_json
+                        mi_aggr.save()
+                    mi_aggr.metadata.save()
             else:
                 msg = "No model program aggregation was found in linked composite resource ID:{}"
                 msg = msg.format(linked_res.short_id)
@@ -138,16 +140,17 @@ class Command(BaseCommand):
             # set CoreMetaData object for the composite resource
             core_meta_obj = CoreMetaData.objects.create()
             comp_res.content_object = core_meta_obj
-            comp_res.save()
+
             # migrate mi resource core metadata elements to composite resource
             migrate_core_meta_elements(mi_metadata_obj, comp_res)
+            comp_res.save()
 
             # update url attribute of the metadata 'type' element
             type_element = comp_res.metadata.type
             type_element.url = '{0}/terms/{1}'.format(current_site_url(), to_resource_type)
             type_element.save()
             create_aggregation = True
-            if not mi_metadata_obj.model_output and self._EXECUTED_BY_EXTRA_META_KEY not in comp_res.extra_metadata:
+            if not mi_metadata_obj.model_output and self._EXECUTED_BY_EXTRA_META_KEY not in comp_res.extra_data:
                 msg = "Resource has no model instance specific metadata and no data files. " \
                       "No model instance aggregation created for this resource:{}".format(comp_res.short_id)
                 if comp_res.files.count() == 0:
@@ -209,9 +212,8 @@ class Command(BaseCommand):
                 if mi_metadata_obj.model_output:
                     mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
 
-                if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_metadata and not comp_res.raccess.published:
-                    self.copy_linked_mp_aggregation(mi_aggr, comp_res, logger)
-                    # comp_res.extra_metadata.pop(self._EXECUTED_BY_EXTRA_META_KEY)
+                if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_data:
+                    self.set_executed_by(mi_aggr, comp_res, logger)
                 mi_aggr.save()
 
                 # create aggregation level xml files
@@ -221,7 +223,7 @@ class Command(BaseCommand):
                 logger.info(msg)
                 self.stdout.write(self.style.SUCCESS(msg))
 
-            comp_res.extra_metadata['MIGRATED_FROM'] = 'ModelInstanceResource'
+            comp_res.extra_data['MIGRATED_FROM'] = 'ModelInstanceResource'
             comp_res.save()
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
