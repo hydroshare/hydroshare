@@ -510,6 +510,56 @@ class GroupCommunityRequest(models.Model):
             .format(group.name, community.name)
         return message, True
 
+    @classmethod
+    def retract(cls, requester, **kwargs):
+        '''
+        Retract an unredeemed request. This can only be done by a community or group owner.
+        :param group: target group.
+        :param community: target community.
+
+        Usage:
+            GroupCommunityPrivilege.retract(group={X}, community={Y}, community_owner={Z})
+
+        Return values: returns a pair of values
+        * message: a status message for the user.
+        * success: whether the removal succeeded.
+
+        '''
+        if __debug__:
+            assert('group' in kwargs)
+            assert(isinstance(kwargs['group'], Group))
+            assert(kwargs['group'].gaccess.active)
+            assert('community' in kwargs)
+            assert(isinstance(kwargs['community'], Community))
+
+        group = kwargs['group']
+        community = kwargs['community']
+
+        # don't allow anything unless the requester is authorized
+        if not requester.uaccess.owns_community(community) and\
+                not requester.uaccess.owns_group(group):
+            message = "User {} does not own community '{}' or group '{}'"\
+                .format(requester.username, community.name, group.name)
+            return message, False
+
+        # delete request from provenance chain
+        try:
+            request = GroupCommunityRequest.get_request(community=community, group=group)
+            if request.redeemed:
+                message = "Request to put group '{}' into community '{}' already redeemed."\
+                    .format(group.name, community.name)
+                return message, False
+            else:
+                request.delete()
+                message = "Removed request to put group '{}' into community '{}'"\
+                    .format(group.name, community.name)
+                return message, True
+
+        except cls.DoesNotExist:
+            message = "Request to put group '{}' into community '{}' does not exist."\
+                .format(group.name, community.name)
+            return message, True
+
 # TODO: we need some kind of user feedback about what happened when something is denied.
 # TODO: it would be nice to know why something's declined.
 # TODO: to avoid request storms, the decline should be sticky unless overridden by an invite.

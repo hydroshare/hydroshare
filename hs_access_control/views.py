@@ -61,7 +61,7 @@ class GroupView(TemplateView):
         else:
             action = None
         denied = request.hydroshare_denied(uid, gid, cid=cid)
-        logger.debug("denied is {}".format(denied))
+        # logger.debug("denied is {}".format(denied))
         if denied == "":
             user = User.objects.get(id=uid)
             group = Group.objects.get(id=gid)
@@ -70,7 +70,7 @@ class GroupView(TemplateView):
                 if action == 'approve':
                     gcr = GroupCommunityRequest.objects.get(
                         group=group, community=community)
-                    if gcr.redeemed: 
+                    if gcr.redeemed:  # reset to unredeemed in order to approve
                         gcr.reset(responder=user) 
                     message, worked = gcr.approve(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
@@ -86,23 +86,15 @@ class GroupView(TemplateView):
                         group=group, community=community, requester=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'retract':  # remove a pending request
-                    gcr = GroupCommunityRequest.objects.get(
-                        community=community, group=group)
+                elif action == 'leave':
                     message, worked = GroupCommunityRequest.remove(
                         requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
-                elif action == 'leave':
-                    user.uaccess.unshare_community_with_group(
-                        this_community=community,
-                        this_group=group)
-                    gcr = GroupCommunityRequest.objects.get(
-                        community=community, group=group)
-                    gcr.delete()
-                    message = "group {} ({}) removed from community {} ({}). "\
-                        .format(group.name, group.id, community.name, community.id)
-                    logger.debug(message)
+                elif action == 'retract':  # remove a pending request
+                    message, worked = GroupCommunityRequest.retract(
+                        requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
 
                 else:
                     message = "unknown action '{}'".format(action)
@@ -114,7 +106,6 @@ class GroupView(TemplateView):
             context['group'] = group
             context['uid'] = uid
             context['gid'] = gid
-            context['debug'] = GroupCommunityRequest.objects.all()
 
             # communities joined
             context['joined'] = Community.objects.filter(c2gcp__group=group)
@@ -147,7 +138,7 @@ class GroupView(TemplateView):
 
         else:  # non-empty denied means an error.
             context['denied'] = denied
-            logger.debug("denied is '{}'".format(denied))
+            logger.error(denied)
             return context
 
 
@@ -237,21 +228,20 @@ class CommunityView(TemplateView):
                     except Exception as e:
                         logger.debug(e)
 
-                elif action == 'retract':  # remove a pending request
-                    gcr = GroupCommunityRequest.objects.get(community=community, group=group)
+                elif action == 'remove':  # remove a group from this community
                     message, worked = GroupCommunityRequest.remove(
+                        requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
+
+                elif action == 'retract':  # remove a pending request
+                    message, worked = GroupCommunityRequest.retract(
                          requester=user, group=group, community=community)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
                 elif action == 'remove':  # remove a group from this community
-                    user.uaccess.unshare_community_with_group(
-                        this_community=community,
-                        this_group=group)
-                    gcr = GroupCommunityRequest.objects.filter(community__id=int(cid),
-                                                               group__id=int(kwargs['gid']))
-                    if gcr.count() > 0:
-                        gcr = gcr[0]
-                        gcr.delete()
+                    message, worked = GroupCommunityRequest.remove(
+                         requester=user, group=group, community=community)
+                    logger.debug("message = '{}' worked='{}'".format(message, worked))
 
                     message = "group {} ({}) removed from community {} ({}). "\
                         .format(group.name, group.id, community.name, community.id)
