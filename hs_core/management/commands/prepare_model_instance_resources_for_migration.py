@@ -18,7 +18,7 @@ class Command(BaseCommand):
             ModelInstanceResource.objects.count())
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
-
+        # TODO: need to do this preparation for SWAT model instance and MODFLOW model instance resources
         for mi_res in ModelInstanceResource.objects.all().iterator():
             msg = "Preparing model instance resource for migration:{}".format(mi_res.short_id)
             self.stdout.write(self.style.SUCCESS(msg))
@@ -42,7 +42,7 @@ class Command(BaseCommand):
                 else:
                     # store the id of the linked mp resource in mi resource so that we can access the resource
                     # after the mp resource gets migrated to composite resource
-                    mi_res.extra_metadata['EXECUTED_BY_RES_ID'] = linked_mp_res.short_id
+                    mi_res.extra_data['EXECUTED_BY_RES_ID'] = linked_mp_res.short_id
                     mi_res.save()
                     resource_counter_modified += 1
                     msg = "Saved the ID:{} of the linked model program resource in model instance resource"
