@@ -102,9 +102,10 @@ class Command(BaseCommand):
             # set CoreMetaData object for the composite resource
             core_meta_obj = CoreMetaData.objects.create()
             comp_res.content_object = core_meta_obj
-            comp_res.save()
+
             # migrate mp resource core metadata elements to composite resource
             migrate_core_meta_elements(mp_metadata_obj, comp_res)
+            comp_res.save()
 
             # update url attribute of the metadata 'type' element
             type_element = comp_res.metadata.type
