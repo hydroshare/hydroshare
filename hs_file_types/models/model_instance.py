@@ -45,8 +45,18 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             dom_tags.legend("Executed By (Model Program)")
             if self.executed_by:
                 mp_aggr = self.executed_by
-                display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
-                dom_tags.p(display_string)
+                # check if the mp aggregation is from another resource (possible only in the case of
+                # migrated published mi resource)
+                if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
+                    hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
+                    display_string = "Model program content from resource:"
+                    with dom_tags.p(display_string):
+                        with dom_tags.span():
+                            dom_tags.a(hs_res_url, href=hs_res_url)
+                    dom_tags.p("Model program content path:{}".format(mp_aggr.aggregation_name))
+                else:
+                    display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
+                    dom_tags.p(display_string)
             else:
                 dom_tags.p("Unspecified")
 
