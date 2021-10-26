@@ -328,6 +328,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         if self.executed_by:
             if self.executed_by:
                 resource = self.logical_file.resource
+                if resource.short_id != self.executed_by.resource.short_id:
+                    # case of model instance resource migrated to composite resource where the
+                    # model program aggregation can live in another resource
+                    resource = self.executed_by.resource
                 hs_res_url = os.path.join(current_site_url(), 'resource', resource.file_path)
                 aggr_url = os.path.join(hs_res_url, self.executed_by.map_short_file_path) + '#aggregation'
                 graph.add((subject, HSTERMS.executedByModelProgram, URIRef(aggr_url)))
