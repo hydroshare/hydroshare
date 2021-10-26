@@ -50,6 +50,7 @@ class CommunityView(TemplateView):
             is_admin = False
 
         return {
+            'cid': community.id,
             'community': community,
             'community_resources': community_resources,
             'groups': groups,

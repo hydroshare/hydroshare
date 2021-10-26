@@ -170,10 +170,10 @@
                     </li>
                 {% endif %}
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                {% if profile_user.is_group_owner %}
                     <li role="presentation">
-                        <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-user"></i> Owner Settings</a>
+                        <a href="#communities" aria-controls="communities" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-user"></i> Communities </a>
                     </li>
                 {% endif %}
             </ul>
@@ -818,7 +818,10 @@
                         {% endif %}
                     </form>
                 </div>
-                {% endif %}
+
+                <div role="tabpanel" class="tab-pane fade" id="communities">
+                {% include "hs_access_control/group_wrapper.html" %}
+                </div>
             </div>
         </div>
     </div>

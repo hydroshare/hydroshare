@@ -4,9 +4,8 @@
 <script language='JavaScript'> 
 
 function loader() { 
-    // const axios = require('axios');
     url = '/access/_internal/group/' 
-        + {{ uid }} + '/' + {{ gid }} + '/';
+        + {{ gid }} + '/';
     container = document.getElementById("group_management");
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
@@ -21,9 +20,9 @@ function loader() {
 
 $(document).ready(loader); 
 
-function group_approve_community_invite(uid, gid, cid) { 
+function group_approve_community_invite(gid, cid) { 
     url = '/access/_internal/group/' 
-        + uid + '/' + gid + '/approve/' + cid + '/';
+        + gid + '/approve/' + cid + '/';
     // Make a request for a user with a given ID
     axios.get(url, {'responseType': 'text'} )
       .then(function (response) {
@@ -35,9 +34,9 @@ function group_approve_community_invite(uid, gid, cid) {
       });
 } 
 
-function group_decline_community_invite(uid, gid, cid) { 
+function group_decline_community_invite(gid, cid) { 
     url = '/access/_internal/group/' 
-        + uid + '/' + gid + '/decline/' + cid + '/';
+        + gid + '/decline/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )
@@ -49,9 +48,9 @@ function group_decline_community_invite(uid, gid, cid) {
       });
 } 
 
-function group_retract_community_request(uid, gid, cid) { 
+function group_retract_community_request(gid, cid) { 
     url = '/access/_internal/group/' 
-        + uid + '/' + gid + '/retract/' + cid + '/';
+        + gid + '/retract/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )
@@ -63,9 +62,9 @@ function group_retract_community_request(uid, gid, cid) {
       });
 } 
 
-function group_leave_community(uid, gid, cid) { 
+function group_leave_community(gid, cid) { 
     url = '/access/_internal/group/' 
-        + uid + '/' + gid + '/leave/' + cid + '/';
+        + gid + '/leave/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )
@@ -77,9 +76,9 @@ function group_leave_community(uid, gid, cid) {
       });
 } 
 
-function group_join_community(uid, gid, cid) { 
+function group_join_community(gid, cid) { 
     url = '/access/_internal/group/' 
-        + uid + '/' + gid + '/join/' + cid + '/';
+        + gid + '/join/' + cid + '/';
     // Make a request for a user with a given ID
     container = document.getElementById("group_management");
     axios.get(url, {'responseType': 'text'} )

@@ -42,10 +42,11 @@ thead {
 </style>
 
 <div>
-<h2> Management functions for group {{ group.name }} ({{ group.id }}) </h2>
 {% if denied %}
 <h3> {{ denied }} </h3> 
 {% else %}
+
+<h2> Management functions </h2>
 {{ message }}
 
 <h3>Communities joined</h3> 
@@ -66,7 +67,7 @@ thead {
       <tr>
       <td> {{ c.name }} </td> 
       <td> <button type="button" id="Leave" 
-              onclick="group_leave_community({{ uid }}, {{ gid }}, {{ c.id }})" > 
+              onclick="group_leave_community({{ gid }}, {{ c.id }})" > 
               Leave </button> 
       </td>
       </tr>
@@ -100,11 +101,11 @@ thead {
       <td> {{ gcr.community_owner.username }} </td>
       <td> {{ gcr.when_community }} </td>
       <td> <button type="button" id="Approve" 
-              onclick="group_approve_community_invite({{ uid }}, {{ gid }}, {{ gcr.community.id }})" > 
+              onclick="group_approve_community_invite({{ gid }}, {{ gcr.community.id }})" > 
               approve </button> 
       </td>
       <td> <button type="button" id="Decline" 
-              onclick="group_decline_community_invite({{ uid }}, {{ gid }}, {{ gcr.community.id }})"> 
+              onclick="group_decline_community_invite({{ gid }}, {{ gcr.community.id }})"> 
               decline </button>
       </td>
       </tr>
@@ -133,7 +134,7 @@ thead {
       <tr>
       <td> {{ c.name }} </td> 
       <td> <button type="button" id="Join" 
-              onclick="group_join_community({{ uid }}, {{ gid }}, {{ c.id }})" > 
+              onclick="group_join_community({{ gid }}, {{ c.id }})" > 
               Join </button> 
       </td>
       </tr>
@@ -164,7 +165,7 @@ thead {
       <td> {{ gcr.community.name }} </td> 
       <td> {{ gcr.when_group }} </td>
       <td> <button type="button" id="Retract" 
-              onclick="group_retract_community_request({{ uid }}, {{ gid }}, {{ gcr.community.id }})" > 
+              onclick="group_retract_community_request({{ gid }}, {{ gcr.community.id }})" > 
               Retract </button> 
       </td>
       </tr>
@@ -200,7 +201,7 @@ thead {
     <td> {{ gcr.group_owner.username }} </td>
     <td> {{ gcr.when_group }} </td>
     <td> <button type="button" id="Approve" 
-            onclick="group_approve_community_invite({{ uid }}, {{ gid }}, {{ gcr.community.id }})" > 
+            onclick="group_approve_community_invite({{ gid }}, {{ gcr.community.id }})" > 
             Approve </button> 
     </td>
     </tr>

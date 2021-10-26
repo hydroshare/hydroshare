@@ -11,16 +11,10 @@ logger = logging.getLogger(__name__)
 class GroupView(TemplateView):
     template_name = 'hs_access_control/group.html'
 
-    def hydroshare_denied(request, uid, gid, cid=None):
-        try:
-            user = User.objects.get(id=uid)  # becomes request.user
-            # # when in production:
-            # user = request.user
-            # if not user.is_authenticated:
-            #     message = "You must be logged in to access this function."
-            #     return message
-        except User.DoesNotExist:
-            message = "user id {} not found".format(uid)
+    def hydroshare_denied(request, gid, cid=None):
+        user = request.user
+        if not user or not user.is_authenticated:
+            message = "You must be logged in to access this function."
             logger.error(message)
             return message
 
@@ -49,7 +43,7 @@ class GroupView(TemplateView):
             logger.error(message)
             return message
 
-    def get_context_data(request, uid, gid, *args, **kwargs):
+    def get_context_data(request, gid, *args, **kwargs):
         context = {}
         message = ''
         if 'cid' in kwargs:
@@ -60,8 +54,9 @@ class GroupView(TemplateView):
             action = kwargs['action']
         else:
             action = None
-        denied = request.hydroshare_denied(uid, gid, cid=cid)
-        # logger.debug("denied is {}".format(denied))
+
+        denied = request.hydroshare_denied(gid, cid=cid)
+        logger.debug("denied is {}".format(denied))
         if denied == "":
             user = User.objects.get(id=uid)
             group = Group.objects.get(id=gid)
@@ -145,16 +140,10 @@ class GroupView(TemplateView):
 class CommunityView(TemplateView):
     template_name = 'hs_access_control/community.html'
 
-    def hydroshare_denied(request, uid, cid, gid=None):
-        try:
-            user = User.objects.get(id=uid)  # becomes request.user
-            # # when in production:
-            # user = request.user
-            # if not user.is_authenticated:
-            #     message = "You must be logged in to access this function."
-            #     return message
-        except User.DoesNotExist:
-            message = "user id {} not found".format(uid)
+    def hydroshare_denied(request, cid, gid=None):
+        user = request.user
+        if not user or not user.is_authenticated:
+            message = "You must be logged in to access this function."
             logger.error(message)
             return message
 
@@ -183,7 +172,7 @@ class CommunityView(TemplateView):
             logger.error(message)
             return message
 
-    def get_context_data(request, uid, cid, *args, **kwargs):
+    def get_context_data(request, cid, *args, **kwargs):
         message = ''
         context = {}
         uid = int(uid)
@@ -196,8 +185,8 @@ class CommunityView(TemplateView):
             action = kwargs['action']
         else:
             action = None
-        logger.debug("uid={} cid={} action={} gid={}".format(uid, cid, action, gid))
-        denied = request.hydroshare_denied(uid, cid, gid)
+        logger.debug("uid={} cid={} action={} gid={}".format(cid, action, gid))
+        denied = request.hydroshare_denied(cid, gid)
         logger.debug("denied is {}".format(denied))
         if denied == "":
             user = User.objects.get(id=int(uid))
@@ -295,7 +284,7 @@ class CommunityView(TemplateView):
 class TestCommunity(TemplateView):
     template_name = 'hs_access_control/community_test.html'
 
-    def get_context_data(request, uid, cid, *args, **kwargs):
+    def get_context_data(request, cid, *args, **kwargs):
         context = {}
         context['uid'] = uid
         context['cid'] = cid
@@ -305,7 +294,7 @@ class TestCommunity(TemplateView):
 class TestGroup(TemplateView):
     template_name = 'hs_access_control/group_test.html'
 
-    def get_context_data(request, uid, gid, *args, **kwargs):
+    def get_context_data(request, gid, *args, **kwargs):
         context = {}
         context['uid'] = uid
         context['gid'] = gid
