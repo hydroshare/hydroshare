@@ -49,7 +49,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
     def test_prepare_for_migration_1(self):
         """Here we are testing that model instance resource that have a link to a model program resource
-        the id of the mp resource gets saved in the mi resource extra_metadata field
+        the id of the mp resource gets saved in the mi resource extra_data field
         """
 
         # create a mi resource
@@ -60,16 +60,16 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # link the mi res to mp resource
         mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
         self.assertNotEqual(mi_res.metadata.executed_by, None)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_metadata)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
         # run  prepare migration command
         call_command(self.prepare_mi_migration_command)
         mi_res.refresh_from_db()
-        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_metadata)
-        self.assertEqual(mi_res.extra_metadata[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        self.assertEqual(mi_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
 
     def test_prepare_for_migration_2(self):
         """Here we are testing that model instance resource that does not have a link to a model program resource
-        the id of the mp resource is NOT saved in the mi resource extra_metadata field
+        the id of the mp resource is NOT saved in the mi resource extra_data field
         """
 
         # create a mi resource
@@ -78,11 +78,11 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(mi_res.metadata.executed_by, None)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_metadata)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
         # run  prepare migration command
         call_command(self.prepare_mi_migration_command)
         mi_res.refresh_from_db()
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_metadata)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
 
     def test_migrate_mi_resource_1(self):
         """
@@ -101,8 +101,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource does not contain any aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should be no mi aggregations
         self.assertEqual(len(list(cmp_res.logical_files)), 0)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 0)
@@ -128,8 +128,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
@@ -167,8 +167,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertTrue(cmp_res.metadata.subjects)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
@@ -220,8 +220,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertTrue(cmp_res.metadata.subjects)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
@@ -261,8 +261,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(cmp_res.files.count(), 1)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should not be any mi aggregation
         self.assertFalse(list(cmp_res.logical_files))
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
@@ -296,8 +296,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
@@ -342,8 +342,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
@@ -396,8 +396,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
@@ -449,9 +449,9 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted mi resource contains one mi aggregations
         cmp_res = CompositeResource.objects.get(short_id=mi_res.short_id)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
-        self.assertEqual(cmp_res.extra_metadata[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
         # there should be two aggregations in the migrated mi resource - one mi and one copied mp
         self.assertEqual(len(list(cmp_res.logical_files)), 2)
         self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_program])
@@ -514,8 +514,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted mi resource contains one mi aggregations
         cmp_res = CompositeResource.objects.get(short_id=mi_res.short_id)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
-        self.assertEqual(cmp_res.extra_metadata[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
         # there should be two aggregations in the migrated mi resource - one mi and one copied mp
         self.assertEqual(len(list(cmp_res.logical_files)), 2)
         self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_program])
@@ -531,11 +531,11 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the mi aggr is linked to the mp aggr
         self.assertEqual(mi_aggr.metadata.executed_by, mp_aggr)
 
-    def test_executed_by_aggr_copy_3(self):
+    def test_executed_by_no_aggr_copy(self):
         """
         Migrate a mi published resource that has a link (executed_by) to a composite resource
         If the linked resource has a mp aggregation that aggregation is NOT copied over to the
-        migrated resource.
+        migrated resource but a link to the external mp aggregation is established
         """
 
         # create a mi resource
@@ -578,9 +578,9 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cmp_res.raccess.published)
         # test that the converted mi resource contains one mi aggregation
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_metadata)
-        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
-        self.assertEqual(cmp_res.extra_metadata[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
         # there should be only one mi aggregation in the migrated mi resource
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_instance])
@@ -588,7 +588,10 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertTrue(mi_aggr.metadata.has_model_output)
-        self.assertEqual(mi_aggr.metadata.executed_by, None)
+        self.assertEqual(mi_aggr.metadata.executed_by, mp_aggr)
+        # check that the linked mp aggregation is part of another resource
+        self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
+
 
     def _create_mi_resource(self, add_keywords=False):
         res = hydroshare.create_resource("ModelInstanceResource", self.user,
