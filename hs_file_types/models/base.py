@@ -29,6 +29,7 @@ from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
 from rdflib.namespace import DC
 
+
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 SCHEMA_JSON_FILE_ENDSWITH = "_schema.json"
@@ -379,6 +380,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             extra_metadata[key] = value
         self.extra_metadata = copy.deepcopy(extra_metadata)
+
         self.save()
 
     def get_rdf_graph(self):
