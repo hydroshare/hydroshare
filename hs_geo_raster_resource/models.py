@@ -1,4 +1,5 @@
 import json
+import parser
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -114,24 +115,25 @@ class OriginalCoverage(AbstractMetaDataElement):
     def rdf_triples(self, subject, graph):
         original_coverage = BNode()
         graph.add((subject, HSTERMS.spatialReference, original_coverage))
-        value = BNode()
-        graph.add((original_coverage, HSTERMS.box, value))
+        graph.add((original_coverage, RDF.type, HSTERMS.box))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
-        graph.add((value, RDF.value, Literal(value_string)))
+        graph.add((original_coverage, RDF.value, Literal(value_string)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
-        spatial_object = graph.value(subject=subject, predicate=HSTERMS.spatialReference)
-        box_object = graph.value(subject=spatial_object, predicate=HSTERMS.box)
-        value_str = graph.value(subject=box_object, predicate=RDF.value)
-        if value_str:
-            value_str = value_str.value
-            value_dict = {}
-            for key_value in value_str.split(";"):
-                key_value = key_value.strip()
-                k, v = key_value.split("=")
-                value_dict[k] = v
-            OriginalCoverage.create(value=value_dict, content_object=content_object)
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            rdf_type = graph.value(subject=cov, predicate=RDF.type)
+            value_str = graph.value(subject=cov, predicate=RDF.value)
+            rdf_type = rdf_type.split('/')[-1]
+            if value_str:
+                value_dict = {}
+                for key_value in value_str.split(";"):
+                    key_value = key_value.strip()
+                    k, v = key_value.split("=")
+                    if k in ['start', 'end']:
+                        v = parser.parse(v).strftime("%Y/%m/%d")
+                    value_dict[k] = v
+                OriginalCoverage.create(type=rdf_type, value=value_dict, content_object=content_object)
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):

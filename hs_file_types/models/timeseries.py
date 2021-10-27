@@ -5,6 +5,7 @@ import sqlite3
 import csv
 from dateutil import parser
 import tempfile
+import time
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -733,6 +734,25 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 raise ValidationError(msg)
             return logical_file
 
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated sqlite file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated sqlite file
+        sqlite_file = None
+        if self.has_csv_file:
+            # the sqlite file is a system generated file
+            for res_file in self.files.all():
+                if res_file.file_name.lower().endswith(".sqlite"):
+                    sqlite_file = res_file
+                    break
+
+        super(TimeSeriesLogicalFile, self).remove_aggregation()
+
+        if sqlite_file is not None:
+            sqlite_file.delete()
+
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
 
@@ -989,10 +1009,10 @@ def add_blank_sqlite_file(resource, upload_folder):
     # add the sqlite file to the resource
     odm2_sqlite_file_name = 'ODM2.sqlite'
     odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    odm2_sqlite_file_name = _get_timestamped_file_name(odm2_sqlite_file_name)
 
     try:
-        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'),
-                                     name=os.path.basename(odm2_sqlite_file))
+        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'), name=odm2_sqlite_file_name)
         new_res_file = utils.add_file_to_resource(
             resource, uploaded_file, folder=upload_folder
         )
@@ -1306,6 +1326,7 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     temp_dir = tempfile.mkdtemp()
     odm2_sqlite_file_name = 'ODM2.sqlite'
     odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    odm2_sqlite_file_name = _get_timestamped_file_name(odm2_sqlite_file_name)
     target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
     shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
 
@@ -1355,6 +1376,12 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
     # cleanup the temp csv file
     if os.path.exists(temp_csv_file):
         shutil.rmtree(os.path.dirname(temp_csv_file))
+
+
+def _get_timestamped_file_name(file_name):
+    name, ext = os.path.splitext(file_name)
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    return "{}_{}{}".format(name, timestr, ext)
 
 
 def _extract_creators_contributors(resource, cur, file_type=False):

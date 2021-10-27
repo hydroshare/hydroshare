@@ -482,6 +482,8 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
                 if logical_file.is_fileset:
                     res_file.logical_file_content_object = None
                     self.add_resource_file(res_file)
+        if res_files:
+            resource.cleanup_aggregations()
         return res_files
 
     def get_copy(self, copied_resource):
@@ -495,6 +497,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         copy_of_logical_file.metadata.metadata_json = self.metadata.metadata_json
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.metadata_schema_json = self.metadata_schema_json
         copy_of_logical_file.save()
         return copy_of_logical_file
 

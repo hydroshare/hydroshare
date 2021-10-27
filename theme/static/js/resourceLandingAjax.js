@@ -308,8 +308,12 @@ function metadata_update_ajax_submit(form_id){
             $form.find(".btn-form-submit").removeClass("disabled");
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-            var responseText = JSON.parse(XMLHttpRequest.responseText);
-            var errMessage = "Metadata failed to update " + JSON.stringify(responseText.message);
+            var responseMessage = "Could not parse the error message";
+            try{
+                responseMessage = JSON.parse(XMLHttpRequest.responseText).message;
+            } catch (Error){
+            }
+            var errMessage = "Metadata failed to update " + JSON.stringify(responseMessage);
             $alert_error = $alert_error.replace("Metadata failed to update.", errMessage);
             $('#' + form_id).before($alert_error);
             $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){

@@ -241,7 +241,7 @@
                             </td>
                             {# Title #}
                             <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title|escape }}</a>
                                 </strong>
                             </td>
                             {# First Author #}

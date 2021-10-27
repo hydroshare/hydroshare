@@ -52,7 +52,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, '')
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_2(self):
@@ -79,7 +79,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.file_folder, new_folder)
         self.assertEqual(res_file.logical_file_type_name, self.logical_file_type_name)
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata(self):
@@ -185,6 +185,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(spatial_cov.value['units'], 'Decimal degree')
         self.assertEqual(spatial_cov.value['north'], 45.6789)
         self.assertEqual(spatial_cov.value['east'], -156.45678)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
@@ -229,7 +230,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         sf_aggr.metadata.delete_element('coverage', sf_aggr.metadata.temporal_coverage.id)
         self.assertEqual(sf_aggr.metadata.temporal_coverage, None)
         self.assertTrue(sf_aggr.metadata.is_dirty)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_name(self):
@@ -283,6 +284,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         expected_aggregation_name = '{0}/{1}'.format(folder_rename, res_file.file_name)
         self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_xml_file_paths(self):
@@ -353,6 +355,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
@@ -384,6 +387,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
         # check the files previously associated with the generic aggregation not deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_rename(self):
@@ -405,7 +409,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       tgt_path)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.file_name, '{0}_1{1}'.format(base_file_name, ext))
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_move(self):
@@ -432,6 +436,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # file should in a folder
         self.assertEqual(res_file.file_folder, new_folder)
         self.assertTrue(res_file.resource_file.name.endswith(tgt_path))
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata_on_file_delete(self):
@@ -475,6 +480,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
         # test that resource level coverage element exist - not got deleted
         self.assertEqual(Coverage.objects.count(), 2)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def test_main_file(self):
         self.create_composite_resource(self.generic_file)
@@ -486,6 +492,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(1, GenericLogicalFile.objects.count())
         self.assertEqual(".*", GenericLogicalFile.objects.first().get_main_file_type())
         self.assertEqual(res_file, GenericLogicalFile.objects.first().get_main_file)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def test_has_modified_metadata_no_change(self):
         self.create_composite_resource(self.generic_file)
@@ -501,6 +508,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
         self.assertEqual("generic_file", gen_logical_file.dataset_name)
         self.assertFalse(gen_logical_file.metadata.has_modified_metadata)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def test_has_modified_metadata_empty_title(self):
         self.create_composite_resource(self.generic_file)
@@ -519,6 +527,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
         self.assertFalse(gen_logical_file.dataset_name)
         self.assertFalse(gen_logical_file.metadata.has_modified_metadata)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def test_has_modified_metadata_updated_title(self):
         self.create_composite_resource(self.generic_file)
@@ -537,6 +546,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
         self.assertEqual("Updated", gen_logical_file.dataset_name)
         self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def test_has_modified_metadata_updated_coverages(self):
         self.create_composite_resource(self.generic_file)
@@ -555,6 +565,7 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual({}, gen_logical_file.metadata.extra_metadata)
         self.assertEqual("generic_file", gen_logical_file.dataset_name)
         self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def test_has_modified_metadata_updated_extra_metadata(self):
         self.create_composite_resource(self.generic_file)
@@ -574,3 +585,4 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          gen_logical_file.metadata.extra_metadata)
         self.assertEqual("generic_file", gen_logical_file.dataset_name)
         self.assertTrue(gen_logical_file.metadata.has_modified_metadata)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())

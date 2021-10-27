@@ -12,11 +12,15 @@ Please connect to the bash shell for the hydroshare container before running the
 """
 
 from django.core.management.base import BaseCommand
+from django.core.files import File
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes, \
         UserGroupPrivilege, UserCommunityPrivilege, GroupCommunityPrivilege
 from hs_access_control.management.utilities import community_from_name_or_id, \
         group_from_name_or_id, user_from_name
+from hs_access_control.models.invite import GroupCommunityRequest
+import os
+from pprint import pprint
 
 
 def usage():
@@ -28,6 +32,8 @@ def usage():
     print("      list: print the configuration of a community.")
     print("      create: create the community.")
     print("      update: update metadata for community.")
+    print("      remove: remove community.")
+    print("      rename: rename community.")
     print("      Options for create and update include:")
     print("          --owner={username}: set an owner for the community.")
     print("          --description='{description}': set the description to the text provided.")
@@ -38,13 +44,17 @@ def usage():
     print("              add: add the group to the community.")
     print("              update: update community metadata for the group.")
     print("              remove: remove the group from the community.")
-    print("      owner {oname} {request}: owner commands")
+    print("              invite: invite the group to join the community.")
+    print("              request: request from group owner to join the community.")
+    print("              approve: approve a request or invitation.")
+    print("              decline: decline a request or invitation.")
     print("      owner {oname} {request}: owner commands")
     print("          {oname}: owner name.")
     print("          {request} is one of:")
     print("              [blank]: list community owners")
     print("              add: add an owner for the community.")
     print("              remove: remove an owner from the community.")
+    print("      banner {path-to-banner}: upload a banner.")
 
 
 class Command(BaseCommand):
@@ -54,6 +64,13 @@ class Command(BaseCommand):
 
         # a command to execute
         parser.add_argument('command', nargs='*', type=str)
+
+        parser.add_argument(
+            '--syntax',
+            action='store_true',  # True for presence, False for absence
+            dest='syntax',  # value is options['syntax']
+            help='print help message',
+        )
 
         parser.add_argument(
             '--owner',
@@ -74,6 +91,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+
+        if options['syntax']:
+            usage()
+            exit(1)
 
         if len(options['command']) > 0:
             cname = options['command'][0]
@@ -103,6 +124,7 @@ class Command(BaseCommand):
             print("All communities:")
             for c in Community.objects.all():
                 print("  '{}' (id={})".format(c.name, str(c.id)))
+            usage()
             exit(0)
 
         if command is None or command == 'list':
@@ -132,11 +154,20 @@ class Command(BaseCommand):
                 for ugp in UserGroupPrivilege.objects.filter(group=gcp.group,
                                                              privilege=PrivilegeCodes.OWNER):
                     print("             {}".format(ugp.user.username))
+            print("  invitations and requests:")
+            for gcr in GroupCommunityRequest.objects.filter(community=community, redeemed=False):
+                if (gcr.group_owner is None):
+                    print("     '{}' (id={}) invited (by community owner={}):"
+                          .format(gcr.group.name, gcr.group.id, gcr.community_owner.username))
+                else:
+                    print("     '{}' (id={}) requested membership (by group owner={}):"
+                          .format(gcr.group.name, gcr.group.id, gcr.group_owner.username))
             exit(0)
 
         # These are idempotent actions. Creating a community twice does nothing.
         if command == 'update' or command == 'create':
-            try:
+            community = community_from_name_or_id(cname)
+            if community is not None:
                 community = Community.objects.get(name=cname)
                 if options['description'] is not None:
                     community.description = options['description']
@@ -150,8 +181,7 @@ class Command(BaseCommand):
                                               privilege=PrivilegeCodes.OWNER,
                                               grantor=owner)
 
-            except Community.DoesNotExist:  # create it
-
+            else:  # if it does not exist, create it
                 if options['description'] is not None:
                     description = options['description']
                 else:
@@ -162,6 +192,27 @@ class Command(BaseCommand):
                       .format(cname, owner, description))
 
                 owner.uaccess.create_community(cname, description, purpose=purpose)
+
+        elif command == 'remove':
+            # at this point, community must exist
+            community = community_from_name_or_id(cname)
+            if community is None:
+                print("community '{}' does not exist".format(cname))
+                exit(1)
+            print("removing community '{}' (id={})".format(community.name, community.id))
+            community.delete()
+
+        elif command == 'rename':
+            # at this point, community must exist
+            community = community_from_name_or_id(cname)
+            if community is None:
+                print("community '{}' does not exist".format(cname))
+                exit(1)
+
+            nname = options['command'][2]
+            print("renaming community '{}' (id={}) to '{}'".format(community.name, community.id, nname))
+            community.name = nname
+            community.save()
 
         elif command == 'owner':
             # at this point, community must exist
@@ -250,6 +301,9 @@ class Command(BaseCommand):
                     if gcp.privilege != privilege or owner != gcp.grantor:
                         GroupCommunityPrivilege.share(group=group, community=community,
                                                       privilege=privilege, grantor=owner)
+                    else:
+                        print("Group '{}' is already a member of community '{}'"
+                              .format(gname, cname))
 
                 except GroupCommunityPrivilege.DoesNotExist:
                     print("Adding group '{}' (id={}) to community '{}' (id={})"
@@ -262,6 +316,128 @@ class Command(BaseCommand):
                     # update view status if different than default
                     gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
 
+            elif action == 'invite':
+                # resolve privilege of group
+                privilege = PrivilegeCodes.VIEW
+
+                try:
+                    print("Inviting group '{}' (id={}) to community '{}' (id={})."
+                          .format(gname, str(group.id), cname, str(community.id)))
+                    gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
+                    # pass privilege changes through the privilege system to record provenance.
+                    if gcp.privilege != privilege or owner != gcp.grantor:
+                        community_owner = community.first_owner
+                        message, _ = GroupCommunityRequest.create_or_update(
+                            community=community, requester=community_owner, group=group)
+                        print(message)
+                    else:
+                        print("Group '{}' is already a member of community '{}'"
+                              .format(group.name, community.name))
+
+                except GroupCommunityPrivilege.DoesNotExist:
+                    print("Adding group '{}' (id={}) to community '{}' (id={})"
+                          .format(gname, str(group.id), cname, str(community.id)))
+
+                    community_owner = community.first_owner
+                    message, _ = GroupCommunityRequest.create_or_update(
+                        community=community, requester=community_owner, group=group)
+                    print(message)
+
+                # update gcp for result of situation
+                try:
+                    gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
+                except GroupCommunityPrivilege.DoesNotExist:
+                    gcp = None
+
+            elif action == 'request':
+                # resolve privilege of group
+                privilege = PrivilegeCodes.VIEW
+
+                print("Requesting that group '{}' (id={}) join community '{}' (id={})."
+                      .format(gname, str(group.id), cname, str(community.id)))
+                try:
+                    gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
+                    # pass privilege changes through the privilege system to record provenance.
+                    if gcp.privilege != privilege or owner != gcp.grantor:
+                        group_owner = group.gaccess.first_owner
+                        message, _ = GroupCommunityRequest.create_or_update(
+                            community=community, requester=group_owner, group=group)
+                        print(message)
+                    else:
+                        print("Group '{}' is already a member of community '{}'"
+                              .format(group.name, community.name))
+
+                except GroupCommunityPrivilege.DoesNotExist:
+                    group_owner = group.gaccess.first_owner
+                    message, _ = GroupCommunityRequest.create_or_update(
+                        community=community, requester=group_owner, group=group)
+
+                # update gcp for result of situation
+                try:
+                    gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
+                except GroupCommunityPrivilege.DoesNotExist:
+                    gcp = None
+
+            elif action == 'approve':
+
+                try:
+                    gcr = GroupCommunityRequest.objects.get(community=community, group=group)
+                except GroupCommunityRequest.DoesNotExist:
+                    print("GroupCommunityRequest for community '{}' and group '{}' does not exist."
+                          .format(cname, gname))
+
+                if (gcr.redeemed):
+                    print("request connecting '{}' and '{}' is already redeemed."
+                          .format(community.name, group.name))
+                    exit(1)
+                elif (gcr.community_owner is None):
+                    community_owner = community.first_owner
+                    print("owner '{}' of community '{}' approves request from group '{}'"
+                          .format(community_owner.username, cname, gname))
+                    message, _ = gcr.approve(responder=community_owner)
+                else:
+                    group_owner = group.gaccess.first_owner
+                    print("owner '{}' of group '{}' approves invitation from community '{}'"
+                          .format(group_owner.username, gname, cname))
+                    message, _ = gcr.approve(responder=group_owner)
+
+                # update gcp for result of situation
+                try:
+                    gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
+                except GroupCommunityPrivilege.DoesNotExist:
+                    gcp = None
+
+            elif action == 'decline':
+
+                try:
+                    gcr = GroupCommunityRequest.objects.get(community=community, group=group)
+                except GroupCommunityRequest.DoesNotExist:
+                    print("GroupCommunityRequest for community '{}' and group '{}' does not exist."
+                          .format(cname, gname))
+
+                if (gcr.redeemed):
+                    print("request connecting '{}' and '{}' is already redeemed."
+                          .format(community.name, group.name))
+                    exit(1)
+                elif (gcr.community_owner is None):
+                    community_owner = community.first_owner
+                    print("owner '{}' of community '{}' declines request from group '{}'"
+                          .format(community_owner.username, cname, gname))
+                    message, _ = gcr.decline(responder=community_owner)
+                else:
+                    pprint(group)
+                    pprint(group.gaccess)
+                    group_owner = group.gaccess.first_owner
+                    print("owner '{}' of group '{}' declines invitation from community '{}'"
+                          .format(group_owner.username, gname, cname))
+                    message, _ = gcr.decline(responder=group_owner)
+
+                # update gcp for result of situation
+                try:
+                    gcp = GroupCommunityPrivilege.objects.get(group=group, community=community)
+                except GroupCommunityPrivilege.DoesNotExist:
+                    gcp = None
+
             elif action == 'remove':
 
                 print("removing group '{}' (id={}) from community '{}' (id={})"
@@ -270,6 +446,21 @@ class Command(BaseCommand):
 
             else:
                 print("unknown group command '{}'.".format(action))
+                usage()
+                exit(1)
+
+        elif command == 'banner':
+            # upload a banner
+            community = community_from_name_or_id(cname)
+            if community is None:
+                usage()
+                exit(1)
+            if len(options['command']) > 2:
+                pname = options['command'][2]
+                nname = os.path.basename(pname)
+                community.picture.save(nname, File(open(pname, 'rb')))
+            else:
+                print("no file name given for banner image")
                 usage()
                 exit(1)
 
