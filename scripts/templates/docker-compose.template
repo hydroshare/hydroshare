@@ -12,6 +12,7 @@ solr:
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
+    - solr_data:/var/solr
   # ports:
   # - "8983"
   command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
@@ -74,3 +75,5 @@ defaultworker:
     - postgis:postgis
     - rabbitmq:rabbitmq
   command: /bin/bash init-defaultworker
+volumes:
+  solr_data:
