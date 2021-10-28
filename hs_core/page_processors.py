@@ -1,14 +1,14 @@
 """Page processors for hs_core app."""
 
+import json
+
 from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
-from .forms import ExtendedMetadataForm
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -16,9 +16,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
-import json
-
 from hs_odm2.models import ODM2Variable
+from .forms import ExtendedMetadataForm
 
 
 @processor_for(GenericResource)
@@ -269,13 +268,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
-    grps_member_of = []
-    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-    # for each group set group dynamic attributes
-    for g in groups:
-        g.is_user_member = user in g.gaccess.members
-        if g.is_user_member:
-            grps_member_of.append(g)
     try:
         citation_id = content_model.metadata.citation.first().id
     except:
