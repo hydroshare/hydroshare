@@ -87,7 +87,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
     def test_migrate_mi_resource_1(self):
         """
         Migrate a mi resource that has no files and no mi specific metadata
-        A mi aggregation will be created in the migrated composite resource
+        A mi aggregation (folder based) will be created in the migrated composite resource
         """
 
         # create a mi resource
@@ -435,6 +435,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_res.metadata.create_element('modeloutput', includes_output=True)
         self.assertNotEqual(mi_res.metadata.executed_by, None)
         self.assertNotEqual(mi_res.metadata.model_output, None)
+        self.assertEqual(mi_res.files.count(), 0)
 
         # run  prepare migration command for preparing mi resource for migration
         call_command(self.prepare_mi_migration_command)
@@ -444,6 +445,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramResource.objects.count(), 0)
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, None)
+        self.assertEqual(mp_aggr.files.count(), 1)
 
         # run  migration command to migrate mi resource
         call_command(self.mi_migration_command)
@@ -455,6 +457,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertEqual(cmp_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        # one file should be there due to the copied mp aggregation
+        self.assertEqual(cmp_res.files.count(), 1)
         # there should be two aggregations in the migrated mi resource - one mi and one copied mp
         self.assertEqual(len(list(cmp_res.logical_files)), 2)
         self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_program])
@@ -463,9 +467,18 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 2)
         mp_aggr = [lf for lf in cmp_res.logical_files if lf.is_model_program][0]
         mi_aggr = [lf for lf in cmp_res.logical_files if lf.is_model_instance][0]
+        self.assertTrue(mi_aggr.metadata.has_model_output)
+        # check that the mi aggregation has no file
+        self.assertEqual(mi_aggr.files.count(), 0)
+        # check the mi aggregation is folder based
+        self.assertEqual(mi_aggr.folder, 'mi')
+        # check that the copied mp aggregation has one file
+        self.assertEqual(mp_aggr.files.count(), 1)
+        mp_aggr_file = mp_aggr.files.first()
+        self.assertEqual(mp_aggr_file.file_folder, 'executed_by_mp')
+        self.assertEqual(mp_aggr_file.file_name, 'cea.tif')
         # check the copied mp aggregation is folder based
         self.assertEqual(mp_aggr.folder, 'executed_by_mp')
-        self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the mi aggr is linked to the mp aggr
         self.assertEqual(mi_aggr.metadata.executed_by, mp_aggr)
 
@@ -493,6 +506,10 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                       name=os.path.basename(file_path))
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        # check mp resource has 2 files
+        self.assertEqual(mp_res.files.count(), 2)
+        # no files in mi resource
+        self.assertEqual(mi_res.files.count(), 0)
 
         # link the mi res to mp resource
         mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
@@ -509,6 +526,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.files.count(), 2)
 
         # run  migration command to migrate mi resource
         call_command(self.mi_migration_command)
@@ -528,11 +546,17 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 2)
         mp_aggr = [lf for lf in cmp_res.logical_files if lf.is_model_program][0]
         mi_aggr = [lf for lf in cmp_res.logical_files if lf.is_model_instance][0]
+        # check that the copied mp aggregation has 2 files
+        self.assertEqual(mp_aggr.files.count(), 2)
+        for mp_aggr_file in mp_aggr.files.all():
+            self.assertEqual(mp_aggr_file.file_folder, 'executed_by_mp')
         # check the copied mp aggregation is folder based
         self.assertEqual(mp_aggr.folder, 'executed_by_mp')
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the mi aggr is linked to the mp aggr
         self.assertEqual(mi_aggr.metadata.executed_by, mp_aggr)
+        self.assertEqual(mi_aggr.files.count(), 0)
+        self.assertEqual(mi_aggr.folder, 'mi')
 
     def test_executed_by_no_aggr_copy(self):
         """
@@ -552,6 +576,10 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
                                       name=os.path.basename(file_path))
 
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        # check mp resource has 2 files
+        self.assertEqual(mp_res.files.count(), 1)
+        # no files in mi resource
+        self.assertEqual(mi_res.files.count(), 0)
 
         # make the mi resource published
         mi_res.raccess.published = True
@@ -584,6 +612,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertEqual(cmp_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        # no files in migrated mi resource
+        self.assertEqual(cmp_res.files.count(), 0)
         # there should be only one mi aggregation in the migrated mi resource
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_instance])
@@ -594,7 +624,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.metadata.executed_by, mp_aggr)
         # check that the linked mp aggregation is part of another resource
         self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
-
+        self.assertEqual(mi_aggr.files.count(), 0)
+        self.assertEqual(mi_aggr.folder, 'mi')
 
     def _create_mi_resource(self, add_keywords=False):
         res = hydroshare.create_resource("ModelInstanceResource", self.user,
