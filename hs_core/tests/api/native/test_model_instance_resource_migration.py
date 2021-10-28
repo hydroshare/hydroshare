@@ -87,7 +87,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
     def test_migrate_mi_resource_1(self):
         """
         Migrate a mi resource that has no files and no mi specific metadata
-        No mi aggregation will be created in the migrated composite resource
+        A mi aggregation will be created in the migrated composite resource
         """
 
         # create a mi resource
@@ -98,14 +98,15 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         call_command(self.mi_migration_command)
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
-        # test that the converted resource does not contain any aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
-        # there should be no mi aggregations
-        self.assertEqual(len(list(cmp_res.logical_files)), 0)
-        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 0)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, 'mi')
 
     def test_migrate_mi_resource_2(self):
         """
@@ -238,7 +239,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
     def test_migrate_mi_resource_5(self):
         """
         Migrate a mi resource that has a readme file only and no mi specific metadata
-        No mi aggregation is created in the migrated composite resource
+        A mi aggregation is created in the migrated composite resource
         """
 
         # create a mi resource
@@ -263,9 +264,11 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
-        # there should not be any mi aggregation
-        self.assertFalse(list(cmp_res.logical_files))
-        self.assertEqual(ModelInstanceResource.objects.count(), 0)
+        # there should be one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, 'mi')
 
     def test_migrate_mi_resource_6(self):
         """

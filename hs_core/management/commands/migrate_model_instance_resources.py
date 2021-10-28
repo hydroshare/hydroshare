@@ -149,79 +149,65 @@ class Command(BaseCommand):
             type_element = comp_res.metadata.type
             type_element.url = '{0}/terms/{1}'.format(current_site_url(), to_resource_type)
             type_element.save()
-            create_aggregation = True
-            if not mi_metadata_obj.model_output and self._EXECUTED_BY_EXTRA_META_KEY not in comp_res.extra_data:
-                msg = "Resource has no model instance specific metadata and no data files. " \
-                      "No model instance aggregation created for this resource:{}".format(comp_res.short_id)
-                if comp_res.files.count() == 0:
-                    # original mi resource has no files and no mi specific metadata - no need to create mi aggregation
-                    print(msg)
-                    create_aggregation = False
-                elif comp_res.readme_file is not None and comp_res.files.count() == 1:
-                    # original mi resource contains only a readme file and no mi specific metadata - no need to
-                    # create mi aggregation
-                    print(msg)
-                    create_aggregation = False
 
-            if create_aggregation:
-                # create a mi aggregation
-                try:
-                    mi_aggr = ModelInstanceLogicalFile.create(resource=comp_res)
-                    mi_aggr.save()
-                except Exception as ex:
-                    err_msg = 'Failed to create model instance aggregation for resource (ID: {})'
-                    err_msg = err_msg.format(mi_res.short_id)
-                    err_msg = err_msg + '\n' + str(ex)
-                    logger.error(err_msg)
-                    self.stdout.write(self.style.ERROR(err_msg))
-                    continue
+            # create a mi aggregation
+            try:
+                mi_aggr = ModelInstanceLogicalFile.create(resource=comp_res)
+                mi_aggr.save()
+            except Exception as ex:
+                err_msg = 'Failed to create model instance aggregation for resource (ID: {})'
+                err_msg = err_msg.format(mi_res.short_id)
+                err_msg = err_msg + '\n' + str(ex)
+                logger.error(err_msg)
+                self.stdout.write(self.style.ERROR(err_msg))
+                continue
 
-                if comp_res.files.count() == 0:
+            if comp_res.files.count() == 0:
+                self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
+            elif comp_res.readme_file is not None:
+                if comp_res.files.count() > 2 or comp_res.files.count() == 1:
                     self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
-                elif comp_res.readme_file is not None:
-                    if comp_res.files.count() > 2 or comp_res.files.count() == 1:
-                        self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
-                    # make the all res files part of the aggregation excluding the readme file
-                    for res_file in comp_res.files.all():
-                        if res_file != comp_res.readme_file:
-                            mi_aggr.add_resource_file(res_file)
-                            msg = "Added file {} to mi aggregation".format(res_file.file_name)
-                            self.stdout.write(self.style.SUCCESS(msg))
-                else:
-                    if comp_res.files.count() > 1:
-                        self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
-                    # make the all res files part of the aggregation
-                    for res_file in comp_res.files.all():
+                # make the all res files part of the aggregation excluding the readme file
+                for res_file in comp_res.files.all():
+                    if res_file != comp_res.readme_file:
                         mi_aggr.add_resource_file(res_file)
                         msg = "Added file {} to mi aggregation".format(res_file.file_name)
                         self.stdout.write(self.style.SUCCESS(msg))
+            else:
+                if comp_res.files.count() > 1:
+                    self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
+                # make the all res files part of the aggregation
+                for res_file in comp_res.files.all():
+                    mi_aggr.add_resource_file(res_file)
+                    msg = "Added file {} to mi aggregation".format(res_file.file_name)
+                    self.stdout.write(self.style.SUCCESS(msg))
 
-                # set the dataset_name field of the aggregation in the case of file based mi aggregation
-                if not mi_aggr.folder:
-                    aggr_file = mi_aggr.files.first()
-                    aggr_filename, _ = os.path.splitext(aggr_file.file_name)
-                    mi_aggr.dataset_name = aggr_filename
-                    mi_aggr.save()
-
-                # copy the resource level keywords to aggregation level
-                if comp_res.metadata.subjects:
-                    keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
-                    mi_aggr.metadata.keywords = keywords
-                    mi_aggr.metadata.save()
-                # copy the model specific metadata to the mi aggregation
-                if mi_metadata_obj.model_output:
-                    mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
-
-                if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_data:
-                    self.set_executed_by(mi_aggr, comp_res, logger)
+            # set the dataset_name field of the aggregation in the case of file based mi aggregation
+            if not mi_aggr.folder:
+                aggr_file = mi_aggr.files.first()
+                aggr_filename, _ = os.path.splitext(aggr_file.file_name)
+                mi_aggr.dataset_name = aggr_filename
                 mi_aggr.save()
 
-                # create aggregation level xml files
-                mi_aggr.create_aggregation_xml_documents()
-                msg = 'One model instance aggregation was created in resource (ID:{})'
-                msg = msg.format(comp_res.short_id)
-                logger.info(msg)
-                self.stdout.write(self.style.SUCCESS(msg))
+            # copy the resource level keywords to aggregation level
+            if comp_res.metadata.subjects:
+                keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
+                mi_aggr.metadata.keywords = keywords
+                mi_aggr.metadata.save()
+            # copy the model specific metadata to the mi aggregation
+            if mi_metadata_obj.model_output:
+                mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
+
+            if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_data:
+                self.set_executed_by(mi_aggr, comp_res, logger)
+            mi_aggr.save()
+
+            # create aggregation level xml files
+            mi_aggr.create_aggregation_xml_documents()
+            msg = 'One model instance aggregation was created in resource (ID:{})'
+            msg = msg.format(comp_res.short_id)
+            logger.info(msg)
+            self.stdout.write(self.style.SUCCESS(msg))
 
             comp_res.extra_data['MIGRATED_FROM'] = 'ModelInstanceResource'
             comp_res.save()
