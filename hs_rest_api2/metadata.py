@@ -67,7 +67,7 @@ def resource_metadata_json(request, pk):
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     metadata = request.POST.get('metadata', None)
     ingest_resource_metadata(resource, metadata)
-    return HttpResponse(status=204)
+    return HttpResponse(status=200)
 
 
 def get_aggregation(resource, file_path):
@@ -101,7 +101,7 @@ def aggregation_metadata_json(request, pk, aggregation_path):
     metadata_json_str = request.POST.get('metadata', None)
     metadata_json = json.loads(metadata_json_str)
     ingest_logical_file_metadata(metadata_json, resource)
-    return HttpResponse(status=204)
+    return HttpResponse(status=200)
 
 
 @swagger_auto_schema(method='put', request_body=serializers.GeographicFeatureMetadataSerializer,
