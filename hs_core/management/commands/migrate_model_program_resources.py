@@ -202,7 +202,7 @@ class Command(BaseCommand):
                 logger.info(msg)
                 self.stdout.write(self.style.SUCCESS(msg))
 
-            comp_res.extra_metadata['MIGRATED_FROM'] = 'ModelProgramResource'
+            comp_res.extra_data['MIGRATED_FROM'] = 'ModelProgramResource'
             comp_res.save()
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
