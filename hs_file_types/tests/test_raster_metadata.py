@@ -48,10 +48,13 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.raster_file_name = 'small_logan.tif'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
         self.invalid_raster_file_name = 'raster_tif_invalid.tif'
+        self.invalid_raster_with_bad_coverage_name = 'invalid_raster_with_invalid_coverage_boundingbox.tif'
         self.invalid_raster_zip_file_name = 'bad_small_vrt.zip'
         self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
         self.raster_zip_file = 'hs_file_types/tests/{}'.format(self.raster_zip_file_name)
         self.invalid_raster_file = 'hs_file_types/tests/{}'.format(self.invalid_raster_file_name)
+        self.invalid_raster_with_bad_coverage_file = 'hs_file_types/tests/data/{}'.format(
+            self.invalid_raster_with_bad_coverage_name)
         self.invalid_raster_zip_file = 'hs_file_types/tests/{}'.format(
             self.invalid_raster_zip_file_name)
 
@@ -84,6 +87,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         # there should not be any file level keywords at this point
         self.assertEqual(logical_file.metadata.keywords, [])
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -117,6 +121,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         # there should not be any file level keywords at this point
         self.assertEqual(logical_file.metadata.keywords, [])
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -155,6 +160,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
         logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
         expected_file_folder = new_folder
         for res_file in logical_file.files.all():
@@ -202,6 +208,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(len(list(self.composite_resource.logical_files)), 1)
         logical_file = list(self.composite_resource.logical_files)[0]
         self.assertEqual(logical_file.files.count(), 2)
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         base_tif_file_name, _ = os.path.splitext(self.raster_file_name)
         expected_file_folder = '{}'.format(new_folder)
         for res_file in logical_file.files.all():
@@ -212,7 +219,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_create_aggregation_from_zip_file_1(self):
-        # here we are using a valid raster zip file that exist at the root of the folder hierarchy
+        # here we are using a valid raster zip file (contains 1 vrt file and 2 tif files) that exist at
+        # the root of the folder hierarchy
         # for setting it to Geo Raster file type which includes metadata extraction
         # a new folder should be created in this case where the extracted files that are part of
         # the aggregation should exist
@@ -230,7 +238,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(res_file.has_logical_file, False)
 
         # check that the resource file is not associated with any logical file
-        # self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(res_file.has_logical_file, False)
         # set the zip file to GeoRasterFile type
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
@@ -241,7 +249,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_create_aggregation_from_zip_file_2(self):
-        # here we are using a valid raster zip file that exist in a folder
+        # here we are using a valid raster zip file (contains 1 vrt file and 2 tif files) that exist in a folder
         # for setting it to Geo Raster file type which includes metadata extraction
         # no new folder should be created in this case
         # location of the raster file before aggregation: raster-aggr/small_logan.tif
@@ -448,11 +456,22 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.composite_resource.delete()
 
     def test_set_file_type_to_geo_raster_invalid_file_3(self):
-        # here we are using an invalid raster zip file for setting it
+        # here we are using an invalid raster zip file (contains 2 vrt files and 2 tif files) for setting it
         # to Geo Raster file type - should fail
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.invalid_raster_zip_file)
+
+        self._test_invalid_file()
+        self.assertTrue(self.composite_resource.files.first().file_name.endswith('.zip'))
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_geo_raster_invalid_file_4(self):
+        # here we are using an invalid raster file that has spacial coverage with invalid bounding box for setting it
+        # to Geo Raster file type - should fail
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.invalid_raster_with_bad_coverage_file)
 
         self._test_invalid_file()
 
@@ -765,15 +784,15 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
     def test_remove_aggregation(self):
         # test that when an instance GeoRasterLogicalFile (aggregation) is deleted
-        # all files associated with that aggregation is not deleted but the associated metadata
-        # is deleted
+        # all files associated with that aggregation is not deleted
+        # (except the vt file if it was generated by the system) but the associated metadata is deleted
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
-        res_file = self.composite_resource.files.first()
+        res_tif_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterLogicalFile (aggregation)
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_tif_file.id)
 
         # test that we have one logical file of type GeoRasterFileType
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
@@ -785,13 +804,16 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          set(logical_file.files.all()))
 
         # delete the aggregation (logical file) object using the remove_aggregation function
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         logical_file.remove_aggregation()
         # test there is no GeoRasterLogicalFile object
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         # test there is no GeoRasterFileMetaData object
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
-        # check the files associated with the aggregation not deleted
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the tif file is not deleted but the system generated vrt file is deleted
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        self.assertFalse(self.composite_resource.files.first().file_name.endswith('.vrt'))
+        self.assertEqual(self.composite_resource.files.first().file_name, res_tif_file.file_name)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -868,7 +890,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         ResourceFile.create_folder(self.composite_resource, folder_for_raster)
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=folder_for_raster)
         res_file = self.composite_resource.files.first()
-        base_file_name, ext = os.path.splitext(res_file.file_name)
 
         # create aggregation from the tif file
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
@@ -1122,10 +1143,12 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        # test that no raster aggregation exists
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
-        # check that the resource file is not associated with generic logical file
+        # check that the resource file is not associated with logical file
         self.assertEqual(res_file.has_logical_file, False)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
@@ -1142,6 +1165,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check that the logicalfile is associated with 3 files
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         logical_file = GeoRasterLogicalFile.objects.first()
+        self.assertEqual(logical_file.extra_data['vrt_created'], "False")
         res_file = self.composite_resource.files.first()
         expected_dataset_name, _ = os.path.splitext(res_file.file_name)
 
@@ -1214,6 +1238,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
         self.assertEqual(1, GeoRasterLogicalFile.objects.count())
+        logical_file = GeoRasterLogicalFile.objects.first()
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
         self.assertEqual(".vrt", GeoRasterLogicalFile.objects.first().get_main_file_type())
         self.assertEqual("small_logan.vrt",
                          GeoRasterLogicalFile.objects.first().get_main_file.file_name)

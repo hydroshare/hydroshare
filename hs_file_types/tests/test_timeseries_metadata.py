@@ -249,7 +249,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # to TimeSeries file type which should fail
 
         self.create_composite_resource(self.sqlite_invalid_file)
-        self._test_invalid_file()
+        self._test_invalid_sqlite_file()
         self.composite_resource.delete()
 
     def test_create_aggregation_from_csv_invalid_file(self):
@@ -1096,7 +1096,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
-    def _test_invalid_file(self):
+    def _test_invalid_sqlite_file(self):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
@@ -1108,11 +1108,13 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def _test_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file = self._get_invalid_csv_file(invalid_csv_file_name)
@@ -1134,6 +1136,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
