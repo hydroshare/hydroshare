@@ -133,6 +133,15 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.delete()
         self.user.delete()
 
+    def test_nested_fileset_ingestion(self):
+        prepare_resource(self, "fileset_nested")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(FileSetLogicalFile.type_name())[0].metadata.get_xml(),
+                          "fileset_nested/fileset/fileset_meta.xml")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
+                          "fileset_nested/fileset/singlefile_meta.xml")
+
     def test_modelinstance_ingestion(self):
         prepare_resource(self, "model_program")
         prepare_resource(self, "model_instance")
