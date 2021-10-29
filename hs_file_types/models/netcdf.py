@@ -492,6 +492,21 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 log.error(err_msg)
                 raise ValidationError(err_msg)
 
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated txt file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated ncdump txt file
+        txt_file = None
+        for res_file in self.files.all():
+            if res_file.file_name.lower().endswith(".txt"):
+                txt_file = res_file
+                break
+        super(NetCDFLogicalFile, self).remove_aggregation()
+        if txt_file is not None:
+            txt_file.delete()
+
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
         """Gets a resource file that has extension .nc from the list of files *resource_files* """

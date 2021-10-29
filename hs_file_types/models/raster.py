@@ -379,6 +379,24 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 log.error(err_msg)
                 raise ValidationError(err_msg)
 
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated vrt file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated vrt file
+        vrt_created = self.extra_data.get('vrt_created', False)
+        vrt_file = None
+        if vrt_created:
+            # the vrt file is a system generated file
+            for res_file in self.files.all():
+                if res_file.file_name.lower().endswith(".vrt"):
+                    vrt_file = res_file
+                    break
+        super(GeoRasterLogicalFile, self).remove_aggregation()
+        if vrt_file is not None:
+            vrt_file.delete()
+
     @classmethod
     def get_primary_resouce_file(cls, resource_files):
         """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
