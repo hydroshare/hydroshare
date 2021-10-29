@@ -333,8 +333,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                                         raster_folder=raster_folder)
 
             if not validation_results['error_info']:
+                vrt_created = validation_results['vrt_created']
                 msg = "Geographic raster aggregation. Error when creating aggregation. Error:{}"
-                file_type_success = False
                 log.info("Geographic raster aggregation validation successful.")
                 # extract metadata
                 temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
@@ -353,25 +353,25 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                                               new_files_to_upload=files_to_upload,
                                                               folder_path=upload_folder)
 
+                        ft_ctx.logical_file = logical_file
                         log.info("Geographic raster aggregation type - new files were added "
                                  "to the resource.")
-
+                        logical_file.extra_data['vrt_created'] = vrt_created
+                        logical_file.save()
                         # use the extracted metadata to populate file metadata
                         for element in metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
                             k, v = list(element.items())[0]
                             logical_file.metadata.create_element(k, **v)
-                        log.info("Geographic raster aggregation type - metadata was saved to DB")
 
-                        file_type_success = True
-                        ft_ctx.logical_file = logical_file
+                        log.info("Geographic raster aggregation type - metadata was saved to DB")
                     except Exception as ex:
+                        ft_ctx.remove_logical_file = True
                         msg = msg.format(str(ex))
                         log.exception(msg)
+                        raise ValidationError(msg)
 
-                if not file_type_success:
-                    raise ValidationError(msg)
                 return logical_file
             else:
                 err_msg = "Geographic raster aggregation type validation failed. {}".format(
@@ -410,7 +410,7 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     error_info = []
     new_resource_files_to_add = []
     raster_resource_files = []
-    create_vrt = True
+    create_vrt = False
     validation_results = {'error_info': error_info,
                           'new_resource_files_to_add': new_resource_files_to_add,
                           'raster_resource_files': raster_resource_files,
@@ -429,7 +429,6 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
                 if len(vrt_files) > 1:
                     error_info.append("More than one vrt file was found.")
                     return validation_results
-                create_vrt = False
             elif len(tif_files) != 1:
                 # if there are more than one tif file, there needs to be one vrt file
                 error_info.append("A vrt file is missing.")
@@ -444,7 +443,6 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
         if len(vrt_files_for_raster) == 1:
             vrt_file = vrt_files_for_raster[0]
             raster_resource_files.extend([vrt_file])
-            create_vrt = False
             temp_dir = os.path.dirname(raster_file)
             temp_vrt_file = utils.get_file_from_irods(vrt_file, temp_dir)
             listed_tif_files = list_tif_files(vrt_file)
@@ -460,6 +458,8 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
             try:
                 vrt_file = create_vrt_file(raster_file)
                 temp_vrt_file = vrt_file
+                create_vrt = True
+                validation_results['vrt_created'] = create_vrt
             except Exception as ex:
                 error_info.append(str(ex))
             else:
@@ -570,7 +570,7 @@ def list_tif_files(vrt_file):
     """
     lists tif files named in a vrt_file
     :param vrt_file: ResourceFile for of a vrt to list associated tif(f) files
-    :return: List of string filenames read from vrt_file, empty list if not found
+    :return: List of string filenames read from vrt_file
     """
     temp_vrt_file = utils.get_file_from_irods(vrt_file)
     with open(temp_vrt_file, 'r') as opened_vrt_file:
@@ -578,7 +578,6 @@ def list_tif_files(vrt_file):
         root = ET.fromstring(vrt_string)
         file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
         return file_names_in_vrt
-    return []
 
 
 def get_vrt_files(raster_file, res_files):

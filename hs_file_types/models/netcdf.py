@@ -416,7 +416,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             nc_dataset = nc_utils.get_nc_dataset(temp_file)
             if isinstance(nc_dataset, netCDF4.Dataset):
                 msg = "NetCDF aggregation. Error when creating aggregation. Error:{}"
-                file_type_success = False
                 # extract the metadata from netcdf file
                 res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
                 # populate resource_metadata and file_type_metadata lists with extracted metadata
@@ -447,6 +446,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
                         log.info("NetCDF aggregation creation - a new file was added to the "
                                  "resource.")
+                        ft_ctx.logical_file = logical_file
 
                         # use the extracted metadata to populate resource metadata
                         for element in resource_metadata:
@@ -478,16 +478,14 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                         resource.metadata.create_element('subject', value=kw)
                             else:
                                 logical_file.metadata.create_element(k, **v)
-                        log.info("NetCDF aggregation - metadata was saved in aggregation")
 
-                        file_type_success = True
-                        ft_ctx.logical_file = logical_file
+                        log.info("NetCDF aggregation - metadata was saved in aggregation")
                     except Exception as ex:
+                        ft_ctx.remove_logical_file = True
                         msg = msg.format(str(ex))
                         log.exception(msg)
+                        raise ValidationError(msg)
 
-                if not file_type_success:
-                    raise ValidationError(msg)
                 return logical_file
             else:
                 err_msg = "Not a valid NetCDF file. NetCDF aggregation validation failed."
