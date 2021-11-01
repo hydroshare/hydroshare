@@ -751,6 +751,8 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             # Fix by making the resource undiscoverable.
             # This has the side-effect of deleting the resource from SOLR.
             res.set_discoverable(False)
+            res.extra_data['to_be_deleted'] = True
+            res.save()
             task = delete_resource_task.apply_async((shortkey, user.username))
             task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
@@ -1827,7 +1829,7 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
-        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u, redeemed=False).exclude(
             group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
@@ -1835,7 +1837,7 @@ class MyGroupsView(TemplateView):
 
         active_groups = [g for g in groups if g.gaccess.active]
         inactive_groups = [g for g in groups if not g.gaccess.active]
-        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u).exclude(
+        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u, redeemed=False).exclude(
             group_to_join__gaccess__active=False)
         return {
             'profile_user': u,
