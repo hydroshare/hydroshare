@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.db.models import F
 from hs_access_control.models import Community, GroupCommunityRequest
 import logging
@@ -66,7 +66,7 @@ class GroupView(TemplateView):
                     gcr = GroupCommunityRequest.objects.get(
                         group=group, community=community)
                     if gcr.redeemed:  # reset to unredeemed in order to approve
-                        gcr.reset(responder=user) 
+                        gcr.reset(responder=user)
                     message, worked = gcr.approve(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
@@ -122,11 +122,11 @@ class GroupView(TemplateView):
 
             # requests that were declined by others
             context['they_declined'] = GroupCommunityRequest.objects.filter(
-                group=group, redeemed=True, approved=False, when_group__lt=F('when_community')) 
+                group=group, redeemed=True, approved=False, when_group__lt=F('when_community'))
 
             # requests that were declined by us
             context['we_declined'] = GroupCommunityRequest.objects.filter(
-                group=group, redeemed=True, approved=False, when_group__gt=F('when_community')) 
+                group=group, redeemed=True, approved=False, when_group__gt=F('when_community'))
 
             return context
 
@@ -194,7 +194,7 @@ class CommunityView(TemplateView):
                 if action == 'approve':  # approve a request from a group
                     gcr = GroupCommunityRequest.objects.get(
                         community=community, group=group)
-                    if gcr.redeemed:  # make it possible to approve a formerly declined request. 
+                    if gcr.redeemed:  # make it possible to approve a formerly declined request.
                         gcr.reset(responder=user)
                     message, worked = gcr.approve(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
@@ -252,11 +252,11 @@ class CommunityView(TemplateView):
 
             # requests that were declined by us
             context['we_declined'] = GroupCommunityRequest.objects.filter(
-                community=community, redeemed=True, approved=False, when_group__lt=F('when_community')) 
+                community=community, redeemed=True, approved=False, when_group__lt=F('when_community'))
 
             # requests that were declined by others
             context['they_declined'] = GroupCommunityRequest.objects.filter(
-                community=community, redeemed=True, approved=False, when_group__gt=F('when_community')) 
+                community=community, redeemed=True, approved=False, when_group__gt=F('when_community'))
 
             # group requests to be approved
             context['approvals'] = GroupCommunityRequest.objects.filter(
