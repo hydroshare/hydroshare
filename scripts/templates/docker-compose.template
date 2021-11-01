@@ -1,79 +1,81 @@
-postgis:
-  image: hydroshare/hs_postgres:9.4.7
-  container_name: postgis
-  volumes:
-    - "/var/lib/postgresql/data"
-rabbitmq:
-  image: rabbitmq:3.8.2
-  container_name: rabbitmq
-solr:
-  image: solr:6.6
-  container_name: solr
-  volumes:
-    # hydroshare repository
-    - "HS_PATH:/hydroshare"
-    - solr_data:/var/solr
-  # ports:
-  # - "8983"
-  command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
-hydroshare:
-  build: .
-  container_name: hydroshare
-  cap_add:
-    - SYS_ADMIN
-  devices:
-    - "/dev/fuse"
-  privileged: true
-  environment:
-    POSTGIS_HOST: postgis
-    POSTGIS_PORT: 5432
-    POSTGIS_PASSWORD: postgres
-    POSTGIS_DB: postgres
-    POSTGIS_USER: postgres
-    PGPASSWORD: postgres
-    SOLR_HOST: solr
-    TMP: /hs_tmp
-  volumes:
-    # hydroshare repository
-    - "HS_PATH:/hydroshare"
-    # pycharm debugging
-    # - "/home/hydro/pycharm-debug:/pycharm-debug"
-    # log files
-    - "HS_LOG_FILES:/hydroshare/log"
-    # shared location for gunicorn.sock between containers
-    - "/hs_tmp"
-    # temp directory shared with celery workers
-    - "/shared_tmp"
-    - "/irods/hydroshare:/irods/hydroshare"
-    - "/irods/hydroshare_vault:/irods/hydroshare_vault"
-  ports:
-    - "1338:2022"
-    - "8000:8000"
-    - "15001:15001"
-  links:
-    - postgis:postgis
-    - rabbitmq:rabbitmq
-    - solr:solr
-  command: /bin/bash init-hydroshare
-defaultworker:
-  build: .
-  container_name: defaultworker
-  environment:
-    POSTGIS_HOST: postgis
-    POSTGIS_PORT: 5432
-    POSTGIS_PASSWORD: postgres
-    POSTGIS_DB: postgres
-    PGPASSWORD: postgres
-    C_FORCE_ROOT: 1
-  ports:
-    - "5555:5555"
-  volumes_from:
-    - hydroshare
-  volumes:
-    - "/var/run/docker.sock:/docker.sock"
-  links:
-    - postgis:postgis
-    - rabbitmq:rabbitmq
-  command: /bin/bash init-defaultworker
+version: '2.1'
+services:
+  postgis:
+    image: hydroshare/hs_postgres:9.4.7
+    container_name: postgis
+    volumes:
+      - "/var/lib/postgresql/data"
+  rabbitmq:
+    image: rabbitmq:3.8.2
+    container_name: rabbitmq
+  solr:
+    image: solr:6.6
+    container_name: solr
+    volumes:
+      # hydroshare repository
+      - "HS_PATH:/hydroshare"
+      - solr_data:/var/solr
+    # ports:
+    # - "8983"
+    command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+  hydroshare:
+    build: .
+    container_name: hydroshare
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - "/dev/fuse"
+    privileged: true
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
+      PGPASSWORD: postgres
+      SOLR_HOST: solr
+      TMP: /hs_tmp
+    volumes:
+      # hydroshare repository
+      - "HS_PATH:/hydroshare"
+      # pycharm debugging
+      # - "/home/hydro/pycharm-debug:/pycharm-debug"
+      # log files
+      - "HS_LOG_FILES:/hydroshare/log"
+      # shared location for gunicorn.sock between containers
+      - "/hs_tmp"
+      # temp directory shared with celery workers
+      - "/shared_tmp"
+      - "/irods/hydroshare:/irods/hydroshare"
+      - "/irods/hydroshare_vault:/irods/hydroshare_vault"
+    ports:
+      - "1338:2022"
+      - "8000:8000"
+      - "15001:15001"
+    links:
+      - postgis:postgis
+      - rabbitmq:rabbitmq
+      - solr:solr
+    command: /bin/bash init-hydroshare
+  defaultworker:
+    build: .
+    container_name: defaultworker
+    environment:
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      PGPASSWORD: postgres
+      C_FORCE_ROOT: 1
+    ports:
+      - "5555:5555"
+    volumes_from:
+      - hydroshare
+    volumes:
+      - "/var/run/docker.sock:/docker.sock"
+    links:
+      - postgis:postgis
+      - rabbitmq:rabbitmq
+    command: /bin/bash init-defaultworker
 volumes:
   solr_data:
