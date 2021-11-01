@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 class GroupView(TemplateView):
     template_name = 'hs_access_control/group.html'
 
-    def hydroshare_denied(request, gid, cid=None):
-        user = request.user
+    def hydroshare_denied(self, gid, cid=None):
+        user = self.request.user
         if not user or not user.is_authenticated:
             message = "You must be logged in to access this function."
             logger.error(message)
@@ -43,7 +43,7 @@ class GroupView(TemplateView):
             logger.error(message)
             return message
 
-    def get_context_data(request, gid, *args, **kwargs):
+    def get_context_data(self, gid, *args, **kwargs):
         context = {}
         message = ''
         if 'cid' in kwargs:
@@ -55,10 +55,10 @@ class GroupView(TemplateView):
         else:
             action = None
 
-        denied = request.hydroshare_denied(gid, cid=cid)
+        denied = self.hydroshare_denied(gid, cid=cid)
         logger.debug("denied is {}".format(denied))
         if denied == "":
-            user = User.objects.get(id=uid)
+            user = self.request.user
             group = Group.objects.get(id=gid)
             if 'action' in kwargs:
                 community = Community.objects.get(id=cid)
@@ -99,7 +99,6 @@ class GroupView(TemplateView):
             context['message'] = message
             context['user'] = user
             context['group'] = group
-            context['uid'] = uid
             context['gid'] = gid
 
             # communities joined
@@ -140,8 +139,8 @@ class GroupView(TemplateView):
 class CommunityView(TemplateView):
     template_name = 'hs_access_control/community.html'
 
-    def hydroshare_denied(request, cid, gid=None):
-        user = request.user
+    def hydroshare_denied(self, cid, gid=None):
+        user = self.request.user
         if not user or not user.is_authenticated:
             message = "You must be logged in to access this function."
             logger.error(message)
@@ -172,10 +171,9 @@ class CommunityView(TemplateView):
             logger.error(message)
             return message
 
-    def get_context_data(request, cid, *args, **kwargs):
+    def get_context_data(self, cid, *args, **kwargs):
         message = ''
         context = {}
-        uid = int(uid)
         cid = int(cid)
         if 'gid' in kwargs:
             gid = int(kwargs['gid'])
@@ -185,11 +183,11 @@ class CommunityView(TemplateView):
             action = kwargs['action']
         else:
             action = None
-        logger.debug("uid={} cid={} action={} gid={}".format(cid, action, gid))
-        denied = request.hydroshare_denied(cid, gid)
+        logger.debug("cid={} action={} gid={}".format(cid, action, gid))
+        denied = self.hydroshare_denied(cid, gid)
         logger.debug("denied is {}".format(denied))
         if denied == "":
-            user = User.objects.get(id=int(uid))
+            user = self.request.user
             community = Community.objects.get(id=int(cid))
             if action is not None:
                 group = Group.objects.get(id=int(gid))
@@ -198,7 +196,7 @@ class CommunityView(TemplateView):
                         community=community, group=group)
                     if gcr.redeemed:  # make it possible to approve a formerly declined request. 
                         gcr.reset(responder=user)
-                    message, worked = gcr.approve(responder=User.objects.get(id=int(uid)))
+                    message, worked = gcr.approve(responder=user)
                     logger.debug("message = '{}' worked='{}'".format(message, worked))
 
                 elif action == 'decline':  # decline a request from a group
@@ -239,7 +237,6 @@ class CommunityView(TemplateView):
                     message = "unknown action '{}'".format(action)
                     logger.error(message)
 
-            context['uid'] = uid
             context['cid'] = cid
             context['denied'] = denied
             context['message'] = message
@@ -261,9 +258,6 @@ class CommunityView(TemplateView):
             context['they_declined'] = GroupCommunityRequest.objects.filter(
                 community=community, redeemed=True, approved=False, when_group__gt=F('when_community')) 
 
-            # debugging
-            context['debug'] = GroupCommunityRequest.objects.all()
-
             # group requests to be approved
             context['approvals'] = GroupCommunityRequest.objects.filter(
                 community=Community.objects.get(id=int(cid)),
@@ -284,9 +278,8 @@ class CommunityView(TemplateView):
 class TestCommunity(TemplateView):
     template_name = 'hs_access_control/community_test.html'
 
-    def get_context_data(request, cid, *args, **kwargs):
+    def get_context_data(self, cid, *args, **kwargs):
         context = {}
-        context['uid'] = uid
         context['cid'] = cid
         return context
 
@@ -294,8 +287,7 @@ class TestCommunity(TemplateView):
 class TestGroup(TemplateView):
     template_name = 'hs_access_control/group_test.html'
 
-    def get_context_data(request, gid, *args, **kwargs):
+    def get_context_data(self, gid, *args, **kwargs):
         context = {}
-        context['uid'] = uid
         context['gid'] = gid
         return context
