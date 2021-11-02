@@ -48,13 +48,13 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.raster_file_name = 'small_logan.tif'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
         self.invalid_raster_file_name = 'raster_tif_invalid.tif'
-        self.invalid_raster_with_bad_coverage_name = 'invalid_raster_with_invalid_coverage_boundingbox.tif'
+        self.raster_with_coverage_crossing_dateline_name = 'raster_with_coverage_crossing_dateline.tif'
         self.invalid_raster_zip_file_name = 'bad_small_vrt.zip'
         self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
         self.raster_zip_file = 'hs_file_types/tests/{}'.format(self.raster_zip_file_name)
         self.invalid_raster_file = 'hs_file_types/tests/{}'.format(self.invalid_raster_file_name)
-        self.invalid_raster_with_bad_coverage_file = 'hs_file_types/tests/data/{}'.format(
-            self.invalid_raster_with_bad_coverage_name)
+        self.raster_with_coverage_crossing_dateline_file = 'hs_file_types/tests/data/{}'.format(
+            self.raster_with_coverage_crossing_dateline_name)
         self.invalid_raster_zip_file = 'hs_file_types/tests/{}'.format(
             self.invalid_raster_zip_file_name)
 
@@ -64,7 +64,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # a new folder should be created as part of the aggregation creation where the resource
         # files of the aggregation should live
         # location of raster file before aggregation: small_logan.tif
-        # location of raster file after aggregation: samll_logan/small_logan.tif
+        # location of raster file after aggregation: small_logan/small_logan.tif
 
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
@@ -215,6 +215,34 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
+
+    def test_create_aggregation_from_tif_file_5(self):
+        # here we are using a valid raster tif file that has spatial coverage longitude which crosses dateline
+
+        self.create_composite_resource()
+        self.add_file_to_resource(file_to_add=self.raster_with_coverage_crossing_dateline_file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
+
+        # set the tif file to GeoRasterLogicalFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
+        self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
+        self.assertEqual(logical_file.extra_data['vrt_created'], "True")
+        # there should not be any file level keywords at this point
+        self.assertEqual(logical_file.metadata.keywords, [])
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -464,17 +492,6 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self._test_invalid_file()
         self.assertTrue(self.composite_resource.files.first().file_name.endswith('.zip'))
-        self.composite_resource.delete()
-
-    def test_set_file_type_to_geo_raster_invalid_file_4(self):
-        # here we are using an invalid raster file that has spacial coverage with invalid bounding box for setting it
-        # to Geo Raster file type - should fail
-
-        self.create_composite_resource()
-        self.add_file_to_resource(file_to_add=self.invalid_raster_with_bad_coverage_file)
-
-        self._test_invalid_file()
-
         self.composite_resource.delete()
 
     def test_metadata_CRUD(self):
