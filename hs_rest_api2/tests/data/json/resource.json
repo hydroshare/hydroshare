@@ -1,26 +1,29 @@
 {
-	"type": "CompositeResource",
-	"url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598",
-	"identifier": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598",
-	"title": "triceratops",
-	"language": "eng",
-	"subjects": [],
-	"creators": [{
-		"name": "some_last_name, some_first_name",
-		"email": "test_user@email.com",
-		"description": "/user/1/",
-		"identifiers": {}
-	}],
-	"contributors": [],
-	"sources": [],
-	"relations": [],
-	"additional_metadata": [],
-	"rights": {
-		"statement": "This resource is shared under the Creative Commons Attribution CC BY.",
-		"url": "http://creativecommons.org/licenses/by/4.0/"
-	},
-	"created": "2021-10-28T22:19:26.789219+00:00",
-	"modified": "2021-10-28T22:19:26.794613+00:00",
-	"awards": [],
-	"citation": "some_last_name, s. (2021). triceratops, HydroShare, http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598"
+  "type": "CompositeResource",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598",
+  "identifier": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598",
+  "title": "triceratops",
+  "language": "eng",
+  "subjects": [],
+  "creators": [
+    {
+      "name": "some_last_name, some_first_name",
+      "organization": "RENCI",
+      "email": "test_user@email.com",
+      "description": "/user/1/",
+      "identifiers": {}
+    }
+  ],
+  "contributors": [],
+  "sources": [],
+  "relations": [],
+  "additional_metadata": [],
+  "rights": {
+    "statement": "This resource is shared under the Creative Commons Attribution CC BY.",
+    "url": "http://creativecommons.org/licenses/by/4.0/"
+  },
+  "created": "2021-10-28T22:15:16.427605+00:00",
+  "modified": "2021-10-28T22:15:16.440249+00:00",
+  "awards": [],
+  "citation": "some_last_name, s. (2021). triceratops, HydroShare, http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598"
 }

@@ -2,11 +2,13 @@ import os
 import json
 
 from django.core.urlresolvers import reverse
+from hsmodels.schemas import ResourceMetadata
 from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.hydroshare import current_site_url
 from hs_core.tests.api.rest.base import HSRESTTestCase
+from hs_rest_api2.schemas import ResourceMetadataIn
 
 
 def normalize_metadata(metadata_str, short_id):
@@ -37,3 +39,27 @@ class TestFileBasedJSON(HSRESTTestCase):
         expected['modified'] = response_json['modified']
         expected['created'] = response_json['created']
         self.assertEqual(response_json, expected)
+
+    def test_resource_metadata_update(self):
+        # Create resource
+        res = hydroshare.create_resource(resource_type='CompositeResource',
+                                           owner=self.user,
+                                           title='triceratops',
+                                           metadata=[], )
+
+        # Verify resource exists
+        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        with open(os.path.join(self.base_dir, "full_resource.json"), "r") as f:
+            full_resource_json = json.loads(normalize_metadata(f.read(), res.short_id))
+        full_resource_json_in = ResourceMetadataIn(**full_resource_json)
+        self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
+                        data=json.dumps(full_resource_json_in.json(exclude_defaults=True)))
+
+        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+        full_resource_json['modified'] = response_json['modified']
+        full_resource_json['created'] = response_json['created']
+        self.assertEqual(response_json, full_resource_json)
