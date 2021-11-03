@@ -438,6 +438,8 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     if ext == '.tif' or ext == '.tiff':
         res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
                                              sub_folders=False)
+
+        uploaded_vrt = None
         if resource.resource_type == "RasterResource":
             # check if there is already a vrt file in that folder
             vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
@@ -447,6 +449,7 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
                 if len(vrt_files) > 1:
                     error_info.append("More than one vrt file was found.")
                     return validation_results
+                uploaded_vrt = vrt_files[0]
             elif len(tif_files) != 1:
                 # if there are more than one tif file, there needs to be one vrt file
                 error_info.append("A vrt file is missing.")
@@ -456,6 +459,10 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
         if len(vrt_files_for_raster) > 1:
             error_info.append("The raster {} is listed by more than one vrt file {}".format(raster_file,
                                                                                             vrt_files_for_raster))
+            return validation_results
+
+        if uploaded_vrt is not None and not vrt_files_for_raster:
+            error_info.append("The raster {} is not listed in vrt file {}".format(raster_file, uploaded_vrt))
             return validation_results
 
         if len(vrt_files_for_raster) == 1:
