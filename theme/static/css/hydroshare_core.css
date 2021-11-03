@@ -1509,21 +1509,27 @@ body > .main-container {
     margin: 3px;
     border-radius: 3px;
 }
-.citation-label {
-    float:left;
-    font-weight: bold;
-}
 
-#citation-text {
-	display: inline-block;
-	width: calc(100% - 65px);
-	min-height: 30px;
+#citation-text-wrapper {
+  width: 100%;
 	background: #EEE;
 	border: 1px solid #CCC;
-	border-radius: 0;
-	padding: 4px;
 	cursor: default;
 	line-height: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#citation-text-wrapper > .flex {
+  align-items: center;
+  padding: 8px;
+}
+
+#citation-text-wrapper > button.clipboard-copy {
+  align-self: flex-start;
+  border-top: 0;
+  border-right: 0;
+  border-bottom-left-radius: 4px;
 }
 
 .clipboard-copy {
