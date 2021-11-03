@@ -3120,11 +3120,21 @@ span.you-flag {
 }
 
 #grid-content-types,
-#grid-sharing-and-access,
-#grid-resource-types {
+#grid-resource-types,
+#grid-sharing-and-access {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   margin-bottom: 10px;
+}
+
+@media (min-width: 993px) {
+  #grid-sharing-and-access {
+    grid-template-columns: auto auto;
+  }
+}
+
+#grid-sharing-and-access > div {
+  flex-basis: 180px;
 }
 
 #grid-content-types > div {
