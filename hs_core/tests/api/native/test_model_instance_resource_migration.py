@@ -627,6 +627,117 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.files.count(), 0)
         self.assertEqual(mi_aggr.folder, 'mi')
 
+    def test_delete_external_linked_mp_aggr(self):
+        """
+        Here we are testing that when the mp aggregation which is linked to a mi aggregation where the
+        mi and mp aggregation are part of different resource, is deleted the mi aggregation metadata is set to dirty
+        (metadata set to dirty will generate the mi xml file on bag download)
+        """
+        # create a mi resource
+        mi_res = self._create_mi_resource()
+        self.assertEqual(ModelInstanceResource.objects.count(), 1)
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        upload_folder = ''
+        file_path = 'hs_core/tests/data/cea.tif'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        # check mp resource has 2 files
+        self.assertEqual(mp_res.files.count(), 1)
+        # no files in mi resource
+        self.assertEqual(mi_res.files.count(), 0)
+
+        # make the mi resource published
+        mi_res.raccess.published = True
+        mi_res.raccess.save()
+
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        mi_res.metadata.create_element('modeloutput', includes_output=True)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertNotEqual(mi_res.metadata.model_output, None)
+
+        # run  prepare migration command for preparing mi resource for migration
+        call_command(self.prepare_mi_migration_command)
+        # run migration command to migrate mp resource
+        call_command(self.mp_migration_command)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, None)
+
+        # run  migration command to migrate mi resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(ModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        cmp_res = CompositeResource.objects.get(short_id=mi_res.short_id)
+        # check that the composite resource is published
+        self.assertTrue(cmp_res.raccess.published)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertFalse(mi_aggr.metadata.is_dirty)
+        # test deleting the linked mp aggregation sets the metadata for mi aggregation to dirty
+        mp_aggr.delete()
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertTrue(mi_aggr.metadata.is_dirty)
+
+    def test_delete_external_linked_mp_aggr_resource(self):
+        """
+        Here we are testing that when the resource having the mp aggregation which is linked to a mi aggregation
+        where the mi and mp aggregation are part of different resource, is deleted the mi aggregation metadata
+        is set to dirty (metadata set to dirty will generate the mi xml file on bag download)
+        """
+        # create a mi resource
+        mi_res = self._create_mi_resource()
+        self.assertEqual(ModelInstanceResource.objects.count(), 1)
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        upload_folder = ''
+        file_path = 'hs_core/tests/data/cea.tif'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        # check mp resource has 2 files
+        self.assertEqual(mp_res.files.count(), 1)
+        # no files in mi resource
+        self.assertEqual(mi_res.files.count(), 0)
+
+        # make the mi resource published
+        mi_res.raccess.published = True
+        mi_res.raccess.save()
+
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        mi_res.metadata.create_element('modeloutput', includes_output=True)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertNotEqual(mi_res.metadata.model_output, None)
+
+        # run  prepare migration command for preparing mi resource for migration
+        call_command(self.prepare_mi_migration_command)
+        # run migration command to migrate mp resource
+        call_command(self.mp_migration_command)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, None)
+
+        # run  migration command to migrate mi resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(ModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        cmp_res = CompositeResource.objects.get(short_id=mi_res.short_id)
+        # check that the composite resource is published
+        self.assertTrue(cmp_res.raccess.published)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertFalse(mi_aggr.metadata.is_dirty)
+        # test deleting the linked composite resource (containing the mp aggregation) sets the metadata
+        # for mi aggregation to dirty
+        mp_res.delete()
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertTrue(mi_aggr.metadata.is_dirty)
+
     def _create_mi_resource(self, add_keywords=False):
         res = hydroshare.create_resource("ModelInstanceResource", self.user,
                                          "Testing migrating to composite resource")
