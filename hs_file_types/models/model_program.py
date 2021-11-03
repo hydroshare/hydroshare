@@ -500,3 +500,9 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
             mi_meta.save()
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
+        # regenerate xml files for all model instance aggregations related to this model program aggregation
+        for mi_meta in self.mi_metadata_objects.all():
+            mi_meta.logical_file.create_aggregation_xml_documents(create_map_xml=create_map_xml)

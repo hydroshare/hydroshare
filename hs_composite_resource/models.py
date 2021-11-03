@@ -349,11 +349,17 @@ class CompositeResource(BaseResource):
 
         # update any aggregations under the orig_path
         for lf in self.logical_files:
+            # update any folder based aggregation under the orig path
             if hasattr(lf, 'folder'):
                 if lf.folder is not None and lf.folder.startswith(orig_path):
                     lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
                     lf.save()
                     lf.create_aggregation_xml_documents()
+                    continue
+
+            # update any non-folder based aggregation under the new path
+            if lf.aggregation_name.startswith(new_path):
+                lf.create_aggregation_xml_documents()
 
         # need to recreate xml doc for any parent aggregation that may exist relative to path *new_path*
         if '/' in new_path:
