@@ -495,7 +495,8 @@ class GroupCommunityRequest(models.Model):
         # delete request from provenance chain
         try:
             request = GroupCommunityRequest.get_request(community=community, group=group)
-            request.delete()
+            if request is not None:
+                request.delete()
         except cls.DoesNotExist:
             pass
 
@@ -505,7 +506,7 @@ class GroupCommunityRequest(models.Model):
                 .format(group.name, community.name)
             return message, True
 
-        requester.uaccess_unshare_community_with_group(community, group)
+        requester.uaccess.unshare_community_with_group(community, group)
         message = "Group '{}' removed from community '{}'."\
             .format(group.name, community.name)
         return message, True
