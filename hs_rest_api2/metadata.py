@@ -13,7 +13,8 @@ from hs_core.views import ACTION_TO_AUTHORIZE
 from hs_core.views.utils import authorize
 from hs_file_types.utils import ingest_logical_file_metadata
 from hs_rest_api2 import serializers
-from hs_rest_api2.schemas import ResourceMetadataIn
+
+from hsmodels.schemas.resource import ResourceMetadataIn
 
 
 def load_metadata(istorage, file_with_path):
@@ -33,11 +34,12 @@ def ingest_resource_metadata(resource, incoming_metadata):
     from hsmodels.schemas.resource import ResourceMetadata
     from hsmodels.schemas import rdf_graph
     r_md = resource_metadata(resource).dict()
+    #incoming_metadata = json.loads(incoming_metadata)
     incoming_r_md = ResourceMetadataIn(**incoming_metadata)
     # merge existing metadata with incoming, incoming overrides existing
     merged_metadata = {**r_md, **incoming_r_md.dict(exclude_defaults=True)}
     res_metadata = ResourceMetadata(**merged_metadata)
-    rdf_graph(res_metadata)
+
     graph = rdf_graph(res_metadata)
     try:
         with transaction.atomic():
@@ -68,8 +70,8 @@ def resource_metadata_json(request, pk):
 
     resource, _, _ = authorize(request, pk,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    metadata = json.loads(request.body.decode('utf-8'))
-    ingest_resource_metadata(resource, metadata)
+    md = json.loads(request.data)
+    ingest_resource_metadata(resource, md)
     return HttpResponse(status=200)
 
 

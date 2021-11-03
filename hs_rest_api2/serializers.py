@@ -4,7 +4,7 @@ from rest_framework.serializers import Serializer
 from hsmodels.schemas import ResourceMetadata, GeographicFeatureMetadata, GeographicRasterMetadata, \
     MultidimensionalMetadata, SingleFileMetadata, FileSetMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata
 
-from hs_rest_api2.schemas import ResourceMetadataIn
+from hsmodels.schemas.resource import ResourceMetadataIn
 
 
 class ResourceMetadataSerializer(Serializer):
