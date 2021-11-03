@@ -34,7 +34,6 @@ def ingest_resource_metadata(resource, incoming_metadata):
     from hsmodels.schemas.resource import ResourceMetadata
     from hsmodels.schemas import rdf_graph
     r_md = resource_metadata(resource).dict()
-    #incoming_metadata = json.loads(incoming_metadata)
     incoming_r_md = ResourceMetadataIn(**incoming_metadata)
     # merge existing metadata with incoming, incoming overrides existing
     merged_metadata = {**r_md, **incoming_r_md.dict(exclude_defaults=True)}
@@ -79,8 +78,6 @@ def get_aggregation(resource, file_path):
     file_storage_path = os.path.join(resource.file_path, file_path)
     folder, file_name = ResourceFile.resource_path_is_acceptable(resource, file_storage_path, test_exists=True)
     res_file = ResourceFile.get(resource, file_name, folder)
-    # assert res_file.logical_file
-
     return res_file.logical_file
 
 
@@ -90,7 +87,7 @@ def aggregation_metadata(resource, file_path):
     return load_metadata(resource.get_irods_storage(), agg.metadata_file_path)
 
 
-def aggregation_metadata_json(resource, file_path):
+def aggregation_metadata_json_loads(resource, file_path):
     return json.loads(aggregation_metadata(resource, file_path).json())
 
 
@@ -98,7 +95,7 @@ def aggregation_metadata_json(request, pk, aggregation_path):
     if request.method == 'GET':
         resource, _, _ = authorize(request, pk,
                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        md_json = aggregation_metadata_json(resource, aggregation_path)
+        md_json = aggregation_metadata_json_loads(resource, aggregation_path)
         return JsonResponse(md_json)
 
     resource, _, _ = authorize(request, pk,

@@ -74,4 +74,3 @@ class NestedSchemaGenerator(OpenAPISchemaGenerator):
             for d in schema['definitions']:
                 swagger.definitions.update({d: schema['definitions'][d]})
         return swagger
-
