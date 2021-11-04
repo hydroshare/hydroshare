@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from .metadata import resource_metadata_json, geographic_feature_metadata_json, geographic_raster_metadata_json, \
     time_series_metadata_json, file_set_metadata_json, multidimensional_metadata_json, \
@@ -7,6 +7,11 @@ from .metadata import resource_metadata_json, geographic_feature_metadata_json, 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+
+
+hsapi2_urlpatterns = [
+    url('^hsapi2/', include('hs_rest_api2.urls', namespace='hsapi2')),
+]
 
 schema_view_yasg = get_schema_view(
    openapi.Info(
