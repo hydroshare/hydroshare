@@ -51,6 +51,7 @@ def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggreg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -95,6 +96,7 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
     assert mi_aggr.metadata.executed_by is None
     # check that mi_aggr metadata is set to dirty
     assert mi_aggr.metadata.is_dirty is True
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -139,6 +141,7 @@ def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_agg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr metadata is set to dirty
     assert mi_aggr.metadata.is_dirty is True
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -184,12 +187,14 @@ def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_agg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr metadata is set to dirty
     assert mi_aggr.metadata.is_dirty is True
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
 def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
     """Test that we can store all metadata items for a model instance aggregation"""
 
+    res, _ = composite_resource_with_mi_aggregation
     mi_aggr = ModelInstanceLogicalFile.objects.first()
 
     # test extra metadata
@@ -237,6 +242,7 @@ def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
     mi_aggr.metadata.save()
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     assert mi_aggr.metadata.metadata_json
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -261,6 +267,7 @@ def test_auto_netcdf_aggregation_creation(composite_resource_with_mi_aggregation
     assert nc_res_file.has_logical_file
     # the netcdf aggregation should contain 2 files - nc and the txt files
     assert NetCDFLogicalFile.objects.first().files.count() == 2
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -289,6 +296,7 @@ def test_auto_raster_aggregation_creation(composite_resource_with_mi_aggregation
 
     # the raster aggregation should contain 2 files (tif and vrt)
     assert GeoRasterLogicalFile.objects.first().files.count() == 2
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -320,6 +328,7 @@ def test_auto_geofeature_aggregation_creation(composite_resource_with_mi_aggrega
 
     # the geo feature aggregation should contain 4 files that we uploaded
     assert GeoFeatureLogicalFile.objects.first().files.count() == 4
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -345,6 +354,7 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # the timeseries aggregation should contain 1 file
     assert TimeSeriesLogicalFile.objects.first().files.count() == 1
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -372,6 +382,7 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # ref timeseries aggregation should contain 1 file
     assert RefTimeseriesLogicalFile.objects.first().files.count() == 1
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -391,6 +402,7 @@ def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_a
         FileSetLogicalFile.set_file_type(resource, user, folder_path=fs_folder_path)
 
     assert FileSetLogicalFile.objects.count() == 0
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -412,6 +424,7 @@ def test_canot_create_mi_aggregation_within_mi_aggregation(composite_resource_wi
         ModelInstanceLogicalFile.set_file_type(resource, user, folder_path=mi_sub_folder_path)
 
     assert ModelInstanceLogicalFile.objects.count() == 1
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -452,6 +465,7 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
     tgt_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
 
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -502,6 +516,7 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.50594036845686
     assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.8639080745171
     assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -545,6 +560,7 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     # check model instance spatial coverage has not been updated
     assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
     assert mi_aggr.metadata.spatial_coverage.value['north'] == value_dict['north']
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -577,6 +593,8 @@ def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
                nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -613,6 +631,8 @@ def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
                nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -655,6 +675,8 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
                nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    assert not resource.dangling_aggregations_exist()
 
 
 def _add_files_to_resource(resource, files_to_add, upload_folder=None):

@@ -598,11 +598,15 @@ def _validate_json_data(json_data):
         # validate variableName
         _check_for_empty_string(series['variable']['variableName'], 'variableName')
 
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
         url = Request(request_info['url'])
         if url not in urls:
             urls.append(url)
             try:
-                urlopen(url)
+                urlopen(url, context=ctx)
             except URLError:
                 raise Exception(err_msg.format("Invalid web service URL found"))
 
@@ -615,9 +619,6 @@ def _validate_json_data(json_data):
             if not url:
                 raise ValidationError("methodLink has a value of empty string")
             if url.lower() != 'unknown':
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
                 url = Request(url)
                 if url not in urls:
                     urls.append(url)

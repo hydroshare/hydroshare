@@ -368,7 +368,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
     // Wait for all asynchronous calls to finish
     $.when.apply($, calls)
       .done(function () {
-          $("html").css("cursor", "initial"); // Restore default cursor
+          window.location.href = "/my-resources/";
       })
       .fail(function () {
           customAlert("Error", 'Failed to delete resource(s).', "error", 10000);

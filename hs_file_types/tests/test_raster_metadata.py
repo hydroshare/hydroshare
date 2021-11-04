@@ -86,7 +86,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
         # there should not be any file level keywords at this point
         self.assertEqual(logical_file.metadata.keywords, [])
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_tif_file_2(self):
@@ -119,7 +119,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
         # there should not be any file level keywords at this point
         self.assertEqual(logical_file.metadata.keywords, [])
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_tif_file_3(self):
@@ -169,7 +169,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 other_res_file = res_file
                 break
         self.assertEqual(other_res_file.file_folder, new_folder)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_tif_file_4(self):
@@ -208,7 +208,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             self.assertEqual(res_file.file_folder, expected_file_folder)
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
         self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_zip_file_1(self):
@@ -294,6 +294,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         for res_file in self.composite_resource.files.all():
             self.assertEqual(res_file.has_logical_file, True)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_validation(self):
@@ -321,7 +322,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation does not exist
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_multiple_tif_without_vrt(self):
@@ -352,6 +353,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             else:
                 self.assertEqual(res_file.has_logical_file, False)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_with_missing_tif_with_vrt(self):
@@ -376,7 +378,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_with_extra_tif_with_vrt(self):
@@ -402,7 +404,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, lone_tif_file.id)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 2)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_set_file_type_to_geo_raster_invalid_file_1(self):
@@ -442,6 +444,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             GeoRasterLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_set_file_type_to_geo_raster_invalid_file_3(self):
@@ -452,6 +455,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.add_file_to_resource(file_to_add=self.invalid_raster_zip_file)
 
         self._test_invalid_file()
+
         self.composite_resource.delete()
 
     def test_metadata_CRUD(self):
@@ -636,7 +640,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file.metadata.extra_metadata = {}
         logical_file.metadata.save()
         self.assertEqual(logical_file.metadata.extra_metadata, {})
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_metadata_on_file_delete(self):
@@ -650,6 +654,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test with deleting of 'vrt' file
         self._test_file_metadata_on_file_delete(ext='.vrt')
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_metadata_on_logical_file_delete(self):
@@ -691,7 +696,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_metadata_on_resource_delete(self):
@@ -717,6 +722,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(OriginalCoverage.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
         # delete resource
         hydroshare.delete_resource(self.composite_resource.short_id)
@@ -754,7 +760,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # delete the logical file using the custom delete function - logical_delete()
         logical_file.logical_delete(self.user)
         self.assertEqual(self.composite_resource.files.all().count(), 0)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
@@ -786,7 +792,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
         # check the files associated with the aggregation not deleted
         self.assertEqual(self.composite_resource.files.all().count(), 2)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_content_file_delete(self):
@@ -824,6 +830,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_file_move(self):
@@ -849,6 +856,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_rename(self):
@@ -905,7 +913,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         expected_map_file_path = '{0}{1}'.format(vrt_file_path, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_parent_folder_rename(self):
@@ -979,7 +987,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         expected_map_file_path = '{0}{1}'.format(vrt_file_path, RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_move(self):
@@ -1026,7 +1034,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation xml file paths
         self.assertNotEqual(logical_file.metadata_short_file_path, metadata_short_file_path)
         self.assertNotEqual(logical_file.map_short_file_path, map_short_file_path)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _test_file_metadata_on_file_delete(self, ext):
@@ -1100,6 +1108,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def _test_invalid_file(self):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -1118,6 +1127,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # check that the resource file is not associated with generic logical file
         self.assertEqual(res_file.has_logical_file, False)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
 
     def _test_aggregation_from_zip_file(self, aggr_folder_path):
         # test the resource now has 4 files (one vrt file and 2 tif files) and the original zip file
@@ -1194,6 +1204,8 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(band_info.maximumValue, '2880.007080078125')
         self.assertEqual(band_info.minimumValue, '2274.958984375')
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+
     def test_main_file(self):
         self.create_composite_resource()
         self.add_file_to_resource(file_to_add=self.raster_file)
@@ -1205,3 +1217,4 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(".vrt", GeoRasterLogicalFile.objects.first().get_main_file_type())
         self.assertEqual("small_logan.vrt",
                          GeoRasterLogicalFile.objects.first().get_main_file.file_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())

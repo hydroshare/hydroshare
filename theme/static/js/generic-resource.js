@@ -370,6 +370,8 @@ $(document).ready(function () {
                 $('#delete-resource-dialog').modal('hide');
                 notificationsApp.registerTask(task);
                 notificationsApp.show();
+                // redirect to my resources page after async task is started to address issue #4321
+                window.location.href = "/my-resources/";
             },
             error: function (xhr, errmsg, err) {
                 display_error_message('Failed to delete the resource', xhr.responseText);

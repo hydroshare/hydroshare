@@ -121,7 +121,7 @@ class RDF_Term_MixIn(object):
         for field in [field for field in self._meta.fields if field.name not in extra_ignored_fields]:
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value and field_value != 'None':
+            if field_value is not None and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
                     field_value = URIRef(encode_resource_url(field_value))
@@ -160,13 +160,14 @@ class RDF_Term_MixIn(object):
             metadata_nodes = [subject]
         else:
             metadata_nodes = graph.objects(subject=subject, predicate=term)
+
         for metadata_node in metadata_nodes:
             value_dict = {}
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
                 field_term = cls.get_field_term(field.name)
-                val = graph.value(metadata_node, field_term)
+                val = graph.value(subject=metadata_node, predicate=field_term)
                 if val is not None:
                     if isinstance(val, URIRef):
                         value_dict[field.name] = decode_resource_url(str(val.toPython()))
