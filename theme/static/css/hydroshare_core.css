@@ -3097,6 +3097,7 @@ span.you-flag {
 	overflow: scroll;
     overflow-x: hidden;
 }
+
 #pub-agreement-frame {
 	border: 0 none;
 	height: 1500px;
@@ -3120,9 +3121,7 @@ span.you-flag {
 /*  Home page revamp */
 #home-page-carousel {
 	height: 400px;
-    margin-bottom: 60px;
-	margin-top: -20px;
-    overflow: hidden;
+  overflow: hidden;
 	border: 0;
 }
 
@@ -3162,19 +3161,19 @@ span.you-flag {
 	margin: 15px 0;
 }
 
-.checkmark {
+/* .checkmark {
 	color: #81D685;
 	font-size: 18px;
 	margin-left: 5px;
 	margin-right: 20px;
-}
+} */
 
-.img-devices {
+/* .img-devices {
 	max-height: 100px;
 	margin: auto;
-}
+} */
 
-.screen-sizes {
+/* .screen-sizes {
     background: url(../img/graypattern.jpg);
 	background-color: #BBB;
 	padding: 15px 0;
@@ -3186,7 +3185,7 @@ span.you-flag {
     font-family: 'webfont_light', Helvetica, Arial, sans-serif;
     color: #777;
     text-shadow: 0 1px rgba(255, 255, 255, 0.6);
-}
+} */
 
 .btn-signup {
     margin: 20px;
@@ -3321,77 +3320,110 @@ span.you-flag {
   to { transform: translateY(0); }
 }
 
+/* =================================== */
 .steps-container {
-    text-align: center;
-    margin-top: -40px;
-}
-
-.step-wrapper {
-    padding: 20px;
-    margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
 }
 
 .step-item {
-	border-top: 1px solid #D6D6D6;
-    padding: 10px;
-	color: #4BB5C1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
-.step-item:hover {
-	background: #FFF;
-}
-
-.step-item h4 {
-	color: #555 !important;
+.step-item hr {
+  margin: 0;
+  width: 100%;
+  border-top: 1px solid #D6D6D6;
+  margin-bottom: -15px;
 }
 
 .step-number {
-    border: 1px solid #A9A9A9;
-    width: 30px;
-    height: 30px;
-    background: #FFF;
-    border-radius: 50%;
-    padding-top: 4px;
-    color: #000;
-    margin: auto;
-    margin-top: -25px;
+  border: 1px solid #A9A9A9;
+  width: 30px;
+  height: 30px;
+  background: #FFF;
+  border-radius: 50%;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-description {
+  text-align: center;
+}
+
+.img-step {
+  max-width: 100px;
+  margin-bottom: 10px;
+}
+/* =================================== */
+.features-container {
+  margin: 40px 0;
+}
+
+.features-container .feature {
+  display: flex;
+  align-items: center;
+}
+
+.features-container .feature:not(:last-child) {
+  margin-bottom: 40px;
+}
+
+.features-container .feature .feature-icon {
+  min-width: 90px;
+  text-align: center;
+  margin-right: 30px;
+  color: #4bb5c1;
+}
+/* =================================== */
+.faetured-organizations, .faetured-institutions {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 40px 0;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.faetured-organizations > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.faetured-organizations img {
+  max-height: 90px;
+  max-width: 390px;
+}
+
+.faetured-institutions img {
+  max-height: 90px;
+  max-width: 200px;
+}
+/* =================================== */
+.container-grey {
+  background-color: #f7f6f6;
+}
+
+section.container-grey,
+section.container {
+  padding: 40px 0;
+  color: #666;
 }
 
 .home-page-block {
     margin-bottom: 30px;
 }
 
-div.description.active {
-    display: block;
-}
-
-.step-description {
-    text-align: center;
-    color: #666;
-    line-height:20px;
-}
-
-.description-container {
-    height: 150px;
-}
-
-.table-display {
-    display: table;
-    width: 100%
-}
-
-.table-cell-display {
-    display: table-cell;
-    vertical-align: middle;
-    text-align: center;
-}
-
 .home-page-block-title {
     color: #4BB5C1;
-}
-
-.img-step {
-    margin: auto
+    text-align: center;
 }
 
 .availability-description {
