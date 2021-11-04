@@ -215,6 +215,11 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         self.folder = new_folder + self.folder[len(old_folder):]
         self.save()
 
+    def set_metadata_dirty(self):
+        super(FileSetLogicalFile, self).set_metadata_dirty()
+        for child_aggr in self.get_children():
+            child_aggr.set_metadata_dirty()
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
