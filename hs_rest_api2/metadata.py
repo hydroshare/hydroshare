@@ -4,6 +4,8 @@ import os
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse
 from drf_yasg.utils import swagger_auto_schema
+from pydantic import ValidationError as PydanticValidationError
+from rest_framework.exceptions import ValidationError
 
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from rest_framework.decorators import api_view
@@ -15,6 +17,12 @@ from hs_file_types.utils import ingest_logical_file_metadata
 from hs_rest_api2 import serializers
 
 from hsmodels.schemas.resource import ResourceMetadataIn
+
+
+class ResourceMetadataInNoRequired(ResourceMetadataIn):
+
+    class Config:
+        extra = 'forbid'
 
 
 def load_metadata(istorage, file_with_path):
@@ -34,7 +42,10 @@ def ingest_resource_metadata(resource, incoming_metadata):
     from hsmodels.schemas.resource import ResourceMetadata
     from hsmodels.schemas import rdf_graph
     r_md = resource_metadata(resource).dict()
-    incoming_r_md = ResourceMetadataIn(**incoming_metadata)
+    try:
+        incoming_r_md = ResourceMetadataInNoRequired(**incoming_metadata)
+    except PydanticValidationError as e:
+        raise ValidationError(e)
     # merge existing metadata with incoming, incoming overrides existing
     merged_metadata = {**r_md, **incoming_r_md.dict(exclude_defaults=True)}
     res_metadata = ResourceMetadata(**merged_metadata)
@@ -69,7 +80,7 @@ def resource_metadata_json(request, pk):
 
     resource, _, _ = authorize(request, pk,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    md = json.loads(request.data)
+    md = json.loads(request.body)
     ingest_resource_metadata(resource, md)
     return HttpResponse(status=200)
 

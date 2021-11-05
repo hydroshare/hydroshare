@@ -72,3 +72,19 @@ class TestFileBasedJSON(HSRESTTestCase):
         full_resource_json['modified'] = response_json['modified']
         full_resource_json['created'] = response_json['created']
         self.assertEqual(sorting(response_json), sorting(full_resource_json))
+
+    def test_resource_metadata_update_unknown_field(self):
+        # Create resource
+        res = hydroshare.create_resource(resource_type='CompositeResource',
+                                           owner=self.user,
+                                           title='triceratops',
+                                           metadata=[], )
+
+        # Verify resource exists
+        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        in_resource_json = json.dumps({'bad_title': 'this better not work!'})
+        response = self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
+                                   data=in_resource_json, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
