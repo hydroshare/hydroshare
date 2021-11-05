@@ -40,7 +40,7 @@ def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods
     assert not res_file.file_folder
     assert aggr_cls.objects.count() == 1
     mod_aggregation = aggr_cls.objects.first()
-    assert not mod_aggregation.metadata.is_dirty
+    assert mod_aggregation.metadata.is_dirty
     assert mod_aggregation.files.count() == 1
     assert mod_aggregation.dataset_name == 'generic_file'
     if isinstance(mod_aggregation, ModelProgramLogicalFile):
@@ -534,7 +534,7 @@ def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_irods)
     assert res_file.file_folder == new_folder
     assert aggr_cls.objects.count() == 1
     mi_mp_aggr = aggr_cls.objects.first()
-    assert not mi_mp_aggr.metadata.is_dirty
+    assert mi_mp_aggr.metadata.is_dirty
     # delete resource file
     hydroshare.delete_resource_file(res.short_id, res_file.id, user)
     assert res.files.count() == 0
