@@ -451,15 +451,10 @@ function getResourceMetadata() {
 }
 
 function get_file_type_metadata_ajax_submit(url, logical_type) {
-    let data_type;
-    if(logical_type === 'ModelProgramLogicalFile' || logical_type === 'ModelInstanceLogicalFile')
-        data_type = 'html';
-    else
-        data_type = 'json';
     return $.ajax({
         type: "POST",
         url: url,
-        dataType: data_type,
+        dataType: 'json',
         async: false,
         success: function (result) {
         },
