@@ -35,8 +35,8 @@ aggregation_type_to_class = {
     'RefTimeseries': ReferencedTimeSeriesMetadata,
     'FileSet': FileSetMetadata,
     'Generic': SingleFileMetadata,
-    'Model Instance': ModelInstanceMetadata,
-    'Model Program': ModelProgramMetadata
+    'ModelInstance': ModelInstanceMetadata,
+    'ModelProgram': ModelProgramMetadata
 }
 
 
