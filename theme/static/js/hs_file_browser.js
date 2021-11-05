@@ -1004,6 +1004,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                 editor.disable();
                 // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
                 $(".property-selector").removeAttr("style");
+                $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             }
             else if (resource_mode === 'edit') {
                 option_val = {
@@ -1016,26 +1017,33 @@ function showFileTypeMetadata(file_type_time_series, url){
                       "allowInput": true
                     }
                 };
-                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime-local";
-                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['options'] = option_val;
-                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
-                json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['options'] = option_val;
+                if ('PeriodCoverage' in json_response.metadata.json_schema['definitions']) {
+                    json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime-local";
+                    json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['options'] = option_val;
+                    json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime-local";
+                    json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['options'] = option_val;
+                }
+                if ('BoxCoverage' in json_response.metadata.json_schema['definitions']) {
+                    json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['northlimit']['options'] = get_coord_je_option('northlimit');
+                    json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['southlimit']['options'] = get_coord_je_option('southlimit');
+                    json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['eastlimit']['options'] = get_coord_je_option('eastlimit');
+                    json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['westlimit']['options'] = get_coord_je_option('westlimit');
+                }
+                if ('PointCoverage' in json_response.metadata.json_schema['definitions']) {
+                    json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['north']['options'] = get_coord_je_option('north');
+                    json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['east']['options'] = get_coord_je_option('east');
+                }
+                if ('BoxSpatialReference' in json_response.metadata.json_schema['definitions']) {
+                    json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['northlimit']['options'] = get_coord_je_option('northlimit');
+                    json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['southlimit']['options'] = get_coord_je_option('southlimit');
+                    json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['eastlimit']['options'] = get_coord_je_option('eastlimit');
+                    json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['westlimit']['options'] = get_coord_je_option('westlimit');
+                }
+                if ('PointSpatialReference' in json_response.metadata.json_schema['definitions']) {
+                    json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['north']['options'] = get_coord_je_option('north');
+                    json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['east']['options'] = get_coord_je_option('east');
+                }
 
-                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['northlimit']['options'] = get_coord_je_option('northlimit');
-                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['southlimit']['options'] = get_coord_je_option('southlimit');
-                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['eastlimit']['options'] = get_coord_je_option('eastlimit');
-                json_response.metadata.json_schema['definitions']['BoxCoverage']['properties']['westlimit']['options'] = get_coord_je_option('westlimit');
-
-                json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['north']['options'] = get_coord_je_option('north');
-                json_response.metadata.json_schema['definitions']['PointCoverage']['properties']['east']['options'] = get_coord_je_option('east');
-
-                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['northlimit']['options'] = get_coord_je_option('northlimit');
-                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['southlimit']['options'] = get_coord_je_option('southlimit');
-                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['eastlimit']['options'] = get_coord_je_option('eastlimit');
-                json_response.metadata.json_schema['definitions']['BoxSpatialReference']['properties']['westlimit']['options'] = get_coord_je_option('westlimit');
-
-                json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['north']['options'] = get_coord_je_option('north');
-                json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['east']['options'] = get_coord_je_option('east');
                 let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
                     schema: json_response.metadata.json_schema,
                     theme: 'bootstrap4',
@@ -1083,19 +1091,6 @@ function showFileTypeMetadata(file_type_time_series, url){
                 $(".property-selector").removeAttr("style");
                 $(".file-browser-container, #fb-files-container").css("cursor", "auto");
             }
-        }
-        else { // keep old way of metadata view/edit for MP/MI aggregations which are not yet supported by hsmodels
-            $("#fileTypeMetaData").html(json_response.metadata);
-            $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-            $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
-
-            $("#txt-keyword-filetype").keypress(function (e) {
-                e.which = e.which || e.keyCode;
-                if (e.which == 13) {
-                    onAddKeywordFileType();
-                    return false;
-                }
-            });
         }
 
         if (RESOURCE_MODE === "Edit") {

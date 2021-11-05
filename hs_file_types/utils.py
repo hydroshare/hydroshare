@@ -475,6 +475,7 @@ def get_logical_file_metadata_json_schema(file_with_path):
         json_schema_dict['properties']['type']['options'] = {
             "hidden": True
         }
+        # json_schema_dict['properties']['additional_metadata']['items']['required'] = []
         json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}
