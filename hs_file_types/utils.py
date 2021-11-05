@@ -1,6 +1,9 @@
 import json
 import os
 from operator import lt, gt
+from hsmodels.schemas import load_rdf, rdf_graph
+from hsmodels.schemas.aggregations import GeographicRasterMetadata, GeographicFeatureMetadata, \
+    MultidimensionalMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata, FileSetMetadata, SingleFileMetadata
 
 from dateutil import parser
 from django.apps import apps
@@ -10,6 +13,7 @@ from rdflib.namespace import DC, Namespace
 
 from hs_core.hydroshare import utils, get_resource_file
 from hs_file_types.models.base import AbstractLogicalFile
+from django_irods.storage import IrodsStorage
 from .models import (
     GenericLogicalFile,
     GeoRasterLogicalFile,
@@ -21,6 +25,16 @@ from .models import (
     ModelProgramLogicalFile,
     ModelInstanceLogicalFile,
 )
+
+aggregation_type_to_class = {
+    'GeoRaster': GeographicRasterMetadata,
+    'GeoFeature': GeographicFeatureMetadata,
+    'NetCDF': MultidimensionalMetadata,
+    'TimeSeries': TimeSeriesMetadata,
+    'RefTimeseries': ReferencedTimeSeriesMetadata,
+    'FileSet': FileSetMetadata,
+    'Generic': SingleFileMetadata
+}
 
 
 def get_SupportedAggTypes_choices():
@@ -328,24 +342,42 @@ def get_aggregation_files(map_graph):
     return files
 
 
-def ingest_logical_file_metadata(metadata_file, resource, map_files):
+def ingest_logical_file_metadata(metadata, resource, map_files):
+    """
+    Ingest logical file metadata into Django models
+    :param metadata: a dict object that contains updated metadata element or an uploaded metadata file object
+    :param resource: the resource object to update metadata for
+    :param map_files: uploaded resource map file object. Default is None for metadata update only
+    :return:
+    """
     resource.refresh_from_db()
-    graph = Graph()
-    graph = graph.parse(data=metadata_file.read())
-
     agg_type_name = None
+    # if metadata is a dict object with updated metadata, create a rdf graph instance directly from it
+    if isinstance(metadata, dict):
+        if metadata['type'] in aggregation_type_to_class:
+            aggr_class = aggregation_type_to_class[metadata['type']]
+            meta_obj = aggr_class.parse_obj(metadata)
+            graph = rdf_graph(meta_obj)
+            md_name = metadata['title']
+        else:
+            raise Exception("{} aggregation type is not supported".format(metadata['type']))
+    else:
+        graph = Graph()
+        graph = graph.parse(data=metadata.read())
+        md_name = metadata.name
+
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
-        raise Exception("Could not derive aggregation type from {}".format(metadata_file.name))
+        raise Exception("Could not derive aggregation type from {}".format(md_name))
 
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
-        raise Exception("Could not derive aggregation path from {}".format(metadata_file.name))
+        raise Exception("Could not derive aggregation path from {}".format(md_name))
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
@@ -376,9 +408,9 @@ def ingest_logical_file_metadata(metadata_file, resource, map_files):
             res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
-            raise Exception("Could not find aggregation for {}".format(metadata_file.name))
+            raise Exception("Could not find aggregation for {}".format(md_name))
         if not lf:
-            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(md_name))
 
     with transaction.atomic():
         lf.metadata.delete_all_elements()
@@ -412,3 +444,37 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='',
         if fail_feedback:
             raise
         return None
+
+
+def get_logical_file_metadata_json_schema(file_with_path):
+    """
+    Get logical file metadata values in json format along with its json schema
+    for metadata display
+    :param file_with_path: meatadata file with path
+    :return: metadata JSON values and schema for logical file
+    """
+    istorage = IrodsStorage()
+    with istorage.open(file_with_path) as f:
+        metadata = load_rdf(f.read())
+        json_value = metadata.json()
+        json_value_dict = json.loads(json_value)
+        if 'spatial_reference' in json_value_dict and json_value_dict['spatial_reference'] is None:
+            del json_value_dict['spatial_reference']
+        if 'spatial_coverage' in json_value_dict and json_value_dict['spatial_coverage'] is None:
+            del json_value_dict['spatial_coverage']
+        json_value = json.dumps(json_value_dict)
+
+        json_schema = metadata.schema_json()
+        json_schema_dict = json.loads(json_schema)
+        # hide the url and aggregation type fields since they are required but should be hidden from metadata
+        # view and update
+
+        json_schema_dict['properties']['url']['options'] = {
+            "hidden": True
+        }
+        json_schema_dict['properties']['type']['options'] = {
+            "hidden": True
+        }
+        json_schema = json.dumps(json_schema_dict)
+        return json_value, json_schema
+    return {}, {}

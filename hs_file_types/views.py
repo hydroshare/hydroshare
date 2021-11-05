@@ -29,7 +29,7 @@ from .models import (
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile
 )
-from .utils import set_logical_file_type
+from .utils import set_logical_file_type, get_logical_file_metadata_json_schema, ingest_logical_file_metadata
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -1014,6 +1014,26 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@login_required
+def update_schema_based_metadata(request, resource_id, **kwargs):
+    """update aggregation metadata based on JSON schema
+    """
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
+    metadata_json_str = request.POST.get('metadata_json', None)
+    metadata_json = json.loads(metadata_json_str)
+
+    ingest_logical_file_metadata(metadata_json, resource, None)
+
+    # resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success',
+                          'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
 @authorise_for_aggregation_edit(file_type="ModelProgramLogicalFile")
 @login_required
 def update_model_program_metadata(request, file_type_id, **kwargs):
@@ -1184,7 +1204,7 @@ def update_model_instance_metadata(request, file_type_id, **kwargs):
 
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     """
-    Gets metadata html for the logical file type
+    Gets metadata json schema and value for the logical file type
     :param request:
     :param hs_file_type: HydroShare supported logical file type class name
     :param file_type_id: id of the logical file object for which metadata in html format is needed
@@ -1212,49 +1232,11 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return json_response
 
     try:
-        if metadata_mode == 'view':
-            metadata = logical_file.metadata.get_html()
-        else:
-            metadata = logical_file.metadata.get_html_forms(user=request.user)
-        ajax_response_data = {'status': 'success', 'metadata': metadata}
-    except Exception as ex:
-        ajax_response_data = {'status': 'error', 'message': str(ex)}
-
-    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
-
-
-@login_required
-def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
-    """
-    Gets metadata html for the aggregation type (logical file type)
-    :param request:
-    :param file_type_id: id of the aggregation (logical file) object for which metadata in html
-    format is needed
-    :param  series_id: if of the time series for which metadata to be displayed
-    :param resource_mode: a value of either edit or view. In resource edit mode metadata html
-    form elements are returned. In view mode normal html for display of metadata is returned
-    :return: json data containing html string
-    """
-    if resource_mode != "edit" and resource_mode != 'view':
-        err_msg = "Invalid metadata type request."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    logical_file, json_response = _get_logical_file("TimeSeriesLogicalFile", file_type_id)
-    if json_response is not None:
-        return json_response
-
-    series_ids = logical_file.metadata.series_ids_with_labels
-    if series_id not in list(series_ids.keys()):
-        # this will happen only in case of CSV file upload when data is written
-        # first time to the blank sqlite file as the series ids get changed to
-        # uuids
-        series_id = list(series_ids.keys())[0]
-    try:
-        if resource_mode == 'view':
-            metadata = logical_file.metadata.get_html(series_id=series_id)
-        else:
-            metadata = logical_file.metadata.get_html_forms(series_id=series_id)
+        file_path = logical_file.metadata_file_path
+        json_value, json_schema = get_logical_file_metadata_json_schema(file_path)
+        metadata = {'json_value': json.loads(json_value),
+                    'json_schema': json.loads(json_schema)
+                    }
         ajax_response_data = {'status': 'success', 'metadata': metadata}
     except Exception as ex:
         ajax_response_data = {'status': 'error', 'message': str(ex)}
