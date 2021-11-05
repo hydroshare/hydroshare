@@ -3,7 +3,8 @@ import os
 from operator import lt, gt
 from hsmodels.schemas import load_rdf, rdf_graph
 from hsmodels.schemas.aggregations import GeographicRasterMetadata, GeographicFeatureMetadata, \
-    MultidimensionalMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata, FileSetMetadata, SingleFileMetadata
+    MultidimensionalMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata, FileSetMetadata, \
+    SingleFileMetadata, ModelInstanceMetadata, ModelProgramMetadata
 
 from dateutil import parser
 from django.apps import apps
@@ -33,7 +34,9 @@ aggregation_type_to_class = {
     'TimeSeries': TimeSeriesMetadata,
     'RefTimeseries': ReferencedTimeSeriesMetadata,
     'FileSet': FileSetMetadata,
-    'Generic': SingleFileMetadata
+    'Generic': SingleFileMetadata,
+    'Model Instance': ModelInstanceMetadata,
+    'Model Program': ModelProgramMetadata
 }
 
 
