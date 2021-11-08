@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse
@@ -40,7 +41,9 @@ def ingest_resource_metadata(resource, incoming_metadata):
     except PydanticValidationError as e:
         raise ValidationError(e)
     # merge existing metadata with incoming, incoming overrides existing
-    merged_metadata = {**r_md, **incoming_r_md.dict(exclude_defaults=True)}
+    merged_metadata = {**r_md,
+                       **incoming_r_md.dict(exclude_defaults=True),
+                       "modified": datetime.now(timezone.utc).isoformat()}
     res_metadata = ResourceMetadata(**merged_metadata)
 
     graph = rdf_graph(res_metadata)
@@ -73,7 +76,7 @@ def resource_metadata_json(request, pk):
 
     resource, _, _ = authorize(request, pk,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    md = json.loads(request.data)
+    md = json.loads(request.body)
     ingest_resource_metadata(resource, md)
     return HttpResponse(status=200)
 

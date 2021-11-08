@@ -62,13 +62,14 @@ class TestFileBasedJSON(HSRESTTestCase):
         with open(os.path.join(self.base_dir, "full_resource.json"), "r") as f:
             full_resource_json = json.loads(normalize_metadata(f.read(), res.short_id))
         full_resource_json_in = ResourceMetadataIn(**full_resource_json)
-        in_resource_json = full_resource_json_in.json(exclude_defaults=True)
+        in_resource_json = full_resource_json_in.dict(exclude_defaults=True)
         self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
                         data=in_resource_json, format="json")
 
         response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
+        self.assertGreater(response_json['modified'], response['modified'])
         full_resource_json['modified'] = response_json['modified']
         full_resource_json['created'] = response_json['created']
         self.assertEqual(sorting(response_json), sorting(full_resource_json))
@@ -84,7 +85,7 @@ class TestFileBasedJSON(HSRESTTestCase):
         response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        in_resource_json = json.dumps({'bad_title': 'this better not work!'})
+        in_resource_json = {'bad_title': 'this better not work!'}
         response = self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
                                    data=in_resource_json, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
