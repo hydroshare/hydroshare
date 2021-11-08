@@ -3,6 +3,7 @@ import datetime
 import pytz
 import logging
 
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 
 from django.core.mail import send_mail
@@ -1814,7 +1815,10 @@ class FindGroupsView(TemplateView):
                 'groups': groups
             }
         else:
-            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")  # active is included in this query
+            # for anonymous user
+            groups = Group.objects.filter(Q(gaccess__active=True) &
+                                          (Q(gaccess__discoverable=True) |
+                                          Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
             return {
                 'groups': groups
