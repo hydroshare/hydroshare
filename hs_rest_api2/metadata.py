@@ -15,14 +15,7 @@ from hs_core.views import ACTION_TO_AUTHORIZE
 from hs_core.views.utils import authorize
 from hs_file_types.utils import ingest_logical_file_metadata
 from hs_rest_api2 import serializers
-
-from hsmodels.schemas.resource import ResourceMetadataIn
-
-
-class ResourceMetadataInNoRequired(ResourceMetadataIn):
-
-    class Config:
-        extra = 'forbid'
+from hs_rest_api2.serializers import ResourceMetadataInForbidExtra
 
 
 def load_metadata(istorage, file_with_path):
@@ -43,7 +36,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
     from hsmodels.schemas import rdf_graph
     r_md = resource_metadata(resource).dict()
     try:
-        incoming_r_md = ResourceMetadataInNoRequired(**incoming_metadata)
+        incoming_r_md = ResourceMetadataInForbidExtra(**incoming_metadata)
     except PydanticValidationError as e:
         raise ValidationError(e)
     # merge existing metadata with incoming, incoming overrides existing
@@ -80,7 +73,7 @@ def resource_metadata_json(request, pk):
 
     resource, _, _ = authorize(request, pk,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    md = json.loads(request.body)
+    md = json.loads(request.data)
     ingest_resource_metadata(resource, md)
     return HttpResponse(status=200)
 

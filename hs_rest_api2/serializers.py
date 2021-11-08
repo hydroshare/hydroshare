@@ -7,6 +7,12 @@ from hsmodels.schemas import ResourceMetadata, GeographicFeatureMetadata, Geogra
 from hsmodels.schemas.resource import ResourceMetadataIn
 
 
+class ResourceMetadataInForbidExtra(ResourceMetadataIn):
+
+    class Config:
+        extra = 'forbid'
+
+
 class ResourceMetadataSerializer(Serializer):
     class Meta:
         fields = "__all__"
@@ -16,7 +22,7 @@ class ResourceMetadataSerializer(Serializer):
 class ResourceMetadataInSerializer(Serializer):
     class Meta:
         fields = "__all__"
-        swagger_schema_fields = ResourceMetadataIn.schema()
+        swagger_schema_fields = ResourceMetadataInForbidExtra.schema()
 
 
 class GeographicFeatureMetadataSerializer(Serializer):
