@@ -94,7 +94,7 @@
                         <i class="glyphicon glyphicon-file"></i> Resources</a>
                 </li>
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public %}
+                {% if profile_user.is_group_member or group.gaccess.public %}
                     <li role="presentation">
                         <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-user"></i> Members</a>
