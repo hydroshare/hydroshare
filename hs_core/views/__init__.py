@@ -1883,15 +1883,17 @@ class GroupView(TemplateView):
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
         if self.request.user.is_authenticated():
-
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
             u.is_group_viewer = g in u.uaccess.view_groups
+            u.is_group_member = u in g.gaccess.members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            if u not in g.gaccess.members:
+                group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             return {
                 'group': g,
