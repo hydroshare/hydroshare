@@ -3327,6 +3327,10 @@ span.you-flag {
   gap: 10px;
 }
 
+.steps-container h4 {
+  font-weight: bold;
+}
+
 .step-item {
   padding: 10px;
   display: flex;
@@ -3400,11 +3404,16 @@ span.you-flag {
 .faetured-organizations img {
   max-height: 90px;
   max-width: 390px;
+  margin-bottom: 10px;
 }
 
 .faetured-institutions img {
   max-height: 90px;
   max-width: 200px;
+}
+
+.faetured-organizations {
+
 }
 /* =================================== */
 .container-grey {
