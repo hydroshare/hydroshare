@@ -89,4 +89,3 @@ class TestFileBasedJSON(HSRESTTestCase):
         response = self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
                                    data=in_resource_json, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
