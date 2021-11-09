@@ -14,7 +14,7 @@ class Command(BaseCommand):
     help = "Convert all model program resources to composite resource with model program aggregation"
 
     def create_aggr_folder(self, mp_aggr, comp_res, logger):
-        new_folder = "mp"
+        new_folder = "model-program"
         ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mp_aggr.folder = new_folder
         mp_aggr.dataset_name = new_folder
@@ -32,6 +32,9 @@ class Command(BaseCommand):
                 istorage.moveFile(src_full_path, tgt_full_path)
                 res_file.set_storage_path(tgt_full_path)
                 msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
+                self.stdout.write(self.style.SUCCESS(msg))
+                mp_aggr.add_resource_file(res_file)
+                msg = "Added file {} to mp aggregation".format(res_file.file_name)
                 self.stdout.write(self.style.SUCCESS(msg))
 
     def create_mp_file_type(self, file_name, file_type, mp_aggr):
@@ -124,32 +127,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(err_msg))
                 continue
 
-            if comp_res.files.count() == 0:
-                self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
-            elif comp_res.readme_file is not None:
-                if comp_res.files.count() > 2 or comp_res.files.count() == 1:
-                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
-                # make the all res files part of the aggregation excluding the readme file
-                for res_file in comp_res.files.all():
-                    if res_file != comp_res.readme_file:
-                        mp_aggr.add_resource_file(res_file)
-                        msg = "Added file {} to mp aggregation".format(res_file.file_name)
-                        self.stdout.write(self.style.SUCCESS(msg))
-            else:
-                if comp_res.files.count() > 1:
-                    self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
-                # make all the res files part of the aggregation
-                for res_file in comp_res.files.all():
-                    mp_aggr.add_resource_file(res_file)
-                    msg = "Added file {} to mp aggregation".format(res_file.file_name)
-                    self.stdout.write(self.style.SUCCESS(msg))
-
-            # set the dataset_name field of the aggregation in the case of file based mp aggregation
-            if not mp_aggr.folder:
-                aggr_file = mp_aggr.files.first()
-                aggr_filename, _ = os.path.splitext(aggr_file.file_name)
-                mp_aggr.dataset_name = aggr_filename
-                mp_aggr.save()
+            self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
@@ -202,7 +180,7 @@ class Command(BaseCommand):
                 logger.info(msg)
                 self.stdout.write(self.style.SUCCESS(msg))
 
-            comp_res.extra_data['MIGRATED_FROM'] = 'ModelProgramResource'
+            comp_res.extra_metadata['MIGRATED_FROM'] = 'Model Program Resource'
             comp_res.save()
             # set resource to dirty so that resource level xml files (resource map and
             # metadata xml files) will be re-generated as part of next bag download
