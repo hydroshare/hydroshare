@@ -12,6 +12,8 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.models import ModelInstanceLogicalFile, ModelProgramLogicalFile
 from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceResource
+from hs_swat_modelinstance.models import SWATModelInstanceResource
+from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 
 
 class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
@@ -48,8 +50,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         ModelInstanceResource.objects.all().delete()
         ModelProgramResource.objects.all().delete()
 
-    def test_prepare_for_migration_1(self):
-        """Here we are testing that model instance resource that have a link to a model program resource
+    def test_prepare_generic_mi_for_migration_1(self):
+        """Here we are testing that generic model instance resource that have a link to a model program resource
         the id of the mp resource gets saved in the mi resource extra_data field
         """
 
@@ -68,14 +70,88 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
         self.assertEqual(mi_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
 
-    def test_prepare_for_migration_2(self):
-        """Here we are testing that model instance resource that does not have a link to a model program resource
+    def test_prepare_generic_mi_for_migration_2(self):
+        """Here we are testing that generic  model instance resource that does not have a link to a model program resource
         the id of the mp resource is NOT saved in the mi resource extra_data field
         """
 
         # create a mi resource
         mi_res = self._create_mi_resource()
         self.assertEqual(ModelInstanceResource.objects.count(), 1)
+        self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(mi_res.metadata.executed_by, None)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        # run  prepare migration command
+        call_command(self.prepare_mi_migration_command)
+        mi_res.refresh_from_db()
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+
+    def test_prepare_swat_mi_for_migration_1(self):
+        """Here we are testing that SWAT model instance resource that have a link to a model program resource
+        the id of the mp resource gets saved in the mi resource extra_data field
+        """
+
+        # create a SWAT mi resource
+        mi_res = self._create_mi_resource(model_instance_type="SWATModelInstanceResource")
+        self.assertEqual(SWATModelInstanceResource.objects.count(), 1)
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        # run  prepare migration command
+        call_command(self.prepare_mi_migration_command)
+        mi_res.refresh_from_db()
+        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        self.assertEqual(mi_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+
+    def test_prepare_swat_mi_for_migration_2(self):
+        """Here we are testing that SWAT model instance resource that does not have a link to a model program resource
+        the id of the mp resource is NOT saved in the mi resource extra_data field
+        """
+
+        # create a mi resource
+        mi_res = self._create_mi_resource(model_instance_type="SWATModelInstanceResource")
+        self.assertEqual(SWATModelInstanceResource.objects.count(), 1)
+        self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(mi_res.metadata.executed_by, None)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        # run  prepare migration command
+        call_command(self.prepare_mi_migration_command)
+        mi_res.refresh_from_db()
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+
+    def test_prepare_modflow_mi_for_migration_1(self):
+        """Here we are testing that MODFLOW model instance resource that have a link to a model program resource
+        the id of the mp resource gets saved in the mi resource extra_data field
+        """
+
+        # create a SWAT mi resource
+        mi_res = self._create_mi_resource(model_instance_type="MODFLOWModelInstanceResource")
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        # run  prepare migration command
+        call_command(self.prepare_mi_migration_command)
+        mi_res.refresh_from_db()
+        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in mi_res.extra_data)
+        self.assertEqual(mi_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+
+    def test_prepare_modflow_mi_for_migration_2(self):
+        """Here we are testing that MODFLOW model instance resource that does not have a link to a model program resource
+        the id of the mp resource is NOT saved in the mi resource extra_data field
+        """
+
+        # create a mi resource
+        mi_res = self._create_mi_resource(model_instance_type="MODFLOWModelInstanceResource")
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
         self._create_mp_resource()
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(mi_res.metadata.executed_by, None)
@@ -572,8 +648,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertTrue(mi_aggr.metadata.is_dirty)
 
-    def _create_mi_resource(self, add_keywords=False):
-        res = hydroshare.create_resource("ModelInstanceResource", self.user,
+    def _create_mi_resource(self, model_instance_type="ModelInstanceResource", add_keywords=False):
+        res = hydroshare.create_resource(model_instance_type, self.user,
                                          "Testing migrating to composite resource")
         if add_keywords:
             res.metadata.create_element('subject', value='kw-1')
