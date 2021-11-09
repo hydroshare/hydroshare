@@ -44,8 +44,11 @@ class TestFileBasedJSON(HSRESTTestCase):
 
         with open(os.path.join(self.base_dir, "resource.json"), "r") as f:
             expected = json.loads(normalize_metadata(f.read(), res.short_id))
+
+        # overwrite system metadata fields for comparison
         expected['modified'] = response_json['modified']
         expected['created'] = response_json['created']
+        expected['creators'][0]['description'] = response_json['creators'][0]['description']
         self.assertEqual(response_json, expected)
 
     def test_resource_metadata_update(self):
@@ -69,9 +72,12 @@ class TestFileBasedJSON(HSRESTTestCase):
         response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
-        self.assertGreater(response_json['modified'], response['modified'])
+        self.assertGreater(response_json['modified'], full_resource_json['modified'])
+
+        # overwrite system metadata fields for comparison
         full_resource_json['modified'] = response_json['modified']
         full_resource_json['created'] = response_json['created']
+        full_resource_json['creators'][0]['description'] = response_json['creators'][0]['description']
         self.assertEqual(sorting(response_json), sorting(full_resource_json))
 
     def test_resource_metadata_update_unknown_field(self):
