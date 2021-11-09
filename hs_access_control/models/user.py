@@ -308,9 +308,7 @@ class UserAccess(models.Model):
                                       gaccess__active=True) |
                                     Q(g2ugp__user=self.user,
                                       gaccess__active=False,
-                                      g2ugp__privilege=PrivilegeCodes.OWNER) |
-                                    Q(gaccess__active=True, gaccess__public=True) |
-                                    Q(gaccess__active=True, gaccess__discoverable=True)).distinct()
+                                      g2ugp__privilege=PrivilegeCodes.OWNER)).distinct()
 
     @property
     def edit_groups(self):
