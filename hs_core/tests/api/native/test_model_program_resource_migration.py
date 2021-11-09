@@ -30,7 +30,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         )
         self.migration_command = "migrate_model_program_resources"
         self.MIGRATED_FROM_EXTRA_META_KEY = "MIGRATED_FROM"
-        self.MIGRATING_RESOURCE_TYPE = "ModelProgramResource"
+        self.MIGRATING_RESOURCE_TYPE = "Model Program Resource"
+        self.MP_FOLDER_NAME = "model-program"
 
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
@@ -65,8 +66,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
-        self.assertEqual(mp_aggr.folder, 'mp')
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
 
     def test_migrate_mp_resource_2(self):
         """
@@ -94,14 +95,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
-        self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
 
     def test_migrate_mp_resource_3(self):
         """
         Migrate a mp resource that has only one file
-        When converted to composite resource, it should have a mp aggregation (based on the file)
+        When converted to composite resource, it should have a mp aggregation (based on the folder)
         and should have aggregation level metadata
         """
 
@@ -130,15 +131,15 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
-        # check mp aggregation is not folder based
+        # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
-        self.assertEqual(mp_aggr.folder, None)
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
         self.assertEqual(cmp_res.metadata.subjects.count(), 2)
         self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
 
     def test_migrate_mp_resource_4(self):
         """
@@ -183,13 +184,13 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
-        self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
         self.assertEqual(cmp_res.metadata.subjects.count(), 2)
         self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
 
     def test_migrate_mp_resource_5(self):
         """
@@ -222,8 +223,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
-        self.assertEqual(mp_aggr.folder, 'mp')
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
 
     def test_migrate_mp_resource_6(self):
         """
@@ -254,20 +255,20 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 0)
-        self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
 
     def test_migrate_mp_resource_7(self):
         """
         Migrate a mp resource that has a readme file and another file, and has mp specific metadata
-        When converted to composite resource, it should have a mp aggregation (based on file)
+        When converted to composite resource, it should have a mp aggregation (based on folder)
         and should have aggregation level metadata
         """
 
@@ -299,14 +300,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
-        # check mp aggregation is not folder based
+        # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 1)
-        self.assertEqual(mp_aggr.folder, None)
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
 
     def test_migrate_mp_resource_8(self):
@@ -352,20 +353,20 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 2)
-        self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
 
     def test_migrate_mp_resource_9(self):
         """
         Migrate a mp resource that has one file , and has all mp specific metadata
-        When converted to composite resource, it should have a mp aggregation (based on file)
+        When converted to composite resource, it should have a mp aggregation (based on folder)
         and should have aggregation level metadata
         """
 
@@ -401,14 +402,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
-        # check mp aggregation is file based
+        # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 1)
-        self.assertEqual(mp_aggr.folder, None)
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         # test aggregation level metadata
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         self.assertEqual(mp_aggr.metadata.programming_languages, ['Fortran', 'Python'])
@@ -442,14 +443,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
-        self.assertEqual(cmp_res.extra_data[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertTrue(cmp_res.raccess.published)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
-        self.assertEqual(mp_aggr.folder, 'mp')
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
 
     def _create_mp_resource(self, add_keywords=False):
