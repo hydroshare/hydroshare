@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def create_aggr_folder(self, mi_aggr, comp_res, logger):
         new_folder = "model-instance"
-        # passing 'migrating' as True so that folder can be created even in published resource
+        # passing 'migrating_resource' as True so that folder can be created even in published resource
         ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mi_aggr.folder = new_folder
         mi_aggr.dataset_name = new_folder

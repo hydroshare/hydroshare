@@ -169,6 +169,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         # create a mi resource
         mi_res = self._create_mi_resource()
+        self.assertEqual(mi_res.files.count(), 0)
         self.assertEqual(ModelInstanceResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # run  migration command
@@ -176,6 +177,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 1)
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
@@ -194,6 +196,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         # create a mi resource
         mi_res = self._create_mi_resource()
+        self.assertEqual(mi_res.files.count(), 0)
         self.assertEqual(ModelInstanceResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model instance metadata
@@ -205,6 +208,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
@@ -244,6 +248,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
@@ -255,6 +260,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         self.assertEqual(mi_aggr.files.count(), 1)
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, self.MI_FOLDER_NAME)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
@@ -301,6 +308,9 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertTrue(cmp_res.metadata.subjects)
+        self.assertEqual(cmp_res.files.count(), 2)
+        for res_file in cmp_res.files.all():
+            self.assertEqual(res_file.file_folder, self.MI_FOLDER_NAME)
         # there should one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
@@ -338,6 +348,9 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # test that the converted resource does not contain any aggregations
         cmp_res = CompositeResource.objects.first()
         self.assertEqual(cmp_res.files.count(), 1)
+        # check the readme file was not moved to folder
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, "")
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
@@ -375,6 +388,10 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
+        # check that the readme file is not moved to the aggregation folder
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, "")
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
@@ -421,6 +438,13 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 2)
+        for res_file in cmp_res.files.all():
+            if res_file.file_name == "cea.tif":
+                self.assertEqual(res_file.file_folder, self.MI_FOLDER_NAME)
+            else:
+                self.assertEqual(res_file.file_folder, "")
+
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
@@ -475,6 +499,14 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mi aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 3)
+        # check resource files folder
+        for res_file in cmp_res.files.all():
+            if res_file.file_name != "readme.txt":
+                self.assertEqual(res_file.file_folder, self.MI_FOLDER_NAME)
+            else:
+                self.assertEqual(res_file.file_folder, "")
+
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
