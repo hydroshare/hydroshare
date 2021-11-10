@@ -52,6 +52,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         # create a mp resource
         mp_res = self._create_mp_resource()
+        self.assertEqual(mp_res.files.count(), 0)
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # run  migration command
@@ -60,6 +61,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains a folder based mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         # there should be one aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
@@ -78,6 +80,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         # create a mp resource
         mp_res = self._create_mp_resource()
+        self.assertEqual(mp_res.files.count(), 0)
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -89,6 +92,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
@@ -127,10 +131,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the res file moved to the mp aggregation folder
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, self.MP_FOLDER_NAME)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
@@ -178,10 +186,14 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 2)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check both files are moved to the aggregation folder
+        for res_file in cmp_res.files.all():
+            self.assertEqual(res_file.file_folder, self.MP_FOLDER_NAME)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
@@ -221,6 +233,9 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # there should ne one aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check that the readme file was not moved to the aggregation folder
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, "")
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
@@ -254,11 +269,15 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check that the readme file was not moved to the mp aggregation folder
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, "")
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 0)
@@ -299,11 +318,18 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 2)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the folder of each of the files
+        for res_file in cmp_res.files.all():
+            if res_file.file_name != 'readme.txt':
+                self.assertEqual(res_file.file_folder, self.MP_FOLDER_NAME)
+            else:
+                self.assertEqual(res_file.file_folder, "")
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 1)
@@ -352,11 +378,18 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 3)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the folder for each of the files in composite resource
+        for res_file in cmp_res.files.all():
+            if res_file.file_name == 'readme.txt':
+                self.assertEqual(res_file.file_folder, "")
+            else:
+                self.assertEqual(res_file.file_folder, self.MP_FOLDER_NAME)
         # check mp aggregation is folder based
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.files.count(), 2)
@@ -401,8 +434,12 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # check file folder
+        res_file = cmp_res.files.first()
+        self.assertEqual(res_file.file_folder, self.MP_FOLDER_NAME)
         # there should one mp aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
         self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
@@ -429,6 +466,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         # create a mp resource
         mp_res = self._create_mp_resource()
+        self.assertEqual(mp_res.files.count(), 0)
         self.assertEqual(ModelProgramResource.objects.count(), 1)
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
@@ -442,6 +480,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 1)
         # test that the converted resource contains one mp aggregations
         cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
         self.assertEqual(mp_res.short_id, cmp_res.short_id)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         self.assertTrue(cmp_res.raccess.published)
