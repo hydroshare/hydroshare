@@ -46,7 +46,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             if self.executed_by:
                 mp_aggr = self.executed_by
                 # check if the mp aggregation is from another resource (possible only in the case of
-                # migrated published mi resource)
+                # migrated mi resource)
                 if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
                     hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
                     display_string = "Model program content from resource:"
@@ -187,6 +187,26 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 dom_tags.option(option, value=mp_aggr.id)
                         else:
                             dom_tags.option(option, value=mp_aggr.id)
+                    if self.executed_by:
+                        mp_aggr = self.executed_by
+                        # check if the mp aggregation is from another resource (possible only in the case of
+                        # migrated mi resource)
+                        if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
+                            option = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
+                            dom_tags.option(option, selected="selected", value=mp_aggr.id)
+
+                if self.executed_by:
+                    mp_aggr = self.executed_by
+                    # check if the mp aggregation is from another resource (possible only in the case of
+                    # migrated mi resource)
+                    if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
+                        hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
+                        display_string = "Model program content from resource:"
+                        with dom_tags.p(display_string):
+                            with dom_tags.span():
+                                dom_tags.a(hs_res_url, href=hs_res_url)
+                        dom_tags.p("Model program content path:{}".format(mp_aggr.aggregation_name))
+                        dom_tags.p("Selected model program exists in a different resource", cls="alert alert-danger")
                 if invalid_schema:
                     dom_tags.div("Metadata schema in the associated model program fails to validate existing metadata. "
                                  "Updating the schema from model program will lead to loss of all schema based "
