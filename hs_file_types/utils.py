@@ -279,7 +279,7 @@ def ingest_metadata_files(resource, meta_files, map_files):
         if is_resource_metadata_file(f):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
-            ingest_logical_file_metadata(f, resource, map_files)
+            ingest_logical_file_metadata_from_file(f, resource, map_files)
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
@@ -328,24 +328,32 @@ def get_aggregation_files(map_graph):
     return files
 
 
-def ingest_logical_file_metadata(metadata_file, resource, map_files):
-    resource.refresh_from_db()
+def ingest_logical_file_metadata_from_file(metadata_file, resource, map_files=[]):
+    ingest_logical_file_metadata_from_string(metadata_file.read(), resource, map_files)
+
+
+def ingest_logical_file_metadata_from_string(metadata_str, resource, map_files=[]):
     graph = Graph()
-    graph = graph.parse(data=metadata_file.read())
+    graph = graph.parse(data=metadata_str)
+    ingest_logical_file_metadata(graph, resource, map_files)
+
+
+def ingest_logical_file_metadata(graph, resource, map_files=[]):
+    resource.refresh_from_db()
 
     agg_type_name = None
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
-        raise Exception("Could not derive aggregation type from {}".format(metadata_file.name))
+        raise Exception("Could not derive aggregation type from {}".format(graph))
 
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
-        raise Exception("Could not derive aggregation path from {}".format(metadata_file.name))
+        raise Exception("Could not derive aggregation path from {}".format(graph))
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)

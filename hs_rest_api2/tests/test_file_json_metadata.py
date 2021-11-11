@@ -1,13 +1,14 @@
 import os
 import json
+import tempfile
 
 from django.core.urlresolvers import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from rest_framework import status
 
-from hs_core import hydroshare
-from hs_core.hydroshare import current_site_url
+from hs_core.hydroshare import resource, current_site_url
 from hs_core.tests.api.rest.base import HSRESTTestCase
+from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 
 
 def normalize_metadata(metadata_str, short_id):
@@ -26,72 +27,115 @@ def sorting(item):
         return item
 
 
+def prepare_resource(self, folder):
+    prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path)
+
+
 class TestFileBasedJSON(HSRESTTestCase):
 
     base_dir = 'hs_rest_api2/tests/data/json/'
 
-    def test_resource_metadata_retrieve(self):
-        # Create resource
-        res = hydroshare.create_resource(resource_type='CompositeResource',
-                                           owner=self.user,
-                                           title='triceratops',
-                                           metadata=[], )
+    def __init__(self, methodName, param1=None, param2=None):
+        super(TestFileBasedJSON, self).__init__(methodName)
 
-        # Verify resource exists
-        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
+        self.param1 = param1
+        self.param2 = param2
+
+    def setUp(self):
+        super(TestFileBasedJSON, self).setUp()
+
+        self.tmp_dir = tempfile.mkdtemp()
+
+        # create empty resource
+        self.res = resource.create_resource(
+            'CompositeResource',
+            self.user,
+            'triceratops'
+            )
+
+        self.test_bag_path = 'hs_rest_api2/tests/data/test_resource_metadata_files.zip'
+
+        self.extracted_directory = 'hs_core/tests/data/test_resource_metadata_files/'
+
+    def tearDown(self):
+        super(TestFileBasedJSON, self).tearDown()
+        os.remove(self.test_bag_path)
+        self.res.delete()
+
+    def _test_metadata_update_retrieve(self, endpoint, schema_in, aggregation_path=None):
+        kwargs = {"pk": self.res.short_id}
+        if aggregation_path:
+            kwargs["aggregation_path"] = aggregation_path
+        response = self.client.get(reverse(endpoint, kwargs=kwargs))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.content.decode())
 
         with open(os.path.join(self.base_dir, "resource.json"), "r") as f:
-            expected = json.loads(normalize_metadata(f.read(), res.short_id))
+            full_resource_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
+        schema_in_instance = schema_in(**full_resource_json)
+        in_json = schema_in_instance.dict(exclude_defaults=True)
+        self.client.put(reverse(endpoint, kwargs=kwargs),
+                        data=in_json, format="json")
 
-        # overwrite system metadata fields for comparison
-        expected['modified'] = response_json['modified']
-        expected['created'] = response_json['created']
-        expected['creators'][0]['description'] = response_json['creators'][0]['description']
-        self.assertEqual(response_json, expected)
-
-    def test_resource_metadata_update(self):
-        # Create resource
-        res = hydroshare.create_resource(resource_type='CompositeResource',
-                                           owner=self.user,
-                                           title='triceratops',
-                                           metadata=[], )
-
-        # Verify resource exists
-        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        with open(os.path.join(self.base_dir, "full_resource.json"), "r") as f:
-            full_resource_json = json.loads(normalize_metadata(f.read(), res.short_id))
-        full_resource_json_in = ResourceMetadataIn(**full_resource_json)
-        in_resource_json = full_resource_json_in.dict(exclude_defaults=True)
-        self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
-                        data=in_resource_json, format="json")
-
-        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
+        response = self.client.get(reverse(endpoint, kwargs=kwargs))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
-        self.assertGreater(response_json['modified'], full_resource_json['modified'])
 
-        # overwrite system metadata fields for comparison
-        full_resource_json['modified'] = response_json['modified']
-        full_resource_json['created'] = response_json['created']
-        full_resource_json['creators'][0]['description'] = response_json['creators'][0]['description']
+        if not aggregation_path:
+            self.assertGreater(response_json['modified'], full_resource_json['modified'])
+            # overwrite system metadata fields for comparison
+            full_resource_json['modified'] = response_json['modified']
+            full_resource_json['created'] = response_json['created']
+            full_resource_json['creators'][0]['description'] = response_json['creators'][0]['description']
         self.assertEqual(sorting(response_json), sorting(full_resource_json))
 
-    def test_resource_metadata_update_unknown_field(self):
-        # Create resource
-        res = hydroshare.create_resource(resource_type='CompositeResource',
-                                         owner=self.user,
-                                         title='triceratops',
-                                         metadata=[], )
-
-        # Verify resource exists
-        response = self.client.get(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}))
+    def _test_metadata_update_unknown_field(self, endpoint, aggregation_path=None):
+        kwargs = {"pk": self.res.short_id}
+        if aggregation_path:
+            kwargs["aggregation_path"] = aggregation_path
+        response = self.client.get(reverse(endpoint, kwargs=kwargs))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         in_resource_json = {'bad_title': 'this better not work!'}
-        response = self.client.put(reverse('hsapi2:resource_metadata_json', kwargs={"pk": res.short_id}),
-                                   data=in_resource_json, format="json")
+        response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_resource_json, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_resource_metadata_update_unknown_field(self):
+        prepare_resource(self, "resource")
+        self._test_metadata_update_unknown_field("hsapi2:resource_metadata_json")
+
+    def test_reference_timerseries_metadata_update_unknown_field(self):
+        prepare_resource(self, "reference_timeseries")
+        self._test_metadata_update_unknown_field("hsapi2:referenced_time_series_metadata_json", "msf_version.refts.json")
+
+    def test_netcdf_metadata_update_unknown_field(self):
+        prepare_resource(self, "netcdf")
+        self._test_metadata_update_unknown_field("hsapi2:multidimensional_metadata_json", "SWE_time.nc")
+
+    def test_file_set_metadata_update_unknown_field(self):
+        prepare_resource(self, "file_set")
+        self._test_metadata_update_unknown_field("hsapi2:file_set_metadata_json", "asdf/testing.xml")
+
+    def test_timerseries_metadata_update_unknown_field(self):
+        prepare_resource(self, "timeseries")
+        self._test_metadata_update_unknown_field("hsapi2:time_series_metadata_json", "ODM2_Multi_Site_One_Variable.sqlite")
+
+    def test_geographic_raster_metadata_update_unknown_field(self):
+        prepare_resource(self, "geographic_raster")
+        self._test_metadata_update_unknown_field("hsapi2:geographic_raster_metadata_json", "logan.vrt")
+
+    def test_geographic_feature_metadata_update_unknown_field(self):
+        prepare_resource(self, "geographic_feature")
+        self._test_metadata_update_unknown_field("hsapi2:geographic_feature_metadata_json", "watersheds_meta.xml")
+
+    def test_single_file_metadata_update_unknown_field(self):
+        prepare_resource(self, "single_file")
+        self._test_metadata_update_unknown_field("hsapi2:single_file_metadata_json", "test_meta.xml")
+
+    def test_model_program_metadata_update_unknown_field(self):
+        prepare_resource(self, "model_program")
+        self._test_metadata_update_unknown_field("hsapi2:model_program_metadata_json", "setup_meta.xml")
+
+    def test_model_instance_metadata_update_unknown_field(self):
+        prepare_resource(self, "model_program")
+        prepare_resource(self, "model_instance")
+        self._test_metadata_update_unknown_field("hsapi2:model_instance_metadata_json", "generic_file_meta.xml")
