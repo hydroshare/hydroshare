@@ -125,17 +125,17 @@ class TestFileBasedJSON(HSRESTTestCase):
 
     def test_geographic_feature_metadata_update_unknown_field(self):
         prepare_resource(self, "geographic_feature")
-        self._test_metadata_update_unknown_field("hsapi2:geographic_feature_metadata_json", "watersheds_meta.xml")
+        self._test_metadata_update_unknown_field("hsapi2:geographic_feature_metadata_json", "watersheds.shp")
 
     def test_single_file_metadata_update_unknown_field(self):
         prepare_resource(self, "single_file")
-        self._test_metadata_update_unknown_field("hsapi2:single_file_metadata_json", "test_meta.xml")
+        self._test_metadata_update_unknown_field("hsapi2:single_file_metadata_json", "test.xml")
 
     def test_model_program_metadata_update_unknown_field(self):
         prepare_resource(self, "model_program")
-        self._test_metadata_update_unknown_field("hsapi2:model_program_metadata_json", "setup_meta.xml")
+        self._test_metadata_update_unknown_field("hsapi2:model_program_metadata_json", "setup.cfg")
 
     def test_model_instance_metadata_update_unknown_field(self):
         prepare_resource(self, "model_program")
         prepare_resource(self, "model_instance")
-        self._test_metadata_update_unknown_field("hsapi2:model_instance_metadata_json", "generic_file_meta.xml")
+        self._test_metadata_update_unknown_field("hsapi2:model_instance_metadata_json", "generic_file.txt")

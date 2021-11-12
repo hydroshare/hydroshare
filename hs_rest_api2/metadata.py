@@ -98,6 +98,9 @@ def get_aggregation(resource, file_path):
 
 def aggregation_metadata(resource, file_path):
     agg = get_aggregation(resource, file_path)
+    if agg.metadata.is_dirty:
+        # TODO, shouldn't have to do this?
+        agg.create_aggregation_xml_documents()
     return load_metadata(resource.get_irods_storage(), agg.metadata_file_path)
 
 
@@ -113,10 +116,11 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path, in_schem
     except PydanticValidationError as e:
         raise ValidationError(e)
     # merge existing metadata with incoming, incoming overrides existing
-    merged_metadata = {**r_md,
-                       **incoming_md.dict(exclude_defaults=True)}
+    incoming_dict = {**incoming_md.dict(exclude_defaults=True)}
+    existing_dict = {**r_md}
+    merged_metadata = {**incoming_dict,
+                       **existing_dict}
 
-    # TODO change to aggregation schema
     agg_metadata = out_schema(**merged_metadata)
     graph = rdf_graph(agg_metadata)
 
@@ -208,7 +212,7 @@ def single_file_metadata_json(request, pk, aggregation_path):
                      operation_description="Get Model Program aggregation metadata json")
 @api_view(['GET', 'PUT'])
 def model_program_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path, ModelProgramMetadataIn, ModelInstanceMetadata)
+    return aggregation_metadata_json(request, pk, aggregation_path, ModelProgramMetadataIn, ModelProgramMetadata)
 
 
 @swagger_auto_schema(method='put', request_body=serializers.ModelInstanceMetadataInSerializer,
