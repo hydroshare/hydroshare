@@ -4,7 +4,8 @@ from hs_core.models import Relation, BaseResource
 
 
 class Command(BaseCommand):
-    help = "Cleanup broken/dangling resources resulting from versioning issues, e.g., #3276 and #4028"
+    help = "Output versioning chain violation resources (e.g., #4028) for fixing and delete those relations " \
+           "that point to non-existant resources"
 
     def handle(self, *args, **options):
         replace_by_qs = Relation.objects.filter(type='isReplacedBy')
@@ -66,17 +67,17 @@ class Command(BaseCommand):
                         writer.writerow([key, val])
 
         # output resource list where one resource is valueOf more than one other resources
-        with open('is_value_of_violations.csv', 'w') as csvfile:
+        with open('is_version_of_violations.csv', 'w') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['Resource', 'isValueOf'])
+            writer.writerow(['Resource', 'isVersionOf'])
             for key, val_list in version_of_dict.items():
                 if len(val_list) > 1:
                     # obsolesence chain violation
                     for val in val_list:
                         writer.writerow([key, val])
 
-        # output resource list where isReplacedBy and isValueOf are not in pairs
-        with open('replace_by_and_value_of_not_in_pairs.csv', 'w') as csvfile:
+        # output resource list where isReplacedBy and isVersionOf are not in pairs
+        with open('replace_by_and_version_of_not_in_pairs.csv', 'w') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['Resource', 'isReplacedBy', 'isVersionOf'])
             for key, val_list in replaced_by_dict.items():
