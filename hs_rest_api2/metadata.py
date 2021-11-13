@@ -118,8 +118,8 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path, in_schem
     # merge existing metadata with incoming, incoming overrides existing
     incoming_dict = {**incoming_md.dict(exclude_defaults=True)}
     existing_dict = {**r_md}
-    merged_metadata = {**incoming_dict,
-                       **existing_dict}
+    merged_metadata = {**existing_dict,
+                       **incoming_dict}
 
     agg_metadata = out_schema(**merged_metadata)
     graph = rdf_graph(agg_metadata)
