@@ -73,7 +73,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         base_file_name, _ = os.path.splitext(res_file.file_name)
         assert_time_series_file_type_metadata(self, expected_file_folder='')
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_sqlite_file_2(self):
@@ -106,7 +106,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
         # test extracted metadata
         assert_time_series_file_type_metadata(self, expected_file_folder=new_folder)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_from_sqlite_file_3(self):
@@ -489,6 +489,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(ts_result.aggregation_statistics, 'Average')
         self.assertTrue(logical_file.metadata.is_dirty)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata_on_aggregation_delete(self):
@@ -567,6 +568,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(CVMedium.objects.all().count(), 0)
         self.assertEqual(CVAggregationStatistic.objects.all().count(), 0)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
@@ -603,6 +605,8 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, '')
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_delete(self):
@@ -660,6 +664,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(CVMedium.objects.all().count(), 0)
         self.assertEqual(CVAggregationStatistic.objects.all().count(), 0)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_metadata_on_file_delete(self):
@@ -695,6 +700,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_file_move(self):
@@ -722,6 +728,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                 move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                               tgt_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_rename(self):
@@ -783,6 +790,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                                     RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_parent_folder_rename(self):
@@ -867,6 +875,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_folder_move(self):
@@ -925,6 +934,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _test_aggregation_folder_creation(self, res_file, file_folder_path):
@@ -948,6 +958,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(isinstance(logical_file, TimeSeriesLogicalFile))
         self.assertTrue(logical_file.metadata, TimeSeriesFileMetaData)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _test_CSV_aggregation(self, expected_aggr_folder, value_count_by_series='20'):
@@ -1030,6 +1041,8 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.coverages.filter(
             type='period').count(), 1)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+
     def _test_file_metadata_on_file_delete(self, ext):
 
         if ext == '.sqlite':
@@ -1080,6 +1093,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(CVMedium.objects.all().count(), 0)
         self.assertEqual(CVAggregationStatistic.objects.all().count(), 0)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _test_invalid_file(self):
@@ -1125,6 +1139,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         # check that the resource file is still not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _get_invalid_csv_file(self, invalid_csv_file_name):
@@ -1142,3 +1157,5 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(".sqlite", TimeSeriesLogicalFile.objects.first().get_main_file_type())
         self.assertEqual(self.sqlite_file_name,
                          TimeSeriesLogicalFile.objects.first().get_main_file.file_name)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
