@@ -14,10 +14,11 @@ class Command(BaseCommand):
 
         replaced_by_dict = {}
         for obj in replace_by_qs:
-            res_id = obj.value.split('/')[-1]
-            if not BaseResource.objects.filter(short_id=res_id).exists():
+            replacy_by_id = obj.value.split('/')[-1]
+            if not BaseResource.objects.filter(short_id=replacy_by_id).exists():
                 obj.delete()
-                msg = '{res_id} does not exist, so delete the corresponding isReplacedBy relation metadata element'
+                msg = '{replacy_by_id} does not exist, so delete the corresponding isReplacedBy relation ' \
+                      'metadata element'
                 print(msg, flush=True)
                 continue
             res_obj = BaseResource.objects.filter(object_id=obj.object_id).first()
@@ -28,9 +29,14 @@ class Command(BaseCommand):
                 print(msg, flush=True)
                 continue
             if res_obj.short_id in replaced_by_dict:
-                replaced_by_dict[res_obj.short_id].append(res_id)
+                if replacy_by_id in replaced_by_dict[res_obj.short_id]:
+                    print(f'{res_obj.short_id} is already replaced by {replacy_by_id} - clean up duplicate entry',
+                          flush=True)
+                    obj.delete()
+                else:
+                    replaced_by_dict[res_obj.short_id].append(replacy_by_id)
             else:
-                replaced_by_dict[res_obj.short_id] = [res_id]
+                replaced_by_dict[res_obj.short_id] = [replacy_by_id]
 
         version_of_dict = {}
         version_of_qs = Relation.objects.filter(type='isVersionOf')
@@ -38,10 +44,11 @@ class Command(BaseCommand):
         print(msg, flush=True)
 
         for obj in version_of_qs:
-            res_id = obj.value.split('/')[-1]
-            if not BaseResource.objects.filter(short_id=res_id).exists():
+            version_of_id = obj.value.split('/')[-1]
+            if not BaseResource.objects.filter(short_id=version_of_id).exists():
                 obj.delete()
-                msg = '{res_id} does not exist, so delete the corresponding isVersionOf relation metadata element'
+                msg = '{version_of_id} does not exist, so delete the corresponding isVersionOf relation ' \
+                      'metadata element'
                 print(msg, flush=True)
                 continue
             res_obj = BaseResource.objects.filter(object_id=obj.object_id).first()
@@ -52,9 +59,13 @@ class Command(BaseCommand):
                 print(msg, flush=True)
                 continue
             if res_obj.short_id in version_of_dict:
-                version_of_dict[res_obj.short_id].append(res_id)
+                if version_of_id in version_of_dict[res_obj.short_id]:
+                    print(f'{res_obj.short_id} is already version of {version_of_id} - clean up duplicate entry')
+                    obj.delete()
+                else:
+                    version_of_dict[res_obj.short_id].append(version_of_id)
             else:
-                version_of_dict[res_obj.short_id] = [res_id]
+                version_of_dict[res_obj.short_id] = [version_of_id]
 
         # output resource list where one resource is replaced by more than one other resources
         with open('is_replaced_by_violations.csv', 'w') as csvfile:
@@ -84,7 +95,11 @@ class Command(BaseCommand):
                 for val in val_list:
                     if val not in version_of_dict:
                         writer.writerow([key, val, ''])
+                    elif key not in version_of_dict[val]:
+                        writer.writerow([key, val, ''])
             for key, val_list in version_of_dict.items():
                 for val in val_list:
                     if val not in replaced_by_dict:
+                        writer.writerow([key, '', val])
+                    elif key not in replaced_by_dict[val]:
                         writer.writerow([key, '', val])
