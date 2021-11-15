@@ -28,7 +28,7 @@
     "url": "http://creativecommons.org/licenses/by/4.0/"
   },
   "includes_model_output": false,
-  "executed_by": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/generic_file_resmap.xml#aggregation",
+  "executed_by": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/setup_resmap.xml#aggregation",
   "program_schema_json": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/generic_file_schema.json",
   "program_schema_json_values": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/generic_file_schema_values.json"
 }

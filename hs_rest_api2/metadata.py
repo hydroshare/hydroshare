@@ -112,7 +112,10 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path, in_schem
     from hsmodels.schemas import rdf_graph
     r_md = aggregation_metadata(resource, file_path).dict()
     try:
-        incoming_md = in_schema(**incoming_metadata)
+        class IncomingForbid(in_schema):
+            class Config:
+                extra = "forbid"
+        incoming_md = IncomingForbid(**incoming_metadata)
     except PydanticValidationError as e:
         raise ValidationError(e)
     # merge existing metadata with incoming, incoming overrides existing
