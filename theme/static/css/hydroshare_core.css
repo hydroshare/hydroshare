@@ -3106,8 +3106,9 @@ span.you-flag {
 	width: 520px;
 }
 
-#legend-resource-type .table-res-type-icon {
-    margin-bottom:10px;
+#legend-resource-type .table-res-type-icon,
+#legend-content-type .table-res-type-icon {
+  margin-bottom: 10px;
 }
 
 .table-res-type-icon {
@@ -3116,6 +3117,38 @@ span.you-flag {
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;
+}
+
+#grid-content-types,
+#grid-resource-types,
+#grid-sharing-and-access {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-bottom: 10px;
+}
+
+@media (min-width: 993px) {
+  #grid-sharing-and-access {
+    grid-template-columns: auto auto;
+  }
+}
+
+#grid-sharing-and-access > div {
+  flex-basis: 180px;
+}
+
+#grid-content-types > div {
+  display: flex;
+  align-items: center;
+}
+
+#grid-content-types span.fa-stack {
+  width: 50px;
+}
+
+#grid-content-types span.fa-stack, 
+#grid-content-types img {
+  margin-right: 10px;
 }
 
 /*  Home page revamp */
