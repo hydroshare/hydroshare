@@ -28,7 +28,12 @@ class Command(BaseCommand):
                     return
                 fixed = False
                 res_id = row[1]
-                res = get_resource_by_shortkey(res_id)
+                try:
+                    res = get_resource_by_shortkey(res_id)
+                except Exception:
+                    print(f'Resource {res_id} does not exist', flush=True)
+                    continue
+
                 if not row[0] and not row[2]:
                     # both isVersionOf and isReplacedby are empty, so clean up any versioning
                     # relationships for this resource if any
@@ -43,7 +48,12 @@ class Command(BaseCommand):
                     if res_id == '4111306529e74503b090494ef1e808e2':
                         # for this single resource, isCopyOf relation needs to be added
                         copy_of_res_id = 'fdc3a06e6ad842abacfa5b896df73a76'
-                        copy_of_res = get_resource_by_shortkey(copy_of_res_id)
+                        try:
+                            copy_of_res = get_resource_by_shortkey(copy_of_res_id)
+                        except Exception:
+                            print(f'Resource {copy_of_res_id} does not exist, so isCopyOf relation cannot be added',
+                                  flush=True)
+                            continue
                         hs_identifier = copy_of_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
                         if hs_identifier:
                             res.metadata.create_element('source', derived_from=hs_identifier.url)
@@ -52,7 +62,11 @@ class Command(BaseCommand):
                 elif not row[2]:
                     # isVersionOf is not empty but isReplacedBy is empty
                     version_res_id = row[0]
-                    version_res = get_resource_by_shortkey(version_res_id)
+                    try:
+                        version_res = get_resource_by_shortkey(version_res_id)
+                    except Exception:
+                        print(f'Resource {version_res_id} does not exist', flush=True)
+                        continue
                     hs_identifier = version_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
                     if res.metadata.relations.all().filter(type='isVersionOf').exists():
                         res.metadata.relations.all().filter(type='isVersionOf').all().delete()
@@ -62,7 +76,11 @@ class Command(BaseCommand):
                 elif not row[0]:
                     # isVersionOf is empty but isReplacedBy is not empty
                     replace_by_res_id = row[2]
-                    replace_by_res = get_resource_by_shortkey(replace_by_res_id)
+                    try:
+                        replace_by_res = get_resource_by_shortkey(replace_by_res_id)
+                    except Exception:
+                        print(f'Resource {replace_by_res_id} does not exist', flush=True)
+                        continue
                     hs_identifier = replace_by_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
                     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
                         res.metadata.relations.all().filter(type='isReplacedBy').all().delete()
@@ -73,9 +91,17 @@ class Command(BaseCommand):
                     # both isReplacedBy and isVersionOf are not empty - need to only keep this pair of relationship
                     # and delete other pairs to meet the single obsolecense chain requirement
                     version_res_id = row[0]
-                    version_res = get_resource_by_shortkey(version_res_id)
+                    try:
+                        version_res = get_resource_by_shortkey(version_res_id)
+                    except Exception:
+                        print(f'Resource {version_res_id} does not exist', flush=True)
+                        continue
                     replace_res_id = row[2]
-                    replace_res = get_resource_by_shortkey(replace_res_id)
+                    try:
+                        replace_res = get_resource_by_shortkey(replace_res_id)
+                    except Exception:
+                        print(f'Resource {replace_res_id} does not exist', flush=True)
+                        continue
                     if res.metadata.relations.all().filter(type='isVersionOf').exists():
                         res.metadata.relations.all().filter(type='isVersionOf').all().delete()
                     hs_identifier = version_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
