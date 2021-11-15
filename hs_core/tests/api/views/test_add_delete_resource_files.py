@@ -66,6 +66,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = add_files_to_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # there should be 1 file
@@ -86,6 +87,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = add_files_to_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # there should be 1 file
@@ -108,6 +110,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         add_files_to_resource(request, shortkey=self.gen_res.short_id)
         res_file = self.gen_res.files.first()
 
@@ -145,6 +148,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         add_files_to_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(self.gen_res.files.count(), 2)
 

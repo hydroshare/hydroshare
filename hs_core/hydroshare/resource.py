@@ -800,6 +800,8 @@ def delete_resource(pk, request_username=None):
     Note:  Only HydroShare administrators will be able to delete formally published resource
     """
     from hs_core.tasks import delete_resource_task
+    resource = utils.get_resource_by_shortkey(pk)
+    resource.set_discoverable(False)
     delete_resource_task(pk, request_username)
 
     return pk
