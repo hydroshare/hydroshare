@@ -1,7 +1,8 @@
 import os
-from unittest import TestCase
+from unittest import TestCase, skip
 
 import json
+import jsonschema
 from rest_framework.renderers import JSONRenderer
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
@@ -35,13 +36,13 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[self.hs_group],
         )
-        self.mi_migration_command = "migrate_model_instance_resources"
+        self.mi_migration_command = "migrate_modflow_instance_resources"
         self.mp_migration_command = "migrate_model_program_resources"
         self.prepare_mi_migration_command = "prepare_model_instance_resources_for_migration"
         self.MIGRATED_FROM_EXTRA_META_KEY = "MIGRATED_FROM"
-        self.MIGRATING_RESOURCE_TYPE = "Model Instance Resource"
+        self.MIGRATING_RESOURCE_TYPE = "MODFLOW Instance Resource"
         self.EXECUTED_BY_EXTRA_META_KEY = "EXECUTED_BY_RES_ID"
-        self.MI_FOLDER_NAME = "model-instance"
+        self.MI_FOLDER_NAME = "modflow-instance"
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
         ModelInstanceResource.objects.all().delete()
@@ -55,6 +56,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         ModelInstanceResource.objects.all().delete()
         ModelProgramResource.objects.all().delete()
 
+    @skip("Not testing at this time")
     def test_generation_of_meta_in_json(self):
 
         mi_res = self._create_modflow_resource()
@@ -132,23 +134,41 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         print("\n")
         data = serializer.data
         data['studyArea'] = data.pop('study_area', None)
+        if data['studyArea'] is None:
+            data['studyArea'] = {}
+
         data['modelCalibration'] = data.pop('model_calibration', None)
+        if data['modelCalibration'] is None:
+            data['modelCalibration'] = {}
+
         data['groundwaterFlow'] = data.pop('ground_water_flow', None)
+        if data['groundwaterFlow'] is None:
+            data['groundwaterFlow'] = {}
+
         data['gridDimensions'] = data.pop('grid_dimensions', None)
+        if data['gridDimensions'] is None:
+            data['gridDimensions'] = {}
+
         # TODO: modelInput is currently not part of the MODFLOW json schema
         data['modelInput'] = data.pop('model_inputs', None)
+        if data['modelInput'] is None:
+            data['modelInput'] = []
         # TODO: stressPeriod attribute in the schema needs to be adjusted to take string values for some of the
         #  properties of this field
         data['stressPeriod'] = data.pop('stress_period', None)
+        if data['stressPeriod'] is None:
+            data['stressPeriod'] = {}
         general_elements = data.pop('general_elements', None)
-        if general_elements is not None:
+        if general_elements is None:
+            general_elements = {}
+        if general_elements:
             data['modelSolver'] = general_elements['modelSolver']
             data['modelParameter'] = general_elements['modelParameter']
             data['subsidencePackage'] = general_elements['subsidencePackage']
         else:
-            data['modelSolver'] = ""
+            data['modelSolver'] = None
             data['modelParameter'] = ""
-            data['subsidencePackage'] = ""
+            data['subsidencePackage'] = None
 
         if data['stressPeriod']:
             for key in list(data['stressPeriod']):
@@ -168,72 +188,120 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
                 if new_key:
                     data['stressPeriod'][new_key] = v
 
-        data['outputControlPackage'] = [{'OC': False}, {'HYD': False}, {'GAGE': False}, {'LMT6': False},
-                                        {'MNWI': False}]
-        if general_elements is not None:
+        data['outputControlPackage'] = {'OC': False, 'HYD': False, 'GAGE': False, 'LMT6': False, 'MNWI': False}
+        if general_elements:
             output_control_pkg = general_elements['output_control_package']
             if output_control_pkg:
-                for item in data['outputControlPackage']:
-                    key = list(item.keys())[0]
+                for key in data['outputControlPackage']:
                     for pkg in output_control_pkg:
                         if pkg['description'] == key:
-                            item[key] = True
+                            data['outputControlPackage'][key] = True
                             break
 
         print('general_elements:\n')
         print(general_elements)
         print("\n")
         boundary_condition = data.pop('boundary_condition', None)
-        data['specifiedHeadBoundaryPackages'] = [{"BFH": False}, {"CHD": False}, {"FHB": False}]
-        data['specifiedFluxBoundaryPackages'] = [{"RCH": False}, {"WEL": False}, {"FHB": False}]
-        data['headDependentFluxBoundaryPackages'] = [{"DAF": False}, {"DRN": False}, {"DRT": False},
-                                                     {"ETS": False}, {"EVT": False}, {"GHB": False},
-                                                     {"LAK": False}, {"RES": False}, {"RIP": False},
-                                                     {"RIV": False}, {"SFR": False}, {"STR": False},
-                                                     {"UZF": False}, {"DAFG": False}, {"MNW1": False},
-                                                     {"MNW2": False}]
-        if boundary_condition is not None:
-            for item in data['specifiedHeadBoundaryPackages']:
-                key = list(item.keys())[0]
+        if boundary_condition is None:
+            boundary_condition = {}
+        data['specifiedHeadBoundaryPackages'] = {"BFH": False, "CHD": False, "FHB": False, "otherPackages": ""}
+        data['specifiedFluxBoundaryPackages'] = {"RCH": False, "WEL": False, "FHB": False, "otherPackages": ""}
+        data['headDependentFluxBoundaryPackages'] = {"DAF": False, "DRN": False, "DRT": False,
+                                                     "ETS": False, "EVT": False, "GHB": False,
+                                                     "LAK": False, "RES": False, "RIP": False,
+                                                     "RIV": False, "SFR": False, "STR": False,
+                                                     "UZF": False, "DAFG": False, "MNW1": False,
+                                                     "MNW2": False, "otherPackages": ""}
+        if boundary_condition:
+            for key in data['specifiedHeadBoundaryPackages']:
                 for pkg in boundary_condition['specified_head_boundary_packages']:
                     if pkg['description'] == key:
-                        item[key] = True
+                        data['specifiedHeadBoundaryPackages'][key] = True
                         break
 
-            other_pkg = {"otherPackages": ""}
             if boundary_condition['other_specified_head_boundary_packages']:
-                other_pkg = {"otherPackages": boundary_condition['other_specified_head_boundary_packages']}
+                data['specifiedHeadBoundaryPackages']["otherPackages"] = boundary_condition['other_specified_head_boundary_packages']
 
-            data['specifiedHeadBoundaryPackages'].append(other_pkg)
-            for item in data['specifiedFluxBoundaryPackages']:
-                key = list(item.keys())[0]
+            for key in data['specifiedFluxBoundaryPackages']:
                 for pkg in boundary_condition['specified_flux_boundary_packages']:
                     if pkg['description'] == key:
-                        item[key] = True
+                        data['specifiedFluxBoundaryPackages'][key] = True
                         break
-            other_pkg = {"otherPackages": ""}
-            if boundary_condition['other_specified_flux_boundary_packages']:
-                other_pkg = {"otherPackages": boundary_condition['other_specified_flux_boundary_packages']}
 
-            data['specifiedFluxBoundaryPackages'].append(other_pkg)
-            for item in data['headDependentFluxBoundaryPackages']:
-                key = list(item.keys())[0]
+            if boundary_condition['other_specified_flux_boundary_packages']:
+                data['specifiedFluxBoundaryPackages']["otherPackages"] = boundary_condition['other_specified_flux_boundary_packages']
+
+            for key in data['headDependentFluxBoundaryPackages']:
                 for pkg in boundary_condition['head_dependent_flux_boundary_packages']:
                     if pkg['description'] == key:
-                        item[key] = True
+                        data['headDependentFluxBoundaryPackages'][key] = True
                         break
-            other_pkg = {"otherPackages": ""}
             if boundary_condition['other_head_dependent_flux_boundary_packages']:
-                other_pkg = {"otherPackages": boundary_condition['other_head_dependent_flux_boundary_packages']}
-
-            data['headDependentFluxBoundaryPackages'].append(other_pkg)
+                data['headDependentFluxBoundaryPackages']["otherPackages"] = boundary_condition['other_head_dependent_flux_boundary_packages']
 
         meta_json = json.dumps(data, indent=4)
         print(meta_json)
-        # json_schema = json.loads(get_modflow_meta_schema())
+        meta_json_schema = json.loads(get_modflow_meta_schema())
         # print("MODFLOW Meta Schema:\n")
         # print(json_schema)
-        self.assertEqual(1, 2)
+        try:
+            jsonschema.Draft4Validator(meta_json_schema).validate(data)
+        except jsonschema.ValidationError as err:
+            print("Meta schema validation error:\n")
+            print(err)
+            # print(err.absolute_schema_path)
+            # print(str(err.message))
+            # print("path:\n")
+            # str(err.schema_path)
+
+        # self.assertEqual(1, 2)
+
+    def test_migrate_no_modflow_specific_metadata(self):
+        """
+        Here we are testing that we can migrate a modflow mi resource that doesn't have any modflow specific metadata
+        """
+        mi_res = self._create_modflow_resource()
+        self.maxDiff = None
+        # check that there are no model specific metadata
+        self.assertEqual(mi_res.metadata.study_area, None)
+        self.assertEqual(mi_res.metadata.grid_dimensions, None)
+        self.assertEqual(mi_res.metadata.stress_period, None)
+        self.assertEqual(mi_res.metadata.ground_water_flow, None)
+        self.assertEqual(mi_res.metadata.boundary_condition, None)
+        self.assertEqual(mi_res.metadata.model_calibration, None)
+        self.assertEqual(list(mi_res.metadata.model_inputs), [])
+        self.assertEqual(mi_res.metadata.general_elements, None)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
+        # migrate the modflow resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        # check the mi aggregation has meta schema
+        self.assertNotEqual(mi_aggr.metadata_schema_json, {})
+        # check the json metadata in mi aggregation
+        self.assertEqual(mi_aggr.metadata.metadata_json['studyArea'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['gridDimensions'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['groundwaterFlow'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelCalibration'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['stressPeriod'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelParameter'], "")
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelSolver'], None)
+        self.assertEqual(mi_aggr.metadata.metadata_json['subsidencePackage'], None)
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['outputControlPackage'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'], {})
 
     def _create_modflow_resource(self, model_instance_type="MODFLOWModelInstanceResource", add_keywords=False):
         res = hydroshare.create_resource(model_instance_type, self.user,

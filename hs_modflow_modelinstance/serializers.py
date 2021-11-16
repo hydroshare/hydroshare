@@ -120,3 +120,14 @@ class MODFLOWModelInstanceMetaDataSerializer(ModelInstanceMetaDataSerializer):
 
     class Meta:
         model = MODFLOWModelInstanceMetaData
+
+
+class MODFLOWModelInstanceMetaDataSerializerMigration(serializers.Serializer):
+    study_area = StudyAreaMetaDataSerializer(required=False, many=False)
+    grid_dimensions = GridDimensionsMetaDataSerializer(required=False, many=False)
+    stress_period = StressPeriodMetaDataSerializer(required=False, many=False)
+    ground_water_flow = GroundWaterFlowMetaDataSerializer(required=False, many=False)
+    boundary_condition = BoundaryConditionMetaDataSerializer(required=False, many=False)
+    model_calibration = ModelCalibrationMetaDataSerializer(required=False, many=False)
+    model_inputs = ModelInputMetaDataSerializer(required=False, many=True)
+    general_elements = GeneralElementsMetaDataSerializer(required=False, many=False)
