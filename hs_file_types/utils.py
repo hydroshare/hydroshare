@@ -384,9 +384,9 @@ def ingest_logical_file_metadata(graph, resource, map_files=[]):
             res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
-            raise Exception("Could not find aggregation for {}".format(metadata_file.name))
+            raise Exception("Could not find aggregation for {}".format(subject))
         if not lf:
-            raise Exception("Files for aggregation in metadata file {} could not be found".format(metadata_file.name))
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(subject))
 
     with transaction.atomic():
         lf.metadata.delete_all_elements()

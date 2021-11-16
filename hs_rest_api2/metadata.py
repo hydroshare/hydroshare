@@ -41,7 +41,6 @@ def resource_metadata(resource):
 
 
 def ingest_resource_metadata(resource, incoming_metadata):
-    from hsmodels.schemas.resource import ResourceMetadata
     from hsmodels.schemas import rdf_graph
     r_md = resource_metadata(resource).dict()
     try:
@@ -152,7 +151,8 @@ def aggregation_metadata_json(request, pk, aggregation_path, in_schema, out_sche
                      operation_description="Get Geographic Feature aggregation metadata json")
 @api_view(['GET', 'PUT'])
 def geographic_feature_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path, GeographicFeatureMetadataIn, GeographicFeatureMetadata)
+    return aggregation_metadata_json(request, pk, aggregation_path, GeographicFeatureMetadataIn,
+                                     GeographicFeatureMetadata)
 
 
 @swagger_auto_schema(method='put', request_body=serializers.GeographicRasterMetadataInSerializer,
@@ -161,7 +161,8 @@ def geographic_feature_metadata_json(request, pk, aggregation_path):
                      operation_description="Get Geographic Raster aggregation metadata json")
 @api_view(['GET', 'PUT'])
 def geographic_raster_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path, GeographicRasterMetadataIn, GeographicRasterMetadata)
+    return aggregation_metadata_json(request, pk, aggregation_path, GeographicRasterMetadataIn,
+                                     GeographicRasterMetadata)
 
 
 @swagger_auto_schema(method='put', request_body=serializers.TimeSeriesMetadataInSerializer,
@@ -188,7 +189,8 @@ def file_set_metadata_json(request, pk, aggregation_path):
                      operation_description="Get Multidimensional aggregation metadata json")
 @api_view(['GET', 'PUT'])
 def multidimensional_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path, MultidimensionalMetadataIn, MultidimensionalMetadata)
+    return aggregation_metadata_json(request, pk, aggregation_path, MultidimensionalMetadataIn,
+                                     MultidimensionalMetadata)
 
 
 @swagger_auto_schema(method='put', request_body=serializers.ReferencedTimeSeriesMetadataInSerializer,
@@ -197,7 +199,8 @@ def multidimensional_metadata_json(request, pk, aggregation_path):
                      operation_description="Get Referenced TimeSeries aggregation metadata json")
 @api_view(['GET', 'PUT'])
 def referenced_time_series_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path, ReferencedTimeSeriesMetadataIn, ReferencedTimeSeriesMetadata)
+    return aggregation_metadata_json(request, pk, aggregation_path, ReferencedTimeSeriesMetadataIn,
+                                     ReferencedTimeSeriesMetadata)
 
 
 @swagger_auto_schema(method='put', request_body=serializers.SingleFileMetadataInSerializer,

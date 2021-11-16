@@ -6,8 +6,7 @@ from django.core.urlresolvers import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
     MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \
-    ReferencedTimeSeriesMetadataIn, ModelProgramMetadata, ModelProgramMetadataIn, ModelInstanceMetadata, \
-    ModelInstanceMetadataIn
+    ReferencedTimeSeriesMetadataIn, ModelProgramMetadataIn, ModelInstanceMetadataIn
 from rest_framework import status
 
 from hs_core.hydroshare import resource, current_site_url
@@ -101,40 +100,50 @@ class TestFileBasedJSON(HSRESTTestCase):
 
     def test_reference_timerseries_metadata_update_retrieve(self):
         prepare_resource(self, "reference_timeseries")
-        self._test_metadata_update_retrieve("hsapi2:referenced_time_series_metadata_json", ReferencedTimeSeriesMetadataIn, "referencedtimeseries.refts.json", "msf_version.refts.json")
+        self._test_metadata_update_retrieve("hsapi2:referenced_time_series_metadata_json",
+                                            ReferencedTimeSeriesMetadataIn, "referencedtimeseries.refts.json",
+                                            "msf_version.refts.json")
 
     def test_netcdf_metadata_update_retrieve(self):
         prepare_resource(self, "netcdf")
-        self._test_metadata_update_retrieve("hsapi2:multidimensional_metadata_json", MultidimensionalMetadataIn, "multidimensional.json", "SWE_time.nc")
+        self._test_metadata_update_retrieve("hsapi2:multidimensional_metadata_json", MultidimensionalMetadataIn,
+                                            "multidimensional.json", "SWE_time.nc")
 
     def test_file_set_metadata_update_retrieve(self):
         prepare_resource(self, "file_set")
-        self._test_metadata_update_retrieve("hsapi2:file_set_metadata_json", FileSetMetadataIn, "fileset.json", "asdf/testing.xml")
+        self._test_metadata_update_retrieve("hsapi2:file_set_metadata_json", FileSetMetadataIn, "fileset.json",
+                                            "asdf/testing.xml")
 
     def test_timerseries_metadata_update_retrieve(self):
         prepare_resource(self, "timeseries")
-        self._test_metadata_update_retrieve("hsapi2:time_series_metadata_json", TimeSeriesMetadataIn, "timeseries.json", "ODM2_Multi_Site_One_Variable.sqlite")
+        self._test_metadata_update_retrieve("hsapi2:time_series_metadata_json", TimeSeriesMetadataIn,
+                                            "timeseries.json", "ODM2_Multi_Site_One_Variable.sqlite")
 
     def test_geographic_raster_metadata_update_retrieve(self):
         prepare_resource(self, "geographic_raster")
-        self._test_metadata_update_retrieve("hsapi2:geographic_raster_metadata_json", GeographicRasterMetadataIn, "geographicraster.json", "logan.vrt")
+        self._test_metadata_update_retrieve("hsapi2:geographic_raster_metadata_json", GeographicRasterMetadataIn,
+                                            "geographicraster.json", "logan.vrt")
 
     def test_geographic_feature_metadata_update_retrieve(self):
         prepare_resource(self, "geographic_feature")
-        self._test_metadata_update_retrieve("hsapi2:geographic_feature_metadata_json", GeographicFeatureMetadataIn, "geographicfeature.json", "watersheds.shp")
+        self._test_metadata_update_retrieve("hsapi2:geographic_feature_metadata_json", GeographicFeatureMetadataIn,
+                                            "geographicfeature.json", "watersheds.shp")
 
     def test_single_file_metadata_update_retrieve(self):
         prepare_resource(self, "single_file")
-        self._test_metadata_update_retrieve("hsapi2:single_file_metadata_json", SingleFileMetadataIn, "singlefile.json", "test.xml")
+        self._test_metadata_update_retrieve("hsapi2:single_file_metadata_json", SingleFileMetadataIn,
+                                            "singlefile.json", "test.xml")
 
     def test_model_program_metadata_update_retrieve(self):
         prepare_resource(self, "model_program")
-        self._test_metadata_update_retrieve("hsapi2:model_program_metadata_json", ModelProgramMetadataIn, "modelprogram.json", "setup.cfg")
+        self._test_metadata_update_retrieve("hsapi2:model_program_metadata_json", ModelProgramMetadataIn,
+                                            "modelprogram.json", "setup.cfg")
 
     def test_model_instance_metadata_update_retrieve(self):
         prepare_resource(self, "model_program")
         prepare_resource(self, "model_instance")
-        self._test_metadata_update_retrieve("hsapi2:model_instance_metadata_json", ModelInstanceMetadataIn, "modelinstance.json", "generic_file.txt")
+        self._test_metadata_update_retrieve("hsapi2:model_instance_metadata_json", ModelInstanceMetadataIn,
+                                            "modelinstance.json", "generic_file.txt")
 
     def _test_metadata_update_unknown_field(self, endpoint, aggregation_path=None):
         kwargs = {"pk": self.res.short_id}
@@ -153,7 +162,8 @@ class TestFileBasedJSON(HSRESTTestCase):
 
     def test_reference_timerseries_metadata_update_unknown_field(self):
         prepare_resource(self, "reference_timeseries")
-        self._test_metadata_update_unknown_field("hsapi2:referenced_time_series_metadata_json", "msf_version.refts.json")
+        self._test_metadata_update_unknown_field("hsapi2:referenced_time_series_metadata_json",
+                                                 "msf_version.refts.json")
 
     def test_netcdf_metadata_update_unknown_field(self):
         prepare_resource(self, "netcdf")
@@ -165,7 +175,8 @@ class TestFileBasedJSON(HSRESTTestCase):
 
     def test_timerseries_metadata_update_unknown_field(self):
         prepare_resource(self, "timeseries")
-        self._test_metadata_update_unknown_field("hsapi2:time_series_metadata_json", "ODM2_Multi_Site_One_Variable.sqlite")
+        self._test_metadata_update_unknown_field("hsapi2:time_series_metadata_json",
+                                                 "ODM2_Multi_Site_One_Variable.sqlite")
 
     def test_geographic_raster_metadata_update_unknown_field(self):
         prepare_resource(self, "geographic_raster")
