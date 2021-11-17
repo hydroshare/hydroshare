@@ -3493,7 +3493,8 @@ span.you-flag {
 }
 
 .owl-item {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .owl-item:last-child {
