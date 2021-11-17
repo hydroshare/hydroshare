@@ -277,6 +277,8 @@ function updateSelectionMenuContext() {
             uiActionStates.removeAggregation.disabled = true;
         }
         $("#fileTypeMetaData").html(file_metadata_alert);
+        // hide preview option on multiple file selection
+        uiActionStates.preview.fileMenu.hidden = true;
     }
     else if (selected.length === 1) {
         // Exactly one item selected
@@ -316,11 +318,11 @@ function updateSelectionMenuContext() {
                 uiActionStates.paste.disabled = true;
                 uiActionStates.subMenuSetContentType.disabled = true;
                 uiActionStates.subMenuSetContentType.fileMenu.hidden = true;
+            }
 
-                let previewDataURL = selected.children('span.fb-preview-data-url').text();
-                if (previewDataURL == 'null') {
-                    uiActionStates.preview.fileMenu.hidden = true;
-                };
+            let previewDataURL = selected.children('span.fb-preview-data-url').text();
+            if (previewDataURL === 'null' || previewDataURL === 'undefined') {
+                uiActionStates.preview.fileMenu.hidden = true;
             }
 
             let logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");

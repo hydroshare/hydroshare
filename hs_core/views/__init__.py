@@ -287,15 +287,31 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_discoverable_status = 'discoverable' if resource.raccess.discoverable \
         else 'not discoverable'
 
+    show_meta_status = False
+    if 'meta-status' not in request.session:
+        request.session['meta-status'] = ''
+
+    if 'meta-status-res-id' not in request.session:
+        request.session['meta-status-res-id'] = resource.short_id
+        show_meta_status = True
+    elif request.session['meta-status-res-id'] != resource.short_id:
+        request.session['meta-status-res-id'] = resource.short_id
+        show_meta_status = True
+
     if resource.can_be_public_or_discoverable:
         metadata_status = METADATA_STATUS_SUFFICIENT
     else:
         metadata_status = METADATA_STATUS_INSUFFICIENT
 
+    if request.session['meta-status'] != metadata_status:
+        request.session['meta-status'] = metadata_status
+        show_meta_status = True
+
     response_data = {
         'res_public_status': res_public_status,
         'res_discoverable_status': res_discoverable_status,
         'metadata_status': metadata_status,
+        'show_meta_status': show_meta_status
     }
 
     return JsonResponse(data=response_data, status=200)
@@ -707,6 +723,11 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     finally:
         request.session['resource-mode'] = 'edit'
 
+    if res.can_be_public_or_discoverable:
+        request.session['meta-status'] = METADATA_STATUS_SUFFICIENT
+    else:
+        request.session['meta-status'] = METADATA_STATUS_INSUFFICIENT
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -730,7 +751,13 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             # raising this specific exception
             logger.warn(str(ex))
             continue
+
     request.session['resource-mode'] = 'edit'
+
+    if res.can_be_public_or_discoverable:
+        request.session['meta-status'] = METADATA_STATUS_SUFFICIENT
+    else:
+        request.session['meta-status'] = METADATA_STATUS_INSUFFICIENT
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -1669,6 +1696,9 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
         user_data['website'] = user.userprofile.website if user.userprofile.website else ''
         user_data['identifiers'] = user.userprofile.identifiers
+        user_data['type'] = user.userprofile.user_type
+        user_data['date_joined'] = user.date_joined
+        user_data['subject_areas'] = user.userprofile.subject_areas
     else:
         group = utils.group_from_id(user_or_group_id)
         user_data['organization'] = group.name
