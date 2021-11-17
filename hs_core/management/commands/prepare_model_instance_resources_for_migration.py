@@ -6,6 +6,7 @@ from hs_modelinstance.models import ModelInstanceResource
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 from hs_swat_modelinstance.models import SWATModelInstanceResource
 
+
 class Command(BaseCommand):
     """This command needs to be run before migrating model program resources"""
 
