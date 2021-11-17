@@ -314,12 +314,6 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         graph.add((subject, HSTERMS.includesModelOutput, Literal(self.has_model_output)))
 
-        if self.has_model_output:
-            includes_output = 'true'
-        else:
-            includes_output = 'false'
-        graph.add((subject, HSTERMS.includesModelOutput, Literal(includes_output)))
-
         if self.executed_by:
             if self.executed_by:
                 resource = self.logical_file.resource
