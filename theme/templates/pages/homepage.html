@@ -4,6 +4,9 @@
 
 {% block meta_title %}Find, Analyze and Share Water Data{% endblock %}
 
+{% block extra_css %}
+{% endblock %}
+
 {% block main %}
     {# Begin Maintenance Warning #}
     {% with page.get_content_model as cm %}
@@ -91,6 +94,11 @@
         <div class="container">
             <h2 class="home-page-block-title">How can HydroShare support your research?</h2>
             <div class="features-container row slideInBlock">
+                <div class="feature col-xs-12" style="justify-content: center; flex-direction: column;">
+                  <img class="feature-icon" src="{{ STATIC_URL }}img/home-page/FAIR.png" style="max-width: 350px;" alt="FAIR">
+                  <p>Sharing research products with colleagues and others using FAIR Data Principles</p>
+                </div>
+
                 <div class="feature col-xs-12 col-sm-6">
                     <div class="feature-icon"><i class="fa fa-cogs fa-5x" aria-hidden="true"></i></div>
                     <p>A dependable data management and publication solution for hydrologic data types and models</p>
@@ -130,11 +138,6 @@
                     <div class="feature-icon"><i class="fa fa-desktop fa-5x" aria-hidden="true"></i></div>
                     <p>Web apps for visualizing, analyzing, and running models on data in HydroShare</p>
                 </div>
-
-                <div class="feature col-xs-12" style="justify-content: center;">
-                    <img class="feature-icon" src="{{ STATIC_URL }}img/home-page/FAIR.png" style="max-width: 350px;" alt="FAIR">
-                    <p>Sharing research products with colleagues and others using FAIR Data Principles</p>
-                </div>
             </div>
         </div>
     </section>
@@ -144,20 +147,24 @@
         <div class="row home-page-block">
             <div class="steps-container col-xs-12">
                 <div class="step-item slideInBlock">
-                    <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png" alt="Create data">
+                    <a href="https://help.hydroshare.org/hydroshare-resources/content-types/">
+                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png" alt="Create data">
+                    </a>
                     <hr>
                     <div class="step-number">1</div>
-                    <h4>Create data</h4>
+                    <a href="https://help.hydroshare.org/hydroshare-resources/content-types/"><h4>Create data</h4></a>
                     <div class="step-description">
                         Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.
                     </div>
                 </div>
 
                 <div class="step-item slideInBlock">
-                    <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png" alt="Upload to HydroShare">
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/creating-resources/">
+                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png" alt="Upload to HydroShare">
+                    </a>
                     <hr>
                     <div class="step-number">2</div>
-                    <h4>Upload to HydroShare</h4>
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/creating-resources/"><h4>Upload to HydroShare</h4></a>
                     <div class="step-description">
                         Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.
                     </div>
@@ -165,30 +172,36 @@
 
 
                 <div class="step-item slideInBlock">
-                    <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png" alt="Describe with metadata">
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/best-practices-for-describing-your-resource-with-metadata/">
+                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png" alt="Describe with metadata">
+                    </a>
                     <hr>
                     <div class="step-number">3</div>
-                    <h4>Describe with metadata</h4>
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/best-practices-for-describing-your-resource-with-metadata/"><h4>Describe with metadata</h4></a>
                     <div class="step-description">
                         Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.
                     </div>
                 </div>
 
                 <div class="step-item slideInBlock">
-                    <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png" alt="Share with colleagues">
+                    <a href="https://help.hydroshare.org/sharing-and-privacy/">
+                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png" alt="Share with colleagues">
+                    </a>
                     <hr>
                     <div class="step-number">4</div>
-                    <h4>Share with colleagues</h4>
+                    <a href="https://help.hydroshare.org/sharing-and-privacy/"><h4>Share with colleagues</h4></a>
                     <div class="step-description">
                         Choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or make your resources public for everyone to access.
                     </div>
                 </div>
 
                 <div class="step-item slideInBlock">
-                    <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step5.png" alt="Formally Publish">
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/formally-publishing-data/">
+                      <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step5.png" alt="Formally Publish">
+                    </a>
                     <hr>
                     <div class="step-number">5</div>
-                    <h4>Permanently Publish</h4>
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/formally-publishing-data/"><h4>Permanently Publish</h4></a>
                     <div class="step-description">
                         Obtain a Digital Object Identifier (DOI) so your work can be
                         easily cited. Reference related journal publications in your metadata.
@@ -204,25 +217,15 @@
             <p>Whether you are a faculty member, researcher, student, or a professional, HydroShare provides functionality that can take your research to the next level of openness and reproducibility, enhance the trustworthiness of research findings, and increase the reusability of research outputs. </p>
             <br>
             <p>HydroShare provides Data Services to meet the needs of many different research organizations.</p>
-            <div class="faetured-organizations">
-                <div class="text-center">
-                    <img src="{{ STATIC_URL }}img/home-page/iutah_logo.png" alt="iUtah logo">
-                    <div><a href="#">Learn more</a></div>
-                </div>
-                <div class="text-center">
-                    <img src="{{ STATIC_URL }}img/home-page/CZN_Logo.png" alt="CZN logo">
-                    <div><a href="#">Learn more</a></div>
-                </div>
-                <div class="text-center">
-                    <img src="{{ STATIC_URL }}img/home-page/czo_logo.png" alt="CZO logo">
-                    <div><a href="#">Learn more</a></div>
-                </div>
-                <div class="text-center">
-                    <img src="{{ STATIC_URL }}img/home-page/lro_logo.png" alt="LRO logo">
-                    <div><a href="#">Learn more</a></div>
-                </div>
+            <div class="carousel-wrapper">
+              <div class="featured-organizations groups-carousel owl-carousel">
+                  <a href="#"><img src="{{ STATIC_URL }}img/home-page/iutah_logo.png" alt="iUtah logo"></a>
+                  <a href="#"><img src="{{ STATIC_URL }}img/home-page/CZN_Logo.png" alt="CZN logo"></a>
+                  <a href="#"><img src="{{ STATIC_URL }}img/home-page/czo_logo.png" alt="CZO logo"></a>
+                  <a href="#"><img src="{{ STATIC_URL }}img/home-page/lro_logo.png" alt="LRO logo"></a>
+              </div>
             </div>
-            <p>Want your organization to be featured here? <a href="#">Tell us how you are using HydroShare!</a></p>
+            <p>Want your organization to be featured here? <a href="mailto:help.cuahsi.org?subject=How we use HydroShare">Tell us how you are using HydroShare!</a></p>
         </div>
     </div>
 
@@ -230,16 +233,19 @@
         <h2 class="home-page-block-title">Trusted by the Scientific Community</h2>
         <p>We collaborate with a variety of institutions to ensure that HydroShare is a trusted repository for your data and research products. We are committed to FAIR Data Principles and strive to maintain functionality to support more transparent and reproducible research.</p>
         <a class="btn btn-primary" href="#">Learn more</a>
-        <div class="faetured-institutions">
-            <img src="{{ STATIC_URL }}img/home-page/FAIRsharing-sdp.svg" alt="Fair Sharing logo">
-            <img src="{{ STATIC_URL }}img/home-page/re3datalogo_black.png" alt="re3data logo">
-            <img src="{{ STATIC_URL }}img/home-page/springer_nature_logo.png" alt="CZO logo">
-            <img src="{{ STATIC_URL }}img/home-page/jgr_logo.png" alt="JGR logo">
-            <img src="{{ STATIC_URL }}img/home-page/scientific_data_logo.jpg" alt="Scientific Data logo">
+        <div class="carousel-wrapper">
+            <div class="featured-institutions institutions-carousel owl-carousel">
+                <a href="#"><img src="{{ STATIC_URL }}img/home-page/FAIRsharing-sdp.svg" alt="Fair Sharing logo"></a>
+                <a href="#"><img src="{{ STATIC_URL }}img/home-page/re3datalogo_black.png" alt="re3data logo"></a>
+                <a href="#"><img src="{{ STATIC_URL }}img/home-page/springer_nature_logo.png" alt="CZO logo"></a>
+                <a href="#"><img src="{{ STATIC_URL }}img/home-page/jgr_logo.png" alt="JGR logo"></a>
+                <a href="#"><img src="{{ STATIC_URL }}img/home-page/scientific_data_logo.jpg" alt="Scientific Data logo"></a>
+            </div>
         </div>
     </section>
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/home-page.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
 
 {% endblock %}
 

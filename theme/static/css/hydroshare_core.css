@@ -3420,33 +3420,84 @@ span.you-flag {
   color: #4bb5c1;
 }
 /* =================================== */
-.faetured-organizations, .faetured-institutions {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 40px 0;
-  gap: 40px;
-  flex-wrap: wrap;
-}
 
-.faetured-organizations > div {
-  display: flex;
-  flex-direction: column;
-}
-
-.faetured-organizations img {
+.featured-organizations img {
   max-height: 90px;
   max-width: 390px;
-  margin-bottom: 10px;
 }
 
-.faetured-institutions img {
+.featured-institutions img {
   max-height: 90px;
   max-width: 200px;
 }
+/* =================================== */
+.carousel-wrapper {
+  position: relative;
+  padding: 0 75px;
+  overflow: hidden;
+  margin: 40px 0;
+}
 
-.faetured-organizations {
+.carousel-wrapper::before, .carousel-wrapper::after {
+  content: '';
+  display: block;
+  width: 75px;
+  height: 90px;
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
 
+.carousel-wrapper::before {
+  background: linear-gradient(90deg, rgb(255 255 255) 60%, rgb(0 0 0 / 0%));
+  left: 0;
+}
+
+.carousel-wrapper::after {
+  background: linear-gradient(270deg, rgb(255 255 255) 60%, rgb(0 0 0 / 0%));
+  right: 0;
+}
+
+.container-grey .carousel-wrapper::before {
+  background: linear-gradient(90deg, rgb(247 246 246) 60%, rgb(0 0 0 / 0%));
+  left: 0;
+}
+
+.container-grey .carousel-wrapper::after {
+  background: linear-gradient(270deg, rgb(247 246 246) 60%, rgb(0 0 0 / 0%));
+  right: 0;
+}
+
+.carousel-wrapper .owl-stage {
+  display: flex;
+}
+
+.owl-carousel button[role='presentation'] {
+  position: absolute;
+  z-index: 2;
+  top: calc(50% - 25px);
+  width: 50px;
+  height: 50px;
+  border: 0;
+  font-size: 18px;
+  border-radius: 50%;
+  box-shadow: 0 3px 1px -2px rgb(0 0 0 / 20%), 0 2px 2px 0 rgb(0 0 0 / 14%), 0 1px 5px 0 rgb(0 0 0 / 12%);
+}
+
+.owl-carousel button[role='presentation'].owl-next {
+  right: 5px;
+}
+
+.owl-carousel button[role='presentation'].owl-prev {
+  left: 5px;
+}
+
+.owl-item {
+  display: inline-block;
+}
+
+.owl-item:last-child {
+  margin-right: 0 !important;
 }
 /* =================================== */
 .container-grey {
