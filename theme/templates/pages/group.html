@@ -20,7 +20,6 @@
     </div>
 
     <div class="container">
-
         <div class="row">
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
@@ -51,13 +50,28 @@
                              style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                     </div>
                 {% endif %}
+
+                {#  Group Info #}
+                {% if group.gaccess.email or group.gaccess.url %}
+                <div class="group-info">
+                    {% if group.gaccess.email %}
+                        <div class="text-muted">
+                            <i class="fa fa-envelope-o"></i> <span>{{ group.gaccess.email }}</span>
+                        </div>
+                    {% endif %}
+                    {% if group.gaccess.url %}
+                        <div class="text-muted">
+                            <i class="fa fa-link"></i> <a href="{{ group.gaccess.url }}" target="_blank">{{ group.gaccess.url }}</a>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
 
             <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
-                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
-
-                <p>{{ group.gaccess.description|linebreaks }}</p>
+                {% if group.gaccess.purpose %}<h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>{% endif %}
+                {% if group.gaccess.description %}<p>{{ group.gaccess.description|linebreaks }}</p>{% endif %}
             </div>
 
             {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
@@ -771,7 +785,18 @@
                                     <small class="text-muted">300 characters or less</small>
                                     <textarea class="form-control" name="purpose"
                                               maxlength="300">{{ group.gaccess.purpose }}</textarea>
+                                </fieldset>
 
+                                {# Group Contact Email #}
+                                <fieldset class="col-sm-12">
+                                    <label>Group contact email</label>
+                                    <input class="form-control" type="email" name="email" value="{{ group.gaccess.email }}"></input>
+                                </fieldset>
+
+                                {# Group Url #}
+                                <fieldset class="col-sm-12">
+                                    <label>Group URL</label>
+                                    <input class="form-control" type="url" name="url" value="{{ group.gaccess.url }}"></input>
                                 </fieldset>
 
                                 {# Group Description #}

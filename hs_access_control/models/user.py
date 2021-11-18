@@ -222,7 +222,7 @@ class UserAccess(models.Model):
                                                      Q(invitation_to=self.user)) \
             .filter(group_to_join__gaccess__active=True).filter(redeemed=False)
 
-    def create_group(self, title, description, auto_approve=False, email=None, url = None, purpose=None):
+    def create_group(self, title, description, auto_approve=False, email=None, url=None, purpose=None):
         """
         Create a group.
 
