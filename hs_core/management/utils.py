@@ -33,39 +33,33 @@ def get_modflow_meta_schema():
     {
     "type": "object",
     "title": "MODFLOW Model Instance Metadata Schema",
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": "http://json-schema.org/draft-04/schema#",	
     "properties": {
         "studyArea": {
             "type": "object",
             "title": "Study Area",
             "properties": {
                 "totalWidth": {
-                    "type": ["number", "string"],
-                    "title": "Total Width (in meters)",
-                    "default": 0,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Total Width (in meters)",                    
                     "description": "Total width of the study area used in creating this model instance.",
                     "propertyOrder": 2
                 },
                 "totalLength": {
-                    "type": ["number", "string"],
-                    "title": "Total Length (in meters)",
-                    "default": 0,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Total Length (in meters)",                    
                     "description": "Total length of the study area used in creating this model instance.",
                     "propertyOrder": 1
                 },
                 "maximumElevation": {
-                    "type": ["number", "string"],
-                    "title": "Maximum Elevation (in meters)",
-                    "default": 0,
+                    "type": "string",
+                    "title": "Maximum Elevation (in meters)",                    
                     "description": "Maximum elevation of the study area used in creating this model instance.",
                     "propertyOrder": 3
                 },
                 "minimumElevation": {
-                    "type": ["number", "string"],
-                    "title": "Minimum Elevation (in meters)",
-                    "default": 0,
+                    "type": "string",
+                    "title": "Minimum Elevation (in meters)",                    
                     "description": "Minimum elevation of the study area used in creating this model instance.",
                     "propertyOrder": 4
                 }
@@ -75,8 +69,7 @@ def get_modflow_meta_schema():
             "additionalProperties": false
         },
         "modelSolver": {
-            "enum": [
-                "DE4",
+            "enu": [                
                 "GMG",
                 "LMG",
                 "PCG",
@@ -84,11 +77,10 @@ def get_modflow_meta_schema():
                 "SIP",
                 "SOR",
                 "NWT",
-                null
+                "DE4"				
             ],
-            "type": ["string", "null"],
-            "title": "Model Solver",
-            "default": "",
+            "type": "string",
+            "title": "Model Solver",				
             "description": "Model solver used in creating this model instance.",
             "propertyOrder": 5
         },
@@ -103,16 +95,13 @@ def get_modflow_meta_schema():
                         "Steady and Transient"
                     ],
                     "type": "string",
-                    "title": "Type",
-                    "default": "",
+                    "title": "Type",                    
                     "description": "Type of stress period used in creating this model instance.",
                     "propertyOrder": 1
                 },
                 "lengthOfSteadyStateStressPeriod": {
-                    "type": ["number", "string"],
-                    "title": "Length of Steady State Stress Periods",
-                    "default": 1,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Length of Steady State Stress Periods",                    
                     "description": "Length of steady state stress periods used in creating this model instance.",
                     "propertyOrder": 2
                 },
@@ -125,20 +114,17 @@ def get_modflow_meta_schema():
                         "Other"
                     ],
                     "type": "string",
-                    "title": "Type of Transient State Stress Periods",
-                    "default": "",
+                    "title": "Type of Transient State Stress Periods",                    
                     "description": "Type of transient state stress periods used in creating this model instance.",
                     "propertyOrder": 1
                 },
                 "lengthOfTransientStateStressPeriod": {
-                    "type": ["number", "string"],
-                    "title": "Length of Transient State Stress Periods",
-                    "default": 1,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Length of Transient State Stress Periods",                    
                     "description": "Length of transient state stress periods used in creating this model instance.",
                     "propertyOrder": 4
                 }
-            },
+            },			
             "description": "Stress periods used in creating this model instance.",
             "propertyOrder": 10,
             "additionalProperties": false
@@ -153,16 +139,13 @@ def get_modflow_meta_schema():
                         "Irregular"
                     ],
                     "type": "string",
-                    "title": "Type of Rows",
-                    "default": "",
+                    "title": "Type of Rows",                    
                     "description": "Type of rows used in creating this model instance.",
                     "propertyOrder": 2
                 },
                 "numberOfRows": {
-                    "type": ["number", "string"],
-                    "title": "Number of Rows",
-                    "default": 1,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Number of Rows",                    
                     "description": "Number of rows used in creating this model instance.",
                     "propertyOrder": 3
                 },
@@ -172,28 +155,23 @@ def get_modflow_meta_schema():
                         "Irregular"
                     ],
                     "type": "string",
-                    "title": "Type of Columns",
-                    "default": "",
+                    "title": "Type of Columns",                    
                     "description": "Type of columns used in creating this model instance.",
                     "propertyOrder": 4
                 },
                 "numberOfLayers": {
-                    "type": ["number", "string"],
-                    "title": "Number of Layers",
-                    "default": 1,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Number of Layers",                    
                     "description": "Number of layers used in creating this model instance.",
                     "propertyOrder": 1
                 },
                 "numberOfColumns": {
-                    "type": ["number", "string"],
-                    "title": "Number of Columns",
-                    "default": 1,
-                    "minimum": 0,
+                    "type": "string",
+                    "title": "Number of Columns",                    
                     "description": "Number of columns used in creating this model instance.",
                     "propertyOrder": 5
                 }
-            },
+            },			
             "description": "Grid dimensions used in creating this model instance.",
             "propertyOrder": 9,
             "additionalProperties": false
@@ -294,8 +272,7 @@ def get_modflow_meta_schema():
                         "STOB"
                     ],
                     "type": "string",
-                    "title": "Observation Process Packages",
-                    "default": "",
+                    "title": "Observation Process Packages",                    
                     "description": "Type of transient state stress periods used in creating this model instance.",
                     "propertyOrder": 3
                 }
@@ -308,12 +285,10 @@ def get_modflow_meta_schema():
             "enum": [
                 "IBS",
                 "SUB",
-                "SWT",
-                null
+                "SWT"				
             ],
-            "type": ["string", "null"],
-            "title": "Subsidence Package",
-            "default": "",
+            "type": "string",
+            "title": "Subsidence Package",            
             "description": "Subsidence package used in creating this model instance.",
             "propertyOrder": 7
         },
@@ -352,6 +327,7 @@ def get_modflow_meta_schema():
                     "propertyOrder": 4
                 }
             },
+			"required": ["OC", "HYD", "GAGE", "LMT6", "MNWI"],
             "description": "Output control packages used in creating this model instance.",
             "propertyOrder": 6,
             "additionalProperties": false
@@ -384,6 +360,7 @@ def get_modflow_meta_schema():
                     "propertyOrder": 4
                 }
             },
+			"required": ["FHB", "RCH", "WEL"],
             "description": "Specified flux boundary packages used in creating this model instance.",
             "propertyOrder": 2,
             "additionalProperties": false
@@ -416,6 +393,7 @@ def get_modflow_meta_schema():
                     "propertyOrder": 4
                 }
             },
+			"required": ["BFH", "CHD", "FHB"],
             "description": "Specified head boundary packages used in creating this model instance.",
             "propertyOrder": 1,
             "additionalProperties": false
@@ -526,14 +504,17 @@ def get_modflow_meta_schema():
                     "propertyOrder": 17
                 }
             },
+			"required": ["DAF", "DRN", "DRT", "ETS", "EVT", "GHB", "LAK", "RES", "RIP", "RIV", "SFR", "STR", "UZF", "DAFG", "MNW1", "MNW2"],
             "description": "Head dependent flux boundary packages used in creating this model instance.",
             "propertyOrder": 3,
             "additionalProperties": false
         },
 		"modelInputs": {
 			"type": "array",
+			"title": "Inputs for model",
+			"format": "table",
 			"items": {
-				"type": "object",
+				"type": "object",				
 				"properties": {
 					"inputType": {
 						"type": "string",
@@ -547,13 +528,14 @@ def get_modflow_meta_schema():
 						"type": "string",
 						"title": "Input source URL"
 					}
-				}
+				},
+				"additionalProperties": false
 			},
 			"description": "Model inputs.",
             "propertyOrder": 4,
             "additionalProperties": false
 		}
-    },
+    },   	
     "description": "A sample schema for MODFLOW model instance metadata.",
     "additionalProperties": false
 }
