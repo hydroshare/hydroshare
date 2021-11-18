@@ -681,6 +681,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def _create_mi_resource(self, model_instance_type="ModelInstanceResource", add_keywords=False):
+        """Creates a model instance resource"""
         res = hydroshare.create_resource(model_instance_type, self.user,
                                          "Testing migrating to composite resource")
         if add_keywords:
@@ -689,6 +690,7 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         return res
 
     def _create_mp_resource(self, add_keywords=False):
+        """Create a model program resource"""
         mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
                                             "Testing migrating to composite resource")
         if add_keywords:
