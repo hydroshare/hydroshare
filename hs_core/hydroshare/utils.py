@@ -114,10 +114,10 @@ def user_from_id(user, raise404=True):
         return user
 
     try:
-        tgt = User.objects.get(username=user)
+        tgt = User.objects.get(username__iexact=user)
     except ObjectDoesNotExist:
         try:
-            tgt = User.objects.get(email=user)
+            tgt = User.objects.get(email__iexact=user)
         except ObjectDoesNotExist:
             try:
                 tgt = User.objects.get(pk=int(user))
