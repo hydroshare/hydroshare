@@ -272,6 +272,67 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(list(mi_res.metadata.model_inputs), [])
         self.assertEqual(mi_res.metadata.general_elements, None)
         self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
+        # add study area meta element to modflow resource
+        mi_res.metadata.create_element('StudyArea',
+                                       totalLength='10',
+                                       totalWidth=20,
+                                       maximumElevation='100',
+                                       minimumElevation='5')
+
+        # migrate the modflow resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        # check the mi aggregation has meta schema
+        self.assertNotEqual(mi_aggr.metadata_schema_json, {})
+        # check the json metadata in mi aggregation
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['studyArea'], {})
+        study_area = mi_aggr.metadata.metadata_json['studyArea']
+        self.assertEqual(study_area['totalWidth'], '20')
+        self.assertEqual(study_area['totalLength'], '10')
+        self.assertEqual(study_area['maximumElevation'], '100')
+        self.assertEqual(study_area['minimumElevation'], '5')
+
+        self.assertEqual(mi_aggr.metadata.metadata_json['gridDimensions'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['groundwaterFlow'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelCalibration'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['stressPeriod'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelParameter'], "")
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelSolver'], None)
+        self.assertEqual(mi_aggr.metadata.metadata_json['subsidencePackage'], None)
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['outputControlPackage'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'], {})
+
+    def test_migrate_modflow_specific_metadata_only_studyArea(self):
+        """
+        Here we are testing that we can migrate a modflow mi resource that has modflow specific
+        metadata 'study area' only
+        """
+        mi_res = self._create_modflow_resource()
+        self.maxDiff = None
+        # check that there are no model specific metadata
+        self.assertEqual(mi_res.metadata.study_area, None)
+        self.assertEqual(mi_res.metadata.grid_dimensions, None)
+        self.assertEqual(mi_res.metadata.stress_period, None)
+        self.assertEqual(mi_res.metadata.ground_water_flow, None)
+        self.assertEqual(mi_res.metadata.boundary_condition, None)
+        self.assertEqual(mi_res.metadata.model_calibration, None)
+        self.assertEqual(list(mi_res.metadata.model_inputs), [])
+        self.assertEqual(mi_res.metadata.general_elements, None)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
         # migrate the modflow resource
         call_command(self.mi_migration_command)
         self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
