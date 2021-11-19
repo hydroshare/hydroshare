@@ -668,6 +668,7 @@
                 {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 <div role="tabpanel" class="tab-pane fade" id="settings">
                     <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data" class="col-xs-12 col-sm-7">
+                        <legend>Group Settings</legend>
                         {% csrf_token %}
                         <div class="row">
                             {# Group Name #}
