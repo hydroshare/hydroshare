@@ -114,6 +114,13 @@
                             <i class="glyphicon glyphicon-user"></i> Members</a>
                     </li>
                 {% endif %}
+
+                {% if profile_user.is_group_owner %}
+                    <li role="presentation">
+                        <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-user"></i> Owner Settings</a>
+                    </li>
+                {% endif %}
             </ul>
 
             <!-- Tab panes -->
@@ -661,6 +668,12 @@
                         {% endif %}
 
                         </div>
+                    </div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade" id="settings">
+                    <div class="row">
+                        settings content here
                     </div>
                 </div>
             </div>
