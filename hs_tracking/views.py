@@ -11,7 +11,7 @@ from django.contrib import messages
 from . import models as hs_tracking
 from .models import Session, Variable
 from .utils import get_std_log_fields, authentic_redirect_url
-from hs_tools_resource.utils import do_work_when_launching_app_as_needed, WebAppLaunchException, encode_url
+from hs_tools_resource.utils import do_work_when_launching_app_as_needed, WebAppLaunchException
 
 
 class AppLaunch(TemplateView):
@@ -59,9 +59,6 @@ class AppLaunch(TemplateView):
             # format and save the log message
             msg = Variable.format_kwargs(**fields)
             session.record('app_launch', value=msg)
-
-        # encode url before redirect
-        url = encode_url(url)
 
         return HttpResponseRedirect(url)
 

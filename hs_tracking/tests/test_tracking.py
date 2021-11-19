@@ -1,23 +1,22 @@
-import csv
-import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import datetime, timedelta
+import csv
 from io import StringIO
-from pprint import pprint
 
-from django.contrib.auth.models import User, Group
-from django.http import HttpRequest, QueryDict, response
-from django.test import Client
 from django.test import TestCase
+from django.contrib.auth.models import User, Group
+from django.test import Client
+from django.http import HttpRequest, QueryDict, response
 from mock import patch, Mock
 
-import hs_tracking.utils as utils
-from hs_core import hydroshare
-from hs_tools_resource.models import RequestUrlBase
-from hs_tools_resource.utils import encode_url
 from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
+from hs_core import hydroshare
 from hs_tracking.views import AppLaunch
+import hs_tracking.utils as utils
+from hs_tools_resource.models import RequestUrlBase
+import urllib.request
+import urllib.parse
+import urllib.error
+from pprint import pprint
 
 
 class ViewTests(TestCase):
@@ -97,7 +96,6 @@ class ViewTests(TestCase):
 
         # validate response
         self.assertTrue(type(url_redirect) == response.HttpResponseRedirect)
-        request_url = encode_url(request_url)
         self.assertTrue(url_redirect.url == request_url)
 
         # validate logged data
