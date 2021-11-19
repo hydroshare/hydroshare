@@ -12,7 +12,7 @@
                 <div class="col-sm-12">
                     <div class="collaborate-nav">
                         <a href="{% url "groups" %}" class="collaborate-nav-item">Find Groups</a>
-                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+                        <a href="{% url "my_groups" %}" class="collaborate-nav-item active">My Groups</a>
                     </div>
                 </div>
             </div>
@@ -20,7 +20,7 @@
     </div>
 
     <div class="container">
-        <div class="row">
+        <div >
             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                 {% if not group.gaccess.active %}
                     <div class="alert alert-warning alert-dismissible" role="alert">
@@ -37,68 +37,79 @@
                 {% endif %}
             {% endif %}
 
-            <div class="col-sm-3">
-                {#  Group Picture #}
-                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                    </div>
-
-                {% else %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image group-preview-image-default"
-                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                    </div>
-                {% endif %}
-
-                {#  Group Info #}
-                {% if group.gaccess.email or group.gaccess.url %}
-                <div class="group-info">
-                    {% if group.gaccess.email %}
-                        <div class="text-muted">
-                            <i class="fa fa-envelope-o"></i> <span>{{ group.gaccess.email }}</span>
+            <div class="group-header">
+                <div>
+                    {#  Group Picture #}
+                    {% if group.gaccess.picture and group.gaccess.picture.url %}
+                        <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
                         </div>
-                    {% endif %}
-                    {% if group.gaccess.url %}
-                        <div class="text-muted">
-                            <i class="fa fa-link"></i> <a href="{{ group.gaccess.url }}" target="_blank">{{ group.gaccess.url }}</a>
+                    {% else %}
+                        <div class="group-image-wrapper group-image-wrapper-medium">
+                            <div class="group-image group-preview-image-default"
+                                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                         </div>
                     {% endif %}
                 </div>
-                {% endif %}
-            </div>
 
-            <div class="col-sm-7">
-                <h2 class="group-title">{{ group.name }}</h2>
-                {% if group.gaccess.purpose %}<h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>{% endif %}
-                {% if group.gaccess.description %}<p>{{ group.gaccess.description|linebreaks }}</p>{% endif %}
-            </div>
-
-            {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                <div class="col-sm-2">
-                    {% if group.gaccess.active %}
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                            <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip"
-                                      data-placement="auto" title="Edit Group"></span></a>
+                <div>
+                    <div class="group-title-container">
+                        <h2 class="group-title">{{ group.name }}</h2>
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
+                            <div>
+                                <!-- {% if group.gaccess.active %}
+                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                        <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
+                                            <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip"
+                                                data-placement="auto" title="Edit Group"></span></a>
+                                    {% endif %}
+                                {% endif %} -->
+                                <a href="#" id="btn-leave-group" class="btn btn-danger" data-toggle="modal" data-target="#leave-group-dialog">
+                                    Leave Group
+                                </a>
+                                <!-- {% if profile_user.is_group_owner and group.gaccess.active %}
+                                    <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
+                                        <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip"
+                                            data-placement="auto" title="Delete Group"></span></a>
+                                {% endif %} -->
+                                <!-- {% if profile_user.is_group_owner and not group.gaccess.active %}
+                                    <a href="{% url "restore_user_group" group.id %}">
+                                        <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip"
+                                            data-placement="auto" title="Restore Group"></span></a>
+                                {% endif %} -->
+                            </div>
                         {% endif %}
-                    {% endif %}
-                    <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
-                        <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip"
-                              data-placement="auto" title="Leave Group"></span></a>
-                    {% if profile_user.is_group_owner and group.gaccess.active %}
-                        <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
-                            <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip"
-                                  data-placement="auto" title="Delete Group"></span></a>
-                    {% endif %}
-                    {% if profile_user.is_group_owner and not group.gaccess.active %}
-                        <a href="{% url "restore_user_group" group.id %}">
-                            <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip"
-                                  data-placement="auto" title="Restore Group"></span></a>
+                    </div>
+                    
+                    {% if group.gaccess.purpose %}<h4>{{ group.gaccess.purpose|linebreaks }}</h4>{% endif %}
+
+                    {#  Group Info #}
+                    {% if group.gaccess.email or group.gaccess.url %}
+                    <div class="group-info">
+                        {% if group.gaccess.url %}
+                            <div class="text-muted">
+                                <i class="fa fa-link"></i> <a href="{{ group.gaccess.url }}" target="_blank">{{ group.gaccess.url }}</a>
+                            </div>
+                        {% endif %}
+
+                        {% if group.gaccess.email %}
+                            <div class="text-muted">
+                                <i class="fa fa-envelope-o"></i> <a href="mailto:{{ group.gaccess.email }}">{{ group.gaccess.email }}</a>
+                            </div>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
-            {% endif %}
+            </div>
         </div>
+
+        {% if group.gaccess.description %}
+            <div class="row">
+                <div class="text-muted col-xs-12">
+                    <p class="text-muted">{{ group.gaccess.description|linebreaks }}</p>
+                </div>
+            </div>
+        {% endif %}
 
         <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
