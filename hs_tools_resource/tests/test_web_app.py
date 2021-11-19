@@ -399,7 +399,9 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(tl['res_id'], self.resWebApp.short_id)
         self.assertEqual(tl['agg_types'], '')
         self.assertEqual(tl['file_extensions'], '')
-        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
+
+        url = "{}?{}".format(tl['url_res_path'], tl['url_res_query'])
+        self.assertEqual(url, "https://www.google.com?s=it works")
 
         self.resComposite.extra_metadata = {}
         self.resComposite.save()
@@ -415,7 +417,8 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
                                                  'web app key')
         tl = relevant_tools['tool_list'][0]
-        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=it works'}")
+        url = "{}?{}".format(tl['url_res_path'], tl['url_res_query'])
+        self.assertEqual(url, 'https://www.google.com?s=it works')
 
         # test for resource override of default custom key value specified in the web app
         self.resComposite.extra_metadata = {'search_string': 'overridden'}
@@ -424,7 +427,8 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertIsNotNone(relevant_tools, msg='relevant_tools should not be None with a default '
                                                  'web app key')
         tl = relevant_tools['tool_list'][0]
-        self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=overridden'}")
+        url = "{}?{}".format(tl['url_res_path'], tl['url_res_query'])
+        self.assertEqual(url, 'https://www.google.com?s=overridden')
 
     def test_web_app_do_needed_work_when_being_launched(self):
         # testing a web app does needed work when being launched. Currently, the needed work when
