@@ -3189,37 +3189,6 @@ span.you-flag {
     padding: 8px 0;
 }
 
-.home-panel-info {
-	min-height: 300px;
-	margin: 15px 0;
-}
-
-/* .checkmark {
-	color: #81D685;
-	font-size: 18px;
-	margin-left: 5px;
-	margin-right: 20px;
-} */
-
-/* .img-devices {
-	max-height: 100px;
-	margin: auto;
-} */
-
-/* .screen-sizes {
-    background: url(../img/graypattern.jpg);
-	background-color: #BBB;
-	padding: 15px 0;
-	text-align: center;
-    margin-bottom: -20px;
-}
-
-.screen-sizes h2 {
-    font-family: 'webfont_light', Helvetica, Arial, sans-serif;
-    color: #777;
-    text-shadow: 0 1px rgba(255, 255, 255, 0.6);
-} */
-
 .btn-signup {
     margin: 20px;
 }
