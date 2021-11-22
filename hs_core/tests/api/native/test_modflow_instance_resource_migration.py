@@ -1,23 +1,18 @@
 import os
-from unittest import TestCase, skip
+from unittest import TestCase
 
-import json
 import jsonschema
-from rest_framework.renderers import JSONRenderer
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from django.core.management import call_command
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.management.utils import get_modflow_meta_schema
 from hs_core.hydroshare import add_file_to_resource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.models import ModelInstanceLogicalFile, ModelProgramLogicalFile
 from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceResource
-from hs_modflow_modelinstance.serializers import MODFLOWModelInstanceMetaDataSerializerMigration
-from hs_swat_modelinstance.models import SWATModelInstanceResource
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 
 
@@ -56,39 +51,136 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         ModelInstanceResource.objects.all().delete()
         ModelProgramResource.objects.all().delete()
 
-    @skip("Not testing at this time")
-    def test_generation_of_meta_in_json(self):
-
+    def test_migrate_no_modflow_specific_metadata(self):
+        """
+        Here we are testing that we can migrate a modflow mi resource that doesn't have any modflow specific metadata
+        """
         mi_res = self._create_modflow_resource()
-        # add modflow specific metadata
-        # 1. create stressperiod (this will match with one schema attribute)
-        mi_res.metadata.create_element('StressPeriod',
-                                       stressPeriodType='Steady',
-                                       steadyStateValue='a',
-                                       transientStateValueType='Daily',
-                                       transientStateValue='b')
+        # check that there are no model specific metadata
+        self.assertEqual(mi_res.metadata.study_area, None)
+        self.assertEqual(mi_res.metadata.grid_dimensions, None)
+        self.assertEqual(mi_res.metadata.stress_period, None)
+        self.assertEqual(mi_res.metadata.ground_water_flow, None)
+        self.assertEqual(mi_res.metadata.boundary_condition, None)
+        self.assertEqual(mi_res.metadata.model_calibration, None)
+        self.assertEqual(list(mi_res.metadata.model_inputs), [])
+        self.assertEqual(mi_res.metadata.general_elements, None)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
 
-        # 2. create StudyArea (this will match with one schema attribute)
+        # migrate the modflow resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        # check the mi aggregation has meta schema
+        self.assertNotEqual(mi_aggr.metadata_schema_json, {})
+        # check the json metadata in mi aggregation - there should not me any modflow specific metadata
+        self.assertEqual(mi_aggr.metadata.metadata_json, {})
+        json_meta_fields = ['studyArea', 'gridDimensions', 'groundwaterFlow', 'modelCalibration', 'stressPeriod',
+                            'modelInputs', 'modelParameter', 'modelSolver', 'subsidencePackage',
+                            'headDependentFluxBoundaryPackages', 'outputControlPackage',
+                            'specifiedFluxBoundaryPackages', 'specifiedHeadBoundaryPackages']
+        for meta_field in json_meta_fields:
+            self.assertTrue(meta_field not in mi_aggr.metadata.metadata_json)
+
+    def test_migrate_modflow_specific_metadata_only_studyArea(self):
+        """
+        Here we are testing that we can migrate a modflow mi resource that has only one modflow specific
+        metadata 'study area'
+        """
+        mi_res = self._create_modflow_resource()
         mi_res.metadata.create_element('StudyArea',
                                        totalLength='10',
                                        totalWidth='20',
                                        maximumElevation='100',
                                        minimumElevation='5')
 
-        # 3. create griddimensions (this will match with one schema attribute)
-        mi_res.metadata.create_element('GridDimensions',
-                                       numberOfLayers='a',
-                                       typeOfRows='Regular',
-                                       numberOfRows='c',
-                                       typeOfColumns='Irregular',
-                                       numberOfColumns='e')
+        # check that there are no model specific metadata
+        self.assertNotEqual(mi_res.metadata.study_area, None)
+        self.assertEqual(mi_res.metadata.grid_dimensions, None)
+        self.assertEqual(mi_res.metadata.stress_period, None)
+        self.assertEqual(mi_res.metadata.ground_water_flow, None)
+        self.assertEqual(mi_res.metadata.boundary_condition, None)
+        self.assertEqual(mi_res.metadata.model_calibration, None)
+        self.assertEqual(list(mi_res.metadata.model_inputs), [])
+        self.assertEqual(mi_res.metadata.general_elements, None)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
+        # migrate the modflow resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        # check the mi aggregation has meta schema
+        self.assertNotEqual(mi_aggr.metadata_schema_json, {})
 
-        # 4. create groundwaterflow (this will match with one schema attribute)
+        # check the json metadata in mi aggregation
+        self.assertNotEqual(mi_aggr.metadata.metadata_json, {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['studyArea'], {})
+        study_area = mi_aggr.metadata.metadata_json['studyArea']
+        self.assertEqual(study_area['totalWidth'], '20')
+        self.assertEqual(study_area['totalLength'], '10')
+        self.assertEqual(study_area['maximumElevation'], '100')
+        self.assertEqual(study_area['minimumElevation'], '5')
+        # no other metadata should be part of the JSON metadata
+        json_meta_fields = ['gridDimensions', 'groundwaterFlow', 'modelCalibration', 'stressPeriod',
+                            'modelInputs', 'modelParameter', 'modelSolver', 'subsidencePackage',
+                            'headDependentFluxBoundaryPackages', 'outputControlPackage',
+                            'specifiedFluxBoundaryPackages', 'specifiedHeadBoundaryPackages']
+        for meta_field in json_meta_fields:
+            self.assertTrue(meta_field not in mi_aggr.metadata.metadata_json)
+
+        try:
+            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
+        except jsonschema.ValidationError as err:
+            self.fail(msg=str(err))
+
+    def test_migrate_modflow_specific_metadata_all_metadata(self):
+        """
+        Here we are testing that we can migrate a modflow mi resource that has all modflow specific
+        metadata
+        """
+        mi_res = self._create_modflow_resource()
+        mi_res.metadata.create_element('StudyArea',
+                                       totalLength='10',
+                                       totalWidth='20',
+                                       maximumElevation='100',
+                                       minimumElevation='5')
+
+        mi_res.metadata.create_element('StressPeriod',
+                                       stressPeriodType='Steady',
+                                       steadyStateValue='a',
+                                       transientStateValueType='Daily',
+                                       transientStateValue='10')
+
+        mi_res.metadata.create_element('GridDimensions',
+                                       numberOfLayers='10',
+                                       typeOfRows='Regular',
+                                       numberOfRows=20,
+                                       typeOfColumns='Irregular',
+                                       numberOfColumns='50')
+
         mi_res.metadata.create_element('GroundWaterFlow',
                                        flowPackage='BCF6',
                                        flowParameter='Transmissivity')
 
-        # 5. create generic elements (this will match with 4 schema attributes)
         ot_ctl_pkgs = ['LMT6', 'OC']
         mi_res.metadata.create_element('GeneralElements',
                                        modelParameter='BCF6',
@@ -96,7 +188,6 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
                                        output_control_package=ot_ctl_pkgs,
                                        subsidencePackage='SUB')
 
-        # 6. create boundary condition meta element (this will match with 3 schema attributes)
         spec_hd_bd_pkgs = ['CHD', 'FHB']
         spec_fx_bd_pkgs = ['RCH', 'WEL']
         hd_dep_fx_pkgs = ['MNW2', 'GHB', 'LAK']
@@ -108,177 +199,34 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
                                        other_specified_flux_boundary_packages='MMM',
                                        other_head_dependent_flux_boundary_packages='JLG')
 
-        # 7. create modelcalibration meta element (this will match with one schema attribute)
         mi_res.metadata.create_element('ModelCalibration',
                                        calibratedParameter='a',
                                        observationType='b',
                                        observationProcessPackage='RVOB',
                                        calibrationMethod='c')
 
-        # 8a. create ModelInput meta element (no matching schema attribute in modflow schema template)
         mi_res.metadata.create_element('ModelInput',
-                                       inputType='a',
-                                       inputSourceName='b',
-                                       inputSourceURL='http://www.RVOB.com')
+                                       inputType='aa',
+                                       inputSourceName='aaa',
+                                       inputSourceURL='http://www.RVOB1.com')
 
         # 8b. create another modelinput
         mi_res.metadata.create_element('ModelInput',
-                                       inputType='aa',
-                                       inputSourceName='bd',
-                                       inputSourceURL='http://www.RVOBs.com')
+                                       inputType='bb',
+                                       inputSourceName='bbb',
+                                       inputSourceURL='http://www.RVOB2.com')
 
-        serializer = MODFLOWModelInstanceMetaDataSerializerMigration(mi_res.metadata)
+        # check that there are all model specific metadata
+        self.assertNotEqual(mi_res.metadata.study_area, None)
+        self.assertNotEqual(mi_res.metadata.grid_dimensions, None)
+        self.assertNotEqual(mi_res.metadata.stress_period, None)
+        self.assertNotEqual(mi_res.metadata.ground_water_flow, None)
+        self.assertNotEqual(mi_res.metadata.boundary_condition, None)
+        self.assertNotEqual(mi_res.metadata.model_calibration, None)
+        self.assertNotEqual(list(mi_res.metadata.model_inputs), [])
+        self.assertNotEqual(mi_res.metadata.general_elements, None)
 
-        meta_json = JSONRenderer().render(serializer.data)
-        print(meta_json)
-        print("\n")
-        data = serializer.data
-        data['studyArea'] = data.pop('study_area', None)
-        if data['studyArea'] is None:
-            data['studyArea'] = {}
-
-        data['modelCalibration'] = data.pop('model_calibration', None)
-        if data['modelCalibration'] is None:
-            data['modelCalibration'] = {}
-
-        data['groundwaterFlow'] = data.pop('ground_water_flow', None)
-        if data['groundwaterFlow'] is None:
-            data['groundwaterFlow'] = {}
-
-        data['gridDimensions'] = data.pop('grid_dimensions', None)
-        if data['gridDimensions'] is None:
-            data['gridDimensions'] = {}
-
-        # TODO: modelInput is currently not part of the MODFLOW json schema
-        data['modelInput'] = data.pop('model_inputs', None)
-        if data['modelInput'] is None:
-            data['modelInput'] = []
-        # TODO: stressPeriod attribute in the schema needs to be adjusted to take string values for some of the
-        #  properties of this field
-        data['stressPeriod'] = data.pop('stress_period', None)
-        if data['stressPeriod'] is None:
-            data['stressPeriod'] = {}
-        general_elements = data.pop('general_elements', None)
-        if general_elements is None:
-            general_elements = {}
-        if general_elements:
-            data['modelSolver'] = general_elements['modelSolver']
-            data['modelParameter'] = general_elements['modelParameter']
-            data['subsidencePackage'] = general_elements['subsidencePackage']
-        else:
-            data['modelSolver'] = None
-            data['modelParameter'] = ""
-            data['subsidencePackage'] = None
-
-        if data['stressPeriod']:
-            for key in list(data['stressPeriod']):
-                new_key = ""
-                if key == 'stressPeriodType':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'type'
-                elif key == 'steadyStateValue':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'lengthOfSteadyStateStressPeriod'
-                elif key == 'transientStateValueType':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'typeOfTransientStateStressPeriod'
-                elif key == 'transientStateValue':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'lengthOfTransientStateStressPeriod'
-                if new_key:
-                    data['stressPeriod'][new_key] = v
-
-        data['outputControlPackage'] = {'OC': False, 'HYD': False, 'GAGE': False, 'LMT6': False, 'MNWI': False}
-        if general_elements:
-            output_control_pkg = general_elements['output_control_package']
-            if output_control_pkg:
-                for key in data['outputControlPackage']:
-                    for pkg in output_control_pkg:
-                        if pkg['description'] == key:
-                            data['outputControlPackage'][key] = True
-                            break
-
-        print('general_elements:\n')
-        print(general_elements)
-        print("\n")
-        boundary_condition = data.pop('boundary_condition', None)
-        if boundary_condition is None:
-            boundary_condition = {}
-        data['specifiedHeadBoundaryPackages'] = {"BFH": False, "CHD": False, "FHB": False, "otherPackages": ""}
-        data['specifiedFluxBoundaryPackages'] = {"RCH": False, "WEL": False, "FHB": False, "otherPackages": ""}
-        data['headDependentFluxBoundaryPackages'] = {"DAF": False, "DRN": False, "DRT": False,
-                                                     "ETS": False, "EVT": False, "GHB": False,
-                                                     "LAK": False, "RES": False, "RIP": False,
-                                                     "RIV": False, "SFR": False, "STR": False,
-                                                     "UZF": False, "DAFG": False, "MNW1": False,
-                                                     "MNW2": False, "otherPackages": ""}
-        if boundary_condition:
-            for key in data['specifiedHeadBoundaryPackages']:
-                for pkg in boundary_condition['specified_head_boundary_packages']:
-                    if pkg['description'] == key:
-                        data['specifiedHeadBoundaryPackages'][key] = True
-                        break
-
-            if boundary_condition['other_specified_head_boundary_packages']:
-                data['specifiedHeadBoundaryPackages']["otherPackages"] = boundary_condition['other_specified_head_boundary_packages']
-
-            for key in data['specifiedFluxBoundaryPackages']:
-                for pkg in boundary_condition['specified_flux_boundary_packages']:
-                    if pkg['description'] == key:
-                        data['specifiedFluxBoundaryPackages'][key] = True
-                        break
-
-            if boundary_condition['other_specified_flux_boundary_packages']:
-                data['specifiedFluxBoundaryPackages']["otherPackages"] = boundary_condition['other_specified_flux_boundary_packages']
-
-            for key in data['headDependentFluxBoundaryPackages']:
-                for pkg in boundary_condition['head_dependent_flux_boundary_packages']:
-                    if pkg['description'] == key:
-                        data['headDependentFluxBoundaryPackages'][key] = True
-                        break
-            if boundary_condition['other_head_dependent_flux_boundary_packages']:
-                data['headDependentFluxBoundaryPackages']["otherPackages"] = boundary_condition['other_head_dependent_flux_boundary_packages']
-
-        meta_json = json.dumps(data, indent=4)
-        print(meta_json)
-        meta_json_schema = json.loads(get_modflow_meta_schema())
-        # print("MODFLOW Meta Schema:\n")
-        # print(json_schema)
-        try:
-            jsonschema.Draft4Validator(meta_json_schema).validate(data)
-        except jsonschema.ValidationError as err:
-            print("Meta schema validation error:\n")
-            print(err)
-            # print(err.absolute_schema_path)
-            # print(str(err.message))
-            # print("path:\n")
-            # str(err.schema_path)
-
-        # self.assertEqual(1, 2)
-
-    def test_migrate_no_modflow_specific_metadata(self):
-        """
-        Here we are testing that we can migrate a modflow mi resource that doesn't have any modflow specific metadata
-        """
-        mi_res = self._create_modflow_resource()
-        self.maxDiff = None
-        # check that there are no model specific metadata
-        self.assertEqual(mi_res.metadata.study_area, None)
-        self.assertEqual(mi_res.metadata.grid_dimensions, None)
-        self.assertEqual(mi_res.metadata.stress_period, None)
-        self.assertEqual(mi_res.metadata.ground_water_flow, None)
-        self.assertEqual(mi_res.metadata.boundary_condition, None)
-        self.assertEqual(mi_res.metadata.model_calibration, None)
-        self.assertEqual(list(mi_res.metadata.model_inputs), [])
-        self.assertEqual(mi_res.metadata.general_elements, None)
         self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
-        # add study area meta element to modflow resource
-        mi_res.metadata.create_element('StudyArea',
-                                       totalLength='10',
-                                       totalWidth=20,
-                                       maximumElevation='100',
-                                       minimumElevation='5')
-
         # migrate the modflow resource
         call_command(self.mi_migration_command)
         self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
@@ -295,7 +243,9 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
+
         # check the json metadata in mi aggregation
+        self.assertNotEqual(mi_aggr.metadata.metadata_json, {})
         self.assertNotEqual(mi_aggr.metadata.metadata_json['studyArea'], {})
         study_area = mi_aggr.metadata.metadata_json['studyArea']
         self.assertEqual(study_area['totalWidth'], '20')
@@ -303,66 +253,145 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(study_area['maximumElevation'], '100')
         self.assertEqual(study_area['minimumElevation'], '5')
 
-        self.assertEqual(mi_aggr.metadata.metadata_json['gridDimensions'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['groundwaterFlow'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelCalibration'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['stressPeriod'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelParameter'], "")
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelSolver'], None)
-        self.assertEqual(mi_aggr.metadata.metadata_json['subsidencePackage'], None)
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'], {})
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['outputControlPackage'], {})
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'], {})
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['stressPeriod'], {})
+        stress_period = mi_aggr.metadata.metadata_json['stressPeriod']
+        self.assertEqual(stress_period['type'], 'Steady')
+        self.assertEqual(stress_period['lengthOfSteadyStateStressPeriod'], 'a')
+        self.assertEqual(stress_period['typeOfTransientStateStressPeriod'], 'Daily')
+        self.assertEqual(stress_period['lengthOfTransientStateStressPeriod'], '10')
 
-    def test_migrate_modflow_specific_metadata_only_studyArea(self):
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['gridDimensions'], {})
+        grid_dimensions = mi_aggr.metadata.metadata_json['gridDimensions']
+        self.assertEqual(grid_dimensions['numberOfLayers'], '10')
+        self.assertEqual(grid_dimensions['typeOfRows'], 'Regular')
+        self.assertEqual(grid_dimensions['numberOfRows'], '20')
+        self.assertEqual(grid_dimensions['typeOfColumns'], 'Irregular')
+        self.assertEqual(grid_dimensions['numberOfColumns'], '50')
+
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['groundwaterFlow'], {})
+        ground_water_flow = mi_aggr.metadata.metadata_json['groundwaterFlow']
+        self.assertEqual(ground_water_flow['flowPackage'], 'BCF6')
+        self.assertEqual(ground_water_flow['flowParameter'], 'Transmissivity')
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelSolver'], 'DE4')
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelParameter'], 'BCF6')
+        self.assertEqual(mi_aggr.metadata.metadata_json['subsidencePackage'], 'SUB')
+        for key in mi_aggr.metadata.metadata_json['outputControlPackage']:
+            if key in ['LMT6', 'OC']:
+                self.assertTrue(mi_aggr.metadata.metadata_json['outputControlPackage'][key])
+            else:
+                self.assertFalse(mi_aggr.metadata.metadata_json['outputControlPackage'][key])
+
+        for key in mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages']:
+            if key in spec_hd_bd_pkgs:
+                self.assertTrue(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'][key])
+            elif key == 'otherPackages':
+                self.assertEqual(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'][key], 'JMS')
+            else:
+                self.assertFalse(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'][key])
+
+        for key in mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages']:
+            if key in spec_fx_bd_pkgs:
+                self.assertTrue(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'][key])
+            elif key == 'otherPackages':
+                self.assertEqual(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'][key], 'MMM')
+            else:
+                self.assertFalse(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'][key])
+
+        for key in mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages']:
+            if key in hd_dep_fx_pkgs:
+                self.assertTrue(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'][key])
+            elif key == 'otherPackages':
+                self.assertEqual(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'][key], 'JLG')
+            else:
+                self.assertFalse(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'][key])
+
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['modelCalibration'], {})
+        model_calibration = mi_aggr.metadata.metadata_json['modelCalibration']
+        self.assertEqual(model_calibration['observationType'], 'b')
+        self.assertEqual(model_calibration['calibrationMethod'], 'c')
+        self.assertEqual(model_calibration['calibratedParameter'], 'a')
+        self.assertEqual(model_calibration['observationProcessPackage'], 'RVOB')
+
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
+        for mi_item in mi_aggr.metadata.metadata_json['modelInputs']:
+            self.assertIn(mi_item['inputType'], ['aa', 'bb'])
+            self.assertIn(mi_item['inputSourceName'], ['aaa', 'bbb'])
+            self.assertIn(mi_item['inputSourceURL'], ['http://www.RVOB1.com', 'http://www.RVOB2.com'])
+
+        mi_item_1, mi_item_2 = mi_aggr.metadata.metadata_json['modelInputs']
+        self.assertNotEqual(mi_item_1['inputType'], mi_item_2['inputType'])
+        self.assertNotEqual(mi_item_1['inputSourceName'], mi_item_2['inputSourceName'])
+        self.assertNotEqual(mi_item_1['inputSourceURL'], mi_item_2['inputSourceURL'])
+
+        try:
+            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
+        except jsonschema.ValidationError as err:
+            self.fail(msg=str(err))
+
+    def test_executed_by(self):
         """
-        Here we are testing that we can migrate a modflow mi resource that has modflow specific
-        metadata 'study area' only
+        Migrate a mi resource that has a link (executed_by) to a composite resource
+        If the linked resource has a mp aggregation, a link to the external mp aggregation is established
         """
+
+        # create a mi resource
         mi_res = self._create_modflow_resource()
-        self.maxDiff = None
-        # check that there are no model specific metadata
-        self.assertEqual(mi_res.metadata.study_area, None)
-        self.assertEqual(mi_res.metadata.grid_dimensions, None)
-        self.assertEqual(mi_res.metadata.stress_period, None)
-        self.assertEqual(mi_res.metadata.ground_water_flow, None)
-        self.assertEqual(mi_res.metadata.boundary_condition, None)
-        self.assertEqual(mi_res.metadata.model_calibration, None)
-        self.assertEqual(list(mi_res.metadata.model_inputs), [])
-        self.assertEqual(mi_res.metadata.general_elements, None)
         self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
-        # migrate the modflow resource
+        mp_res = self._create_mp_resource()
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        upload_folder = ''
+        file_path = 'hs_core/tests/data/cea.tif'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        # check mp resource has 2 files
+        self.assertEqual(mp_res.files.count(), 1)
+        # no files in mi resource
+        self.assertEqual(mi_res.files.count(), 0)
+
+        # link the mi res to mp resource
+        mi_res.metadata.create_element('executedby', model_name=mp_res.short_id)
+        mi_res.metadata.create_element('modeloutput', includes_output=True)
+        self.assertNotEqual(mi_res.metadata.executed_by, None)
+        self.assertNotEqual(mi_res.metadata.model_output, None)
+
+        # run  prepare migration command for preparing mi resource for migration
+        call_command(self.prepare_mi_migration_command)
+        # run migration command to migrate mp resource
+        call_command(self.mp_migration_command)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, "model-program")
+
+        # run  migration command to migrate mi resource
         call_command(self.mi_migration_command)
         self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
-        self.assertEqual(CompositeResource.objects.count(), 1)
-        cmp_res = CompositeResource.objects.first()
-        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        cmp_res = CompositeResource.objects.get(short_id=mi_res.short_id)
+
+        # test that the converted mi resource contains one mi aggregation
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
-        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertTrue(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
-        # test that the converted resource contains one mi aggregation
+        self.assertEqual(cmp_res.extra_data[self.EXECUTED_BY_EXTRA_META_KEY], mp_res.short_id)
+        # no files in migrated mi resource
+        self.assertEqual(cmp_res.files.count(), 0)
+        # there should be only one mi aggregation in the migrated mi resource
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertTrue([lf for lf in cmp_res.logical_files if lf.is_model_instance])
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
-        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertTrue(mi_aggr.metadata.has_model_output)
+        self.assertEqual(mi_aggr.metadata.executed_by, mp_aggr)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
-        # check the json metadata in mi aggregation
-        self.assertEqual(mi_aggr.metadata.metadata_json['studyArea'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['gridDimensions'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['groundwaterFlow'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelCalibration'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['stressPeriod'], {})
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelParameter'], "")
-        self.assertEqual(mi_aggr.metadata.metadata_json['modelSolver'], None)
-        self.assertEqual(mi_aggr.metadata.metadata_json['subsidencePackage'], None)
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'], {})
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['outputControlPackage'], {})
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'], {})
-        self.assertNotEqual(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'], {})
+        # check that the linked mp aggregation is part of another resource
+        self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
+        self.assertEqual(mi_aggr.files.count(), 0)
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
 
     def _create_modflow_resource(self, model_instance_type="MODFLOWModelInstanceResource", add_keywords=False):
         res = hydroshare.create_resource(model_instance_type, self.user,
@@ -371,3 +400,11 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
             res.metadata.create_element('subject', value='kw-1')
             res.metadata.create_element('subject', value='kw-2')
         return res
+
+    def _create_mp_resource(self, add_keywords=False):
+        mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
+                                            "Testing migrating to composite resource")
+        if add_keywords:
+            mp_res.metadata.create_element('subject', value='kw-1')
+            mp_res.metadata.create_element('subject', value='kw-2')
+        return mp_res
