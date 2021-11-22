@@ -3,7 +3,6 @@ import logging
 import os
 
 import jsonschema
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_resource_by_shortkey
@@ -22,47 +21,26 @@ class Command(BaseCommand):
         """
         Generate modflow metadata in JSON format from the metadata of the modflow model instance metadata
         :param modflow_meta: This is the original metadata object from the modflow model instance resource
-        :return:
         """
         serializer = MODFLOWModelInstanceMetaDataSerializerMigration(modflow_meta)
         data = serializer.data
-        data['studyArea'] = data.pop('study_area', None)
-        if data['studyArea'] is None:
-            data['studyArea'] = {}
+        # mapping of json based field names to modflow meta database field names
+        key_maps = {'studyArea': 'study_area', 'modelCalibration': 'model_calibration',
+                    'groundwaterFlow': 'ground_water_flow', 'gridDimensions': 'grid_dimensions',
+                    'stressPeriod': 'stress_period', 'modelInputs': 'model_inputs'}
 
-        data['modelCalibration'] = data.pop('model_calibration', None)
-        if data['modelCalibration'] is None:
-            data['modelCalibration'] = {}
-
-        data['groundwaterFlow'] = data.pop('ground_water_flow', None)
-        if data['groundwaterFlow'] is None:
-            data['groundwaterFlow'] = {}
-
-        data['gridDimensions'] = data.pop('grid_dimensions', None)
-        if data['gridDimensions'] is None:
-            data['gridDimensions'] = {}
-
-        data['modelInputs'] = data.pop('model_inputs', None)
-        if data['modelInputs'] is None:
-            data['modelInputs'] = []
-
-        data['stressPeriod'] = data.pop('stress_period', None)
-        if data['stressPeriod'] is None:
-            data['stressPeriod'] = {}
+        for key, value in key_maps.items():
+            data[key] = data.pop(value, None)
+            if data[key] is None or not data[key]:
+                data.pop(key)
 
         general_elements = data.pop('general_elements', None)
-        if general_elements is None:
-            general_elements = {}
-        if general_elements:
+        if general_elements is not None:
             data['modelSolver'] = general_elements['modelSolver']
             data['modelParameter'] = general_elements['modelParameter']
             data['subsidencePackage'] = general_elements['subsidencePackage']
-        else:
-            data['modelSolver'] = None
-            data['modelParameter'] = ""
-            data['subsidencePackage'] = None
 
-        if data['stressPeriod']:
+        if 'stressPeriod' in data:
             for key in list(data['stressPeriod']):
                 new_key = ""
                 if key == 'stressPeriodType':
@@ -80,10 +58,10 @@ class Command(BaseCommand):
                 if new_key:
                     data['stressPeriod'][new_key] = v
 
-        data['outputControlPackage'] = {'OC': False, 'HYD': False, 'GAGE': False, 'LMT6': False, 'MNWI': False}
-        if general_elements:
+        if general_elements is not None:
             output_control_pkg = general_elements['output_control_package']
             if output_control_pkg:
+                data['outputControlPackage'] = {'OC': False, 'HYD': False, 'GAGE': False, 'LMT6': False, 'MNWI': False}
                 for key in data['outputControlPackage']:
                     for pkg in output_control_pkg:
                         if pkg['description'] == key:
@@ -91,17 +69,8 @@ class Command(BaseCommand):
                             break
 
         boundary_condition = data.pop('boundary_condition', None)
-        if boundary_condition is None:
-            boundary_condition = {}
-        data['specifiedHeadBoundaryPackages'] = {"BFH": False, "CHD": False, "FHB": False, "otherPackages": ""}
-        data['specifiedFluxBoundaryPackages'] = {"RCH": False, "WEL": False, "FHB": False, "otherPackages": ""}
-        data['headDependentFluxBoundaryPackages'] = {"DAF": False, "DRN": False, "DRT": False,
-                                                     "ETS": False, "EVT": False, "GHB": False,
-                                                     "LAK": False, "RES": False, "RIP": False,
-                                                     "RIV": False, "SFR": False, "STR": False,
-                                                     "UZF": False, "DAFG": False, "MNW1": False,
-                                                     "MNW2": False, "otherPackages": ""}
-        if boundary_condition:
+        if boundary_condition is not None:
+            data['specifiedHeadBoundaryPackages'] = {"BFH": False, "CHD": False, "FHB": False, "otherPackages": ""}
             for key in data['specifiedHeadBoundaryPackages']:
                 for pkg in boundary_condition['specified_head_boundary_packages']:
                     if pkg['description'] == key:
@@ -112,6 +81,7 @@ class Command(BaseCommand):
                 data['specifiedHeadBoundaryPackages']["otherPackages"] = boundary_condition[
                     'other_specified_head_boundary_packages']
 
+            data['specifiedFluxBoundaryPackages'] = {"RCH": False, "WEL": False, "FHB": False, "otherPackages": ""}
             for key in data['specifiedFluxBoundaryPackages']:
                 for pkg in boundary_condition['specified_flux_boundary_packages']:
                     if pkg['description'] == key:
@@ -122,6 +92,12 @@ class Command(BaseCommand):
                 data['specifiedFluxBoundaryPackages']["otherPackages"] = boundary_condition[
                     'other_specified_flux_boundary_packages']
 
+            data['headDependentFluxBoundaryPackages'] = {"DAF": False, "DRN": False, "DRT": False,
+                                                         "ETS": False, "EVT": False, "GHB": False,
+                                                         "LAK": False, "RES": False, "RIP": False,
+                                                         "RIV": False, "SFR": False, "STR": False,
+                                                         "UZF": False, "DAFG": False, "MNW1": False,
+                                                         "MNW2": False, "otherPackages": ""}
             for key in data['headDependentFluxBoundaryPackages']:
                 for pkg in boundary_condition['head_dependent_flux_boundary_packages']:
                     if pkg['description'] == key:
@@ -176,18 +152,6 @@ class Command(BaseCommand):
                 # use the external mp aggregation for executed_by
                 mi_aggr.metadata.executed_by = mp_aggr
                 mi_aggr.metadata.save()
-                if mp_aggr.metadata_schema_json:
-                    mi_aggr.metadata_schema_json = mp_aggr.metadata_schema_json
-                else:
-                    # load the MODFLOW model instance metadata schema that we have in the system
-                    schema_template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
-                    schema_template_path = os.path.join(schema_template_path, "MODFLOW_Schema_1.0.0.json")
-                    with open(schema_template_path) as file_obj:
-                        schema_data = file_obj.read()
-                        json_schema = json.loads(schema_data)
-                        mi_aggr.metadata_schema_json = json_schema
-
-                mi_aggr.save()
                 msg = 'Setting executed_by to external model program aggregation of resource (ID:{})'
                 msg = msg.format(linked_res.short_id)
                 logger.info(msg)
@@ -291,15 +255,16 @@ class Command(BaseCommand):
             mi_aggr.save()
             # generate the JSON metadata from the MODFLOW specific metadata
             metadata_json = self.generate_metadata_json(mi_metadata_obj)
-            mi_aggr.metadata.metadata_json = metadata_json
-            mi_aggr.metadata.save()
-            try:
-                jsonschema.Draft4Validator(meta_json_schema).validate(metadata_json)
-            except jsonschema.ValidationError as err:
-                msg = 'Metadata validation failed as per schema for resource (ID:{}). Error:{}'
-                msg = msg.format(comp_res.short_id, str(err))
-                logger.error(msg)
-                self.stdout.write(self.style.ERROR(msg))
+            if metadata_json:
+                mi_aggr.metadata.metadata_json = metadata_json
+                mi_aggr.metadata.save()
+                try:
+                    jsonschema.Draft4Validator(meta_json_schema).validate(metadata_json)
+                except jsonschema.ValidationError as err:
+                    msg = 'Metadata validation failed as per schema for resource (ID:{}). Error:{}'
+                    msg = msg.format(comp_res.short_id, str(err))
+                    logger.error(msg)
+                    self.stdout.write(self.style.ERROR(msg))
 
             # create aggregation level xml files
             mi_aggr.create_aggregation_xml_documents()

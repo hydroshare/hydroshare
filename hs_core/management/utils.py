@@ -29,6 +29,11 @@ import logging
 
 
 def get_modflow_meta_schema():
+    """MODFLOW metadata JSON schema used for migrating MODFLOW model instance resource to Composite Resource
+    The model instance aggregation created in the converted composite resource will have this metadata schema for
+    MODFLOW specific metadata
+    """
+
     _schema = """
     {
     "type": "object",
