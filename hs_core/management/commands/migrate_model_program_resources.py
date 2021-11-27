@@ -27,15 +27,24 @@ class Command(BaseCommand):
 
         for res_file in comp_res.files.all():
             if res_file != comp_res.readme_file:
-                src_full_path = os.path.join(comp_res.file_path, res_file.file_name)
-                tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.file_name)
-                istorage.moveFile(src_full_path, tgt_full_path)
-                res_file.set_storage_path(tgt_full_path)
-                msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
-                self.stdout.write(self.style.SUCCESS(msg))
-                mp_aggr.add_resource_file(res_file)
-                msg = "Added file {} to mp aggregation".format(res_file.file_name)
-                self.stdout.write(self.style.SUCCESS(msg))
+                full_file_path = res_file.public_path
+                if istorage.exists(full_file_path):
+                    src_full_path = os.path.join(comp_res.file_path, res_file.short_path)
+                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.short_path)
+                    istorage.moveFile(src_full_path, tgt_full_path)
+                    res_file.set_storage_path(tgt_full_path)
+                    msg = "Moved file ({}) to the new folder:{}".format(res_file.short_path, new_folder)
+                    logger.info(msg)
+                    self.stdout.write(self.style.SUCCESS(msg))
+                    mp_aggr.add_resource_file(res_file)
+                    msg = "Added file ({}) to model program aggregation".format(res_file.short_path)
+                    logger.info(msg)
+                    self.stdout.write(self.style.SUCCESS(msg))
+                else:
+                    err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
+                              "the model program aggregation.".format(full_file_path)
+                    logger.warn(err_msg)
+                    self.stdout.write(self.style.WARNING(err_msg))
 
     def create_mp_file_type(self, file_name, file_type, mp_aggr):
         for aggr_file in mp_aggr.files.all():
@@ -67,31 +76,17 @@ class Command(BaseCommand):
 
         for mp_res in ModelProgramResource.objects.all().iterator():
             msg = "Migrating model program resource:{}".format(mp_res.short_id)
+            logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
             # check resource exists on irods
             istorage = mp_res.get_irods_storage()
             if not istorage.exists(mp_res.root_path):
-                err_msg = "Model program resource not found in irods (ID: {})".format(mp_res.short_id)
+                err_msg = "Couldn't migrate model program resource (ID:{}). This resource doesn't exist in iRODS."
+                err_msg = err_msg.format(mp_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
                 # skip this mp resource
-                continue
-
-            # check resource files exist on irods
-            file_missing = False
-            for res_file in mp_res.files.all():
-                file_path = res_file.public_path
-                if not istorage.exists(file_path):
-                    err_msg = "File path not found in irods:{}".format(file_path)
-                    logger.error(err_msg)
-                    err_msg = "Failed to convert model program resource (ID: {}). " \
-                              "Resource file is missing on irods".format(mp_res.short_id)
-                    self.stdout.write(self.style.ERROR(err_msg))
-                    file_missing = True
-                    break
-            if file_missing:
-                # skip this corrupt model program resource for migration
                 continue
 
             # change the resource_type
