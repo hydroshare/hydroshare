@@ -27,13 +27,16 @@ class Command(BaseCommand):
 
         for res_file in comp_res.files.all():
             if res_file != comp_res.readme_file:
-                full_file_path = res_file.public_path
+                full_file_path = res_file.full_path
                 if istorage.exists(full_file_path):
-                    src_full_path = os.path.join(comp_res.file_path, res_file.short_path)
-                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.short_path)
+                    orig_short_path = res_file.short_path
+                    src_full_path = os.path.join(comp_res.file_path, orig_short_path)
+                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, orig_short_path)
+                    msg = "Moving file ({}) to the new folder:{}".format(orig_short_path, new_folder)
+                    self.stdout.write(msg)
                     istorage.moveFile(src_full_path, tgt_full_path)
                     res_file.set_storage_path(tgt_full_path)
-                    msg = "Moved file ({}) to the new folder:{}".format(res_file.short_path, new_folder)
+                    msg = "Moved file ({}) to the new folder:{}".format(orig_short_path, new_folder)
                     logger.info(msg)
                     self.stdout.write(self.style.SUCCESS(msg))
                     mp_aggr.add_resource_file(res_file)
@@ -196,6 +199,7 @@ class Command(BaseCommand):
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
             print("_______________________________________________")
+            self.stdout.flush()
 
         if resource_counter > 0:
             msg = "{} MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
@@ -212,3 +216,4 @@ class Command(BaseCommand):
             msg = "ALL MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
+        self.stdout.flush()
