@@ -8,6 +8,7 @@ from django.core.management import call_command
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource
+from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.models import ModelProgramLogicalFile, ModelProgramResourceFileType
 from hs_model_program.models import ModelProgramResource
@@ -107,7 +108,7 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
         Migrate a mp resource that has only one file
         When converted to composite resource, it should have a mp aggregation (based on the folder)
-        and should have aggregation level metadata
+        and should have aggregation level metadata. The resource file will be moved to the new folder.
         """
 
         # create a mp resource
@@ -491,6 +492,290 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+
+    def test_migrate_mp_resource_with_folder_1(self):
+        """
+        Migrate a mp resource that has only one file in a folder
+        When converted to composite resource, it should have a mp aggregation (based on the folder)
+        and should have aggregation level metadata. The original folder will be moved into the new aggregation folder
+        """
+
+        # create a mp resource
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(CompositeResource.objects.count(), 0)
+        # create Model program metadata
+        mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
+        # upload a file to mp resource
+        file_path = 'hs_core/tests/data/test.txt'
+        upload_folder = 'folder-1'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        self.assertEqual(mp_res.files.count(), 1)
+        # run  migration command
+        call_command(self.migration_command)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # test that the converted resource contains one mp aggregations
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
+        self.assertEqual(mp_res.short_id, cmp_res.short_id)
+        # there should one mp aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the res file moved to the mp aggregation folder
+        res_file = cmp_res.files.first()
+        expected_file_folder = "{}/{}".format(self.MP_FOLDER_NAME, upload_folder)
+        self.assertEqual(res_file.file_folder, expected_file_folder)
+        # check mp aggregation is folder based
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        self.assertEqual(mp_aggr.files.count(), 1)
+        self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+
+    def test_migrate_mp_resource_with_folder_2(self):
+        """
+        Migrate a mp resource that has 2 folders each containing a file
+        When converted to composite resource, it should have a mp aggregation (based on the folder)
+        and should have aggregation level metadata. The original 2 folders will be moved into the new aggregation folder
+        """
+
+        # create a mp resource
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(CompositeResource.objects.count(), 0)
+        # create Model program metadata
+        mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
+        # upload a file to mp resource
+        file_path = 'hs_core/tests/data/test.txt'
+        upload_folder_1 = 'folder-1'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_1)
+        upload_folder_2 = 'folder-2'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_2)
+
+        self.assertEqual(mp_res.files.count(), 2)
+        # run  migration command
+        call_command(self.migration_command)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # test that the converted resource contains one mp aggregations
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 2)
+        self.assertEqual(mp_res.short_id, cmp_res.short_id)
+        # there should one mp aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the res files moved to the mp aggregation folder
+        expected_file_folders = ["{}/{}".format(self.MP_FOLDER_NAME, upload_folder_1),
+                                 "{}/{}".format(self.MP_FOLDER_NAME, upload_folder_2)]
+        for res_file in cmp_res.files.all():
+            self.assertIn(res_file.file_folder, expected_file_folders)
+        res_file_1 = cmp_res.files.all()[0]
+        res_file_2 = cmp_res.files.all()[1]
+        self.assertNotEqual(res_file_1.file_folder, res_file_2.file_folder)
+        # check mp aggregation is folder based
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        self.assertEqual(mp_aggr.files.count(), 2)
+        self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+
+    def test_migrate_mp_resource_with_folder_3(self):
+        """
+        Migrate a mp resource that has 2 folders - one folder contains a file the other one is empty
+        When converted to composite resource, it should have a mp aggregation (based on the folder)
+        and should have aggregation level metadata. The original folder that has a file will be moved into the
+        new aggregation folder. The other empty folder will not be part of the mp aggregation.
+        """
+
+        # create a mp resource
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(CompositeResource.objects.count(), 0)
+        # create Model program metadata
+        mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
+        # upload a file to mp resource
+        file_path = 'hs_core/tests/data/test.txt'
+        upload_folder_1 = 'folder-1'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_1)
+        upload_folder_2 = 'folder-2'
+        ResourceFile.create_folder(mp_res, upload_folder_2)
+
+        self.assertEqual(mp_res.files.count(), 1)
+        # run  migration command
+        call_command(self.migration_command)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # test that the converted resource contains one mp aggregations
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 1)
+        self.assertEqual(mp_res.short_id, cmp_res.short_id)
+        # there should one mp aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the res files moved to the mp aggregation folder
+        res_file = cmp_res.files.first()
+        expected_file_folder = "{}/{}".format(self.MP_FOLDER_NAME, upload_folder_1)
+        self.assertEqual(res_file.file_folder, expected_file_folder)
+        # check mp aggregation is folder based
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        self.assertEqual(mp_aggr.files.count(), 1)
+        self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+
+    def test_migrate_mp_resource_with_folder_4(self):
+        """
+        Migrate a mp resource that has a readme file and one folder that contains a file
+        When converted to composite resource, it should have a mp aggregation (based on the folder)
+        and should have aggregation level metadata. The original folder that has a file will be moved into the
+        new aggregation folder. The readme file won't be part of the mp aggregation.
+        """
+
+        # create a mp resource
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(CompositeResource.objects.count(), 0)
+        # create Model program metadata
+        mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
+        # upload a readme file to mp resource
+        file_path = 'hs_core/tests/data/readme.txt'
+        upload_folder = ''
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        # upload a file to mp resource folder
+        file_path = 'hs_core/tests/data/test.txt'
+        upload_folder_1 = 'folder-1'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_1)
+
+        self.assertEqual(mp_res.files.count(), 2)
+        # run  migration command
+        call_command(self.migration_command)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # test that the converted resource contains one mp aggregations
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 2)
+        self.assertEqual(mp_res.short_id, cmp_res.short_id)
+        # there should one mp aggregation that has one resource file
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the res files moved to the mp aggregation folder
+        # check the folder for each of the files in composite resource
+        for res_file in cmp_res.files.all():
+            if res_file.file_name == 'readme.txt':
+                self.assertEqual(res_file.file_folder, "")
+            else:
+                expected_file_folder = "{}/{}".format(self.MP_FOLDER_NAME, upload_folder_1)
+                self.assertEqual(res_file.file_folder, expected_file_folder)
+
+        # check mp aggregation is folder based
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        self.assertEqual(mp_aggr.files.count(), 1)
+        self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+
+    def test_migrate_mp_resource_missing_file_in_irods(self):
+        """
+        Migrate a mp resource that has 2 files in db but only one file in iRODS
+        When converted to composite resource, it should have a mp aggregation (based on the folder)
+        and should have aggregation level metadata. Only the resource file that is in iRODS will be part of the
+        mp aggregation.
+        """
+
+        # create a mp resource
+        mp_res = self._create_mp_resource(add_keywords=True)
+        self.assertEqual(mp_res.metadata.subjects.count(), 2)
+        self.assertEqual(ModelProgramResource.objects.count(), 1)
+        self.assertEqual(CompositeResource.objects.count(), 0)
+        # create Model program metadata
+        mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
+        # upload a file to mp resource
+        file_path = 'hs_core/tests/data/test.txt'
+        upload_folder = ''
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+        self.assertEqual(mp_res.files.count(), 1)
+        text_res_file = mp_res.files.first()
+
+        file_path = 'hs_core/tests/data/cea.tif'
+        file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                      name=os.path.basename(file_path))
+
+        add_file_to_resource(mp_res, file_to_upload, folder=upload_folder)
+
+        self.assertEqual(mp_res.files.count(), 2)
+        # delete the text file from iRODS
+        istorage = mp_res.get_irods_storage()
+        istorage.delete(text_res_file.public_path)
+
+        # as pre the DB the MP resource still have 2 files
+        self.assertEqual(mp_res.files.count(), 2)
+
+        # run  migration command
+        call_command(self.migration_command)
+        self.assertEqual(ModelProgramResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # test that the converted resource contains one mp aggregations
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 2)
+        self.assertEqual(mp_res.short_id, cmp_res.short_id)
+        # there should one mp aggregation containing only one resource file (tif file)
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        # check the res file moved to the mp aggregation folder
+        for res_file in cmp_res.files.all():
+            if res_file.file_name == 'cea.tif':
+                self.assertEqual(res_file.file_folder, self.MP_FOLDER_NAME)
+
+        # check mp aggregation is folder based
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
+        # check that the file that exists in iRODS is part of the mp aggregation and the file that is
+        # missing in iRODS is not part of the mp aggregation
+        self.assertEqual(mp_aggr.files.count(), 1)
+        aggr_res_file = mp_aggr.files.first()
+        self.assertEqual(aggr_res_file.file_name, 'cea.tif')
+        self.assertEqual(mp_aggr.metadata.version, '5.1.011')
+        # check that the resource level keywords copied over to the aggregation
+        self.assertEqual(cmp_res.metadata.subjects.count(), 2)
+        self.assertEqual(len(mp_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
 
     def _create_mp_resource(self, add_keywords=False):
         mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
