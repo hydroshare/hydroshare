@@ -176,19 +176,37 @@ class Command(BaseCommand):
                     # create mp program file types
                     file_type = ModelProgramResourceFileType.ENGINE
                     for file_name in mp_metadata_obj.program.get_engine_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as computational engine".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
 
                     file_type = ModelProgramResourceFileType.SOFTWARE
                     for file_name in mp_metadata_obj.program.get_software_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as software".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
 
                     file_type = ModelProgramResourceFileType.DOCUMENTATION
                     for file_name in mp_metadata_obj.program.get_documentation_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as documentation".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
 
                     file_type = ModelProgramResourceFileType.RELEASE_NOTES
                     for file_name in mp_metadata_obj.program.get_releasenotes_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as release notes".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
+
+                    self.stdout.flush()
 
                 if mp_metadata_obj.program.modelReleaseDate:
                     mp_aggr.metadata.release_date = mp_metadata_obj.program.modelReleaseDate
