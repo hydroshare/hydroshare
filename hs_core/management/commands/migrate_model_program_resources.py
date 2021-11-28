@@ -11,9 +11,10 @@ from ..utils import migrate_core_meta_elements
 
 
 class Command(BaseCommand):
-    help = "Convert all model program resources to composite resource with model program aggregation"
+    help = "Convert all model program resources to composite resource with one model program aggregation"
 
-    def create_aggr_folder(self, mp_aggr, comp_res, logger):
+    def move_files_and_folders_to_aggregation(self, mp_aggr, comp_res, logger):
+        # create a new folder for mp aggregation to which all files and folders will be moved
         new_folder = "model-program"
         ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mp_aggr.folder = new_folder
@@ -22,30 +23,63 @@ class Command(BaseCommand):
         msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
-        # move files to the new folder
-        istorage = comp_res.get_irods_storage()
 
+        # move files and folders to the new aggregation folder
+        istorage = comp_res.get_irods_storage()
+        moved_folders = []
         for res_file in comp_res.files.all():
             if res_file != comp_res.readme_file:
+                moving_folder = False
+                if res_file.file_folder:
+                    if "/" in res_file.file_folder:
+                        folder_to_move = res_file.file_folder.split("/")[0]
+                    else:
+                        folder_to_move = res_file.file_folder
+                    if folder_to_move not in moved_folders:
+                        moved_folders.append(folder_to_move)
+                        moving_folder = True
+                    else:
+                        continue
+                    src_short_path = folder_to_move
+                else:
+                    src_short_path = res_file.file_name
+
                 src_full_path = res_file.storage_path
                 if istorage.exists(src_full_path):
-                    if res_file.file_folder:
-                        file_short_path = os.path.join(res_file.file_folder, res_file.file_name)
+                    src_full_path = os.path.join(comp_res.file_path, src_short_path)
+                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, src_short_path)
+                    if moving_folder:
+                        msg = "Moving folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
                     else:
-                        file_short_path = res_file.file_name
-
-                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, file_short_path)
-                    msg = "Moving file ({}) to the new folder:{}".format(file_short_path, new_folder)
+                        msg = "Moving file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
                     self.stdout.write(msg)
+
                     istorage.moveFile(src_full_path, tgt_full_path)
-                    res_file.set_storage_path(tgt_full_path)
-                    msg = "Moved file ({}) to the new folder:{}".format(file_short_path, new_folder)
-                    logger.info(msg)
-                    self.stdout.write(self.style.SUCCESS(msg))
-                    mp_aggr.add_resource_file(res_file)
-                    msg = "Added file ({}) to model program aggregation".format(res_file.short_path)
-                    logger.info(msg)
-                    self.stdout.write(self.style.SUCCESS(msg))
+                    if moving_folder:
+                        msg = "Moved folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                        logger.info(msg)
+                        self.stdout.write(self.style.SUCCESS(msg))
+                        self.stdout.flush()
+
+                        res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
+                        tgt_short_path = os.path.join(new_folder, folder_to_move)
+                        for fobj in res_file_objs:
+                            src_path = fobj.storage_path
+                            new_path = src_path.replace(folder_to_move, tgt_short_path, 1)
+                            fobj.set_storage_path(new_path)
+                            mp_aggr.add_resource_file(fobj)
+                            msg = "Added file ({}) to model program aggregation".format(fobj.short_path)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
+                    else:
+                        msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                        logger.info(msg)
+                        self.stdout.write(self.style.SUCCESS(msg))
+                        res_file.set_storage_path(tgt_full_path)
+                        mp_aggr.add_resource_file(res_file)
+                        msg = "Added file ({}) to model program aggregation".format(res_file.short_path)
+                        logger.info(msg)
+                        self.stdout.write(self.style.SUCCESS(msg))
                 else:
                     err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
                               "the model program aggregation.".format(src_full_path)
@@ -129,7 +163,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(err_msg))
                 continue
 
-            self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
+            self.move_files_and_folders_to_aggregation(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
