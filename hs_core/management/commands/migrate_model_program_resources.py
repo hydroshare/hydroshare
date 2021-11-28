@@ -27,16 +27,19 @@ class Command(BaseCommand):
 
         for res_file in comp_res.files.all():
             if res_file != comp_res.readme_file:
-                full_file_path = res_file.full_path
-                if istorage.exists(full_file_path):
-                    orig_short_path = res_file.short_path
-                    src_full_path = os.path.join(comp_res.file_path, orig_short_path)
-                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, orig_short_path)
-                    msg = "Moving file ({}) to the new folder:{}".format(orig_short_path, new_folder)
+                src_full_path = res_file.storage_path
+                if istorage.exists(src_full_path):
+                    if res_file.file_folder:
+                        file_short_path = os.path.join(res_file.file_folder, res_file.file_name)
+                    else:
+                        file_short_path = res_file.file_name
+
+                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, file_short_path)
+                    msg = "Moving file ({}) to the new folder:{}".format(file_short_path, new_folder)
                     self.stdout.write(msg)
                     istorage.moveFile(src_full_path, tgt_full_path)
                     res_file.set_storage_path(tgt_full_path)
-                    msg = "Moved file ({}) to the new folder:{}".format(orig_short_path, new_folder)
+                    msg = "Moved file ({}) to the new folder:{}".format(file_short_path, new_folder)
                     logger.info(msg)
                     self.stdout.write(self.style.SUCCESS(msg))
                     mp_aggr.add_resource_file(res_file)
@@ -45,9 +48,10 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(msg))
                 else:
                     err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
-                              "the model program aggregation.".format(full_file_path)
+                              "the model program aggregation.".format(src_full_path)
                     logger.warn(err_msg)
                     self.stdout.write(self.style.WARNING(err_msg))
+                self.stdout.flush()
 
     def create_mp_file_type(self, file_name, file_type, mp_aggr):
         for aggr_file in mp_aggr.files.all():
