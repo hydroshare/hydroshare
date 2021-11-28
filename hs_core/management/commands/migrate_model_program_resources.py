@@ -11,9 +11,10 @@ from ..utils import migrate_core_meta_elements
 
 
 class Command(BaseCommand):
-    help = "Convert all model program resources to composite resource with model program aggregation"
+    help = "Convert all model program resources to composite resource with one model program aggregation"
 
-    def create_aggr_folder(self, mp_aggr, comp_res, logger):
+    def move_files_and_folders_to_aggregation(self, mp_aggr, comp_res, logger):
+        # create a new folder for mp aggregation to which all files and folders will be moved
         new_folder = "model-program"
         ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mp_aggr.folder = new_folder
@@ -22,20 +23,69 @@ class Command(BaseCommand):
         msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
-        # move files to the new folder
-        istorage = comp_res.get_irods_storage()
 
+        # move files and folders to the new aggregation folder
+        istorage = comp_res.get_irods_storage()
+        moved_folders = []
         for res_file in comp_res.files.all():
             if res_file != comp_res.readme_file:
-                src_full_path = os.path.join(comp_res.file_path, res_file.file_name)
-                tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.file_name)
-                istorage.moveFile(src_full_path, tgt_full_path)
-                res_file.set_storage_path(tgt_full_path)
-                msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
-                self.stdout.write(self.style.SUCCESS(msg))
-                mp_aggr.add_resource_file(res_file)
-                msg = "Added file {} to mp aggregation".format(res_file.file_name)
-                self.stdout.write(self.style.SUCCESS(msg))
+                moving_folder = False
+                if res_file.file_folder:
+                    if "/" in res_file.file_folder:
+                        folder_to_move = res_file.file_folder.split("/")[0]
+                    else:
+                        folder_to_move = res_file.file_folder
+                    if folder_to_move not in moved_folders:
+                        moved_folders.append(folder_to_move)
+                        moving_folder = True
+                    else:
+                        continue
+                    src_short_path = folder_to_move
+                else:
+                    src_short_path = res_file.file_name
+
+                src_full_path = res_file.storage_path
+                if istorage.exists(src_full_path):
+                    src_full_path = os.path.join(comp_res.file_path, src_short_path)
+                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, src_short_path)
+                    if moving_folder:
+                        msg = "Moving folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                    else:
+                        msg = "Moving file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                    self.stdout.write(msg)
+
+                    istorage.moveFile(src_full_path, tgt_full_path)
+                    if moving_folder:
+                        msg = "Moved folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                        logger.info(msg)
+                        self.stdout.write(self.style.SUCCESS(msg))
+                        self.stdout.flush()
+
+                        res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
+                        tgt_short_path = os.path.join(new_folder, folder_to_move)
+                        for fobj in res_file_objs:
+                            src_path = fobj.storage_path
+                            new_path = src_path.replace(folder_to_move, tgt_short_path, 1)
+                            fobj.set_storage_path(new_path)
+                            mp_aggr.add_resource_file(fobj)
+                            msg = "Added file ({}) to model program aggregation".format(fobj.short_path)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
+                    else:
+                        msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                        logger.info(msg)
+                        self.stdout.write(self.style.SUCCESS(msg))
+                        res_file.set_storage_path(tgt_full_path)
+                        mp_aggr.add_resource_file(res_file)
+                        msg = "Added file ({}) to model program aggregation".format(res_file.short_path)
+                        logger.info(msg)
+                        self.stdout.write(self.style.SUCCESS(msg))
+                else:
+                    err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
+                              "the model program aggregation.".format(src_full_path)
+                    logger.warn(err_msg)
+                    self.stdout.write(self.style.WARNING(err_msg))
+                self.stdout.flush()
 
     def create_mp_file_type(self, file_name, file_type, mp_aggr):
         for aggr_file in mp_aggr.files.all():
@@ -67,31 +117,17 @@ class Command(BaseCommand):
 
         for mp_res in ModelProgramResource.objects.all().iterator():
             msg = "Migrating model program resource:{}".format(mp_res.short_id)
+            logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
             # check resource exists on irods
             istorage = mp_res.get_irods_storage()
             if not istorage.exists(mp_res.root_path):
-                err_msg = "Model program resource not found in irods (ID: {})".format(mp_res.short_id)
+                err_msg = "Couldn't migrate model program resource (ID:{}). This resource doesn't exist in iRODS."
+                err_msg = err_msg.format(mp_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
                 # skip this mp resource
-                continue
-
-            # check resource files exist on irods
-            file_missing = False
-            for res_file in mp_res.files.all():
-                file_path = res_file.public_path
-                if not istorage.exists(file_path):
-                    err_msg = "File path not found in irods:{}".format(file_path)
-                    logger.error(err_msg)
-                    err_msg = "Failed to convert model program resource (ID: {}). " \
-                              "Resource file is missing on irods".format(mp_res.short_id)
-                    self.stdout.write(self.style.ERROR(err_msg))
-                    file_missing = True
-                    break
-            if file_missing:
-                # skip this corrupt model program resource for migration
                 continue
 
             # change the resource_type
@@ -127,7 +163,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(err_msg))
                 continue
 
-            self.create_aggr_folder(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
+            self.move_files_and_folders_to_aggregation(mp_aggr=mp_aggr, comp_res=comp_res, logger=logger)
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
@@ -140,19 +176,37 @@ class Command(BaseCommand):
                     # create mp program file types
                     file_type = ModelProgramResourceFileType.ENGINE
                     for file_name in mp_metadata_obj.program.get_engine_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as computational engine".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
 
                     file_type = ModelProgramResourceFileType.SOFTWARE
                     for file_name in mp_metadata_obj.program.get_software_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as software".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
 
                     file_type = ModelProgramResourceFileType.DOCUMENTATION
                     for file_name in mp_metadata_obj.program.get_documentation_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as documentation".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
 
                     file_type = ModelProgramResourceFileType.RELEASE_NOTES
                     for file_name in mp_metadata_obj.program.get_releasenotes_list():
-                        self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                        if file_name:
+                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
+                            msg = "Setting file:{} as release notes".format(file_name)
+                            logger.info(msg)
+                            self.stdout.write(self.style.SUCCESS(msg))
+
+                    self.stdout.flush()
 
                 if mp_metadata_obj.program.modelReleaseDate:
                     mp_aggr.metadata.release_date = mp_metadata_obj.program.modelReleaseDate
@@ -201,6 +255,7 @@ class Command(BaseCommand):
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
             print("_______________________________________________")
+            self.stdout.flush()
 
         if resource_counter > 0:
             msg = "{} MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
@@ -217,3 +272,4 @@ class Command(BaseCommand):
             msg = "ALL MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
+        self.stdout.flush()
