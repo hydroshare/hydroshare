@@ -61,6 +61,7 @@ class Command(BaseCommand):
                     logger.info(msg)
                     self.stdout.write(self.style.SUCCESS(msg))
                 print("_______________________________________________")
+                self.stdout.flush()
 
             if resource_counter_executed_by == resource_counter_modified:
                 msg = "ALL MODEL INSTANCE ({}) RESOURCES WITH LINKED MODEL PROGRAM RESOURCE WERE SUCCESSFULLY " \
@@ -73,6 +74,8 @@ class Command(BaseCommand):
                                                       model_type.upper())
                 logger.warning(msg)
                 self.stdout.write(self.style.WARNING(msg))
+
+            self.stdout.flush()
 
         prepare_model_instance_resources(ModelInstanceResource, model_type='generic')
         prepare_model_instance_resources(SWATModelInstanceResource, model_type='swat')
