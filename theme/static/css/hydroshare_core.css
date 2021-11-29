@@ -4135,11 +4135,6 @@ ul#fb-files-container .hs-upload-indicator {
 	cursor: default;
 }
 
-.fb-view-list .fb-file-name {
-	font-size: 14px;
-	white-space: nowrap;
-}
-
 .fb-view-grid .fb-file-icon, .fb-file-icon {
     font-size: 32px;
 }
@@ -4309,7 +4304,7 @@ div.fb-upload-caption a {
 }
 
 .fb-view-list {
-    padding: 10px;
+  padding: 10px;
 	margin: 0;
 	min-width: 600px;
 }
@@ -4318,25 +4313,32 @@ div.fb-upload-caption a {
 	float: initial;
 	width: 85%;
 	border: 1px solid transparent;
-	padding: 6px 0;
+	padding: 6px;
 	margin: 4px 0;
 	display: flex;
+  align-items: baseline;
+  column-gap: 10px;
 }
 
 .fb-view-list > li > span {
-    width: 18%;
+    /* width: 18%; */
     text-overflow: ellipsis;
-    padding: 0 10px;
-    white-space: nowrap;
+    /* padding: 0 10px; */
+    /* white-space: nowrap; */
     overflow: hidden;
 }
 
+.fb-view-list .fb-file-name {
+	font-size: 14px;
+	/* white-space: nowrap; */
+}
+
 .fb-view-list > li > span:nth-child(1) {
-	width: 40px;
+	/* width: 40px; */
 }
 
 .fb-view-list > li > span:nth-child(2) {
-	width: calc(40% - 40px);
+	/* width: calc(40% - 40px); */
 }
 
 .fb-view-list > li > span:nth-child(3), .fb-view-list > li > span:nth-child(4), .fb-view-list > li > span:nth-child(5) {
@@ -4371,14 +4373,15 @@ div.fb-upload-caption a {
 }
 
 .fb-view-list .fb-file-icon {
-	margin-right: 10px;
-	margin-left: 10px;
+	/* margin-right: 10px;
+	margin-left: 10px; */
 	font-size: 18px;
 }
 
-.fb-view-list .fb-aggregation-icon {
-    margin-left: 7px;
-    margin-right: 12px;
+.fb-view-list .fb-aggregation-icon, .fb-view-list .fb-file-icon {
+    /* margin-left: 7px;
+    margin-right: 12px; */
+    flex-shrink: 0;
 }
 
 .fb-view-list .fb-aggregation-icon > img {

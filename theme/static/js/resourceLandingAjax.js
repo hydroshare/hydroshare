@@ -735,7 +735,7 @@ function get_aggregation_folder_struct(aggregation) {
     updateNavigationState();
 }
 
-// This method is called to refresh the loader with the most recent structure after every other call
+/** This method is called to refresh the loader with the most recent structure after every other call */
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
 
@@ -748,9 +748,9 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             store_path: store_path.path.join('/')
         },
         success: function (result) {
-            var files = result.files;
-            var folders = result.folders;
-            var can_be_public = result.can_be_public;
+            const files = result.files;
+            const folders = result.folders;
+            const canBePublic = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
 
             $('#fb-files-container').empty();
@@ -808,7 +808,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 }
             }
 
-            if (can_be_public) {
+            if (canBePublic) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
 

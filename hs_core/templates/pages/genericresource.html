@@ -888,6 +888,8 @@
                         </div>
                     </div>
 
+                    <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/file-browser-app.js"></script>
+
                     <div class="files" id="previews"></div>
                     {% block download_bag %}
                         {% if user_zone_account_exist %}
@@ -1068,6 +1070,7 @@
     <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/copyToClipboard.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/generic-resource.js"></script>
+  
 
 {% endblock %}
 
