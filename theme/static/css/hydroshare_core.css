@@ -3584,6 +3584,21 @@ div.group-thumbnails {
 	flex-wrap: wrap;
 }
 
+.group-info {
+  margin-top: 10px;
+  word-break: break-all;
+}
+
+.group-info > div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.group-info > div > i {
+  margin-right: 10px;
+}
+
 .group-container {
     margin-bottom: 20px;
 }
