@@ -2699,10 +2699,9 @@ span.you-flag {
 /*-------- My resources page revamp ---------*/
 
 #search-container .dropdown-menu {
-	border: 0;
     padding: 20px;
-	left: -251px;
-	width: 284px;
+    left: -251px;
+    width: 284px;
 }
 
 .input-group-btn .btn-group {
@@ -3533,11 +3532,12 @@ input.no-style {
     background: #093E54;
     padding: 20px 0;
     margin-bottom: 20px;
-	margin-top: 20px;
+	  margin-top: 20px;
 }
 
 .collaborate-header a {
     color: #CCC;
+    text-shadow: 1px 1px 1px rgb(0 0 0 / 30%);
 }
 
 .collaborate-nav-item {
@@ -3554,7 +3554,6 @@ input.no-style {
 
 .collaborate-nav-item.active {
 	color: #FFF;
-	font-weight: bold;
 }
 
 .collaborate-nav-item:focus {
@@ -3585,8 +3584,12 @@ div.group-thumbnails {
 }
 
 .group-info {
-  margin-top: 10px;
+  margin-top: 20px;
   word-break: break-all;
+  display: flex;
+  align-items: flex-start;
+  column-gap: 50px;
+  flex-wrap: wrap;
 }
 
 .group-info > div {
@@ -3596,7 +3599,20 @@ div.group-thumbnails {
 }
 
 .group-info > div > i {
-  margin-right: 10px;
+  margin-right: 6px;
+}
+
+.group-header {
+  display: flex;
+  column-gap: 30px;
+  align-items: center;
+}
+
+.group-title-container {
+  display: flex;
+  column-gap: 20px;
+  justify-content: space-between;
+  align-items: baseline;
 }
 
 .group-container {
