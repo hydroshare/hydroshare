@@ -114,7 +114,7 @@ def user_from_id(user, raise404=True):
         return user
 
     tgt = None
-    if user.isnumeric():
+    if str(user).isnumeric():
         try:
             tgt = User.objects.get(pk=int(user))
         except ValueError:
