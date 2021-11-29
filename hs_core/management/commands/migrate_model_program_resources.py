@@ -13,9 +13,22 @@ from ..utils import migrate_core_meta_elements
 class Command(BaseCommand):
     help = "Convert all model program resources to composite resource with one model program aggregation"
 
+    def get_aggregation_folder_name(self, comp_res):
+        # generate a folder name if the default name already exists
+        default_folder_name = "model-program"
+        folder_name = default_folder_name
+        istorage = comp_res.get_irods_storage()
+        folder_path = os.path.join(comp_res.file_path, default_folder_name)
+        post_fix = 1
+        while istorage.exists(folder_path):
+            folder_name = "{}-{}".format(default_folder_name, post_fix)
+            folder_path = os.path.join(comp_res.file_path, folder_name)
+            post_fix += 1
+        return folder_name
+
     def move_files_and_folders_to_aggregation(self, mp_aggr, comp_res, logger):
         # create a new folder for mp aggregation to which all files and folders will be moved
-        new_folder = "model-program"
+        new_folder = self.get_aggregation_folder_name(comp_res)
         ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
         mp_aggr.folder = new_folder
         mp_aggr.dataset_name = new_folder
