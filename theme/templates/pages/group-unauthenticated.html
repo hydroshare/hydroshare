@@ -50,10 +50,91 @@
                     <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-file"></i> Resources</a>
                 </li>
+                {% if group.gaccess.public %}
+                    <li role="presentation">
+                        <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-user"></i> Members</a>
+                    </li>
+                {% endif %}
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
+                <div role="tabpanel" class="tab-pane fade" id="members">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-3">
+                            <table id="members-filter" class="table-user-contributions table table-hover">
+                                <tbody>
+                                <tr class="active c-pointer" data-filter-by="all">
+                                    <td><span>All</span></td>
+                                    <td><span class="badge" data-filter-by='All'>0</span></td>
+                                </tr>
+                                <tr class="c-pointer" data-filter-by="edit-user">
+                                    <td><span>Owners</span></td>
+                                    <td><span class="badge" data-filter-by='Owners'>0</span></td>
+                                </tr>
+                                <tr class="c-pointer" data-filter-by="pending">
+                                    <td><span>Pending</span></td>
+                                    <td><span class="badge" data-filter-by='Pending'>0</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-12 col-md-9">
+                            {#  All members #}
+                            <table data-edit-count="{{ edit_users|length }}"
+                                   data-view-count="{{ view_users|length }}"
+                                   data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
+                                   id="all-members-table" class="table-members-list active">
+
+                                {% for owner in group.gaccess.owners %}
+                                    <tr data-filter-by="edit-user">
+                                        <td>
+                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <h4><strong><a>{{ owner|contact }}</a></strong></h4>
+                                            {% if  owner.userprofile.title %}
+                                                <span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
+                                        </td>
+                                        <td>
+                                           Owner
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+
+                                {% for member in view_users %}
+                                    <tr data-filter-by="view-user">
+                                        <td>
+                                            {% if member.userprofile.picture and member.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ member.userprofile.picture.url }}');"
+                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <h4><strong><a>{{ member|contact }}</a></strong></h4>
+                                            {% if  member.userprofile.title %}
+                                                <span class="text-muted">{{ member.userprofile.title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            Member
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
                 <div role="tabpanel" class="tab-pane fade in active" id="resources">
                     <div class="row">
                         <div class="col-lg-2" id="facets">
