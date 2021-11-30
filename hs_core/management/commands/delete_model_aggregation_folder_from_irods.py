@@ -1,8 +1,9 @@
 import logging
 import os
 
-from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.core.management.base import BaseCommand
+
 from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceResource
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
@@ -26,26 +27,35 @@ class Command(BaseCommand):
     def process_resource(self, model_res, resource_type, logger):
         istorage = model_res.get_irods_storage()
         if not istorage.exists(model_res.root_path):
-            err_msg = "Resource (ID:{}) doesn't exist in iRODS"
+            err_msg = ">> Resource (ID:{}) doesn't exist in iRODS"
             self.stdout.write(self.style.ERROR(err_msg))
             return
         if resource_type == "ModelProgram":
-            full_folder_path_to_delete = os.path.join(model_res.file_path, 'model-program')
-            aggr_meta_file = "model-program_meta.xml"
+            folder_name = 'model-program'
+            full_folder_path_to_delete = os.path.join(model_res.file_path, folder_name)
         else:
-            full_folder_path_to_delete = os.path.join(model_res.file_path, 'model-instance')
-            aggr_meta_file = "model-instance_meta.xml"
+            folder_name = 'model-instance'
+            full_folder_path_to_delete = os.path.join(model_res.file_path, folder_name)
+
+        aggr_meta_file = "{}_meta.xml".format(folder_name)
 
         if not istorage.exists(full_folder_path_to_delete):
-            err_msg = "Folder ({}) was not found in iRODS".format(full_folder_path_to_delete)
+            err_msg = ">> Folder ({}) was not found in iRODS".format(full_folder_path_to_delete)
             self.stdout.write(self.style.ERROR(err_msg))
             return
         full_aggr_meta_file_path = os.path.join(full_folder_path_to_delete, aggr_meta_file)
         if not istorage.exists(full_aggr_meta_file_path):
-            err_msg = "No aggregation meta file exist in iRODS at:{} Not deleting folder."
-            err_msg = err_msg.format(full_folder_path_to_delete)
-            self.stdout.write(self.style.ERROR(err_msg))
-            return
+            # check for empty folder
+            directory_in_irods = model_res.get_irods_path(full_folder_path_to_delete)
+
+            store = istorage.listdir(directory_in_irods)
+            # store[1] is a list of files in the directory
+            if len(store[1]) > 0:
+                err_msg = ">> No aggregation meta file exist in iRODS and the folder is not empty:{}. " \
+                          "Not deleting folder."
+                err_msg = err_msg.format(full_folder_path_to_delete)
+                self.stdout.write(self.style.ERROR(err_msg))
+                return
 
         # delete the folder
         istorage.delete(full_folder_path_to_delete)
