@@ -240,12 +240,12 @@ class Command(BaseCommand):
 
                 mp_aggr.save()
 
-                # create aggregation level xml files
-                mp_aggr.create_aggregation_xml_documents()
-                msg = 'One model program aggregation was created in resource (ID:{})'
-                msg = msg.format(comp_res.short_id)
-                logger.info(msg)
-                self.stdout.write(self.style.SUCCESS(msg))
+            # create aggregation level xml files
+            mp_aggr.create_aggregation_xml_documents()
+            msg = 'One model program aggregation was created in resource (ID:{})'
+            msg = msg.format(comp_res.short_id)
+            logger.info(msg)
+            self.stdout.write(self.style.SUCCESS(msg))
 
             comp_res.extra_metadata['MIGRATED_FROM'] = 'Model Program Resource'
             comp_res.save()
