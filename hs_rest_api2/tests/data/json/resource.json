@@ -24,7 +24,6 @@
   "creators": [
     {
       "name": "some_last_name, some_first_name",
-      "phone": "",
       "organization": "RENCI",
       "email": "test_user@email.com",
       "description": "/user/1/",
