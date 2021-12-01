@@ -18,13 +18,7 @@ from hs_file_types.utils import ingest_logical_file_metadata
 from hs_rest_api2 import serializers
 from hs_rest_api2.serializers import ResourceMetadataInForbidExtra
 
-from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
-    MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \
-    ReferencedTimeSeriesMetadataIn, ModelProgramMetadata, ModelProgramMetadataIn, ModelInstanceMetadata, \
-    ModelInstanceMetadataIn
-
-from hsmodels.schemas import ResourceMetadata, GeographicFeatureMetadata, GeographicRasterMetadata, \
-    MultidimensionalMetadata, SingleFileMetadata, FileSetMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata
+from hsmodels.schemas import ResourceMetadata
 
 
 def load_metadata(istorage, file_with_path):
