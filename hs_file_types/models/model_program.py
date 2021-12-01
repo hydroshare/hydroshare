@@ -1,14 +1,10 @@
-import glob
 import json
 import os
 
 from urllib.parse import urlparse
-from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.template import Template, Context
-from dominate import tags as dom_tags
 from rdflib import Literal, URIRef
 from dateutil import parser
 
