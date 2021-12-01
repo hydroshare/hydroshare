@@ -40,7 +40,8 @@ class Command(BaseCommand):
         # move files and folders to the new aggregation folder
         istorage = comp_res.get_irods_storage()
         moved_folders = []
-        for res_file in comp_res.files.all():
+
+        for res_file in comp_res.files.all().iterator():
             if res_file != comp_res.readme_file:
                 moving_folder = False
                 if res_file.file_folder:
@@ -57,10 +58,9 @@ class Command(BaseCommand):
                 else:
                     src_short_path = res_file.file_name
 
-                src_full_path = res_file.storage_path
+                src_full_path = os.path.join(comp_res.root_path, 'data', 'contents', src_short_path)
                 if istorage.exists(src_full_path):
-                    src_full_path = os.path.join(comp_res.file_path, src_short_path)
-                    tgt_full_path = os.path.join(comp_res.file_path, new_folder, src_short_path)
+                    tgt_full_path = os.path.join(comp_res.root_path, 'data', 'contents', new_folder, src_short_path)
                     if moving_folder:
                         msg = "Moving folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
                     else:
