@@ -75,16 +75,24 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.SUCCESS(msg))
                         self.stdout.flush()
 
+                        # Note: some of the files returned by list_folder() may not exist in iRODS
                         res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
                         tgt_short_path = os.path.join(new_folder, folder_to_move)
                         for fobj in res_file_objs:
                             src_path = fobj.storage_path
                             new_path = src_path.replace(folder_to_move, tgt_short_path, 1)
-                            fobj.set_storage_path(new_path)
-                            mi_aggr.add_resource_file(fobj)
-                            msg = "Added file ({}) to model instance aggregation".format(fobj.short_path)
-                            logger.info(msg)
-                            self.stdout.write(self.style.SUCCESS(msg))
+                            if istorage.exists(new_path):
+                                fobj.set_storage_path(new_path)
+                                mi_aggr.add_resource_file(fobj)
+                                msg = "Added file ({}) to model instance aggregation".format(fobj.short_path)
+                                logger.info(msg)
+                                self.stdout.write(self.style.SUCCESS(msg))
+                            else:
+                                err_msg = "File ({}) is missing in iRODS. File not added to the aggregation"
+                                err_msg = err_msg.format(new_path)
+                                logger.warn(err_msg)
+                                self.stdout.write(self.style.WARNING(err_msg))
+
                     else:
                         msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
                         logger.info(msg)
