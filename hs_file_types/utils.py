@@ -465,6 +465,8 @@ def get_logical_file_metadata_json_schema(file_with_path):
             del json_value_dict['spatial_reference']
         if 'spatial_coverage' in json_value_dict and json_value_dict['spatial_coverage'] is None:
             del json_value_dict['spatial_coverage']
+        if 'additional_metadata' in json_value_dict and not json_value_dict['additional_metadata']:
+            json_value_dict['additional_metadata'] = []
         json_value = json.dumps(json_value_dict)
 
         json_schema = metadata.schema_json()
@@ -478,6 +480,7 @@ def get_logical_file_metadata_json_schema(file_with_path):
         json_schema_dict['properties']['type']['options'] = {
             "hidden": True
         }
+
         # json_schema_dict['properties']['additional_metadata']['items']['required'] = []
         json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
