@@ -77,10 +77,11 @@ class Command(BaseCommand):
 
                         # Note: some of the files returned by list_folder() may not exist in iRODS
                         res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
-                        tgt_short_path = os.path.join(new_folder, folder_to_move)
+                        tgt_short_path = os.path.join('data', 'contents', new_folder, folder_to_move)
+                        src_short_path = os.path.join('data', 'contents', folder_to_move)
                         for fobj in res_file_objs:
                             src_path = fobj.storage_path
-                            new_path = src_path.replace(folder_to_move, tgt_short_path, 1)
+                            new_path = src_path.replace(src_short_path, tgt_short_path, 1)
                             if istorage.exists(new_path):
                                 fobj.set_storage_path(new_path)
                                 mi_aggr.add_resource_file(fobj)
