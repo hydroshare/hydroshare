@@ -77,7 +77,7 @@ def resource_metadata_json(request, pk):
 
     resource, _, _ = authorize(request, pk,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    md = json.loads(request.body)
+    md = request.data
     ingest_resource_metadata(resource, md)
     return HttpResponse(status=200)
 
@@ -152,7 +152,7 @@ def aggregation_metadata_json(request, pk, aggregation_path):
 
     resource, _, _ = authorize(request, pk,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    metadata_json = json.loads(request.body)
+    metadata_json = request.body
     ingest_aggregation_metadata(resource, metadata_json, aggregation_path)
     return HttpResponse(status=200)
 
