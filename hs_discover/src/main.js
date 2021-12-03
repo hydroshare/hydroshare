@@ -9,7 +9,7 @@ Vue.use(BootstrapVue);
 function delayPopOutSurvey() {
   const cookie = $.cookie('discover-survey');
   if (!cookie) {
-    const delaySeconds = 20;
+    const delaySeconds = 60;
     const buttonExists = $('.typeform-sidetab-button').length;
     if (buttonExists) {
       setTimeout(
