@@ -766,23 +766,23 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 0)
         # create Model program metadata
         mp_res.metadata.create_element('MpMetadata', modelVersion='5.1.011')
-        # upload a file to mp resource folder-A
+        # upload a file to mp resource 'data' folder
         file_path = 'hs_core/tests/data/test.txt'
-        upload_folder_1 = 'folder-A'
+        upload_folder_1 = 'data'
         file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                       name=os.path.basename(file_path))
 
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_1)
-        # upload a file to mp resource folder-B
+        # upload a file to mp resource 'contents' folder
         file_path = 'hs_core/tests/data/cea.tif'
-        upload_folder_2 = 'folder-B'
+        upload_folder_2 = 'contents'
         file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                       name=os.path.basename(file_path))
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_2)
 
-        # upload a file to mp resource folder-B/folder-C
+        # upload a file to mp resource 'contents/data' folder
         file_path = 'hs_core/tests/data/netcdf_valid.nc'
-        upload_folder_3 = 'folder-B/folder-C'
+        upload_folder_3 = 'contents/data'
         file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                       name=os.path.basename(file_path))
         add_file_to_resource(mp_res, file_to_upload, folder=upload_folder_3)
