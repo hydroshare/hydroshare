@@ -21,7 +21,6 @@ $.fn.visible = function (partial) {
 };
 
 $(document).ready(function () {
-
     // Prevents dropdown form getting dismissed when clicking on items inside
     $('.dropdown-menu').click(function (e) {
         e.stopPropagation();
@@ -33,6 +32,50 @@ $(document).ready(function () {
             el.addClass("come-in");
         }
     });
+
+    $('.institutions-carousel').owlCarousel({
+      loop: false,
+      margin: 50,
+      autoWidth: true,
+      slideTransition: 'ease',
+      checkVisible: false,
+      dots: false,
+      navContainer: '.institutions-carousel',
+      nav: true,
+      responsive:{
+          0: {
+              items:1
+          },
+          600: {
+              items:3
+          },
+          1000: {
+              items:5
+          }
+      }
+    })
+
+    $('.groups-carousel').owlCarousel({
+        loop: false,
+        margin: 50,
+        autoWidth: true,
+        slideTransition: 'ease',
+        checkVisible: false,
+        dots: false,
+        navContainer: '.groups-carousel',
+        nav: true,
+        responsive:{
+            0: {
+                items:1
+            },
+            600: {
+                items:3
+            },
+            1000: {
+                items:5
+            }
+        }
+      })
 
     var win = $(window);
     var allMods = $(".slideInBlock");
