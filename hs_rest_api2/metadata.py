@@ -31,6 +31,10 @@ def load_metadata(istorage, file_with_path):
 def resource_metadata(resource):
     file_with_path = resource.scimeta_path
     istorage = resource.get_irods_storage()
+    metadata_dirty = resource.getAVU('metadata_dirty')
+    if metadata_dirty:
+        # TODO, shouldn't have to do this?
+        create_bag_metadata_files(resource)
     return load_metadata(istorage, file_with_path)
 
 
@@ -56,7 +60,6 @@ def ingest_resource_metadata(resource, incoming_metadata):
         # logger.exception("Error processing resource metadata file")
         raise
     create_bag_metadata_files(resource)
-    resource.setAVU("bag_modified", True)
 
 
 def _resource_metadata_json(resource):
@@ -140,7 +143,6 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
     # write the updated metadata back to file
     ingest_logical_file_metadata(graph, resource)
     create_bag_metadata_files(resource)
-    resource.setAVU("bag_modified", True)
 
 
 def aggregation_metadata_json(request, pk, aggregation_path):
