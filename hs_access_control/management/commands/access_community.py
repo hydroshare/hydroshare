@@ -26,7 +26,7 @@ def usage():
     print("access_community usage:")
     print("  access_community [{cname} [{request} [{options}]]]")
     print("Where:")
-    print("  {cname} is a community name. Use '' to embed spaces.")
+    print("  {cname} is a community name or id. Use '' to embed spaces.")
     print("  {request} is one of:")
     print("      list: print the configuration of a community.")
     print("      create: create the community.")
@@ -38,13 +38,13 @@ def usage():
     print("      remove: remove community.")
     print("      rename: rename community.")
     print("      group {gname} {request} {options}: group commands.")
-    print("          {gname}: group name.")
+    print("          {gname}: group name or id.")
     print("          {request} is one of:")
     print("              add: add the group to the community.")
     print("              update: update community metadata for the group.")
     print("              remove: remove the group from the community.")
     print("              invite: invite the group to join the community.")
-    print("              request: request from group owner to join the community.")
+    print("              request: make a request from a group owner to join the community.")
     print("              approve: approve a request or invitation.")
     print("              decline: decline a request or invitation.")
     print("      owner {oname} {request}: owner commands")
@@ -65,9 +65,9 @@ class Command(BaseCommand):
         parser.add_argument('command', nargs='*', type=str)
 
         parser.add_argument(
-            '--syntax',
+            '--help',
             action='store_true',  # True for presence, False for absence
-            dest='syntax',  # value is options['syntax']
+            dest='help',  # value is options['help']
             help='print help message',
         )
 
@@ -91,7 +91,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if options['syntax']:
+        if options['help']:
             usage()
             exit(1)
 

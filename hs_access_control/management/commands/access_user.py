@@ -40,6 +40,13 @@ class Command(BaseCommand):
         parser.add_argument('command', nargs='*', type=str)
 
         parser.add_argument(
+            '--help',
+            action='store_true',  # True for presence, False for absence
+            dest='help',  # value is options['help']
+            help='print help message',
+        )
+
+        parser.add_argument(
             '--first',
             dest='first',
             help='first name of user'
@@ -58,6 +65,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+
+        if options['help']:
+            usage()
+            exit(1)
 
         if len(options['command']) > 0:
             uname = options['command'][0]
