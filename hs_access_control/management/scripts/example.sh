@@ -12,11 +12,11 @@ python manage.py access_group rats create --owner=alvacouch --description='squea
 python manage.py access_community foo group cats add
 python manage.py access_community foo group dogs add
 python manage.py access_community foo group rats add 
-python manage.py access_user betacouch create --email=beta@couch.com
+python manage.py access_user betacouch create --email=beta@couch.com --first=first --last=last
 python manage.py access_community foo update --owner=betacouch
-python manage.py access_user gammacouch create --email=gamma@couch.com
+python manage.py access_user gammacouch create --email=gamma@couch.com --first=first --last=last
 python manage.py access_group cats update --owner=gammacouch
-python manage.py access_user deltacouch create --email=delta@couch.com
+python manage.py access_user deltacouch create --email=delta@couch.com --first=first --last=last
 python manage.py access_group dogs update --owner=deltacouch
 python manage.py access_community foo
 python manage.py access_group cats
