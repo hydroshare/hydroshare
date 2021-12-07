@@ -168,18 +168,22 @@ class Command(BaseCommand):
         if command == 'update' or command == 'create':
             community = community_from_name_or_id(cname)
             if community is not None:
-                community = Community.objects.get(name=cname)
+                community = Community.objects.get(name=community.name)
+                print("updating community {}".format(community.name))
                 if options['description'] is not None:
                     community.description = options['description']
                     community.save()
+                    print("   updated description")
                 if options['purpose'] is not None:
                     community.purpose = options['purpose']
                     community.save()
+                    print("   updated purpose")
 
                 UserCommunityPrivilege.update(user=owner,
                                               community=community,
                                               privilege=PrivilegeCodes.OWNER,
                                               grantor=owner)
+                print("   updated ownership")
 
             else:  # if it does not exist, create it
                 if options['description'] is not None:
@@ -236,7 +240,7 @@ class Command(BaseCommand):
                 exit(1)
 
             if len(options['command']) < 4:
-                print("user {} owns community '{}' (id={})"
+                print("user {} is a potential owner of community '{}' (id={})"
                       .format(owner.username, community.name, str(community.id)))
             action = options['command'][3]
 

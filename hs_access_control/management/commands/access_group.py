@@ -131,17 +131,21 @@ class Command(BaseCommand):
             try:
                 group = Group.objects.get(name=gname)
                 # if it exists, update it
+                print("updating group {}".format(gname))
                 if options['description'] is not None:
                     group.description = options['description']
                     group.save()
+                    print("   updated description")
                 if options['purpose'] is not None:
                     group.purpose = options['purpose']
                     group.save()
+                    print("   updated purpose")
                 UserGroupPrivilege.update(user=owner,
                                           group=group,
                                           privilege=PrivilegeCodes.OWNER,
                                           grantor=owner)
 
+                print("   updated ownership")
             except Group.DoesNotExist:  # create it
 
                 if options['description'] is not None:
