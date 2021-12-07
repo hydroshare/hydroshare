@@ -33,12 +33,19 @@ def usage():
 
 
 class Command(BaseCommand):
-    help = """Manage groups."""
+    help = """Manage resource users."""
 
     def add_arguments(self, parser):
 
         # a command to execute
         parser.add_argument('command', nargs='*', type=str)
+
+        parser.add_argument(
+            '--help',
+            action='store_true',  # True for presence, False for absence
+            dest='help',  # value is options['help']
+            help='print help message',
+        )
 
         parser.add_argument(
             '--grantor',
