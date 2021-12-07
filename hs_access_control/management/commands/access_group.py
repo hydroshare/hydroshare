@@ -207,7 +207,6 @@ class Command(BaseCommand):
 
         elif command == 'user':
             # at this point, group must exist
-            print("DEBUG: user subcommand")
             group = group_from_name_or_id(gname)
             if group is None:
                 usage()
