@@ -25,9 +25,9 @@ def usage():
     print("Where:")
     print("  {rid} is a resource short name.")
     print("  {request} is one of:")
-    print("      list: print the users of a resource.")
-    print("      user: user to add or remove.")
-    print("          where options include {user-id} {add|remove}.")
+    print("      list: print the owners of a resource.")
+    print("      owner: add or remove an owner.")
+    print("          where options include {user} {add|remove}.")
     print("And options include:")
     print("  --grantor={username} -- grantor of privilege")
 
