@@ -40,9 +40,9 @@ class Command(BaseCommand):
         parser.add_argument('command', nargs='*', type=str)
 
         parser.add_argument(
-            '--help',
+            '--syntax',
             action='store_true',  # True for presence, False for absence
-            dest='help',  # value is options['help']
+            dest='syntax',  # value is options['syntax']
             help='print help message',
         )
 
@@ -66,7 +66,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if options['help']:
+        if options['syntax']:
             usage()
             exit(1)
 
