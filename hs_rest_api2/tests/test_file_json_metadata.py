@@ -66,6 +66,19 @@ class TestFileBasedJSON(HSRESTTestCase):
         self.res.delete()
 
     def _test_metadata_update_retrieve(self, endpoint, schema_in, json_put_file, aggregation_path=None):
+        def compare_response(result_json, expected_json):
+            if aggregation_path:
+                # The default rights contains a date and is read-only on an aggregation
+                expected_json['rights'] = result_json['rights']
+            else:
+                self.assertGreater(result_json['modified'], expected_json['modified'])
+                # overwrite system metadata fields for comparison
+                expected_json['modified'] = result_json['modified']
+                expected_json['created'] = result_json['created']
+                expected_json['creators'][0]['description'] = result_json['creators'][0]['description']
+            self.assertEqual(sorting(result_json), sorting(expected_json))
+
+
         kwargs = {"pk": self.res.short_id}
         if aggregation_path:
             kwargs["aggregation_path"] = aggregation_path
@@ -73,26 +86,19 @@ class TestFileBasedJSON(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         with open(os.path.join(self.base_dir, json_put_file), "r") as f:
-            full_resource_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
-        schema_in_instance = schema_in(**full_resource_json)
+            expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
+        schema_in_instance = schema_in(**expected_json)
         in_json = schema_in_instance.dict(exclude_defaults=True)
+
         put_response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_json, format="json")
-        self.assertEqual(put_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(put_response.status_code, status.HTTP_200_OK)
+        put_response_json = json.loads(put_response.content.decode())
+        compare_response(put_response_json, expected_json)
 
         response = self.client.get(reverse(endpoint, kwargs=kwargs))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
-
-        if aggregation_path:
-            # TODO remove rights from aggregation in schema
-            full_resource_json['rights'] = response_json['rights']
-        else:
-            self.assertGreater(response_json['modified'], full_resource_json['modified'])
-            # overwrite system metadata fields for comparison
-            full_resource_json['modified'] = response_json['modified']
-            full_resource_json['created'] = response_json['created']
-            full_resource_json['creators'][0]['description'] = response_json['creators'][0]['description']
-        self.assertEqual(sorting(response_json), sorting(full_resource_json))
+        compare_response(response_json, expected_json)
 
     def test_resource_metadata_update_retrieve(self):
         prepare_resource(self, "resource")

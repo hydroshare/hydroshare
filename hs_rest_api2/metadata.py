@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime, timezone
 
@@ -13,6 +14,23 @@ from hs_rest_api2.serializers import ResourceMetadataInForbidExtra
 from hsmodels.schemas import ResourceMetadata, load_rdf, rdf_graph
 
 logger = logging.getLogger(__name__)
+
+
+def _get_in_schema(out_schema):
+    """
+    Gets the parent schema class and subclasses it to forbid extra parameters
+
+    :params out_schema: A hsmodel schema
+
+    :returns: A new schema class
+    """
+    in_schema = out_schema.__bases__[0]
+
+    class IncomingForbid(in_schema):
+        class Config:
+            extra = "forbid"
+
+    return IncomingForbid
 
 
 def load_metadata_from_file(istorage, file_with_path):
@@ -47,6 +65,13 @@ def resource_metadata(resource):
     return load_metadata_from_file(istorage, file_with_path)
 
 
+def resource_metadata_json_loads(resource):
+    """
+    Returns the resource metadata as a JSON dict
+    """
+    return json.loads(resource_metadata(resource).json())
+
+
 def ingest_resource_metadata(resource, incoming_metadata):
     """
     Writes resource metadata json to the resource rdf/xml.
@@ -79,23 +104,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
         logger.exception(f"Error processing resource metadata file for resource {resource.short_id}")
         raise
     save_resource_metadata_xml(resource)
-
-
-def _get_in_schema(out_schema):
-    """
-    Gets the parent schema class and subclasses it to forbid extra parameters
-
-    :params out_schema: A hsmodel schema
-
-    :returns: A new schema class
-    """
-    in_schema = out_schema.__bases__[0]
-
-    class IncomingForbid(in_schema):
-        class Config:
-            extra = "forbid"
-
-    return IncomingForbid
+    return json.loads(res_metadata.json())
 
 
 def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
@@ -115,7 +124,7 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
         aggregation.create_aggregation_xml_documents()
 
     # read existing metadata from file
-    agg_md = load_metadata_from_file(resource.get_irods_storage(), agg.metadata_file_path)
+    agg_md = load_metadata_from_file(resource.get_irods_storage(), aggregation.metadata_file_path)
 
     agg_md_dict = agg_md.dict()
 
@@ -140,4 +149,16 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
 
     # write the updated metadata back to file
     ingest_logical_file_metadata(graph, resource)
-    aggregation.create_aggregation_xml_documents()
+    aggregation.refresh_from_db()
+    return json.loads(agg_metadata.json())
+
+
+def aggregation_metadata_json_loads(resource, file_path):
+    """
+    Returns the aggregation metadata as a JSON dict
+    """
+    agg = resource.get_aggregation_by_name(file_path)
+    if agg.metadata.is_dirty:
+        agg.create_aggregation_xml_documents()
+    agg_md = load_metadata_from_file(resource.get_irods_storage(), agg.metadata_file_path)
+    return json.loads(agg_md.json())
