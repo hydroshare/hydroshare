@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.4.18
--- Dumped by pg_dump version 11.5
+-- Dumped from database version 13.1 (Debian 13.1-1.pgdg100+1)
+-- Dumped by pg_dump version 13.1 (Debian 13.1-1.pgdg100+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -17,7 +17,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: hstore; Type: EXTENSION; Schema: -; Owner: 
+-- Name: hstore; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
@@ -31,7 +31,7 @@ COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs
 
 
 --
--- Name: postgis; Type: EXTENSION; Schema: -; Owner: 
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
@@ -46,7 +46,7 @@ COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: auth_group; Type: TABLE; Schema: public; Owner: postgres
@@ -2184,6 +2184,85 @@ ALTER SEQUENCE public.hs_access_control_community_id_seq OWNED BY public.hs_acce
 
 
 --
+-- Name: hs_access_control_communityresourceprivilege; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_access_control_communityresourceprivilege (
+    id integer NOT NULL,
+    privilege integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    community_id integer NOT NULL,
+    grantor_id integer NOT NULL,
+    resource_id integer NOT NULL,
+    exhibit boolean NOT NULL
+);
+
+
+ALTER TABLE public.hs_access_control_communityresourceprivilege OWNER TO postgres;
+
+--
+-- Name: hs_access_control_communityresourceprivilege_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_access_control_communityresourceprivilege_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_access_control_communityresourceprivilege_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_communityresourceprivilege_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_access_control_communityresourceprivilege_id_seq OWNED BY public.hs_access_control_communityresourceprivilege.id;
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_access_control_communityresourceprovenance (
+    id integer NOT NULL,
+    privilege integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    undone boolean NOT NULL,
+    community_id integer NOT NULL,
+    grantor_id integer,
+    resource_id integer NOT NULL,
+    exhibit boolean NOT NULL
+);
+
+
+ALTER TABLE public.hs_access_control_communityresourceprovenance OWNER TO postgres;
+
+--
+-- Name: hs_access_control_communityresourceprovenance_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_access_control_communityresourceprovenance_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_access_control_communityresourceprovenance_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_communityresourceprovenance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_access_control_communityresourceprovenance_id_seq OWNED BY public.hs_access_control_communityresourceprovenance.id;
+
+
+--
 -- Name: hs_access_control_feature; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -2270,7 +2349,8 @@ CREATE TABLE public.hs_access_control_groupcommunityprivilege (
     start timestamp with time zone NOT NULL,
     community_id integer NOT NULL,
     grantor_id integer NOT NULL,
-    group_id integer NOT NULL
+    group_id integer NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2308,7 +2388,8 @@ CREATE TABLE public.hs_access_control_groupcommunityprovenance (
     undone boolean NOT NULL,
     community_id integer NOT NULL,
     grantor_id integer,
-    group_id integer NOT NULL
+    group_id integer NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2336,6 +2417,48 @@ ALTER SEQUENCE public.hs_access_control_groupcommunityprovenance_id_seq OWNED BY
 
 
 --
+-- Name: hs_access_control_groupcommunityrequest; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_access_control_groupcommunityrequest (
+    id integer NOT NULL,
+    privilege integer,
+    redeemed boolean NOT NULL,
+    approved boolean NOT NULL,
+    community_id integer NOT NULL,
+    community_owner_id integer,
+    group_id integer NOT NULL,
+    group_owner_id integer,
+    when_requested timestamp with time zone,
+    when_responded timestamp with time zone
+);
+
+
+ALTER TABLE public.hs_access_control_groupcommunityrequest OWNER TO postgres;
+
+--
+-- Name: hs_access_control_groupcommunityrequest_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_access_control_groupcommunityrequest_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_access_control_groupcommunityrequest_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_groupcommunityrequest_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_access_control_groupcommunityrequest_id_seq OWNED BY public.hs_access_control_groupcommunityrequest.id;
+
+
+--
 -- Name: hs_access_control_groupmembershiprequest; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -2344,7 +2467,8 @@ CREATE TABLE public.hs_access_control_groupmembershiprequest (
     date_requested timestamp with time zone NOT NULL,
     group_to_join_id integer NOT NULL,
     invitation_to_id integer,
-    request_from_id integer NOT NULL
+    request_from_id integer NOT NULL,
+    redeemed boolean NOT NULL
 );
 
 
@@ -2381,7 +2505,8 @@ CREATE TABLE public.hs_access_control_groupresourceprivilege (
     start timestamp with time zone NOT NULL,
     grantor_id integer NOT NULL,
     group_id integer NOT NULL,
-    resource_id integer NOT NULL
+    resource_id integer NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2419,7 +2544,8 @@ CREATE TABLE public.hs_access_control_groupresourceprovenance (
     grantor_id integer,
     group_id integer NOT NULL,
     resource_id integer NOT NULL,
-    undone boolean NOT NULL
+    undone boolean NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2567,7 +2693,8 @@ CREATE TABLE public.hs_access_control_usercommunityprovenance (
     undone boolean NOT NULL,
     community_id integer NOT NULL,
     grantor_id integer,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2642,7 +2769,8 @@ CREATE TABLE public.hs_access_control_usergroupprovenance (
     grantor_id integer,
     group_id integer NOT NULL,
     user_id integer NOT NULL,
-    undone boolean NOT NULL
+    undone boolean NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2679,7 +2807,8 @@ CREATE TABLE public.hs_access_control_userresourceprivilege (
     start timestamp with time zone NOT NULL,
     grantor_id integer NOT NULL,
     resource_id integer NOT NULL,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -2717,7 +2846,8 @@ CREATE TABLE public.hs_access_control_userresourceprovenance (
     grantor_id integer,
     resource_id integer NOT NULL,
     user_id integer NOT NULL,
-    undone boolean NOT NULL
+    undone boolean NOT NULL,
+    exhibit boolean NOT NULL
 );
 
 
@@ -3568,25 +3698,26 @@ ALTER SEQUENCE public.hs_communities_topic_id_seq OWNED BY public.hs_communities
 
 
 --
--- Name: hs_core_bags; Type: TABLE; Schema: public; Owner: postgres
+-- Name: hs_core_citation; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.hs_core_bags (
+CREATE TABLE public.hs_core_citation (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    "timestamp" timestamp with time zone NOT NULL,
+    value text NOT NULL,
     content_type_id integer NOT NULL,
-    CONSTRAINT hs_core_bags_object_id_check CHECK ((object_id >= 0))
+    CONSTRAINT hs_core_citation_object_id_check CHECK ((object_id >= 0))
 );
 
 
-ALTER TABLE public.hs_core_bags OWNER TO postgres;
+ALTER TABLE public.hs_core_citation OWNER TO postgres;
 
 --
--- Name: hs_core_bags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: hs_core_citation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.hs_core_bags_id_seq
+CREATE SEQUENCE public.hs_core_citation_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -3594,13 +3725,13 @@ CREATE SEQUENCE public.hs_core_bags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_bags_id_seq OWNER TO postgres;
+ALTER TABLE public.hs_core_citation_id_seq OWNER TO postgres;
 
 --
--- Name: hs_core_bags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: hs_core_citation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.hs_core_bags_id_seq OWNED BY public.hs_core_bags.id;
+ALTER SEQUENCE public.hs_core_citation_id_seq OWNED BY public.hs_core_citation.id;
 
 
 --
@@ -3921,11 +4052,11 @@ CREATE TABLE public.hs_core_genericresource (
     rating_average double precision NOT NULL,
     content text NOT NULL,
     short_id character varying(32) NOT NULL,
-    doi character varying(1024),
+    doi character varying(128) NOT NULL,
     object_id integer,
     content_type_id integer,
     creator_id integer NOT NULL,
-    last_changed_by_id integer,
+    last_changed_by_id integer NOT NULL,
     user_id integer NOT NULL,
     resource_type character varying(50) NOT NULL,
     file_unpack_message text,
@@ -4130,7 +4261,7 @@ CREATE TABLE public.hs_core_relation (
     id integer NOT NULL,
     object_id integer NOT NULL,
     type character varying(100) NOT NULL,
-    value character varying(500) NOT NULL,
+    value text NOT NULL,
     content_type_id integer NOT NULL,
     CONSTRAINT hs_core_relation_object_id_check CHECK ((object_id >= 0))
 );
@@ -4169,7 +4300,7 @@ CREATE TABLE public.hs_core_resourcefile (
     resource_file character varying(4096),
     content_type_id integer NOT NULL,
     fed_resource_file character varying(4096),
-    file_folder character varying(4096),
+    file_folder character varying(4096) NOT NULL,
     logical_file_content_type_id integer,
     logical_file_object_id integer,
     _size bigint NOT NULL,
@@ -4245,7 +4376,7 @@ ALTER SEQUENCE public.hs_core_rights_id_seq OWNED BY public.hs_core_rights.id;
 CREATE TABLE public.hs_core_source (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    derived_from character varying(300) NOT NULL,
+    derived_from text NOT NULL,
     content_type_id integer NOT NULL,
     CONSTRAINT hs_core_source_object_id_check CHECK ((object_id >= 0))
 );
@@ -4308,6 +4439,45 @@ ALTER TABLE public.hs_core_subject_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.hs_core_subject_id_seq OWNED BY public.hs_core_subject.id;
+
+
+--
+-- Name: hs_core_tasknotification; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_core_tasknotification (
+    id integer NOT NULL,
+    task_id character varying(50) NOT NULL,
+    name character varying(1000) NOT NULL,
+    payload character varying(1000) NOT NULL,
+    status character varying(20) NOT NULL,
+    username character varying(150) NOT NULL,
+    created timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.hs_core_tasknotification OWNER TO postgres;
+
+--
+-- Name: hs_core_tasknotification_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_core_tasknotification_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_core_tasknotification_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_core_tasknotification_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_core_tasknotification_id_seq OWNED BY public.hs_core_tasknotification.id;
 
 
 --
@@ -5093,6 +5263,204 @@ ALTER TABLE public.hs_file_types_georasterlogicalfile_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.hs_file_types_georasterlogicalfile_id_seq OWNED BY public.hs_file_types_georasterlogicalfile.id;
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_modelinstancefilemetadata (
+    id integer NOT NULL,
+    extra_metadata public.hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL,
+    has_model_output boolean NOT NULL,
+    metadata_json jsonb NOT NULL,
+    executed_by_id integer
+);
+
+
+ALTER TABLE public.hs_file_types_modelinstancefilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_file_types_modelinstancefilemetadata_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_file_types_modelinstancefilemetadata_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_file_types_modelinstancefilemetadata_id_seq OWNED BY public.hs_file_types_modelinstancefilemetadata.id;
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_modelinstancelogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    extra_data public.hstore NOT NULL,
+    folder character varying(4096),
+    metadata_schema_json jsonb NOT NULL,
+    model_instance_type character varying(255) NOT NULL,
+    metadata_id integer NOT NULL,
+    resource_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_file_types_modelinstancelogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_file_types_modelinstancelogicalfile_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_file_types_modelinstancelogicalfile_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_file_types_modelinstancelogicalfile_id_seq OWNED BY public.hs_file_types_modelinstancelogicalfile.id;
+
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_modelprogramfilemetadata (
+    id integer NOT NULL,
+    extra_metadata public.hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL,
+    version character varying(255),
+    programming_languages character varying(100)[] NOT NULL,
+    operating_systems character varying(100)[] NOT NULL,
+    release_date date,
+    website character varying(255),
+    code_repository character varying(255)
+);
+
+
+ALTER TABLE public.hs_file_types_modelprogramfilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_file_types_modelprogramfilemetadata_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_file_types_modelprogramfilemetadata_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_file_types_modelprogramfilemetadata_id_seq OWNED BY public.hs_file_types_modelprogramfilemetadata.id;
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_modelprogramlogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    extra_data public.hstore NOT NULL,
+    folder character varying(4096),
+    metadata_schema_json jsonb NOT NULL,
+    model_program_type character varying(255) NOT NULL,
+    metadata_id integer NOT NULL,
+    resource_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_file_types_modelprogramlogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_file_types_modelprogramlogicalfile_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_file_types_modelprogramlogicalfile_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_file_types_modelprogramlogicalfile_id_seq OWNED BY public.hs_file_types_modelprogramlogicalfile.id;
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_modelprogramresourcefiletype (
+    id integer NOT NULL,
+    file_type smallint NOT NULL,
+    mp_metadata_id integer NOT NULL,
+    res_file_id integer NOT NULL,
+    CONSTRAINT hs_file_types_modelprogramresourcefiletype_file_type_check CHECK ((file_type >= 0))
+);
+
+
+ALTER TABLE public.hs_file_types_modelprogramresourcefiletype OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.hs_file_types_modelprogramresourcefiletype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_file_types_modelprogramresourcefiletype_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.hs_file_types_modelprogramresourcefiletype_id_seq OWNED BY public.hs_file_types_modelprogramresourcefiletype.id;
 
 
 --
@@ -8693,9 +9061,9 @@ CREATE TABLE public.theme_userprofile (
     title character varying(1024),
     subject_areas character varying(1024),
     organization character varying(1024),
-    phone_1 character varying(1024),
+    phone_1 character varying(16),
     phone_1_type character varying(1024),
-    phone_2 character varying(1024),
+    phone_2 character varying(16),
     phone_2_type character varying(1024),
     public boolean NOT NULL,
     cv character varying(100),
@@ -9145,6 +9513,20 @@ ALTER TABLE ONLY public.hs_access_control_community ALTER COLUMN id SET DEFAULT 
 
 
 --
+-- Name: hs_access_control_communityresourceprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_communityresourceprivilege_id_seq'::regclass);
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_communityresourceprovenance_id_seq'::regclass);
+
+
+--
 -- Name: hs_access_control_feature id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -9170,6 +9552,13 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege ALTER COLUMN i
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupcommunityprovenance_id_seq'::regclass);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupcommunityrequest_id_seq'::regclass);
 
 
 --
@@ -9397,10 +9786,10 @@ ALTER TABLE ONLY public.hs_communities_topic ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- Name: hs_core_bags id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_citation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.hs_core_bags ALTER COLUMN id SET DEFAULT nextval('public.hs_core_bags_id_seq'::regclass);
+ALTER TABLE ONLY public.hs_core_citation ALTER COLUMN id SET DEFAULT nextval('public.hs_core_citation_id_seq'::regclass);
 
 
 --
@@ -9527,6 +9916,13 @@ ALTER TABLE ONLY public.hs_core_source ALTER COLUMN id SET DEFAULT nextval('publ
 --
 
 ALTER TABLE ONLY public.hs_core_subject ALTER COLUMN id SET DEFAULT nextval('public.hs_core_subject_id_seq'::regclass);
+
+
+--
+-- Name: hs_core_tasknotification id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_tasknotification ALTER COLUMN id SET DEFAULT nextval('public.hs_core_tasknotification_id_seq'::regclass);
 
 
 --
@@ -9681,6 +10077,41 @@ ALTER TABLE ONLY public.hs_file_types_georasterfilemetadata ALTER COLUMN id SET 
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_georasterlogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelinstancefilemetadata_id_seq'::regclass);
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelinstancelogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramfilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelprogramfilemetadata_id_seq'::regclass);
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelprogramlogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelprogramresourcefiletype_id_seq'::regclass);
 
 
 --
@@ -11563,6 +11994,36 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 807	Can add feature	255	add_feature
 808	Can change feature	255	change_feature
 809	Can delete feature	255	delete_feature
+810	Can add task notification	256	add_tasknotification
+811	Can change task notification	256	change_tasknotification
+812	Can delete task notification	256	delete_tasknotification
+813	Can add citation	257	add_citation
+814	Can change citation	257	change_citation
+815	Can delete citation	257	delete_citation
+816	Can add community resource privilege	258	add_communityresourceprivilege
+817	Can change community resource privilege	258	change_communityresourceprivilege
+818	Can delete community resource privilege	258	delete_communityresourceprivilege
+819	Can add community resource provenance	259	add_communityresourceprovenance
+820	Can change community resource provenance	259	change_communityresourceprovenance
+821	Can delete community resource provenance	259	delete_communityresourceprovenance
+822	Can add group community request	260	add_groupcommunityrequest
+823	Can change group community request	260	change_groupcommunityrequest
+824	Can delete group community request	260	delete_groupcommunityrequest
+825	Can add model instance file meta data	261	add_modelinstancefilemetadata
+826	Can change model instance file meta data	261	change_modelinstancefilemetadata
+827	Can delete model instance file meta data	261	delete_modelinstancefilemetadata
+828	Can add model instance logical file	262	add_modelinstancelogicalfile
+829	Can change model instance logical file	262	change_modelinstancelogicalfile
+830	Can delete model instance logical file	262	delete_modelinstancelogicalfile
+831	Can add model program file meta data	263	add_modelprogramfilemetadata
+832	Can change model program file meta data	263	change_modelprogramfilemetadata
+833	Can delete model program file meta data	263	delete_modelprogramfilemetadata
+834	Can add model program logical file	264	add_modelprogramlogicalfile
+835	Can change model program logical file	264	change_modelprogramlogicalfile
+836	Can delete model program logical file	264	delete_modelprogramlogicalfile
+837	Can add model program resource file type	265	add_modelprogramresourcefiletype
+838	Can change model program resource file type	265	change_modelprogramresourcefiletype
+839	Can delete model program resource file type	265	delete_modelprogramresourcefiletype
 \.
 
 
@@ -12000,6 +12461,16 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 253	hs_odm2	odm2variable
 254	hs_communities	topic
 255	hs_access_control	feature
+256	hs_core	tasknotification
+257	hs_core	citation
+258	hs_access_control	communityresourceprivilege
+259	hs_access_control	communityresourceprovenance
+260	hs_access_control	groupcommunityrequest
+261	hs_file_types	modelinstancefilemetadata
+262	hs_file_types	modelinstancelogicalfile
+263	hs_file_types	modelprogramfilemetadata
+264	hs_file_types	modelprogramlogicalfile
+265	hs_file_types	modelprogramresourcefiletype
 \.
 
 
@@ -12364,6 +12835,33 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 258	theme	0013_auto_20180222_1700	2019-09-30 17:50:57.00372+00
 259	theme	0014_comma_semicolon_delimiter	2019-09-30 17:50:57.220111+00
 260	hs_access_control	0025_auto_20190924_1622	2019-10-01 18:20:37.61755+00
+261	django_irods	0002_auto_20200603_2110	2021-12-08 22:00:41.248948+00
+262	hs_core	0046_auto_20191104_2035	2021-12-08 22:00:41.76647+00
+263	hs_core	0047_auto_20200512_1509	2021-12-08 22:00:42.281209+00
+264	hs_core	0048_auto_20200603_2110	2021-12-08 22:00:43.450423+00
+265	hs_core	0049_auto_20200610_1938	2021-12-08 22:00:44.223411+00
+266	hs_core	0050_auto_20200611_1912	2021-12-08 22:00:44.461823+00
+267	hs_core	0051_tasknotification	2021-12-08 22:00:44.514882+00
+268	hs_core	0052_tasknotification_username	2021-12-08 22:00:44.538044+00
+269	hs_core	0053_auto_20200826_1629	2021-12-08 22:00:44.570151+00
+270	hs_core	0054_auto_20201028_1432	2021-12-08 22:00:44.59346+00
+271	hs_core	0055_auto_20201031_1727	2021-12-08 22:00:44.880401+00
+272	hs_core	0056_auto_citations	2021-12-08 22:00:45.460421+00
+273	hs_core	0057_auto_20210104_2106	2021-12-08 22:00:45.520439+00
+274	hs_access_control	0026_auto_20200603_2110	2021-12-08 22:00:45.611627+00
+275	hs_access_control	0027_groupmembershiprequest_redeemed	2021-12-08 22:00:45.693496+00
+276	hs_access_control	0028_auto_20210528_1427	2021-12-08 22:00:46.823744+00
+277	hs_access_control	0029_auto_20210604_1143	2021-12-08 22:00:48.533957+00
+278	hs_access_control	0030_groupcommunityinvite_groupcommunityrequest	2021-12-08 22:00:48.850031+00
+279	hs_access_control	0031_auto_20210606_2052	2021-12-08 22:00:49.388982+00
+280	hs_access_control	0032_auto_20210607_2027	2021-12-08 22:00:50.139074+00
+281	hs_core	0058_cite with_text_field	2021-12-08 22:00:50.216441+00
+282	hs_file_types	0011_auto_20201212_1554	2021-12-08 22:00:51.27555+00
+283	hs_modflow_modelinstance	0004_auto_20200603_2110	2021-12-08 22:00:51.618623+00
+284	hs_tools_resource	0021_url_rename	2021-12-08 22:00:51.62959+00
+285	theme	0015_auto_20200603_2110	2021-12-08 22:00:51.794739+00
+286	theme	0016_userprofile_phone_validations	2021-12-08 22:00:52.288232+00
+287	theme	0017_phone_validation_message	2021-12-08 22:00:52.532831+00
 \.
 
 
@@ -12634,6 +13132,22 @@ COPY public.hs_access_control_community (id, name, description, purpose, auto_ap
 
 
 --
+-- Data for Name: hs_access_control_communityresourceprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_access_control_communityresourceprivilege (id, privilege, start, community_id, grantor_id, resource_id, exhibit) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_access_control_communityresourceprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_access_control_communityresourceprovenance (id, privilege, start, undone, community_id, grantor_id, resource_id, exhibit) FROM stdin;
+\.
+
+
+--
 -- Data for Name: hs_access_control_feature; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12665,18 +13179,18 @@ COPY public.hs_access_control_groupaccess (id, active, discoverable, public, sha
 -- Data for Name: hs_access_control_groupcommunityprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupcommunityprivilege (id, privilege, start, community_id, grantor_id, group_id) FROM stdin;
-1	3	2019-09-30 19:12:45.26565+00	1	4	3
-2	3	2019-09-30 19:13:01.194705+00	1	4	4
-3	3	2019-09-30 19:13:10.139482+00	1	4	5
-4	3	2019-09-30 19:13:18.322848+00	1	4	6
-5	3	2019-09-30 19:13:26.612387+00	1	4	7
-6	3	2019-09-30 19:13:35.648032+00	1	4	8
-7	3	2019-09-30 19:13:49.469898+00	1	4	9
-8	3	2019-09-30 19:13:58.116409+00	1	4	10
-9	3	2019-09-30 19:14:06.217639+00	1	4	11
-10	3	2019-10-01 18:20:00.942039+00	1	4	12
-11	3	2019-12-11 20:09:00.701724+00	1	4	13
+COPY public.hs_access_control_groupcommunityprivilege (id, privilege, start, community_id, grantor_id, group_id, exhibit) FROM stdin;
+1	3	2019-09-30 19:12:45.26565+00	1	4	3	f
+2	3	2019-09-30 19:13:01.194705+00	1	4	4	f
+3	3	2019-09-30 19:13:10.139482+00	1	4	5	f
+4	3	2019-09-30 19:13:18.322848+00	1	4	6	f
+5	3	2019-09-30 19:13:26.612387+00	1	4	7	f
+6	3	2019-09-30 19:13:35.648032+00	1	4	8	f
+7	3	2019-09-30 19:13:49.469898+00	1	4	9	f
+8	3	2019-09-30 19:13:58.116409+00	1	4	10	f
+9	3	2019-09-30 19:14:06.217639+00	1	4	11	f
+10	3	2019-10-01 18:20:00.942039+00	1	4	12	f
+11	3	2019-12-11 20:09:00.701724+00	1	4	13	f
 \.
 
 
@@ -12684,18 +13198,26 @@ COPY public.hs_access_control_groupcommunityprivilege (id, privilege, start, com
 -- Data for Name: hs_access_control_groupcommunityprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupcommunityprovenance (id, privilege, start, undone, community_id, grantor_id, group_id) FROM stdin;
-1	3	2019-09-30 19:12:45.27461+00	f	1	4	3
-2	3	2019-09-30 19:13:01.203156+00	f	1	4	4
-3	3	2019-09-30 19:13:10.146263+00	f	1	4	5
-4	3	2019-09-30 19:13:18.330555+00	f	1	4	6
-5	3	2019-09-30 19:13:26.619285+00	f	1	4	7
-6	3	2019-09-30 19:13:35.656081+00	f	1	4	8
-7	3	2019-09-30 19:13:49.480141+00	f	1	4	9
-8	3	2019-09-30 19:13:58.123568+00	f	1	4	10
-9	3	2019-09-30 19:14:06.224192+00	f	1	4	11
-10	3	2019-10-01 18:20:00.959632+00	f	1	4	12
-11	3	2019-12-11 20:09:00.710226+00	f	1	4	13
+COPY public.hs_access_control_groupcommunityprovenance (id, privilege, start, undone, community_id, grantor_id, group_id, exhibit) FROM stdin;
+1	3	2019-09-30 19:12:45.27461+00	f	1	4	3	f
+2	3	2019-09-30 19:13:01.203156+00	f	1	4	4	f
+3	3	2019-09-30 19:13:10.146263+00	f	1	4	5	f
+4	3	2019-09-30 19:13:18.330555+00	f	1	4	6	f
+5	3	2019-09-30 19:13:26.619285+00	f	1	4	7	f
+6	3	2019-09-30 19:13:35.656081+00	f	1	4	8	f
+7	3	2019-09-30 19:13:49.480141+00	f	1	4	9	f
+8	3	2019-09-30 19:13:58.123568+00	f	1	4	10	f
+9	3	2019-09-30 19:14:06.224192+00	f	1	4	11	f
+10	3	2019-10-01 18:20:00.959632+00	f	1	4	12	f
+11	3	2019-12-11 20:09:00.710226+00	f	1	4	13	f
+\.
+
+
+--
+-- Data for Name: hs_access_control_groupcommunityrequest; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_access_control_groupcommunityrequest (id, privilege, redeemed, approved, community_id, community_owner_id, group_id, group_owner_id, when_requested, when_responded) FROM stdin;
 \.
 
 
@@ -12703,7 +13225,7 @@ COPY public.hs_access_control_groupcommunityprovenance (id, privilege, start, un
 -- Data for Name: hs_access_control_groupmembershiprequest; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupmembershiprequest (id, date_requested, group_to_join_id, invitation_to_id, request_from_id) FROM stdin;
+COPY public.hs_access_control_groupmembershiprequest (id, date_requested, group_to_join_id, invitation_to_id, request_from_id, redeemed) FROM stdin;
 \.
 
 
@@ -12711,7 +13233,7 @@ COPY public.hs_access_control_groupmembershiprequest (id, date_requested, group_
 -- Data for Name: hs_access_control_groupresourceprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupresourceprivilege (id, privilege, start, grantor_id, group_id, resource_id) FROM stdin;
+COPY public.hs_access_control_groupresourceprivilege (id, privilege, start, grantor_id, group_id, resource_id, exhibit) FROM stdin;
 \.
 
 
@@ -12719,7 +13241,7 @@ COPY public.hs_access_control_groupresourceprivilege (id, privilege, start, gran
 -- Data for Name: hs_access_control_groupresourceprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupresourceprovenance (id, privilege, start, grantor_id, group_id, resource_id, undone) FROM stdin;
+COPY public.hs_access_control_groupresourceprovenance (id, privilege, start, grantor_id, group_id, resource_id, undone, exhibit) FROM stdin;
 \.
 
 
@@ -12767,9 +13289,9 @@ COPY public.hs_access_control_usercommunityprivilege (id, privilege, start, comm
 -- Data for Name: hs_access_control_usercommunityprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_usercommunityprovenance (id, privilege, start, undone, community_id, grantor_id, user_id) FROM stdin;
-1	1	2019-09-30 18:58:41.783727+00	f	1	4	4
-2	1	2019-12-11 19:11:08.764307+00	f	1	6	6
+COPY public.hs_access_control_usercommunityprovenance (id, privilege, start, undone, community_id, grantor_id, user_id, exhibit) FROM stdin;
+1	1	2019-09-30 18:58:41.783727+00	f	1	4	4	f
+2	1	2019-12-11 19:11:08.764307+00	f	1	6	6	f
 \.
 
 
@@ -12797,19 +13319,19 @@ COPY public.hs_access_control_usergroupprivilege (id, privilege, start, grantor_
 -- Data for Name: hs_access_control_usergroupprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_usergroupprovenance (id, privilege, start, grantor_id, group_id, user_id, undone) FROM stdin;
-1	1	2019-09-30 17:58:37.349239+00	5	2	5	f
-2	1	2019-09-30 18:40:46.784224+00	7	3	7	f
-3	1	2019-09-30 18:41:24.761228+00	8	4	8	f
-4	1	2019-09-30 18:42:01.591317+00	9	5	9	f
-5	1	2019-09-30 18:42:35.51756+00	10	6	10	f
-6	1	2019-09-30 18:43:16.461094+00	11	7	11	f
-7	1	2019-09-30 18:44:19.822052+00	12	8	12	f
-8	1	2019-09-30 18:45:36.400902+00	13	9	13	f
-9	1	2019-09-30 18:50:37.912029+00	14	10	14	f
-10	1	2019-09-30 18:51:05.927648+00	15	11	15	f
-11	1	2019-10-01 18:19:20.904821+00	6	12	6	f
-12	1	2019-12-11 18:21:22.550158+00	17	13	17	f
+COPY public.hs_access_control_usergroupprovenance (id, privilege, start, grantor_id, group_id, user_id, undone, exhibit) FROM stdin;
+1	1	2019-09-30 17:58:37.349239+00	5	2	5	f	f
+2	1	2019-09-30 18:40:46.784224+00	7	3	7	f	f
+3	1	2019-09-30 18:41:24.761228+00	8	4	8	f	f
+4	1	2019-09-30 18:42:01.591317+00	9	5	9	f	f
+5	1	2019-09-30 18:42:35.51756+00	10	6	10	f	f
+6	1	2019-09-30 18:43:16.461094+00	11	7	11	f	f
+7	1	2019-09-30 18:44:19.822052+00	12	8	12	f	f
+8	1	2019-09-30 18:45:36.400902+00	13	9	13	f	f
+9	1	2019-09-30 18:50:37.912029+00	14	10	14	f	f
+10	1	2019-09-30 18:51:05.927648+00	15	11	15	f	f
+11	1	2019-10-01 18:19:20.904821+00	6	12	6	f	f
+12	1	2019-12-11 18:21:22.550158+00	17	13	17	f	f
 \.
 
 
@@ -12817,7 +13339,7 @@ COPY public.hs_access_control_usergroupprovenance (id, privilege, start, grantor
 -- Data for Name: hs_access_control_userresourceprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_userresourceprivilege (id, privilege, start, grantor_id, resource_id, user_id) FROM stdin;
+COPY public.hs_access_control_userresourceprivilege (id, privilege, start, grantor_id, resource_id, user_id, exhibit) FROM stdin;
 \.
 
 
@@ -12825,7 +13347,7 @@ COPY public.hs_access_control_userresourceprivilege (id, privilege, start, grant
 -- Data for Name: hs_access_control_userresourceprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_userresourceprovenance (id, privilege, start, grantor_id, resource_id, user_id, undone) FROM stdin;
+COPY public.hs_access_control_userresourceprovenance (id, privilege, start, grantor_id, resource_id, user_id, undone, exhibit) FROM stdin;
 \.
 
 
@@ -13089,10 +13611,10 @@ COPY public.hs_communities_topic (id, name) FROM stdin;
 
 
 --
--- Data for Name: hs_core_bags; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: hs_core_citation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_core_bags (id, object_id, "timestamp", content_type_id) FROM stdin;
+COPY public.hs_core_citation (id, object_id, value, content_type_id) FROM stdin;
 \.
 
 
@@ -13245,6 +13767,14 @@ COPY public.hs_core_source (id, object_id, derived_from, content_type_id) FROM s
 --
 
 COPY public.hs_core_subject (id, object_id, value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_core_tasknotification; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_core_tasknotification (id, task_id, name, payload, status, username, created) FROM stdin;
 \.
 
 
@@ -22814,6 +23344,46 @@ COPY public.hs_file_types_georasterlogicalfile (id, dataset_name, metadata_id, e
 
 
 --
+-- Data for Name: hs_file_types_modelinstancefilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_modelinstancefilemetadata (id, extra_metadata, keywords, is_dirty, has_model_output, metadata_json, executed_by_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_file_types_modelinstancelogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_modelinstancelogicalfile (id, dataset_name, extra_data, folder, metadata_schema_json, model_instance_type, metadata_id, resource_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_file_types_modelprogramfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_modelprogramfilemetadata (id, extra_metadata, keywords, is_dirty, version, programming_languages, operating_systems, release_date, website, code_repository) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_file_types_modelprogramlogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_modelprogramlogicalfile (id, dataset_name, extra_data, folder, metadata_schema_json, model_program_type, metadata_id, resource_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_file_types_modelprogramresourcefiletype; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_modelprogramresourcefiletype (id, file_type, mp_metadata_id, res_file_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: hs_file_types_netcdffilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -25663,7 +26233,7 @@ COPY public.security_passwordexpiry (id, password_expiry_date, user_id) FROM std
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.spatial_ref_sys  FROM stdin;
+COPY public.spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text) FROM stdin;
 \.
 
 
@@ -25763,7 +26333,7 @@ SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 2352, true);
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 809, true);
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 839, true);
 
 
 --
@@ -25882,7 +26452,7 @@ SELECT pg_catalog.setval('public.django_comments_id_seq', 1, false);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 255, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 265, true);
 
 
 --
@@ -25973,7 +26543,7 @@ SELECT pg_catalog.setval('public.django_irods_rodsenvironment_id_seq', 1, false)
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 260, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 287, true);
 
 
 --
@@ -26117,6 +26687,20 @@ SELECT pg_catalog.setval('public.hs_access_control_community_id_seq', 1, true);
 
 
 --
+-- Name: hs_access_control_communityresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_communityresourceprivilege_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_communityresourceprovenance_id_seq', 1, false);
+
+
+--
 -- Name: hs_access_control_feature_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -26142,6 +26726,13 @@ SELECT pg_catalog.setval('public.hs_access_control_groupcommunityprivilege_id_se
 --
 
 SELECT pg_catalog.setval('public.hs_access_control_groupcommunityprovenance_id_seq', 11, true);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupcommunityrequest_id_seq', 1, false);
 
 
 --
@@ -26369,10 +26960,10 @@ SELECT pg_catalog.setval('public.hs_communities_topic_id_seq', 75, true);
 
 
 --
--- Name: hs_core_bags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: hs_core_citation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_bags_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_citation_id_seq', 1, false);
 
 
 --
@@ -26499,6 +27090,13 @@ SELECT pg_catalog.setval('public.hs_core_source_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('public.hs_core_subject_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_tasknotification_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_tasknotification_id_seq', 1, false);
 
 
 --
@@ -26653,6 +27251,41 @@ SELECT pg_catalog.setval('public.hs_file_types_georasterfilemetadata_id_seq', 1,
 --
 
 SELECT pg_catalog.setval('public.hs_file_types_georasterlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelinstancefilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelinstancelogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelprogramfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelprogramlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelprogramresourcefiletype_id_seq', 1, false);
 
 
 --
@@ -28008,11 +28641,43 @@ ALTER TABLE ONLY public.generic_threadedcomment
 
 
 --
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_commun_community_id_resource_id_8c98adee_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
+    ADD CONSTRAINT hs_access_control_commun_community_id_resource_id_8c98adee_uniq UNIQUE (community_id, resource_id);
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_commun_resource_id_community_id_33fe6f26_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
+    ADD CONSTRAINT hs_access_control_commun_resource_id_community_id_33fe6f26_uniq UNIQUE (resource_id, community_id, start);
+
+
+--
 -- Name: hs_access_control_community hs_access_control_community_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_community
     ADD CONSTRAINT hs_access_control_community_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_communityresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
+    ADD CONSTRAINT hs_access_control_communityresourceprivilege_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_communityresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
+    ADD CONSTRAINT hs_access_control_communityresourceprovenance_pkey PRIMARY KEY (id);
 
 
 --
@@ -28077,6 +28742,14 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
     ADD CONSTRAINT hs_access_control_groupcommunityprovenance_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_groupcommunityrequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
+    ADD CONSTRAINT hs_access_control_groupcommunityrequest_pkey PRIMARY KEY (id);
 
 
 --
@@ -28448,11 +29121,19 @@ ALTER TABLE ONLY public.hs_communities_topic
 
 
 --
--- Name: hs_core_bags hs_core_bags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_citation hs_core_citation_content_type_id_object_id_7681c663_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.hs_core_bags
-    ADD CONSTRAINT hs_core_bags_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.hs_core_citation
+    ADD CONSTRAINT hs_core_citation_content_type_id_object_id_7681c663_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_core_citation hs_core_citation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_citation
+    ADD CONSTRAINT hs_core_citation_pkey PRIMARY KEY (id);
 
 
 --
@@ -28696,6 +29377,22 @@ ALTER TABLE ONLY public.hs_core_subject
 
 
 --
+-- Name: hs_core_tasknotification hs_core_tasknotification_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_tasknotification
+    ADD CONSTRAINT hs_core_tasknotification_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_core_tasknotification hs_core_tasknotification_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_tasknotification
+    ADD CONSTRAINT hs_core_tasknotification_task_id_key UNIQUE (task_id);
+
+
+--
 -- Name: hs_core_title hs_core_title_content_type_id_558a1cad4b729d8a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -28917,6 +29614,62 @@ ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
     ADD CONSTRAINT hs_file_types_georasterlogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata hs_file_types_modelinstancefilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata
+    ADD CONSTRAINT hs_file_types_modelinstancefilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modelinstancelogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
+    ADD CONSTRAINT hs_file_types_modelinstancelogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modelinstancelogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
+    ADD CONSTRAINT hs_file_types_modelinstancelogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata hs_file_types_modelprogramfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramfilemetadata
+    ADD CONSTRAINT hs_file_types_modelprogramfilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelprogramlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
+    ADD CONSTRAINT hs_file_types_modelprogramlogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelprogramlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
+    ADD CONSTRAINT hs_file_types_modelprogramlogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype hs_file_types_modelprogramresourcefiletype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
+    ADD CONSTRAINT hs_file_types_modelprogramresourcefiletype_pkey PRIMARY KEY (id);
 
 
 --
@@ -31054,6 +31807,48 @@ CREATE INDEX generic_threadedcomment_replied_to_id ON public.generic_threadedcom
 
 
 --
+-- Name: hs_access_control_communit_community_id_6b0528e5; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_communit_community_id_6b0528e5 ON public.hs_access_control_communityresourceprivilege USING btree (community_id);
+
+
+--
+-- Name: hs_access_control_communit_community_id_d99cfdf0; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_communit_community_id_d99cfdf0 ON public.hs_access_control_communityresourceprovenance USING btree (community_id);
+
+
+--
+-- Name: hs_access_control_communit_grantor_id_3ec5bad4; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_communit_grantor_id_3ec5bad4 ON public.hs_access_control_communityresourceprovenance USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_communit_grantor_id_451d7a0c; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_communit_grantor_id_451d7a0c ON public.hs_access_control_communityresourceprivilege USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_communit_resource_id_454c9c9f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_communit_resource_id_454c9c9f ON public.hs_access_control_communityresourceprovenance USING btree (resource_id);
+
+
+--
+-- Name: hs_access_control_communit_resource_id_c2e3d0e4; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_communit_resource_id_c2e3d0e4 ON public.hs_access_control_communityresourceprivilege USING btree (resource_id);
+
+
+--
 -- Name: hs_access_control_feature_user_id_f7b54071; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -31065,6 +31860,13 @@ CREATE INDEX hs_access_control_feature_user_id_f7b54071 ON public.hs_access_cont
 --
 
 CREATE INDEX hs_access_control_groupcom_community_id_84dd001c ON public.hs_access_control_groupcommunityprovenance USING btree (community_id);
+
+
+--
+-- Name: hs_access_control_groupcom_community_owner_id_1dc22dbe; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_groupcom_community_owner_id_1dc22dbe ON public.hs_access_control_groupcommunityrequest USING btree (community_owner_id);
 
 
 --
@@ -31100,6 +31902,27 @@ CREATE INDEX hs_access_control_groupcommunityprovenance_grantor_id_9aa4c4fe ON p
 --
 
 CREATE INDEX hs_access_control_groupcommunityprovenance_group_id_b09a2f11 ON public.hs_access_control_groupcommunityprovenance USING btree (group_id);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest_community_id_68acef01; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_groupcommunityrequest_community_id_68acef01 ON public.hs_access_control_groupcommunityrequest USING btree (community_id);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest_group_id_cc4bb20b; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_groupcommunityrequest_group_id_cc4bb20b ON public.hs_access_control_groupcommunityrequest USING btree (group_id);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest_group_owner_id_b005fc64; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_groupcommunityrequest_group_owner_id_b005fc64 ON public.hs_access_control_groupcommunityrequest USING btree (group_owner_id);
 
 
 --
@@ -31446,17 +32269,10 @@ CREATE INDEX hs_collection_resource_collectiondeletedresource_resource_ocd4f ON 
 
 
 --
--- Name: hs_core_bags_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
+-- Name: hs_core_citation_content_type_id_972d87c6; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX hs_core_bags_417f1b1c ON public.hs_core_bags USING btree (content_type_id);
-
-
---
--- Name: hs_core_bags_d7e6d55b; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX hs_core_bags_d7e6d55b ON public.hs_core_bags USING btree ("timestamp");
+CREATE INDEX hs_core_citation_content_type_id_972d87c6 ON public.hs_core_citation USING btree (content_type_id);
 
 
 --
@@ -31677,6 +32493,27 @@ CREATE INDEX hs_core_subject_417f1b1c ON public.hs_core_subject USING btree (con
 
 
 --
+-- Name: hs_core_tasknotification_task_id_b755952a_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_core_tasknotification_task_id_b755952a_like ON public.hs_core_tasknotification USING btree (task_id varchar_pattern_ops);
+
+
+--
+-- Name: hs_core_tasknotification_username_1ea0ae30; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_core_tasknotification_username_1ea0ae30 ON public.hs_core_tasknotification USING btree (username);
+
+
+--
+-- Name: hs_core_tasknotification_username_1ea0ae30_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_core_tasknotification_username_1ea0ae30_like ON public.hs_core_tasknotification USING btree (username varchar_pattern_ops);
+
+
+--
 -- Name: hs_core_title_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -31786,6 +32623,41 @@ CREATE INDEX hs_file_types_geofeaturelogicalfile_resource_id_05b89011 ON public.
 --
 
 CREATE INDEX hs_file_types_georasterlogicalfile_resource_id_ec57a3c3 ON public.hs_file_types_georasterlogicalfile USING btree (resource_id);
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata_executed_by_id_4d181869; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_file_types_modelinstancefilemetadata_executed_by_id_4d181869 ON public.hs_file_types_modelinstancefilemetadata USING btree (executed_by_id);
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile_resource_id_7ff2e26d; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_file_types_modelinstancelogicalfile_resource_id_7ff2e26d ON public.hs_file_types_modelinstancelogicalfile USING btree (resource_id);
+
+
+--
+-- Name: hs_file_types_modelprogram_mp_metadata_id_7d558023; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_file_types_modelprogram_mp_metadata_id_7d558023 ON public.hs_file_types_modelprogramresourcefiletype USING btree (mp_metadata_id);
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile_resource_id_cfc1a9d6; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_file_types_modelprogramlogicalfile_resource_id_cfc1a9d6 ON public.hs_file_types_modelprogramlogicalfile USING btree (resource_id);
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype_res_file_id_9cd12298; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_file_types_modelprogramresourcefiletype_res_file_id_9cd12298 ON public.hs_file_types_modelprogramresourcefiletype USING btree (res_file_id);
 
 
 --
@@ -33456,6 +34328,54 @@ ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
 
 
 --
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_co_community_id_6b0528e5_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
+    ADD CONSTRAINT hs_access_control_co_community_id_6b0528e5_fk_hs_access FOREIGN KEY (community_id) REFERENCES public.hs_access_control_community(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_co_community_id_d99cfdf0_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
+    ADD CONSTRAINT hs_access_control_co_community_id_d99cfdf0_fk_hs_access FOREIGN KEY (community_id) REFERENCES public.hs_access_control_community(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_co_grantor_id_3ec5bad4_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
+    ADD CONSTRAINT hs_access_control_co_grantor_id_3ec5bad4_fk_auth_user FOREIGN KEY (grantor_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_co_grantor_id_451d7a0c_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
+    ADD CONSTRAINT hs_access_control_co_grantor_id_451d7a0c_fk_auth_user FOREIGN KEY (grantor_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_co_resource_id_454c9c9f_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
+    ADD CONSTRAINT hs_access_control_co_resource_id_454c9c9f_fk_hs_core_g FOREIGN KEY (resource_id) REFERENCES public.hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_co_resource_id_c2e3d0e4_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
+    ADD CONSTRAINT hs_access_control_co_resource_id_c2e3d0e4_fk_hs_core_g FOREIGN KEY (resource_id) REFERENCES public.hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_feature hs_access_control_feature_user_id_f7b54071_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -33480,6 +34400,14 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
 
 
 --
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_community_id_68acef01_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
+    ADD CONSTRAINT hs_access_control_gr_community_id_68acef01_fk_hs_access FOREIGN KEY (community_id) REFERENCES public.hs_access_control_community(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_groupcommunityprovenance hs_access_control_gr_community_id_84dd001c_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -33493,6 +34421,14 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
     ADD CONSTRAINT hs_access_control_gr_community_id_9ead4ef2_fk_hs_access FOREIGN KEY (community_id) REFERENCES public.hs_access_control_community(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_community_owner_id_1dc22dbe_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
+    ADD CONSTRAINT hs_access_control_gr_community_owner_id_1dc22dbe_fk_auth_user FOREIGN KEY (community_owner_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -33536,11 +34472,27 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 
 --
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_group_id_cc4bb20b_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
+    ADD CONSTRAINT hs_access_control_gr_group_id_cc4bb20b_fk_auth_grou FOREIGN KEY (group_id) REFERENCES public.auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_groupcommunityprivilege hs_access_control_gr_group_id_ff0f35d5_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
     ADD CONSTRAINT hs_access_control_gr_group_id_ff0f35d5_fk_auth_grou FOREIGN KEY (group_id) REFERENCES public.auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_group_owner_id_b005fc64_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
+    ADD CONSTRAINT hs_access_control_gr_group_owner_id_b005fc64_fk_auth_user FOREIGN KEY (group_owner_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -33808,14 +34760,6 @@ ALTER TABLE ONLY public.hs_core_resourcefile
 
 
 --
--- Name: hs_core_bags hs_c_content_type_id_764ef711d5895dcb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.hs_core_bags
-    ADD CONSTRAINT hs_c_content_type_id_764ef711d5895dcb_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES public.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: hs_core_creator hs_c_content_type_id_77574a4e7e85b859_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -33864,14 +34808,6 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resourc
 
 
 --
--- Name: hs_core_genericresource hs_core_bas_last_changed_by_id_55b9ad9c3719f949_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.hs_core_genericresource
-    ADD CONSTRAINT hs_core_bas_last_changed_by_id_55b9ad9c3719f949_fk_auth_user_id FOREIGN KEY (last_changed_by_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: hs_core_genericresource hs_core_baseresourc_creator_id_306123f66b8ed448_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -33888,11 +34824,27 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
+-- Name: hs_core_citation hs_core_citation_content_type_id_972d87c6_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_citation
+    ADD CONSTRAINT hs_core_citation_content_type_id_972d87c6_fk_django_co FOREIGN KEY (content_type_id) REFERENCES public.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_core_genericresource hs_core_genericre_page_ptr_id_61d7ef1ac505649e_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
     ADD CONSTRAINT hs_core_genericre_page_ptr_id_61d7ef1ac505649e_fk_pages_page_id FOREIGN KEY (page_ptr_id) REFERENCES public.pages_page(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_core_genericresource hs_core_genericresou_last_changed_by_id_f9ce5919_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_genericresource
+    ADD CONSTRAINT hs_core_genericresou_last_changed_by_id_f9ce5919_fk_auth_user FOREIGN KEY (last_changed_by_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -34029,6 +34981,62 @@ ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
     ADD CONSTRAINT hs_file_types_georas_resource_id_ec57a3c3_fk_hs_core_g FOREIGN KEY (resource_id) REFERENCES public.hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata hs_file_types_modeli_executed_by_id_4d181869_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata
+    ADD CONSTRAINT hs_file_types_modeli_executed_by_id_4d181869_fk_hs_file_t FOREIGN KEY (executed_by_id) REFERENCES public.hs_file_types_modelprogramlogicalfile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modeli_metadata_id_a4aeb5ca_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
+    ADD CONSTRAINT hs_file_types_modeli_metadata_id_a4aeb5ca_fk_hs_file_t FOREIGN KEY (metadata_id) REFERENCES public.hs_file_types_modelinstancefilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modeli_resource_id_7ff2e26d_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
+    ADD CONSTRAINT hs_file_types_modeli_resource_id_7ff2e26d_fk_hs_core_g FOREIGN KEY (resource_id) REFERENCES public.hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelp_metadata_id_ee63921b_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
+    ADD CONSTRAINT hs_file_types_modelp_metadata_id_ee63921b_fk_hs_file_t FOREIGN KEY (metadata_id) REFERENCES public.hs_file_types_modelprogramfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype hs_file_types_modelp_mp_metadata_id_7d558023_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
+    ADD CONSTRAINT hs_file_types_modelp_mp_metadata_id_7d558023_fk_hs_file_t FOREIGN KEY (mp_metadata_id) REFERENCES public.hs_file_types_modelprogramfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype hs_file_types_modelp_res_file_id_9cd12298_fk_hs_core_r; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
+    ADD CONSTRAINT hs_file_types_modelp_res_file_id_9cd12298_fk_hs_core_r FOREIGN KEY (res_file_id) REFERENCES public.hs_core_resourcefile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelp_resource_id_cfc1a9d6_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
+    ADD CONSTRAINT hs_file_types_modelp_resource_id_cfc1a9d6_fk_hs_core_g FOREIGN KEY (resource_id) REFERENCES public.hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -34757,16 +35765,6 @@ ALTER TABLE ONLY public.theme_userquota
 
 ALTER TABLE ONLY public.blog_blogpost_related_posts
     ADD CONSTRAINT to_blogpost_id_refs_id_6404941b FOREIGN KEY (to_blogpost_id) REFERENCES public.blog_blogpost(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
