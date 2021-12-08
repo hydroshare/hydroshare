@@ -69,15 +69,14 @@ class TestFileBasedJSON(HSRESTTestCase):
         def compare_response(result_json, expected_json):
             if aggregation_path:
                 # The default rights contains a date and is read-only on an aggregation
-                expected_json['rights'] = result_json['rights']
+                result_json['rights'] = expected_json['rights']
             else:
                 self.assertGreater(result_json['modified'], expected_json['modified'])
                 # overwrite system metadata fields for comparison
-                expected_json['modified'] = result_json['modified']
-                expected_json['created'] = result_json['created']
-                expected_json['creators'][0]['description'] = result_json['creators'][0]['description']
+                result_json['modified'] = expected_json['modified']
+                result_json['created'] = expected_json['created']
+                result_json['creators'][0]['description'] = expected_json['creators'][0]['description']
             self.assertEqual(sorting(result_json), sorting(expected_json))
-
 
         kwargs = {"pk": self.res.short_id}
         if aggregation_path:
