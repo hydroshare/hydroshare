@@ -1,45 +1,64 @@
-import json
-import os
+import logging
 from datetime import datetime, timezone
 
 from django.db import transaction
-from django.http import JsonResponse, HttpResponse
-from drf_yasg.utils import swagger_auto_schema
 from pydantic import ValidationError as PydanticValidationError
 from rest_framework.exceptions import ValidationError
 
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
-from rest_framework.decorators import api_view
+from hs_core.hydroshare.hs_bagit import save_resource_metadata_xml
 
-from hs_core.models import ResourceFile
-from hs_core.views import ACTION_TO_AUTHORIZE
-from hs_core.views.utils import authorize
 from hs_file_types.utils import ingest_logical_file_metadata
-from hs_rest_api2 import serializers
 from hs_rest_api2.serializers import ResourceMetadataInForbidExtra
 
-from hsmodels.schemas import ResourceMetadata
+from hsmodels.schemas import ResourceMetadata, load_rdf, rdf_graph
+
+logger = logging.getLogger(__name__)
 
 
-def load_metadata(istorage, file_with_path):
-    from hsmodels.schemas import load_rdf
+def load_metadata_from_file(istorage, file_with_path):
+    """
+    Loads a rdf/xml metadata file to a hsmodel pydantic schema instance
+
+    Parameters:
+    :param istorage: An irods storage object
+    :param file_with_path: The path to the rdf/xml metadata file
+
+    :returns: hsmodel schema instance
+    """
     with istorage.open(file_with_path) as f:
         metadata = load_rdf(f.read())
         return metadata
 
 
 def resource_metadata(resource):
+    """
+    Loads the resource rdf/xml file to a hsmodel pydantic schema instance
+
+    Parameters:
+    :param resource: A resource django model instance
+
+    :returns: ResourceMetadata schema instance
+    """
     file_with_path = resource.scimeta_path
     istorage = resource.get_irods_storage()
     metadata_dirty = resource.getAVU('metadata_dirty')
     if metadata_dirty:
-        # TODO, shouldn't have to do this?
-        create_bag_metadata_files(resource)
-    return load_metadata(istorage, file_with_path)
+        save_resource_metadata_xml(resource)
+    return load_metadata_from_file(istorage, file_with_path)
 
 
 def ingest_resource_metadata(resource, incoming_metadata):
-    from hsmodels.schemas import rdf_graph
+    """
+    Writes resource metadata json to the resource rdf/xml.
+
+    Parameters:
+    :param resource: A resource django model instance
+    :param incoming_metadata: JSON dictionary of resource metadata
+
+    :returns: ResourceMetadata schema instance
+
+    :raises: ValidationError when incoming_metadata does not pass validation
+    """
     r_md = resource_metadata(resource).dict()
     try:
         incoming_r_md = ResourceMetadataInForbidExtra(**incoming_metadata)
@@ -57,73 +76,52 @@ def ingest_resource_metadata(resource, incoming_metadata):
             resource.metadata.delete_all_elements()
             resource.metadata.ingest_metadata(graph)
     except:
-        # logger.exception("Error processing resource metadata file")
+        logger.exception(f"Error processing resource metadata file for resource {resource.short_id}")
         raise
-    create_bag_metadata_files(resource)
+    save_resource_metadata_xml(resource)
 
 
-def _resource_metadata_json(resource):
-    return json.loads(resource_metadata(resource).json())
+def _get_in_schema(out_schema):
+    """
+    Gets the parent schema class and subclasses it to forbid extra parameters
 
+    :params out_schema: A hsmodel schema
 
-@swagger_auto_schema(method='put', request_body=serializers.ResourceMetadataInSerializer,
-                     operation_description="Update Resource level metadata in json",)
-@swagger_auto_schema(method='get', responses={200: serializers.ResourceMetadataSerializer},
-                     operation_description="Get Resource level metadata json")
-@api_view(['GET', 'PUT'])
-def resource_metadata_json(request, pk):
-    if request.method == 'GET':
-        resource, _, _ = authorize(request, pk,
-                                   needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        md_json = _resource_metadata_json(resource)
-        return JsonResponse(md_json)
-
-    resource, _, _ = authorize(request, pk,
-                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    md = request.data
-    ingest_resource_metadata(resource, md)
-    return HttpResponse(status=200)
-
-
-def get_aggregation(resource, file_path):
-    file_storage_path = os.path.join(resource.file_path, file_path)
-    folder, file_name = ResourceFile.resource_path_is_acceptable(resource, file_storage_path, test_exists=True)
-    res_file = ResourceFile.get(resource, file_name, folder)
-    return res_file.logical_file
-
-
-def aggregation_metadata(resource, file_path):
-    agg = get_aggregation(resource, file_path)
-    if agg.metadata.is_dirty:
-        # TODO, shouldn't have to do this?
-        agg.create_aggregation_xml_documents()
-    return load_metadata(resource.get_irods_storage(), agg.metadata_file_path)
-
-
-def aggregation_metadata_json_loads(resource, file_path):
-    return json.loads(aggregation_metadata(resource, file_path).json())
-
-
-def get_in_schema(out_schema):
-    # TODO update hsmodels in schemas to include forbid
+    :returns: A new schema class
+    """
     in_schema = out_schema.__bases__[0]
 
     class IncomingForbid(in_schema):
         class Config:
             extra = "forbid"
+
     return IncomingForbid
 
 
 def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
-    from hsmodels.schemas import rdf_graph
+    """
+    Writes resource metadata json to the resource rdf/xml.
+
+    Parameters:
+    :param resource: A resource django model instance
+    :param incoming_metadata: JSON dictionary of resource metadata
+
+    :returns: ResourceMetadata schema instance
+
+    :raises: ValidationError when incoming_metadata does not pass validation
+    """
+    aggregation = resource.get_aggregation_by_name(file_path)
+    if aggregation.metadata.is_dirty:
+        aggregation.create_aggregation_xml_documents()
 
     # read existing metadata from file
-    agg_md = aggregation_metadata(resource, file_path)
+    agg_md = load_metadata_from_file(resource.get_irods_storage(), agg.metadata_file_path)
+
     agg_md_dict = agg_md.dict()
 
     # get schema classes
     out_schema = agg_md.__class__
-    in_schema = get_in_schema(out_schema)
+    in_schema = _get_in_schema(out_schema)
 
     # validate incoming metadata against the schema
     try:
@@ -142,99 +140,4 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
 
     # write the updated metadata back to file
     ingest_logical_file_metadata(graph, resource)
-    create_bag_metadata_files(resource)
-
-
-def aggregation_metadata_json(request, pk, aggregation_path):
-    if request.method == 'GET':
-        resource, _, _ = authorize(request, pk,
-                                   needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        md_json = aggregation_metadata_json_loads(resource, aggregation_path)
-        return JsonResponse(md_json)
-
-    resource, _, _ = authorize(request, pk,
-                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    metadata_json = request.data
-    ingest_aggregation_metadata(resource, metadata_json, aggregation_path)
-    return HttpResponse(status=200)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.GeographicFeatureMetadataInSerializer,
-                     operation_description="Update Geographic Feature aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.GeographicFeatureMetadataSerializer},
-                     operation_description="Get Geographic Feature aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def geographic_feature_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.GeographicRasterMetadataInSerializer,
-                     operation_description="Update Geographic Raster aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.GeographicRasterMetadataSerializer},
-                     operation_description="Get Geographic Raster aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def geographic_raster_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.TimeSeriesMetadataInSerializer,
-                     operation_description="Update Time Series aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.TimeSeriesMetadataSerializer},
-                     operation_description="Get Time Series aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def time_series_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.FileSetMetadataInSerializer,
-                     operation_description="Update FileSet aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.FileSetMetadataSerializer},
-                     operation_description="Get FileSet aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def file_set_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.MultidimensionalMetadataInSerializer,
-                     operation_description="Update Multidimensional aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.MultidimensionalMetadataSerializer},
-                     operation_description="Get Multidimensional aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def multidimensional_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.ReferencedTimeSeriesMetadataInSerializer,
-                     operation_description="Update Referenced TimeSeries aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.ReferencedTimeSeriesMetadataSerializer},
-                     operation_description="Get Referenced TimeSeries aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def referenced_time_series_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.SingleFileMetadataInSerializer,
-                     operation_description="Update Single File aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.SingleFileMetadataSerializer},
-                     operation_description="Get Single File aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def single_file_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.ModelProgramMetadataInSerializer,
-                     operation_description="Update Model Program aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.ModelProgramMetadataSerializer},
-                     operation_description="Get Model Program aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def model_program_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
-
-
-@swagger_auto_schema(method='put', request_body=serializers.ModelInstanceMetadataInSerializer,
-                     operation_description="Update Model Instance aggregation metadata with json",)
-@swagger_auto_schema(method='get', responses={200: serializers.ModelInstanceMetadataSerializer},
-                     operation_description="Get Model Instance aggregation metadata json")
-@api_view(['GET', 'PUT'])
-def model_instance_metadata_json(request, pk, aggregation_path):
-    return aggregation_metadata_json(request, pk, aggregation_path)
+    aggregation.create_aggregation_xml_documents()

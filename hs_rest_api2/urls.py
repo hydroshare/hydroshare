@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 
-from .metadata import resource_metadata_json, geographic_feature_metadata_json, geographic_raster_metadata_json, \
+from .views.metadata import resource_metadata_json, geographic_feature_metadata_json, geographic_raster_metadata_json, \
     time_series_metadata_json, file_set_metadata_json, multidimensional_metadata_json, \
     referenced_time_series_metadata_json, single_file_metadata_json, model_instance_metadata_json, \
     model_program_metadata_json

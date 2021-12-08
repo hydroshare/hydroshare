@@ -111,6 +111,23 @@ def create_bagit_files_by_irods(res, istorage):
         raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
+def save_resource_metadata_xml(resource):
+    """
+    Writes the resource level metadata from the db to the resourcemetadata.xml file of a resource
+
+    Parameters:
+    :param resource: A resource instance
+    """
+    istorage = resource.get_irods_storage()
+    temp_path = istorage.getUniqueTmpPath
+    from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
+    with open(from_file_name, 'w') as out:
+        # write resource level metadata
+        out.write(resource.get_metadata_xml())
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
+    istorage.saveFile(from_file_name, to_file_name, True)
+
+
 def create_bag_metadata_files(resource):
     """
     create and update files needed by bagit operation that is conducted on iRODS server;
@@ -154,12 +171,7 @@ def create_bag_metadata_files(resource):
     # istorage.saveFile('', to_file_name, create_directory=True)
 
     # create resourcemetadata.xml in local directory and upload it to iRODS
-    from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
-    with open(from_file_name, 'w') as out:
-        # write resource level metadata
-        out.write(resource.get_metadata_xml())
-    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
-    istorage.saveFile(from_file_name, to_file_name, True)
+    save_resource_metadata_xml(resource)
 
     # URLs are found in the /data/ subdirectory to comply with bagit format assumptions
     current_site_url = current_site_url()

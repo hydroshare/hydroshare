@@ -76,8 +76,8 @@ class TestFileBasedJSON(HSRESTTestCase):
             full_resource_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
         schema_in_instance = schema_in(**full_resource_json)
         in_json = schema_in_instance.dict(exclude_defaults=True)
-        self.client.put(reverse(endpoint, kwargs=kwargs),
-                        data=in_json, format="json")
+        put_response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_json, format="json")
+        self.assertEqual(put_response.status_code, status.HTTP_204_NO_CONTENT)
 
         response = self.client.get(reverse(endpoint, kwargs=kwargs))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
