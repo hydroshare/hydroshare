@@ -175,7 +175,7 @@ class Command(BaseCommand):
                     UserResourcePrivilege.unshare(user=owner, resource=resource, grantor=grantor)
 
                 else:
-                    print("unrecognized action '{}'".format(action))
+                    print("unknown user action '{}'".format(action))
                     usage()
                     exit(1)
 
@@ -195,7 +195,7 @@ class Command(BaseCommand):
                     usage()
                     exit(1)
 
-                action = options['command'][3]
+                action = options['command'].pop(0)
                 if action == 'add':
                     print("adding {} as group for {}"
                           .format(group.name, resource.short_id))
@@ -225,24 +225,15 @@ class Command(BaseCommand):
                 status = options['command'].pop(0)
                 if status == 'private':
                     print("{}: making private".format(resource.short_id))
-                    resource.discoverable = False
-                    resource.public = False
-                    resource.published = False
-                    resource.save()
+                    resource.set_discoverable(False)
 
                 elif status == 'discoverable':
                     print("{}: making discoverable".format(resource.short_id))
-                    resource.discoverable = True
-                    resource.public = False
-                    resource.published = False
-                    resource.save()
+                    resource.set_discoverable(True)
 
                 elif status == 'public':
                     print("{}: making public".format(resource.short_id))
-                    resource.discoverable = True
-                    resource.public = True
-                    resource.published = False
-                    resource.save()
+                    resource.set_public(True)
 
                 else:
                     print("unrecognized access status '{}'".format(action))
