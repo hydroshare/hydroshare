@@ -303,9 +303,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and
-                                              type_value != 'isVersionOf' and
-                                              type_value != 'hasPart'),
+                                              if type_value not in Relation.NOT_USER_EDITABLE),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,

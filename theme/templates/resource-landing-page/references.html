@@ -27,29 +27,7 @@
                     {% if relation.type|lower != "haspart" %}
                         <tr>
                             <td class="dataset-label" style="min-width: 100px;">
-                                {% if relation.type == "isCopiedFrom" %}
-                                    The content of this resource was copied from:
-                                {% elif relation.type == "isPartOf" %}
-                                    The content of this resource is part of:
-                                {% elif relation.type == "isExecutedBy" %}
-                                    The content of this resource can be executed by:
-                                {% elif relation.type == "isCreatedBy" %}
-                                    The content of this resource was created by:
-                                {% elif relation.type == "isDataFor" %}
-                                    The content of this resource serves as the data for:
-                                {% elif relation.type == "cites" %}
-                                    This resource cites:
-                                {% elif relation.type == "isDescribedBy" %}
-                                    This resource is described by:
-                                {% elif relation.type == "IsReferencedBy" %}
-                                    This resource is referenced by:
-                                {% elif relation.type == "isVersionOf" %}
-                                    This resource updates and replaces previous version:
-                                {% elif relation.type == "isReplacedBy" %}
-                                    This resource has been replaced by newer version:
-                                {% else %}
-                                    {{ relation.type }}
-                                {% endif %}
+                                {{ relation.type_description }}
                             </td>
                             <td class="dataset-details">{{ relation.value|urlize }}</td>
                         </tr>
@@ -126,13 +104,15 @@ Click this button to add a relationship to another resource, external website, o
             </button>
             <div class="flex">
                 <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                <em style="padding-right:20px;">If this resource is related to other documents, datasets, websites,
-                    etc., you can record those relationships here as references. For example, if this resource is cited
-                    by a paper you published, select a relationship type of "The content of this resource serves as the
-                    data for" and then provide a full text citation for the paper that used the data, including the
-                    paper's DOI encoded as an HTTP URL if available. This records that this resource is the data for the
-                    paper that cited it. If you enter a URL as part of the citation, it will be converted to an active
-                    link.</em>
+                <em style="padding-right:20px;">If this resource is related to other documents, datasets, websites, etc.,
+                    you can record those relationships here as related resources. For example,
+                    if this resource is cited by a paper you published, select a relationship type of "The content
+                    of this resource serves as the data for" and then provide a full text citation for the paper
+                    that used the data, including the paper's DOI encoded as an HTTP URL if available.
+                    This records that this resource is the data for the paper that cited it.
+                    If you enter a URL as part of the citation, it will be converted to an active link.
+                    If the data in your resource was derived from another source or dataset, you can cite or
+                    acknowledge those relationships here.</em>
             </div>
         </div>
 
@@ -143,32 +123,10 @@ Click this button to add a relationship to another resource, external website, o
                 {% if  relation.type|lower != "haspart" %}
                     <tr>
                         <td scope="row" class="dataset-label" style="min-width: 100px;">
-                            {% if relation.type == "isCopiedFrom" %}
-                                The content of this resource was copied from:
-                            {% elif relation.type == "isPartOf" %}
-                                The content of this resource is part of:
-                            {% elif relation.type == "isExecutedBy" %}
-                                The content of this resource can be executed by:
-                            {% elif relation.type == "isCreatedBy" %}
-                                The content of this resource was created by:
-                            {% elif relation.type == "isDataFor" %}
-                                The content of this resource serves as the data for:
-                            {% elif relation.type == "cites" %}
-                                This resource cites:
-                            {% elif relation.type == "isDescribedBy" %}
-                                This resource is described by:
-                            {% elif relation.type == "IsReferencedBy" %}
-                                This resource is referenced by:
-                            {% elif relation.type == "isVersionOf" %}
-                                This resource updates and replaces previous version:
-                            {% elif relation.type == "isReplacedBy" %}
-                                This resource has been replaced by newer version:
-                            {% else %}
-                                {{ relation.type }}
-                            {% endif %}
+                            {{ relation.type_description }}
                         </td>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
-                        {% if relation.type != "isVersionOf" %}
+                        {% if relation.type not in relation.NOT_USER_EDITABLE %}
                             <td style="min-width: 120px;">
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
                                    class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
