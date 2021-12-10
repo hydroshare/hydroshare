@@ -949,23 +949,31 @@ class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
     SOURCE_TYPES = (
-        ('isHostedBy', 'The content of this resource is hosted by'),
-        ('isCopiedFrom', 'The content of this resource was copied from'),
+        # ('isHostedBy', 'The content of this resource is hosted by'), # need to migrate it to 'source'
+        # ('isCopiedFrom', 'The content of this resource was copied from'), # need to migrate it to 'source'
         ('isPartOf', 'The content of this resource is part of'),
-        ('hasPart', 'Has Part'),
+        ('hasPart', 'This resource includes'),
         ('isExecutedBy', 'The content of this resource can be executed by'),
-        ('isCreatedBy', 'The content of this resource was created by'),
-        ('isVersionOf', 'Version Of'),
-        ('isReplacedBy', 'Replaced By'),
-        ('isDataFor', 'The content of this resource serves as the data for'),
-        ('cites', 'This resource cites'),
+        ('isCreatedBy', 'The content of this resource was created by a related App or software program'),
+        ('isVersionOf', 'This resource updates and replaces a previous version'),
+        ('isReplacedBy', 'This resource has been replaced by a newer version'),
+        # ('isDataFor', 'The content of this resource serves as the data for'), # need to migrate it to 'isReferencedBy'
+        # ('cites', 'This resource cites'), # need to migrate it to 'references'
         ('isDescribedBy', 'This resource is described by'),
+        ('conformsTo', 'This resource conforms to established standard described by'),
+        ('hasFormat', 'This resource has a related resource in another format'),
+        ('isFormatOf', 'This resource is a different format of'),
+        ('isRequiredBy', 'This resource is required by'),
+        ('requires', 'This resource requires'),
+        ('isReferencedBy', 'This resource is referenced by'),
+        ('references', 'The content of this resource references'),
+        ('replaces', 'This resource replaces'),
+        ('source', 'The content of this resource is derived from')
     )
 
-    # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
-                         'cites', 'isDescribedBy')
-
+    # these are hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = ('isExecutedBy', 'isCreatedBy', 'isDescribedBy')
+    NOT_USER_EDITABLE = ('isVersionOf', 'isReplacedBy', 'isPartOf', 'hasPart', 'replaces')
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
@@ -978,10 +986,16 @@ class Relation(AbstractMetaDataElement):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
+    def type_description(self):
+        return dict(self.SOURCE_TYPES)[self.type]
+
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
-        graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        if self.type in self.HS_RELATION_TERMS:
+            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        else:
+            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
