@@ -20,11 +20,12 @@ def usage():
     print("access_create_resource usage:")
     print("  access_create_resource [{options}]")
     print("Where options include:")
-    print("  --owner={username} -- make this user the owner")
-    print("  --title={title} -- title of resource")
-    print("  --abstract={abstract} -- title of resource")
-    print("  --keywords={keywords} -- subjects for resource")
-    print("  --access={private|discoverable|public} -- access for resource")
+    print("  owner {username} -- make this user the owner")
+    print("  title {title} -- title of resource")
+    print("  abstract {abstract} -- title of resource")
+    print("  keywords {keywords} -- subjects for resource")
+    print("  access {private|discoverable|public} -- access for resource")
+    print("Options may be strung together on one line.")
 
 
 class Command(BaseCommand):
@@ -55,6 +56,7 @@ class Command(BaseCommand):
         access = 'private'
         oname = 'admin'
         owner = user_from_name('admin')
+        files = None
 
         while options['command']:
             command = options['command'].pop(0)
@@ -65,6 +67,9 @@ class Command(BaseCommand):
             elif command == 'subjects':
                 subjects = options['command'].pop(0)
                 subjects = tuple(subjects.split(','))
+            elif command == 'files':
+                files = options['command'].pop(0)
+                files = files.split(',')
             elif command == 'access':
                 access = options['command'].pop(0)
                 if access not in ['private', 'discoverable', 'public']:
@@ -87,6 +92,9 @@ class Command(BaseCommand):
         print("  subjects={}".format(subjects))
         print("  owner={}".format(oname))
         print("  access={}".format(access))
+        print("  files={}".format(files))
+
+        fds = tuple([open(f, 'rb') for f in files])
 
         metadata_dict = [
             {'description': {'abstract': abstract}},
@@ -97,7 +105,14 @@ class Command(BaseCommand):
             owner=owner,
             title=title,
             keywords=subjects,
-            metadata=metadata_dict
+            metadata=metadata_dict, 
+            files=fds
         )
+ 
+        if access == 'discoverable':
+            res.set_discoverable(True)
+        elif access == 'public': 
+            res.set_public(True)
+        # default is 'private'
 
         print(res.short_id)
