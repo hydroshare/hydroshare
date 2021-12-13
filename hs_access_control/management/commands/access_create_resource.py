@@ -105,13 +105,13 @@ class Command(BaseCommand):
             owner=owner,
             title=title,
             keywords=subjects,
-            metadata=metadata_dict, 
+            metadata=metadata_dict,
             files=fds
         )
- 
+
         if access == 'discoverable':
             res.set_discoverable(True)
-        elif access == 'public': 
+        elif access == 'public':
             res.set_public(True)
         # default is 'private'
 
