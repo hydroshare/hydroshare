@@ -353,7 +353,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                                               new_files_to_upload=files_to_upload,
                                                               folder_path=upload_folder)
 
-                        ft_ctx.logical_file = logical_file
                         log.info("Geographic raster aggregation type - new files were added "
                                  "to the resource.")
                         logical_file.extra_data['vrt_created'] = vrt_created
@@ -366,8 +365,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             logical_file.metadata.create_element(k, **v)
 
                         log.info("Geographic raster aggregation type - metadata was saved to DB")
+                        ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        ft_ctx.remove_logical_file = True
+                        logical_file.remove_aggregation()
                         msg = msg.format(str(ex))
                         log.exception(msg)
                         raise ValidationError(msg)

@@ -153,15 +153,15 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
 
-            ft_ctx.logical_file = logical_file
             try:
                 logical_file.folder = folder_path
                 logical_file.save()
                 # make all the files in the selected folder as part of the aggregation
                 logical_file.add_resource_files_in_folder(resource, folder_path)
                 log.info("File set aggregation was created for folder:{}.".format(folder_path))
+                ft_ctx.logical_file = logical_file
             except Exception as ex:
-                ft_ctx.remove_logical_file = True
+                logical_file.remove_aggregation()
                 msg = msg.format(str(ex))
                 log.exception(msg)
                 raise ValidationError(msg)

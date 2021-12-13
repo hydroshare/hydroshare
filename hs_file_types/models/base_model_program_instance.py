@@ -150,7 +150,6 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                                                   res_files=res_files,
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
-            ft_ctx.logical_file = logical_file
             try:
                 if folder_path and file_id is None:
                     logical_file.folder = folder_path
@@ -161,11 +160,12 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 else:
                     log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
                                                                                 res_file.storage_path))
+                ft_ctx.logical_file = logical_file
             except Exception as ex:
-                ft_ctx.remove_logical_file = True
                 msg = "{} aggregation. Error when creating aggregation. Error:{}".format(logical_file.data_type,
                                                                                          str(ex))
                 log.exception(msg)
+                logical_file.remove_aggregation()
                 raise ValidationError(msg)
 
         return logical_file

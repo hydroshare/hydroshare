@@ -294,13 +294,13 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=files_to_upload,
                                                           folder_path=upload_folder)
 
-                    ft_ctx.logical_file = logical_file
                     ft_ctx.res_files_to_delete = res_files_to_delete
                     log.info("GeoFeature aggregation - files were added to the aggregation.")
                     add_metadata(resource, meta_dict, xml_file, logical_file)
                     log.info("GeoFeature aggregation and resource level metadata updated.")
+                    ft_ctx.logical_file = logical_file
                 except Exception as ex:
-                    ft_ctx.remove_logical_file = True
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)

@@ -1549,9 +1549,6 @@ class FileTypeContext(object):
         # caller must set the logical_file attribute of the context manager
         # before existing context manager
         self.logical_file = None
-        # caller needs to set this to True if aggregation needs to be deleted in the case of an invalid aggregation
-        # created
-        self.remove_logical_file = False
         # if any resource files need to be deleter as part of creating aggregation, caller needs
         # to set the res_files_to_delete attribute of the context manager
         self.res_files_to_delete = []
@@ -1572,27 +1569,24 @@ class FileTypeContext(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # run this code when caller is done with the context manager
-        if self.logical_file:
-            if not self.remove_logical_file:
-                # set resource to private if logical file is missing required metadata
-                self.resource.update_public_and_discoverable()
+        if self.logical_file is not None:
+            # set resource to private if logical file is missing required metadata
+            self.resource.update_public_and_discoverable()
 
-                # generate xml files for this newly created aggregation
-                self.logical_file.create_aggregation_xml_documents()
-                # if this newly created aggregation has a parent aggregation - we have to regenerate
-                # xml files for that parent aggregation so that it can have references to this new aggregation
-                parent_aggr = self.logical_file.get_parent()
-                if parent_aggr is not None:
-                    parent_aggr.create_aggregation_xml_documents()
+            # generate xml files for this newly created aggregation
+            self.logical_file.create_aggregation_xml_documents()
+            # if this newly created aggregation has a parent aggregation - we have to regenerate
+            # xml files for that parent aggregation so that it can have references to this new aggregation
+            parent_aggr = self.logical_file.get_parent()
+            if parent_aggr is not None:
+                parent_aggr.create_aggregation_xml_documents()
 
-                if self.post_aggr_signal is not None:
-                    self.post_aggr_signal.send(
-                        sender=AbstractLogicalFile,
-                        resource=self.resource,
-                        file=self.logical_file
-                    )
-            else:
-                self.logical_file.remove_aggregation()
+            if self.post_aggr_signal is not None:
+                self.post_aggr_signal.send(
+                    sender=AbstractLogicalFile,
+                    resource=self.resource,
+                    file=self.logical_file
+                )
 
         # delete res files
         for res_file in self.res_files_to_delete:

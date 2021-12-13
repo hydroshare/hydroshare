@@ -709,7 +709,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=[],
                                                           folder_path=upload_folder)
 
-                    ft_ctx.logical_file = logical_file
                     info_msg = "TimeSeries aggregation type - {} file was added to the aggregation."
                     info_msg = info_msg.format(res_file.extension[1:])
                     log.info(info_msg)
@@ -723,8 +722,9 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     else:
                         # populate CV metadata django models from the blank sqlite file
                         extract_cv_metadata_from_blank_sqlite_file(logical_file)
+                    ft_ctx.logical_file = logical_file
                 except Exception as ex:
-                    ft_ctx.remove_logical_file = True
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)

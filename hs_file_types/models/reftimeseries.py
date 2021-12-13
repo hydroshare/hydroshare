@@ -733,7 +733,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=[],
                                                           folder_path=upload_folder)
 
-                    ft_ctx.logical_file = logical_file
                     logical_file.metadata.json_file_content = json_file_content
                     logical_file.metadata.save()
                     logical_file.dataset_name = logical_file.metadata.get_title_from_json()
@@ -741,8 +740,9 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     # extract metadata
                     _extract_metadata(resource, logical_file)
                     log.info("RefTimeseries aggregation type was created.")
+                    ft_ctx.logical_file = logical_file
                 except Exception as ex:
-                    ft_ctx.remove_logical_file = True
+                    logical_file.remove_aggregation()
                     msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                           "type. Error:{}"
                     msg = msg.format(str(ex))

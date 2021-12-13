@@ -446,7 +446,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
                         log.info("NetCDF aggregation creation - a new file was added to the "
                                  "resource.")
-                        ft_ctx.logical_file = logical_file
 
                         # use the extracted metadata to populate resource metadata
                         for element in resource_metadata:
@@ -480,8 +479,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                 logical_file.metadata.create_element(k, **v)
 
                         log.info("NetCDF aggregation - metadata was saved in aggregation")
+                        ft_ctx.logical_file = logical_file
                     except Exception as ex:
-                        ft_ctx.remove_logical_file = True
+                        logical_file.remove_aggregation()
                         msg = msg.format(str(ex))
                         log.exception(msg)
                         raise ValidationError(msg)
