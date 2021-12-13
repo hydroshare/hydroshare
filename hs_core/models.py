@@ -1565,7 +1565,7 @@ class Coverage(AbstractMetaDataElement):
                 value_dict[key_name] = value_dict[key_name] + 360
             elif value_dict[key_name] >= 180 and value_dict[key_name] <= 360:
                 value_dict[key_name] = value_dict[key_name] - 360
-            elif value_dict[key_name] < -180 or value_dict[key_name] > 180:
+            if value_dict[key_name] < -180 or value_dict[key_name] > 180:
                 err_msg = "Invalid value for {}:{}. Value for {} longitude should be in the range of -180 to 180"
                 err_msg = err_msg.format(key_name, value_dict[key_name], key_name)
                 raise ValidationError(err_msg)
