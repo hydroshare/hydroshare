@@ -1,6 +1,7 @@
 # coding=utf-8
 import os
 
+from django.core.exceptions import ValidationError
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
@@ -185,12 +186,381 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(spatial_cov.value['units'], 'Decimal degree')
         self.assertEqual(spatial_cov.value['north'], 45.6789)
         self.assertEqual(spatial_cov.value['east'], -156.45678)
+
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
         # there should be no GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # there should be no GenericFileMetaData object at this point
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
+
+    def test_spatial_coverage_update_long_extent(self):
+        """
+        Here we are testing updating spatial coverage with longitude that crosses dateline
+        """
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set file to generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        gen_logical_file = res_file.logical_file
+        # add spatial coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        spatial_cov = gen_logical_file.metadata.create_element('coverage', type='point',
+                                                               value=value_dict)
+        self.assertEqual(spatial_cov.value['north'], 12.6789)
+        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        # update spatial coverage
+        value_dict = {'east': '-156.45678', 'north': '45.6789', 'units': 'Decimal degree'}
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point',
+                                                 value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        self.assertEqual(spatial_cov.value['north'], 45.6789)
+        self.assertEqual(spatial_cov.value['east'], -156.45678)
+        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = -181.45678 + 360
+        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+        value_dict = {'east': '200.1122', 'north': '12.6789', 'units': 'decimal deg'}
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = 200.1122 - 360
+        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+
+        # using invalid east value (>360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+
+        # using invalid east value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '-361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = 120.6789
+        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        expected_west_value = 16.6789
+        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '-181.6789', 'southlimit': '16.45678',
+                      'westlimit': '181.6789',
+                      'units': 'decimal deg'}
+
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = -181.6789 + 360
+        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        expected_west_value = 181.6789 - 360
+        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+
+        # using invalid eastlimt value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+        # using invalid eastlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+        # using invalid westlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '16.45678',
+                          'westlimit': '361.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+        # using invalid westlimit value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '16.45678',
+                          'westlimit': '-361.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+    def test_spatial_coverage_create_long_extent(self):
+        """
+        Here we are testing creating spatial coverage with longitude that crosses dateline
+        """
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set file to generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        gen_logical_file = res_file.logical_file
+        metadata = gen_logical_file.metadata
+        # add a point type coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        spatial_cov.delete()
+
+        value_dict = {'east': '-181.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = -181.45678 + 360
+        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+
+        value_dict = {'east': '200.1122', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = 200.1122 - 360
+        self.assertEqual(spatial_cov.value['east'], expected_east_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+        # using invalid east value (>360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        # using invalid east value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '-361.0', 'north': '12.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        metadata.create_element('coverage', type='box', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = 120.6789
+        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        expected_west_value = 16.6789
+        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '-181.6789', 'southlimit': '16.45678',
+                      'westlimit': '181.6789',
+                      'units': 'decimal deg'}
+
+        metadata.create_element('coverage', type='box', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_east_value = -181.6789 + 360
+        self.assertEqual(spatial_cov.value['eastlimit'], expected_east_value)
+        expected_west_value = 181.6789 - 360
+        self.assertEqual(spatial_cov.value['westlimit'], expected_west_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+        # using invalid eastlimt value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid eastlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '361.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid westlimit value (> 360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '16.45678',
+                          'westlimit': '361.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid westlimit value (< -360)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '16.45678',
+                          'westlimit': '-361.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+    def test_spatial_coverage_update_lat_extent(self):
+        """
+        Here we are testing updating spatial coverage with latitude
+        """
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set file to generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        gen_logical_file = res_file.logical_file
+        # add spatial coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'Decimal degree'}
+        spatial_cov = gen_logical_file.metadata.create_element('coverage', type='point',
+                                                               value=value_dict)
+        self.assertEqual(spatial_cov.value['north'], 12.6789)
+        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        # update spatial coverage
+        value_dict = {'east': '-156.45678', 'north': '45.6789', 'units': 'Decimal degree'}
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point',
+                                                 value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        self.assertEqual(spatial_cov.value['north'], 45.6789)
+        self.assertEqual(spatial_cov.value['east'], -156.45678)
+        value_dict = {'east': '60.45678', 'north': '-89.6789', 'units': 'decimal deg'}
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_north_value = -89.6789
+        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+        value_dict = {'east': '200.1122', 'north': '89.6789', 'units': 'decimal deg'}
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_north_value = 89.6789
+        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+
+        # using invalid north value (>90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '75.120', 'north': '90.6789', 'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+
+        # using invalid north value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '20.120', 'north': '-90.6789', 'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='point', value=value_dict)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_north_value = 56.45678
+        self.assertEqual(spatial_cov.value['northlimit'], expected_north_value)
+        expected_south_value = 16.45678
+        self.assertEqual(spatial_cov.value['southlimit'], expected_south_value)
+
+        # using invalid northlimt value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '-90.45678', 'eastlimit': '-120.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+        # using invalid northlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '90.45678', 'eastlimit': '61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+        # using invalid southlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '90.45678',
+                          'westlimit': '61.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+        # using invalid southlimit value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '-90.45678',
+                          'westlimit': '-61.6789',
+                          'units': 'decimal deg'}
+            gen_logical_file.metadata.update_element('coverage', spatial_cov.id, type='box', value=value_dict)
+
+    def test_spatial_coverage_create_lat_extent(self):
+        """
+        Here we are testing creating spatial coverage with latitude
+        """
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource file
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # set file to generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        res_file = self.composite_resource.files.first()
+        gen_logical_file = res_file.logical_file
+        metadata = gen_logical_file.metadata
+        # add a point type coverage
+        value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        self.assertEqual(spatial_cov.value['east'], 56.45678)
+        spatial_cov.delete()
+
+        value_dict = {'east': '-181.45678', 'north': '89.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_north_value = 89.6789
+        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+
+        value_dict = {'east': '200.1122', 'north': '-89.6789', 'units': 'decimal deg'}
+        metadata.create_element('coverage', type='point', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_north_value = -89.6789
+        self.assertEqual(spatial_cov.value['north'], expected_north_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+        # using invalid north value (>90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '61.0', 'north': '90.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        # using invalid north value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'east': '61.0', 'north': '-90.6789', 'units': 'decimal deg'}
+            metadata.create_element('coverage', type='point', value=value_dict)
+
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789',
+                      'units': 'decimal deg'}
+
+        metadata.create_element('coverage', type='box', value=value_dict)
+        spatial_cov = gen_logical_file.metadata.spatial_coverage
+        expected_north_value = 56.45678
+        self.assertEqual(spatial_cov.value['northlimit'], expected_north_value)
+        expected_south_value = 16.45678
+        self.assertEqual(spatial_cov.value['southlimit'], expected_south_value)
+        spatial_cov.delete()
+        self.assertEqual(gen_logical_file.metadata.spatial_coverage, None)
+
+        # using invalid northlimt value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '-90.45678', 'eastlimit': '-61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid northlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '90.45678', 'eastlimit': '61.6789', 'southlimit': '16.45678',
+                          'westlimit': '181.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid southlimit value (> 90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '-180.6789', 'southlimit': '90.45678',
+                          'westlimit': '61.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
+
+        # using invalid southlimit value (< -90)
+        with self.assertRaises(ValidationError):
+            value_dict = {'northlimit': '56.45678', 'eastlimit': '181.6789', 'southlimit': '-90.45678',
+                          'westlimit': '-61.6789',
+                          'units': 'decimal deg'}
+            metadata.create_element('coverage', type='box', value=value_dict)
 
     def test_delete_aggregation_coverage(self):
         """Here we are testing deleting of temporal and spatial coverage for a single file
