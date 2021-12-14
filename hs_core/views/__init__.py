@@ -3,6 +3,7 @@ import datetime
 import pytz
 import logging
 
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 
 from django.core.mail import send_mail
@@ -287,15 +288,31 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_discoverable_status = 'discoverable' if resource.raccess.discoverable \
         else 'not discoverable'
 
+    show_meta_status = False
+    if 'meta-status' not in request.session:
+        request.session['meta-status'] = ''
+
+    if 'meta-status-res-id' not in request.session:
+        request.session['meta-status-res-id'] = resource.short_id
+        show_meta_status = True
+    elif request.session['meta-status-res-id'] != resource.short_id:
+        request.session['meta-status-res-id'] = resource.short_id
+        show_meta_status = True
+
     if resource.can_be_public_or_discoverable:
         metadata_status = METADATA_STATUS_SUFFICIENT
     else:
         metadata_status = METADATA_STATUS_INSUFFICIENT
 
+    if request.session['meta-status'] != metadata_status:
+        request.session['meta-status'] = metadata_status
+        show_meta_status = True
+
     response_data = {
         'res_public_status': res_public_status,
         'res_discoverable_status': res_discoverable_status,
         'metadata_status': metadata_status,
+        'show_meta_status': show_meta_status
     }
 
     return JsonResponse(data=response_data, status=200)
@@ -707,6 +724,11 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     finally:
         request.session['resource-mode'] = 'edit'
 
+    if res.can_be_public_or_discoverable:
+        request.session['meta-status'] = METADATA_STATUS_SUFFICIENT
+    else:
+        request.session['meta-status'] = METADATA_STATUS_INSUFFICIENT
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -730,7 +752,13 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             # raising this specific exception
             logger.warn(str(ex))
             continue
+
     request.session['resource-mode'] = 'edit'
+
+    if res.can_be_public_or_discoverable:
+        request.session['meta-status'] = METADATA_STATUS_SUFFICIENT
+    else:
+        request.session['meta-status'] = METADATA_STATUS_INSUFFICIENT
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -1814,7 +1842,10 @@ class FindGroupsView(TemplateView):
                 'groups': groups
             }
         else:
-            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")  # active is included in this query
+            # for anonymous user
+            groups = Group.objects.filter(Q(gaccess__active=True) &
+                                          (Q(gaccess__discoverable=True) |
+                                          Q(gaccess__public=True))).exclude(name="Hydroshare Author")
 
             return {
                 'groups': groups
@@ -1879,15 +1910,17 @@ class GroupView(TemplateView):
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
         if self.request.user.is_authenticated():
-
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
-            u.is_group_viewer = g in u.uaccess.view_groups
+            u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
+            u.is_group_member = u in g.gaccess.members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            if u not in g.gaccess.members:
+                group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             return {
                 'group': g,

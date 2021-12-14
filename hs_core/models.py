@@ -968,7 +968,7 @@ class Relation(AbstractMetaDataElement):
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
-    value = models.CharField(max_length=500)
+    value = models.TextField()
 
     def __str__(self):
         """Return {type} {value} for string representation."""
@@ -1824,7 +1824,7 @@ class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
     term = 'Source'
-    derived_from = models.CharField(max_length=300)
+    derived_from = models.TextField()
 
     class Meta:
         """Define meta properties for Source model."""

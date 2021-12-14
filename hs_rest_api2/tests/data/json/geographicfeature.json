@@ -1,0 +1,87 @@
+{
+  "type": "GeoFeature",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/watersheds_resmap.xml#aggregation",
+  "title": "watershedsa",
+  "subjects": [
+    "asdf",
+    "fdas"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "key": "value",
+    "key2": "value2"
+  },
+  "spatial_coverage": {
+    "type": "box",
+    "northlimit": 41.84732649257394,
+    "eastlimit": -111.40051926333071,
+    "southlimit": 41.46101782271056,
+    "westlimit": -111.79812580632701,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2020-11-05T00:00:00",
+    "end": "2020-11-26T00:00:00"
+  },
+  "rights": {
+    "statement": "my statement",
+    "url": "http://studio.bakajo.com"
+  },
+  "field_information": [
+    {
+      "field_name": "Id",
+      "field_type": "Integer64",
+      "field_type_code": "12",
+      "field_width": 10
+    },
+    {
+      "field_name": "Shape_Area",
+      "field_type": "Real",
+      "field_type_code": "2",
+      "field_width": 19,
+      "field_precision": 11
+    },
+    {
+      "field_name": "Area_km2",
+      "field_type": "Real",
+      "field_type_code": "2",
+      "field_width": 19,
+      "field_precision": 11
+    },
+    {
+      "field_name": "OBJECTID",
+      "field_type": "Integer64",
+      "field_type_code": "12",
+      "field_width": 10
+    },
+    {
+      "field_name": "gridcode",
+      "field_type": "Integer64",
+      "field_type_code": "12",
+      "field_width": 10
+    },
+    {
+      "field_name": "Shape_Leng",
+      "field_type": "Real",
+      "field_type_code": "2",
+      "field_width": 19,
+      "field_precision": 11
+    }
+  ],
+  "geometry_information": {
+    "feature_count": 5,
+    "geometry_type": "POLYGON"
+  },
+  "spatial_reference": {
+    "type": "box",
+    "northlimit": 4633133.1700797,
+    "eastlimit": 466551.480322555,
+    "southlimit": 4590013.8756461,
+    "westlimit": 433743.114844041,
+    "units": "metre",
+    "projection_string": "PROJCS[\"NAD83 / UTM zone 12N\",\n    GEOGCS[\"NAD83\",\n        DATUM[\"North_American_Datum_1983\",\n            SPHEROID[\"GRS 1980\",6378137,298.257222101,\n                AUTHORITY[\"EPSG\",\"7019\"]],\n            TOWGS84[0,0,0,0,0,0,0],\n            AUTHORITY[\"EPSG\",\"6269\"]],\n        PRIMEM[\"Greenwich\",0,\n            AUTHORITY[\"EPSG\",\"8901\"]],\n        UNIT[\"degree\",0.0174532925199433,\n            AUTHORITY[\"EPSG\",\"9122\"]],\n        AUTHORITY[\"EPSG\",\"4269\"]],\n    PROJECTION[\"Transverse_Mercator\"],\n    PARAMETER[\"latitude_of_origin\",0],\n    PARAMETER[\"central_meridian\",-111],\n    PARAMETER[\"scale_factor\",0.9996],\n    PARAMETER[\"false_easting\",500000],\n    PARAMETER[\"false_northing\",0],\n    UNIT[\"metre\",1,\n        AUTHORITY[\"EPSG\",\"9001\"]],\n    AXIS[\"Easting\",EAST],\n    AXIS[\"Northing\",NORTH],\n    AUTHORITY[\"EPSG\",\"26912\"]]",
+    "datum": "North_American_Datum_1983",
+    "projection_name": "NAD83 / UTM zone 12N"
+  }
+}
