@@ -422,7 +422,7 @@ $(document).ready(function () {
         });
     }
 
-    $("#citation-text").on("click", function (e) {
+    $("#citation-text-wrapper").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower
         if (document.selection) {
             document.selection.empty();

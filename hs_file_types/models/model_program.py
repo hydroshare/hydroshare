@@ -164,7 +164,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             val = graph.value(subject=subject, predicate=term)
             if val:
                 if is_date:
-                    date = parser.parse(str(val))
+                    date = parser.parse(str(val)).date()
                     setattr(obj, field_name, date)
                 else:
                     setattr(obj, field_name, str(val.toPython()))

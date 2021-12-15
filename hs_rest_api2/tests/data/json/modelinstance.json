@@ -1,0 +1,34 @@
+{
+  "type": "ModelInstance",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/generic_file_resmap.xml#aggregation",
+  "title": "generic_file",
+  "subjects": [
+    "fdsa",
+    "asdf"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "1": "2",
+    "3": "4"
+  },
+  "spatial_coverage": {
+    "type": "point",
+    "name": "asdf",
+    "east": -98.1969,
+    "north": 41.85,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2021-10-08T00:00:00",
+    "end": "2021-10-15T00:00:00"
+  },
+  "rights": {
+    "statement": "This resource is shared under the Creative Commons Attribution CC BY.",
+    "url": "http://creativecommons.org/licenses/by/4.0/"
+  },
+  "includes_model_output": false,
+  "executed_by": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/setup_resmap.xml#aggregation",
+  "program_schema_json": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/generic_file_schema.json",
+  "program_schema_json_values": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/generic_file_schema_values.json"
+}

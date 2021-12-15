@@ -279,6 +279,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             FileSetLogicalFile.set_file_type(self.composite_resource, self.user,
                                              folder_path=child_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -1225,15 +1226,15 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # the raster aggregation should contain 2 files (tif and vrt)
         self.assertEqual(GeoRasterLogicalFile.objects.first().files.count(), 2)
         raster_aggr = raster_res_file.logical_file
-        # remove raster aggregation and test that the raster files are now part of the fileset
-        # aggregation
+        # remove raster aggregation and test that the raster (tif file only) is now part of the fileset
+        # aggregation - raster remove aggregation deletes the system generated vrt file
         raster_aggr.remove_aggregation()
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
-        fileset_aggregation = FileSetLogicalFile.objects.first()
-        assert fileset_aggregation.metadata.is_dirty
-        # there should be now three resource file that are part of the fileset aggregation
-        self.assertEqual(fs_aggr.files.count(), 3)
+        fs_aggr = FileSetLogicalFile.objects.first()
+        assert fs_aggr.metadata.is_dirty
+        # there should be now two resource files that are part of the fileset aggregation
+        self.assertEqual(fs_aggr.files.count(), 2)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -1269,12 +1270,12 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                            file=self.raster_file_name, folder=child_fs_folder)
         self.assertEqual(raster_res_file.has_logical_file, True)
         raster_aggr = raster_res_file.logical_file
-        # remove raster aggregation - this should make the two raster files part of the child
-        # fileset aggregation
+        # remove raster aggregation - this should make the tif raster file part of the child
+        # fileset aggregation - note raster remove aggregation deletes the system generated vtrt file
         raster_aggr.remove_aggregation()
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
-        # child fileset aggregation should have three resource files
-        self.assertEqual(child_fs_aggr.files.count(), 3)
+        # child fileset aggregation should have two resource files
+        self.assertEqual(child_fs_aggr.files.count(), 2)
         assert child_fs_aggr.metadata.is_dirty
         # parent fileset aggregation - no change
         self.assertEqual(parent_fs_aggr.files.count(), 1)

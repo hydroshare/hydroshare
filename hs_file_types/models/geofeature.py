@@ -259,8 +259,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             res_file = ft_ctx.res_file
             try:
-                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
-                                                                                   res_file)
+                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
             except ValidationError as ex:
                 log.exception(str(ex))
                 raise ex
@@ -276,9 +275,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             file_folder = res_file.file_folder
             upload_folder = file_folder
-            file_type_success = False
             res_files_to_delete = []
-
             msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
             with transaction.atomic():
                 try:
@@ -297,19 +294,17 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=files_to_upload,
                                                           folder_path=upload_folder)
 
+                    ft_ctx.res_files_to_delete = res_files_to_delete
                     log.info("GeoFeature aggregation - files were added to the aggregation.")
                     add_metadata(resource, meta_dict, xml_file, logical_file)
                     log.info("GeoFeature aggregation and resource level metadata updated.")
-
-                    file_type_success = True
                     ft_ctx.logical_file = logical_file
-                    ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
+                    raise ValidationError(msg)
 
-            if not file_type_success:
-                raise ValidationError(msg)
             return logical_file
 
     @classmethod
