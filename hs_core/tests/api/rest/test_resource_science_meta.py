@@ -88,17 +88,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "relations": [
                 {
-                    "type": "isCopiedFrom",
+                    "type": "source",
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 },
                 {
@@ -124,7 +116,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
-        self.assertEqual(self.resource.metadata.sources.all().count(), 2)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
@@ -233,17 +224,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "relations": [
                 {
-                    "type": "isCopiedFrom",
+                    "type": "source",
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 },
                 {
@@ -269,7 +252,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
-        self.assertEqual(self.resource.metadata.sources.all().count(), 2)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")

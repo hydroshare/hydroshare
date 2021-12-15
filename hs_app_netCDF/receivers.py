@@ -214,11 +214,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                         nc_res.metadata.create_element('subject', value=keyword)
 
             # update source
-            if res_dublin_core_meta.get('source'):
-                for source in nc_res.metadata.sources.all():
-                    source.delete()
-                nc_res.metadata.create_element('source',
-                                               derived_from=res_dublin_core_meta.get('source'))
+            if 'source' in res_dublin_core_meta:
+                nc_res.metadata.relations.filter(type='source').all().delete()
+                nc_res.metadata.create_element('relation', type='source',
+                                               value=res_dublin_core_meta.get('source'))
 
             # update license element:
             if res_dublin_core_meta.get('rights'):
@@ -232,8 +231,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
             # update relation
             if res_dublin_core_meta.get('references'):
-                nc_res.metadata.relations.filter(type='cites').all().delete()
-                nc_res.metadata.create_element('relation', type='cites',
+                nc_res.metadata.create_element('relation', type='references',
                                                value=res_dublin_core_meta['references'])
 
             # update box info

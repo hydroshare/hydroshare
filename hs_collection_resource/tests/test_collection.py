@@ -927,16 +927,16 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # check contained res
         hasPart = "hasPart"
 
-        # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        # check self.resGen1.short_id        
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
-        # check self.resGen2.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        # check self.resGen2.short_id        
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
-        # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        # check self.resGen3.short_id        
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 
@@ -951,16 +951,16 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # should be 2 hasPart metadata
         self.assertEqual(self.resCollection.metadata.relations.count(), 2)
 
-        # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        # check self.resGen1.short_id        
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
-        # check self.resGen2.short_id -- should be 0
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        # check self.resGen2.short_id -- should be 0        
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 0)
-        # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        # check self.resGen3.short_id        
+        value = self.resGen3.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 

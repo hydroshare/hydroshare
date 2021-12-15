@@ -189,15 +189,6 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
             if collection_res.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-            # handle "Relation" metadata
-            hasPart = "hasPart"
-            for deleted_res_log in collection_res.deleted_resources:
-                add_or_remove_relation_metadata(add=False,
-                                                target_res_obj=collection_res,
-                                                relation_type=hasPart,
-                                                relation_value=deleted_res_log.get_citation(),
-                                                set_res_modified=False)
-
             new_coverage_list = _update_collection_coverages(collection_res)
             ajax_response_data['new_coverage_list'] = new_coverage_list
 

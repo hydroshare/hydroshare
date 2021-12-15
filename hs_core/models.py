@@ -1032,16 +1032,11 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
-        if kwargs['type'] == 'isHostedBy' and \
-           Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
+        if kwargs['type'] == 'source' and \
+           Relation.objects.filter(type='source', object_id=metadata_obj.id,
                                    content_type=metadata_type).exists():
             raise ValidationError('Relation type:%s cannot be created since '
-                                  'isCopiedFrom relation already exists.' % kwargs['type'])
-        elif kwargs['type'] == 'isCopiedFrom' and \
-                Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
-                                        content_type=metadata_type).exists():
-            raise ValidationError('Relation type:%s cannot be created since '
-                                  'isHostedBy relation already exists.' % kwargs['type'])
+                                  'it already exists.' % kwargs['type'])
 
         return super(Relation, cls).create(**kwargs)
 
@@ -1831,7 +1826,7 @@ class Subject(AbstractMetaDataElement):
             Subject.create(value=str(o), content_object=content_object)
 
 
-@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
+# @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
@@ -3711,16 +3706,16 @@ class BaseResource(Page, AbstractResource):
         replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
         rlist = []
         for r in replacedby:
-            replacement = r.value
+            citation = r.value
+            res_id = citation[-32:]
             # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
-            if replacement.startswith(current_site_url() + "/resource/"):
-                replacement = replacement[-32:]  # strip header
+            res_path = "{}/resource/{}".format(current_site_url(), res_id)
+            if citation.endswith(res_path):
                 try:
-                    rv = get_resource_by_shortkey(replacement, or_404=False)
-                except BaseResource.DoesNotExist:
-                    rv = None
-                if rv is not None:
+                    rv = get_resource_by_shortkey(res_id, or_404=False)
                     rlist.append(rv)
+                except BaseResource.DoesNotExist:
+                    pass
         return rlist
 
     @property
@@ -3811,7 +3806,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     identifiers = GenericRelation(Identifier)
     _language = GenericRelation(Language)
     subjects = GenericRelation(Subject)
-    sources = GenericRelation(Source)
     relations = GenericRelation(Relation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
@@ -4113,7 +4107,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         self.coverages.all().delete()
         self.formats.all().delete()
         self.subjects.all().delete()
-        self.sources.all().delete()
         self.relations.all().delete()
         self.funding_agencies.all().delete()
 
@@ -4398,20 +4391,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
                 terms_type.text = rel.value
-
-        for src in self.sources.all():
-            dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
-            dc_source_rdf_Description = etree.SubElement(dc_source,
-                                                         '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_derived_from = etree.SubElement(
-                dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
-
-            # if the source value starts with 'http://' or 'https://' add value as an attribute
-            if src.derived_from.lower().find('http://') == 0 or \
-                    src.derived_from.lower().find('https://') == 0:
-                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
-            else:
-                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])

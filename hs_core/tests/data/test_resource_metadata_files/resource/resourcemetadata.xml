@@ -34,11 +34,6 @@
       </rdf:Description>
     </dc:contributor>
     <dc:subject>UEB</dc:subject>
-    <dc:source>
-      <rdf:Description>
-        <hsterms:isDerivedFrom>the source</hsterms:isDerivedFrom>
-      </rdf:Description>
-    </dc:source>
     <dc:contributor>
       <rdf:Description>
         <hsterms:ORCID rdf:resource="https://orcid.org/0000-0002-1341-5681"/>
@@ -115,14 +110,9 @@
     <dc:subject>Snow water equivalent</dc:subject>
     <dc:relation>
       <rdf:Description>
-          <hsterms:isPartOf>sadf</hsterms:isPartOf>>
+          <dcterms:isPartOf>sadf</dcterms:isPartOf>>
       </rdf:Description>
     </dc:relation>
-    <dc:source>
-      <rdf:Description>
-        <hsterms:isDerivedFrom>another</hsterms:isDerivedFrom>
-      </rdf:Description>
-    </dc:source>
     <dc:subject>Time Series</dc:subject>
     <dc:subject>value1</dc:subject>
     <dc:subject>CUAHSI</dc:subject>
@@ -148,7 +138,7 @@
     <dc:subject>key1</dc:subject>
     <dc:relation>
       <rdf:Description>
-          <hsterms:isCopiedFrom>https://www.google.com</hsterms:isCopiedFrom>
+          <dcterms:source>https://www.google.com</dcterms:source>
       </rdf:Description>
     </dc:relation>
   </hsterms:CompositeResource>
