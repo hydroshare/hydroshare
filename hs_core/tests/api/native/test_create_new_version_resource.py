@@ -172,11 +172,11 @@ class TestNewVersionResource(TestCase):
         relation_is_version_of = new_res_generic.metadata.relations.filter(type='isVersionOf').first()
         self.assertNotEqual(relation_is_version_of, None)
         self.assertEqual(relation_is_version_of.value, self.res_generic.get_citation())
-        
+
         relation_is_replaced_by = self.res_generic.metadata.relations.filter(type='isReplacedBy').first()
         self.assertNotEqual(relation_is_replaced_by, None)
         self.assertEqual(relation_is_replaced_by.value, new_res_generic.get_citation())
-        
+
         # test isReplacedBy is removed after the new versioned resource is deleted
         hydroshare.delete_resource(new_res_generic.short_id)
         self.assertNotIn('isReplacedBy',
@@ -278,7 +278,7 @@ class TestNewVersionResource(TestCase):
         relation_is_version_of = new_res_raster.metadata.relations.filter(type='isVersionOf').first()
         self.assertNotEqual(relation_is_version_of, None)
         self.assertEqual(relation_is_version_of.value, self.res_raster.get_citation())
-       
+
         relation_is_replaced_by = self.res_raster.metadata.relations.filter(type='isReplacedBy').first()
         self.assertNotEqual(relation_is_replaced_by, None)
         self.assertEqual(relation_is_replaced_by.value, new_res_raster.get_citation())
