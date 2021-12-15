@@ -6,6 +6,7 @@ import shutil
 from uuid import uuid4
 
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ValidationError
 from django.db import models
 from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace
@@ -149,17 +150,24 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                                                   res_files=res_files,
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
+            try:
+                if folder_path and file_id is None:
+                    logical_file.folder = folder_path
+                    logical_file.save()
+                    # make all the files in the selected folder as part of the aggregation
+                    logical_file.add_resource_files_in_folder(resource, folder_path)
+                    log.info("{0} aggregation was created for folder:{1}.".format(logical_file.data_type, folder_path))
+                else:
+                    log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
+                                                                                res_file.storage_path))
+                ft_ctx.logical_file = logical_file
+            except Exception as ex:
+                msg = "{} aggregation. Error when creating aggregation. Error:{}".format(logical_file.data_type,
+                                                                                         str(ex))
+                log.exception(msg)
+                logical_file.remove_aggregation()
+                raise ValidationError(msg)
 
-            if folder_path and file_id is None:
-                logical_file.folder = folder_path
-                logical_file.save()
-                # make all the files in the selected folder as part of the aggregation
-                logical_file.add_resource_files_in_folder(resource, folder_path)
-                log.info("{0} aggregation was created for folder:{1}.".format(logical_file.data_type, folder_path))
-            else:
-                log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
-                                                                            res_file.storage_path))
-            ft_ctx.logical_file = logical_file
         return logical_file
 
     def generate_map_xml(self):

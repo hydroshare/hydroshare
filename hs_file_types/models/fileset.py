@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from hs_core.models import ResourceFile
@@ -140,6 +141,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                              post_aggr_signal=None,
                              is_temp_file=False) as ft_ctx:
 
+            msg = "Fileset aggregation. Error when creating aggregation. Error:{}"
             folder_name = folder_path
             if '/' in folder_path:
                 folder_name = os.path.basename(folder_path)
@@ -151,12 +153,19 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
 
-            logical_file.folder = folder_path
-            logical_file.save()
-            # make all the files in the selected folder as part of the aggregation
-            logical_file.add_resource_files_in_folder(resource, folder_path)
-            ft_ctx.logical_file = logical_file
-            log.info("File set aggregation was created for folder:{}.".format(folder_path))
+            try:
+                logical_file.folder = folder_path
+                logical_file.save()
+                # make all the files in the selected folder as part of the aggregation
+                logical_file.add_resource_files_in_folder(resource, folder_path)
+                log.info("File set aggregation was created for folder:{}.".format(folder_path))
+                ft_ctx.logical_file = logical_file
+            except Exception as ex:
+                logical_file.remove_aggregation()
+                msg = msg.format(str(ex))
+                log.exception(msg)
+                raise ValidationError(msg)
+
             return logical_file
 
     def xml_file_short_path(self, resmap=True):

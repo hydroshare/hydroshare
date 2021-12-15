@@ -334,12 +334,12 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # test there is no NetCDFFileMetaData object
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
-        # check the files associated with the aggregation not deleted
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the nc file associated with the aggregation is not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
         # check the file folder is not deleted
-        for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, expected_file_folder)
-
+        nc_file = self.composite_resource.files.first()
+        self.assertTrue(nc_file.file_name.endswith('.nc'))
+        self.assertEqual(nc_file.file_folder, expected_file_folder)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 

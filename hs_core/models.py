@@ -1569,6 +1569,16 @@ class Coverage(AbstractMetaDataElement):
     @classmethod
     def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         """Validate values based on coverage type."""
+        def compute_longitude(key_name):
+            if value_dict[key_name] <= -180 and value_dict[key_name] >= -360:
+                value_dict[key_name] = value_dict[key_name] + 360
+            elif value_dict[key_name] >= 180 and value_dict[key_name] <= 360:
+                value_dict[key_name] = value_dict[key_name] - 360
+            if value_dict[key_name] < -180 or value_dict[key_name] > 180:
+                err_msg = "Invalid value for {}:{}. Value for {} longitude should be in the range of -180 to 180"
+                err_msg = err_msg.format(key_name, value_dict[key_name], key_name)
+                raise ValidationError(err_msg)
+
         if coverage_type == 'period':
             # check that all the required sub-elements exist
             if 'start' not in value_dict or 'end' not in value_dict:
@@ -1586,10 +1596,7 @@ class Coverage(AbstractMetaDataElement):
                 except TypeError:
                     raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
-            if value_dict['east'] < -180 or value_dict['east'] > 180:
-                raise ValidationError("Value for East longitude should be "
-                                      "in the range of -180 to 180")
-
+            compute_longitude(key_name='east')
             if value_dict['north'] < -90 or value_dict['north'] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
@@ -1622,13 +1629,8 @@ class Coverage(AbstractMetaDataElement):
                     raise ValidationError("Value for North latitude must be greater than or "
                                           "equal to that of South latitude.")
 
-            if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
-                raise ValidationError("Value for East longitude should be "
-                                      "in the range of -180 to 180")
-
-            if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
-                raise ValidationError("Value for West longitude should be "
-                                      "in the range of -180 to 180")
+            compute_longitude(key_name='eastlimit')
+            compute_longitude(key_name='westlimit')
 
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.

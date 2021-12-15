@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 import os
 import tempfile
-import zipfile
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
-from django.core.files.uploadedfile import UploadedFile
 from rdflib import Graph, URIRef
 from rdflib.compare import _squashed_graphs_triples
 from rdflib.namespace import DCTERMS, RDF, DC
-from pathlib import Path
 
 from hs_core import hydroshare
 from hs_core.hs_rdf import HSTERMS
-from hs_core.hydroshare import resource, add_resource_files, current_site_url
+from hs_core.hydroshare import resource, current_site_url
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 from hs_file_types.models import (
     GenericLogicalFile,
     FileSetLogicalFile,
@@ -76,28 +74,7 @@ def compare_metadatas(self, short_id, new_metadata_str, original_metadata_file):
 
 
 def prepare_resource(self, folder):
-    from hs_core.views.utils import unzip_file
-
-    def zip_up(ziph, root_directory, directory=""):
-        full_path = Path(os.path.join(root_directory, directory))
-        dirs = [str(item) for item in full_path.iterdir() if item.is_dir()]
-        files = [str(item) for item in full_path.iterdir() if item.is_file()]
-        for file in files:
-            ziph.write(file, arcname=os.path.join(directory, os.path.basename(file)))
-        for d in dirs:
-            zip_up(ziph, root_directory, os.path.join(directory, os.path.basename(d)))
-
-    zipf = zipfile.ZipFile(self.test_bag_path, 'w')
-    zip_up(zipf, os.path.join(self.extracted_directory, folder))
-
-    files_to_upload = [UploadedFile(file=open('hs_core/tests/data/test_resource_metadata_files.zip', 'rb'),
-                                    name="test_resource_metadata_files.zip")]
-    add_resource_files(self.res.short_id, *files_to_upload, full_paths={})
-
-    unzip_file(self.user, self.res.short_id, "data/contents/test_resource_metadata_files.zip", True,
-               overwrite=True, auto_aggregate=True, ingest_metadata=True)
-
-    self.res.refresh_from_db()
+    prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path)
 
 
 class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):

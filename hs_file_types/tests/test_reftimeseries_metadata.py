@@ -644,6 +644,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
