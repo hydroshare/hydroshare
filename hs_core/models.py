@@ -1824,6 +1824,7 @@ class Subject(AbstractMetaDataElement):
         for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
             Subject.create(value=str(o), content_object=content_object)
 
+
 # TODO: Source model class needs to be deleted after metadata stored in this object is moved to Relation meta object
 # @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
