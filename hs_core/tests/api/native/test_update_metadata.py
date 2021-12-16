@@ -49,7 +49,6 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             {'language': {'code': 'fre'}},
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource', 'url': 'http://rights.ord/001'}},
-            {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
             {'subject': {'value': 'sub-1'}},
             {'subject': {'value': 'sub-2'}},
         ]
@@ -144,12 +143,6 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.rights.statement, 'This is the rights statement for this resource',
                          msg="Statement of rights did not match.")
         self.assertEqual(self.res.metadata.rights.url, 'http://rights.ord/001', msg="URL of rights did not match.")
-
-        self.assertEqual(self.res.metadata.sources.all().count(), 1, msg="Number of sources is not equal to 1.")
-        self.assertIn('http://hydroshare.org/resource/0001',
-                      [src.derived_from for src in self.res.metadata.sources.all()],
-                      msg="Source element with derived from a value of %s does not exist."
-                          % 'http://hydroshare.org/resource/0001')
 
         # there should be 2 subject elements for this resource
         self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 1.")

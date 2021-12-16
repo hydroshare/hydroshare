@@ -219,12 +219,6 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                          msg="Statement of rights did not match.")
         self.assertEqual(res.metadata.rights.url, 'http://rights.org/001', msg="URL of rights did not match.")
 
-        self.assertEqual(res.metadata.sources.all().count(), 1, msg="Number of sources is not equal to 1.")
-        self.assertIn('http://hydroshare.org/resource/0001',
-                      [src.derived_from for src in res.metadata.sources.all()],
-                      msg="Source element with derived from value of %s does not exist."
-                          % 'http://hydroshare.org/resource/0001')
-
         # there should be 2 subject elements for this resource
         self.assertEqual(res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 1.")
         self.assertIn('sub-1', [sub.value for sub in res.metadata.subjects.all()],

@@ -874,16 +874,6 @@ class GenericResourceMeta(object):
                 msg = "Relations with type {0} are not supported"
                 msg = msg.format(r.__class__.__name__)
                 raise TypeError(msg)
-        if len(self.sources) > 0:
-            resource.metadata.sources.all().delete()
-        for s in self.sources:
-            if isinstance(s, GenericResourceMeta.ResourceSource):
-                kwargs = {'derived_from': s.uri}
-                resource.metadata.create_element('source', **kwargs)
-            else:
-                msg = "Sources with type {0} are not supported"
-                msg = msg.format(s.__class__.__name__)
-                raise TypeError(msg)
 
         if update_modification_date:
             # Update modification date last

@@ -313,8 +313,6 @@ def netcdf_post_add_files_to_resource(sender, **kwargs):
         metadata.is_dirty = True
     elif 'references =' not in nc_text and metadata.relations.all().filter(type='cites'):
         metadata.is_dirty = True
-    elif 'source =' not in nc_text and metadata.sources.all():
-        metadata.is_dirty = True
     else:
         metadata.is_dirty = False
 

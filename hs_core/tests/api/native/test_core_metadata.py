@@ -1310,42 +1310,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.rights.url, 'http://rights-modified.ord/001',
                          msg="URL of rights did not match.")
 
-    def test_source(self):
-        # at this point there should not be any source element
-        self.assertEqual(self.res.metadata.sources.all().count(), 0, msg="Number of sources is not equal to 0.")
-
-        # add a source element of uri type
-        resource.create_metadata_element(self.res.short_id,'source', derived_from='http://hydroshare.org/resource/0001')
-        # at this point there should be 1 source element
-        self.assertEqual(self.res.metadata.sources.all().count(), 1, msg="Number of sources is not equal to 1.")
-        self.assertIn('http://hydroshare.org/resource/0001', [src.derived_from for src in
-                                                              self.res.metadata.sources.all()],
-                      msg="Source element with derived from a value of %s does not exist." %
-                          'http://hydroshare.org/resource/0001')
-
-        #test update
-        src_1 = self.res.metadata.sources.all().filter(derived_from='http://hydroshare.org/resource/0001').first()
-        resource.update_metadata_element(self.res.short_id, 'source', src_1.id,
-                                         derived_from='http://hydroshare.org/resource/0002')
-        self.assertIn('http://hydroshare.org/resource/0002', [src.derived_from for src in
-                                                              self.res.metadata.sources.all()],
-                      msg="Source element with derived from a value of %s does not exist."
-                          % 'http://hydroshare.org/resource/0002')
-
-        # add another source element of string type
-        resource.create_metadata_element(self.res.short_id,'source', derived_from='This resource has been derived '
-                                                                                  'from another resource')
-        # at this point there should be 2 source element
-        self.assertEqual(self.res.metadata.sources.all().count(), 2, msg="Number of sources is not equal to 2.")
-
-        # duplicate source elements are not allowed - exception raised
-        self.assertRaises(Exception, lambda:resource.create_metadata_element(
-            self.res.short_id, 'source', derived_from='http://hydroshare.org/resource/0002'))
-
-        # test that it is possible to delete all source elements
-        for src in self.res.metadata.sources.all():
-            resource.delete_metadata_element(self.res.short_id,'source', src.id)
-
     def test_subject(self):
         # there should be 2 subject elements for this resource as we provided two keywords when creating the resource
         self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 2.")
