@@ -1134,9 +1134,7 @@
                                         <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                             <option value="">---------</option>
                                             {% for type_value, type_display in relation_source_types %}
-                                                {% if type_display != "The content of this resource is hosted by" %}
-                                                    <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
-                                                {% endif %}
+                                                <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -1366,9 +1364,7 @@
                                     <div class="controls">
                                         <select class="form-control input-sm select" id="id_type" name="type">
                                             {% for type_value, type_display in relation_source_types %}
-                                                {% if type_display != "The content of this resource is hosted by" %}
-                                                    <option value={{ type_value }}>{{ type_display }}</option>
-                                                {% endif %}
+                                                <option value={{ type_value }}>{{ type_display }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>

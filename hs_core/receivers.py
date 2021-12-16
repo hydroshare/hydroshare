@@ -10,7 +10,7 @@ from hs_core.tasks import update_web_services
 from hs_core.models import GenericResource, Party
 from django.conf import settings
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
-    ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
+    ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
 
@@ -49,8 +49,6 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
-    elif element_name == 'source':
-        element_form = SourceValidationForm(request.POST)
     elif element_name == 'rights':
         element_form = RightsValidationForm(request.POST)
     elif element_name == 'language':
@@ -88,8 +86,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
     repeatable_elements = {'creator': CreatorValidationForm,
                            'contributor': ContributorValidationForm,
-                           'relation': RelationValidationForm,
-                           'source': SourceValidationForm
+                           'relation': RelationValidationForm
                            }
 
     if element_name == 'title':
