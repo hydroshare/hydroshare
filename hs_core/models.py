@@ -312,13 +312,15 @@ def page_permissions_page_processor(request, page):
 
     users_json = json.dumps(users_json)
 
-    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
-        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
+    is_replaced_by_relation = cm.metadata.relations.filter(type='isReplacedBy').first()
+    if is_replaced_by_relation is not None:
+        is_replaced_by = is_replaced_by_relation.value
     else:
         is_replaced_by = ''
 
-    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
+    is_version_of_relation = cm.metadata.relations.all().filter(type='isVersionOf').first()
+    if is_version_of_relation is not None:
+        is_version_of = is_version_of_relation.value
     else:
         is_version_of = ''
 
@@ -948,6 +950,7 @@ class Date(AbstractMetaDataElement):
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
+    # TODO: remove the commented relation types
     SOURCE_TYPES = (
         # ('isHostedBy', 'The content of this resource is hosted by'), # need to migrate it to 'source'
         # ('isCopiedFrom', 'The content of this resource was copied from'), # need to migrate it to 'source'
@@ -1031,12 +1034,6 @@ class Relation(AbstractMetaDataElement):
                                    content_type=metadata_type).exists():
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
-
-        if kwargs['type'] == 'source' and \
-           Relation.objects.filter(type='source', object_id=metadata_obj.id,
-                                   content_type=metadata_type).exists():
-            raise ValidationError('Relation type:%s cannot be created since '
-                                  'it already exists.' % kwargs['type'])
 
         return super(Relation, cls).create(**kwargs)
 
@@ -1827,7 +1824,7 @@ class Subject(AbstractMetaDataElement):
         for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
             Subject.create(value=str(o), content_object=content_object)
 
-
+# TODO: Source model class needs to be deleted after metadata stored in this object is moved to Relation meta object
 # @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
@@ -1843,6 +1840,13 @@ class Source(AbstractMetaDataElement):
     def __unicode__(self):
         """Return derived_from field for unicode representation."""
         return self.derived_from
+
+    @classmethod
+    def create(cls, **kwargs):
+        """This meta element is no more supported
+        This model class needs to be deleted after migration of source metadata to relation metadata
+        """
+        raise Exception("Source metadata element is not supported")
 
 
 @rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
@@ -3808,6 +3812,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     identifiers = GenericRelation(Identifier)
     _language = GenericRelation(Language)
     subjects = GenericRelation(Subject)
+    sources = GenericRelation(Source)
     relations = GenericRelation(Relation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
@@ -4008,7 +4013,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 'Identifier',
                 'Language',
                 'Subject',
-                'Source',
                 'Relation',
                 'Publisher',
                 'FundingAgency']
@@ -4145,7 +4149,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """
         from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
+            RelationValidationForm, FundingAgencyValidationForm
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -4153,7 +4157,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                                     'rights': RightsValidationForm,
                                     'creator': CreatorValidationForm,
                                     'contributor': ContributorValidationForm,
-                                    'source': SourceValidationForm,
                                     'relation': RelationValidationForm,
                                     'fundingagency': FundingAgencyValidationForm
                                     }
