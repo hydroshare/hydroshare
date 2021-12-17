@@ -1826,7 +1826,7 @@ class Subject(AbstractMetaDataElement):
 
 
 # TODO: Source model class needs to be deleted after metadata stored in this object is moved to Relation meta object
-# @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
+@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
@@ -1841,13 +1841,6 @@ class Source(AbstractMetaDataElement):
     def __unicode__(self):
         """Return derived_from field for unicode representation."""
         return self.derived_from
-
-    @classmethod
-    def create(cls, **kwargs):
-        """This meta element is no more supported
-        This model class needs to be deleted after migration of source metadata to relation metadata
-        """
-        raise Exception("Source metadata element is not supported")
 
 
 @rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
@@ -4014,6 +4007,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 'Identifier',
                 'Language',
                 'Subject',
+                'Source',
                 'Relation',
                 'Publisher',
                 'FundingAgency']
@@ -4114,6 +4108,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         self.coverages.all().delete()
         self.formats.all().delete()
         self.subjects.all().delete()
+        self.sources.all().delete()
         self.relations.all().delete()
         self.funding_agencies.all().delete()
 
@@ -4397,6 +4392,21 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
                 terms_type.text = rel.value
+
+        # TODO: need to remove sources meta element
+        for src in self.sources.all():
+            dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
+            dc_source_rdf_Description = etree.SubElement(dc_source,
+                                                         '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_derived_from = etree.SubElement(
+                dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
+
+            # if the source value starts with 'http://' or 'https://' add value as an attribute
+            if src.derived_from.lower().find('http://') == 0 or \
+                    src.derived_from.lower().find('https://') == 0:
+                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
+            else:
+                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])

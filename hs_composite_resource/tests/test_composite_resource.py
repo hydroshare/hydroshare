@@ -900,8 +900,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a relation element of uri type
         metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
-        # add a source element of uri type
-        metadata.create_element('source', derived_from='http://hydroshare.org/resource/0001')
+
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
         metadata.create_element('subject', value='sub-2')
