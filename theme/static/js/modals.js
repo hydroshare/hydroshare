@@ -104,4 +104,18 @@ $(document).ready(function() {
     }).on('shown.bs.collapse', function () {
         $("a[data-target='#usage-info']").text("Show Less");
     });
+    $("#chk_use_existing_resource").change(function () {
+       if(this.checked) {
+           $("#select_resource_related").show();
+           $("#select_resource_related").prop('disabled', false);
+           $("#id_related_to_input").hide();
+           $("#id_related_to_input").prop('disabled', true);
+       }
+       else {
+           $("#select_resource_related").hide();
+           $("#select_resource_related").prop('disabled', true);
+           $("#id_related_to_input").show();
+           $("#id_related_to_input").prop('disabled', false);
+       }
+    });
 });
