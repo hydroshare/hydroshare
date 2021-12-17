@@ -1330,9 +1330,10 @@
                                     </div>
                                 </div>
                                 <div id="div_id_value" class="control-group">
-                                    <input id="chk_use_existing_resource" type="checkbox" style="margin-bottom: 20px;"> Relate to existing resource
                                     <label for="id_related_to_input" class="control-label requiredField">
-                                        Full text citation, URL link for, or description of the related resource
+                                         Full text citation of the related resource, including URL if there is one.
+                                        To relate to a HydroShare Resource go to the HydroShare resource landing page
+                                        'How to Cite' section and Copy Citation then paste
                                         <span class="asteriskField">*</span>
                                     </label>
 
@@ -1340,15 +1341,6 @@
                                         <input class="form-control input-sm textinput textInput"
                                                id="id_related_to_input" maxlength="500" name="value" required="required"
                                                type="text">
-                                        <select class="form-control" name="value" id="select_resource_related" style="display: none;" disabled>
-                                            <option value="">Select a resource ...</option>
-                                            <br>
-                                            {% for user_resource in current_user.uaccess.view_resources %}
-                                                {% if user_resource.short_id != cm.short_id %}
-                                                    <option value="{{ user_resource.get_citation }}">{{ user_resource.title }}</option>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </select>
                                     </div>
                                 </div>
                             </fieldset>
