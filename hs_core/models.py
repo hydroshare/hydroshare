@@ -1826,7 +1826,7 @@ class Subject(AbstractMetaDataElement):
 
 
 # TODO: Source model class needs to be deleted after metadata stored in this object is moved to Relation meta object
-@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
+# @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
