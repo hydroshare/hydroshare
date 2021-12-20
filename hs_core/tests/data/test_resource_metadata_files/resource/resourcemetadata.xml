@@ -34,11 +34,6 @@
       </rdf:Description>
     </dc:contributor>
     <dc:subject>UEB</dc:subject>
-    <dc:source>
-      <rdf:Description>
-        <hsterms:isDerivedFrom>the source</hsterms:isDerivedFrom>
-      </rdf:Description>
-    </dc:source>
     <dc:contributor>
       <rdf:Description>
         <hsterms:ORCID rdf:resource="https://orcid.org/0000-0002-1341-5681"/>
@@ -118,11 +113,6 @@
           <hsterms:isCreatedBy>sadf</hsterms:isCreatedBy>>
       </rdf:Description>
     </dc:relation>
-    <dc:source>
-      <rdf:Description>
-        <hsterms:isDerivedFrom>another</hsterms:isDerivedFrom>
-      </rdf:Description>
-    </dc:source>
     <dc:subject>Time Series</dc:subject>
     <dc:subject>value1</dc:subject>
     <dc:subject>CUAHSI</dc:subject>

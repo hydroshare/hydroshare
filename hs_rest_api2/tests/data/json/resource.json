@@ -60,10 +60,6 @@
       }
     }
   ],
-  "sources": [
-    "another",
-    "the source"
-  ],
   "relations": [
     {
       "type": "The content of this resource can be executed by",
