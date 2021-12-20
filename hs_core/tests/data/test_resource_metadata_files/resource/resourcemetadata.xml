@@ -115,7 +115,7 @@
     <dc:subject>Snow water equivalent</dc:subject>
     <dc:relation>
       <rdf:Description>
-          <dcterms:isPartOf>sadf</dcterms:isPartOf>>
+          <hsterms:isCreatedBy>sadf</hsterms:isCreatedBy>>
       </rdf:Description>
     </dc:relation>
     <dc:source>
@@ -148,7 +148,7 @@
     <dc:subject>key1</dc:subject>
     <dc:relation>
       <rdf:Description>
-          <dcterms:source>https://www.google.com</dcterms:source>
+          <hsterms:isDescribedBy>https://www.google.com</hsterms:isDescribedBy>
       </rdf:Description>
     </dc:relation>
   </hsterms:CompositeResource>
