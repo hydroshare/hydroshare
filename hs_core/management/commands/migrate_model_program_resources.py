@@ -108,8 +108,32 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING(err_msg))
                 self.stdout.flush()
 
-    def create_mp_file_type(self, file_name, file_type, mp_aggr):
+    def create_mp_file_type(self, orig_mp_file_path, file_type, mp_aggr, file_type_name, logger):
+        # Note: The *orig_mp_file_path* in the original mp resource can be just a file name (test.txt), or
+        # a short path (folder-1/test.txt) or path starting with resource file path([res_id]/data/contents/test.txt)
+        # The *orig_mp_file_path* not always includes the folder path in which the file exist. If the
+        # original mp resource has duplicate filenames (without folder path) for multiple mp file types
+        # (e.g. test.txt as 'documentation' as well as text.txt as 'release notes', then the same file will be
+        # set to multiple mp file types as part of the migration.
+        msg = "Setting file (original file path):{} as {}".format(orig_mp_file_path, file_type_name)
+        logger.info(msg)
+        self.stdout.write(self.style.SUCCESS(msg))
+
+        comp_res = mp_aggr.resource
         for aggr_file in mp_aggr.files.all():
+            file_folder = ''
+            if orig_mp_file_path.startswith(comp_res.file_path):
+                orig_mp_file_path = orig_mp_file_path[len(comp_res.file_path) + 1:]
+
+            if '/' in orig_mp_file_path:
+                file_folder, file_name = os.path.split(orig_mp_file_path)
+            else:
+                file_name = orig_mp_file_path
+
+            if file_folder:
+                if not aggr_file.file_folder == "{}/{}".format(mp_aggr.folder, file_folder):
+                    continue
+
             if aggr_file.file_name == file_name:
                 if not ModelProgramResourceFileType.objects.filter(
                         file_type=file_type,
@@ -119,6 +143,11 @@ class Command(BaseCommand):
                     ModelProgramResourceFileType.objects.create(file_type=file_type,
                                                                 res_file=aggr_file,
                                                                 mp_metadata=mp_aggr.metadata)
+
+                    msg = "File (new file path):{} was set as {}".format(aggr_file.short_path, file_type_name)
+                    logger.info(msg)
+                    self.stdout.write(self.style.SUCCESS(msg))
+
                 break
 
     def handle(self, *args, **options):
@@ -196,37 +225,29 @@ class Command(BaseCommand):
                 if mp_aggr.files.count() > 0:
                     # create mp program file types
                     file_type = ModelProgramResourceFileType.ENGINE
-                    for file_name in mp_metadata_obj.program.get_engine_list():
-                        if file_name:
-                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
-                            msg = "Setting file:{} as computational engine".format(file_name)
-                            logger.info(msg)
-                            self.stdout.write(self.style.SUCCESS(msg))
+                    for mp_file_path in mp_metadata_obj.program.get_engine_list():
+                        if mp_file_path:
+                            self.create_mp_file_type(orig_mp_file_path=mp_file_path, file_type=file_type,
+                                                     mp_aggr=mp_aggr,
+                                                     file_type_name='computational engine', logger=logger)
 
                     file_type = ModelProgramResourceFileType.SOFTWARE
                     for file_name in mp_metadata_obj.program.get_software_list():
                         if file_name:
-                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
-                            msg = "Setting file:{} as software".format(file_name)
-                            logger.info(msg)
-                            self.stdout.write(self.style.SUCCESS(msg))
+                            self.create_mp_file_type(orig_mp_file_path=file_name, file_type=file_type, mp_aggr=mp_aggr,
+                                                     file_type_name='software', logger=logger)
 
                     file_type = ModelProgramResourceFileType.DOCUMENTATION
                     for file_name in mp_metadata_obj.program.get_documentation_list():
                         if file_name:
-                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
-                            msg = "Setting file:{} as documentation".format(file_name)
-                            logger.info(msg)
-                            self.stdout.write(self.style.SUCCESS(msg))
+                            self.create_mp_file_type(orig_mp_file_path=file_name, file_type=file_type, mp_aggr=mp_aggr,
+                                                     file_type_name='documentation', logger=logger)
 
                     file_type = ModelProgramResourceFileType.RELEASE_NOTES
                     for file_name in mp_metadata_obj.program.get_releasenotes_list():
                         if file_name:
-                            self.create_mp_file_type(file_name=file_name, file_type=file_type, mp_aggr=mp_aggr)
-                            msg = "Setting file:{} as release notes".format(file_name)
-                            logger.info(msg)
-                            self.stdout.write(self.style.SUCCESS(msg))
-
+                            self.create_mp_file_type(orig_mp_file_path=file_name, file_type=file_type, mp_aggr=mp_aggr,
+                                                     file_type_name='release notes', logger=logger)
                     self.stdout.flush()
 
                 if mp_metadata_obj.program.modelReleaseDate:
