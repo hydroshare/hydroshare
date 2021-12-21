@@ -1117,6 +1117,7 @@ class AbstractLogicalFile(models.Model):
 
         res_file.logical_file_content_object = self
         res_file.save()
+        self.set_metadata_dirty()
 
     def add_files_to_resource(self, resource, files_to_add, upload_folder):
         """A helper for adding any new files to resource as part of creating an aggregation
@@ -1240,11 +1241,12 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
-        # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
-        # aggregation so that the references to the deleted aggregation can be removed
+        # if the this deleted aggregation has a parent aggregation - xml files for the parent
+        # aggregation needs to be generated so that the references to the deleted aggregation can be removed
+        # setting parent aggregation metadata dirty will regenerate xml files for parent aggregation at the time
+        # of download
         if parent_aggr is not None:
-            parent_aggr.create_aggregation_xml_documents()
-
+            parent_aggr.set_metadata_dirty()
         resource.cleanup_aggregations()
 
     def remove_aggregation(self):
@@ -1289,8 +1291,8 @@ class AbstractLogicalFile(models.Model):
                 parent_aggr.add_resource_file(res_file)
 
             # need to regenerate the xml files for the parent so that the references to this deleted aggregation
-            # can be removed from the parent xml files
-            parent_aggr.create_aggregation_xml_documents()
+            # can be removed from the parent xml files - so need to set the parent aggregation metadata to dirty
+            parent_aggr.set_metadata_dirty()
 
         post_remove_file_aggregation.send(
             sender=self.__class__,
@@ -1349,6 +1351,10 @@ class AbstractLogicalFile(models.Model):
         """Returns True if any of the contained aggregation has temporal data, otherwise False"""
         return any(child_aggr.metadata.temporal_coverage is not None for child_aggr in
                    self.get_children())
+
+    def set_metadata_dirty(self):
+        self.metadata.is_dirty = True
+        self.metadata.save()
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
@@ -1573,14 +1579,13 @@ class FileTypeContext(object):
             # set resource to private if logical file is missing required metadata
             self.resource.update_public_and_discoverable()
 
-            # generate xml files for this newly created aggregation
-            self.logical_file.create_aggregation_xml_documents()
-            # if this newly created aggregation has a parent aggregation - we have to regenerate
-            # xml files for that parent aggregation so that it can have references to this new aggregation
+            # set this new logical file metadata to dirty so that meta xml files will be generated as part of download
+            self.logical_file.set_metadata_dirty()
+
+            # if this new logical file has a parent logical file that too needs to be set to metadata dirty
             parent_aggr = self.logical_file.get_parent()
             if parent_aggr is not None:
-                parent_aggr.create_aggregation_xml_documents()
-
+                parent_aggr.set_metadata_dirty()
             if self.post_aggr_signal is not None:
                 self.post_aggr_signal.send(
                     sender=AbstractLogicalFile,
