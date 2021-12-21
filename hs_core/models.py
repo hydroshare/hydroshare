@@ -1837,6 +1837,11 @@ class Source(AbstractMetaDataElement):
         """Return derived_from field for unicode representation."""
         return self.derived_from
 
+    @classmethod
+    def create(cls, **kwargs):
+        """Overriding to prevent Source meta creation"""
+        raise ValidationError("Source metadata is no more supported")
+
 
 @rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
 class Rights(AbstractMetaDataElement):
