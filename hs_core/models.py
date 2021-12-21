@@ -950,18 +950,13 @@ class Date(AbstractMetaDataElement):
 class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
-    # TODO: remove the commented relation types
     SOURCE_TYPES = (
-        # ('isHostedBy', 'The content of this resource is hosted by'), # need to migrate it to 'source'
-        # ('isCopiedFrom', 'The content of this resource was copied from'), # need to migrate it to 'source'
         ('isPartOf', 'The content of this resource is part of'),
         ('hasPart', 'This resource includes'),
         ('isExecutedBy', 'The content of this resource can be executed by'),
         ('isCreatedBy', 'The content of this resource was created by a related App or software program'),
         ('isVersionOf', 'This resource updates and replaces a previous version'),
         ('isReplacedBy', 'This resource has been replaced by a newer version'),
-        # ('isDataFor', 'The content of this resource serves as the data for'), # need to migrate it to 'isReferencedBy'
-        # ('cites', 'This resource cites'), # need to migrate it to 'references'
         ('isDescribedBy', 'This resource is described by'),
         ('conformsTo', 'This resource conforms to established standard described by'),
         ('hasFormat', 'This resource has a related resource in another format'),
