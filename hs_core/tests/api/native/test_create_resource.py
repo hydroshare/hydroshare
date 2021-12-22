@@ -155,7 +155,6 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.org/001'}},
-            {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
             {'subject': {'value': 'sub-1'}},
             {'subject': {'value': 'sub-2'}},
             {'language': {'code': 'fre'}},
