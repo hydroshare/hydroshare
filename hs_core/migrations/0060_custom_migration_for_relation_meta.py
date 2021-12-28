@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import migrations
+from django.db import migrations, transaction
 
 # from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import set_dirty_bag_flag
@@ -15,6 +15,7 @@ def migrate_relation_meta(apps, schema_editor):
     BaseResource = apps.get_model("hs_core", "BaseResource")
     Relation = apps.get_model("hs_core", "Relation")
     Source = apps.get_model("hs_core", "Source")
+    transaction.set_autocommit(False)
     for res in BaseResource.objects.all().iterator():
         res = res.get_content_model()
         type_migrated = False
@@ -97,6 +98,7 @@ def migrate_relation_meta(apps, schema_editor):
                 log_msg = log_msg.format(res.short_id, res.resource_type)
                 log.info(log_msg)
                 print(log_msg)
+        transaction.commit()
 
 
 class Migration(migrations.Migration):
