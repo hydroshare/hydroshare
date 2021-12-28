@@ -7,6 +7,11 @@ from django.db import migrations
 from hs_core.hydroshare.utils import set_dirty_bag_flag
 
 
+def get_resource_metadata_from_resource(resource):
+    metaclass = resource.get_metadata_class()
+    return metaclass.objects.get(id=resource.object_id)
+
+
 def migrate_relation_meta(apps, schema_editor):
     """Migrates the Source metadata element to the Relation metadata element using
     relation type as 'source'. Migrates some old relation types to new types"""
@@ -21,8 +26,9 @@ def migrate_relation_meta(apps, schema_editor):
             for res in Resource.objects.all().iterator():
                 type_migrated = False
                 # migrate relation types
-                metadata_type = ContentType.objects.get_for_model(res.content_object)
-                for rel in Relation.objects.filter(object_id=res.content_object.id, content_type__pk=metadata_type.id).all():
+                res_meta_obj = get_resource_metadata_from_resource(res)
+                metadata_type = ContentType.objects.get_for_model(res_meta_obj)
+                for rel in Relation.objects.filter(object_id=res_meta_obj.id, content_type__pk=metadata_type.id).all():
                 # for rel in res.metadata.relations.all():
                     if rel.type in ('cites', 'isHostedBy', 'isDataFor', 'isCopiedFrom'):
                         old_type = rel.type
@@ -42,19 +48,19 @@ def migrate_relation_meta(apps, schema_editor):
                 # res.save()
                 # migrate source elements to relation elements
                 source_migrated = False
-                for source in Source.objects.filter(object_id=res.content_object.id, content_type__pk=metadata_type.id).all():
+                for source in Source.objects.filter(object_id=res_meta_obj.id, content_type__pk=metadata_type.id).all():
                 # for source in res.metadata.sources.all():
-                    if not Relation.objects.filter(object_id=res.content_object.id, content_type__pk=metadata_type.id, type='source',
+                    if not Relation.objects.filter(object_id=res_meta_obj.id, content_type__pk=metadata_type.id, type='source',
                                                    value=source.derived_from).exists():
                     # if not res.metadata.relations.filter(type='source', value=source.derived_from).exists():
-                        Relation.objects.create(content_object=res.content_object, type='source', value=source.derived_from)
+                        Relation.objects.create(content_object=res_meta_obj, type='source', value=source.derived_from)
                         # res.metadata.create_element('relation', type='source', value=source.derived_from)
                         source_migrated = True
 
-                if any([source_migrated, type_migrated, Relation.objects.filter(object_id=res.content_object.id,
+                if any([source_migrated, type_migrated, Relation.objects.filter(object_id=res_meta_obj.id,
                                                                                 content_type__pk=metadata_type.id,
                                                                                 type='isVersionOf').exists(),
-                        Relation.objects.filter(object_id=res.content_object.id, content_type__pk=metadata_type.id,
+                        Relation.objects.filter(object_id=res_meta_obj.id, content_type__pk=metadata_type.id,
                                                 type='isReplacedBy').exists()]):
 
                 # if any([source_migrated, type_migrated, res.metadata.relations.filter(type='isVersionOf').exists(),
@@ -77,19 +83,20 @@ def migrate_relation_meta(apps, schema_editor):
                     if res.resources.count() > 0:
                         # first delete all relation type of 'hasPart' for the collection resource
                         # res.metadata.relations.filter(type='hasPart').all().delete()
-                        Relation.objects.filter(object_id=res.content_object.id, content_type__pk=metadata_type.id,
+                        Relation.objects.filter(object_id=res_meta_obj.id, content_type__pk=metadata_type.id,
                                                 type='hasPart').all().delete()
                         # create new relation meta element of type 'hasPart' with value of citation of the resource that the
                         # collection contains
                         for res_in_collection in res.resources.all():
-                            Relation.objects.create(content_object=res.content_object, type='hasPart',
+                            Relation.objects.create(content_object=res_meta_obj, type='hasPart',
                                                     value=res_in_collection.get_citation())
                             # res.metadata.create_element("relation", type='hasPart', value=res_in_collection.get_citation())
-                            res_in_col_metadata_type = ContentType.objects.get_for_model(res_in_collection.content_object)
-                            Relation.objects.filter(object_id=res_in_collection.content_object.id,
+                            res_in_coll_meta_obj = get_resource_metadata_from_resource(res_in_collection)
+                            res_in_col_metadata_type = ContentType.objects.get_for_model(res_in_coll_meta_obj)
+                            Relation.objects.filter(object_id=res_in_coll_meta_obj.id,
                                                     content_type__pk=res_in_col_metadata_type.id).all().delete()
                             # res_in_collection.metadata.relations.filter(type='isPartOf').all().delete()
-                            Relation.objects.create(content_object=res_in_collection.content_object, type='isPartOf',
+                            Relation.objects.create(content_object=res_in_coll_meta_obj, type='isPartOf',
                                                     value=res.get_citation())
                             # res_in_collection.metadata.create_element("relation", type='isPartOf', value=res.get_citation())
                             set_dirty_bag_flag(res_in_collection)
