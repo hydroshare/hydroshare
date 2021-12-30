@@ -1784,24 +1784,33 @@ class FindGroupsView(TemplateView):
         if self.request.user.is_authenticated():
             u = User.objects.get(pk=self.request.user.id)
 
-            groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+            groups = Group.objects.filter(gaccess__active=True).exclude(
+                name="Hydroshare Author").select_related('gaccess')
             for g in groups:
-                g.is_user_member = u in g.gaccess.members
-                g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
-                    request_from=u).exists()
-                g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
-                    invitation_to=u).exists()
+                g.members = g.gaccess.members
+                g.is_user_member = u in g.members
                 g.join_request = None
-                if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                    g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                     g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                if g.is_user_member:
+                    g.join_request_waiting_owner_action = False
+                    g.join_request_waiting_user_action = False
+                else:
+                    g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(
+                        request_from=u).exists()
+                    g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(
+                        invitation_to=u).exists()
+
+                    if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                        g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                         g.gaccess.group_membership_requests.filter(invitation_to=u).first()
             return {
                 'profile_user': u,
                 'groups': groups
             }
         else:
-            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")  # active is included in this query
-
+            # active is included in this query
+            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")
+            for g in groups:
+                g.members = g.gaccess.members
             return {
                 'groups': groups
             }
