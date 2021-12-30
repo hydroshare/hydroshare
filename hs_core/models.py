@@ -7,8 +7,6 @@ import logging
 import re
 from uuid import uuid4
 
-from django.db.models.query import prefetch_related_objects, Prefetch
-
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
 from dateutil import parser
@@ -16,7 +14,6 @@ from lxml import etree
 from markdown import markdown
 
 from django_irods.icommands import SessionException
-
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
@@ -314,27 +311,15 @@ def page_permissions_page_processor(request, page):
 
     users_json = json.dumps(users_json)
 
-    is_replaced_by = ''
-    for rel in cm.metadata.relations:
-        if rel.type == 'isReplacedBy':
-            is_replaced_by = rel.value
-            break
+    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
+        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
+    else:
+        is_replaced_by = ''
 
-    # if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
-    #     is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
-    # else:
-    #     is_replaced_by = ''
-
-    is_version_of = ''
-    for rel in cm.metadata.relations:
-        if rel.type == 'isVersionOf':
-            is_version_of = rel.value
-            break
-
-    # if cm.metadata.relations.all().filter(type='isVersionOf').exists():
-    #     is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
-    # else:
-    #     is_version_of = ''
+    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
+    else:
+        is_version_of = ''
 
     permissions_allow_copy = False
     if request.user.is_authenticated:
@@ -386,11 +371,7 @@ class AbstractMetaDataElement(models.Model, RDF_Term_MixIn):
     @classmethod
     def create(cls, **kwargs):
         """Pass through kwargs to object.create method."""
-        meta_instance = cls.objects.create(**kwargs)
-        content_type = ContentType.objects.get_for_model(meta_instance)
-        ResourceMeta.objects.create(content_type=content_type, object_id=meta_instance.id,
-                                    resource=meta_instance.metadata.resource)
-        return meta_instance
+        return cls.objects.create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -1811,11 +1792,8 @@ class Subject(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         value = kwargs.get('value', None)
         if value is not None:
-            for sub in metadata_obj.subjects:
-                if sub.value.lower() == value.lower():
-                    raise ValidationError("Subject element already exists.")
-            # if metadata_obj.subjects.filter(value__iexact=value).exists():
-            #     raise ValidationError("Subject element already exists.")
+            if metadata_obj.subjects.filter(value__iexact=value).exists():
+                raise ValidationError("Subject element already exists.")
 
         return super(Subject, cls).create(**kwargs)
 
@@ -1988,13 +1966,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        for dt in self.metadata.dates:
-            if dt.type == 'modified':
-                return dt
-        return None
-
-        # return self.metadata.dates.all().filter(type='modified')[0].start_date
-
+        return self.metadata.dates.all().filter(type='modified')[0].start_date
 
     @property
     def has_required_metadata(self):
@@ -2349,27 +2321,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def metadata(self):
         """Return the metadata object for this resource."""
-        # return self.content_object
-
-        # PK - using these prefeches increased the number of queries for the resource landing page
-        # prefetch_related_objects([self.content_object],
-        #                          Prefetch('creators'),
-        #                          Prefetch('subjects'),
-        #                          Prefetch('_title'),
-        #                          Prefetch('dates'),
-        #                          Prefetch('coverages'),
-        #                          Prefetch('_rights'),
-        #                          Prefetch('citation'),
-        #                          Prefetch('sources'),
-        #                          Prefetch('relations'),
-        #                          Prefetch('funding_agencies'),
-        #                          Prefetch('_language'),
-        #                          Prefetch('_publisher'),
-        #                          Prefetch('identifiers'),
-        #                          Prefetch('citation'),
-        #                          Prefetch('_description'),
-        #                          Prefetch('formats'),
-        #                          )
         return self.content_object
 
     @classmethod
@@ -2379,11 +2330,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def first_creator(self):
         """Get first creator of resource from metadata."""
-        # first_creator = self.metadata.creators.filter(order=1).first()
-        for creator in self.metadata.creators:
-            if creator.order == 1:
-                return creator
-        return None
+        first_creator = self.metadata.creators.filter(order=1).first()
+        return first_creator
 
     def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
         """Get metadata xml for Resource.
@@ -2457,13 +2405,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     def get_custom_citation(self):
         """Get custom citation."""
-        if not self.metadata.citation:
+        if self.metadata.citation.first() is None:
             return ''
-        return str(self.metadata.citation[0])
-
-        # if self.metadata.citation.first() is None:
-        #     return ''
-        # return str(self.metadata.citation.first())
+        return str(self.metadata.citation.first())
 
     def get_citation(self):
         """Get citation or citations from resource metadata."""
@@ -2472,15 +2416,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         CITATION_ERROR = "Failed to generate citation."
 
-        first_author = self.first_creator #  self.metadata.creators.all().filter(order=1)[0]
+        first_author = self.first_creator
         if first_author.organization and not first_author.name:
             citation_str_lst.append(first_author.organization + ", ")
         else:
             citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
 
-        # other_authors = self.metadata.creators.all().filter(order__gt=1)
-        other_authors = [creator for creator in self.metadata.creators if creator.order > 1]
-
+        other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
             if author.organization and not author.name:
                 citation_str_lst.append(author.organization + ", ")
@@ -2493,55 +2435,25 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return CITATION_ERROR
 
-        citation_date = None
-        for dt in self.metadata.dates:
-            if dt.type == 'published':
-                citation_date = dt
-                break
-        if citation_date is None:
-            for dt in self.metadata.dates:
-                if dt.type == 'modified':
-                    citation_date = dt
-                    break
-        if citation_date is None:
+        if self.metadata.dates.all().filter(type='published'):
+            citation_date = self.metadata.dates.all().filter(type='published')[0]
+        elif self.metadata.dates.all().filter(type='modified'):
+            citation_date = self.metadata.dates.all().filter(type='modified')[0]
+        else:
             return CITATION_ERROR
-
-        # if self.metadata.dates.all().filter(type='published'):
-        #     citation_date = self.metadata.dates.all().filter(type='published')[0]
-        # elif self.metadata.dates.all().filter(type='modified'):
-        #     citation_date = self.metadata.dates.all().filter(type='modified')[0]
-        # else:
-        #     return CITATION_ERROR
 
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
         isPendingActivation = False
-        hs_identifier = None
-        for id in self.metadata.identifiers:
-            if id.name == 'doi':
-                hs_identifier = id
-                if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
-                    isPendingActivation = True
-                break
-
-        if hs_identifier is None:
-            for id in self.metadata.identifiers:
-                if id.name == 'hydroShareIdentifier':
-                    hs_identifier = id
-                    break
-
-        if hs_identifier is None:
+        if self.metadata.identifiers.all().filter(name="doi"):
+            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
+                isPendingActivation = True
+        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        else:
             return CITATION_ERROR
-
-        # if self.metadata.identifiers.all().filter(name="doi"):
-        #     hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-        #     if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
-        #         isPendingActivation = True
-        # elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-        #     hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        # else:
-        #     return CITATION_ERROR
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
@@ -2610,13 +2522,21 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
+        def get_file_name(res_file):
+            if self.is_federated:
+                storage_path = res_file.fed_resource_file.name
+            else:
+                storage_path = res_file.resource_file.name
+            return os.path.basename(storage_path).lower()
+
         res_files_at_root = self.files.filter(file_folder='')
         readme_txt_file = None
         readme_md_file = None
         for res_file in res_files_at_root:
-            if res_file.file_name.lower() == 'readme.md':
+            file_name = get_file_name(res_file)
+            if file_name == 'readme.md':
                 readme_md_file = res_file
-            elif res_file.file_name.lower() == 'readme.txt':
+            elif file_name == 'readme.txt':
                 readme_txt_file = res_file
             if readme_md_file is not None:
                 break
@@ -2648,7 +2568,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def logical_files(self):
         """Get a list of logical files for resource."""
         logical_files_list = []
-        for res_file in self.files.all().prefetch_related('logical_file_content_object'):
+        for res_file in self.files.all():
             if res_file.logical_file is not None:
                 if res_file.logical_file not in logical_files_list:
                     logical_files_list.append(res_file.logical_file)
@@ -2687,12 +2607,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return generic_logical_files_list
 
     def get_logical_files(self, logical_file_class_name):
-        """Get a list of logical files (aggregations) for a specified logical file class name."""
+        """Get a list of logical files (aggregations) for a specified logical file class name.
+        Other resource types that support logical file must override this.
+        """
 
-        logical_files_list = [lf for lf in self.logical_files if
-                              lf.type_name() == logical_file_class_name]
-
-        return logical_files_list
+        return []
 
     @property
     def has_logical_spatial_coverage(self):
@@ -2703,8 +2622,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def has_logical_temporal_coverage(self):
         """Checks if any of the logical files has temporal coverage"""
-        return False
-        # return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
+
+        return any(lf.metadata.temporal_coverage is not None for lf in self.logical_files)
 
     @property
     def supports_logical_file(self):
@@ -3000,7 +2919,10 @@ class ResourceFile(ResourceFileIRODSMixin):
         if self.exists:
             if delete_logical_file and self.logical_file is not None:
                 # deleting logical file metadata deletes the logical file as well
-                self.logical_file.metadata.delete()
+                logical_meta = self.logical_file.metadata
+                self.logical_file.delete()
+                logical_meta.delete()
+                # self.logical_file.metadata.delete()
             if self.fed_resource_file:
                 self.fed_resource_file.delete()
             if self.resource_file:
@@ -3875,44 +3797,21 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     _description = GenericRelation(Description)    # resource abstract
     _title = GenericRelation(Title)
-    _creators = GenericRelation(Creator)
-    _contributors = GenericRelation(Contributor)
-    _citation = GenericRelation(Citation)
-    _dates = GenericRelation(Date)
-    _coverages = GenericRelation(Coverage)
-    _formats = GenericRelation(Format)
-    _identifiers = GenericRelation(Identifier)
+    creators = GenericRelation(Creator)
+    contributors = GenericRelation(Contributor)
+    citation = GenericRelation(Citation)
+    dates = GenericRelation(Date)
+    coverages = GenericRelation(Coverage)
+    formats = GenericRelation(Format)
+    identifiers = GenericRelation(Identifier)
     _language = GenericRelation(Language)
-    _subjects = GenericRelation(Subject)
-    _sources = GenericRelation(Source)
-    _relations = GenericRelation(Relation)
+    subjects = GenericRelation(Subject)
+    sources = GenericRelation(Source)
+    relations = GenericRelation(Relation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
-    _funding_agencies = GenericRelation(FundingAgency)
-    _meta_elements = None
-
-    def refresh_from_db(self):
-        meta_elements = []
-        for rf in ResourceMeta.objects.filter(resource=self.resource).all():
-            meta_elements.append(rf.content_object)
-        self._meta_elements = meta_elements
-
-    def _get_meta(self, element_cls, multiple=False):
-        if self._meta_elements is None:
-            self.refresh_from_db()
-
-        if not multiple:
-            for meta_element in self._meta_elements:
-                if isinstance(meta_element, element_cls):
-                    return meta_element
-            return None
-
-        metas = []
-        for meta_element in self._meta_elements:
-            if isinstance(meta_element, element_cls):
-                metas.append(meta_element)
-        return metas
+    funding_agencies = GenericRelation(FundingAgency)
 
     @property
     def resource(self):
@@ -3922,101 +3821,40 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._get_meta(element_cls=Title)
-
-        # return self._title.all().first()
+        return self._title.all().first()
 
     @property
     def description(self):
         """Return the first description object from metadata."""
-        return self._get_meta(element_cls=Description)
-        # return self._description.all().first()
-
-    @property
-    def creators(self):
-        return self._get_meta(element_cls=Creator, multiple=True)
-
-    @property
-    def contributors(self):
-        return self._get_meta(element_cls=Contributor, multiple=True)
-
-    @property
-    def citation(self):
-        return self._get_meta(element_cls=Citation, multiple=True)
-
-    @property
-    def dates(self):
-        return self._get_meta(element_cls=Date, multiple=True)
-
-    @property
-    def coverages(self):
-        return self._get_meta(element_cls=Coverage, multiple=True)
-
-    @property
-    def formats(self):
-        return self._get_meta(element_cls=Format, multiple=True)
-
-    @property
-    def identifiers(self):
-        return self._get_meta(element_cls=Identifier, multiple=True)
-
-    @property
-    def subjects(self):
-        return self._get_meta(element_cls=Subject, multiple=True)
-
-    @property
-    def sources(self):
-        return self._get_meta(element_cls=Source, multiple=True)
-
-    @property
-    def relations(self):
-        return self._get_meta(element_cls=Relation, multiple=True)
-
-    @property
-    def funding_agencies(self):
-        return self._get_meta(element_cls=FundingAgency, multiple=True)
+        return self._description.all().first()
 
     @property
     def language(self):
         """Return the first _language object from metadata."""
-        return self._get_meta(element_cls=Language)
-        # return self._language.all().first()
+        return self._language.all().first()
 
     @property
     def rights(self):
         """Return the first rights object from metadata."""
-        return self._get_meta(element_cls=Rights)
-        # return self._rights.all().first()
+        return self._rights.all().first()
 
     @property
     def type(self):
         """Return the first _type object from metadata."""
-        return self._get_meta(element_cls=Type)
-        # return self._type.all().first()
+        return self._type.all().first()
 
     @property
     def publisher(self):
         """Return the first _publisher object from metadata."""
-        return self._get_meta(element_cls=Publisher)
-        # return self._publisher.all().first()
+        return self._publisher.all().first()
 
     @property
     def spatial_coverage(self):
-        coverages = self._get_meta(element_cls=Coverage, multiple=True)
-        for cov in coverages:
-            if cov.type != 'period':
-                return cov
-        return None
-        # return self.coverages.exclude(type='period').first()
+        return self.coverages.exclude(type='period').first()
 
     @property
     def temporal_coverage(self):
-        coverages = self._get_meta(element_cls=Coverage, multiple=True)
-        for cov in coverages:
-            if cov.type == 'period':
-                return cov
-        return None
-        # return self.coverages.filter(type='period').first()
+        return self.coverages.filter(type='period').first()
 
     @property
     def spatial_coverage_default_projection(self):
@@ -4200,25 +4038,28 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
-        if not self.title:
+        title = self.title
+        if title:
             return False
-        elif self.title.value.lower() == 'untitled resource':
-            return False
-
-        if not self.description:
-            return False
-        elif len(self.description.abstract.strip()) == 0:
+        elif title.value.lower() == 'untitled resource':
             return False
 
-        if len(self.creators) == 0:
+        description = self.description
+        if not description:
+            return False
+        elif len(description.abstract.strip()) == 0:
             return False
 
-        if not self.rights:
-            return False
-        elif len(self.rights.statement.strip()) == 0:
+        if self.creators.count() == 0:
             return False
 
-        if len(self.subjects) == 0:
+        rights = self.rights
+        if not rights:
+            return False
+        elif len(rights.statement.strip()) == 0:
+            return False
+
+        if self.subjects.count() == 0:
             return False
 
         return True
@@ -4250,10 +4091,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         This method needs to be overriden by any subclass of this class if that class
         has additional metadata elements
         """
-        def delete_multiple_meta_elements(meta_elements):
-            for elm in meta_elements:
-                elm.delete()
-
         if self.title:
             self.title.delete()
         if self.description:
@@ -4267,27 +4104,16 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         if self.type:
             self.type.delete()
 
-        delete_multiple_meta_elements(self.creators)
-        delete_multiple_meta_elements(self.contributors)
-        delete_multiple_meta_elements(self.dates)
-        delete_multiple_meta_elements(self.identifiers)
-        delete_multiple_meta_elements(self.coverages)
-        delete_multiple_meta_elements(self.formats)
-        delete_multiple_meta_elements(self.subjects)
-        delete_multiple_meta_elements(self.sources)
-        delete_multiple_meta_elements(self.relations)
-        delete_multiple_meta_elements(self.funding_agencies)
-
-        # self.creators.all().delete()
-        # self.contributors.all().delete()
-        # self.dates.all().delete()
-        # self.identifiers.all().delete()
-        # self.coverages.all().delete()
-        # self.formats.all().delete()
-        # self.subjects.all().delete()
-        # self.sources.all().delete()
-        # self.relations.all().delete()
-        # self.funding_agencies.all().delete()
+        self.creators.all().delete()
+        self.contributors.all().delete()
+        self.dates.all().delete()
+        self.identifiers.all().delete()
+        self.coverages.all().delete()
+        self.formats.all().delete()
+        self.subjects.all().delete()
+        self.sources.all().delete()
+        self.relations.all().delete()
+        self.funding_agencies.all().delete()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         """Copy all metadata elements from another resource."""
@@ -4893,13 +4719,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
-
-
-class ResourceMeta(models.Model):
-    resource = models.ForeignKey(BaseResource)
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
 
 
 class TaskNotification(models.Model):
