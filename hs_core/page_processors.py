@@ -29,7 +29,7 @@ def landing_page(request, page):
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
 
 
-def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
+def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None, content_model=None):
     """Inject a crispy_form layout into the page to display extended metadata.
 
     :param page: which page to get the template context for
@@ -47,19 +47,23 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 - split into two functions: get_readonly_page_context(...) and
                 get_editable_page_context(...)
     """
+
     file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
         if file_type_error:
             del request.session["file_type_error"]
 
-    content_model = page.get_content_model()
+    if content_model is None:
+        content_model = page.get_content_model()
+
     # whether the user has permission to view this resource
-    can_view = content_model.can_view(request)
-    if not can_view:
-        if user.is_authenticated():
-            raise PermissionDenied()
-        return redirect_to_login(request.path)
+    if not resource_edit:  # In view mode
+        can_view = content_model.can_view(request)
+        if not can_view:
+            if user.is_authenticated():
+                raise PermissionDenied()
+            return redirect_to_login(request.path)
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
@@ -120,7 +124,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         readme = ''
     has_web_ref = res_has_web_reference(content_model)
 
-    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects])
+    keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
 
@@ -173,7 +177,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
-
+        can_change = content_model.can_change(request)
+        can_delete = content_model.can_delete(request)
         context = {
                    'cm': content_model,
                    'resource_edit_mode': resource_edit,
@@ -183,17 +188,17 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'title': title,
                    'readme': readme,
                    'abstract': abstract,
-                   'creators': content_model.metadata.creators,
-                   'contributors': content_model.metadata.contributors,
+                   'creators': content_model.metadata.creators.all(),
+                   'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
                    'keywords': keywords,
                    'language': language,
                    'rights': content_model.metadata.rights,
-                   'sources': content_model.metadata.sources,
-                   'relations': content_model.metadata.relations,
+                   'sources': content_model.metadata.sources.all(),
+                   'relations': content_model.metadata.relations.all(),
                    'show_relations_section': show_relations_section(content_model),
-                   'fundingagencies': content_model.metadata.funding_agencies,
+                   'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': missing_metadata_elements,
                    'validation_error': validation_error if validation_error else None,
@@ -212,7 +217,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'belongs_to_collections': belongs_to_collections,
                    'show_web_reference_note': has_web_ref,
                    'current_user': user,
-                   'maps_key': maps_key
+                   'maps_key': maps_key,
+                   'page_perms_change': can_change,
+                   'page_perms_delete': can_delete,
+                   'can_be_published': content_model.can_be_published
         }
 
         return context
@@ -269,13 +277,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
-    grps_member_of = []
-    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author").select_related('gaccess')
-    # for each group set group dynamic attributes
-    for g in groups:
-        g.is_user_member = user in g.gaccess.members
-        if g.is_user_member:
-            grps_member_of.append(g)
     try:
         citation_id = content_model.metadata.citation.first().id
     except:
@@ -285,13 +286,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'cm': content_model,
                'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
-               'creators': content_model.metadata.creators,
+               'creators': content_model.metadata.creators.all(),
                'title': content_model.metadata.title,
                'readme': readme,
-               'contributors': content_model.metadata.contributors,
-               'relations': content_model.metadata.relations,
-               'sources': content_model.metadata.sources,
-               'fundingagencies': content_model.metadata.funding_agencies,
+               'contributors': content_model.metadata.contributors.all(),
+               'relations': content_model.metadata.relations.all(),
+               'sources': content_model.metadata.sources.all(),
+               'fundingagencies': content_model.metadata.funding_agencies.all(),
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
                'keywords': keywords,
@@ -320,6 +321,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'topics_json': mark_safe(escapejs(json.dumps(topics))),
                'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
                'odm2_terms': list(ODM2Variable.all()),
+               'page_perms_change': can_change,
+               'can_be_published': content_model.can_be_published
     }
 
     return context
