@@ -1,72 +1,62 @@
-import json
 import datetime
-import pytz
+import json
 import logging
 
-from drf_yasg.utils import swagger_auto_schema
-
-from django.core.mail import send_mail
+import pytz
+from autocomplete_light import shortcuts as autocomplete_light
+from django import forms
+from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
-from django.contrib import messages
-from django.utils.decorators import method_decorator
+from django.core import signing
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
+from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
+from django.db import Error, IntegrityError
+from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.core import signing
-from django.db import Error, IntegrityError
-from django import forms
+from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
-from django.core.urlresolvers import reverse
-from django.forms.models import model_to_dict
-
-from rest_framework import status
-from rest_framework.decorators import api_view
-
+from drf_yasg.utils import swagger_auto_schema
+from inplaceeditform.commons import get_dict_from_obj, apply_filters
+from inplaceeditform.views import _get_http_response, _get_adaptor
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import subject_template, send_mail_template
+from rest_framework import status
+from rest_framework.decorators import api_view
 
-from autocomplete_light import shortcuts as autocomplete_light
-from inplaceeditform.commons import get_dict_from_obj, apply_filters
-from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.icommands import SessionException
-
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     update_quota_usage as update_quota_usage_utility
-
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
+from hs_core.signals import *
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
 from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
     create_new_version_resource_task, delete_resource_task
-
-from . import resource_rest_api
-from . import resource_metadata_rest_api
-from . import user_rest_api
-from . import resource_folder_hierarchy
-
-from . import resource_access_api
-from . import resource_folder_rest_api
-from . import debug_resource_view
-from . import resource_ticket_rest_api
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from . import apps
+from . import debug_resource_view
+from . import resource_access_api
+from . import resource_folder_hierarchy
+from . import resource_folder_rest_api
+from . import resource_metadata_rest_api
+from . import resource_rest_api
+from . import resource_ticket_rest_api
+from . import user_rest_api
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 
 from hs_core.hydroshare import utils
-
-from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
-
 
 logger = logging.getLogger(__name__)
 
@@ -429,9 +419,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         if res.raccess.published:
             err_msg = err_msg.format(element_name, "Published resource needs to have at least one subject")
         else:
-            for sub in res.metadata.subjects:
-                sub.delete()
-            # res.metadata.subjects.all().delete()
+            res.metadata.subjects.all().delete()
             is_add_success = True
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
@@ -457,9 +445,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                 keywords_to_add.append(kw)
 
                         if len(keywords_to_add) > 0:
-                            for sub in res.metadata.subjects:
-                                sub.delete()
-                            # res.metadata.subjects.all().delete()
+                            res.metadata.subjects.all().delete()
                             for kw in keywords_to_add:
                                 res.metadata.create_element(element_name, value=kw)
                         is_add_success = True
@@ -489,8 +475,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            res.metadata.refresh_from_db()
-
             res_public_status = 'public' if res.raccess.public else 'not public'
             res_discoverable_status = 'discoverable' if res.raccess.discoverable \
                 else 'not discoverable'
@@ -563,10 +547,10 @@ def get_resource_metadata(request, shortkey, *args, **kwargs):
     else:
         res_metadata['abstract'] = None
     creators = []
-    for creator in resource.metadata.creators:
+    for creator in resource.metadata.creators.all():
         creators.append(model_to_dict(creator))
     res_metadata['creators'] = creators
-    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects]
+    res_metadata['keywords'] = [sub.value for sub in resource.metadata.subjects.all()]
     res_metadata['spatial_coverage'] = get_coverage_data_dict(resource)
     res_metadata['temporal_coverage'] = get_coverage_data_dict(resource, coverage_type='temporal')
     return JsonResponse(res_metadata, status=200)
@@ -616,8 +600,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            res.metadata.refresh_from_db()
-
             res_public_status = 'public' if res.raccess.public else 'not public'
             res_discoverable_status = 'discoverable' if res.raccess.discoverable \
                 else 'not discoverable'
@@ -689,7 +671,6 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     res.metadata.delete_element(element_name, element_id)
-    res.metadata.refresh_from_db()
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
@@ -700,7 +681,6 @@ def delete_author(request, shortkey, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     try:
         res.metadata.delete_element('creator', element_id)
-        res.metadata.refresh_from_db()
         resource_modified(res, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'message': "Author was deleted successfully"}
     except Error as exp:
@@ -750,15 +730,9 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
     if usertext != "DELETE":
         return HttpResponse("'usertext' path parameter must be provided with value 'DELETE'",
                             status=status.HTTP_400_BAD_REQUEST)
-
-    for rel in res.metadata.relations:
-        if rel.type == 'isReplacedBy':
-            return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
-                                status=status.HTTP_400_BAD_REQUEST)
-
-    # if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-    #     return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
-    #                         status=status.HTTP_400_BAD_REQUEST)
+    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+        return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
+                            status=status.HTTP_400_BAD_REQUEST)
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
@@ -769,6 +743,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             res.set_discoverable(False)
             task = delete_resource_task.apply_async((shortkey, user.username))
             task_id = task.task_id
+
         task_dict = get_or_create_task_notification(task_id, name='resource delete', payload=shortkey,
                                                     username=user.username)
         pre_delete_resource.send(sender=type(res), request=request, user=user,
