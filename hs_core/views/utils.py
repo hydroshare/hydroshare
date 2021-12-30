@@ -370,10 +370,13 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     """
     authorized = False
     user = get_user(request)
-    try:
-        res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
-    except ObjectDoesNotExist:
-        raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    if isinstance(res_id, str):
+        try:
+            res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
+        except ObjectDoesNotExist:
+            raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    else:
+        res = res_id
 
     if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
         if res.raccess.discoverable or res.raccess.public:
