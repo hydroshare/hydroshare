@@ -152,7 +152,8 @@ class GroupAccess(models.Model):
         """
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
-                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW).select_related('uaccess')
+                                   u2ugp__privilege__lte=PrivilegeCodes.VIEW).select_related('uaccess').\
+            select_related('userprofile')
 
     @property
     def viewers(self):
