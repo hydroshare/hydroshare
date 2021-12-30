@@ -41,58 +41,40 @@ class CompositeResource(BaseResource):
         """A generator that returns each of the logical files of this resource"""
 
         for lf in LogicalFile.objects.filter(resource=self).all():
+            # this is going to be a separate query
             yield lf.content_object
 
-        # for lf in self.filesetlogicalfile_set.all().prefetch_related('files'):
-        #     yield lf
-        # for lf in self.genericlogicalfile_set.all().prefetch_related('files'):
-        #     yield lf
-        # for lf in self.geofeaturelogicalfile_set.all():
-        #     yield lf
-        # for lf in self.netcdflogicalfile_set.all():
-        #     yield lf
-        # for lf in self.georasterlogicalfile_set.all():
-        #     yield lf
-        # for lf in self.reftimeserieslogicalfile_set.all():
-        #     yield lf
-        # for lf in self.timeserieslogicalfile_set.all():
-        #     yield lf
-        # for lf in self.modelprogramlogicalfile_set.all():
-        #     yield lf
-        # for lf in self.modelinstancelogicalfile_set.all():
-        #     yield lf
+    def get_logical_files(self, logical_file_class_name):
+        """Get a list of logical files (aggregations) for a specified logical file class name."""
 
-    # def get_logical_files(self, logical_file_class_name):
-    #     """Get a list of logical files (aggregations) for a specified logical file class name."""
-    #
-    #     if logical_file_class_name == "GenericLogicalFile":
-    #         return self.genericlogicalfile_set.all().prefetch_related('metadata')
-    #
-    #     if logical_file_class_name == "NetCDFLogicalFile":
-    #         return self.netcdflogicalfile_set.all().prefetch_related('metadata')
-    #
-    #     if logical_file_class_name == "GeoRasterLogicalFile":
-    #         return self.georasterlogicalfile_set.all()
-    #
-    #     if logical_file_class_name == "GeoFeatureLogicalFile":
-    #         return self.geofeaturelogicalfile_set.all()
-    #
-    #     if logical_file_class_name == "FileSetLogicalFile":
-    #         return self.filesetlogicalfile_set.all()
-    #
-    #     if logical_file_class_name == "ModelProgramLogicalFile":
-    #         return self.modelprogramlogicalfile_set.all()
-    #
-    #     if logical_file_class_name == "ModelInstanceLogicalFile":
-    #         return self.modelinstancelogicalfile_set.all()
-    #
-    #     if logical_file_class_name == "TimeSeriesLogicalFile":
-    #         return self.timeserieslogicalfile_set.all().prefetch_related('metadata')
-    #
-    #     if logical_file_class_name == "RefTimeseriesLogicalFile":
-    #         return self.reftimeserieslogicalfile_set.all()
-    #
-    #     raise Exception("Invalid logical file type:{}".format(logical_file_class_name))
+        if logical_file_class_name == "GenericLogicalFile":
+            return self.genericlogicalfile_set.all()
+
+        if logical_file_class_name == "NetCDFLogicalFile":
+            return self.netcdflogicalfile_set.all()
+
+        if logical_file_class_name == "GeoRasterLogicalFile":
+            return self.georasterlogicalfile_set.all()
+
+        if logical_file_class_name == "GeoFeatureLogicalFile":
+            return self.geofeaturelogicalfile_set.all()
+
+        if logical_file_class_name == "FileSetLogicalFile":
+            return self.filesetlogicalfile_set.all()
+
+        if logical_file_class_name == "ModelProgramLogicalFile":
+            return self.modelprogramlogicalfile_set.all()
+
+        if logical_file_class_name == "ModelInstanceLogicalFile":
+            return self.modelinstancelogicalfile_set.all()
+
+        if logical_file_class_name == "TimeSeriesLogicalFile":
+            return self.timeserieslogicalfile_set.all().prefetch_related('metadata')
+
+        if logical_file_class_name == "RefTimeseriesLogicalFile":
+            return self.reftimeserieslogicalfile_set.all()
+
+        raise Exception("Invalid logical file type:{}".format(logical_file_class_name))
 
 
     @property
