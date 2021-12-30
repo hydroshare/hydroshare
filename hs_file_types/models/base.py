@@ -1197,6 +1197,13 @@ class AbstractLogicalFile(models.Model):
     def delete(self, using=None, keep_parents=False):
         """Overriding the django model delete() here so that subclasses can do further
         override if needed"""
+        content_type = ContentType.objects.get_for_model(self)
+        try:
+            lf = LogicalFile.objects.get(content_type=content_type, object_id=self.id)
+            lf.delete()
+        except LogicalFile.DoesNotExist:
+            pass
+
         super(AbstractLogicalFile, self).delete()
 
     def logical_delete(self, user, delete_res_files=True):
