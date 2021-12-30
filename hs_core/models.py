@@ -168,7 +168,7 @@ class ResourcePermissionsMixin(Ownable):
         """Use utils.authorize method to determine if user can delete a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-        return authorize(request, self.short_id,
+        return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                          raises_exception=False)[1]
 
@@ -176,7 +176,7 @@ class ResourcePermissionsMixin(Ownable):
         """Use utils.authorize method to determine if user can change a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-        return authorize(request, self.short_id,
+        return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                          raises_exception=False)[1]
 
@@ -184,7 +184,7 @@ class ResourcePermissionsMixin(Ownable):
         """Use utils.authorize method to determine if user can view a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-        return authorize(request, self.short_id,
+        return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
                          raises_exception=False)[1]
 
