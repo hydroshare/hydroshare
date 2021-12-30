@@ -1,15 +1,39 @@
 import logging
+import os
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import migrations
 
 # from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import set_dirty_bag_flag
+# from hs_core.hydroshare.utils import set_dirty_bag_flag
+from django_irods.storage import IrodsStorage
+from hs_core.models import CoreMetaData, FedStorage
 
 
 def get_resource_metadata_from_resource(resource):
-    metaclass = resource.get_metadata_class()
-    return metaclass.objects.get(id=resource.object_id)
+    # metaclass = resource.get_metadata_class()
+    return CoreMetaData.objects.get(id=resource.object_id)
+
+
+def is_federated(resource):
+    """Return existence of resource_federation_path."""
+    return resource.resource_federation_path is not None and \
+        resource.resource_federation_path != ''
+
+
+def set_dirty_bag_flag(resource):
+    if resource.resource_federation_path:
+        istorage = FedStorage()
+    else:
+        istorage = IrodsStorage()
+
+    if is_federated(resource):
+        res_coll = os.path.join(resource.resource_federation_path, resource.short_id)
+    else:
+        res_coll = resource.short_id
+
+    istorage.setAVU(res_coll, "bag_modified", "true")
+    istorage.setAVU(res_coll, "metadata_dirty", "true")
 
 
 def migrate_relation_meta(apps, schema_editor):
