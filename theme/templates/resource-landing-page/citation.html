@@ -43,7 +43,7 @@
                   });
                 </script>
             </div>
-            {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
+            {% if self_access_level == 'owner' and not cm.raccess.published and can_be_published %}
             <br />
             <div class="citation-description">
                 <em>
@@ -90,7 +90,7 @@
                 {% endif %}
             {% else %}
                 <div class="row">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ rights.id }}/update-metadata/"#}
                           id="id-rights" method="post">
                         {% csrf_token %}
                         <fieldset>
@@ -109,17 +109,17 @@
                                     <option value="other">Other</option>
                                 </select>
                                 <img id="img-badge" class="cc-image"
-                                        {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                                        {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
                                      src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
-                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
                                      src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
-                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
                                      src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
-                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
                                      src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
-                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
                                      src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
-                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
                                      src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
                                         {% endif %}/>
                             </div>
@@ -129,7 +129,7 @@
 
                                     <div class="controls">
                                             <textarea class="form-control input-sm textarea" cols="40"
-                                                      id="id_statement" name="statement" readonly="True">{{ cm.metadata.rights.statement }}</textarea>
+                                                      id="id_statement" name="statement" readonly="True">{{ rights.statement }}</textarea>
                                     </div>
                                 </div>
                                 <div id="div_id_url" class="control-group">
@@ -138,7 +138,7 @@
                                     <div class="controls">
                                         <input class="form-control input-sm urlinput" id="id_url"
                                                maxlength="200" name="url" readonly="True" type="url"
-                                               value={{ cm.metadata.rights.url }}>
+                                               value={{ rights.url }}>
                                     </div>
                                 </div>
 

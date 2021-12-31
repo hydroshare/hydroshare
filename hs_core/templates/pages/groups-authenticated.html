@@ -55,7 +55,7 @@
                                     {% if group.gaccess.public %}
                                         <div class="users-joined height-fix">
                                             <div class="link-members"><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
-                                            {% for member in group.gaccess.members|slice:":5" %}
+                                            {% for member in group.members|slice:":5" %}
                                                 {% if  member.userprofile.picture and member.userprofile.picture.url %}
                                                     <div style="background-image: url('{{ member.userprofile.picture.url }}');"
                                                          class="round-image profile-pic-thumbnail"
@@ -67,9 +67,9 @@
                                                 {% endif %}
                                             {% endfor %}
                                         </div>
-                                        {% if group.gaccess.members|length > 5 %}
+                                        {% if group.members|length > 5 %}
                                             <div>
-                                                <small class="text-muted">and {{ group.gaccess.members|length|add:"-5" }} others have joined</small>
+                                                <small class="text-muted">and {{ group.members|length|add:"-5" }} others have joined</small>
                                             </div>
                                         {% endif %}
 
@@ -89,7 +89,7 @@
                                                         <table class="table access-table members-table"
                                                                style="text-align: left;">
                                                             <tbody>
-                                                            {% for u in group.gaccess.members %}
+                                                            {% for u in group.members %}
                                                                 <tr id="row-id-{{ u.pk }}"
                                                                     {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
                                                                     <td>

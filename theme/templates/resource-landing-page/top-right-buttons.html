@@ -87,11 +87,11 @@
                         {% endif %}
                     {% endif %}
                 {% endif %}
-                {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
+                {% if page_perms_change or self_access_level == 'owner' and cm.raccess.published %}
                     <form action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
 
-                        {% if page.perms.delete or cm.raccess.published %}
+                        {% if page_perms_delete or cm.raccess.published %}
                             <a id="new-version" {% if cm.locked_time is None %}data-toggle="modal"{% endif %}
                                data-target="#new-version-resource-dialog"
                                {% if cm.locked_time is not None %}class="disabled"{% endif %}>
@@ -101,7 +101,7 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.delete and cm.can_be_published %}
+                        {% if page_perms_delete and can_be_published %}
                             <a id="publish" {% if cm.raccess.public %}data-toggle="modal"{% endif %}
                                data-target="#submit-for-publication-dialog"
                                {% if not cm.raccess.public %}class="disabled"{% endif %}>
@@ -117,14 +117,14 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.change or cm.raccess.published %}
+                        {% if page_perms_change or cm.raccess.published %}
                             <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="bottom"
                                     title="Edit this resource"
                                     class="glyphicon glyphicon-pencil icon-button icon-blue"></button>
                         {% endif %}
 
-                        {% if page.perms.delete %}
+                        {% if page_perms_delete %}
                             <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="bottom" title="Delete this resource"
                                       class="glyphicon glyphicon-trash icon-button btn-remove"></span>

@@ -171,9 +171,7 @@
 {% endblock %}
 
 {% block main %}
-    {% keywords_for page as kws %}
-    {% set_page_permissions page %}
-    {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+    {% if resource_edit_mode and not cm.raccess.published %}
     {% csrf_token %}
     {% endif %}
 
@@ -197,7 +195,7 @@
         {% include "includes/profile-card.html" %}
 
         {%  block modal %}
-            {% include "resource-landing-page/modals.html" %}
+            {% include "resource-landing-page/modals.html" with page_perms_delete=page_perms_delete page_perms_change=page_perms_change resource_edit_mode=resource_edit_mode can_be_published=can_be_published %}
             {% include "includes/author-preview.html" %}
             {% include "resource-landing-page/coordinates_picker.html" %}
         {%  endblock %}
@@ -206,7 +204,7 @@
         {% include "resource-landing-page/title-section.html" %}
 
         {# ======= Top-right buttons ======= #}
-        {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access %}
+        {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access page_perms_change=page_perms_change can_be_published=can_be_published %}
 
         {# ======= Title and header content ======= #}
         {% include "resource-landing-page/resource-header.html" %}
@@ -236,7 +234,7 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+                {% if resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "CompositeResource" %}
                         <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
                             <span class="fa fa-scissors icon-blue"></span>
@@ -301,7 +299,7 @@
                     <span class="fa fa-external-link icon-blue"></span>
                     <span>Open referenced URL</span>
                 </li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" %}
+                {% if resource_edit_mode and cm.resource_type == "CompositeResource" %}
                     <li data-fb-action="updateRefUrl"
                         data-toggle="modal" data-target="#edit-referenced-url-dialog">
                         <span class="glyphicon glyphicon-pencil icon-blue"></span>
@@ -309,7 +307,7 @@
                     </li>
                 {% endif %}
                 <li id="content-type-separator" role="separator" class="divider"></li>
-                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published %}
+                {% if resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published %}
                     {# ADD METADATA TO A FILE #}
                     <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
                         <i class="fa fa-plus icon-green" aria-hidden="true"></i>
@@ -394,7 +392,7 @@
 
             {# POPUP MENU - Right clicking empty space in file browser #}
             <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+                {% if resource_edit_mode and not cm.raccess.published %}
                     {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                             data-fb-action="createFolder"
@@ -429,7 +427,7 @@
 
             <div class="col-xs-12 content-block">
                 <h3>Content</h3>
-                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                {% if resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published or current_user.is_superuser %}
                         <div class="alert alert-info alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -464,7 +462,7 @@
                     </div>
                 </div>
 
-                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                {% if resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published or current_user.is_superuser %}
                         <div id="fb-alerts">
                             <div class="alert alert-warning alert-dismissible" role="alert">
@@ -488,7 +486,7 @@
                    {% endif %}
                 {% endif %}
 
-                {% if page.perms.change and resource_edit_mode %}
+                {% if resource_edit_mode %}
                     {% if file_type_error %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button id="validation-error-close" type="button" class="close"
@@ -536,7 +534,7 @@
                     {# ======= Modal window ends =======#}
 
                     <div id="hs-file-browser" data-current-path=""
-                         {% if page.perms.change and resource_edit_mode %}
+                         {% if resource_edit_mode %}
                              data-mode="edit"
                          {% else %}
                             data-mode="view"
@@ -635,7 +633,7 @@
                                     </div>
                                     <div class="row">
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
-                                            {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                            {% if resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published or current_user.is_superuser %}
                                                     <a type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
@@ -681,7 +679,7 @@
                                                 {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published %}
+                                            {% if resource_edit_mode and not cm.raccess.published %}
                                                 {% if cm.resource_type == "ModelProgramResource" or cm.resource_type == "MODFLOWModelInstanceResource" or cm.resource_type == "SWATModelInstanceResource" or cm.resource_type == "ModelInstanceResource" or cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-create-folder" class="disabled"
                                                             data-fb-action="createFolder" data-toggle="modal"
@@ -735,7 +733,7 @@
                                                 {% endif %}
                                             {% endif %}
 
-                                            {% if page.perms.change and resource_edit_mode %}
+                                            {% if resource_edit_mode %}
                                                 {% if not cm.raccess.published or current_user.is_superuser %}
                                                     <button id="fb-delete" data-fb-action="delete"
                                                             class="disabled fb-space-right"
@@ -809,7 +807,7 @@
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
                                     <form id="hsDropzone"
-                                          class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published or cm.raccess.published and current_user.is_superuser %}dropzone{% endif %}"
+                                          class="files-container h-100 ui-widget-content {% if resource_edit_mode and not cm.raccess.published or cm.raccess.published and current_user.is_superuser %}dropzone{% endif %}"
                                           action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
                                           method="POST">
                                         {% csrf_token %}
@@ -835,7 +833,7 @@
                                         </ul>
                                     </form>
 
-                                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                    {% if resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published or current_user.is_superuser %}
                                             <div class="fb-upload-caption ">
                                                 <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
@@ -875,7 +873,7 @@
                                 {% endif %}
                             </div>
 
-                            {% if page.perms.change and resource_edit_mode %}
+                            {% if resource_edit_mode %}
                                 {% if not cm.raccess.published or current_user.is_superuser %}
                                     <form id="fb-delete-files-form" class="hidden"
                                           action="/hsapi/_internal/{{ cm.short_id }}/delete-multiple-files/"
@@ -961,9 +959,9 @@
 
         {# ======= Citation ======= #}
         {% if resource_edit_mode and not cm.raccess.published %}
-            {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+            {% include "resource-landing-page/citation.html" with resource_mode="edit" can_be_published=can_be_published %}
         {% else %}
-            {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+            {% include "resource-landing-page/citation.html" with resource_mode="view" can_be_published=can_be_published %}
         {% endif %}
 
         {# ======= Comments ======= #}
@@ -972,7 +970,6 @@
 {% endblock %}
 
 {% block extra_js %}
-    {% set_page_permissions page %}
     {{ block.super }}
     <script>
       {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
@@ -991,7 +988,7 @@
       const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
-      const CAN_CHANGE = "{{ page.perms.change }}" === "True";
+      const CAN_CHANGE = "{{ resource_edit_mode }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
       const FILE_COUNT = {{ cm.files.all.count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";

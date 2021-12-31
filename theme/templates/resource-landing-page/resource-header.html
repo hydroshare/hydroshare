@@ -93,16 +93,18 @@
                     <th>Citation:</th>
                     <td><a href="#citation">See how to cite this resource</a></td>
                 </tr>
-                {% if cm.resource_type == "CompositeResource" and cm.aggregation_types %}
+                {% with aggregation_types=cm.aggregation_types %}
+                {% if cm.resource_type == "CompositeResource" and aggregation_types %}
                 <tr>
                     <th>Content types:</th>
                     <td>
-                        {% for ct in cm.aggregation_types %}
+                        {% for ct in aggregation_types %}
                             <span class="label label-info agg-{{ ct|display_name_to_class }}">{{ ct }}</span>&nbsp;
                         {% endfor %}
                     </td>
                 </tr>
                 {% endif %}
+                {% endwith %}
             </table>
 
             <edit-author-modal v-if="res_mode === 'Edit'"

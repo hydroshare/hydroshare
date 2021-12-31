@@ -250,7 +250,8 @@
                             {# Date Created #}
                             <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
-                            <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
+                            {% with last_updated=res.last_updated %}
+                            <td>{{ last_updated|date:"M d, Y" }} at {{ last_updated|time }}</td>
                             <td>
                                 {% for kw in res.metadata.subjects.all %}
                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
@@ -283,7 +284,8 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.last_updated|date:"U" }}</td>
+                            <td>{{ last_updated|date:"U" }}</td>
+                           {% endwith %}
                             <td>
                                 {% if res.raccess.published %}
                                     Published
