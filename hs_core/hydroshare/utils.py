@@ -114,24 +114,29 @@ def user_from_id(user, raise404=True):
     if isinstance(user, User):
         return user
 
-    try:
-        tgt = User.objects.get(username=user)
-    except ObjectDoesNotExist:
+    tgt = None
+    if str(user).isnumeric():
         try:
-            tgt = User.objects.get(email=user)
+            tgt = User.objects.get(pk=int(user))
+        except ValueError:
+            pass
+        except ObjectDoesNotExist:
+            pass
+    else:
+        try:
+            tgt = User.objects.get(username__iexact=user)
         except ObjectDoesNotExist:
             try:
-                tgt = User.objects.get(pk=int(user))
-            except ValueError:
-                if raise404:
-                    raise Http404('User not found')
-                else:
-                    raise User.DoesNotExist
+                tgt = User.objects.get(email__iexact=user)
             except ObjectDoesNotExist:
-                if raise404:
-                    raise Http404('User not found')
-                else:
-                    raise
+                pass
+
+    if tgt is None:
+        if raise404:
+            raise Http404('User not found')
+        else:
+            raise
+
     return tgt
 
 

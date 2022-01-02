@@ -1,14 +1,14 @@
 """Page processors for hs_core app."""
 
+import json
+
 from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
-from .forms import ExtendedMetadataForm
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -16,9 +16,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
-import json
-
 from hs_odm2.models import ODM2Variable
+from .forms import ExtendedMetadataForm
 
 
 @processor_for(GenericResource)

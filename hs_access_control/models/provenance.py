@@ -23,6 +23,8 @@ class ProvenanceBase(models.Model):
     called from the specific "provenance" classes when needed.
     """
 
+    exhibit = models.BooleanField(default=False)  # whether to exhibit the result as a product
+
     class Meta:
         abstract = True
 
@@ -339,7 +341,10 @@ class UserGroupProvenance(ProvenanceBase):
                                 related_name='x2ugq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('user', 'group', 'start')
@@ -442,7 +447,15 @@ class UserResourceProvenance(ProvenanceBase):
                                 related_name='x2urq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('user', 'resource', 'start')
@@ -475,7 +488,7 @@ class UserResourceProvenance(ProvenanceBase):
         return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
 
     @classmethod
-    def update(cls, resource, user, privilege, grantor, undone=False):
+    def update(cls, resource, user, privilege, grantor, undone=False, exhibit=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -494,7 +507,8 @@ class UserResourceProvenance(ProvenanceBase):
                                                   user=user,
                                                   privilege=privilege,
                                                   grantor=grantor,
-                                                  undone=undone)
+                                                  undone=undone,
+                                                  exhibit=exhibit)
 
 
 class GroupResourceProvenance(ProvenanceBase):
@@ -542,7 +556,15 @@ class GroupResourceProvenance(ProvenanceBase):
                                 related_name='x2grq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('group', 'resource', 'start')
@@ -578,7 +600,7 @@ class GroupResourceProvenance(ProvenanceBase):
         return Group.objects.filter(pk__in=selected)
 
     @classmethod
-    def update(cls, resource, group, privilege, grantor, undone=False):
+    def update(cls, resource, group, privilege, grantor, undone=False, exhibit=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -594,7 +616,8 @@ class GroupResourceProvenance(ProvenanceBase):
                                                    group=group,
                                                    privilege=privilege,
                                                    grantor=grantor,
-                                                   undone=undone)
+                                                   undone=undone,
+                                                   exhibit=exhibit)
 
 
 class UserCommunityProvenance(ProvenanceBase):
@@ -639,7 +662,10 @@ class UserCommunityProvenance(ProvenanceBase):
                                 related_name='x2ucq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('community', 'user', 'start')
@@ -747,7 +773,10 @@ class GroupCommunityProvenance(ProvenanceBase):
                                 related_name='x2gcq',
                                 help_text='grantor of privilege')
 
-    undone = models.BooleanField(editable=False, default=False)
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
 
     class Meta:
         unique_together = ('community', 'group', 'start')
@@ -811,3 +840,120 @@ class GroupCommunityProvenance(ProvenanceBase):
                                                     privilege=privilege,
                                                     grantor=grantor,
                                                     undone=undone)
+
+
+class CommunityResourceProvenance(ProvenanceBase):
+    """
+    Provenance of privileges of a community over a resource
+
+    Having any community privilege over a resource is synonymous with membership.
+
+    This is an append-only ledger of community privilege that serves as complete provenance
+    of access changes.  At any time, one privilege applies to each grantee and community.
+    This is the privilege with the latest start date.  For performance reasons, this
+    information is cached in a separate table CommunityResourcePrivilege.
+
+    To undo a privilege, one appends a record to this table with PrivilegeCodes.NONE.
+    This is indistinguishable from having no record at all.  Thus, this provides a
+    complete time-based journal of what privilege was in effect when.
+
+    An "undone" field allows one-step undo but prohibits further undo.
+
+    """
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now_add=True)
+
+    resource = models.ForeignKey(BaseResource,
+                                  null=False,
+                                  editable=False,
+                                  related_name='r2crq',
+                                  help_text='community to be granted privilege')
+
+    community = models.ForeignKey(Community,
+                                  null=False,
+                                  editable=False,
+                                  related_name='c2crq',
+                                  help_text='community to which privilege applies')
+
+    grantor = models.ForeignKey(User,
+                                null=True,
+                                editable=False,
+                                related_name='x2crq',
+                                help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    undone = models.BooleanField(editable=False,
+                                 default=False,
+                                 null=False,
+                                 help_text='already undone by undo')
+
+    class Meta:
+        unique_together = ('resource', 'community', 'start')
+
+    @property
+    def grantee(self):
+        """ make printing of privilege records work properly in superclass"""
+        return self.resource
+
+    @property
+    def entity(self):
+        """ make printing of privilege records work properly in superclass"""
+        return self.community
+
+    @classmethod
+    def get_undo_resources(cls, community, grantor):
+        """
+        get the communities for which a specific grantee can undo privilege
+
+        :param community: community to check.
+        :param grantor: user that would initiate the rollback.
+
+        Note: undo is somewhat independent of access control. A user need not hold
+        a privilege to undo a privilege that was previously granted.
+        """
+
+        if __debug__:
+            assert isinstance(grantor, User)
+            assert isinstance(community, Community)
+
+        # users are those last granted a privilege over the entity by the grantor
+        # This syntax is curious due to undesirable semantics of .exclude.
+        # All conditions on the filter must be specified in the same filter statement.
+        selected = BaseResource.objects.filter(r2crq__community=community)\
+                                       .annotate(start=Max('r2crq__start'))\
+                                       .filter(r2crq__start=F('start'),
+                                               r2crq__grantor=grantor,
+                                               r2crq__undone=False)
+        return selected
+
+    @classmethod
+    def update(cls, community, resource, privilege, grantor, undone=False, exhibit=False):
+        """
+        Add a provenance record to the provenance chain.
+
+        :param community: shared community
+        :param resource: resource with which community is shared.
+        :param grantor: user that would initiate the rollback.
+
+        This is just a wrapper around ProvenanceBase.update that makes parameters explicit.
+        """
+
+        if __debug__:
+            assert isinstance(community, Community)
+            assert isinstance(resource, BaseResource)
+            assert grantor is None or isinstance(grantor, User)
+            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+
+        super(CommunityResourceProvenance, cls).update(community=community,
+                                                       resource=resource,
+                                                       privilege=privilege,
+                                                       grantor=grantor,
+                                                       undone=undone,
+                                                       exhibit=exhibit)

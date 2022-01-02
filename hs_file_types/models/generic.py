@@ -270,7 +270,7 @@ class GenericLogicalFile(AbstractLogicalFile):
     def get_primary_resouce_file(cls, resource_files):
         """Gets any resource file as the primary file  from the list of files *resource_files* """
 
-        return resource_files[0]
+        return resource_files[0] if resource_files else None
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(GenericLogicalFile, self).create_aggregation_xml_documents(create_map_xml)

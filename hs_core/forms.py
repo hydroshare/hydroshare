@@ -879,17 +879,21 @@ class CoverageTemporalForm(forms.Form):
         super(CoverageTemporalForm, self).clean()
         start_date = self.cleaned_data.get('start', None)
         end_date = self.cleaned_data.get('end', None)
-        if not start_date:
-            self._errors['start'] = ["Data for start date is missing"]
+        if self.errors:
+            self.errors.clear()
+
+        if start_date is None:
+            self.add_error('start', "Data for start date is missing")
             is_form_errors = True
 
-        if not end_date:
-            self._errors['end'] = ["Data for end date is missing"]
+        if end_date is None:
+            self.add_error('end', "Data for end date is missing")
             is_form_errors = True
 
-        if start_date > end_date:
-            self._errors['end'] = ["End date should be date after the start date"]
-            is_form_errors = True
+        if not is_form_errors:
+            if start_date > end_date:
+                self.add_error('end', "End date should be a date after the start date")
+                is_form_errors = True
 
         if is_form_errors:
             return self.cleaned_data
@@ -965,8 +969,6 @@ class CoverageSpatialForm(forms.Form):
                                                 file_type=file_type)
         self.number = 0
         self.delete_modal_form = None
-        if self.errors:
-            self.errors.clear()
         if res_short_id:
             self.action = "/hsapi/_internal/%s/coverage/add-metadata/" % res_short_id
         else:
@@ -1009,14 +1011,12 @@ class CoverageSpatialForm(forms.Form):
             north = temp_cleaned_data.get('north', None)
             east = temp_cleaned_data.get('east', None)
             if not north and north != 0:
-                self._errors['north'] = ["Data for north is missing"]
+                self.add_error('north', "Data for longitude is missing")
                 is_form_errors = True
-                del self.cleaned_data['north']
 
             if not east and east != 0:
-                self._errors['east'] = ["Data for east is missing"]
+                self.add_error('east', "Data for latitude is missing")
                 is_form_errors = True
-                del self.cleaned_data['east']
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1045,13 +1045,14 @@ class CoverageSpatialForm(forms.Form):
             if 'elevation' in temp_cleaned_data:
                 del temp_cleaned_data['elevation']
 
-            for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            box_fields_map = {"northlimit": "north latitude", "southlimit": "south latitude",
+                              "eastlimit": "east longitude", "westlimit": "west longitude"}
+            for limit in box_fields_map.keys():
                 limit_data = temp_cleaned_data.get(limit, None)
                 # allow value of 0 to go through
                 if not limit_data and limit_data != 0:
-                    self._errors[limit] = ["Data for %s is missing" % limit]
+                    self.add_error(limit, "Data for %s is missing" % box_fields_map[limit])
                     is_form_errors = True
-                    del self.cleaned_data[limit]
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1073,9 +1074,9 @@ class CoverageSpatialForm(forms.Form):
         self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
 
         if 'northlimit' in self.cleaned_data:
-                del self.cleaned_data['northlimit']
+            del self.cleaned_data['northlimit']
         if 'eastlimit' in self.cleaned_data:
-                del self.cleaned_data['eastlimit']
+            del self.cleaned_data['eastlimit']
         if 'southlimit' in self.cleaned_data:
             del self.cleaned_data['southlimit']
         if 'westlimit' in self.cleaned_data:

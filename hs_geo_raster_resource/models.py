@@ -10,7 +10,7 @@ from mezzanine.pages.page_processors import processor_for
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
 from rdflib import BNode, RDF, Literal
 
-from hs_core.hs_rdf import HSTERMS
+from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
@@ -19,6 +19,7 @@ from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 # extended metadata for raster resource type to store the original box type coverage
 # since the core metadata coverage stores the converted WGS84 geographic coordinate
 # system projection coverage, see issue #210 on github for details
+@rdf_terms(HSTERMS.spatialReference)
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -114,7 +115,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     def rdf_triples(self, subject, graph):
         original_coverage = BNode()
-        graph.add((subject, HSTERMS.spatialReference, original_coverage))
+        graph.add((subject, self.get_class_term(), original_coverage))
         graph.add((original_coverage, RDF.type, HSTERMS.box))
         value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
         graph.add((original_coverage, RDF.value, Literal(value_string)))
@@ -122,9 +123,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
-            rdf_type = graph.value(subject=cov, predicate=RDF.type)
             value_str = graph.value(subject=cov, predicate=RDF.value)
-            rdf_type = rdf_type.split('/')[-1]
             if value_str:
                 value_dict = {}
                 for key_value in value_str.split(";"):
@@ -133,7 +132,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     if k in ['start', 'end']:
                         v = parser.parse(v).strftime("%Y/%m/%d")
                     value_dict[k] = v
-                OriginalCoverage.create(type=rdf_type, value=value_dict, content_object=content_object)
+                OriginalCoverage.create(value=value_dict, content_object=content_object)
 
     @classmethod
     def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):

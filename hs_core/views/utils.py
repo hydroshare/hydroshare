@@ -568,7 +568,7 @@ def get_my_resources_list(user, annotate=True):
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
-        type='isReplacedBy').values('object_id'))
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
 
     # get a list of resources with effective CHANGE privilege (should include resources that the
     # user has access to via group
@@ -835,28 +835,20 @@ def remove_irods_folder_in_django(resource, folder_path, user):
     rel_folder_path = folder_path[len(resource.file_path) + 1:]
     res_file_set = ResourceFile.objects.filter(object_id=resource.id, file_folder__startswith=rel_folder_path)
 
-    # then delete resource file objects
+    if resource.resource_type == 'CompositeResource':
+        # delete all aggregation objects that are under the folder_path
+        for lf in resource.logical_files:
+            if lf.aggregation_name.startswith(rel_folder_path):
+                lf.logical_delete(user, delete_res_files=False)
+
+    # delete resource files
     for f in res_file_set:
         file_name = f.file_name
-        # TODO: integrate deletion of logical file with ResourceFile.delete
-        # delete the logical file (if it's not a fileset) object if the resource file
-        # has one
-        if f.has_logical_file and not f.logical_file.is_fileset:
-            # this should delete the logical file and any associated metadata
-            # but does not delete the resource files that are part of the logical file
-            f.logical_file.logical_delete(user, delete_res_files=False)
         f.delete()
         hydroshare.delete_format_metadata_after_delete_file(resource, file_name)
 
-    # if the folder getting deleted contains any fileset aggregation those aggregations need to
-    # be deleted
-    # note: for other types of aggregation the aggregation gets deleted as part of deleting
-    # the resource file - see above for resource file delete
     if resource.resource_type == 'CompositeResource':
-        filesets = [aggr for aggr in resource.logical_files if aggr.is_fileset]
-        for fileset in filesets:
-            if fileset.folder.startswith(rel_folder_path):
-                fileset.logical_delete(user, delete_res_files=True)
+        resource.cleanup_aggregations()
 
     # send the post-delete signal
     post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
@@ -1239,7 +1231,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1285,7 +1277,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1341,7 +1333,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         if resource.resource_type == "CompositeResource":
             orig_src_path = src_full_path[len(resource.file_path) + 1:]
             new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 

@@ -29,6 +29,7 @@ from hs_core.signals import post_remove_file_aggregation
 from rdflib import Literal, Namespace, BNode, URIRef, Graph
 from rdflib.namespace import DC
 
+
 RESMAP_FILE_ENDSWITH = "_resmap.xml"
 METADATA_FILE_ENDSWITH = "_meta.xml"
 SCHEMA_JSON_FILE_ENDSWITH = "_schema.json"
@@ -399,6 +400,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             value = graph.value(subject=o, predicate=HSTERMS.value).value
             extra_metadata[key] = value
         self.extra_metadata = copy.deepcopy(extra_metadata)
+
         self.save()
 
     def get_rdf_graph(self):
@@ -914,6 +916,19 @@ class AbstractLogicalFile(models.Model):
             res_file = get_resource_file_by_id(resource, file_id)
             if res_file is None or not res_file.exists:
                 raise ValidationError("File not found.")
+
+            logical_file = None
+            if res_file.has_logical_file:
+                logical_file = res_file.logical_file
+
+            if logical_file is not None:
+                if not logical_file.is_fileset and not logical_file.is_model_instance:
+                    msg = "Selected file {} is already part of an aggregation.".format(res_file.file_name)
+                    raise ValidationError(msg)
+                elif cls.__name__ == 'ModelProgramLogicalFile':
+                    if logical_file.is_model_instance:
+                        msg = "Model program aggregation is not allowed within a model instance aggregation"
+                        raise ValidationError(msg)
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
             storage = resource.get_irods_storage()
@@ -936,20 +951,6 @@ class AbstractLogicalFile(models.Model):
                         msg = msg.format("Model instance", path_to_check)
                     raise ValidationError(msg)
 
-        if cls.__name__ not in ['FileSetLogicalFile', 'ModelProgramLogicalFile', 'ModelInstanceLogicalFile']:
-            if res_file is not None and res_file.has_logical_file:
-                if not res_file.logical_file.is_fileset and not res_file.logical_file.is_model_instance:
-                    msg = "Selected {} {} is already part of an aggregation."
-                    if not folder_path:
-                        msg = msg.format('file', res_file.file_name)
-                    else:
-                        msg = msg.format('folder', folder_path)
-                    raise ValidationError(msg)
-        elif cls.__name__ == 'ModelProgramLogicalFile':
-            if res_file is not None and res_file.has_logical_file:
-                if res_file.logical_file.is_model_instance:
-                    msg = "Model program aggregation is not allowed within a model instance aggregation"
-                    raise ValidationError(msg)
         return res_file, folder_path
 
     @classmethod
@@ -994,6 +995,25 @@ class AbstractLogicalFile(models.Model):
     def is_model_instance(self):
         """Return True if this aggregation is a model instance aggregation, otherwise False"""
         return self.get_aggregation_class_name() == 'ModelInstanceLogicalFile'
+
+    @property
+    def is_dangling(self):
+        """Checks if this aggregation is a dangling aggregation or not"""
+
+        resource = self.resource
+        istorage = resource.get_irods_storage()
+        if self.files.count() == 0:
+            if any([self.is_fileset, self.is_model_instance, self.is_model_program]):
+                # check folder exist in irods
+                if self.folder:
+                    path = os.path.join(resource.file_path, self.folder)
+                    if not istorage.exists(path):
+                        return True
+                else:
+                    return True
+            else:
+                return True
+        return False
 
     @staticmethod
     def get_aggregation_type_name():
@@ -1117,6 +1137,7 @@ class AbstractLogicalFile(models.Model):
 
         res_file.logical_file_content_object = self
         res_file.save()
+        self.set_metadata_dirty()
 
     def add_files_to_resource(self, resource, files_to_add, upload_folder):
         """A helper for adding any new files to resource as part of creating an aggregation
@@ -1223,9 +1244,9 @@ class AbstractLogicalFile(models.Model):
         from hs_core.hydroshare.resource import delete_resource_file
 
         parent_aggr = self.get_parent()
-
+        resource = self.resource
         # delete associated metadata and map xml documents
-        istorage = self.resource.get_irods_storage()
+        istorage = resource.get_irods_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -1234,8 +1255,7 @@ class AbstractLogicalFile(models.Model):
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(f.resource.short_id, f.id, user,
-                                     delete_logical_file=False)
+                delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
@@ -1248,10 +1268,13 @@ class AbstractLogicalFile(models.Model):
             # the metadata object
             metadata.delete()
 
-        # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
-        # aggregation so that the references to the deleted aggregation can be removed
+        # if the this deleted aggregation has a parent aggregation - xml files for the parent
+        # aggregation needs to be generated so that the references to the deleted aggregation can be removed
+        # setting parent aggregation metadata dirty will regenerate xml files for parent aggregation at the time
+        # of download
         if parent_aggr is not None:
-            parent_aggr.create_aggregation_xml_documents()
+            parent_aggr.set_metadata_dirty()
+        resource.cleanup_aggregations()
 
     def remove_aggregation(self):
         """Deletes the aggregation object (logical file) *self* and the associated metadata
@@ -1295,8 +1318,8 @@ class AbstractLogicalFile(models.Model):
                 parent_aggr.add_resource_file(res_file)
 
             # need to regenerate the xml files for the parent so that the references to this deleted aggregation
-            # can be removed from the parent xml files
-            parent_aggr.create_aggregation_xml_documents()
+            # can be removed from the parent xml files - so need to set the parent aggregation metadata to dirty
+            parent_aggr.set_metadata_dirty()
 
         post_remove_file_aggregation.send(
             sender=self.__class__,
@@ -1355,6 +1378,10 @@ class AbstractLogicalFile(models.Model):
         """Returns True if any of the contained aggregation has temporal data, otherwise False"""
         return any(child_aggr.metadata.temporal_coverage is not None for child_aggr in
                    self.get_children())
+
+    def set_metadata_dirty(self):
+        self.metadata.is_dirty = True
+        self.metadata.save()
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         """Creates aggregation map xml and aggregation metadata xml files
@@ -1514,7 +1541,8 @@ class AbstractLogicalFile(models.Model):
         """
 
         xml_file_name = self.get_xml_file_name(resmap=resmap)
-        file_folder = self.files.first().file_folder
+        aggr_file = self.files.first()
+        file_folder = aggr_file.file_folder if aggr_file else ""
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
@@ -1578,14 +1606,13 @@ class FileTypeContext(object):
             # set resource to private if logical file is missing required metadata
             self.resource.update_public_and_discoverable()
 
-            # generate xml files for this newly created aggregation
-            self.logical_file.create_aggregation_xml_documents()
-            # if this newly created aggregation has a parent aggregation - we have to regenerate
-            # xml files for that parent aggregation so that it can have references to this new aggregation
+            # set this new logical file metadata to dirty so that meta xml files will be generated as part of download
+            self.logical_file.set_metadata_dirty()
+
+            # if this new logical file has a parent logical file that too needs to be set to metadata dirty
             parent_aggr = self.logical_file.get_parent()
             if parent_aggr is not None:
-                parent_aggr.create_aggregation_xml_documents()
-
+                parent_aggr.set_metadata_dirty()
             if self.post_aggr_signal is not None:
                 self.post_aggr_signal.send(
                     sender=AbstractLogicalFile,
@@ -1597,6 +1624,7 @@ class FileTypeContext(object):
         for res_file in self.res_files_to_delete:
             delete_resource_file(self.resource.short_id, res_file.id, self.user)
 
+        self.resource.cleanup_aggregations()
         resource_modified(self.resource, self.user, overwrite_bag=False)
 
         # delete temp dir

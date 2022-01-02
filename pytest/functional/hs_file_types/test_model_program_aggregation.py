@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 from rest_framework.exceptions import ValidationError as RF_ValidationError
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
-from hs_core.views.utils import move_or_rename_file_or_folder
+from hs_core.views.utils import move_or_rename_file_or_folder, delete_resource_file
 from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile, ModelInstanceLogicalFile, \
     ModelProgramResourceFileType
 from hs_file_types.forms import ModelProgramMetadataValidationForm
@@ -45,6 +45,7 @@ def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_irods):
     mp_res_file_type = ModelProgramResourceFileType.objects.first()
     assert mp_res_file_type.res_file.short_path == res_file.short_path
     assert mp_res_file_type.file_type == ModelProgramResourceFileType.type_from_string(mp_type)
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -88,6 +89,7 @@ def test_mark_multiple_res_files_as_mp_file_type(composite_resource, mock_irods)
     ModelProgramResourceFileType.create(file_type=mp_type, res_file=res_file_vrt,
                                         mp_metadata=mp_aggregation.metadata)
     assert ModelProgramResourceFileType.objects.count() == 2
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -126,6 +128,7 @@ def test_mark_res_file_as_mp_file_type_failure_1(composite_resource, mock_irods)
                                             mp_metadata=mp_aggregation.metadata)
 
     assert ModelProgramResourceFileType.objects.count() == 1
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -165,6 +168,7 @@ def test_mark_res_file_as_mp_file_type_failure_2(composite_resource, mock_irods)
                                             mp_metadata=mp_aggregation.metadata)
 
     assert ModelProgramResourceFileType.objects.count() == 0
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -183,9 +187,11 @@ def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggre
                                         mp_metadata=mp_aggregation.metadata)
     assert ModelProgramResourceFileType.objects.count() == 1
     # delete res_file
-    res_file.delete()
+    delete_resource_file(pk=res.short_id, filename_or_id=res_file.id, user=user)
     # mp program file type got deleted
     assert ModelProgramResourceFileType.objects.count() == 0
+    assert ModelProgramLogicalFile.objects.count() == 0
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -387,6 +393,7 @@ def test_set_metadata(composite_resource_with_mp_aggregation, mock_irods):
     mp_aggr.metadata.code_repository = 'https://github.com/swat'
     mp_aggr.metadata.save()
     assert mp_aggr.metadata.code_repository == 'https://github.com/swat'
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -428,3 +435,5 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
     tgt_path = 'data/contents/{}/{}'.format(mp_folder, single_file_name)
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+
+    assert not res.dangling_aggregations_exist()

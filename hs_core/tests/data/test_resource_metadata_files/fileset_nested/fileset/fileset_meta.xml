@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+>
+  <hsterms:FileSetAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/fileset/fileset_resmap.xml#aggregation">
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/FileSetAggregation"/>
+    <dc:language>eng</dc:language>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:rightsStatement>sadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnfsadf;lkjkqweljqw;lefj;qlwv;qndw;fnqwef;nqwerfnqwe;fna;fn;adnf</hsterms:rightsStatement>
+        <hsterms:URL rdf:resource="https://www.hydroshare.org"/>
+      </rdf:Description>
+    </dc:rights>
+    <dc:title>fileset</dc:title>
+  </hsterms:FileSetAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/FileSetAggregation">
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+    <rdfs:label>File Set Content: One or more files with specific metadata</rdfs:label>
+  </rdf:Description>
+</rdf:RDF>

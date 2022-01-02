@@ -87,6 +87,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_raster_aggregation_from_folder(self):
@@ -122,6 +123,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_netcdf_aggregation_from_file(self):
@@ -152,6 +154,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_netcdf_aggregation_from_folder(self):
@@ -187,6 +190,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_timeseries_aggregation_from_file(self):
@@ -217,6 +221,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_timeseries_aggregation_from_folder(self):
@@ -252,6 +257,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_fileset_aggregation(self):
@@ -286,6 +292,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "FileSetLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_remove_aggregation(self):
@@ -327,12 +334,13 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # test there is no NetCDFFileMetaData object
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
-        # check the files associated with the aggregation not deleted
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the nc file associated with the aggregation is not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
         # check the file folder is not deleted
-        for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, expected_file_folder)
-
+        nc_file = self.composite_resource.files.first()
+        self.assertTrue(nc_file.file_name.endswith('.nc'))
+        self.assertEqual(nc_file.file_folder, expected_file_folder)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_delete_aggregation(self):
@@ -375,6 +383,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # check the files are deleted
         self.assertEqual(self.composite_resource.files.all().count(), 0)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_move_aggregation(self):
@@ -423,6 +432,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, tgt_folder)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_move_aggregation_nested(self):
@@ -471,6 +482,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, tgt_folder)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_move_aggregation_root(self):
@@ -519,6 +532,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, tgt_folder)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_move_aggregation_to_root(self):
@@ -565,6 +580,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # check the file folder is now tgt_folder
         for f in self.composite_resource.files.all():
             self.assertEqual(f.file_folder, '')
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_update_single_file_aggregation_metadata(self):
@@ -614,6 +631,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
         self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_update_file_set_aggregation_metadata(self):
@@ -671,6 +689,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
         self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_delete_single_file_aggregation_coverage(self):
@@ -760,7 +779,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertTrue(logical_file.metadata.is_dirty)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_update_raster_aggregation_metadata(self):
@@ -810,6 +829,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         temporal_coverage = logical_file.metadata.temporal_coverage
         self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
         self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_update_netcdf_aggregation_metadata(self):
@@ -923,7 +943,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual('success', response_dict['status'])
         variable = logical_file.metadata.variables.all().filter(id=variable.id).first()
         self.assertEqual(variable.name, 'variable_name_updated')
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_dataset_name_single_file_aggregation(self):
@@ -1003,7 +1023,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.dataset_name, dataset_name)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_dataset_name_refts_aggregation_failure(self):
@@ -1043,6 +1063,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # dataset name should not have changed
         self.assertNotEqual(logical_file.dataset_name, dataset_name)
         self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_dataset_name_refts_aggregation_success(self):
@@ -1080,6 +1101,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         # dataset name should have been changed
         self.assertEqual(logical_file.dataset_name, dataset_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_abstract_refts_aggregation_failure(self):
@@ -1122,6 +1144,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # abstract should not have changed
         self.assertNotEqual(logical_file.metadata.abstract, new_abstract)
         self.assertEqual(logical_file.metadata.abstract, orig_abstract)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_abstract_refts_aggregation_success(self):
@@ -1160,6 +1183,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         # abstract should have changed
         self.assertEqual(logical_file.metadata.abstract, new_abstract)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_abstract_timeseries_aggregation(self):
@@ -1193,6 +1217,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         # abstract should have changed
         self.assertEqual(logical_file.metadata.abstract, new_abstract)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_get_timeseries_aggregation_metadata(self):
@@ -1224,6 +1249,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_delete_keywords_refts_aggregation_failure(self):
@@ -1280,6 +1306,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # check keywords after deleting via the view function- should not have changed
         for kw in ('Time Series', 'CUAHSI'):
             self.assertIn(kw, logical_file.metadata.keywords)
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_delete_keywords_refts_aggregation_success(self):
@@ -1340,7 +1368,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertIn('keyword-2', logical_file.metadata.keywords)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_CRUD_key_value_metadata_raster_aggregation(self):
@@ -1415,6 +1443,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         # at this point there should not be any key/value metadata
         self.assertEqual(logical_file.metadata.extra_metadata, {})
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_CRUD_key_value_metadata_netcdf_aggregation(self):
@@ -1489,6 +1518,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         logical_file = res_file.logical_file
         # at this point there should not be any key/value metadata
         self.assertEqual(logical_file.metadata.extra_metadata, {})
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_add_delete_keywords_aggregations(self):
@@ -1540,6 +1570,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
                 break
         self.assertNotEqual(nc_dump_res_file, None)
         self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read().decode('utf-8'))
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_sqlite_file_for_aggregation(self):
@@ -1565,6 +1596,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content.decode())
         self.assertEqual('success', response_dict['status'])
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_update_file_set_coverage_from_contents(self):
@@ -1649,6 +1681,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
             self.assertEqual(fs_aggr.metadata.spatial_coverage.value[limit],
                              nc_aggr.metadata.spatial_coverage.value[limit])
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _add_delete_keywords_file_type(self, file_path, file_type):
@@ -1736,4 +1770,5 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # test that deleting a file level keyword doesn't delete the same keyword from
         # resource level
         self.assertIn('keyword-1', res_keywords)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()

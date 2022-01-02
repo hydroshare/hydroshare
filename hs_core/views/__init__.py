@@ -1,62 +1,73 @@
-import datetime
 import json
+import datetime
+import pytz
 import logging
 
-import pytz
-from autocomplete_light import shortcuts as autocomplete_light
-from django import forms
-from django.contrib import messages
+from django.db.models import Q
+from drf_yasg.utils import swagger_auto_schema
+
+from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
-from django.core import signing
+from django.contrib import messages
+from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
-from django.db import Error, IntegrityError
-from django.forms.models import model_to_dict
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
     HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
-from django.utils.decorators import method_decorator
+from django.core import signing
+from django.db import Error, IntegrityError
+from django import forms
 from django.views.generic import TemplateView
-from drf_yasg.utils import swagger_auto_schema
-from inplaceeditform.commons import get_dict_from_obj, apply_filters
-from inplaceeditform.views import _get_http_response, _get_adaptor
-from mezzanine.conf import settings
-from mezzanine.pages.page_processors import processor_for
-from mezzanine.utils.email import subject_template, send_mail_template
+from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from django_irods.icommands import SessionException
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege, GroupAccess
-from hs_core import hydroshare
+from mezzanine.conf import settings
+from mezzanine.pages.page_processors import processor_for
+from mezzanine.utils.email import subject_template, send_mail_template
 
+from autocomplete_light import shortcuts as autocomplete_light
+from inplaceeditform.commons import get_dict_from_obj, apply_filters
+from inplaceeditform.views import _get_http_response, _get_adaptor
+from django_irods.icommands import SessionException
+
+from hs_core import hydroshare
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     update_quota_usage as update_quota_usage_utility
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject, TaskNotification
-from hs_core.signals import *
+
+from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+
 from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by_id, \
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
 from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
     create_new_version_resource_task, delete_resource_task
-from hs_tools_resource.app_launch_helper import resource_level_tool_urls
-from . import apps
-from . import debug_resource_view
-from . import resource_access_api
-from . import resource_folder_hierarchy
-from . import resource_folder_rest_api
-from . import resource_metadata_rest_api
+
 from . import resource_rest_api
-from . import resource_ticket_rest_api
+from . import resource_metadata_rest_api
 from . import user_rest_api
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+from . import resource_folder_hierarchy
+
+from . import resource_access_api
+from . import resource_folder_rest_api
+from . import debug_resource_view
+from . import resource_ticket_rest_api
+from . import apps
 
 from hs_core.hydroshare import utils
+
+from hs_core.signals import *
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
+
 
 logger = logging.getLogger(__name__)
 
@@ -277,15 +288,31 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_discoverable_status = 'discoverable' if resource.raccess.discoverable \
         else 'not discoverable'
 
+    show_meta_status = False
+    if 'meta-status' not in request.session:
+        request.session['meta-status'] = ''
+
+    if 'meta-status-res-id' not in request.session:
+        request.session['meta-status-res-id'] = resource.short_id
+        show_meta_status = True
+    elif request.session['meta-status-res-id'] != resource.short_id:
+        request.session['meta-status-res-id'] = resource.short_id
+        show_meta_status = True
+
     if resource.can_be_public_or_discoverable:
         metadata_status = METADATA_STATUS_SUFFICIENT
     else:
         metadata_status = METADATA_STATUS_INSUFFICIENT
 
+    if request.session['meta-status'] != metadata_status:
+        request.session['meta-status'] = metadata_status
+        show_meta_status = True
+
     response_data = {
         'res_public_status': res_public_status,
         'res_discoverable_status': res_discoverable_status,
         'metadata_status': metadata_status,
+        'show_meta_status': show_meta_status
     }
 
     return JsonResponse(data=response_data, status=200)
@@ -697,6 +724,11 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     finally:
         request.session['resource-mode'] = 'edit'
 
+    if res.can_be_public_or_discoverable:
+        request.session['meta-status'] = METADATA_STATUS_SUFFICIENT
+    else:
+        request.session['meta-status'] = METADATA_STATUS_INSUFFICIENT
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -720,7 +752,13 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             # raising this specific exception
             logger.warn(str(ex))
             continue
+
     request.session['resource-mode'] = 'edit'
+
+    if res.can_be_public_or_discoverable:
+        request.session['meta-status'] = METADATA_STATUS_SUFFICIENT
+    else:
+        request.session['meta-status'] = METADATA_STATUS_INSUFFICIENT
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -741,6 +779,8 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             # Fix by making the resource undiscoverable.
             # This has the side-effect of deleting the resource from SOLR.
             res.set_discoverable(False)
+            res.extra_data['to_be_deleted'] = True
+            res.save()
             task = delete_resource_task.apply_async((shortkey, user.username))
             task_id = task.task_id
 
@@ -1658,6 +1698,9 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
         user_data['website'] = user.userprofile.website if user.userprofile.website else ''
         user_data['identifiers'] = user.userprofile.identifiers
+        user_data['type'] = user.userprofile.user_type
+        user_data['date_joined'] = user.date_joined
+        user_data['subject_areas'] = user.userprofile.subject_areas
     else:
         group = utils.group_from_id(user_or_group_id)
         user_data['organization'] = group.name
@@ -1807,8 +1850,11 @@ class FindGroupsView(TemplateView):
                 'groups': groups
             }
         else:
-            # active is included in this query
-            groups = GroupAccess.groups_with_public_resources().exclude(name="Hydroshare Author")
+            # for anonymous user
+            groups = Group.objects.filter(Q(gaccess__active=True) &
+                                          (Q(gaccess__discoverable=True) |
+                                          Q(gaccess__public=True))).exclude(name="Hydroshare Author")
+
             for g in groups:
                 g.members = g.gaccess.members
             return {
@@ -1827,7 +1873,7 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.my_groups
-        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u, redeemed=False).exclude(
             group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
@@ -1835,7 +1881,7 @@ class MyGroupsView(TemplateView):
 
         active_groups = [g for g in groups if g.gaccess.active]
         inactive_groups = [g for g in groups if not g.gaccess.active]
-        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u).exclude(
+        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u, redeemed=False).exclude(
             group_to_join__gaccess__active=False)
         return {
             'profile_user': u,
@@ -1874,15 +1920,17 @@ class GroupView(TemplateView):
         group_resources = sorted(group_resources, key=lambda x: x.date_granted, reverse=True)
 
         if self.request.user.is_authenticated():
-
             u = User.objects.get(pk=self.request.user.id)
             u.is_group_owner = u.uaccess.owns_group(g)
             u.is_group_editor = g in u.uaccess.edit_groups
-            u.is_group_viewer = g in u.uaccess.view_groups
+            u.is_group_viewer = g in u.uaccess.view_groups or g.gaccess.public or g.gaccess.discoverable
+            u.is_group_member = u in g.gaccess.members
 
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+            if u not in g.gaccess.members:
+                group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
 
             return {
                 'group': g,

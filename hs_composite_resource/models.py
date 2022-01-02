@@ -117,6 +117,7 @@ class CompositeResource(BaseResource):
                         # to delete any associated ModelProgramResourceFileType object
                         if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
                             ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                    self.cleanup_aggregations()
             except ObjectDoesNotExist:
                 pass
 
@@ -143,8 +144,10 @@ class CompositeResource(BaseResource):
          :param dir_path: Resource file directory path (full folder path starting with resource id)
          for which the aggregation object to be retrieved
         """
+        aggregation_path = dir_path
+        if dir_path.startswith(self.file_path):
+            aggregation_path = dir_path[len(self.file_path) + 1:]
 
-        aggregation_path = dir_path[len(self.file_path) + 1:]
         for lf in self.logical_files:
             if hasattr(lf, 'folder'):
                 if lf.folder == aggregation_path:
@@ -184,7 +187,10 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        relative_file_path = file_path[len(self.file_path) + 1:]
+        relative_file_path = file_path
+        if file_path.startswith(self.file_path):
+            relative_file_path = file_path[len(self.file_path) + 1:]
+
         folder, base = os.path.split(relative_file_path)
         try:
             res_file = ResourceFile.get(self, file=base, folder=folder)
@@ -320,14 +326,24 @@ class CompositeResource(BaseResource):
                 return aggr
             return None
 
-    def recreate_aggregation_meta_files(self, orig_path, new_path):
+    def set_flag_to_recreate_aggregation_meta_files(self, orig_path, new_path):
         """
         When a folder or file representing an aggregation is renamed or moved,
         the associated meta files (resource map, metadata xml files as well as schema json files) are deleted
-        and then regenerated
+        and then aggregation metadata is set to dirty so that these meta files will be regenerated as part of
+        aggregation or bag download
         :param  orig_path: original file/folder path prior to move/rename
         :param  new_path: new file/folder path after move/rename
         """
+
+        def set_parent_aggregation_dirty(path_to_search):
+            if '/' in path_to_search:
+                path = os.path.dirname(path_to_search)
+                try:
+                    parent_aggr = self.get_aggregation_by_name(path)
+                    parent_aggr.set_metadata_dirty()
+                except ObjectDoesNotExist:
+                    pass
 
         if new_path.startswith(self.file_path):
             new_path = new_path[len(self.file_path) + 1:]
@@ -367,26 +383,34 @@ class CompositeResource(BaseResource):
         if istorage.exists(map_xml_file_full_path):
             istorage.delete(map_xml_file_full_path)
 
-        # update any aggregations under the orig_path
+        # set affected logical file metadata to dirty so that xml meta files will be regenerated at the time of
+        # aggregation or bag download
         for lf in self.logical_files:
+            # set metadata dirty for any folder based aggregations under the orig_path
             if hasattr(lf, 'folder'):
                 if lf.folder is not None and lf.folder.startswith(orig_path):
                     lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
                     lf.save()
-                    lf.create_aggregation_xml_documents()
+                    lf.set_metadata_dirty()
+                    continue
 
-        # need to recreate xml doc for any parent aggregation that may exist relative to path *new_path*
-        if '/' in new_path:
-            path = os.path.dirname(new_path)
-            try:
-                parent_aggr = self.get_aggregation_by_name(path)
-                parent_aggr.create_aggregation_xml_documents()
-            except ObjectDoesNotExist:
-                pass
+            # set metadata dirty for any non-folder based aggregation under the orig_path
+            if lf.aggregation_name.startswith(orig_path):
+                lf.set_metadata_dirty()
+
+            # set metadata to dirty for non-folder based aggregation under the new_path
+            if lf.aggregation_name.startswith(new_path):
+                lf.set_metadata_dirty()
+
+        # set metadata to dirty for any parent aggregation that may exist relative to path *orig_path*
+        set_parent_aggregation_dirty(orig_path)
+
+        # set metadata to dirty for any parent aggregation that may exist relative to path *new_path*
+        set_parent_aggregation_dirty(new_path)
 
         try:
             aggregation = self.get_aggregation_by_name(new_path)
-            aggregation.create_aggregation_xml_documents()
+            aggregation.set_metadata_dirty()
         except ObjectDoesNotExist:
             # the file path *new_path* does not represent an aggregation - no more
             # action is needed
@@ -653,6 +677,29 @@ class CompositeResource(BaseResource):
         """
 
         update_target_temporal_coverage(self)
+
+    def cleanup_aggregations(self):
+        """Deletes any dangling aggregations (aggregation without resource files or folder) the resource may have"""
+
+        count = 0
+        for lf in self.logical_files:
+            if lf.is_dangling:
+                agg_cls_name = lf.type_name()
+                lf.remove_aggregation()
+                count += 1
+                msg = "Deleted a dangling aggregation of type:{} for resource:{}".format(agg_cls_name, self.short_id)
+                logger.warning(msg)
+        return count
+
+    def dangling_aggregations_exist(self):
+        """Checks if there are any dangling aggregations in this resource
+        Note: This function used only in tests
+        """
+
+        for lf in self.logical_files:
+            if lf.is_dangling:
+                return True
+        return False
 
     @staticmethod
     def is_path_folder(path):

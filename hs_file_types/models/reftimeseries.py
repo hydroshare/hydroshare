@@ -1,22 +1,20 @@
 import json
 import logging
-from dateutil import parser
-from urllib.request import Request, urlopen
+import ssl
 from urllib.error import URLError
+from urllib.request import Request, urlopen
+
 import jsonschema
-from django.db.models.signals import post_save
-
-from django.utils import timezone
-from django.db import models, transaction
+from dateutil import parser
 from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.template import Template, Context
-
+from django.utils import timezone
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td, a
 
 from hs_core.signals import post_add_reftimeseries_aggregation
-
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext, create_logical_file
+from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 
 class TimeSeries(object):
@@ -744,11 +742,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     log.info("RefTimeseries aggregation type was created.")
                     ft_ctx.logical_file = logical_file
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                           "type. Error:{}"
                     msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)
+
                 return logical_file
 
     def get_copy(self, copied_resource):
@@ -764,9 +764,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         super(RefTimeseriesLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
         self.metadata.save()
-
-
-post_save.connect(create_logical_file, sender=RefTimeseriesLogicalFile)
 
 
 def _extract_metadata(resource, logical_file):
@@ -926,11 +923,15 @@ def _validate_json_data(json_data):
         # validate variableName
         _check_for_empty_string(series['variable']['variableName'], 'variableName')
 
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
         url = Request(request_info['url'])
         if url not in urls:
             urls.append(url)
             try:
-                urlopen(url)
+                urlopen(url, context=ctx)
             except URLError:
                 raise Exception(err_msg.format("Invalid web service URL found"))
 
@@ -947,7 +948,7 @@ def _validate_json_data(json_data):
                 if url not in urls:
                     urls.append(url)
                     try:
-                        urlopen(url)
+                        urlopen(url, context=ctx)
                     except URLError:
                         raise Exception(err_msg.format("Invalid method link found"))
 
