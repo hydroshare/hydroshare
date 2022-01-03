@@ -461,15 +461,17 @@ def set_logical_file_type(res, user, file_id, hs_file_type=None, folder_path='',
         return None
 
 
-def get_logical_file_metadata_json_schema(file_with_path):
+def get_logical_file_metadata_json_schema(lf):
     """
     Get logical file metadata values in json format along with its json schema
     for metadata display
-    :param file_with_path: meatadata file with path
+    :param lf: logical file object
     :return: metadata JSON values and schema for logical file
     """
     istorage = IrodsStorage()
-    with istorage.open(file_with_path) as f:
+    if lf.metadata.is_dirty:
+        lf.create_aggregation_xml_documents()
+    with istorage.open(lf.metadata_file_path) as f:
         metadata = load_rdf(f.read())
         json_value = metadata.json()
         json_value_dict = json.loads(json_value)

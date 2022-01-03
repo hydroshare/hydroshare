@@ -1232,8 +1232,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         return json_response
 
     try:
-        file_path = logical_file.metadata_file_path
-        json_value, json_schema = get_logical_file_metadata_json_schema(file_path)
+        json_value, json_schema = get_logical_file_metadata_json_schema(logical_file)
         metadata = {'json_value': json.loads(json_value),
                     'json_schema': json.loads(json_schema)
                     }
