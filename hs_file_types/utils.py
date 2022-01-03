@@ -12,6 +12,7 @@ from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
 
+from django.core.exceptions import ValidationError
 from hs_core.hydroshare import utils, get_resource_file
 from hs_file_types.models.base import AbstractLogicalFile
 from django_irods.storage import IrodsStorage
@@ -353,6 +354,27 @@ def ingest_logical_file_metadata_from_string(metadata_str, resource, map_files=[
     graph = Graph()
     graph = graph.parse(data=metadata_str)
     ingest_logical_file_metadata(graph, resource, map_files)
+
+
+def ingest_logical_file_metadata_from_dict(metadata, resource, map_files=[]):
+    """
+    Ingest logical file metadata dict into Django models
+    :param metadata: a dict object that contains updated metadata element
+    :param resource: the resource object to update metadata for
+    :param map_files: uploaded resource map file object. Default is None for metadata update only
+    :return:
+    """
+    if isinstance(metadata, dict):
+        if metadata['type'] in aggregation_type_to_class:
+            aggr_class = aggregation_type_to_class[metadata['type']]
+            meta_obj = aggr_class.parse_obj(metadata)
+            graph = rdf_graph(meta_obj)
+            ingest_logical_file_metadata(graph, resource, map_files)
+        else:
+            raise ValueError(f"metadata aggregation type {metadata['type']} is not supported")
+    else:
+        raise ValidationError("input metadata must be a dict object")
+
 
 
 def ingest_logical_file_metadata(graph, resource, map_files=[]):

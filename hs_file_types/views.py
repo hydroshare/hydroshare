@@ -30,7 +30,7 @@ from .models import (
     TimeSeriesLogicalFile
 )
 from .utils import set_logical_file_type, get_logical_file_metadata_json_schema, \
-    ingest_logical_file_metadata_from_string
+    ingest_logical_file_metadata_from_dict
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -1025,8 +1025,8 @@ def update_schema_based_metadata(request, resource_id, **kwargs):
     if not authorized:
         return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
     metadata_json_str = request.POST.get('metadata_json', None)
-
-    ingest_logical_file_metadata_from_string(metadata_json_str, resource, None)
+    metadata_json = json.loads(metadata_json_str)
+    ingest_logical_file_metadata_from_dict(metadata_json, resource, None)
 
     # resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success',
