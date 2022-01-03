@@ -247,6 +247,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # set nc file to aggregation
         NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         # check that the nc resource file is associated with a logical file
         res_file = hydroshare.utils.get_resource_files_by_extension(
@@ -259,6 +260,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -432,17 +434,18 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          set(logical_file.files.all()))
 
         # delete the aggregation (logical file) object using the remove_aggregation function
+        # this should delete the system generated txt file when the netcdf logical file was created
         logical_file.remove_aggregation()
         # test there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # test there is no NetCDFFileMetaData object
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
         # check the files associated with the aggregation not deleted
-        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
         # check the file folder is not deleted
-        for f in self.composite_resource.files.all():
-            self.assertEqual(f.file_folder, expected_folder_name)
-
+        nc_file = self.composite_resource.files.first()
+        self.assertTrue(nc_file.file_name.endswith('.nc'))
+        self.assertEqual(nc_file.file_folder, expected_folder_name)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -898,6 +901,7 @@ class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             NetCDFLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 

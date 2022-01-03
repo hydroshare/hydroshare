@@ -29,7 +29,8 @@ from .models import (
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile
 )
-from .utils import set_logical_file_type, get_logical_file_metadata_json_schema, ingest_logical_file_metadata
+from .utils import set_logical_file_type, get_logical_file_metadata_json_schema, \
+    ingest_logical_file_metadata_from_string
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -375,8 +376,8 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         istorage.moveFile(file.storage_path, tgt_full_path)
         rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
     new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
-    res.recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
-                                        new_path=new_aggregation_name)
+    res.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_aggregation_name,
+                                                    new_path=new_aggregation_name)
     resource_modified(res, request.user, overwrite_bag=False)
     msg = "Aggregation was successfully moved to {}.".format(tgt_path)
     response_data['status'] = 'success'
@@ -1024,9 +1025,8 @@ def update_schema_based_metadata(request, resource_id, **kwargs):
     if not authorized:
         return JsonResponse(status=status.HTTP_401_UNAUTHORIZED)
     metadata_json_str = request.POST.get('metadata_json', None)
-    metadata_json = json.loads(metadata_json_str)
 
-    ingest_logical_file_metadata(metadata_json, resource, None)
+    ingest_logical_file_metadata_from_string(metadata_json_str, resource, None)
 
     # resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success',

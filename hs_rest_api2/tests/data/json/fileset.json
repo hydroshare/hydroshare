@@ -1,0 +1,30 @@
+{
+  "type": "FileSet",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/asdf/asdf_resmap.xml#aggregation",
+  "title": "asdfa",
+  "subjects": [
+    "key2",
+    "key1"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "key2": "value2",
+    "key": "value"
+  },
+  "spatial_coverage": {
+    "type": "point",
+    "name": "point coverage",
+    "east": -97.8454,
+    "north": 36.5415,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2020-11-03T00:00:00",
+    "end": "2020-11-19T00:00:00"
+  },
+  "rights": {
+    "statement": "my statement",
+    "url": "http://studio.bakajo.com"
+  }
+}

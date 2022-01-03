@@ -39,13 +39,14 @@ def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods
     # file has no folder
     assert not res_file.file_folder
     assert aggr_cls.objects.count() == 1
-    mp_aggregation = aggr_cls.objects.first()
-    assert mp_aggregation.files.count() == 1
-    assert mp_aggregation.dataset_name == 'generic_file'
-    if isinstance(mp_aggregation, ModelProgramLogicalFile):
-        assert mp_aggregation.model_program_type == 'Unknown Model Program'
+    mod_aggregation = aggr_cls.objects.first()
+    assert mod_aggregation.metadata.is_dirty
+    assert mod_aggregation.files.count() == 1
+    assert mod_aggregation.dataset_name == 'generic_file'
+    if isinstance(mod_aggregation, ModelProgramLogicalFile):
+        assert mod_aggregation.model_program_type == 'Unknown Model Program'
     else:
-        assert mp_aggregation.model_instance_type == 'Unknown Model Instance'
+        assert mod_aggregation.model_instance_type == 'Unknown Model Instance'
     assert not res.dangling_aggregations_exist()
 
 
@@ -184,10 +185,11 @@ def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_
     assert fs_aggregation.files.count() == 2
     # at this point there should not be any model program/instance aggregation
     assert aggr_cls.objects.count() == 0
-    # set folder to model program aggregation type
+    # set folder to model program/instance aggregation type
     aggr_cls.set_file_type(resource=res, user=user, folder_path=mp_folder_path)
     # fileset now should have only one res file
     assert fs_aggregation.files.count() == 1
+    assert fs_aggregation.metadata.is_dirty
     assert aggr_cls.objects.count() == 1
     mp_mi_aggregation = aggr_cls.objects.first()
     assert mp_mi_aggregation.files.count() == 1
@@ -252,6 +254,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
     assert aggr_cls.objects.count() == 1
     assert fs_aggregation.files.count() == 1
     assert mp_mi_aggregation.files.count() == 1
+    assert mp_mi_aggregation.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -288,6 +291,7 @@ def test_upload_file_to_aggregation_folder(composite_resource, aggr_cls, mock_ir
         assert res_file.has_logical_file
 
     assert mp_mi_aggregation.files.count() == 2
+    assert mp_mi_aggregation.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -325,6 +329,7 @@ def test_upload_file_to_aggregation_sub_folder(composite_resource, aggr_cls, moc
     for res_file in res.files.all():
         assert res_file.has_logical_file
     assert mp_mi_aggregation.files.count() == 2
+    assert mp_mi_aggregation.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -528,11 +533,15 @@ def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_irods)
     # file has folder
     assert res_file.file_folder == new_folder
     assert aggr_cls.objects.count() == 1
+    mi_mp_aggr = aggr_cls.objects.first()
+    assert mi_mp_aggr.metadata.is_dirty
     # delete resource file
     hydroshare.delete_resource_file(res.short_id, res_file.id, user)
     assert res.files.count() == 0
     # aggregation object should still exist
     assert aggr_cls.objects.count() == 1
+    mi_mp_aggr = aggr_cls.objects.first()
+    assert mi_mp_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -675,7 +684,7 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
                                             mp_metadata=mp_mi_aggregation.metadata)
         assert ModelProgramResourceFileType.objects.count() == 1
 
-    # moving the generic file to into another folder
+    # moving the generic file into another folder
     another_folder = 'another_folder'
     ResourceFile.create_folder(res, another_folder)
     src_path = 'data/contents/{}/{}'.format(mp_mi_folder, generic_file_name)
@@ -685,6 +694,7 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
     # model program/instance aggregation should not have any resource files
     mp_mi_aggregation = aggr_cls.objects.first()
     assert mp_mi_aggregation.files.count() == 0
+    assert mp_mi_aggregation.metadata.is_dirty
     res_file = res.files.first()
     # res file is no more part of any logical file
     assert not res_file.has_logical_file
@@ -737,6 +747,7 @@ def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods)
     assert aggr_cls.objects.count() == 1
     # model program/instance aggregation should have one resource file
     mp_mi_aggregation = aggr_cls.objects.first()
+    assert mp_mi_aggregation.metadata.is_dirty
     assert mp_mi_aggregation.files.count() == 1
     res_file = res.files.first()
     # res file part of logical file
@@ -775,6 +786,7 @@ def test_rename_model_aggregation_folder(composite_resource, aggr_cls, mock_irod
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
     assert aggr_cls.objects.count() == 1
     mp_mi_aggregation = aggr_cls.objects.first()
+    assert mp_mi_aggregation.metadata.is_dirty
     assert mp_mi_aggregation.folder == mp_mi_folder_rename
     assert not res.dangling_aggregations_exist()
 

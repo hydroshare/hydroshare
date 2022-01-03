@@ -419,11 +419,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     log.info("RefTimeseries aggregation type was created.")
                     ft_ctx.logical_file = logical_file
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = "RefTimeseries aggregation type. Error when setting aggregation " \
                           "type. Error:{}"
                     msg = msg.format(str(ex))
                     log.exception(msg)
                     raise ValidationError(msg)
+
                 return logical_file
 
     def get_copy(self, copied_resource):

@@ -296,7 +296,7 @@ def ingest_metadata_files(resource, meta_files, map_files):
         if is_resource_metadata_file(f):
             resource_metadata_file = f
         elif is_aggregation_metadata_file(f):
-            ingest_logical_file_metadata(f, resource, map_files)
+            ingest_logical_file_metadata_from_file(f, resource, map_files)
     # process the resource level metadata last, some aggregation metadata is pushed to the resource level
     if resource_metadata_file:
         resource.refresh_from_db()
@@ -345,42 +345,32 @@ def get_aggregation_files(map_graph):
     return files
 
 
-def ingest_logical_file_metadata(metadata, resource, map_files):
-    """
-    Ingest logical file metadata into Django models
-    :param metadata: a dict object that contains updated metadata element or an uploaded metadata file object
-    :param resource: the resource object to update metadata for
-    :param map_files: uploaded resource map file object. Default is None for metadata update only
-    :return:
-    """
-    resource.refresh_from_db()
-    agg_type_name = None
-    # if metadata is a dict object with updated metadata, create a rdf graph instance directly from it
-    if isinstance(metadata, dict):
-        if metadata['type'] in aggregation_type_to_class:
-            aggr_class = aggregation_type_to_class[metadata['type']]
-            meta_obj = aggr_class.parse_obj(metadata)
-            graph = rdf_graph(meta_obj)
-            md_name = metadata['title']
-        else:
-            raise Exception("{} aggregation type is not supported".format(metadata['type']))
-    else:
-        graph = Graph()
-        graph = graph.parse(data=metadata.read())
-        md_name = metadata.name
+def ingest_logical_file_metadata_from_file(metadata_file, resource, map_files=[]):
+    ingest_logical_file_metadata_from_string(metadata_file.read(), resource, map_files)
 
+
+def ingest_logical_file_metadata_from_string(metadata_str, resource, map_files=[]):
+    graph = Graph()
+    graph = graph.parse(data=metadata_str)
+    ingest_logical_file_metadata(graph, resource, map_files)
+
+
+def ingest_logical_file_metadata(graph, resource, map_files=[]):
+    resource.refresh_from_db()
+
+    agg_type_name = None
     for s, _, _ in graph.triples((None, RDFS.isDefinedBy, None)):
         agg_type_name = s.split("/")[-1]
         break
     if not agg_type_name:
-        raise Exception("Could not derive aggregation type from {}".format(md_name))
+        raise Exception("Could not derive aggregation type from {}".format(graph))
 
     subject = None
     for s, _, _ in graph.triples((None, DC.title, None)):
         subject = s.split('/resource/', 1)[1].split("#")[0]
         break
     if not subject:
-        raise Exception("Could not derive aggregation path from {}".format(md_name))
+        raise Exception("Could not derive aggregation path from {}".format(graph))
 
     logical_file_class = get_logical_file(agg_type_name)
     lf = get_logical_file_by_map_file_path(resource, logical_file_class, subject)
@@ -411,9 +401,9 @@ def ingest_logical_file_metadata(metadata, resource, map_files):
             res_file.refresh_from_db()
             lf = res_file.logical_file
         else:
-            raise Exception("Could not find aggregation for {}".format(md_name))
+            raise Exception("Could not find aggregation for {}".format(subject))
         if not lf:
-            raise Exception("Files for aggregation in metadata file {} could not be found".format(md_name))
+            raise Exception("Files for aggregation in metadata file {} could not be found".format(subject))
 
     with transaction.atomic():
         lf.metadata.delete_all_elements()

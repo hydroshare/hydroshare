@@ -160,7 +160,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             val = graph.value(subject=subject, predicate=term)
             if val:
                 if is_date:
-                    date = parser.parse(str(val))
+                    date = parser.parse(str(val)).date()
                     setattr(obj, field_name, date)
                 else:
                     setattr(obj, field_name, str(val.toPython()))
@@ -305,3 +305,14 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         for mi_meta in self.mi_metadata_objects.all():
             mi_meta.is_dirty = True
             mi_meta.save()
+
+    def set_metadata_dirty(self):
+        super(ModelProgramLogicalFile, self).set_metadata_dirty()
+        for mi_meta in self.mi_metadata_objects.all():
+            mi_meta.is_dirty = True
+            mi_meta.save()
+
+    def create_aggregation_xml_documents(self, create_map_xml=True):
+        super(ModelProgramLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
+        # set metadata to dirty for all model instance aggregations related to this model program aggregation
+        self.set_model_instances_dirty()
