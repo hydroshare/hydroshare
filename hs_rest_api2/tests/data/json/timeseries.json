@@ -1,0 +1,303 @@
+{
+  "type": "TimeSeries",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/ODM2_Multi_Site_One_Variable_resmap.xml#aggregation",
+  "title": "changed from the Little Bear River, UT",
+  "subjects": [
+    "Temperature"
+  ],
+  "language": "eng",
+  "additional_metadata": {},
+  "spatial_coverage": {
+    "type": "box",
+    "northlimit": 41.718473,
+    "eastlimit": -111.799324,
+    "southlimit": 41.495409,
+    "westlimit": -111.946402,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2008-01-01T00:00:00",
+    "end": "2008-01-30T23:30:00"
+  },
+  "rights": {
+    "statement": "This resource is shared under the Creative Commons Attribution CC BY.",
+    "url": "http://creativecommons.org/licenses/by/4.0/"
+  },
+  "time_series_results": [
+    {
+      "series_id": "182d8fa3-1ebc-11e6-ad49-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "Surface Water",
+      "value_count": 1441,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-Mendon",
+        "site_name": "Little Bear River at Mendon Road near Mendon, Utah",
+        "elevation_m": 1345.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream",
+        "latitude": 41.718473,
+        "longitude": -111.946402
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "1",
+        "definition": "Quality controlled data",
+        "explanation": "Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    },
+    {
+      "series_id": "4a6f095c-1ebc-11e6-8a10-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "Surface Water",
+      "value_count": 1441,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-SFLower",
+        "site_name": "South Fork Little Bear River below Davenport Creek near Avon, Utah",
+        "elevation_m": 1564.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream",
+        "latitude": 41.506518,
+        "longitude": -111.815079
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "1",
+        "definition": "Quality controlled data",
+        "explanation": "Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    },
+    {
+      "series_id": "2837b7d9-1ebc-11e6-a16e-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "changed Surface Water",
+      "value_count": 1334,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-Paradise",
+        "site_name": "Little Bear River at McMurdy Hollow near Paradise, Utah",
+        "elevation_m": 1445.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream changed",
+        "latitude": 41.575552,
+        "longitude": -111.855217
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "2",
+        "definition": "Quality changed controlled data",
+        "explanation": "Quality changed controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    },
+    {
+      "series_id": "33d63705-1ebc-11e6-b8cd-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "Surface Water",
+      "value_count": 1441,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-Wellsville",
+        "site_name": "Little Bear River near Wellsville, Utah",
+        "elevation_m": 1365.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream",
+        "latitude": 41.643457,
+        "longitude": -111.917649
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "1",
+        "definition": "Quality controlled data",
+        "explanation": "Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    },
+    {
+      "series_id": "51e31687-1ebc-11e6-aa6c-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "Surface Water",
+      "value_count": 1441,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-SFUpper",
+        "site_name": "South Fork Little Bear River above Davenport Creek near Avon, Utah",
+        "elevation_m": 1573.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream",
+        "latitude": 41.495409,
+        "longitude": -111.817993
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "1",
+        "definition": "Quality controlled data",
+        "explanation": "Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    },
+    {
+      "series_id": "3b9037f8-1ebc-11e6-a304-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "Surface Water",
+      "value_count": 1441,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-Confluence",
+        "site_name": "Little Bear River below Confluence of South and East Forks near Avon, Utah",
+        "elevation_m": 1493.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream",
+        "latitude": 41.536088,
+        "longitude": -111.830455
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "1",
+        "definition": "Quality controlled data",
+        "explanation": "Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    },
+    {
+      "series_id": "42fbff7a-1ebc-11e6-ae3e-f45c8999816f",
+      "unit": {
+        "type": "Temperature",
+        "name": "degree celsius",
+        "abbreviation": "degC"
+      },
+      "status": "Unknown",
+      "sample_medium": "Surface Water",
+      "value_count": 1441,
+      "aggregation_statistic": "Average",
+      "site": {
+        "site_code": "USU-LBR-EFLower",
+        "site_name": "East Fork Little Bear River at Paradise Canal Diversion near Avon, Utah",
+        "elevation_m": 1528.0,
+        "elevation_datum": "NGVD29",
+        "site_type": "Stream",
+        "latitude": 41.529212,
+        "longitude": -111.799324
+      },
+      "variable": {
+        "variable_code": "USU36",
+        "variable_name": "Temperature",
+        "variable_type": "Water Quality",
+        "no_data_value": -9999,
+        "speciation": "Not Applicable"
+      },
+      "method": {
+        "method_code": "28",
+        "method_name": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.",
+        "method_type": "Instrument deployment",
+        "method_description": "Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools."
+      },
+      "processing_level": {
+        "processing_level_code": "1",
+        "definition": "Quality controlled data",
+        "explanation": "Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures."
+      }
+    }
+  ],
+  "abstract": "This dataset contains time series of observations of water temperature in the Little Bear River, UT. Data were recorded every 30 minutes. The values were recorded using a HydroLab MS5 multi-parameter water quality sonde connected to a Campbell Scientific datalogger."
+}
