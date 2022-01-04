@@ -376,7 +376,6 @@ def ingest_logical_file_metadata_from_dict(metadata, resource, map_files=[]):
         raise ValidationError("input metadata must be a dict object")
 
 
-
 def ingest_logical_file_metadata(graph, resource, map_files=[]):
     resource.refresh_from_db()
 
