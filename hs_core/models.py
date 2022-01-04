@@ -951,6 +951,10 @@ class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
     SOURCE_TYPES = (
+        ('isHostedBy', 'The content of this resource is hosted by'),
+        ('isCopiedFrom', 'The content of this resource was copied from'),
+        ('isDataFor', 'The content of this resource serves as the data for'),
+        ('cites', 'This resource cites'),
         ('isPartOf', 'The content of this resource is part of'),
         ('hasPart', 'This resource includes'),
         ('isExecutedBy', 'The content of this resource can be executed by'),
@@ -972,6 +976,9 @@ class Relation(AbstractMetaDataElement):
     # these are hydroshare custom terms that are not Dublin Core terms
     HS_RELATION_TERMS = ('isExecutedBy', 'isCreatedBy', 'isDescribedBy')
     NOT_USER_EDITABLE = ('isVersionOf', 'isReplacedBy', 'isPartOf', 'hasPart', 'replaces')
+    # keeping these deprecated types for now for migrating these types to other relation types
+    # using a management command
+    DEPRECATED_RELATION_TYPES = ('isHostedBy', 'isCopiedFrom', 'isDataFor', 'cites')
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
@@ -1015,6 +1022,9 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
+        if kwargs['type'] in cls.DEPRECATED_RELATION_TYPES:
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
@@ -1039,6 +1049,9 @@ class Relation(AbstractMetaDataElement):
             ValidationError("Type of relation element is missing.")
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
+
+        if kwargs['type'] in cls.DEPRECATED_RELATION_TYPES:
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
