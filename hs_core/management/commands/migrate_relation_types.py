@@ -1,7 +1,11 @@
 import logging
+
 from django.core.management.base import BaseCommand
-from hs_core.models import BaseResource
+from django.db.models import Q
+
+from hs_core.hydroshare import utils
 from hs_core.hydroshare.utils import set_dirty_bag_flag
+from hs_core.models import BaseResource
 
 
 class Command(BaseCommand):
@@ -13,6 +17,11 @@ class Command(BaseCommand):
             res = res.get_content_model()
             type_migrated = False
             # migrate relation types
+            if res.metadata is None:
+                log_msg = "Resource with ID:{} missing metadata object. Skipping this resource".format(res.short_id)
+                print(log_msg)
+                log.warning(log_msg)
+                continue
             for rel in res.metadata.relations.all():
                 if rel.type in ('cites', 'isHostedBy', 'isDataFor', 'isCopiedFrom'):
                     old_type = rel.type
@@ -35,11 +44,25 @@ class Command(BaseCommand):
                 if not res.metadata.relations.filter(type='source', value=source.derived_from).exists():
                     res.metadata.create_element('relation', type='source', value=source.derived_from)
                     source_migrated = True
+            res.metadata.sources.all().delete()
+
+            # update relation type 'isVersionOf' and 'isReplacedBy' with resource citation
+            for rel in res.metadata.relations.filter(Q(type='isVersionOf') | Q(type='isReplacedBy')).all():
+                res_url_parts = rel.value.split('/resource/')
+                if len(res_url_parts) == 2:
+                    res_id = res_url_parts[1]
+                    try:
+                        res_to_link = utils.get_resource_by_shortkey(shortkey=res_id, or_404=False)
+                        rel.value = res_to_link.get_citation()
+                        rel.save()
+                    except BaseResource.DoesNotExist:
+                        log_msg = "Failed to update relation type '{}' with resource citation for resource with ID:{}"
+                        log_msg = log_msg.format(rel.type, res.short_id)
+                        print(log_msg)
+                        log.warning(log_msg)
 
             if any([source_migrated, type_migrated, res.metadata.relations.filter(type='isVersionOf').exists(),
                     res.metadata.relations.filter(type='isReplacedBy').exists()]):
-                # setting bag flag to dirty so that resource bag file will be regenerated on demand with updated
-                # resource metadata xml file
                 set_dirty_bag_flag(res)
 
             if source_migrated:
@@ -55,11 +78,12 @@ class Command(BaseCommand):
             if res.resource_type == "CollectionResource":
                 if res.resources.count() > 0:
                     res.metadata.relations.filter(type='hasPart').all().delete()
-                    # create new relation meta element of type 'hasPart' with value of citation of the resource that the
-                    # collection contains
                     for res_in_collection in res.resources.all():
+                        # add relation type 'hasPart' to collection resource
                         res.metadata.create_element("relation", type='hasPart', value=res_in_collection.get_citation())
                         res_in_collection.metadata.relations.filter(type='isPartOf').all().delete()
+
+                        # add relation type 'isPartOf' to the resource that is part of the collection resource
                         res_in_collection.metadata.create_element("relation", type='isPartOf', value=res.get_citation())
                         log_msg = "Added 'isPartOf relation to resource with ID:{} and type:{} that is part of the" \
                                   "collection resource ID:{}"
