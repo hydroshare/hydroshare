@@ -306,14 +306,24 @@ class CompositeResource(BaseResource):
                 return aggr
             return None
 
-    def recreate_aggregation_meta_files(self, orig_path, new_path):
+    def set_flag_to_recreate_aggregation_meta_files(self, orig_path, new_path):
         """
         When a folder or file representing an aggregation is renamed or moved,
         the associated meta files (resource map, metadata xml files as well as schema json files) are deleted
-        and then regenerated
+        and then aggregation metadata is set to dirty so that these meta files will be regenerated as part of
+        aggregation or bag download
         :param  orig_path: original file/folder path prior to move/rename
         :param  new_path: new file/folder path after move/rename
         """
+
+        def set_parent_aggregation_dirty(path_to_search):
+            if '/' in path_to_search:
+                path = os.path.dirname(path_to_search)
+                try:
+                    parent_aggr = self.get_aggregation_by_name(path)
+                    parent_aggr.set_metadata_dirty()
+                except ObjectDoesNotExist:
+                    pass
 
         if new_path.startswith(self.file_path):
             new_path = new_path[len(self.file_path) + 1:]
@@ -353,26 +363,34 @@ class CompositeResource(BaseResource):
         if istorage.exists(map_xml_file_full_path):
             istorage.delete(map_xml_file_full_path)
 
-        # update any aggregations under the orig_path
+        # set affected logical file metadata to dirty so that xml meta files will be regenerated at the time of
+        # aggregation or bag download
         for lf in self.logical_files:
+            # set metadata dirty for any folder based aggregations under the orig_path
             if hasattr(lf, 'folder'):
                 if lf.folder is not None and lf.folder.startswith(orig_path):
                     lf.folder = os.path.join(new_path, lf.folder[len(orig_path) + 1:]).strip('/')
                     lf.save()
-                    lf.create_aggregation_xml_documents()
+                    lf.set_metadata_dirty()
+                    continue
 
-        # need to recreate xml doc for any parent aggregation that may exist relative to path *new_path*
-        if '/' in new_path:
-            path = os.path.dirname(new_path)
-            try:
-                parent_aggr = self.get_aggregation_by_name(path)
-                parent_aggr.create_aggregation_xml_documents()
-            except ObjectDoesNotExist:
-                pass
+            # set metadata dirty for any non-folder based aggregation under the orig_path
+            if lf.aggregation_name.startswith(orig_path):
+                lf.set_metadata_dirty()
+
+            # set metadata to dirty for non-folder based aggregation under the new_path
+            if lf.aggregation_name.startswith(new_path):
+                lf.set_metadata_dirty()
+
+        # set metadata to dirty for any parent aggregation that may exist relative to path *orig_path*
+        set_parent_aggregation_dirty(orig_path)
+
+        # set metadata to dirty for any parent aggregation that may exist relative to path *new_path*
+        set_parent_aggregation_dirty(new_path)
 
         try:
             aggregation = self.get_aggregation_by_name(new_path)
-            aggregation.create_aggregation_xml_documents()
+            aggregation.set_metadata_dirty()
         except ObjectDoesNotExist:
             # the file path *new_path* does not represent an aggregation - no more
             # action is needed

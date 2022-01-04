@@ -335,7 +335,7 @@ class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(site.elevation_m, 1445)
         self.assertEqual(site.elevation_datum, 'NGVD29')
         self.assertEqual(site.site_type, 'Stream')
-        self.assertFalse(logical_file.metadata.is_dirty)
+        self.assertTrue(logical_file.metadata.is_dirty)
 
         site_name = 'Little Bear River at Logan, Utah'
         site_data = {'site_name': site_name, 'elevation_m': site.elevation_m,

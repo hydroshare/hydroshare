@@ -916,6 +916,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             # to delete each of its contained ResourceFile objects
             logical_file.logical_delete(user)
             return filename_or_id
+        else:
+            logical_file.set_metadata_dirty()
 
     signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                resource=resource, user=user)
