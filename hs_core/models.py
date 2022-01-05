@@ -991,6 +991,12 @@ class Relation(AbstractMetaDataElement):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
+    @classmethod
+    def get_supported_types(cls):
+        supported_types = [rel_type for rel_type in dict(cls.SOURCE_TYPES) if rel_type not
+                           in cls.DEPRECATED_RELATION_TYPES]
+        return supported_types
+
     def type_description(self):
         return dict(self.SOURCE_TYPES)[self.type]
 

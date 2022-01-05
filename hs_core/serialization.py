@@ -1196,7 +1196,7 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceRelation(object):
-        KNOWN_TYPES = Relation.SOURCE_TYPES
+        KNOWN_TYPES = Relation.get_supported_types()
 
         def __str__(self):
             msg = "{classname} {relationship_type}: {uri}"
