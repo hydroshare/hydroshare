@@ -1,43 +1,17 @@
 import logging
-import os
 
 from django.core.management.base import BaseCommand
 
 from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_resource_by_shortkey
-from hs_core.models import CoreMetaData, ResourceFile
+from hs_core.models import CoreMetaData
 from hs_file_types.models import ModelInstanceLogicalFile
 from hs_modelinstance.models import ModelInstanceResource
-from ..utils import migrate_core_meta_elements
+from ..utils import migrate_core_meta_elements, move_files_and_folders_to_model_aggregation
 
 
 class Command(BaseCommand):
     help = "Convert all model instance resources to composite resource with model instance aggregation"
     _EXECUTED_BY_EXTRA_META_KEY = 'EXECUTED_BY_RES_ID'
-
-    def create_aggr_folder(self, mi_aggr, comp_res, logger):
-        new_folder = "model-instance"
-        # passing 'migrating_resource' as True so that folder can be created even in published resource
-        ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
-        mi_aggr.folder = new_folder
-        mi_aggr.dataset_name = new_folder
-        mi_aggr.save()
-        msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
-        logger.info(msg)
-        self.stdout.write(self.style.SUCCESS(msg))
-        # move files to the new folder
-        istorage = comp_res.get_irods_storage()
-
-        for res_file in comp_res.files.all():
-            if res_file != comp_res.readme_file:
-                src_full_path = os.path.join(comp_res.file_path, res_file.file_name)
-                tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.file_name)
-                istorage.moveFile(src_full_path, tgt_full_path)
-                res_file.set_storage_path(tgt_full_path)
-                msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
-                self.stdout.write(self.style.SUCCESS(msg))
-                mi_aggr.add_resource_file(res_file)
-                msg = "Added file {} to mi aggregation".format(res_file.file_name)
-                self.stdout.write(self.style.SUCCESS(msg))
 
     def set_executed_by(self, mi_aggr, comp_res, logger):
         linked_res_id = comp_res.extra_data[self._EXECUTED_BY_EXTRA_META_KEY]
@@ -47,6 +21,7 @@ class Command(BaseCommand):
             msg = "Linked resource (ID:{}) was not found. Error:{}".format(linked_res_id, str(err))
             logger.warning(msg)
             self.stdout.write(self.style.WARNING(msg))
+            self.stdout.flush()
             return
 
         # check the linked resource is a composite resource
@@ -70,6 +45,8 @@ class Command(BaseCommand):
                 logger.warning(msg)
                 self.stdout.write(self.style.WARNING(msg))
 
+        self.stdout.flush()
+
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
         resource_counter = 0
@@ -87,26 +64,12 @@ class Command(BaseCommand):
             # check resource exists on irods
             istorage = mi_res.get_irods_storage()
             if not istorage.exists(mi_res.root_path):
-                err_msg = "Model instance resource not found in irods (ID: {})".format(mi_res.short_id)
+                err_msg = "Couldn't migrate model instance resource (ID:{}). This resource doesn't exist in iRODS."
+                err_msg = err_msg.format(mi_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
+                self.stdout.flush()
                 # skip this mi resource
-                continue
-
-            # check resource files exist on irods
-            file_missing = False
-            for res_file in mi_res.files.all().iterator():
-                file_path = res_file.public_path
-                if not istorage.exists(file_path):
-                    err_msg = "File path not found in irods:{}".format(file_path)
-                    logger.error(err_msg)
-                    err_msg = "Failed to convert model instance resource (ID: {}). " \
-                              "Resource file is missing on irods".format(mi_res.short_id)
-                    self.stdout.write(self.style.ERROR(err_msg))
-                    file_missing = True
-                    break
-            if file_missing:
-                # skip this corrupt raster resource for migration
                 continue
 
             # change the resource_type
@@ -140,9 +103,11 @@ class Command(BaseCommand):
                 err_msg = err_msg + '\n' + str(ex)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
+                self.stdout.flush()
                 continue
 
-            self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
+            move_files_and_folders_to_model_aggregation(command=self, model_aggr=mi_aggr, comp_res=comp_res,
+                                                        logger=logger, aggr_name='model-instance')
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
@@ -185,6 +150,7 @@ class Command(BaseCommand):
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
             print("_______________________________________________")
+            self.stdout.flush()
 
         if resource_counter > 0:
             msg = "{} MODEL INSTANCE RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
@@ -200,3 +166,4 @@ class Command(BaseCommand):
                 ModelInstanceResource.objects.all().count())
             logger.info(msg)
             self.stdout.write(self.style.WARNING(msg))
+        self.stdout.flush()

@@ -52,11 +52,13 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 # migrated mi resource)
                 if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
                     hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
-                    display_string = "Model program content from resource:"
+                    display_string = "HydroShare resource that contains the Model Program:"
                     with dom_tags.p(display_string):
                         with dom_tags.span():
                             dom_tags.a(hs_res_url, href=hs_res_url)
-                    dom_tags.p("Model program content path:{}".format(mp_aggr.aggregation_name))
+                    aggr_path = "Aggregation in HydroShare resource that contains the Model Program:"
+                    with dom_tags.p(aggr_path):
+                        dom_tags.span(mp_aggr.aggregation_name, style="font-weight: bold;")
                 else:
                     display_string = "{} ({})".format(mp_aggr.aggregation_name, mp_aggr.dataset_name)
                     dom_tags.p(display_string)
@@ -204,12 +206,18 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                     # migrated mi resource)
                     if self.logical_file.resource.short_id != mp_aggr.resource.short_id:
                         hs_res_url = os.path.join(current_site_url(), 'resource', mp_aggr.resource.short_id)
-                        display_string = "Model program content from resource:"
+                        display_string = "HydroShare resource that contains the Model Program:"
                         with dom_tags.p(display_string):
                             with dom_tags.span():
                                 dom_tags.a(hs_res_url, href=hs_res_url)
-                        dom_tags.p("Model program content path:{}".format(mp_aggr.aggregation_name))
-                        dom_tags.p("Selected model program exists in a different resource", cls="alert alert-danger")
+                        aggr_path = "Aggregation in HydroShare resource that contains the Model Program:"
+                        with dom_tags.p(aggr_path):
+                            dom_tags.span(mp_aggr.aggregation_name, style="font-weight: bold;")
+
+                        external_mp_aggr_msg = "Selected model program exists in a different resource. " \
+                                               "With the current release of HydroShare, you can now move your Model " \
+                                               "Program into the same resource as Model Instance."
+                        dom_tags.p(external_mp_aggr_msg, cls="alert alert-info")
                 if invalid_schema:
                     dom_tags.div("Metadata schema in the associated model program fails to validate existing metadata. "
                                  "Updating the schema from model program will lead to loss of all schema based "
@@ -227,7 +235,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                         id="btn-mi-schema-update", data_schema_update_url=schema_update_url,
                                         cls=btn_cls)
                 if self.logical_file.metadata_schema_json:
-                    dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                    dom_tags.button("Show/Hide Model Instance Metadata JSON Schema", type="button",
                                     cls="btn btn-success btn-block",
                                     data_toggle="collapse", data_target="#meta-schema")
                     mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
@@ -237,7 +245,10 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;",
                                           cls="form-control")
                 if self.executed_by and not self.executed_by.metadata_schema_json:
-                    dom_tags.div("Selected model program is missing metadata schema", cls="alert alert-danger")
+                    missing_schema_msg = "Selected model program is missing metadata schema. With the current " \
+                                         "release of HydroShare, you can now specify specific metadata schema " \
+                                         "for a Model Program."
+                    dom_tags.div(missing_schema_msg, cls="alert alert-info")
 
             return executed_by_div
 

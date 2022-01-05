@@ -3137,7 +3137,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         elif path.startswith(locpath):
             # strip optional local path prefix
             if test_exists and not storage.exists(path):
-                raise ValidationError("Local path does not exist in irods")
+                raise ValidationError("Local path ({}) does not exist in irods".format(path))
             plen = len(locpath)
             relpath = relpath[plen:]  # strip local prefix, omit /
 

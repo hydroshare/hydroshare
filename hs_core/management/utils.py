@@ -11,6 +11,7 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 """
 
 import json
+import os
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -21,531 +22,111 @@ from hs_file_types.utils import set_logical_file_type, get_logical_file_type
 
 from requests import post
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.views.utils import link_irods_file_to_django
 
 import logging
 
 
-def get_modflow_meta_schema():
-    """MODFLOW metadata JSON schema used for migrating MODFLOW model instance resource to Composite Resource
-    The model instance aggregation created in the converted composite resource will have this metadata schema for
-    MODFLOW specific metadata
-    """
+def _get_model_aggregation_folder_name(comp_res, default_folder_name):
+    # generate a folder name if the default folder name already exists
+    # used for migrating model resources
+    folder_name = default_folder_name
+    istorage = comp_res.get_irods_storage()
+    folder_path = os.path.join(comp_res.file_path, default_folder_name)
+    post_fix = 1
+    while istorage.exists(folder_path):
+        folder_name = "{}-{}".format(default_folder_name, post_fix)
+        folder_path = os.path.join(comp_res.file_path, folder_name)
+        post_fix += 1
+    return folder_name
 
-    _schema = """
-    {
-    "type": "object",
-    "title": "MODFLOW Model Instance Metadata Schema",
-    "$schema": "http://json-schema.org/draft-04/schema#",	
-    "properties": {
-        "studyArea": {
-            "type": "object",
-            "title": "Study Area",
-            "properties": {
-                "totalWidth": {
-                    "type": "string",
-                    "title": "Total Width (in meters)",                    
-                    "description": "Total width of the study area used in creating this model instance.",
-                    "propertyOrder": 2
-                },
-                "totalLength": {
-                    "type": "string",
-                    "title": "Total Length (in meters)",                    
-                    "description": "Total length of the study area used in creating this model instance.",
-                    "propertyOrder": 1
-                },
-                "maximumElevation": {
-                    "type": "string",
-                    "title": "Maximum Elevation (in meters)",                    
-                    "description": "Maximum elevation of the study area used in creating this model instance.",
-                    "propertyOrder": 3
-                },
-                "minimumElevation": {
-                    "type": "string",
-                    "title": "Minimum Elevation (in meters)",                    
-                    "description": "Minimum elevation of the study area used in creating this model instance.",
-                    "propertyOrder": 4
-                }
-            },
-            "description": "The dimentions of the study area used in creating this model instance.",
-            "propertyOrder": 8,
-            "additionalProperties": false
-        },
-        "modelSolver": {
-            "enu": [                
-                "GMG",
-                "LMG",
-                "PCG",
-                "PCGN",
-                "SIP",
-                "SOR",
-                "NWT",
-                "DE4"				
-            ],
-            "type": "string",
-            "title": "Model Solver",				
-            "description": "Model solver used in creating this model instance.",
-            "propertyOrder": 5
-        },
-        "stressPeriod": {
-            "type": "object",
-            "title": "Stress Periods",
-            "properties": {
-                "type": {
-                    "enum": [
-                        "Steady",
-                        "Transient",
-                        "Steady and Transient"
-                    ],
-                    "type": "string",
-                    "title": "Type",                    
-                    "description": "Type of stress period used in creating this model instance.",
-                    "propertyOrder": 1
-                },
-                "lengthOfSteadyStateStressPeriod": {
-                    "type": "string",
-                    "title": "Length of Steady State Stress Periods",                    
-                    "description": "Length of steady state stress periods used in creating this model instance.",
-                    "propertyOrder": 2
-                },
-                "typeOfTransientStateStressPeriod": {
-                    "enum": [
-                        "Annually",
-                        "Monthly",
-                        "Daily",
-                        "Hourly",
-                        "Other"
-                    ],
-                    "type": "string",
-                    "title": "Type of Transient State Stress Periods",                    
-                    "description": "Type of transient state stress periods used in creating this model instance.",
-                    "propertyOrder": 1
-                },
-                "lengthOfTransientStateStressPeriod": {
-                    "type": "string",
-                    "title": "Length of Transient State Stress Periods",                    
-                    "description": "Length of transient state stress periods used in creating this model instance.",
-                    "propertyOrder": 4
-                }
-            },			
-            "description": "Stress periods used in creating this model instance.",
-            "propertyOrder": 10,
-            "additionalProperties": false
-        },
-        "gridDimensions": {
-            "type": "object",
-            "title": "Grid Dimensions",
-            "properties": {
-                "typeOfRows": {
-                    "enum": [
-                        "Regular",
-                        "Irregular"
-                    ],
-                    "type": "string",
-                    "title": "Type of Rows",                    
-                    "description": "Type of rows used in creating this model instance.",
-                    "propertyOrder": 2
-                },
-                "numberOfRows": {
-                    "type": "string",
-                    "title": "Number of Rows",                    
-                    "description": "Number of rows used in creating this model instance.",
-                    "propertyOrder": 3
-                },
-                "typeOfColumns": {
-                    "enum": [
-                        "Regular",
-                        "Irregular"
-                    ],
-                    "type": "string",
-                    "title": "Type of Columns",                    
-                    "description": "Type of columns used in creating this model instance.",
-                    "propertyOrder": 4
-                },
-                "numberOfLayers": {
-                    "type": "string",
-                    "title": "Number of Layers",                    
-                    "description": "Number of layers used in creating this model instance.",
-                    "propertyOrder": 1
-                },
-                "numberOfColumns": {
-                    "type": "string",
-                    "title": "Number of Columns",                    
-                    "description": "Number of columns used in creating this model instance.",
-                    "propertyOrder": 5
-                }
-            },			
-            "description": "Grid dimensions used in creating this model instance.",
-            "propertyOrder": 9,
-            "additionalProperties": false
-        },
-        "modelParameter": {
-            "type": "string",
-            "title": "Model Parameters",
-            "default": "",
-            "description": "Model parameters used in creating this model instance.",
-            "propertyOrder": 4
-        },
-        "groundwaterFlow": {
-            "type": "object",
-            "title": "Groundwater Flow",
-            "properties": {
-                "flowPackage": {
-                    "enum": [
-                        "BCF6",
-                        "LPF",
-                        "HUF2",
-                        "UPW"
-                    ],
-                    "type": "string",
-                    "title": "Flow Package",
-                    "default": "",
-                    "description": "Flow package used in creating this model instance.",
-                    "propertyOrder": 1
-                },
-                "flowParameter": {
-                    "enum": [
-                        "Hydraulic Conductivity",
-                        "Transmissivity"
-                    ],
-                    "type": "string",
-                    "title": "Flow Parameter",
-                    "default": "",
-                    "description": "Flow parameter used in creating this model instance.",
-                    "propertyOrder": 5
-                },
-                "IncludesUnsaturatedZonePackage": {
-                    "type": "boolean",
-                    "title": "Includes Unsaturated Zone Package (UZF)",
-                    "format": "checkbox",
-                    "propertyOrder": 2
-                },
-                "IncludesSeawaterIntrusionPackage": {
-                    "type": "boolean",
-                    "title": "Includes Seawater Intrusion package (SWI2)",
-                    "format": "checkbox",
-                    "propertyOrder": 4
-                },
-                "IncludesHorizontalFlowBarrierPackage": {
-                    "type": "boolean",
-                    "title": "Includes Horizontal Flow Barrier package (HFB6)",
-                    "format": "checkbox",
-                    "propertyOrder": 3
-                }
-            },
-            "description": "Groundwater flow used in creating this model instance.",
-            "propertyOrder": 11,
-            "additionalProperties": false
-        },
-        "modelCalibration": {
-            "type": "object",
-            "title": "Model Calibration",
-            "properties": {
-                "observationType": {
-                    "type": "string",
-                    "title": "Observation Types",
-                    "default": "",
-                    "description": "Observation types used in creating this model instance.",
-                    "propertyOrder": 2
-                },
-                "calibrationMethod": {
-                    "type": "string",
-                    "title": "Calibration Methods",
-                    "default": "",
-                    "description": "Calibration methods used in creating this model instance.",
-                    "propertyOrder": 4
-                },
-                "calibratedParameter": {
-                    "type": "string",
-                    "title": "Calibrated Parameters",
-                    "default": "",
-                    "description": "Calibrated parameters used in creating this model instance.",
-                    "propertyOrder": 1
-                },
-                "observationProcessPackage": {
-                    "enum": [
-                        "ADV2",
-                        "CHOB",
-                        "DROB",
-                        "DTOB",
-                        "GBOB",
-                        "HOB",
-                        "OBS",
-                        "RVOB",
-                        "STOB"
-                    ],
-                    "type": "string",
-                    "title": "Observation Process Packages",                    
-                    "description": "Type of transient state stress periods used in creating this model instance.",
-                    "propertyOrder": 3
-                }
-            },
-            "description": "Model calibration used in creating this model instance.",
-            "propertyOrder": 12,
-            "additionalProperties": false
-        },
-        "subsidencePackage": {
-            "enum": [
-                "IBS",
-                "SUB",
-                "SWT"				
-            ],
-            "type": "string",
-            "title": "Subsidence Package",            
-            "description": "Subsidence package used in creating this model instance.",
-            "propertyOrder": 7
-        },
-        "outputControlPackage": {
-            "type": "object",
-            "title": "Output Control Packages",
-            "properties": {
-                "OC": {
-                    "type": "boolean",
-                    "title": "OC",
-                    "format": "checkbox",
-                    "propertyOrder": 5
-                },
-                "HYD": {
-                    "type": "boolean",
-                    "title": "HYD",
-                    "format": "checkbox",
-                    "propertyOrder": 2
-                },
-                "GAGE": {
-                    "type": "boolean",
-                    "title": "GAGE",
-                    "format": "checkbox",
-                    "propertyOrder": 1
-                },
-                "LMT6": {
-                    "type": "boolean",
-                    "title": "LMT6",
-                    "format": "checkbox",
-                    "propertyOrder": 3
-                },
-                "MNWI": {
-                    "type": "boolean",
-                    "title": "MNWI",
-                    "format": "checkbox",
-                    "propertyOrder": 4
-                }
-            },
-			"required": ["OC", "HYD", "GAGE", "LMT6", "MNWI"],
-            "description": "Output control packages used in creating this model instance.",
-            "propertyOrder": 6,
-            "additionalProperties": false
-        },
-        "specifiedFluxBoundaryPackages": {
-            "type": "object",
-            "title": "Specified Flux Boundary Packages",
-            "properties": {
-                "FHB": {
-                    "type": "boolean",
-                    "title": "FHB",
-                    "format": "checkbox",
-                    "propertyOrder": 1
-                },
-                "RCH": {
-                    "type": "boolean",
-                    "title": "RCH",
-                    "format": "checkbox",
-                    "propertyOrder": 2
-                },
-                "WEL": {
-                    "type": "boolean",
-                    "title": "WEL",
-                    "format": "checkbox",
-                    "propertyOrder": 3
-                },
-                "otherPackages": {
-                    "type": "string",
-                    "title": "Other packages",
-                    "propertyOrder": 4
-                }
-            },
-			"required": ["FHB", "RCH", "WEL"],
-            "description": "Specified flux boundary packages used in creating this model instance.",
-            "propertyOrder": 2,
-            "additionalProperties": false
-        },
-        "specifiedHeadBoundaryPackages": {
-            "type": "object",
-            "title": "Specified Head Boundary Packages",
-            "properties": {
-                "BFH": {
-                    "type": "boolean",
-                    "title": "BFH",
-                    "format": "checkbox",
-                    "propertyOrder": 1
-                },
-                "CHD": {
-                    "type": "boolean",
-                    "title": "CHD",
-                    "format": "checkbox",
-                    "propertyOrder": 2
-                },
-                "FHB": {
-                    "type": "boolean",
-                    "title": "FHB",
-                    "format": "checkbox",
-                    "propertyOrder": 3
-                },
-                "otherPackages": {
-                    "type": "string",
-                    "title": "Other packages",
-                    "propertyOrder": 4
-                }
-            },
-			"required": ["BFH", "CHD", "FHB"],
-            "description": "Specified head boundary packages used in creating this model instance.",
-            "propertyOrder": 1,
-            "additionalProperties": false
-        },
-        "headDependentFluxBoundaryPackages": {
-            "type": "object",
-            "title": "Head Dependent Flux Boundary Packages",
-            "properties": {
-                "DAF": {
-                    "type": "boolean",
-                    "title": "DAF",
-                    "format": "checkbox",
-                    "propertyOrder": 1
-                },
-                "DRN": {
-                    "type": "boolean",
-                    "title": "DRN",
-                    "format": "checkbox",
-                    "propertyOrder": 3
-                },
-                "DRT": {
-                    "type": "boolean",
-                    "title": "DRT",
-                    "format": "checkbox",
-                    "propertyOrder": 4
-                },
-                "ETS": {
-                    "type": "boolean",
-                    "title": "ETS",
-                    "format": "checkbox",
-                    "propertyOrder": 5
-                },
-                "EVT": {
-                    "type": "boolean",
-                    "title": "EVT",
-                    "format": "checkbox",
-                    "propertyOrder": 6
-                },
-                "GHB": {
-                    "type": "boolean",
-                    "title": "GHB",
-                    "format": "checkbox",
-                    "propertyOrder": 7
-                },
-                "LAK": {
-                    "type": "boolean",
-                    "title": "LAK",
-                    "format": "checkbox",
-                    "propertyOrder": 8
-                },
-                "RES": {
-                    "type": "boolean",
-                    "title": "RES",
-                    "format": "checkbox",
-                    "propertyOrder": 11
-                },
-                "RIP": {
-                    "type": "boolean",
-                    "title": "RIP",
-                    "format": "checkbox",
-                    "propertyOrder": 12
-                },
-                "RIV": {
-                    "type": "boolean",
-                    "title": "RIV",
-                    "format": "checkbox",
-                    "propertyOrder": 13
-                },
-                "SFR": {
-                    "type": "boolean",
-                    "title": "SFR",
-                    "format": "checkbox",
-                    "propertyOrder": 14
-                },
-                "STR": {
-                    "type": "boolean",
-                    "title": "STR",
-                    "format": "checkbox",
-                    "propertyOrder": 15
-                },
-                "UZF": {
-                    "type": "boolean",
-                    "title": "UZF",
-                    "format": "checkbox",
-                    "propertyOrder": 16
-                },
-                "DAFG": {
-                    "type": "boolean",
-                    "title": "DAFG",
-                    "format": "checkbox",
-                    "propertyOrder": 2
-                },
-                "MNW1": {
-                    "type": "boolean",
-                    "title": "MNW1",
-                    "format": "checkbox",
-                    "propertyOrder": 9
-                },
-                "MNW2": {
-                    "type": "boolean",
-                    "title": "MNW2",
-                    "format": "checkbox",
-                    "propertyOrder": 10
-                },
-                "otherPackages": {
-                    "type": "string",
-                    "title": "Other packages",
-                    "propertyOrder": 17
-                }
-            },
-			"required": ["DAF", "DRN", "DRT", "ETS", "EVT", "GHB", "LAK", "RES", "RIP", "RIV", "SFR", "STR", "UZF", "DAFG", "MNW1", "MNW2"],
-            "description": "Head dependent flux boundary packages used in creating this model instance.",
-            "propertyOrder": 3,
-            "additionalProperties": false
-        },
-		"modelInputs": {
-			"type": "array",
-			"title": "Inputs for model",
-			"format": "table",
-			"items": {
-				"type": "object",				
-				"properties": {
-					"inputType": {
-						"type": "string",
-						"title": "Type of model input"
-					},
-					"inputSourceName": {
-						"type": "string",
-						"title": "Input source name"
-					},
-					"inputSourceURL": {
-						"type": "string",
-						"title": "Input source URL"
-					}
-				},
-				"additionalProperties": false
-			},
-			"description": "Model inputs.",
-            "propertyOrder": 4,
-            "additionalProperties": false
-		}
-    },   	
-    "description": "A sample schema for MODFLOW model instance metadata.",
-    "additionalProperties": false
-}
-    """
-    return _schema
+
+def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, logger, aggr_name):
+    # used for migrating model resources
+
+    # create a new folder for model aggregation to which all files and folders will be moved
+    new_folder = _get_model_aggregation_folder_name(comp_res, aggr_name)
+    ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
+    model_aggr.folder = new_folder
+    model_aggr.dataset_name = new_folder
+    model_aggr.save()
+    msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
+    logger.info(msg)
+    command.stdout.write(command.style.SUCCESS(msg))
+
+    # move files and folders to the new aggregation folder
+    istorage = comp_res.get_irods_storage()
+    moved_folders = []
+    aggr_name = aggr_name.replace("-", " ")
+    for res_file in comp_res.files.all().iterator():
+        if res_file != comp_res.readme_file:
+            moving_folder = False
+            if res_file.file_folder:
+                if "/" in res_file.file_folder:
+                    folder_to_move = res_file.file_folder.split("/")[0]
+                else:
+                    folder_to_move = res_file.file_folder
+                if folder_to_move not in moved_folders:
+                    moved_folders.append(folder_to_move)
+                    moving_folder = True
+                else:
+                    continue
+                src_short_path = folder_to_move
+            else:
+                src_short_path = res_file.file_name
+
+            src_full_path = os.path.join(comp_res.root_path, 'data', 'contents', src_short_path)
+            if istorage.exists(src_full_path):
+                tgt_full_path = os.path.join(comp_res.root_path, 'data', 'contents', new_folder, src_short_path)
+                if moving_folder:
+                    msg = "Moving folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                else:
+                    msg = "Moving file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                command.stdout.write(msg)
+
+                istorage.moveFile(src_full_path, tgt_full_path)
+                if moving_folder:
+                    msg = "Moved folder ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                    logger.info(msg)
+                    command.stdout.write(command.style.SUCCESS(msg))
+                    command.stdout.flush()
+
+                    # Note: some of the files returned by list_folder() may not exist in iRODS
+                    res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
+                    tgt_short_path = os.path.join('data', 'contents', new_folder, folder_to_move)
+                    src_short_path = os.path.join('data', 'contents', folder_to_move)
+                    for fobj in res_file_objs:
+                        src_path = fobj.storage_path
+                        new_path = src_path.replace(src_short_path, tgt_short_path, 1)
+                        if istorage.exists(new_path):
+                            fobj.set_storage_path(new_path)
+                            model_aggr.add_resource_file(fobj)
+                            msg = "Added file ({}) to {} aggregation".format(fobj.short_path, aggr_name)
+                            logger.info(msg)
+                            command.stdout.write(command.style.SUCCESS(msg))
+                        else:
+                            err_msg = "File ({}) is missing in iRODS. File not added to the aggregation"
+                            err_msg = err_msg.format(new_path)
+                            logger.warn(err_msg)
+                            command.stdout.write(command.style.WARNING(err_msg))
+                else:
+                    msg = "Moved file ({}) to the new aggregation folder:{}".format(src_short_path, new_folder)
+                    logger.info(msg)
+                    command.stdout.write(command.style.SUCCESS(msg))
+                    res_file.set_storage_path(tgt_full_path)
+                    model_aggr.add_resource_file(res_file)
+                    msg = "Added file ({}) to {} aggregation".format(res_file.short_path, aggr_name)
+                    logger.info(msg)
+                    command.stdout.write(command.style.SUCCESS(msg))
+            else:
+                err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
+                          "the {} aggregation.".format(src_full_path, aggr_name)
+                logger.warn(err_msg)
+                command.stdout.write(command.style.WARNING(err_msg))
+            command.stdout.flush()
+
 
 def migrate_core_meta_elements(orig_meta_obj, comp_res):
     """
@@ -1184,3 +765,523 @@ class CheckResource(object):
                 print("  Logical file errors:")
                 for e in logical_issues:
                     print("    {}".format(e))
+
+
+def get_modflow_meta_schema():
+    """MODFLOW metadata JSON schema used for migrating MODFLOW model instance resource to Composite Resource
+    The model instance aggregation created in the converted composite resource will have this metadata schema for
+    MODFLOW specific metadata
+    """
+
+    _schema = """
+    {
+    "type": "object",
+    "title": "MODFLOW Model Instance Metadata Schema",
+    "$schema": "http://json-schema.org/draft-04/schema#",	
+    "properties": {
+        "studyArea": {
+            "type": "object",
+            "title": "Study Area",
+            "properties": {
+                "totalWidth": {
+                    "type": "string",
+                    "title": "Total Width (in meters)",                    
+                    "description": "Total width of the study area used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "totalLength": {
+                    "type": "string",
+                    "title": "Total Length (in meters)",                    
+                    "description": "Total length of the study area used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "maximumElevation": {
+                    "type": "string",
+                    "title": "Maximum Elevation (in meters)",                    
+                    "description": "Maximum elevation of the study area used in creating this model instance.",
+                    "propertyOrder": 3
+                },
+                "minimumElevation": {
+                    "type": "string",
+                    "title": "Minimum Elevation (in meters)",                    
+                    "description": "Minimum elevation of the study area used in creating this model instance.",
+                    "propertyOrder": 4
+                }
+            },
+            "description": "The dimentions of the study area used in creating this model instance.",
+            "propertyOrder": 8,
+            "additionalProperties": false
+        },
+        "modelSolver": {
+            "enu": [                
+                "GMG",
+                "LMG",
+                "PCG",
+                "PCGN",
+                "SIP",
+                "SOR",
+                "NWT",
+                "DE4"				
+            ],
+            "type": "string",
+            "title": "Model Solver",				
+            "description": "Model solver used in creating this model instance.",
+            "propertyOrder": 5
+        },
+        "stressPeriod": {
+            "type": "object",
+            "title": "Stress Periods",
+            "properties": {
+                "type": {
+                    "enum": [
+                        "Steady",
+                        "Transient",
+                        "Steady and Transient"
+                    ],
+                    "type": "string",
+                    "title": "Type",                    
+                    "description": "Type of stress period used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "lengthOfSteadyStateStressPeriod": {
+                    "type": "string",
+                    "title": "Length of Steady State Stress Periods",                    
+                    "description": "Length of steady state stress periods used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "typeOfTransientStateStressPeriod": {
+                    "enum": [
+                        "Annually",
+                        "Monthly",
+                        "Daily",
+                        "Hourly",
+                        "Other"
+                    ],
+                    "type": "string",
+                    "title": "Type of Transient State Stress Periods",                    
+                    "description": "Type of transient state stress periods used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "lengthOfTransientStateStressPeriod": {
+                    "type": "string",
+                    "title": "Length of Transient State Stress Periods",                    
+                    "description": "Length of transient state stress periods used in creating this model instance.",
+                    "propertyOrder": 4
+                }
+            },			
+            "description": "Stress periods used in creating this model instance.",
+            "propertyOrder": 10,
+            "additionalProperties": false
+        },
+        "gridDimensions": {
+            "type": "object",
+            "title": "Grid Dimensions",
+            "properties": {
+                "typeOfRows": {
+                    "enum": [
+                        "Regular",
+                        "Irregular"
+                    ],
+                    "type": "string",
+                    "title": "Type of Rows",                    
+                    "description": "Type of rows used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "numberOfRows": {
+                    "type": "string",
+                    "title": "Number of Rows",                    
+                    "description": "Number of rows used in creating this model instance.",
+                    "propertyOrder": 3
+                },
+                "typeOfColumns": {
+                    "enum": [
+                        "Regular",
+                        "Irregular"
+                    ],
+                    "type": "string",
+                    "title": "Type of Columns",                    
+                    "description": "Type of columns used in creating this model instance.",
+                    "propertyOrder": 4
+                },
+                "numberOfLayers": {
+                    "type": "string",
+                    "title": "Number of Layers",                    
+                    "description": "Number of layers used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "numberOfColumns": {
+                    "type": "string",
+                    "title": "Number of Columns",                    
+                    "description": "Number of columns used in creating this model instance.",
+                    "propertyOrder": 5
+                }
+            },			
+            "description": "Grid dimensions used in creating this model instance.",
+            "propertyOrder": 9,
+            "additionalProperties": false
+        },
+        "modelParameter": {
+            "type": "string",
+            "title": "Model Parameters",
+            "default": "",
+            "description": "Model parameters used in creating this model instance.",
+            "propertyOrder": 4
+        },
+        "groundwaterFlow": {
+            "type": "object",
+            "title": "Groundwater Flow",
+            "properties": {
+                "flowPackage": {
+                    "enum": [
+                        "BCF6",
+                        "LPF",
+                        "HUF2",
+                        "UPW"
+                    ],
+                    "type": "string",
+                    "title": "Flow Package",
+                    "default": "",
+                    "description": "Flow package used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "flowParameter": {
+                    "enum": [
+                        "Hydraulic Conductivity",
+                        "Transmissivity"
+                    ],
+                    "type": "string",
+                    "title": "Flow Parameter",
+                    "default": "",
+                    "description": "Flow parameter used in creating this model instance.",
+                    "propertyOrder": 5
+                },
+                "IncludesUnsaturatedZonePackage": {
+                    "type": "boolean",
+                    "title": "Includes Unsaturated Zone Package (UZF)",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "IncludesSeawaterIntrusionPackage": {
+                    "type": "boolean",
+                    "title": "Includes Seawater Intrusion package (SWI2)",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                },
+                "IncludesHorizontalFlowBarrierPackage": {
+                    "type": "boolean",
+                    "title": "Includes Horizontal Flow Barrier package (HFB6)",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                }
+            },
+            "description": "Groundwater flow used in creating this model instance.",
+            "propertyOrder": 11,
+            "additionalProperties": false
+        },
+        "modelCalibration": {
+            "type": "object",
+            "title": "Model Calibration",
+            "properties": {
+                "observationType": {
+                    "type": "string",
+                    "title": "Observation Types",
+                    "default": "",
+                    "description": "Observation types used in creating this model instance.",
+                    "propertyOrder": 2
+                },
+                "calibrationMethod": {
+                    "type": "string",
+                    "title": "Calibration Methods",
+                    "default": "",
+                    "description": "Calibration methods used in creating this model instance.",
+                    "propertyOrder": 4
+                },
+                "calibratedParameter": {
+                    "type": "string",
+                    "title": "Calibrated Parameters",
+                    "default": "",
+                    "description": "Calibrated parameters used in creating this model instance.",
+                    "propertyOrder": 1
+                },
+                "observationProcessPackage": {
+                    "enum": [
+                        "ADV2",
+                        "CHOB",
+                        "DROB",
+                        "DTOB",
+                        "GBOB",
+                        "HOB",
+                        "OBS",
+                        "RVOB",
+                        "STOB"
+                    ],
+                    "type": "string",
+                    "title": "Observation Process Packages",                    
+                    "description": "Type of transient state stress periods used in creating this model instance.",
+                    "propertyOrder": 3
+                }
+            },
+            "description": "Model calibration used in creating this model instance.",
+            "propertyOrder": 12,
+            "additionalProperties": false
+        },
+        "subsidencePackage": {
+            "enum": [
+                "IBS",
+                "SUB",
+                "SWT"				
+            ],
+            "type": "string",
+            "title": "Subsidence Package",            
+            "description": "Subsidence package used in creating this model instance.",
+            "propertyOrder": 7
+        },
+        "outputControlPackage": {
+            "type": "object",
+            "title": "Output Control Packages",
+            "properties": {
+                "OC": {
+                    "type": "boolean",
+                    "title": "OC",
+                    "format": "checkbox",
+                    "propertyOrder": 5
+                },
+                "HYD": {
+                    "type": "boolean",
+                    "title": "HYD",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "GAGE": {
+                    "type": "boolean",
+                    "title": "GAGE",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "LMT6": {
+                    "type": "boolean",
+                    "title": "LMT6",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "MNWI": {
+                    "type": "boolean",
+                    "title": "MNWI",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                }
+            },
+			"required": ["OC", "HYD", "GAGE", "LMT6", "MNWI"],
+            "description": "Output control packages used in creating this model instance.",
+            "propertyOrder": 6,
+            "additionalProperties": false
+        },
+        "specifiedFluxBoundaryPackages": {
+            "type": "object",
+            "title": "Specified Flux Boundary Packages",
+            "properties": {
+                "FHB": {
+                    "type": "boolean",
+                    "title": "FHB",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "RCH": {
+                    "type": "boolean",
+                    "title": "RCH",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "WEL": {
+                    "type": "boolean",
+                    "title": "WEL",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "otherPackages": {
+                    "type": "string",
+                    "title": "Other packages",
+                    "propertyOrder": 4
+                }
+            },
+			"required": ["FHB", "RCH", "WEL"],
+            "description": "Specified flux boundary packages used in creating this model instance.",
+            "propertyOrder": 2,
+            "additionalProperties": false
+        },
+        "specifiedHeadBoundaryPackages": {
+            "type": "object",
+            "title": "Specified Head Boundary Packages",
+            "properties": {
+                "BFH": {
+                    "type": "boolean",
+                    "title": "BFH",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "CHD": {
+                    "type": "boolean",
+                    "title": "CHD",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "FHB": {
+                    "type": "boolean",
+                    "title": "FHB",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "otherPackages": {
+                    "type": "string",
+                    "title": "Other packages",
+                    "propertyOrder": 4
+                }
+            },
+			"required": ["BFH", "CHD", "FHB"],
+            "description": "Specified head boundary packages used in creating this model instance.",
+            "propertyOrder": 1,
+            "additionalProperties": false
+        },
+        "headDependentFluxBoundaryPackages": {
+            "type": "object",
+            "title": "Head Dependent Flux Boundary Packages",
+            "properties": {
+                "DAF": {
+                    "type": "boolean",
+                    "title": "DAF",
+                    "format": "checkbox",
+                    "propertyOrder": 1
+                },
+                "DRN": {
+                    "type": "boolean",
+                    "title": "DRN",
+                    "format": "checkbox",
+                    "propertyOrder": 3
+                },
+                "DRT": {
+                    "type": "boolean",
+                    "title": "DRT",
+                    "format": "checkbox",
+                    "propertyOrder": 4
+                },
+                "ETS": {
+                    "type": "boolean",
+                    "title": "ETS",
+                    "format": "checkbox",
+                    "propertyOrder": 5
+                },
+                "EVT": {
+                    "type": "boolean",
+                    "title": "EVT",
+                    "format": "checkbox",
+                    "propertyOrder": 6
+                },
+                "GHB": {
+                    "type": "boolean",
+                    "title": "GHB",
+                    "format": "checkbox",
+                    "propertyOrder": 7
+                },
+                "LAK": {
+                    "type": "boolean",
+                    "title": "LAK",
+                    "format": "checkbox",
+                    "propertyOrder": 8
+                },
+                "RES": {
+                    "type": "boolean",
+                    "title": "RES",
+                    "format": "checkbox",
+                    "propertyOrder": 11
+                },
+                "RIP": {
+                    "type": "boolean",
+                    "title": "RIP",
+                    "format": "checkbox",
+                    "propertyOrder": 12
+                },
+                "RIV": {
+                    "type": "boolean",
+                    "title": "RIV",
+                    "format": "checkbox",
+                    "propertyOrder": 13
+                },
+                "SFR": {
+                    "type": "boolean",
+                    "title": "SFR",
+                    "format": "checkbox",
+                    "propertyOrder": 14
+                },
+                "STR": {
+                    "type": "boolean",
+                    "title": "STR",
+                    "format": "checkbox",
+                    "propertyOrder": 15
+                },
+                "UZF": {
+                    "type": "boolean",
+                    "title": "UZF",
+                    "format": "checkbox",
+                    "propertyOrder": 16
+                },
+                "DAFG": {
+                    "type": "boolean",
+                    "title": "DAFG",
+                    "format": "checkbox",
+                    "propertyOrder": 2
+                },
+                "MNW1": {
+                    "type": "boolean",
+                    "title": "MNW1",
+                    "format": "checkbox",
+                    "propertyOrder": 9
+                },
+                "MNW2": {
+                    "type": "boolean",
+                    "title": "MNW2",
+                    "format": "checkbox",
+                    "propertyOrder": 10
+                },
+                "otherPackages": {
+                    "type": "string",
+                    "title": "Other packages",
+                    "propertyOrder": 17
+                }
+            },
+			"required": ["DAF", "DRN", "DRT", "ETS", "EVT", "GHB", "LAK", "RES", "RIP", "RIV", "SFR", "STR", "UZF", "DAFG", "MNW1", "MNW2"],
+            "description": "Head dependent flux boundary packages used in creating this model instance.",
+            "propertyOrder": 3,
+            "additionalProperties": false
+        },
+		"modelInputs": {
+			"type": "array",
+			"title": "Inputs for model",
+			"format": "table",
+			"items": {
+				"type": "object",				
+				"properties": {
+					"inputType": {
+						"type": "string",
+						"title": "Type of model input"
+					},
+					"inputSourceName": {
+						"type": "string",
+						"title": "Input source name"
+					},
+					"inputSourceURL": {
+						"type": "string",
+						"title": "Input source URL"
+					}
+				},
+				"additionalProperties": false
+			},
+			"description": "Model inputs.",
+            "propertyOrder": 4,
+            "additionalProperties": false
+		}
+    },   	
+    "description": "A sample schema for MODFLOW model instance metadata.",
+    "additionalProperties": false
+}
+    """
+    return _schema
