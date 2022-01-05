@@ -9,10 +9,15 @@ from hs_core.models import BaseResource
 
 
 class Command(BaseCommand):
-    help = "Migrate relation types of all resources."
+    help = "Migrate source metadata to relation metadata, and update relation types and values of all resources."
 
     def handle(self, *args, **options):
         log = logging.getLogger()
+        res_count = BaseResource.objects.count()
+        log_msg = "Total resources:{}".format(res_count)
+        print(log_msg)
+        log.info(log_msg)
+        res_count = 0
         for res in BaseResource.objects.all().iterator():
             res = res.get_content_model()
             type_migrated = False
@@ -22,6 +27,7 @@ class Command(BaseCommand):
                 print(log_msg)
                 log.warning(log_msg)
                 continue
+            res_count += 1
             for rel in res.metadata.relations.all():
                 if rel.type in ('cites', 'isHostedBy', 'isDataFor', 'isCopiedFrom'):
                     old_type = rel.type
@@ -55,11 +61,22 @@ class Command(BaseCommand):
                         res_to_link = utils.get_resource_by_shortkey(shortkey=res_id, or_404=False)
                         rel.value = res_to_link.get_citation()
                         rel.save()
+                        log_msg = "Updated relation type '{}' with citation of resource (ID:{}) for resource (ID:{})'"
+                        log_msg = log_msg.format(rel.type, res_id, res.short_id)
+                        print(log_msg)
+                        log.info(log_msg)
                     except BaseResource.DoesNotExist:
-                        log_msg = "Failed to update relation type '{}' with resource citation for resource with ID:{}"
-                        log_msg = log_msg.format(rel.type, res.short_id)
+                        log_msg = "Resource doesn't exist for ID:{}. Failed to update relation type '{}' " \
+                                  "with resource citation for resource with ID:{}"
+                        log_msg = log_msg.format(res_id, rel.type, res.short_id)
                         print(log_msg)
                         log.warning(log_msg)
+                else:
+                    log_msg = "Invalid value ({}) for relation type '{}' for resource with ID:{}. " \
+                              "Failed to update relation type '{}' value with citation for this resource"
+                    log_msg = log_msg.format(rel.value, rel.type, res.short_id, rel.type)
+                    print(log_msg)
+                    log.warning(log_msg)
 
             if any([source_migrated, type_migrated, res.metadata.relations.filter(type='isVersionOf').exists(),
                     res.metadata.relations.filter(type='isReplacedBy').exists()]):
@@ -98,3 +115,6 @@ class Command(BaseCommand):
                     log_msg = log_msg.format(res.short_id, res.resource_type)
                     print(log_msg)
                     log.info(log_msg)
+        log_msg = "Total resources processed:{}".format(res_count)
+        print(log_msg)
+        log.info(log_msg)
