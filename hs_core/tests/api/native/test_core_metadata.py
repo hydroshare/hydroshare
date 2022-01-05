@@ -521,12 +521,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.res.metadata.coverages.get(type='box').delete()
         # now try to create point type coverage with invalid data
-        # value for 'east' should be >= -180 and <= 180 and 'north' >= -90 and <= 90
-        value_dict = {'east': '181.45678', 'north': '50', 'units': 'decimal deg'}
+        # value for 'east' should be >= -360 and <= 360 and 'north' >= -90 and <= 90
+        value_dict = {'east': '360.45678', 'north': '50', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
 
-        value_dict = {'east': '-181.45678', 'north': '50', 'units': 'decimal deg'}
+        value_dict = {'east': '-360.45678', 'north': '50', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
 
@@ -553,7 +553,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
         value_dict = {'northlimit': '-91.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
-                      'westlimit': '16.6789', 'units': 'decimal deg' }
+                      'westlimit': '16.6789', 'units': 'decimal deg'}
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
@@ -574,25 +574,25 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
-        # value for 'eastlimit should be in the range of -180 to 180
-        value_dict = {'northlimit': '80.45678', 'eastlimit': '181.6789', 'southlimit': '70.45678',
+        # value for 'eastlimit should be in the range of -360 to 360
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '360.6789', 'southlimit': '70.45678',
                       'westlimit': '16.6789', 'units': 'decimal deg' }
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
-        value_dict = {'northlimit': '80.45678', 'eastlimit': '-181.6789', 'southlimit': '70.45678',
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '-360.6789', 'southlimit': '70.45678',
                       'westlimit': '16.6789', 'units': 'decimal deg' }
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
-        # value for 'westlimit' must be in the range of -180 to 180
+        # value for 'westlimit' must be in the range of -360 to 360
         value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
-                      'westlimit': '-181.6789', 'units': 'decimal deg' }
+                      'westlimit': '-360.6789', 'units': 'decimal deg' }
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
         value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
-                      'westlimit': '181.6789', 'units': 'decimal deg' }
+                      'westlimit': '360.6789', 'units': 'decimal deg' }
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 

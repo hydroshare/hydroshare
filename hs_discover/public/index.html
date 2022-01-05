@@ -58,19 +58,6 @@
 </style>
 <input type="hidden" id="qstring" value="{{ request.GET.q }}">
 <input type="hidden" id="prefillsubject" value="{{ request.GET.subject }}">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-<script>
-    function completedSurvey(event) {
-        $.cookie('discover-survey', 'complete');
-    }
-
-    var cookie = $.cookie('discover-survey');
-    if (!cookie) {
-        $('.main-container').before("<div data-tf-sidetab=\"gfePN4ur\" data-tf-width=\"320\" data-tf-height=\"400\" data-tf-on-submit=\"completedSurvey\" data-tf-button-color=\"#F4B080\" data-tf-button-text=\"Help us improve\" data-tf-auto-close  data-tf-hidden=\"email={{ user.email }},cookie={{ request.session.session_key }}\" style=\"all:unset;\"></div>");
-    }
-
-</script>
-<script src="//embed.typeform.com/next/embed.js"></script>
 <div class="container" id="discover-main">
     <h2 class="page-title">Discover
         <small class="text-muted"><i>Public resources shared with the community</i></small>

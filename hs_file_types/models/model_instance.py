@@ -449,6 +449,11 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         from hs_core.hydroshare.utils import current_site_url
         return "{}/resource/{}".format(current_site_url(), self.schema_values_file_path)
 
+    def set_metadata_dirty(self):
+        super(ModelInstanceLogicalFile, self).set_metadata_dirty()
+        for child_aggr in self.get_children():
+            child_aggr.set_metadata_dirty()
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(ModelInstanceLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():

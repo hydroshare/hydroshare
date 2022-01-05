@@ -330,6 +330,8 @@ def test_auto_geofeature_aggregation_creation(composite_resource_with_mi_aggrega
 
     # the geo feature aggregation should contain 4 files that we uploaded
     assert GeoFeatureLogicalFile.objects.first().files.count() == 4
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
     assert not resource.dangling_aggregations_exist()
 
 
@@ -356,6 +358,8 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # the timeseries aggregation should contain 1 file
     assert TimeSeriesLogicalFile.objects.first().files.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
     assert not resource.dangling_aggregations_exist()
 
 
@@ -384,6 +388,8 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # ref timeseries aggregation should contain 1 file
     assert RefTimeseriesLogicalFile.objects.first().files.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
     assert not resource.dangling_aggregations_exist()
 
 
@@ -467,6 +473,8 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
     tgt_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
 
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 

@@ -1233,7 +1233,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1279,7 +1279,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     if resource.resource_type == "CompositeResource":
         orig_src_path = src_full_path[len(resource.file_path) + 1:]
         new_tgt_path = tgt_full_path[len(resource.file_path) + 1:]
-        resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+        resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -1335,7 +1335,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         if resource.resource_type == "CompositeResource":
             orig_src_path = src_full_path[len(resource.file_path) + 1:]
             new_tgt_path = tgt_qual_path[len(resource.file_path) + 1:]
-            resource.recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
+            resource.set_flag_to_recreate_aggregation_meta_files(orig_path=orig_src_path, new_path=new_tgt_path)
 
     # TODO: should check can_be_public_or_discoverable here
 
