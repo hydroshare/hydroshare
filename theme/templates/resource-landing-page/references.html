@@ -26,7 +26,7 @@
                 {% for relation in relations %}
                     {% if relation.type|lower != "haspart" %}
                         <tr>
-                            <td class="dataset-label">
+                            <td class="dataset-label" style="min-width: 100px;">
                                 {% if relation.type == "isCopiedFrom" %}
                                     The content of this resource was copied from:
                                 {% elif relation.type == "isPartOf" %}
@@ -137,12 +137,12 @@ Click this button to add a relationship to another resource, external website, o
         </div>
 
         {% if relations %}
-        <table class="table hs-table">
+        <table class="table hs-table info-table">
             <tbody>
             {% for relation in relations %}
                 {% if  relation.type|lower != "haspart" %}
                     <tr>
-                        <td scope="row" class="dataset-label">
+                        <td scope="row" class="dataset-label" style="min-width: 100px;">
                             {% if relation.type == "isCopiedFrom" %}
                                 The content of this resource was copied from:
                             {% elif relation.type == "isPartOf" %}

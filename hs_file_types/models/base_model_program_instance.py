@@ -6,6 +6,7 @@ import shutil
 from uuid import uuid4
 
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ValidationError
 from django.db import models
 from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace
@@ -149,17 +150,24 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                                                   res_files=res_files,
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
+            try:
+                if folder_path and file_id is None:
+                    logical_file.folder = folder_path
+                    logical_file.save()
+                    # make all the files in the selected folder as part of the aggregation
+                    logical_file.add_resource_files_in_folder(resource, folder_path)
+                    log.info("{0} aggregation was created for folder:{1}.".format(logical_file.data_type, folder_path))
+                else:
+                    log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
+                                                                                res_file.storage_path))
+                ft_ctx.logical_file = logical_file
+            except Exception as ex:
+                msg = "{} aggregation. Error when creating aggregation. Error:{}".format(logical_file.data_type,
+                                                                                         str(ex))
+                log.exception(msg)
+                logical_file.remove_aggregation()
+                raise ValidationError(msg)
 
-            if folder_path and file_id is None:
-                logical_file.folder = folder_path
-                logical_file.save()
-                # make all the files in the selected folder as part of the aggregation
-                logical_file.add_resource_files_in_folder(resource, folder_path)
-                log.info("{0} aggregation was created for folder:{1}.".format(logical_file.data_type, folder_path))
-            else:
-                log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
-                                                                            res_file.storage_path))
-            ft_ctx.logical_file = logical_file
         return logical_file
 
     def generate_map_xml(self):
@@ -305,7 +313,6 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             istorage.delete(self.map_file_path)
 
         # delete schema json file if this a model aggregation
-        # if self.is_model_program or self.is_model_instance:
         if istorage.exists(self.schema_file_path):
             istorage.delete(self.schema_file_path)
 
@@ -330,10 +337,10 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             # the metadata object
             metadata.delete()
 
-        # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
-        # aggregation so that the references to the deleted aggregation can be removed
+        # if the this deleted aggregation has a parent aggregation - xml files for the parent
+        # aggregation need to be regenerated at the time of download - so need to set metadata to dirty
         if parent_aggr is not None:
-            parent_aggr.create_aggregation_xml_documents()
+            parent_aggr.set_metadata_dirty()
 
         resource.cleanup_aggregations()
 
@@ -387,9 +394,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             for res_file in res_files:
                 parent_aggr.add_resource_file(res_file)
 
-            # need to regenerate the xml files for the parent so that the references to this deleted aggregation
-            # can be removed from the parent xml files
-            parent_aggr.create_aggregation_xml_documents()
+            # need to regenerate the xml files for the parent at the time of download so that the references
+            # to this deleted aggregation can be removed from the parent xml files - so need to set metadata to dirty
+            parent_aggr.set_metadata_dirty()
 
         post_remove_file_aggregation.send(
             sender=self.__class__,

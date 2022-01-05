@@ -66,3 +66,18 @@ class TestUserDetails(APITestCase):
         response = self.client.get(f'/hsapi/userDetails/{self.user.id}/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self._verify_user(response)
+
+    def test_user_details_user_email(self):
+        response = self.client.get(f'/hsapi/userDetails/{self.user.email}/', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._verify_user(response)
+
+    def test_user_details_username_case_insensitive(self):
+        response = self.client.get(f'/hsapi/userDetails/{self.username.upper()}/', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._verify_user(response)
+
+    def test_user_details_user_email_case_insensitive(self):
+        response = self.client.get(f'/hsapi/userDetails/{self.user.email.upper()}/', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._verify_user(response)
