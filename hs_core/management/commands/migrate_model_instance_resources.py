@@ -122,8 +122,9 @@ class Command(BaseCommand):
                 self.set_executed_by(mi_aggr, comp_res, logger)
             mi_aggr.save()
 
-            # create aggregation level xml files
-            mi_aggr.create_aggregation_xml_documents()
+            # set aggregation metadata to dirty so that aggregation meta xml files are generated as part of aggregation
+            # or resource bag download
+            mi_aggr.set_metadata_dirty()
             msg = 'One model instance aggregation was created in resource (ID:{})'
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
