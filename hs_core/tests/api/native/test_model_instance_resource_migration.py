@@ -187,8 +187,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_2(self):
         """
@@ -222,8 +222,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         self.assertTrue(mi_aggr.metadata.has_model_output)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_3(self):
         """
@@ -271,8 +271,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_4(self):
         """
@@ -329,8 +329,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_5(self):
         """
@@ -368,8 +368,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_6(self):
         """
@@ -414,8 +414,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.files.count(), 0)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         self.assertTrue(mi_aggr.metadata.has_model_output)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_7(self):
         """
@@ -469,8 +469,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.files.count(), 1)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         self.assertTrue(mi_aggr.metadata.has_model_output)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_8(self):
         """
@@ -533,8 +533,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.files.count(), 2)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         self.assertTrue(mi_aggr.metadata.has_model_output)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_with_folder_1(self):
         """
@@ -584,8 +584,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_with_folder_2(self):
         """
@@ -646,8 +646,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_with_folder_3(self):
         """
@@ -702,8 +702,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_with_folder_4(self):
         """
@@ -767,8 +767,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_with_folder_5(self):
         """
@@ -841,8 +841,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_with_folder_6(self):
         """
@@ -895,8 +895,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=expected_aggr_folder_name)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_migrate_mi_resource_missing_file_in_irods(self):
         """
@@ -965,8 +965,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check that the resource level keywords copied to the mi aggregation
         self.assertTrue(mi_aggr.metadata.keywords)
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_executed_by(self):
         """
@@ -1030,8 +1030,8 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
         self.assertEqual(mi_aggr.files.count(), 0)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MI_FOLDER_NAME)
+        # check that mi_aggr metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
 
     def test_delete_external_linked_mp_aggr(self):
         """
@@ -1076,7 +1076,10 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(CompositeResource.objects.count(), 2)
 
         mi_aggr = ModelInstanceLogicalFile.objects.first()
-        self.assertFalse(mi_aggr.metadata.is_dirty)
+        # when the new mi aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
+        mi_aggr.metadata.is_dirty = False
+        mi_aggr.metadata.save()
         # test deleting the linked mp aggregation sets the metadata for mi aggregation to dirty
         mp_aggr.delete()
         mi_aggr = ModelInstanceLogicalFile.objects.first()
@@ -1124,22 +1127,15 @@ class TestModelInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceResource.objects.count(), 0)
         self.assertEqual(CompositeResource.objects.count(), 2)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
-        self.assertFalse(mi_aggr.metadata.is_dirty)
+        # when the new mi aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mi_aggr.metadata.is_dirty)
+        mi_aggr.metadata.is_dirty = False
+        mi_aggr.metadata.save()
         # test deleting the linked composite resource (containing the mp aggregation) sets the metadata
         # for mi aggregation to dirty
         mp_res.delete()
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertTrue(mi_aggr.metadata.is_dirty)
-
-    def _test_aggr_meta_files(self, cmp_res, aggr_folder_path):
-        # check the aggregation meta xml files exist in iRODS
-        istorage = cmp_res.get_irods_storage()
-        aggr_meta_file_path = os.path.join(cmp_res.file_path, aggr_folder_path,
-                                           "{}_meta.xml".format(aggr_folder_path))
-        self.assertTrue(istorage.exists(aggr_meta_file_path))
-        aggr_map_file_path = os.path.join(cmp_res.file_path, aggr_folder_path,
-                                          "{}_resmap.xml".format(aggr_folder_path))
-        self.assertTrue(istorage.exists(aggr_map_file_path))
 
     def _create_mi_resource(self, model_instance_type="ModelInstanceResource", add_keywords=False):
         """Creates a model instance resource"""

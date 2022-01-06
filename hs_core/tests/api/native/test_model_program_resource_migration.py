@@ -71,8 +71,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -108,8 +108,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -154,8 +154,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -214,8 +214,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -261,8 +261,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -309,8 +309,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.files.count(), 0)
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -366,8 +366,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -431,8 +431,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -489,8 +489,9 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
+
         # test aggregation level metadata
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         self.assertEqual(mp_aggr.metadata.programming_languages, ['Fortran', 'Python'])
@@ -537,8 +538,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # test no mp files types are created
         self.assertEqual(ModelProgramResourceFileType.objects.filter(mp_metadata=mp_aggr.metadata).count(), 0)
@@ -585,8 +586,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -651,8 +652,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -714,8 +715,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -779,8 +780,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -856,8 +857,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 3)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -911,8 +912,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         expected_aggr_folder_name = "{}-1".format(self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.folder, expected_aggr_folder_name)
         self.assertEqual(mp_aggr.aggregation_name, expected_aggr_folder_name)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=expected_aggr_folder_name)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 1)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -981,8 +982,9 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
+
         # check that the file that exists in iRODS is part of the mp aggregation and the file that is
         # missing in iRODS is not part of the mp aggregation
         self.assertEqual(mp_aggr.files.count(), 1)
@@ -1053,8 +1055,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -1127,8 +1129,8 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mp_aggr = ModelProgramLogicalFile.objects.first()
         self.assertEqual(mp_aggr.folder, self.MP_FOLDER_NAME)
         self.assertEqual(mp_aggr.aggregation_name, self.MP_FOLDER_NAME)
-        # check the aggregation meta xml files exist in iRODS
-        self._test_aggr_meta_files(cmp_res, aggr_folder_path=self.MP_FOLDER_NAME)
+        # when the new mp aggregation gets created, the aggregation metadata is set to dirty
+        self.assertTrue(mp_aggr.metadata.is_dirty)
         self.assertEqual(mp_aggr.files.count(), 2)
         self.assertEqual(mp_aggr.metadata.version, '5.1.011')
         # check that the resource level keywords copied over to the aggregation
@@ -1143,16 +1145,6 @@ class TestModelProgramResourceMigration(MockIRODSTestCaseMixin, TestCase):
             else:
                 self.assertEqual(mp_file_type.res_file.file_folder, "model-program/folder-2")
                 self.assertEqual(mp_file_type.file_type, ModelProgramResourceFileType.SOFTWARE)
-
-    def _test_aggr_meta_files(self, cmp_res, aggr_folder_path):
-        # check the aggregation meta xml files exist in iRODS
-        istorage = cmp_res.get_irods_storage()
-        aggr_meta_file_path = os.path.join(cmp_res.file_path, aggr_folder_path,
-                                           "{}_meta.xml".format(aggr_folder_path))
-        self.assertTrue(istorage.exists(aggr_meta_file_path))
-        aggr_map_file_path = os.path.join(cmp_res.file_path, aggr_folder_path,
-                                          "{}_resmap.xml".format(aggr_folder_path))
-        self.assertTrue(istorage.exists(aggr_map_file_path))
 
     def _create_mp_resource(self, add_keywords=False):
         mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
