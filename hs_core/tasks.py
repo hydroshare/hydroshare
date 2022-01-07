@@ -412,6 +412,11 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)
 
+        if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+            # the resource to be copied is a versioned resource, need to delete this isVersionOf
+            # relation element to maintain the single versioning obsolescence chain
+            new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
+
         # create the relation element for the new_res
         new_res.metadata.create_element('relation', type='source', value=ori_res.get_citation())
 
@@ -461,8 +466,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
             # the original resource is already a versioned resource, and its isVersionOf relation
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
-            eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
-            new_res.metadata.delete_element('relation', eid)
+            new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
 
         new_res.metadata.create_element('relation', type='isVersionOf', value=ori_res.get_citation())
 
