@@ -412,6 +412,12 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)
 
+        if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+            # the resource to be copied is a versioned resource, need to delete this isVersionOf
+            # relation element to maintain the single versioning obsolescence chain
+            eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
+            new_res.metadata.delete_element('relation', eid)
+
         hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         if hs_identifier:
             new_res.metadata.create_element('source', derived_from=hs_identifier.url)
