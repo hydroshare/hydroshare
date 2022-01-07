@@ -806,9 +806,10 @@ class ToolMetaData(CoreMetaData):
                     validate_form(validation_form)
                     request_url = self.url_base
                     if request_url is not None:
-                        self.update_element('requesturlbase', request_url.id, **dict_item['requesturlbase'])
+                        self.update_element('requesturlbase', request_url.id,
+                                            value=dict_item['requesturlbase'])
                     else:
-                        self.create_element('requesturlbase', **dict_item['requesturlbase'])
+                        self.create_element('requesturlbase', value=dict_item['requesturlbase'])
                 elif 'requesturlbaseaggregation' in dict_item:
                     validation_form = AppAggregationLevelUrlValidationForm(
                         dict_item['requesturlbaseaggregation'])
@@ -816,18 +817,20 @@ class ToolMetaData(CoreMetaData):
                     request_url = self.url_base_aggregation
                     if request_url is not None:
                         self.update_element('requesturlbaseaggregation', request_url.id,
-                                            **dict_item['requesturlbaseaggregation'])
+                                            value=dict_item['requesturlbaseaggregation'])
                     else:
-                        self.create_element('requesturlbaseaggregation', **dict_item['requesturlbaseaggregation'])
+                        self.create_element('requesturlbaseaggregation',
+                                            value=dict_item['requesturlbaseaggregation'])
                 elif 'requesturlbasefile' in dict_item:
                     validation_form = AppFileLevelUrlValidationForm(dict_item['requesturlbasefile'])
                     validate_form(validation_form)
                     request_url = self.url_base_file
                     if request_url is not None:
                         self.update_element('requesturlbasefile', request_url.id,
-                                            **dict_item['requesturlbasefile'])
+                                            value=dict_item['requesturlbasefile'])
                     else:
-                        self.create_element('requesturlbasefile', **dict_item['requesturlbasefile'])
+                        self.create_element('requesturlbasefile',
+                                            value=dict_item['requesturlbasefile'])
                 elif 'toolversion' in dict_item:
                     validation_form = VersionValidationForm(dict_item['toolversion'])
                     validate_form(validation_form)
