@@ -1,6 +1,7 @@
 import os
 import tempfile
 import shutil
+from datetime import date
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -196,7 +197,8 @@ class TestCopyResource(TestCase):
         # test to make sure the new copied resource is linked with the original resource via
         # 'source' type relation metadata element and contains the citation of the resource from which the copy was made
         relation_meta = new_res_generic.metadata.relations.filter(type='source').first()
-        self.assertEqual(relation_meta.value, self.res_generic.get_citation())
+        derived_from = _get_relation_meta_derived_from(self.res_generic)
+        self.assertEqual(relation_meta.value, derived_from)
 
         # make sure to clean up resource so that irods storage can be cleaned up
         if new_res_generic:
@@ -286,7 +288,8 @@ class TestCopyResource(TestCase):
         # 'source' type relation metadata element and contains the citation of the resource from which the resource
         #  was copied from
         relation_meta = new_res_raster.metadata.relations.filter(type='source').first()
-        self.assertEqual(relation_meta.value, self.res_raster.get_citation())
+        derived_from = _get_relation_meta_derived_from(self.res_raster)
+        self.assertEqual(relation_meta.value, derived_from)
 
         # make sure to clean up resource so that irods storage can be cleaned up
         if new_res_raster:
@@ -437,3 +440,9 @@ class TestCopyResource(TestCase):
             self.composite_resource.delete()
         if new_composite_resource:
             new_composite_resource.delete()
+
+
+def _get_relation_meta_derived_from(resource):
+    today = date.today().strftime("%m/%d/%Y")
+    derived_from = "{}, accessed on: {}".format(resource.get_citation(), today)
+    return derived_from
