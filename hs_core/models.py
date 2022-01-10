@@ -240,6 +240,14 @@ def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
 
+    def get_relation_version_res_url(resource, rel_type):
+        relation_meta_obj = resource.metadata.relations.filter(type=rel_type).first()
+        if relation_meta_obj is not None:
+            version_res_url = relation_meta_obj.value.split(',')[-1]
+            return version_res_url
+        else:
+            return ''
+
     cm = page.get_content_model()
     can_change_resource_flags = False
     self_access_level = None
@@ -312,17 +320,8 @@ def page_permissions_page_processor(request, page):
 
     users_json = json.dumps(users_json)
 
-    is_replaced_by_relation = cm.metadata.relations.filter(type='isReplacedBy').first()
-    if is_replaced_by_relation is not None:
-        is_replaced_by = is_replaced_by_relation.value
-    else:
-        is_replaced_by = ''
-
-    is_version_of_relation = cm.metadata.relations.all().filter(type='isVersionOf').first()
-    if is_version_of_relation is not None:
-        is_version_of = is_version_of_relation.value
-    else:
-        is_version_of = ''
+    is_replaced_by = get_relation_version_res_url(cm, 'isReplacedBy')
+    is_version_of = get_relation_version_res_url(cm, 'isVersionOf')
 
     permissions_allow_copy = False
     if request.user.is_authenticated:
