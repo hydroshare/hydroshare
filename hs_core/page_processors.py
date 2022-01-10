@@ -122,6 +122,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
+    content_model.update_relation_meta()
 
     # user requested the resource in READONLY mode
     if not resource_edit:

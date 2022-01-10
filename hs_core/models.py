@@ -3764,6 +3764,48 @@ class BaseResource(Page, AbstractResource):
                 visited[r.short_id] = True
         return True  # no reason not to show it
 
+    def update_relation_meta(self):
+        """Updates the citation stored in relation metadata for relation type
+        'isVersionOf', 'isReplacedBy', 'isPartOf' and 'hasPart' if needed"""
+
+        from hs_core.hydroshare import get_resource_by_shortkey
+
+        def _update_relation_meta(relation_meta_obj):
+            relation_updated = False
+            if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
+                version_citation = relation_meta_obj.value
+                version_res_id = version_citation.split('/resource/')[-1]
+                version_res = get_resource_by_shortkey(version_res_id)
+                current_version_citation = version_res.get_citation()
+                if current_version_citation != version_citation:
+                    relation_meta_obj.value = current_version_citation
+                    relation_meta_obj.save()
+                    relation_updated = True
+            return relation_updated
+
+        version_relation = self.metadata.relations.all().filter(type='isVersionBy').first()
+        version_relation_updated = False
+        if version_relation is not None:
+            version_relation_updated = _update_relation_meta(version_relation)
+
+        replace_relation = self.metadata.relations.all().filter(type='isReplacedBy').first()
+        replace_relation_updated = False
+        if replace_relation is not None:
+            replace_relation_updated = _update_relation_meta(replace_relation)
+
+        part_of_relation_updated = False
+        for part_of_relation in self.metadata.relations.filter(type='isPartOf').all():
+            if _update_relation_meta(part_of_relation):
+                part_of_relation_updated = True
+
+        has_part_relation_updated = False
+        for has_part_relation in self.metadata.relations.filter(type='hasPart').all():
+            if _update_relation_meta(has_part_relation):
+                has_part_relation_updated = True
+
+        return any([version_relation_updated, replace_relation_updated, part_of_relation_updated,
+                    has_part_relation_updated])
+
 
 # TODO Deprecated
 class GenericResource(BaseResource):
