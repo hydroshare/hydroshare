@@ -418,7 +418,11 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
 
         # create the relation element for the new_res
-        new_res.metadata.create_element('relation', type='source', value=ori_res.get_citation())
+        today = date.today().strftime("%m/%d/%Y")
+        derived_from = "{}, accessed on: {}".format(ori_res.get_citation(), today)
+        # since we are allowing user to add relation of type source, need to check we don't already have it
+        if not new_res.metadata.relations.all().filter(type='source', value=derived_from).exists():
+            new_res.metadata.create_element('relation', type='source', value=derived_from)
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
