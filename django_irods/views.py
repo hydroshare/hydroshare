@@ -276,6 +276,8 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                     f"{res_id}/bagit.txt"]:
 
             bag_modified = res.getAVU("bag_modified")
+            if res.update_relation_meta():
+                bag_modified = True
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
                 res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
                 create_bag_by_irods(res_id, False)
