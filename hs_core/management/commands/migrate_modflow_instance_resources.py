@@ -1,5 +1,7 @@
 import json
 import logging
+import sys
+import traceback
 
 import jsonschema
 from django.core.management.base import BaseCommand
@@ -252,6 +254,23 @@ class Command(BaseCommand):
                     jsonschema.Draft4Validator(meta_json_schema).validate(metadata_json)
                 except jsonschema.ValidationError as err:
                     msg = 'Metadata validation failed as per schema for resource (ID:{}). Error:{}'
+                    msg = msg.format(comp_res.short_id, str(err))
+                    logger.error(msg)
+                    self.stdout.write(self.style.ERROR(msg))
+                try:
+                    mi_aggr.metadata.get_html()
+                except Exception as err:
+                    traceback.print_exception(*sys.exc_info())
+                    msg = 'Failed to generate modflow aggregation metadata for view for resource (ID:{}). Error:{}'
+                    msg = msg.format(comp_res.short_id, str(err))
+                    logger.error(msg)
+                    self.stdout.write(self.style.ERROR(msg))
+
+                try:
+                    mi_aggr.metadata.get_html_forms()
+                except Exception as err:
+                    traceback.print_exception(*sys.exc_info())
+                    msg = 'Failed to generate modflow aggregation metadata for edit for resource (ID:{}). Error:{}'
                     msg = msg.format(comp_res.short_id, str(err))
                     logger.error(msg)
                     self.stdout.write(self.style.ERROR(msg))
