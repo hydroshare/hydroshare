@@ -808,7 +808,7 @@ def get_modflow_meta_schema():
                     "propertyOrder": 4
                 }
             },
-            "description": "The dimentions of the study area used in creating this model instance.",
+            "description": "The dimensions of the study area used in creating this model instance.",
             "propertyOrder": 8,
             "additionalProperties": false
         },
@@ -955,19 +955,19 @@ def get_modflow_meta_schema():
                     "description": "Flow parameter used in creating this model instance.",
                     "propertyOrder": 5
                 },
-                "IncludesUnsaturatedZonePackage": {
+                "unsaturatedZonePackage": {
                     "type": "boolean",
                     "title": "Includes Unsaturated Zone Package (UZF)",
                     "format": "checkbox",
                     "propertyOrder": 2
                 },
-                "IncludesSeawaterIntrusionPackage": {
+                "seawaterIntrusionPackage": {
                     "type": "boolean",
                     "title": "Includes Seawater Intrusion package (SWI2)",
                     "format": "checkbox",
                     "propertyOrder": 4
                 },
-                "IncludesHorizontalFlowBarrierPackage": {
+                "horizontalFlowBarrierPackage": {
                     "type": "boolean",
                     "title": "Includes Horizontal Flow Barrier package (HFB6)",
                     "format": "checkbox",
