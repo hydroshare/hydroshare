@@ -92,7 +92,11 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         def display_json_meta_field(field_name, field_value):
                             value = ''
                             if isinstance(field_value, list):
-                                if field_value:
+                                # check if list items are dict type
+                                if isinstance(field_value[0], dict):
+                                    for item in field_value:
+                                        display_dict_type_value(item)
+                                elif field_value:
                                     value = ", ".join(field_value)
                             elif isinstance(field_value, str):
                                 value = field_value.strip()
@@ -105,17 +109,23 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                                 with dom_tags.div(cls="col-md-6"):
                                     dom_tags.p(value)
 
-                        if isinstance(v, dict):
-                            for child_k, child_v in v.items():
+                        def display_dict_type_value(value):
+                            for child_k, child_v in value.items():
                                 child_k_title = child_k
                                 if metadata_schema:
                                     child_properties_schema_node = root_properties_schema_node[k]
+                                    if 'type' in child_properties_schema_node:
+                                        if child_properties_schema_node['type'] == 'array':
+                                            child_properties_schema_node = child_properties_schema_node['items']
                                     child_properties_schema_node = child_properties_schema_node[
                                         schema_properties_key]
                                     if child_k in child_properties_schema_node:
                                         child_k_title = child_properties_schema_node[child_k]['title']
 
                                 display_json_meta_field(field_name=child_k_title, field_value=child_v)
+
+                        if isinstance(v, dict):
+                            display_dict_type_value(v)
                         else:
                             display_json_meta_field(field_name=k_title, field_value=v)
 
