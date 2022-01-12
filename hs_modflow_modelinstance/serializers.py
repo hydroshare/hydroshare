@@ -43,7 +43,8 @@ class StressPeriodMetaDataSerializer(serializers.ModelSerializer):
 class GroundWaterFlowMetaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroundWaterFlow
-        fields = ('flowPackage', 'flowParameter')
+        fields = ('flowPackage', 'flowParameter', 'unsaturatedZonePackage', 'horizontalFlowBarrierPackage',
+                  'seawaterIntrusionPackage')
 
 
 class SpecifiedHeadBoundaryPackageChoicesMetaDataSerializer(serializers.ModelSerializer):
