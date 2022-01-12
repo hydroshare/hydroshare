@@ -1,16 +1,15 @@
 import json
 import logging
-import os
 
 import jsonschema
 from django.core.management.base import BaseCommand
 
 from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_resource_by_shortkey
-from hs_core.models import CoreMetaData, ResourceFile
+from hs_core.models import CoreMetaData
 from hs_file_types.models import ModelInstanceLogicalFile
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 from hs_modflow_modelinstance.serializers import MODFLOWModelInstanceMetaDataSerializerMigration
-from ..utils import migrate_core_meta_elements, get_modflow_meta_schema
+from ..utils import migrate_core_meta_elements, get_modflow_meta_schema, move_files_and_folders_to_model_aggregation
 
 
 class Command(BaseCommand):
@@ -24,7 +23,7 @@ class Command(BaseCommand):
         """
         serializer = MODFLOWModelInstanceMetaDataSerializerMigration(modflow_meta)
         data = serializer.data
-        # mapping of json based field names to modflow meta database field names
+        # mapping of json based field names to modflow meta db field names
         key_maps = {'studyArea': 'study_area', 'modelCalibration': 'model_calibration',
                     'groundwaterFlow': 'ground_water_flow', 'gridDimensions': 'grid_dimensions',
                     'stressPeriod': 'stress_period', 'modelInputs': 'model_inputs'}
@@ -34,31 +33,41 @@ class Command(BaseCommand):
             if data[key] is None or not data[key]:
                 data.pop(key)
 
+        if 'studyArea' in data:
+            study_area_fields = ('totalWidth', 'totalLength', 'maximumElevation', 'minimumElevation')
+            study_area = data['studyArea']
+            for fld in study_area_fields:
+                if study_area[fld] is None:
+                    study_area.pop(fld)
+        if 'gridDimensions' in data:
+            grid_fields = ('typeOfRows', 'numberOfRows', 'typeOfColumns', 'numberOfColumns', 'numberOfLayers')
+            grid = data['gridDimensions']
+            for fld in grid_fields:
+                if grid[fld] is None:
+                    grid.pop(fld)
+
+        if 'modelCalibration' in data:
+            model_fields = ('observationType', 'calibrationMethod', 'calibratedParameter', 'observationProcessPackage')
+            model_calibration = data['modelCalibration']
+            for fld in model_fields:
+                if model_calibration[fld] is None:
+                    model_calibration.pop(fld)
+        if 'modelInputs' in data:
+            model_fields = ('inputType', 'inputSourceName', 'inputSourceURL')
+            model_inputs = data['modelInputs']
+            for model_input in model_inputs:
+                for fld in model_fields:
+                    if model_input[fld] is None:
+                        model_input.pop(fld)
+
         general_elements = data.pop('general_elements', None)
         if general_elements is not None:
             data['modelSolver'] = general_elements['modelSolver']
             data['modelParameter'] = general_elements['modelParameter']
             data['subsidencePackage'] = general_elements['subsidencePackage']
+            if data['subsidencePackage'] is None:
+                data.pop('subsidencePackage')
 
-        if 'stressPeriod' in data:
-            for key in list(data['stressPeriod']):
-                new_key = ""
-                if key == 'stressPeriodType':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'type'
-                elif key == 'steadyStateValue':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'lengthOfSteadyStateStressPeriod'
-                elif key == 'transientStateValueType':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'typeOfTransientStateStressPeriod'
-                elif key == 'transientStateValue':
-                    v = data['stressPeriod'].pop(key)
-                    new_key = 'lengthOfTransientStateStressPeriod'
-                if new_key:
-                    data['stressPeriod'][new_key] = v
-
-        if general_elements is not None:
             output_control_pkg = general_elements['output_control_package']
             if output_control_pkg:
                 data['outputControlPackage'] = {'OC': False, 'HYD': False, 'GAGE': False, 'LMT6': False, 'MNWI': False}
@@ -67,6 +76,26 @@ class Command(BaseCommand):
                         if pkg['description'] == key:
                             data['outputControlPackage'][key] = True
                             break
+
+        if 'stressPeriod' in data:
+            stress_period_fields = ('stressPeriodType', 'steadyStateValue', 'transientStateValueType',
+                                    'transientStateValue')
+            for fld in stress_period_fields:
+                if fld in list(data['stressPeriod']):
+                    new_key = ""
+                    v = data['stressPeriod'].pop(fld)
+                    if not v or v is None:
+                        continue
+                    if fld == 'stressPeriodType':
+                        new_key = 'type'
+                    elif fld == 'steadyStateValue':
+                        new_key = 'lengthOfSteadyStateStressPeriod'
+                    elif fld == 'transientStateValueType':
+                        new_key = 'typeOfTransientStateStressPeriod'
+                    elif fld == 'transientStateValue':
+                        new_key = 'lengthOfTransientStateStressPeriod'
+                    if new_key:
+                        data['stressPeriod'][new_key] = v
 
         boundary_condition = data.pop('boundary_condition', None)
         if boundary_condition is not None:
@@ -108,31 +137,6 @@ class Command(BaseCommand):
                     'other_head_dependent_flux_boundary_packages']
 
         return data
-
-    def create_aggr_folder(self, mi_aggr, comp_res, logger):
-        new_folder = "modflow-instance"
-        # passing 'migrating_resource' as True so that folder can be created even in published resource
-        ResourceFile.create_folder(comp_res, new_folder, migrating_resource=True)
-        mi_aggr.folder = new_folder
-        mi_aggr.dataset_name = new_folder
-        mi_aggr.save()
-        msg = "Added a new folder '{}' to the resource:{}".format(new_folder, comp_res.short_id)
-        logger.info(msg)
-        self.stdout.write(self.style.SUCCESS(msg))
-        # move files to the new folder
-        istorage = comp_res.get_irods_storage()
-
-        for res_file in comp_res.files.all():
-            if res_file != comp_res.readme_file:
-                src_full_path = os.path.join(comp_res.file_path, res_file.file_name)
-                tgt_full_path = os.path.join(comp_res.file_path, new_folder, res_file.file_name)
-                istorage.moveFile(src_full_path, tgt_full_path)
-                res_file.set_storage_path(tgt_full_path)
-                msg = "Moved file:{} to the new folder:{}".format(res_file.file_name, new_folder)
-                self.stdout.write(self.style.SUCCESS(msg))
-                mi_aggr.add_resource_file(res_file)
-                msg = "Added file {} to mi aggregation".format(res_file.file_name)
-                self.stdout.write(self.style.SUCCESS(msg))
 
     def set_executed_by(self, mi_aggr, comp_res, logger):
         linked_res_id = comp_res.extra_data[self._EXECUTED_BY_EXTRA_META_KEY]
@@ -185,22 +189,6 @@ class Command(BaseCommand):
                 # skip this mi resource
                 continue
 
-            # check resource files exist on irods
-            file_missing = False
-            for res_file in mi_res.files.all().iterator():
-                file_path = res_file.public_path
-                if not istorage.exists(file_path):
-                    err_msg = "File path not found in irods:{}".format(file_path)
-                    logger.error(err_msg)
-                    err_msg = "Failed to convert MODFLOW instance resource (ID: {}). " \
-                              "Resource file is missing on irods".format(mi_res.short_id)
-                    self.stdout.write(self.style.ERROR(err_msg))
-                    file_missing = True
-                    break
-            if file_missing:
-                # skip this corrupt raster resource for migration
-                continue
-
             # change the resource_type
             mi_metadata_obj = mi_res.metadata
             mi_res.resource_type = to_resource_type
@@ -232,9 +220,11 @@ class Command(BaseCommand):
                 err_msg = err_msg + '\n' + str(ex)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
+                self.stdout.flush()
                 continue
 
-            self.create_aggr_folder(mi_aggr=mi_aggr, comp_res=comp_res, logger=logger)
+            move_files_and_folders_to_model_aggregation(command=self, model_aggr=mi_aggr, comp_res=comp_res,
+                                                        logger=logger, aggr_name='modflow-instance')
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
@@ -266,8 +256,7 @@ class Command(BaseCommand):
                     logger.error(msg)
                     self.stdout.write(self.style.ERROR(msg))
 
-            # create aggregation level xml files
-            mi_aggr.create_aggregation_xml_documents()
+            mi_aggr.set_metadata_dirty()
             msg = 'One model instance aggregation was created in resource (ID:{})'
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
