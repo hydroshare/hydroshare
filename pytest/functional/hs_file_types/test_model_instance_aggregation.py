@@ -102,7 +102,7 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
 @pytest.mark.django_db(transaction=True)
 def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_aggregation, mock_irods):
     """Test that when we rename a file that represents a model program aggregation then the linked model instance
-    aggregation xml files are regenerated (metadata is_dirty gets set to False)"""
+    aggregation metadata is set to dirty"""
 
     res, user = composite_resource_with_mi_aggregation
     assert ModelInstanceLogicalFile.objects.count() == 1
@@ -139,16 +139,15 @@ def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_agg
     assert ModelProgramLogicalFile.objects.count() == 1
     assert ModelInstanceLogicalFile.objects.count() == 1
     mi_aggr = ModelInstanceLogicalFile.objects.first()
-    # check that mi_aggr metadata is set to False (as part of regeneration of xml files for the mi_aggr when mp aggr
-    # file name got changed)
-    assert mi_aggr.metadata.is_dirty is False
+    # check that mi_aggr metadata is set to dirty
+    assert mi_aggr.metadata.is_dirty is True
     assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
 def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_aggregation, mock_irods):
     """Test that when we rename a folder that represents a model program aggregation then the linked model instance
-    aggregation xml files are regenerated (metadata is_dirty gets set to False)"""
+    aggregation metadata is set to dirty"""
 
     res, user = composite_resource_with_mi_aggregation
     assert ModelInstanceLogicalFile.objects.count() == 1
@@ -186,9 +185,8 @@ def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_agg
     assert ModelProgramLogicalFile.objects.count() == 1
     assert ModelInstanceLogicalFile.objects.count() == 1
     mi_aggr = ModelInstanceLogicalFile.objects.first()
-    # check that mi_aggr metadata is set to False (as part of regeneration of xml files for the mi_aggr when mp aggr
-    # folder name got changed)
-    assert mi_aggr.metadata.is_dirty is False
+    # check that mi_aggr metadata is set to dirty
+    assert mi_aggr.metadata.is_dirty is True
     assert not res.dangling_aggregations_exist()
 
 
