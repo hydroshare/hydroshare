@@ -173,7 +173,7 @@ class Command(BaseCommand):
         resource_counter = 0
         to_resource_type = 'CompositeResource'
 
-        msg = "THERE ARE CURRENTLY {} MODFLOW INSTANCE RESOURCES PRIOR TO CONVERSION TO COMPOSITE RESOURCE.".format(
+        msg = "THERE ARE CURRENTLY {} MODFLOW MODEL INSTANCE RESOURCES TO MIGRATE TO COMPOSITE RESOURCE.".format(
             MODFLOWModelInstanceResource.objects.count())
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
@@ -288,7 +288,7 @@ class Command(BaseCommand):
             try:
                 set_dirty_bag_flag(comp_res)
             except Exception as ex:
-                err_msg = 'Failed to set bag flag dirty for the converted resource (ID: {})'
+                err_msg = 'Failed to set bag flag dirty for the migrated resource (ID: {})'
                 err_msg = err_msg.format(comp_res.short_id)
                 err_msg = err_msg + '\n' + str(ex)
                 logger.error(err_msg)
@@ -297,23 +297,29 @@ class Command(BaseCommand):
             resource_counter += 1
             # delete the instance of model instance metadata that was part of the original model instance resource
             mi_metadata_obj.delete()
-            msg = 'MODFLOW instance resource (ID: {}) was converted to Composite Resource type'
+            msg = 'MODFLOW model instance resource (ID: {}) was migrated to Composite Resource type'
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
             print("_______________________________________________")
 
         if resource_counter > 0:
-            msg = "{} MODFLOW INSTANCE RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
+            msg = "{} MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE.".format(
                 resource_counter)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
-        if MODFLOWModelInstanceResource.objects.all().count() > 0:
-            msg = "NOT ALL MODFLOW INSTANCE RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
+        modflow_res_count = MODFLOWModelInstanceResource.objects.count()
+        if modflow_res_count > 0:
+            msg = "NOT ALL MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
             logger.error(msg)
             self.stdout.write(self.style.WARNING(msg))
-            msg = "THERE ARE CURRENTLY {} MODFLOW INSTANCE RESOURCES AFTER CONVERSION.".format(
-                MODFLOWModelInstanceResource.objects.all().count())
+            msg = "THERE ARE CURRENTLY {} MODFLOW MODEL INSTANCE RESOURCES AFTER MIGRATION.".format(
+                modflow_res_count)
             logger.info(msg)
             self.stdout.write(self.style.WARNING(msg))
+        else:
+            msg = "ALL MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
+            logger.info(msg)
+            self.stdout.write(self.style.SUCCESS(msg))
+        self.stdout.flush()
