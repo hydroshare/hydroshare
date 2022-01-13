@@ -61,8 +61,8 @@ class Command(BaseCommand):
                         hs_identifier = copy_of_res.metadata.identifiers.filter(name="hydroShareIdentifier").first()
                         if hs_identifier:
                             res.metadata.create_element('source', derived_from=hs_identifier.url)
-                        print(f'{res_id} is made a copy of {copy_of_res_id}', flush=True)
-                        fixed = True
+                            print(f'{res_id} is made a copy of {copy_of_res_id}', flush=True)
+                            fixed = True
                 elif not row[replace_by_col]:
                     # isVersionOf is not empty but isReplacedBy is empty
                     version_res_id = row[version_of_col]
