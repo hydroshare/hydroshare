@@ -52,7 +52,7 @@ class Command(BaseCommand):
         resource_counter = 0
         to_resource_type = 'CompositeResource'
 
-        msg = "THERE ARE CURRENTLY {} MODEL INSTANCE RESOURCES PRIOR TO CONVERSION TO COMPOSITE RESOURCE.".format(
+        msg = "THERE ARE CURRENTLY {} MODEL INSTANCE RESOURCES TO MIGRATE TO COMPOSITE RESOURCE.".format(
             ModelInstanceResource.objects.count())
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
@@ -154,17 +154,21 @@ class Command(BaseCommand):
             self.stdout.flush()
 
         if resource_counter > 0:
-            msg = "{} MODEL INSTANCE RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
+            msg = "{} MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE.".format(
                 resource_counter)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
         if ModelInstanceResource.objects.all().count() > 0:
-            msg = "NOT ALL MODEL INSTANCE RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
+            msg = "NOT ALL MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
             logger.error(msg)
             self.stdout.write(self.style.WARNING(msg))
-            msg = "THERE ARE CURRENTLY {} MODEL INSTANCE RESOURCES AFTER CONVERSION.".format(
+            msg = "THERE ARE CURRENTLY {} MODEL INSTANCE RESOURCES AFTER MIGRATION.".format(
                 ModelInstanceResource.objects.all().count())
             logger.info(msg)
             self.stdout.write(self.style.WARNING(msg))
+        else:
+            msg = "ALL MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
+            logger.info(msg)
+            self.stdout.write(self.style.SUCCESS(msg))
         self.stdout.flush()

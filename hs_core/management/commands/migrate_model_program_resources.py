@@ -60,7 +60,7 @@ class Command(BaseCommand):
         resource_counter = 0
         to_resource_type = 'CompositeResource'
         mp_resource_count = ModelProgramResource.objects.count()
-        msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES PRIOR TO CONVERSION TO COMPOSITE RESOURCE.".format(
+        msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES TO MIGRATE TO COMPOSITE RESOURCE.".format(
             mp_resource_count)
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
@@ -212,13 +212,16 @@ class Command(BaseCommand):
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
-        if mp_resource_count > resource_counter:
-            msg = "{} MODEL PROGRAM RESOURCE(S) WAS/WERE NOT CONVERTED TO COMPOSITE RESOURCE TYPE"
-            msg = msg.format(mp_resource_count - resource_counter)
+        if ModelProgramResource.objects.all().count() > 0:
+            msg = "NOT ALL MODEL PROGRAM RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
             logger.error(msg)
             self.stdout.write(self.style.WARNING(msg))
-        elif mp_resource_count > 0:
-            msg = "ALL MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE TYPE"
+            msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES AFTER MIGRATION.".format(
+                ModelProgramResource.objects.all().count())
+            logger.info(msg)
+            self.stdout.write(self.style.WARNING(msg))
+        else:
+            msg = "ALL MODEL PROGRAM RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
         self.stdout.flush()
