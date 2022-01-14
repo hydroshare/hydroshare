@@ -20,7 +20,7 @@ class Command(BaseCommand):
         print(msg, flush=True)
 
         version_of_qs = Relation.objects.filter(type='isVersionOf')
-        msg = f'Before cleanup, there are currently {replace_by_qs.count()} isVersionOf relations'
+        msg = f'Before cleanup, there are currently {version_of_qs.count()} isVersionOf relations'
         print(msg, flush=True)
 
         for obj in version_of_qs:
