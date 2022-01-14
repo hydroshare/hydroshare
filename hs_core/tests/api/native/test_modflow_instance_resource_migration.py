@@ -369,17 +369,20 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         """
         mi_res = self._create_modflow_resource()
         mi_res.metadata.create_element('StudyArea',
-                                       totalLength='10'
+                                       totalLength='10',
+                                       totalWidth=' '
                                        )
 
         mi_res.metadata.create_element('StressPeriod',
                                        stressPeriodType='Steady',
-                                       steadyStateValue='a'
+                                       steadyStateValue='a',
                                        )
 
         mi_res.metadata.create_element('GridDimensions',
                                        numberOfLayers='10',
-                                       typeOfRows='Regular'
+                                       typeOfRows='Regular',
+                                       typeOfColumns='',
+                                       numberOfRows=''
                                        )
 
         mi_res.metadata.create_element('GroundWaterFlow',
@@ -390,32 +393,40 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         mi_res.metadata.create_element('GeneralElements',
                                        modelParameter='BCF6',
-                                       modelSolver='DE4'
+                                       modelSolver='DE4',
+                                       output_control_package=[]
                                        )
 
         spec_hd_bd_pkgs = ['CHD', 'FHB']
-        spec_fx_bd_pkgs = ['RCH', 'WEL']
-        hd_dep_fx_pkgs = ['MNW2', 'GHB', 'LAK']
         mi_res.metadata.create_element('BoundaryCondition',
                                        specified_head_boundary_packages=spec_hd_bd_pkgs,
                                        other_specified_head_boundary_packages='JMS',
-                                       other_specified_flux_boundary_packages='MMM'
+                                       other_specified_flux_boundary_packages='MMM',
+                                       specified_flux_boundary_packages=[]
                                        )
 
         mi_res.metadata.create_element('ModelCalibration',
                                        calibratedParameter='a',
-                                       observationType='b'
+                                       observationType='b',
+                                       calibrationMethod='',
+                                       observationProcessPackage='ADV2'
                                        )
 
+        # create multiple modelinput meta elements
         mi_res.metadata.create_element('ModelInput',
                                        inputType='aa',
                                        inputSourceName='aaa'
                                        )
 
-        # 8b. create another modelinput
         mi_res.metadata.create_element('ModelInput',
                                        inputType='bb',
                                        inputSourceName='bbb',
+                                       inputSourceURL=' '
+                                       )
+
+        mi_res.metadata.create_element('ModelInput',
+                                       inputType='cc',
+                                       inputSourceName='ccc',
                                        inputSourceURL='http://www.RVOB2.com')
 
         # check that there are all model specific metadata
@@ -505,18 +516,22 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(model_calibration['observationType'], 'b')
         self.assertNotIn('calibrationMethod', model_calibration)
         self.assertEqual(model_calibration['calibratedParameter'], 'a')
-        self.assertNotIn('observationProcessPackage', model_calibration)
+        self.assertEqual(model_calibration['observationProcessPackage'], 'ADV2')
 
         self.assertNotEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
         for mi_item in mi_aggr.metadata.metadata_json['modelInputs']:
-            self.assertIn(mi_item['inputType'], ['aa', 'bb'])
-            self.assertIn(mi_item['inputSourceName'], ['aaa', 'bbb'])
+            self.assertIn(mi_item['inputType'], ['aa', 'bb', 'cc'])
+            self.assertIn(mi_item['inputSourceName'], ['aaa', 'bbb', 'ccc'])
             if 'inputSourceURL' in mi_item:
                 self.assertIn(mi_item['inputSourceURL'], ['http://www.RVOB2.com'])
 
-        mi_item_1, mi_item_2 = mi_aggr.metadata.metadata_json['modelInputs']
-        self.assertNotEqual(mi_item_1['inputType'], mi_item_2['inputType'])
-        self.assertNotEqual(mi_item_1['inputSourceName'], mi_item_2['inputSourceName'])
+        input_types = set([mi_item['inputType'] for mi_item in mi_aggr.metadata.metadata_json['modelInputs']])
+        self.assertEqual(len(input_types), 3)
+        input_src_names = set([mi_item['inputSourceName'] for mi_item in mi_aggr.metadata.metadata_json['modelInputs']])
+        self.assertEqual(len(input_src_names), 3)
+        input_src_urls = set([mi_item['inputSourceURL'] for mi_item in
+                              mi_aggr.metadata.metadata_json['modelInputs'] if 'inputSourceURL' in mi_item])
+        self.assertEqual(len(input_src_urls), 1)
 
         try:
             jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)

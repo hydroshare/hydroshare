@@ -39,27 +39,27 @@ class Command(BaseCommand):
             study_area_fields = ('totalWidth', 'totalLength', 'maximumElevation', 'minimumElevation')
             study_area = data['studyArea']
             for fld in study_area_fields:
-                if study_area[fld] is None:
+                if study_area[fld] is None or not study_area[fld].strip():
                     study_area.pop(fld)
         if 'gridDimensions' in data:
             grid_fields = ('typeOfRows', 'numberOfRows', 'typeOfColumns', 'numberOfColumns', 'numberOfLayers')
             grid = data['gridDimensions']
             for fld in grid_fields:
-                if grid[fld] is None:
+                if grid[fld] is None or not grid[fld].strip():
                     grid.pop(fld)
 
         if 'modelCalibration' in data:
             model_fields = ('observationType', 'calibrationMethod', 'calibratedParameter', 'observationProcessPackage')
             model_calibration = data['modelCalibration']
             for fld in model_fields:
-                if model_calibration[fld] is None:
+                if model_calibration[fld] is None or not model_calibration[fld].strip():
                     model_calibration.pop(fld)
         if 'modelInputs' in data:
             model_fields = ('inputType', 'inputSourceName', 'inputSourceURL')
             model_inputs = data['modelInputs']
             for model_input in model_inputs:
                 for fld in model_fields:
-                    if model_input[fld] is None:
+                    if model_input[fld] is None or not model_input[fld].strip():
                         model_input.pop(fld)
 
         general_elements = data.pop('general_elements', None)
@@ -86,7 +86,7 @@ class Command(BaseCommand):
                 if fld in list(data['stressPeriod']):
                     new_key = ""
                     v = data['stressPeriod'].pop(fld)
-                    if not v or v is None:
+                    if v is None or not v.strip():
                         continue
                     if fld == 'stressPeriodType':
                         new_key = 'type'
