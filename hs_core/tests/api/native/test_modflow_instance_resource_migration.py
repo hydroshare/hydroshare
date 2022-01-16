@@ -550,6 +550,136 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
             traceback.print_exception(*sys.exc_info())
             self.fail(msg=str(err))
 
+    def test_migrate_modflow_specific_metadata_all_metadata_with_default(self):
+        """
+        Here we are testing that we can migrate a modflow mi resource that has all modflow specific
+        metadata with only default values for sub-fields
+        """
+        mi_res = self._create_modflow_resource()
+        mi_res.metadata.create_element('StudyArea')
+
+        mi_res.metadata.create_element('StressPeriod')
+
+        mi_res.metadata.create_element('GridDimensions')
+
+        mi_res.metadata.create_element('GroundWaterFlow')
+
+        mi_res.metadata.create_element('GeneralElements')
+
+        mi_res.metadata.create_element('BoundaryCondition')
+
+        mi_res.metadata.create_element('ModelCalibration')
+
+        # create multiple modelinput meta elements
+        mi_res.metadata.create_element('ModelInput')
+
+        mi_res.metadata.create_element('ModelInput',
+                                       inputType='bb',
+                                       inputSourceName='bbb',
+                                       inputSourceURL=' '
+                                       )
+
+        mi_res.metadata.create_element('ModelInput',
+                                       inputType='cc',
+                                       inputSourceName='ccc',
+                                       inputSourceURL='http://www.RVOB2.com')
+
+        # check that there are all model specific metadata
+        self.assertNotEqual(mi_res.metadata.study_area, None)
+        self.assertNotEqual(mi_res.metadata.grid_dimensions, None)
+        self.assertNotEqual(mi_res.metadata.stress_period, None)
+        self.assertNotEqual(mi_res.metadata.ground_water_flow, None)
+        self.assertNotEqual(mi_res.metadata.boundary_condition, None)
+        self.assertNotEqual(mi_res.metadata.model_calibration, None)
+        self.assertNotEqual(list(mi_res.metadata.model_inputs), [])
+        self.assertNotEqual(mi_res.metadata.general_elements, None)
+
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 1)
+        # migrate the modflow resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(MODFLOWModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        # check the mi aggregation has meta schema
+        self.assertNotEqual(mi_aggr.metadata_schema_json, {})
+
+        # check the json metadata in mi aggregation
+        self.assertNotEqual(mi_aggr.metadata.metadata_json, {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['studyArea'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['stressPeriod'], {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['gridDimensions'], {})
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['groundwaterFlow'], {})
+
+        self.assertNotIn('modelSolver', mi_aggr.metadata.metadata_json)
+        self.assertNotIn('modelParameter', mi_aggr.metadata.metadata_json)
+        self.assertNotIn('subsidencePackage', mi_aggr.metadata.metadata_json)
+        self.assertNotIn('outputControlPackage', mi_aggr.metadata.metadata_json)
+        self.assertIn('specifiedHeadBoundaryPackages', mi_aggr.metadata.metadata_json)
+        self.assertIn('specifiedFluxBoundaryPackages', mi_aggr.metadata.metadata_json)
+        self.assertIn('headDependentFluxBoundaryPackages', mi_aggr.metadata.metadata_json)
+
+        for key in mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages']:
+            if key == 'otherPackages':
+                self.assertEqual(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'][key], '')
+            else:
+                self.assertFalse(mi_aggr.metadata.metadata_json['specifiedHeadBoundaryPackages'][key])
+
+        for key in mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages']:
+            if key == 'otherPackages':
+                self.assertEqual(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'][key], '')
+            else:
+                self.assertFalse(mi_aggr.metadata.metadata_json['specifiedFluxBoundaryPackages'][key])
+
+        for key in mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages']:
+            self.assertFalse(mi_aggr.metadata.metadata_json['headDependentFluxBoundaryPackages'][key])
+
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelCalibration'], {})
+
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['modelInputs'], [])
+        for mi_item in mi_aggr.metadata.metadata_json['modelInputs']:
+            if 'inputType' in mi_item:
+                self.assertIn(mi_item['inputType'], ['bb', 'cc'])
+            if 'inputSourceName' in mi_item:
+                self.assertIn(mi_item['inputSourceName'], ['bbb', 'ccc'])
+            if 'inputSourceURL' in mi_item:
+                self.assertIn(mi_item['inputSourceURL'], ['http://www.RVOB2.com'])
+
+        input_types = set([mi_item['inputType'] for mi_item in mi_aggr.metadata.metadata_json['modelInputs']
+                           if 'inputType' in mi_item])
+        self.assertEqual(len(input_types), 2)
+        input_src_names = set([mi_item['inputSourceName'] for mi_item in mi_aggr.metadata.metadata_json['modelInputs']
+                               if 'inputSourceName' in mi_item])
+        self.assertEqual(len(input_src_names), 2)
+        input_src_urls = set([mi_item['inputSourceURL'] for mi_item in
+                              mi_aggr.metadata.metadata_json['modelInputs'] if 'inputSourceURL' in mi_item])
+        self.assertEqual(len(input_src_urls), 1)
+
+        try:
+            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
+        except jsonschema.ValidationError as err:
+            self.fail(msg=str(err))
+
+        try:
+            mi_aggr.metadata.get_html()
+        except Exception as err:
+            traceback.print_exception(*sys.exc_info())
+            self.fail(msg=str(err))
+
+        try:
+            mi_aggr.metadata.get_html_forms()
+        except Exception as err:
+            traceback.print_exception(*sys.exc_info())
+            self.fail(msg=str(err))
+
     def test_executed_by(self):
         """
         Migrate a mi resource that has a link (executed_by) to a composite resource

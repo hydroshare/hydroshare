@@ -41,6 +41,17 @@ class Command(BaseCommand):
             for fld in study_area_fields:
                 if study_area[fld] is None or not study_area[fld].strip():
                     study_area.pop(fld)
+
+        if 'groundwaterFlow' in data:
+            ground_water_flow_fields = ('flowPackage', 'flowParameter', 'unsaturatedZonePackage',
+                                        'seawaterIntrusionPackage', 'horizontalFlowBarrierPackage')
+            ground_water_flow = data['groundwaterFlow']
+            for fld in ground_water_flow_fields:
+                if ground_water_flow[fld] is None:
+                    ground_water_flow.pop(fld)
+                elif isinstance(ground_water_flow[fld], str) and not ground_water_flow[fld].strip():
+                    ground_water_flow.pop(fld)
+
         if 'gridDimensions' in data:
             grid_fields = ('typeOfRows', 'numberOfRows', 'typeOfColumns', 'numberOfColumns', 'numberOfLayers')
             grid = data['gridDimensions']
@@ -54,6 +65,7 @@ class Command(BaseCommand):
             for fld in model_fields:
                 if model_calibration[fld] is None or not model_calibration[fld].strip():
                     model_calibration.pop(fld)
+
         if 'modelInputs' in data:
             model_fields = ('inputType', 'inputSourceName', 'inputSourceURL')
             model_inputs = data['modelInputs']
@@ -65,9 +77,13 @@ class Command(BaseCommand):
         general_elements = data.pop('general_elements', None)
         if general_elements is not None:
             data['modelSolver'] = general_elements['modelSolver']
+            if data['modelSolver'] is None or not data['modelSolver'].strip():
+                data.pop('modelSolver')
             data['modelParameter'] = general_elements['modelParameter']
+            if data['modelParameter'] is None or not data['modelParameter'].strip():
+                data.pop('modelParameter')
             data['subsidencePackage'] = general_elements['subsidencePackage']
-            if data['subsidencePackage'] is None:
+            if data['subsidencePackage'] is None or not data['subsidencePackage'].strip():
                 data.pop('subsidencePackage')
 
             output_control_pkg = general_elements['output_control_package']
