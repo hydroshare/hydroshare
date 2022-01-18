@@ -254,7 +254,8 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                         json_schema = json.dumps(self.logical_file.metadata_schema_json, indent=4)
                         dom_tags.textarea(json_schema, readonly=True, rows='30', style="min-width: 100%;",
                                           cls="form-control")
-                if self.executed_by and not self.executed_by.metadata_schema_json:
+                if self.executed_by and not self.executed_by.metadata_schema_json and \
+                        not self.logical_file.metadata_schema_json:
                     missing_schema_msg = "Selected model program is missing metadata schema. With the current " \
                                          "release of HydroShare, you can now specify specific metadata schema " \
                                          "for a Model Program."
