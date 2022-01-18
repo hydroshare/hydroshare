@@ -24,7 +24,7 @@ class Command(BaseCommand):
             res_obj = BaseResource.objects.filter(object_id=obj.object_id).first()
             if not res_obj:
                 obj.delete()
-                msg = 'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
+                msg = f'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
                       'isReplacedBy relation metadata element'
                 print(msg, flush=True)
                 continue
@@ -47,14 +47,14 @@ class Command(BaseCommand):
             version_of_id = obj.value.split('/')[-1]
             if not BaseResource.objects.filter(short_id=version_of_id).exists():
                 obj.delete()
-                msg = '{version_of_id} does not exist, so delete the corresponding isVersionOf relation ' \
+                msg = f'{version_of_id} does not exist, so delete the corresponding isVersionOf relation ' \
                       'metadata element'
                 print(msg, flush=True)
                 continue
             res_obj = BaseResource.objects.filter(object_id=obj.object_id).first()
             if not res_obj:
                 obj.delete()
-                msg = 'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
+                msg = f'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
                       'isVersionOf relation metadata element'
                 print(msg, flush=True)
                 continue
