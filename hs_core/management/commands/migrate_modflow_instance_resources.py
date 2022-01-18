@@ -164,6 +164,7 @@ class Command(BaseCommand):
             msg = "Linked resource (ID:{}) was not found. Error:{}".format(linked_res_id, str(err))
             logger.warning(msg)
             self.stdout.write(self.style.WARNING(msg))
+            self.stdout.flush()
             return
 
         # check the linked resource is a composite resource
@@ -184,26 +185,31 @@ class Command(BaseCommand):
                 logger.warning(msg)
                 self.stdout.write(self.style.WARNING(msg))
 
+            self.stdout.flush()
+
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
         resource_counter = 0
+        err_resource_counter = 0
         to_resource_type = 'CompositeResource'
-
+        modflow_resource_count = MODFLOWModelInstanceResource.objects.count()
         msg = "THERE ARE CURRENTLY {} MODFLOW MODEL INSTANCE RESOURCES TO MIGRATE TO COMPOSITE RESOURCE.".format(
-            MODFLOWModelInstanceResource.objects.count())
+            modflow_resource_count)
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
 
         for mi_res in MODFLOWModelInstanceResource.objects.all().iterator():
             msg = "Migrating MODFLOW instance resource:{}".format(mi_res.short_id)
             self.stdout.write(self.style.SUCCESS(msg))
-
+            self.stdout.flush()
             # check resource exists on irods
             istorage = mi_res.get_irods_storage()
             if not istorage.exists(mi_res.root_path):
+                err_resource_counter += 1
                 err_msg = "MODFLOW instance resource not found in irods (ID: {})".format(mi_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
+                self.stdout.flush()
                 # skip this mi resource
                 continue
 
@@ -233,6 +239,7 @@ class Command(BaseCommand):
                 mi_aggr = ModelInstanceLogicalFile.create(resource=comp_res)
                 mi_aggr.save()
             except Exception as ex:
+                err_resource_counter += 1
                 err_msg = 'Failed to create model instance aggregation for resource (ID: {})'
                 err_msg = err_msg.format(mi_res.short_id)
                 err_msg = err_msg + '\n' + str(ex)
@@ -262,34 +269,59 @@ class Command(BaseCommand):
             mi_aggr.metadata_schema_json = meta_json_schema
             mi_aggr.save()
             # generate the JSON metadata from the MODFLOW specific metadata
-            metadata_json = self.generate_metadata_json(mi_metadata_obj)
+            try:
+                metadata_json = self.generate_metadata_json(mi_metadata_obj)
+            except Exception as err:
+                err_resource_counter += 1
+                msg = 'Failed to migrate MODFLOW specific metadata for resource (ID:{}). Error:{}'
+                msg = msg.format(comp_res.short_id, str(err))
+                logger.error(msg)
+                self.stdout.write(self.style.ERROR(msg))
+                self.stdout.flush()
+                mi_metadata_obj.delete()
+                continue
+
+            # delete the instance of model instance metadata that was part of the original modflow
+            # model instance resource
+            mi_metadata_obj.delete()
+
             if metadata_json:
                 mi_aggr.metadata.metadata_json = metadata_json
                 mi_aggr.metadata.save()
                 try:
                     jsonschema.Draft4Validator(meta_json_schema).validate(metadata_json)
                 except jsonschema.ValidationError as err:
+                    err_resource_counter += 1
                     msg = 'Metadata validation failed as per schema for resource (ID:{}). Error:{}'
                     msg = msg.format(comp_res.short_id, str(err))
                     logger.error(msg)
                     self.stdout.write(self.style.ERROR(msg))
+                    self.stdout.flush()
+                    continue
+
                 try:
                     mi_aggr.metadata.get_html()
                 except Exception as err:
+                    err_resource_counter += 1
                     traceback.print_exception(*sys.exc_info())
                     msg = 'Failed to generate modflow aggregation metadata for view for resource (ID:{}). Error:{}'
                     msg = msg.format(comp_res.short_id, str(err))
                     logger.error(msg)
                     self.stdout.write(self.style.ERROR(msg))
+                    self.stdout.flush()
+                    continue
 
                 try:
                     mi_aggr.metadata.get_html_forms()
                 except Exception as err:
+                    err_resource_counter += 1
                     traceback.print_exception(*sys.exc_info())
                     msg = 'Failed to generate modflow aggregation metadata for edit for resource (ID:{}). Error:{}'
                     msg = msg.format(comp_res.short_id, str(err))
                     logger.error(msg)
                     self.stdout.write(self.style.ERROR(msg))
+                    self.stdout.flush()
+                    continue
 
             mi_aggr.set_metadata_dirty()
             msg = 'One model instance aggregation was created in resource (ID:{})'
@@ -304,6 +336,7 @@ class Command(BaseCommand):
             try:
                 set_dirty_bag_flag(comp_res)
             except Exception as ex:
+                err_resource_counter += 1
                 err_msg = 'Failed to set bag flag dirty for the migrated resource (ID: {})'
                 err_msg = err_msg.format(comp_res.short_id)
                 err_msg = err_msg + '\n' + str(ex)
@@ -311,27 +344,38 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(err_msg))
 
             resource_counter += 1
-            # delete the instance of model instance metadata that was part of the original model instance resource
-            mi_metadata_obj.delete()
-            msg = 'MODFLOW model instance resource (ID: {}) was migrated to Composite Resource type'
+            msg = 'MODFLOW model instance resource (ID: {}) was migrated to Composite Resource'
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
             print("_______________________________________________")
+            self.stdout.flush()
+
+        print("________________MIGRATION SUMMARY_________________")
+        msg = "{} MODFLOW MODEL INSTANCE RESOURCES EXISTED PRIOR TO MIGRATION TO COMPOSITE RESOURCE".format(
+            modflow_resource_count)
+        logger.info(msg)
+        self.stdout.write(self.style.SUCCESS(msg))
+
+        if err_resource_counter > 0:
+            msg = "{} MODFLOW MODEL INSTANCE RESOURCES HAD ISSUES DURING MIGRATION TO COMPOSITE RESOURCE".format(
+                err_resource_counter)
+            logger.info(msg)
+            self.stdout.write(self.style.ERROR(msg))
 
         if resource_counter > 0:
-            msg = "{} MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE.".format(
+            msg = "{} MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE".format(
                 resource_counter)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
-        modflow_res_count = MODFLOWModelInstanceResource.objects.count()
-        if modflow_res_count > 0:
+        modflow_resource_count = MODFLOWModelInstanceResource.objects.count()
+        if modflow_resource_count > 0:
             msg = "NOT ALL MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
             logger.error(msg)
             self.stdout.write(self.style.WARNING(msg))
-            msg = "THERE ARE CURRENTLY {} MODFLOW MODEL INSTANCE RESOURCES AFTER MIGRATION.".format(
-                modflow_res_count)
+            msg = "THERE ARE CURRENTLY {} MODFLOW MODEL INSTANCE RESOURCES AFTER MIGRATION".format(
+                modflow_resource_count)
             logger.info(msg)
             self.stdout.write(self.style.WARNING(msg))
         else:
