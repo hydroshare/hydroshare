@@ -14,10 +14,10 @@ class Command(BaseCommand):
 
         replaced_by_dict = {}
         for obj in replace_by_qs:
-            replacy_by_id = obj.value.split('/')[-1]
-            if not BaseResource.objects.filter(short_id=replacy_by_id).exists():
+            replace_by_id = obj.value.split('/')[-1]
+            if not BaseResource.objects.filter(short_id=replace_by_id).exists():
                 obj.delete()
-                msg = '{replacy_by_id} does not exist, so delete the corresponding isReplacedBy relation ' \
+                msg = f'{replace_by_id} does not exist, so delete the corresponding isReplacedBy relation ' \
                       'metadata element'
                 print(msg, flush=True)
                 continue
