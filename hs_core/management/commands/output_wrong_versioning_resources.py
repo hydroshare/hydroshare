@@ -29,14 +29,14 @@ class Command(BaseCommand):
                 print(msg, flush=True)
                 continue
             if res_obj.short_id in replaced_by_dict:
-                if replacy_by_id in replaced_by_dict[res_obj.short_id]:
-                    print(f'{res_obj.short_id} is already replaced by {replacy_by_id} - clean up duplicate entry',
+                if replace_by_id in replaced_by_dict[res_obj.short_id]:
+                    print(f'{res_obj.short_id} is already replaced by {replace_by_id} - clean up duplicate entry',
                           flush=True)
                     obj.delete()
                 else:
-                    replaced_by_dict[res_obj.short_id].append(replacy_by_id)
+                    replaced_by_dict[res_obj.short_id].append(replace_by_id)
             else:
-                replaced_by_dict[res_obj.short_id] = [replacy_by_id]
+                replaced_by_dict[res_obj.short_id] = [replace_by_id]
 
         version_of_dict = {}
         version_of_qs = Relation.objects.filter(type='isVersionOf')
