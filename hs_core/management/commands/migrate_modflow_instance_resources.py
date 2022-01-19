@@ -1,4 +1,3 @@
-import json
 import logging
 import sys
 import traceback
@@ -6,17 +5,21 @@ import traceback
 import jsonschema
 from django.core.management.base import BaseCommand
 
-from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_resource_by_shortkey
+from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
 from hs_core.models import CoreMetaData
 from hs_file_types.models import ModelInstanceLogicalFile
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 from hs_modflow_modelinstance.serializers import MODFLOWModelInstanceMetaDataSerializerMigration
-from ..utils import migrate_core_meta_elements, get_modflow_meta_schema, move_files_and_folders_to_model_aggregation
+from ..utils import (
+    migrate_core_meta_elements, get_modflow_meta_schema, move_files_and_folders_to_model_aggregation,
+    set_executed_by,
+)
 
 
 class Command(BaseCommand):
     help = "Convert all MODFLOW model instance resources to composite resource with model instance aggregation"
     _EXECUTED_BY_EXTRA_META_KEY = 'EXECUTED_BY_RES_ID'
+    _MIGRATION_ISSUE = "MIGRATION ISSUE:"
 
     def generate_metadata_json(self, modflow_meta):
         """
@@ -156,37 +159,6 @@ class Command(BaseCommand):
 
         return data
 
-    def set_executed_by(self, mi_aggr, comp_res, logger):
-        linked_res_id = comp_res.extra_data[self._EXECUTED_BY_EXTRA_META_KEY]
-        try:
-            linked_res = get_resource_by_shortkey(linked_res_id)
-        except Exception as err:
-            msg = "Linked resource (ID:{}) was not found. Error:{}".format(linked_res_id, str(err))
-            logger.warning(msg)
-            self.stdout.write(self.style.WARNING(msg))
-            self.stdout.flush()
-            return
-
-        # check the linked resource is a composite resource
-        if linked_res.resource_type == 'CompositeResource':
-            # get the mp aggregation
-            mp_aggr = linked_res.modelprogramlogicalfile_set.first()
-            if mp_aggr:
-                # use the external mp aggregation for executed_by
-                mi_aggr.metadata.executed_by = mp_aggr
-                mi_aggr.metadata.save()
-                msg = 'Setting executed_by to external model program aggregation of resource (ID:{})'
-                msg = msg.format(linked_res.short_id)
-                logger.info(msg)
-                self.stdout.write(self.style.SUCCESS(msg))
-            else:
-                msg = "No model program aggregation was found in linked composite resource ID:{}"
-                msg = msg.format(linked_res.short_id)
-                logger.warning(msg)
-                self.stdout.write(self.style.WARNING(msg))
-
-            self.stdout.flush()
-
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
         resource_counter = 0
@@ -206,7 +178,8 @@ class Command(BaseCommand):
             istorage = mi_res.get_irods_storage()
             if not istorage.exists(mi_res.root_path):
                 err_resource_counter += 1
-                err_msg = "MODFLOW instance resource not found in irods (ID: {})".format(mi_res.short_id)
+                err_msg = "{}MODFLOW instance resource not found in iRODS (ID: {})"
+                err_msg = err_msg.format(self._MIGRATION_ISSUE, mi_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
                 self.stdout.flush()
@@ -235,22 +208,21 @@ class Command(BaseCommand):
             type_element.save()
 
             # create a mi aggregation
+            mi_aggr = ModelInstanceLogicalFile.create(resource=comp_res)
+            mi_aggr.save()
             try:
-                mi_aggr = ModelInstanceLogicalFile.create(resource=comp_res)
-                mi_aggr.save()
+                move_files_and_folders_to_model_aggregation(command=self, model_aggr=mi_aggr, comp_res=comp_res,
+                                                            logger=logger, aggr_name='modflow-instance')
             except Exception as ex:
                 err_resource_counter += 1
-                err_msg = 'Failed to create model instance aggregation for resource (ID: {})'
-                err_msg = err_msg.format(mi_res.short_id)
+                err_msg = '{}Failed to move files/folders into model instance aggregation for resource (ID: {})'
+                err_msg = err_msg.format(self._MIGRATION_ISSUE, comp_res.short_id)
                 err_msg = err_msg + '\n' + str(ex)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
                 self.stdout.flush()
+                mi_metadata_obj.delete()
                 continue
-
-            move_files_and_folders_to_model_aggregation(command=self, model_aggr=mi_aggr, comp_res=comp_res,
-                                                        logger=logger, aggr_name='modflow-instance')
-
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
                 keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
@@ -261,20 +233,23 @@ class Command(BaseCommand):
                 mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
 
             if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_data:
-                self.set_executed_by(mi_aggr, comp_res, logger)
+                if not set_executed_by(self, mi_aggr, comp_res, logger):
+                    err_resource_counter += 1
+
             mi_aggr.save()
             # load the default MODFLOW instance meta schema - Note: this schema is used only for migration and
             # is not a template schema that the user can select using the UI for metadata editing
-            meta_json_schema = json.loads(get_modflow_meta_schema())
+            meta_json_schema = get_modflow_meta_schema()
             mi_aggr.metadata_schema_json = meta_json_schema
+
             mi_aggr.save()
             # generate the JSON metadata from the MODFLOW specific metadata
             try:
                 metadata_json = self.generate_metadata_json(mi_metadata_obj)
             except Exception as err:
                 err_resource_counter += 1
-                msg = 'Failed to migrate MODFLOW specific metadata for resource (ID:{}). Error:{}'
-                msg = msg.format(comp_res.short_id, str(err))
+                msg = '{}Failed to migrate MODFLOW specific metadata for resource (ID:{}). Error:{}'
+                msg = msg.format(self._MIGRATION_ISSUE, comp_res.short_id, str(err))
                 logger.error(msg)
                 self.stdout.write(self.style.ERROR(msg))
                 self.stdout.flush()
@@ -292,36 +267,36 @@ class Command(BaseCommand):
                     jsonschema.Draft4Validator(meta_json_schema).validate(metadata_json)
                 except jsonschema.ValidationError as err:
                     err_resource_counter += 1
-                    msg = 'Metadata validation failed as per schema for resource (ID:{}). Error:{}'
-                    msg = msg.format(comp_res.short_id, str(err))
+                    msg = '{}Metadata validation failed as per schema for resource (ID:{}). Error:{}'
+                    msg = msg.format(self._MIGRATION_ISSUE, comp_res.short_id, str(err))
                     logger.error(msg)
                     self.stdout.write(self.style.ERROR(msg))
                     self.stdout.flush()
                     continue
 
-                try:
-                    mi_aggr.metadata.get_html()
-                except Exception as err:
-                    err_resource_counter += 1
-                    traceback.print_exception(*sys.exc_info())
-                    msg = 'Failed to generate modflow aggregation metadata for view for resource (ID:{}). Error:{}'
-                    msg = msg.format(comp_res.short_id, str(err))
-                    logger.error(msg)
-                    self.stdout.write(self.style.ERROR(msg))
-                    self.stdout.flush()
-                    continue
+            try:
+                mi_aggr.metadata.get_html()
+            except Exception as err:
+                err_resource_counter += 1
+                traceback.print_exception(*sys.exc_info())
+                msg = '{}Failed to generate modflow aggregation metadata for view for resource (ID:{}). Error:{}'
+                msg = msg.format(self._MIGRATION_ISSUE, comp_res.short_id, str(err))
+                logger.error(msg)
+                self.stdout.write(self.style.ERROR(msg))
+                self.stdout.flush()
+                continue
 
-                try:
-                    mi_aggr.metadata.get_html_forms()
-                except Exception as err:
-                    err_resource_counter += 1
-                    traceback.print_exception(*sys.exc_info())
-                    msg = 'Failed to generate modflow aggregation metadata for edit for resource (ID:{}). Error:{}'
-                    msg = msg.format(comp_res.short_id, str(err))
-                    logger.error(msg)
-                    self.stdout.write(self.style.ERROR(msg))
-                    self.stdout.flush()
-                    continue
+            try:
+                mi_aggr.metadata.get_html_forms()
+            except Exception as err:
+                err_resource_counter += 1
+                traceback.print_exception(*sys.exc_info())
+                msg = '{}Failed to generate modflow aggregation metadata for edit for resource (ID:{}). Error:{}'
+                msg = msg.format(self._MIGRATION_ISSUE, comp_res.short_id, str(err))
+                logger.error(msg)
+                self.stdout.write(self.style.ERROR(msg))
+                self.stdout.flush()
+                continue
 
             mi_aggr.set_metadata_dirty()
             msg = 'One model instance aggregation was created in resource (ID:{})'
@@ -331,18 +306,7 @@ class Command(BaseCommand):
 
             comp_res.extra_metadata['MIGRATED_FROM'] = 'MODFLOW Instance Resource'
             comp_res.save()
-            # set resource to dirty so that resource level xml files (resource map and
-            # metadata xml files) will be re-generated as part of next bag download
-            try:
-                set_dirty_bag_flag(comp_res)
-            except Exception as ex:
-                err_resource_counter += 1
-                err_msg = 'Failed to set bag flag dirty for the migrated resource (ID: {})'
-                err_msg = err_msg.format(comp_res.short_id)
-                err_msg = err_msg + '\n' + str(ex)
-                logger.error(err_msg)
-                self.stdout.write(self.style.ERROR(err_msg))
-
+            set_dirty_bag_flag(comp_res)
             resource_counter += 1
             msg = 'MODFLOW model instance resource (ID: {}) was migrated to Composite Resource'
             msg = msg.format(comp_res.short_id)
@@ -357,17 +321,19 @@ class Command(BaseCommand):
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
 
+        msg = "{} MODFLOW MODEL INSTANCE RESOURCES HAD ISSUES DURING MIGRATION TO COMPOSITE RESOURCE".format(
+            err_resource_counter)
         if err_resource_counter > 0:
-            msg = "{} MODFLOW MODEL INSTANCE RESOURCES HAD ISSUES DURING MIGRATION TO COMPOSITE RESOURCE".format(
-                err_resource_counter)
             logger.info(msg)
             self.stdout.write(self.style.ERROR(msg))
-
-        if resource_counter > 0:
-            msg = "{} MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE".format(
-                resource_counter)
+        else:
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
+
+        msg = "{} MODFLOW MODEL INSTANCE RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE".format(
+            resource_counter)
+        logger.info(msg)
+        self.stdout.write(self.style.SUCCESS(msg))
 
         modflow_resource_count = MODFLOWModelInstanceResource.objects.count()
         if modflow_resource_count > 0:
