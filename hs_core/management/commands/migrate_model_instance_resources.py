@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_resource_by_shortkey
+from hs_core.hydroshare import current_site_url, set_dirty_bag_flag
 from hs_core.models import CoreMetaData
 from hs_file_types.models import ModelInstanceLogicalFile
 from hs_modelinstance.models import ModelInstanceResource
