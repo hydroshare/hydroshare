@@ -12,6 +12,7 @@ from ..utils import migrate_core_meta_elements, move_files_and_folders_to_model_
 
 class Command(BaseCommand):
     help = "Convert all model program resources to composite resource with one model program aggregation"
+    _MIGRATION_ISSUE = "MIGRATION ISSUE:"
 
     def create_mp_file_type(self, orig_mp_file_path, file_type, mp_aggr, file_type_name, logger):
         # Note: The *orig_mp_file_path* in the original mp resource can be just a file name (test.txt), or
@@ -58,30 +59,30 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
         resource_counter = 0
+        err_resource_counter = 0
         to_resource_type = 'CompositeResource'
         mp_resource_count = ModelProgramResource.objects.count()
         msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES TO MIGRATE TO COMPOSITE RESOURCE.".format(
             mp_resource_count)
         logger.info(msg)
         self.stdout.write(self.style.SUCCESS(msg))
-        if mp_resource_count == 0:
-            msg = "THERE ARE NO MODEL PROGRAM RESOURCES TO MIGRATE."
-            logger.info(msg)
-            self.stdout.write(self.style.SUCCESS(msg))
-            return
+        self.stdout.flush()
 
         for mp_res in ModelProgramResource.objects.all().iterator():
             msg = "Migrating model program resource:{}".format(mp_res.short_id)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
+            self.stdout.flush()
 
             # check resource exists on irods
             istorage = mp_res.get_irods_storage()
             if not istorage.exists(mp_res.root_path):
-                err_msg = "Couldn't migrate model program resource (ID:{}). This resource doesn't exist in iRODS."
-                err_msg = err_msg.format(mp_res.short_id)
+                err_resource_counter += 1
+                err_msg = "{}Couldn't migrate model program resource (ID:{}). This resource doesn't exist in iRODS."
+                err_msg = err_msg.format(self._MIGRATION_ISSUE, mp_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
+                self.stdout.flush()
                 # skip this mp resource
                 continue
 
@@ -107,19 +108,21 @@ class Command(BaseCommand):
             type_element.save()
 
             # create a mp aggregation
+            mp_aggr = ModelProgramLogicalFile.create(resource=comp_res)
+            mp_aggr.save()
             try:
-                mp_aggr = ModelProgramLogicalFile.create(resource=comp_res)
-                mp_aggr.save()
+                move_files_and_folders_to_model_aggregation(command=self, model_aggr=mp_aggr, comp_res=comp_res,
+                                                            logger=logger, aggr_name='model-program')
             except Exception as ex:
-                err_msg = 'Failed to create model program aggregation for resource (ID: {})'
-                err_msg = err_msg.format(mp_res.short_id)
+                err_resource_counter += 1
+                err_msg = '{}Failed to move files/folders into model program aggregation for resource (ID: {})'
+                err_msg = err_msg.format(self._MIGRATION_ISSUE, comp_res.short_id)
                 err_msg = err_msg + '\n' + str(ex)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
+                self.stdout.flush()
+                mp_metadata_obj.delete()
                 continue
-
-            move_files_and_folders_to_model_aggregation(command=self, model_aggr=mp_aggr, comp_res=comp_res,
-                                                        logger=logger, aggr_name='model-program')
 
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
@@ -185,40 +188,45 @@ class Command(BaseCommand):
 
             comp_res.extra_metadata['MIGRATED_FROM'] = 'Model Program Resource'
             comp_res.save()
-            # set resource to dirty so that resource level xml files (resource map and
-            # metadata xml files) will be re-generated as part of next bag download
-            try:
-                set_dirty_bag_flag(comp_res)
-            except Exception as ex:
-                err_msg = 'Failed to set bag flag dirty for the converted resource (ID: {})'
-                err_msg = err_msg.format(comp_res.short_id)
-                err_msg = err_msg + '\n' + str(ex)
-                logger.error(err_msg)
-                self.stdout.write(self.style.ERROR(err_msg))
-
+            set_dirty_bag_flag(comp_res)
             resource_counter += 1
             # delete the instance of model program metadata that was part of the original model instance resource
             mp_metadata_obj.delete()
-            msg = 'Model program resource (ID: {}) was converted to Composite Resource type'
+            msg = 'Model program resource (ID: {}) was migrated to Composite Resource'
             msg = msg.format(comp_res.short_id)
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
             print("_______________________________________________")
             self.stdout.flush()
 
-        if resource_counter > 0:
-            msg = "{} MODEL PROGRAM RESOURCES WERE CONVERTED TO COMPOSITE RESOURCE.".format(
-                resource_counter)
+        print("________________MIGRATION SUMMARY_________________")
+        msg = "{} MODEL PROGRAM RESOURCES EXISTED PRIOR TO MIGRATION TO COMPOSITE RESOURCE".format(
+            mp_resource_count)
+        logger.info(msg)
+        self.stdout.write(self.style.SUCCESS(msg))
+
+        msg = "{} MODEL PROGRAM RESOURCES HAD ISSUES DURING MIGRATION TO COMPOSITE RESOURCE".format(
+            err_resource_counter)
+        if err_resource_counter > 0:
+            logger.error(msg)
+            self.stdout.write(self.style.ERROR(msg))
+        else:
             logger.info(msg)
             self.stdout.write(self.style.SUCCESS(msg))
 
-        if ModelProgramResource.objects.all().count() > 0:
+        msg = "{} MODEL PROGRAM RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE".format(
+            resource_counter)
+        logger.info(msg)
+        self.stdout.write(self.style.SUCCESS(msg))
+
+        mp_resource_count = ModelProgramResource.objects.count()
+        if mp_resource_count > 0:
             msg = "NOT ALL MODEL PROGRAM RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
-            logger.error(msg)
+            logger.warning(msg)
             self.stdout.write(self.style.WARNING(msg))
-            msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES AFTER MIGRATION.".format(
-                ModelProgramResource.objects.all().count())
-            logger.info(msg)
+            msg = "THERE ARE CURRENTLY {} MODEL PROGRAM RESOURCES AFTER MIGRATION".format(
+                mp_resource_count)
+            logger.warning(msg)
             self.stdout.write(self.style.WARNING(msg))
         else:
             msg = "ALL MODEL PROGRAM RESOURCES WERE MIGRATED TO COMPOSITE RESOURCE"
