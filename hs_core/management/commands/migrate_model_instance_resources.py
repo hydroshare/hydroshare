@@ -6,57 +6,13 @@ from hs_core.hydroshare import current_site_url, set_dirty_bag_flag, get_resourc
 from hs_core.models import CoreMetaData
 from hs_file_types.models import ModelInstanceLogicalFile
 from hs_modelinstance.models import ModelInstanceResource
-from ..utils import migrate_core_meta_elements, move_files_and_folders_to_model_aggregation
+from ..utils import migrate_core_meta_elements, move_files_and_folders_to_model_aggregation, set_executed_by
 
 
 class Command(BaseCommand):
     help = "Convert all model instance resources to composite resource with model instance aggregation"
     _EXECUTED_BY_EXTRA_META_KEY = 'EXECUTED_BY_RES_ID'
     _MIGRATION_ISSUE = "MIGRATION ISSUE:"
-
-    def set_executed_by(self, mi_aggr, comp_res, logger):
-        linked_res_id = comp_res.extra_data[self._EXECUTED_BY_EXTRA_META_KEY]
-        try:
-            linked_res = get_resource_by_shortkey(linked_res_id)
-        except Exception as err:
-            msg = "{}Resource (ID:{}) for executed_by was not found. Error:{}"
-            msg = msg.format(self._MIGRATION_ISSUE, linked_res_id, str(err))
-            logger.warning(msg)
-            self.stdout.write(self.style.WARNING(msg))
-            self.stdout.flush()
-            return False
-
-        # check the linked resource is a composite resource
-        if linked_res.resource_type == 'CompositeResource':
-            # get the mp aggregation
-            mp_aggr = linked_res.modelprogramlogicalfile_set.first()
-            if mp_aggr:
-                # use the external mp aggregation for executed_by
-                mi_aggr.metadata.executed_by = mp_aggr
-                if mp_aggr.metadata_schema_json:
-                    mi_aggr.metadata_schema_json = mp_aggr.metadata_schema_json
-                    mi_aggr.save()
-                mi_aggr.metadata.save()
-                msg = 'Setting executed_by to external model program aggregation of resource (ID:{})'
-                msg = msg.format(linked_res.short_id)
-                logger.info(msg)
-                self.stdout.write(self.style.SUCCESS(msg))
-                self.stdout.flush()
-                return True
-            else:
-                msg = "{}No model program aggregation was found in composite resource ID:{} to set executed_by"
-                msg = msg.format(self._MIGRATION_ISSUE, linked_res.short_id)
-                logger.warning(msg)
-                self.stdout.write(self.style.WARNING(msg))
-                self.stdout.flush()
-                return False
-        else:
-            msg = "{}Resource ID:{} to be used for executed_by is not a composite resource"
-            msg = msg.format(self._MIGRATION_ISSUE, linked_res.short_id)
-            logger.warning(msg)
-            self.stdout.write(self.style.WARNING(msg))
-            self.stdout.flush()
-            return False
 
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
@@ -135,7 +91,7 @@ class Command(BaseCommand):
                 mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
 
             if self._EXECUTED_BY_EXTRA_META_KEY in comp_res.extra_data:
-                if not self.set_executed_by(mi_aggr, comp_res, logger):
+                if not set_executed_by(self, mi_aggr, comp_res, logger):
                     err_resource_counter += 1
             mi_aggr.save()
 

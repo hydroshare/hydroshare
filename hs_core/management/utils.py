@@ -44,7 +44,8 @@ def _get_model_aggregation_folder_name(comp_res, default_folder_name):
 
 
 def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, logger, aggr_name):
-    # used for migrating model resources
+    """Helper function used in migrating model resources to create new aggregation folder and move
+    files and folders into that folder"""
 
     # create a new folder for model aggregation to which all files and folders will be moved
     new_folder = _get_model_aggregation_folder_name(comp_res, aggr_name)
@@ -126,6 +127,51 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                 logger.warn(err_msg)
                 command.stdout.write(command.style.WARNING(err_msg))
             command.stdout.flush()
+
+
+def set_executed_by(command, mi_aggr, comp_res, logger):
+    """Helper function used in migrating model instance resources to set the
+    executed_by attribute of the model instance aggregation in the migrated resource"""
+
+    linked_res_id = comp_res.extra_data[command._EXECUTED_BY_EXTRA_META_KEY]
+    try:
+        linked_res = get_resource_by_shortkey(linked_res_id)
+    except Exception as err:
+        msg = "{}Resource (ID:{}) for executed_by was not found. Error:{}"
+        msg = msg.format(command._MIGRATION_ISSUE, linked_res_id, str(err))
+        logger.warning(msg)
+        command.stdout.write(command.style.WARNING(msg))
+        command.stdout.flush()
+        return False
+
+    # check the linked resource is a composite resource
+    if linked_res.resource_type == 'CompositeResource':
+        # get the mp aggregation
+        mp_aggr = linked_res.modelprogramlogicalfile_set.first()
+        if mp_aggr:
+            # use the external mp aggregation for executed_by
+            mi_aggr.metadata.executed_by = mp_aggr
+            mi_aggr.metadata.save()
+            msg = 'Setting executed_by to external model program aggregation of resource (ID:{})'
+            msg = msg.format(linked_res.short_id)
+            logger.info(msg)
+            command.stdout.write(command.style.SUCCESS(msg))
+            command.stdout.flush()
+            return True
+        else:
+            msg = "{}No model program aggregation was found in composite resource ID:{} to set executed_by"
+            msg = msg.format(command._MIGRATION_ISSUE, linked_res.short_id)
+            logger.warning(msg)
+            command.stdout.write(command.style.WARNING(msg))
+            command.stdout.flush()
+            return False
+    else:
+        msg = "{}Resource ID:{} to be used for executed_by is not a composite resource"
+        msg = msg.format(command._MIGRATION_ISSUE, linked_res.short_id)
+        logger.warning(msg)
+        command.stdout.write(command.style.WARNING(msg))
+        command.stdout.flush()
+        return False
 
 
 def migrate_core_meta_elements(orig_meta_obj, comp_res):
