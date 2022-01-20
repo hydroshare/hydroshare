@@ -16,7 +16,6 @@ class Command(BaseCommand):
         res_count = BaseResource.objects.count()
         log_msg = "Total resources:{}".format(res_count)
         print(log_msg)
-        log.info(log_msg)
         res_count = 0
         for res in BaseResource.objects.all().iterator():
             res = res.get_content_model()
@@ -115,6 +114,6 @@ class Command(BaseCommand):
                     log_msg = log_msg.format(res.short_id, res.resource_type)
                     print(log_msg)
                     log.info(log_msg)
-        log_msg = "Total resources processed:{}".format(res_count)
+        log_msg = "Total resources processed for migrating relation types:{}".format(res_count)
         print(log_msg)
         log.info(log_msg)

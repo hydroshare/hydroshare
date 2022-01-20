@@ -241,8 +241,15 @@ def page_permissions_page_processor(request, page):
     from hs_access_control.models.privilege import PrivilegeCodes
 
     def get_relation_version_res_url(resource, rel_type):
+        """Extracts the resource url from resource citation stored in relation metadata for resource
+        versioning
+        :param resource: resource for which relation metadata to search for (this is the resource to be displayed
+        on UI)
+        :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
+        """
         relation_meta_obj = resource.metadata.relations.filter(type=rel_type).first()
         if relation_meta_obj is not None:
+            # get the resource url from resource citation
             version_res_url = relation_meta_obj.value.split(',')[-1]
             return version_res_url
         else:
