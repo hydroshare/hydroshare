@@ -3767,7 +3767,7 @@ class BaseResource(Page, AbstractResource):
 
     def update_relation_meta(self):
         """Updates the citation stored in relation metadata for relation type
-        'isVersionOf', 'isReplacedBy', 'isPartOf' and 'hasPart' if needed"""
+        'isReplacedBy', 'isPartOf' and 'hasPart' if needed"""
 
         from hs_core.hydroshare import get_resource_by_shortkey
 
@@ -3784,11 +3784,6 @@ class BaseResource(Page, AbstractResource):
                     relation_updated = True
             return relation_updated
 
-        version_relation = self.metadata.relations.all().filter(type='isVersionBy').first()
-        version_relation_updated = False
-        if version_relation is not None:
-            version_relation_updated = _update_relation_meta(version_relation)
-
         replace_relation = self.metadata.relations.all().filter(type='isReplacedBy').first()
         replace_relation_updated = False
         if replace_relation is not None:
@@ -3804,8 +3799,7 @@ class BaseResource(Page, AbstractResource):
             if _update_relation_meta(has_part_relation):
                 has_part_relation_updated = True
 
-        if any([version_relation_updated, replace_relation_updated, part_of_relation_updated,
-                has_part_relation_updated]):
+        if any([replace_relation_updated, part_of_relation_updated, has_part_relation_updated]):
             self.setAVU("bag_modified", True)
             self.setAVU("metadata_dirty", True)
 
