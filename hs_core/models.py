@@ -3797,8 +3797,10 @@ class BaseResource(Page, AbstractResource):
             if _update_relation_meta(has_part_relation):
                 has_part_relation_updated = True
 
-        return any([version_relation_updated, replace_relation_updated, part_of_relation_updated,
-                    has_part_relation_updated])
+        if any([version_relation_updated, replace_relation_updated, part_of_relation_updated,
+                has_part_relation_updated]):
+            self.setAVU("bag_modified", True)
+            self.setAVU("metadata_dirty", True)
 
 
 # TODO Deprecated
