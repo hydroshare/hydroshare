@@ -1068,21 +1068,8 @@ class Relation(AbstractMetaDataElement):
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
-        # ensure isHostedBy and isCopiedFrom are mutually exclusive
-        rel = Relation.objects.get(id=element_id)
-        if rel.type != kwargs['type']:
-            if kwargs['type'] == 'isHostedBy' and \
-                Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                        content_type__pk=rel.content_type.id).exists():
-                raise ValidationError('Relation type:%s cannot be updated since '
-                                      'isCopiedFrom relation already exists.' % rel.type)
-            elif kwargs['type'] == 'isCopiedFrom' and \
-                Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                        content_type__pk=rel.content_type.id).exists():
-                raise ValidationError('Relation type:%s cannot be updated since '
-                                      'isHostedBy relation already exists.' % rel.type)
-
         # avoid changing this relation to an existing relation of same type and same value
+        rel = Relation.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         qs = Relation.objects.filter(type=kwargs['type'],
