@@ -452,7 +452,7 @@ class RelationValidationForm(forms.Form):
     """Validate RelationForm 'type' and 'value' CharFields."""
 
     type = forms.CharField(max_length=100)
-    value = forms.CharField(max_length=500)
+    value = forms.CharField()
 
 
 class IdentifierFormSetHelper(FormHelper):
