@@ -10,7 +10,7 @@ from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
 from .hydroshare import utils
-from .models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
+from .models import Party, Creator, Contributor, validate_user_url, Relation, Identifier, \
     FundingAgency, Description
 
 
@@ -452,71 +452,7 @@ class RelationValidationForm(forms.Form):
     """Validate RelationForm 'type' and 'value' CharFields."""
 
     type = forms.CharField(max_length=100)
-    value = forms.CharField(max_length=500)
-
-
-class SourceFormSetHelper(FormHelper):
-    """Render layout for Source form including HTML5 valdiation and errors."""
-
-    def __init__(self, *args, **kwargs):
-        """Render layout for Source form including HTML5 valdiation and errors."""
-        super(SourceFormSetHelper, self).__init__(*args, **kwargs)
-        # the order in which the model fields are listed for the FieldSet is the order these
-        # fields will be displayed
-        field_width = 'form-control input-sm'
-        self.form_tag = False
-        self.form_show_errors = True
-        self.error_text_inline = True
-        self.html5_required = False
-        self.layout = Layout(
-            Fieldset('Source',
-                     Field('derived_from', css_class=field_width),
-                     ),
-        )
-
-
-class SourceForm(ModelForm):
-    """Render Source model form with appropriate attributes."""
-
-    def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
-        """Render Source model form with appropriate attributes."""
-        super(SourceForm, self).__init__(*args, **kwargs)
-        self.helper = SourceFormSetHelper()
-        self.number = 0
-        self.delete_modal_form = None
-        self.allow_edit = allow_edit
-        if res_short_id:
-            self.action = "/hsapi/_internal/%s/source/add-metadata/" % res_short_id
-        else:
-            self.action = ""
-        if not allow_edit:
-            self.fields['derived_from'].widget.attrs['readonly'] = True
-            self.fields['derived_from'].widget.attrs['style'] = "background-color:white;"
-
-    @property
-    def form_id(self):
-        """Render proper form id by prepending 'id_source_'."""
-        form_id = 'id_source_%s' % self.number
-        return form_id
-
-    @property
-    def form_id_button(self):
-        """Render proper form id with quotes."""
-        form_id = 'id_source_%s' % self.number
-        return "'" + form_id + "'"
-
-    class Meta:
-        """Define meta properties for SourceForm."""
-
-        model = Source
-        # fields that will be displayed are specified here - but not necessarily in the same order
-        fields = ['derived_from']
-
-
-class SourceValidationForm(forms.Form):
-    """Validate derived_from field from SourceForm."""
-
-    derived_from = forms.CharField(max_length=300)
+    value = forms.CharField()
 
 
 class IdentifierFormSetHelper(FormHelper):

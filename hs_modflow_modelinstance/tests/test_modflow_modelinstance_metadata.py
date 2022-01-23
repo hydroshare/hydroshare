@@ -140,9 +140,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # there should be rights element
         self.assertNotEqual(self.res.metadata.rights, None)
 
-        # there shouldn't any source element
-        self.assertEqual(self.res.metadata.sources.count(), 0)
-
         # there shouldn't any relation element
         self.assertEqual(self.res.metadata.relations.count(), 0)
 

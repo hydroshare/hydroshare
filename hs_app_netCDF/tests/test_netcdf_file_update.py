@@ -155,40 +155,34 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
 
-        # create/update/delete source for setting flag
+        # create/update/delete relation meta of type source for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
 
-        element = res_metadata.create_element('source',
-                                              derived_from='new source')
+        element = res_metadata.create_element('relation', type='source', value='new source')
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
 
         res_metadata.is_dirty = False
         res_metadata.save()
 
-        res_metadata.update_element('source', element.id, abstract='update source')
+        res_metadata.update_element('relation', element.id, type=element.type, value='update source')
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
 
         res_metadata.is_dirty = False
         res_metadata.save()
 
-        res_metadata.delete_element('source', element.id)
+        res_metadata.delete_element('relation', element.id)
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
 
-        # create/update/delete relation for setting flag
+        # create/update/delete relation of type 'references' for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
 
-        element_1 = res_metadata.create_element('relation',
-                                                type='isHostedBy',
-                                                value='new host')
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
         element_2 = res_metadata.create_element('relation',
-                                                type='cites',
+                                                type='references',
                                                 value='new reference')
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
@@ -196,12 +190,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         res_metadata.is_dirty = False
         res_metadata.save()
 
-        res_metadata.update_element('relation', element_1.id, type='isHostedBy',
-                                    value='update host')
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
-
-        res_metadata.update_element('relation', element_2.id, type='cites',
+        res_metadata.update_element('relation', element_2.id, type='references',
                                     value='update reference')
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)

@@ -272,7 +272,6 @@ def _delete_extracted_metadata(resource):
     resource.metadata.contributors.all().delete()
     resource.metadata.coverages.all().delete()
     resource.metadata.subjects.all().delete()
-    resource.metadata.sources.all().delete()
     resource.metadata.relations.all().delete()
     resource.metadata.sites.delete()
     resource.metadata.variables.delete()

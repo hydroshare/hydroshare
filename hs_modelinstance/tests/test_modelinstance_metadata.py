@@ -123,9 +123,6 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be rights element
         self.assertNotEqual(self.resModelInstance.metadata.rights, None)
 
-        # there shouldn't any source element
-        self.assertEqual(self.resModelInstance.metadata.sources.count(), 0)
-
         # there shouldn't any relation element
         self.assertEqual(self.resModelInstance.metadata.relations.count(), 0)
 
