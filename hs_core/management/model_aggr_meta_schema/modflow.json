@@ -368,7 +368,7 @@
         },
         "headDependentFluxBoundaryPackages": {
             "type": "object",
-            "title": "Head Dependent Flux Boundary Packages",
+            "title": "Head-dependent Flux Boundary Packages",
             "properties": {
                 "DAF": {
                     "type": "boolean",
