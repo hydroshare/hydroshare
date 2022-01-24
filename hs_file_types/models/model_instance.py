@@ -71,7 +71,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
             if self.logical_file.metadata_schema_json:
                 metadata_schema = self.logical_file.metadata_schema_json
             with metadata_json_div:
-                dom_tags.legend("Schema Based Metadata")
+                dom_tags.legend("Schema-based Metadata")
                 schema_properties_key = 'properties'
                 for k, v in self.metadata_json.items():
                     if type(v) not in (int, float, bool):
@@ -151,7 +151,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 with dom_tags.form(id="id-schema-based-form", action=json_form_action,
                                    method="post", enctype="multipart/form-data"):
                     with dom_tags.fieldset():
-                        dom_tags.legend("Schema Based Metadata")
+                        dom_tags.legend("Schema-based Metadata")
                         json_schema = json.dumps(self.logical_file.metadata_schema_json)
                         json_data = "{}"
                         if self.metadata_json:
