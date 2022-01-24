@@ -187,13 +187,13 @@
                 },
                 "seawaterIntrusionPackage": {
                     "type": "boolean",
-                    "title": "Includes Seawater Intrusion package (SWI2)",
+                    "title": "Includes Seawater Intrusion Package (SWI2)",
                     "format": "checkbox",
                     "propertyOrder": 4
                 },
                 "horizontalFlowBarrierPackage": {
                     "type": "boolean",
-                    "title": "Includes Horizontal Flow Barrier package (HFB6)",
+                    "title": "Includes Horizontal Flow Barrier Package (HFB6)",
                     "format": "checkbox",
                     "propertyOrder": 3
                 }
@@ -324,7 +324,7 @@
                 },
                 "otherPackages": {
                     "type": "string",
-                    "title": "Other packages",
+                    "title": "Other Packages",
                     "propertyOrder": 4
                 }
             },
@@ -357,7 +357,7 @@
                 },
                 "otherPackages": {
                     "type": "string",
-                    "title": "Other packages",
+                    "title": "Other Packages",
                     "propertyOrder": 4
                 }
             },
@@ -468,7 +468,7 @@
                 },
                 "otherPackages": {
                     "type": "string",
-                    "title": "Other packages",
+                    "title": "Other Packages",
                     "propertyOrder": 17
                 }
             },
@@ -479,22 +479,22 @@
         },
 		"modelInputs": {
 			"type": "array",
-			"title": "Inputs for model",
+			"title": "Inputs for Model",
 			"format": "table",
 			"items": {
 				"type": "object",
 				"properties": {
 					"inputType": {
 						"type": "string",
-						"title": "Type of model input"
+						"title": "Type of Model Input"
 					},
 					"inputSourceName": {
 						"type": "string",
-						"title": "Input source name"
+						"title": "Input Source Name"
 					},
 					"inputSourceURL": {
 						"type": "string",
-						"title": "Input source URL"
+						"title": "Input Source URL"
 					}
 				},
 				"additionalProperties": false
