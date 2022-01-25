@@ -2,9 +2,6 @@
     "type": "object",
     "title": "SWAT Model Instance Metadata Schema",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "required": [
-        "modelObjective"
-    ],
     "properties": {
         "modelInput": {
             "type": "object",
@@ -80,7 +77,7 @@
                     "description": "URL of the land data used used in creating this model instance.",
                     "propertyOrder": 15
                 },
-                "rainFallTimeStepType": {
+                "rainfallTimeStepType": {
                     "enum": [
                         "Daily",
                         "Sub-hourly"
@@ -102,7 +99,7 @@
                     "description": "Source name of the land used in creating this model instance.",
                     "propertyOrder": 14
                 },
-                "rainFallTimeStepValue": {
+                "rainfallTimeStepValue": {
                     "type": "string",
                     "title": "Rainfall Time Step Value",
                     "description": "Rainfall time step value used in creating this model instance.",
