@@ -28,15 +28,20 @@ class Command(BaseCommand):
         """
         serializer = SWATModelInstanceMetaDataSerializerMigration(swat_meta)
         data = serializer.data
-        for key in data.keys():
+        # mapping of json based field names to swat meta db field names
+        key_maps = {'modelInput': 'model_input', 'modelObjective': 'model_objective',
+                    'modelParameter': 'model_parameter', 'modelMethod': 'model_method',
+                    'simulationType': 'simulation_type'}
+        for key, value in key_maps.items():
+            data[key] = data.pop(value, None)
             if data[key] is None or not data[key]:
                 data.pop(key)
 
         if 'modelInput' in data:
             model_input_fields = ('demSourceURL', 'numberOfHRUs', 'demResolution', 'demSourceName', 'watershedArea',
                                   'numberOfSubbasins', 'soilDataSourceURL', 'warmupPeriodValue', 'soilDataSourceName',
-                                  'routingTimeStepType', 'landUseDataSourceURL', 'rainFallTimeStepType',
-                                  'routingTimeStepValue', 'landUseDataSourceName', 'rainFallTimeStepValue',
+                                  'routingTimeStepType', 'landUseDataSourceURL', 'rainfallTimeStepType',
+                                  'routingTimeStepValue', 'landUseDataSourceName', 'rainfallTimeStepValue',
                                   'simulationTimeStepType', 'simulationTimeStepValue')
             model_input = data['modelInput']
             for fld in model_input_fields:
@@ -49,9 +54,11 @@ class Command(BaseCommand):
             other_objectives = model_objective['other_objectives'].strip()
             data['modelObjective'] = {"BMPs": False, "hydrology": False, "waterQuality": False,
                                       "climateLanduseChange": False}
+            objective_to_json_field_map = {"BMPs": "BMPs", "hydrology": "Hydrology", "waterQuality": "Water quality",
+                                           "climateLanduseChange": "Climate / Landuse Change"}
             for obj_fld in data['modelObjective']:
                 for objective in swat_model_objectives:
-                    if objective['description'] == obj_fld:
+                    if objective['description'] == objective_to_json_field_map[obj_fld]:
                         data['modelObjective'][obj_fld] = True
                         break
             if other_objectives:
@@ -65,9 +72,14 @@ class Command(BaseCommand):
                                       "tileDrainage": False, "tillageOperation": False, "irrigationOperation": False,
                                       "inletOfDrainingWatershed": False}
 
+            param_to_json_field_map = {"cropRotation": "Crop rotation", "tileDrainage": "Tile drainage",
+                                       "pointSource": "Point source", "fertilizer": "Fertilizer",
+                                       "tillageOperation": "Tillage operation",
+                                       "inletOfDrainingWatershed": "Inlet of draining watershed",
+                                       "irrigationOperation": "Irrigation operation"}
             for param_fld in data['modelParameter']:
                 for param in model_parameters:
-                    if param['description'] == param_fld:
+                    if param['description'] == param_to_json_field_map[param_fld]:
                         data['modelParameter'][param_fld] = True
                         break
             if other_parameters:
@@ -130,7 +142,6 @@ class Command(BaseCommand):
 
             # migrate mi resource core metadata elements to composite resource
             migrate_core_meta_elements(mi_metadata_obj, comp_res)
-            # TODO: copy the resource level extended_metadata to mi_aggr level extended metadata
             comp_res.save()
 
             # update url attribute of the metadata 'type' element
@@ -159,6 +170,20 @@ class Command(BaseCommand):
                 keywords = [sub.value for sub in comp_res.metadata.subjects.all()]
                 mi_aggr.metadata.keywords = keywords
                 mi_aggr.metadata.save()
+
+            # copy the resource level abstract to aggregation as extended metadata
+            if comp_res.metadata.description is not None:
+                abstract = comp_res.metadata.description.abstract.strip()
+                if abstract:
+                    mi_aggr.metadata.extra_metadata['description'] = abstract
+                    mi_aggr.metadata.save()
+
+            # move the resource level extra_metadata to aggregation extra_metadata
+            if comp_res.extra_metadata:
+                mi_aggr.metadata.extra_metadata.update(comp_res.extra_metadata)
+                mi_aggr.metadata.save()
+                comp_res.extra_metadata = {}
+                comp_res.save()
             # copy the model specific metadata to the mi aggregation
             if mi_metadata_obj.model_output:
                 mi_aggr.metadata.has_model_output = mi_metadata_obj.model_output.includes_output
