@@ -99,6 +99,22 @@ def clean_for_xml(s):
     return output
 
 
+def get_relation_version_res_url(resource, rel_type):
+    """Extracts the resource url from resource citation stored in relation metadata for resource
+    versioning
+    :param resource: resource for which relation metadata to search for (this is the resource to be displayed
+    on UI)
+    :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
+    """
+    relation_meta_obj = resource.metadata.relations.filter(type=rel_type).first()
+    if relation_meta_obj is not None:
+        # get the resource url from resource citation
+        version_res_url = relation_meta_obj.value.split(',')[-1]
+        return version_res_url
+    else:
+        return ''
+
+
 class GroupOwnership(models.Model):
     """Define lookup table allowing django auth users to own django auth groups."""
 
@@ -239,21 +255,6 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
-
-    def get_relation_version_res_url(resource, rel_type):
-        """Extracts the resource url from resource citation stored in relation metadata for resource
-        versioning
-        :param resource: resource for which relation metadata to search for (this is the resource to be displayed
-        on UI)
-        :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
-        """
-        relation_meta_obj = resource.metadata.relations.filter(type=rel_type).first()
-        if relation_meta_obj is not None:
-            # get the resource url from resource citation
-            version_res_url = relation_meta_obj.value.split(',')[-1]
-            return version_res_url
-        else:
-            return ''
 
     cm = page.get_content_model()
     can_change_resource_flags = False
