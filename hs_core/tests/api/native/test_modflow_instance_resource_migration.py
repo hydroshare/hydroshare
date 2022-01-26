@@ -39,7 +39,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.MIGRATED_FROM_EXTRA_META_KEY = "MIGRATED_FROM"
         self.MIGRATING_RESOURCE_TYPE = "MODFLOW Instance Resource"
         self.EXECUTED_BY_EXTRA_META_KEY = "EXECUTED_BY_RES_ID"
-        self.MI_FOLDER_NAME = "modflow-instance"
+        self.MI_FOLDER_NAME = "modflow-model-instance"
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
         ModelInstanceResource.objects.all().delete()
