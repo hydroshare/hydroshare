@@ -212,7 +212,7 @@ class Command(BaseCommand):
             mi_aggr.save()
             try:
                 move_files_and_folders_to_model_aggregation(command=self, model_aggr=mi_aggr, comp_res=comp_res,
-                                                            logger=logger, aggr_name='modflow-instance')
+                                                            logger=logger, aggr_name='modflow-model-instance')
             except Exception as ex:
                 err_resource_counter += 1
                 err_msg = '{}Failed to move files/folders into model instance aggregation for resource (ID: {})'
