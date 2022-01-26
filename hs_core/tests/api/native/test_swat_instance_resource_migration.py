@@ -40,7 +40,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.MIGRATED_FROM_EXTRA_META_KEY = "MIGRATED_FROM"
         self.MIGRATING_RESOURCE_TYPE = "SWAT Model Instance Resource"
         self.EXECUTED_BY_EXTRA_META_KEY = "EXECUTED_BY_RES_ID"
-        self.MI_FOLDER_NAME = "swat-instance"
+        self.MI_FOLDER_NAME = "swat-model-instance"
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
         ModelInstanceResource.objects.all().delete()
@@ -988,10 +988,10 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
     def test_migrate_mi_resource_with_folder_6(self):
         """
-        Migrate a swat mi resource that has only one file in a folder. The folder name is 'swat-instance'
+        Migrate a swat mi resource that has only one file in a folder. The folder name is 'swat-model-instance'
         When converted to composite resource, it should have a mi aggregation (based on the folder)
         and should have aggregation level metadata. The original folder will be moved into the new aggregation folder.
-        The newly created aggregation folder name should be 'swat-instance-1'
+        The newly created aggregation folder name should be 'swat-model-instance-1'
         """
 
         # create a swat mi resource
@@ -1003,7 +1003,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_res.metadata.create_element('modeloutput', includes_output=True)
         # upload a file to swat mi resource
         file_path = 'hs_core/tests/data/test.txt'
-        upload_folder = 'swat-instance'
+        upload_folder = self.MI_FOLDER_NAME
         file_to_upload = UploadedFile(file=open(file_path, 'rb'),
                                       name=os.path.basename(file_path))
 

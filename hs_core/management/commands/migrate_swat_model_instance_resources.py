@@ -154,7 +154,7 @@ class Command(BaseCommand):
             mi_aggr.save()
             try:
                 move_files_and_folders_to_model_aggregation(command=self, model_aggr=mi_aggr, comp_res=comp_res,
-                                                            logger=logger, aggr_name='swat-instance')
+                                                            logger=logger, aggr_name='swat-model-instance')
             except Exception as ex:
                 err_resource_counter += 1
                 err_msg = '{}Failed to move files/folders into model instance aggregation for resource (ID: {})'
@@ -235,7 +235,7 @@ class Command(BaseCommand):
             except Exception as err:
                 err_resource_counter += 1
                 traceback.print_exception(*sys.exc_info())
-                msg = '{}Failed to generate swat aggregation metadata for view for resource (ID:{}). Error:{}'
+                msg = '{}Failed to generate SWAT aggregation metadata for view for resource (ID:{}). Error:{}'
                 msg = msg.format(self._MIGRATION_ISSUE, comp_res.short_id, str(err))
                 logger.error(msg)
                 self.stdout.write(self.style.ERROR(msg))
@@ -247,7 +247,7 @@ class Command(BaseCommand):
             except Exception as err:
                 err_resource_counter += 1
                 traceback.print_exception(*sys.exc_info())
-                msg = '{}Failed to generate swat aggregation metadata for edit for resource (ID:{}). Error:{}'
+                msg = '{}Failed to generate SWAT aggregation metadata for edit for resource (ID:{}). Error:{}'
                 msg = msg.format(self._MIGRATION_ISSUE, comp_res.short_id, str(err))
                 logger.error(msg)
                 self.stdout.write(self.style.ERROR(msg))
