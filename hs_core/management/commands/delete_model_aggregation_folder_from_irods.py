@@ -28,7 +28,7 @@ class Command(BaseCommand):
         istorage = model_res.get_irods_storage()
         model_res_type_folder_mapping = {"ModelProgram": "model-program", "ModelInstance": "model-instance",
                                          "MODFLOWModelInstance": "modflow-model-instance",
-                                         "SWATModelInstance": "swat-instance"}
+                                         "SWATModelInstance": "swat-model-instance"}
         if not istorage.exists(model_res.root_path):
             err_msg = ">> Resource (ID:{}) doesn't exist in iRODS"
             self.stdout.write(self.style.ERROR(err_msg))
