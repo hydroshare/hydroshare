@@ -8,7 +8,6 @@ from django.conf import settings
 from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-from hs_core.models import get_relation_version_res_url
 from hs_core.search_indexes import normalize_name
 
 
@@ -205,12 +204,12 @@ def relative_irods_path(fed_irods_file_name):
 
 @register.filter
 def resource_replaced_by(res):
-    return get_relation_version_res_url(res, 'isReplacedBy')
+    return res.get_relation_version_res_url('isReplacedBy')
 
 
 @register.filter
 def resource_version_of(res):
-    return get_relation_version_res_url(res, 'isVersionOf')
+    return res.get_relation_version_res_url('isVersionOf')
 
 
 @register.filter

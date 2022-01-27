@@ -99,22 +99,6 @@ def clean_for_xml(s):
     return output
 
 
-def get_relation_version_res_url(resource, rel_type):
-    """Extracts the resource url from resource citation stored in relation metadata for resource
-    versioning
-    :param resource: resource for which relation metadata to search for (this is the resource to be displayed
-    on UI)
-    :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
-    """
-    relation_meta_obj = resource.metadata.relations.filter(type=rel_type).first()
-    if relation_meta_obj is not None:
-        # get the resource url from resource citation
-        version_res_url = relation_meta_obj.value.split(',')[-1]
-        return version_res_url
-    else:
-        return ''
-
-
 class GroupOwnership(models.Model):
     """Define lookup table allowing django auth users to own django auth groups."""
 
@@ -328,8 +312,8 @@ def page_permissions_page_processor(request, page):
 
     users_json = json.dumps(users_json)
 
-    is_replaced_by = get_relation_version_res_url(cm, 'isReplacedBy')
-    is_version_of = get_relation_version_res_url(cm, 'isVersionOf')
+    is_replaced_by = cm.get_relation_version_res_url('isReplacedBy')
+    is_version_of = cm.get_relation_version_res_url('isVersionOf')
 
     permissions_allow_copy = False
     if request.user.is_authenticated:
@@ -3725,6 +3709,19 @@ class BaseResource(Page, AbstractResource):
                 except BaseResource.DoesNotExist:
                     pass
         return rlist
+
+    def get_relation_version_res_url(self, rel_type):
+        """Extracts the resource url from resource citation stored in relation metadata for resource
+        versioning
+        :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
+        """
+        relation_meta_obj = self.metadata.relations.filter(type=rel_type).first()
+        if relation_meta_obj is not None:
+            # get the resource url from resource citation
+            version_res_url = relation_meta_obj.value.split(',')[-1]
+            return version_res_url
+        else:
+            return ''
 
     @property
     def show_in_discover(self):
