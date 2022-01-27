@@ -1239,3 +1239,9 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         except Exception as err:
             traceback.print_exception(*sys.exc_info())
             self.fail(msg=str(err))
+
+        try:
+            mi_aggr.metadata.get_xml()
+        except Exception as err:
+            traceback.print_exception(*sys.exc_info())
+            self.fail(msg=str(err))
