@@ -155,8 +155,6 @@ class TestCreateResource(HSRESTTestCase):
         # relation
         metadata.append({'relation': {'type': 'isPartOf',
                                       'value': 'http://hydroshare.org/resource/001'}})
-        # source
-        metadata.append({'source': {'derived_from': 'http://hydroshare.org/resource/0001'}})
 
         # identifier
         metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
@@ -218,11 +216,6 @@ class TestCreateResource(HSRESTTestCase):
         relation = resource.metadata.relations.all().first()
         self.assertEqual(relation.type, 'isPartOf')
         self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
-
-        # there should be 1 source element
-        self.assertEqual(resource.metadata.sources.all().count(), 1)
-        source = resource.metadata.sources.all().first()
-        self.assertEqual(source.derived_from, 'http://hydroshare.org/resource/0001')
 
         # there should be 2 identifiers
         self.assertEqual(resource.metadata.identifiers.all().count(), 2)

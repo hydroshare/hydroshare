@@ -196,7 +196,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     format = indexes.MultiValueField(stored=False)
     identifier = indexes.MultiValueField(stored=False)
     language = indexes.CharField(stored=False)
-    source = indexes.MultiValueField(stored=False)
     relation = indexes.MultiValueField(stored=False)
     resource_type = indexes.FacetCharField()
     content_type = indexes.FacetMultiValueField()
@@ -623,15 +622,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return obj.metadata.language.code.strip()
         else:
             return None
-
-    def prepare_source(self, obj):
-        """Return resource sources if exists, otherwise return empty array."""
-        if hasattr(obj, 'metadata') and \
-                obj.metadata is not None and \
-                obj.metadata.sources is not None:
-            return [source.derived_from.strip() for source in obj.metadata.sources.all()]
-        else:
-            return []
 
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""

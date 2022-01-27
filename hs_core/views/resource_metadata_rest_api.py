@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 from hs_core import hydroshare
 from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
-    Format, FundingAgency, Identifier, Subject, Source, Relation
+    Format, FundingAgency, Identifier, Subject, Relation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -97,13 +97,6 @@ class SubjectSerializer(serializers.Serializer):
         model = Subject
 
 
-class SourceSerializer(serializers.Serializer):
-    derived_from = serializers.CharField(required=False)
-
-    class Meta:
-        model = Source
-
-
 class RelationSerializer(serializers.Serializer):
     type = serializers.CharField(required=False)
     value = serializers.CharField(required=False)
@@ -126,7 +119,6 @@ class CoreMetaDataSerializer(serializers.Serializer):
     rights = serializers.CharField(required=False)
     type = serializers.CharField(required=False)
     publisher = serializers.CharField(required=False)
-    sources = SourceSerializer(required=False, many=True)
     subjects = SubjectSerializer(required=False, many=True)
     relations = RelationSerializer(required=False, many=True)
 

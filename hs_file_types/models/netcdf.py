@@ -578,14 +578,14 @@ def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_
         add_contributors_metadata(res_meta_list, extracted_core_meta,
                                   Contributor.objects.none())
 
-    # add source (applies only to NetCDF resource type)
+    # add relation of type 'source' (applies only to NetCDF resource type)
     if extracted_core_meta.get('source') and file_meta_list is None:
-        source = {'source': {'derived_from': extracted_core_meta['source']}}
-        res_meta_list.append(source)
+        relation = {'relation': {'type': 'source', 'value': extracted_core_meta['source']}}
+        res_meta_list.append(relation)
 
-    # add relation (applies only to NetCDF resource type)
+    # add relation of type 'references' (applies only to NetCDF resource type)
     if extracted_core_meta.get('references') and file_meta_list is None:
-        relation = {'relation': {'type': 'cites',
+        relation = {'relation': {'type': 'references',
                                  'value': extracted_core_meta['references']}}
         res_meta_list.append(relation)
 
@@ -973,7 +973,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'references'):
                 delattr(nc_dataset, 'references')
 
-            reference_list = instance.metadata.relations.all().filter(type='cites')
+            reference_list = instance.metadata.relations.all().filter(type='references')
             if reference_list:
                 res_meta_ref = []
                 for reference in reference_list:
@@ -984,11 +984,11 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'source'):
                 delattr(nc_dataset, 'source')
 
-            source_list = instance.metadata.sources.all()
+            source_list = instance.metadata.relations.filter(type='source').all()
             if source_list:
                 res_meta_source = []
                 for source in source_list:
-                    res_meta_source.append(source.derived_from)
+                    res_meta_source.append(source.value)
                 nc_dataset.source = ' \n'.join(res_meta_source)
 
         # close nc dataset
