@@ -95,6 +95,8 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         for meta_field in json_meta_fields:
             self.assertTrue(meta_field not in mi_aggr.metadata.metadata_json)
 
+        self._validate_meta_with_schema(mi_aggr)
+
     def test_migrate_modflow_specific_metadata_only_studyArea(self):
         """
         Here we are testing that we can migrate a modflow mi resource that has only one modflow specific
@@ -150,22 +152,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         for meta_field in json_meta_fields:
             self.assertTrue(meta_field not in mi_aggr.metadata.metadata_json)
 
-        try:
-            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
-        except jsonschema.ValidationError as err:
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html_forms()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_specific_metadata_all_metadata(self):
         """
@@ -345,23 +332,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertNotEqual(mi_item_1['inputType'], mi_item_2['inputType'])
         self.assertNotEqual(mi_item_1['inputSourceName'], mi_item_2['inputSourceName'])
         self.assertNotEqual(mi_item_1['inputSourceURL'], mi_item_2['inputSourceURL'])
-
-        try:
-            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
-        except jsonschema.ValidationError as err:
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html_forms()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_specific_metadata_all_metadata_partial(self):
         """
@@ -533,23 +504,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         input_src_urls = set([mi_item['inputSourceURL'] for mi_item in
                               mi_aggr.metadata.metadata_json['modelInputs'] if 'inputSourceURL' in mi_item])
         self.assertEqual(len(input_src_urls), 1)
-
-        try:
-            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
-        except jsonschema.ValidationError as err:
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html_forms()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_specific_metadata_all_metadata_with_default(self):
         """
@@ -663,23 +618,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         input_src_urls = set([mi_item['inputSourceURL'] for mi_item in
                               mi_aggr.metadata.metadata_json['modelInputs'] if 'inputSourceURL' in mi_item])
         self.assertEqual(len(input_src_urls), 1)
-
-        try:
-            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
-        except jsonschema.ValidationError as err:
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
-
-        try:
-            mi_aggr.metadata.get_html_forms()
-        except Exception as err:
-            traceback.print_exception(*sys.exc_info())
-            self.fail(msg=str(err))
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_executed_by(self):
         """
@@ -745,6 +684,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
         self.assertEqual(mi_aggr.files.count(), 0)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_file_1(self):
         """
@@ -794,6 +734,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_file_2(self):
         """
@@ -852,6 +793,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_file_3(self):
         """
@@ -891,6 +833,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_4(self):
         """
@@ -955,6 +898,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_folder_1(self):
         """
@@ -1006,6 +950,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_folder_2(self):
         """
@@ -1068,6 +1013,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_folder_3(self):
         """
@@ -1124,6 +1070,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_folder_4(self):
         """
@@ -1198,6 +1145,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_with_folder_5(self):
         """
@@ -1252,6 +1200,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_modflow_resource_missing_file_in_irods(self):
         """
@@ -1322,6 +1271,7 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+        self._validate_meta_with_schema(mi_aggr)
 
     def _create_modflow_resource(self, model_instance_type="MODFLOWModelInstanceResource", add_keywords=False):
         res = hydroshare.create_resource(model_instance_type, self.user,
@@ -1338,3 +1288,27 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
             mp_res.metadata.create_element('subject', value='kw-1')
             mp_res.metadata.create_element('subject', value='kw-2')
         return mp_res
+
+    def _validate_meta_with_schema(self, mi_aggr):
+        try:
+            jsonschema.Draft4Validator(mi_aggr.metadata_schema_json).validate(mi_aggr.metadata.metadata_json)
+        except jsonschema.ValidationError as err:
+            self.fail(msg=str(err))
+
+        try:
+            mi_aggr.metadata.get_html()
+        except Exception as err:
+            traceback.print_exception(*sys.exc_info())
+            self.fail(msg=str(err))
+
+        try:
+            mi_aggr.metadata.get_html_forms()
+        except Exception as err:
+            traceback.print_exception(*sys.exc_info())
+            self.fail(msg=str(err))
+
+        try:
+            mi_aggr.metadata.get_xml()
+        except Exception as err:
+            traceback.print_exception(*sys.exc_info())
+            self.fail(msg=str(err))
