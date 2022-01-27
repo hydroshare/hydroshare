@@ -259,7 +259,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(simulation_type, 'Normal Simulation')
         self._validate_meta_with_schema(mi_aggr)
 
-    def test_migrate_swat_specific_metadata_all_metadata_partial(self):
+    def test_migrate_swat_specific_metadata_all_metadata_partial_1(self):
         """
         Here we are testing that we can migrate a swat mi resource that has all swat specific
         metadata with missing sub-fields
@@ -272,7 +272,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         s_params = ["Crop rotation"]
         mi_res.metadata.create_element('ModelParameter',
                                        model_parameters=s_params,
-                                       other_parameters='',
+                                       other_parameters=' ',
                                        )
 
         o_objs = "some other objective"
@@ -350,6 +350,110 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(model_input['routingTimeStepType'], 'Daily')
         self.assertEqual(model_input['routingTimeStepValue'], 'e')
         self.assertEqual(model_input['simulationTimeStepType'], 'Hourly')
+
+        self.assertNotIn('simulationTimeStepValue', model_input)
+        self.assertNotIn('watershedArea', model_input)
+        self.assertNotIn('numberOfSubbasins', model_input)
+        self.assertNotIn('numberOfHRUs', model_input)
+        self.assertNotIn('demResolution', model_input)
+        self.assertNotIn('demSourceName', model_input)
+        self.assertNotIn('demSourceURL', model_input)
+        self.assertNotIn('landUseDataSourceName', model_input)
+        self.assertNotIn('landUseDataSourceURL', model_input)
+        self.assertNotIn('soilDataSourceName', model_input)
+        self.assertNotIn('soilDataSourceURL', model_input)
+
+        self.assertNotIn('simulationType', mi_aggr.metadata.metadata_json)
+        self._validate_meta_with_schema(mi_aggr)
+
+    def test_migrate_swat_specific_metadata_all_metadata_partial_2(self):
+        """
+        Here we are testing that we can migrate a swat mi resource that has all swat specific
+        metadata with missing sub-fields with default values
+        """
+        mi_res = self._create_swat_resource()
+        mi_res.metadata.create_element('ModelMethod',
+                                       runoffCalculationMethod=None,
+                                       petEstimationMethod=None)
+
+        mi_res.metadata.create_element('ModelParameter',
+                                       model_parameters=[],
+                                       other_parameters=None,
+                                       )
+
+        mi_res.metadata.create_element('ModelObjective',
+                                       swat_model_objectives=[],
+                                       other_objectives=None)
+
+        mi_res.metadata.create_element('ModelInput',
+                                       warmupPeriodValue=None,
+                                       rainfallTimeStepType='Daily',
+                                       rainfallTimeStepValue=None,
+                                       routingTimeStepType='Daily',
+                                       routingTimeStepValue=None,
+                                       simulationTimeStepValue=None,
+                                       )
+
+        mi_res.metadata.create_element('SimulationType', simulation_type_name='')
+
+        # check that there exists all the swat model specific metadata
+        self.assertNotEqual(mi_res.metadata.model_objective, None)
+        self.assertNotEqual(mi_res.metadata.simulation_type, None)
+        self.assertNotEqual(mi_res.metadata.model_method, None)
+        self.assertNotEqual(mi_res.metadata.model_parameter, None)
+        self.assertNotEqual(mi_res.metadata.model_input, None)
+
+        self.assertEqual(SWATModelInstanceResource.objects.count(), 1)
+        # migrate the swat resource
+        call_command(self.mi_migration_command)
+        self.assertEqual(SWATModelInstanceResource.objects.count(), 0)
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(cmp_res.files.count(), 0)
+        self.assertEqual(mi_res.short_id, cmp_res.short_id)
+        self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
+        self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
+        # test that the converted resource contains one mi aggregation
+        self.assertEqual(len(list(cmp_res.logical_files)), 1)
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        # check the mi aggregation has meta schema
+        self.assertNotEqual(mi_aggr.metadata_schema_json, {})
+        # check the json metadata in mi aggregation - there should be swat specific metadata
+        self.assertNotEqual(mi_aggr.metadata.metadata_json, {})
+        self.assertEqual(mi_aggr.metadata.metadata_json['modelMethod'], {})
+        model_method = mi_aggr.metadata.metadata_json['modelMethod']
+        self.assertNotIn('runoffCalculationMethod', model_method)
+        self.assertNotIn('flowRoutingMethod', model_method)
+        self.assertNotIn('petEstimationMethod', model_method)
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['modelParameter'], {})
+        model_parameter = mi_aggr.metadata.metadata_json['modelParameter']
+        self.assertEqual(model_parameter['cropRotation'], False)
+        self.assertEqual(model_parameter['tillageOperation'], False)
+        self.assertEqual(model_parameter['fertilizer'], False)
+        self.assertEqual(model_parameter['pointSource'], False)
+        self.assertEqual(model_parameter['tileDrainage'], False)
+        self.assertEqual(model_parameter['irrigationOperation'], False)
+        self.assertEqual(model_parameter['inletOfDrainingWatershed'], False)
+        self.assertNotIn('otherParameters', model_parameter)
+
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['modelObjective'], {})
+        model_objective = mi_aggr.metadata.metadata_json['modelObjective']
+        self.assertEqual(model_objective['BMPs'], False)
+        self.assertEqual(model_objective['hydrology'], False)
+        self.assertEqual(model_objective['waterQuality'], False)
+        self.assertEqual(model_objective['climateLanduseChange'], False)
+        self.assertNotIn('otherObjectives', model_objective)
+
+        self.assertNotEqual(mi_aggr.metadata.metadata_json['modelInput'], {})
+        model_input = mi_aggr.metadata.metadata_json['modelInput']
+        self.assertNotIn('warmupPeriodValue', model_input)
+        self.assertEqual(model_input['rainfallTimeStepType'], 'Daily')
+        self.assertNotIn('rainfallTimeStepValue', model_input)
+        self.assertEqual(model_input['routingTimeStepType'], 'Daily')
+        self.assertNotIn('routingTimeStepValue', model_input)
+        self.assertNotIn('simulationTimeStepType', model_input)
 
         self.assertNotIn('simulationTimeStepValue', model_input)
         self.assertNotIn('watershedArea', model_input)
@@ -914,8 +1018,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
     def test_migrate_mi_resource_with_folder_5(self):
         """
-        Migrate a swat mi resource that has 3 folders - one folder contains a file the other one is a nested folder (both
-        parent and child each has a file)
+        Migrate a swat mi resource that has 3 folders - one folder contains a file the other one is a nested
+        folder (both parent and child each has a file)
         When converted to composite resource, it should have a mi aggregation (based on the folder)
         and should have aggregation level metadata. The original 3 folders will be moved into the
         new aggregation folder.

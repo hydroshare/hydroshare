@@ -51,7 +51,9 @@ class Command(BaseCommand):
         if 'modelObjective' in data:
             model_objective = data['modelObjective']
             swat_model_objectives = model_objective['swat_model_objectives']
-            other_objectives = model_objective['other_objectives'].strip()
+            other_objectives = '' if model_objective['other_objectives'] is None else \
+                model_objective['other_objectives'].strip()
+
             data['modelObjective'] = {"BMPs": False, "hydrology": False, "waterQuality": False,
                                       "climateLanduseChange": False}
             objective_to_json_field_map = {"BMPs": "BMPs", "hydrology": "Hydrology", "waterQuality": "Water quality",
@@ -67,7 +69,9 @@ class Command(BaseCommand):
         if 'modelParameter' in data:
             model_parameter = data['modelParameter']
             model_parameters = model_parameter['model_parameters']
-            other_parameters = model_parameter['other_parameters'].strip()
+            other_parameters = '' if model_parameter['other_parameters'] is None else \
+                model_parameter['other_parameters'].strip()
+
             data['modelParameter'] = {"fertilizer": False, "pointSource": False, "cropRotation": False,
                                       "tileDrainage": False, "tillageOperation": False, "irrigationOperation": False,
                                       "inletOfDrainingWatershed": False}
@@ -93,7 +97,8 @@ class Command(BaseCommand):
                     model_method.pop(fld)
 
         if 'simulationType' in data:
-            simulation_type_name = data['simulationType']['simulation_type_name'].strip()
+            simulation_type_name = '' if data['simulationType']['simulation_type_name'] is None \
+                else data['simulationType']['simulation_type_name'].strip()
             if simulation_type_name:
                 data['simulationType'] = simulation_type_name
             else:
