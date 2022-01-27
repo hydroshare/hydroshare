@@ -14,29 +14,29 @@ class Command(BaseCommand):
 
         replaced_by_dict = {}
         for obj in replace_by_qs:
-            replacy_by_id = obj.value.split('/')[-1]
-            if not BaseResource.objects.filter(short_id=replacy_by_id).exists():
+            replace_by_id = obj.value.split('/')[-1]
+            if not BaseResource.objects.filter(short_id=replace_by_id).exists():
                 obj.delete()
-                msg = '{replacy_by_id} does not exist, so delete the corresponding isReplacedBy relation ' \
+                msg = f'{replace_by_id} does not exist, so delete the corresponding isReplacedBy relation ' \
                       'metadata element'
                 print(msg, flush=True)
                 continue
             res_obj = BaseResource.objects.filter(object_id=obj.object_id).first()
             if not res_obj:
                 obj.delete()
-                msg = 'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
+                msg = f'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
                       'isReplacedBy relation metadata element'
                 print(msg, flush=True)
                 continue
             if res_obj.short_id in replaced_by_dict:
-                if replacy_by_id in replaced_by_dict[res_obj.short_id]:
-                    print(f'{res_obj.short_id} is already replaced by {replacy_by_id} - clean up duplicate entry',
+                if replace_by_id in replaced_by_dict[res_obj.short_id]:
+                    print(f'{res_obj.short_id} is already replaced by {replace_by_id} - clean up duplicate entry',
                           flush=True)
                     obj.delete()
                 else:
-                    replaced_by_dict[res_obj.short_id].append(replacy_by_id)
+                    replaced_by_dict[res_obj.short_id].append(replace_by_id)
             else:
-                replaced_by_dict[res_obj.short_id] = [replacy_by_id]
+                replaced_by_dict[res_obj.short_id] = [replace_by_id]
 
         version_of_dict = {}
         version_of_qs = Relation.objects.filter(type='isVersionOf')
@@ -47,14 +47,14 @@ class Command(BaseCommand):
             version_of_id = obj.value.split('/')[-1]
             if not BaseResource.objects.filter(short_id=version_of_id).exists():
                 obj.delete()
-                msg = '{version_of_id} does not exist, so delete the corresponding isVersionOf relation ' \
+                msg = f'{version_of_id} does not exist, so delete the corresponding isVersionOf relation ' \
                       'metadata element'
                 print(msg, flush=True)
                 continue
             res_obj = BaseResource.objects.filter(object_id=obj.object_id).first()
             if not res_obj:
                 obj.delete()
-                msg = 'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
+                msg = f'resource with {obj.object_id} object_id does not exist, so delete the corresponding ' \
                       'isVersionOf relation metadata element'
                 print(msg, flush=True)
                 continue

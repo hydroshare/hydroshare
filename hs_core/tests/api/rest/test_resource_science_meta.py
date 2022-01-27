@@ -88,17 +88,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "relations": [
                 {
-                    "type": "isCopiedFrom",
+                    "type": "source",
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 },
                 {
@@ -124,7 +116,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
-        self.assertEqual(self.resource.metadata.sources.all().count(), 2)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
@@ -183,15 +174,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ]
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -233,17 +216,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "relations": [
                 {
-                    "type": "isCopiedFrom",
+                    "type": "source",
                     "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
                 },
                 {
@@ -269,7 +244,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(self.resource.metadata.dates.all().count(), 3)
-        self.assertEqual(self.resource.metadata.sources.all().count(), 2)
         self.assertEqual(self.resource.metadata.relations.all().count(), 2)
         self.assertEqual(self.resource.metadata.funding_agencies.all().count(), 2)
         self.assertEqual(str(self.resource.metadata.rights), "CCC http://www.hydroshare.org")
@@ -327,15 +301,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ]
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -377,15 +343,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ]
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -438,15 +396,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ]
+            "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"}
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -504,14 +454,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "originalcoverage": {
                 "value": {
                     "northlimit": '12', "projection": "transverse_mercator",
@@ -635,14 +577,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "bandinformations": [
                 {'original_band_name': 'Band_1',
                  'name': 'Band_2',
@@ -741,14 +675,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "mpmetadata": {
                  "modelVersion": "5.1.011",
                  "modelProgramLanguage": "Fortran",
@@ -848,14 +774,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "modeloutput": {"includes_output": False},
             "executedby": {"model_name": "id of a an existing model program resource"}
         }
@@ -943,14 +861,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "modeloutput": {"includes_output": False},
             "executedby": {"model_name": "id of a an existing model program resource"},
             "studyarea": {
@@ -1128,14 +1038,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "scriptspecificmetadata": {
                     "scriptLanguage": "R",
                     "languageVersion": "3.5",
@@ -1223,14 +1125,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "modeloutput": {"includes_output": False},
             "executedby": {"model_name": "id of a an existing model program resource"},
             "modelobjective": {
@@ -1376,14 +1270,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "language": "fre",
             "rights": {"statement": "CCC", "url": "http://www.hydroshare.org"},
-            "sources": [
-                {
-                    "derived_from": "Source 3"
-                },
-                {
-                    "derived_from": "Source 2"
-                }
-            ],
             "requesturlbase": {
                 "value": "https://www.google.com"
             },
