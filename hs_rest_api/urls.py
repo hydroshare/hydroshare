@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
@@ -15,6 +15,19 @@ from rest_framework import permissions
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .discovery import DiscoverSearchView
 
+
+hsapi_urlpatterns = [
+    url('^hsapi/', include('hs_rest_api.urls')),
+    url('^hsapi/', include('hs_core.urls')),
+    url('^hsapi/', include('ref_ts.urls')),
+    url('^hsapi/', include('hs_model_program.urls')),
+    url('^hsapi/', include('hs_labels.urls')),
+    url('^hsapi/', include('hs_collection_resource.urls')),
+    url('^hsapi/', include('hs_file_types.urls')),
+    url('^hsapi/', include('hs_app_netCDF.urls')),
+    url('^hsapi/', include('hs_composite_resource.urls')),
+]
+
 schema_view_yasg = get_schema_view(
    openapi.Info(
       title="Hydroshare API",
@@ -26,6 +39,7 @@ schema_view_yasg = get_schema_view(
    validators=[],
    public=True,
    permission_classes=(permissions.AllowAny,),
+   patterns=hsapi_urlpatterns,
 )
 
 urlpatterns = [
@@ -188,7 +202,7 @@ urlpatterns = [
     url(r'^userInfo/$',
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
-    url(r'^userDetails/(?P<user_identifier>[\d]+)/$',
+    url(r'^userDetails/(?P<user_identifier>.+)/$',
         core_views.hsapi_get_user, name='get_user_details'),
 
     url(r'^dictionary/universities/$',

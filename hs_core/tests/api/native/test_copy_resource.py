@@ -1,6 +1,7 @@
 import os
 import tempfile
 import shutil
+from datetime import date
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -194,16 +195,11 @@ class TestCopyResource(TestCase):
                       msg="Identifier url was not found for new copied resource.")
 
         # test to make sure the new copied resource is linked with the original resource via
-        # isDerivedFrom Source metadata element
-        self.assertGreater(new_res_generic.metadata.sources.all().count(), 0,
-                           msg="New copied resource does not has source element.")
+        # 'source' type relation metadata element and contains the citation of the resource from which the copy was made
+        relation_meta = new_res_generic.metadata.relations.filter(type='source').first()
+        derived_from = _get_relation_meta_derived_from(self.res_generic)
+        self.assertEqual(relation_meta.value, derived_from)
 
-        derived_from_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                                     self.res_generic.short_id)
-        self.assertIn(derived_from_value,
-                      [src.derived_from for src in new_res_generic.metadata.sources.all()],
-                      msg="The original resource identifier is not set in isDerivedFrom Source "
-                          "metadata element of the new copied resource")
         # make sure to clean up resource so that irods storage can be cleaned up
         if new_res_generic:
             new_res_generic.delete()
@@ -289,16 +285,12 @@ class TestCopyResource(TestCase):
                       msg="Identifier url was not found for new copied resource.")
 
         # test to make sure the new copied resource is linked with the original resource via
-        # isDerivedFrom Source metadata element
-        self.assertEqual(new_res_raster.metadata.sources.all().count(), 1,
-                         msg="New copied resource does not has source element.")
+        # 'source' type relation metadata element and contains the citation of the resource from which the resource
+        #  was copied from
+        relation_meta = new_res_raster.metadata.relations.filter(type='source').first()
+        derived_from = _get_relation_meta_derived_from(self.res_raster)
+        self.assertEqual(relation_meta.value, derived_from)
 
-        derived_from_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
-                                                     self.res_raster.short_id)
-        self.assertIn(derived_from_value,
-                      [src.derived_from for src in new_res_raster.metadata.sources.all()],
-                      msg="The original resource identifier is not set in isDerivedFrom Source "
-                          "metadata element of the new copied resource")
         # make sure to clean up resource so that irods storage can be cleaned up
         if new_res_raster:
             new_res_raster.delete()
@@ -448,3 +440,9 @@ class TestCopyResource(TestCase):
             self.composite_resource.delete()
         if new_composite_resource:
             new_composite_resource.delete()
+
+
+def _get_relation_meta_derived_from(resource):
+    today = date.today().strftime("%m/%d/%Y")
+    derived_from = "{}, accessed on: {}".format(resource.get_citation(), today)
+    return derived_from

@@ -1568,7 +1568,7 @@ class UserAccess(models.Model):
         # regardless of privilege, cannot remove last owner or quota holder
         if user is not None:
             if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
-                if access_resource.owners.count() == 1:
+                if access_resource.owners.count() == 1 and user in access_resource.owners:
                     raise PermissionDenied("Cannot remove sole owner of resource")
                 qholder = this_resource.get_quota_holder()
                 if qholder:

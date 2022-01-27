@@ -240,6 +240,21 @@ def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
 
+    def get_relation_version_res_url(resource, rel_type):
+        """Extracts the resource url from resource citation stored in relation metadata for resource
+        versioning
+        :param resource: resource for which relation metadata to search for (this is the resource to be displayed
+        on UI)
+        :param rel_type: type of relation (allowed types are: 'isVersionOf' and 'isReplacedBy')
+        """
+        relation_meta_obj = resource.metadata.relations.filter(type=rel_type).first()
+        if relation_meta_obj is not None:
+            # get the resource url from resource citation
+            version_res_url = relation_meta_obj.value.split(',')[-1]
+            return version_res_url
+        else:
+            return ''
+
     cm = page.get_content_model()
     can_change_resource_flags = False
     self_access_level = None
@@ -312,15 +327,8 @@ def page_permissions_page_processor(request, page):
 
     users_json = json.dumps(users_json)
 
-    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
-        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
-    else:
-        is_replaced_by = ''
-
-    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
-    else:
-        is_version_of = ''
+    is_replaced_by = get_relation_version_res_url(cm, 'isReplacedBy')
+    is_version_of = get_relation_version_res_url(cm, 'isVersionOf')
 
     permissions_allow_copy = False
     if request.user.is_authenticated:
@@ -951,24 +959,35 @@ class Relation(AbstractMetaDataElement):
     SOURCE_TYPES = (
         ('isHostedBy', 'The content of this resource is hosted by'),
         ('isCopiedFrom', 'The content of this resource was copied from'),
-        ('isPartOf', 'The content of this resource is part of'),
-        ('hasPart', 'Has Part'),
-        ('isExecutedBy', 'The content of this resource can be executed by'),
-        ('isCreatedBy', 'The content of this resource was created by'),
-        ('isVersionOf', 'Version Of'),
-        ('isReplacedBy', 'Replaced By'),
         ('isDataFor', 'The content of this resource serves as the data for'),
         ('cites', 'This resource cites'),
+        ('isPartOf', 'The content of this resource is part of'),
+        ('hasPart', 'This resource includes'),
+        ('isExecutedBy', 'The content of this resource can be executed by'),
+        ('isCreatedBy', 'The content of this resource was created by a related App or software program'),
+        ('isVersionOf', 'This resource updates and replaces a previous version'),
+        ('isReplacedBy', 'This resource has been replaced by a newer version'),
         ('isDescribedBy', 'This resource is described by'),
+        ('conformsTo', 'This resource conforms to established standard described by'),
+        ('hasFormat', 'This resource has a related resource in another format'),
+        ('isFormatOf', 'This resource is a different format of'),
+        ('isRequiredBy', 'This resource is required by'),
+        ('requires', 'This resource requires'),
+        ('isReferencedBy', 'This resource is referenced by'),
+        ('references', 'The content of this resource references'),
+        ('replaces', 'This resource replaces'),
+        ('source', 'The content of this resource is derived from')
     )
 
-    # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
-                         'cites', 'isDescribedBy')
-
+    # these are hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = ('isExecutedBy', 'isCreatedBy', 'isDescribedBy')
+    NOT_USER_EDITABLE = ('isVersionOf', 'isReplacedBy', 'isPartOf', 'hasPart', 'replaces')
+    # keeping these deprecated types for now for migrating these types to other relation types
+    # using a management command
+    DEPRECATED_RELATION_TYPES = ('isHostedBy', 'isCopiedFrom', 'isDataFor', 'cites')
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
-    value = models.CharField(max_length=500)
+    value = models.TextField()
 
     def __str__(self):
         """Return {type} {value} for string representation."""
@@ -978,10 +997,22 @@ class Relation(AbstractMetaDataElement):
         """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
+    @classmethod
+    def get_supported_types(cls):
+        supported_types = [rel_type for rel_type in dict(cls.SOURCE_TYPES) if rel_type not
+                           in cls.DEPRECATED_RELATION_TYPES]
+        return supported_types
+
+    def type_description(self):
+        return dict(self.SOURCE_TYPES)[self.type]
+
     def rdf_triples(self, subject, graph):
         relation_node = BNode()
         graph.add((subject, self.get_class_term(), relation_node))
-        graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        if self.type in self.HS_RELATION_TERMS:
+            graph.add((relation_node, getattr(HSTERMS, self.type), Literal(self.value)))
+        else:
+            graph.add((relation_node, getattr(DCTERMS, self.type), Literal(self.value)))
 
     @classmethod
     def ingest_rdf(cls, graph, subject, content_object):
@@ -1003,6 +1034,9 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
+        if kwargs['type'] in cls.DEPRECATED_RELATION_TYPES:
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
@@ -1018,17 +1052,6 @@ class Relation(AbstractMetaDataElement):
             raise ValidationError('Relation element of the same type '
                                   'and value already exists.')
 
-        if kwargs['type'] == 'isHostedBy' and \
-           Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
-                                   content_type=metadata_type).exists():
-            raise ValidationError('Relation type:%s cannot be created since '
-                                  'isCopiedFrom relation already exists.' % kwargs['type'])
-        elif kwargs['type'] == 'isCopiedFrom' and \
-                Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
-                                        content_type=metadata_type).exists():
-            raise ValidationError('Relation type:%s cannot be created since '
-                                  'isHostedBy relation already exists.' % kwargs['type'])
-
         return super(Relation, cls).create(**kwargs)
 
     @classmethod
@@ -1039,24 +1062,14 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
+        if kwargs['type'] in cls.DEPRECATED_RELATION_TYPES:
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
-        # ensure isHostedBy and isCopiedFrom are mutually exclusive
-        rel = Relation.objects.get(id=element_id)
-        if rel.type != kwargs['type']:
-            if kwargs['type'] == 'isHostedBy' and \
-                Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                        content_type__pk=rel.content_type.id).exists():
-                raise ValidationError('Relation type:%s cannot be updated since '
-                                      'isCopiedFrom relation already exists.' % rel.type)
-            elif kwargs['type'] == 'isCopiedFrom' and \
-                Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                        content_type__pk=rel.content_type.id).exists():
-                raise ValidationError('Relation type:%s cannot be updated since '
-                                      'isHostedBy relation already exists.' % rel.type)
-
         # avoid changing this relation to an existing relation of same type and same value
+        rel = Relation.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         qs = Relation.objects.filter(type=kwargs['type'],
@@ -1540,7 +1553,7 @@ class Coverage(AbstractMetaDataElement):
                 key_value = key_value.strip()
                 k, v = key_value.split("=")
                 if k in ['start', 'end']:
-                    v = parser.parse(v).strftime("%Y/%m/%d")
+                    v = parser.parse(v).strftime("%Y/%m/%d %H:%M:%S")
                 value_dict[k] = v
             Coverage.create(type=type, value=value_dict, content_object=content_object)
 
@@ -1560,6 +1573,16 @@ class Coverage(AbstractMetaDataElement):
     @classmethod
     def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         """Validate values based on coverage type."""
+        def compute_longitude(key_name):
+            if value_dict[key_name] <= -180 and value_dict[key_name] >= -360:
+                value_dict[key_name] = value_dict[key_name] + 360
+            elif value_dict[key_name] >= 180 and value_dict[key_name] <= 360:
+                value_dict[key_name] = value_dict[key_name] - 360
+            if value_dict[key_name] < -180 or value_dict[key_name] > 180:
+                err_msg = "Invalid value for {}:{}. Value for {} longitude should be in the range of -180 to 180"
+                err_msg = err_msg.format(key_name, value_dict[key_name], key_name)
+                raise ValidationError(err_msg)
+
         if coverage_type == 'period':
             # check that all the required sub-elements exist
             if 'start' not in value_dict or 'end' not in value_dict:
@@ -1577,10 +1600,7 @@ class Coverage(AbstractMetaDataElement):
                 except TypeError:
                     raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
-            if value_dict['east'] < -180 or value_dict['east'] > 180:
-                raise ValidationError("Value for East longitude should be "
-                                      "in the range of -180 to 180")
-
+            compute_longitude(key_name='east')
             if value_dict['north'] < -90 or value_dict['north'] > 90:
                 raise ValidationError("Value for North latitude should be "
                                       "in the range of -90 to 90")
@@ -1613,13 +1633,8 @@ class Coverage(AbstractMetaDataElement):
                     raise ValidationError("Value for North latitude must be greater than or "
                                           "equal to that of South latitude.")
 
-            if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
-                raise ValidationError("Value for East longitude should be "
-                                      "in the range of -180 to 180")
-
-            if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
-                raise ValidationError("Value for West longitude should be "
-                                      "in the range of -180 to 180")
+            compute_longitude(key_name='eastlimit')
+            compute_longitude(key_name='westlimit')
 
     def get_html(self, pretty=True):
         """Use the dominate module to generate element display HTML.
@@ -1817,12 +1832,13 @@ class Subject(AbstractMetaDataElement):
             Subject.create(value=str(o), content_object=content_object)
 
 
-@rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
+# TODO: Source model class needs to be deleted after metadata stored in this object is moved to Relation meta object
+# @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
 class Source(AbstractMetaDataElement):
     """Define Source custom metadata element model."""
 
     term = 'Source'
-    derived_from = models.CharField(max_length=300)
+    derived_from = models.TextField()
 
     class Meta:
         """Define meta properties for Source model."""
@@ -3697,16 +3713,16 @@ class BaseResource(Page, AbstractResource):
         replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
         rlist = []
         for r in replacedby:
-            replacement = r.value
+            citation = r.value
+            res_id = citation[-32:]
             # TODO: This is a mistake. This hardcodes the server on which the URI is created as its URI
-            if replacement.startswith(current_site_url() + "/resource/"):
-                replacement = replacement[-32:]  # strip header
+            res_path = "{}/resource/{}".format(current_site_url(), res_id)
+            if citation.endswith(res_path):
                 try:
-                    rv = get_resource_by_shortkey(replacement, or_404=False)
-                except BaseResource.DoesNotExist:
-                    rv = None
-                if rv is not None:
+                    rv = get_resource_by_shortkey(res_id, or_404=False)
                     rlist.append(rv)
+                except BaseResource.DoesNotExist:
+                    pass
         return rlist
 
     @property
@@ -3735,6 +3751,44 @@ class BaseResource(Page, AbstractResource):
                 replacedby.extend(r.replaced_by())
                 visited[r.short_id] = True
         return True  # no reason not to show it
+
+    def update_relation_meta(self):
+        """Updates the citation stored in relation metadata for relation type
+        'isReplacedBy', 'isPartOf' and 'hasPart' if needed"""
+
+        from hs_core.hydroshare import get_resource_by_shortkey
+
+        def _update_relation_meta(relation_meta_obj):
+            relation_updated = False
+            if relation_meta_obj.value and '/resource/' in relation_meta_obj.value:
+                version_citation = relation_meta_obj.value
+                version_res_id = version_citation.split('/resource/')[-1]
+                version_res = get_resource_by_shortkey(version_res_id)
+                current_version_citation = version_res.get_citation()
+                if current_version_citation != version_citation:
+                    relation_meta_obj.value = current_version_citation
+                    relation_meta_obj.save()
+                    relation_updated = True
+            return relation_updated
+
+        replace_relation = self.metadata.relations.all().filter(type='isReplacedBy').first()
+        replace_relation_updated = False
+        if replace_relation is not None:
+            replace_relation_updated = _update_relation_meta(replace_relation)
+
+        part_of_relation_updated = False
+        for part_of_relation in self.metadata.relations.filter(type='isPartOf').all():
+            if _update_relation_meta(part_of_relation):
+                part_of_relation_updated = True
+
+        has_part_relation_updated = False
+        for has_part_relation in self.metadata.relations.filter(type='hasPart').all():
+            if _update_relation_meta(has_part_relation):
+                has_part_relation_updated = True
+
+        if any([replace_relation_updated, part_of_relation_updated, has_part_relation_updated]):
+            self.setAVU("bag_modified", True)
+            self.setAVU("metadata_dirty", True)
 
 
 # TODO Deprecated
@@ -4136,7 +4190,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """
         from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
             RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            SourceValidationForm, RelationValidationForm, FundingAgencyValidationForm
+            RelationValidationForm, FundingAgencyValidationForm
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -4144,7 +4198,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                                     'rights': RightsValidationForm,
                                     'creator': CreatorValidationForm,
                                     'contributor': ContributorValidationForm,
-                                    'source': SourceValidationForm,
                                     'relation': RelationValidationForm,
                                     'fundingagency': FundingAgencyValidationForm
                                     }
@@ -4385,6 +4438,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             else:
                 terms_type.text = rel.value
 
+        # TODO: need to remove sources meta element
         for src in self.sources.all():
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
             dc_source_rdf_Description = etree.SubElement(dc_source,

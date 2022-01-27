@@ -1,14 +1,14 @@
 """Page processors for hs_core app."""
 
+import json
+
 from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
-from .forms import ExtendedMetadataForm
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
@@ -16,9 +16,8 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 from hs_core.models import GenericResource, Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
-import json
-
 from hs_odm2.models import ODM2Variable
+from .forms import ExtendedMetadataForm
 
 
 @processor_for(GenericResource)
@@ -123,6 +122,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
+    content_model.update_relation_meta()
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -190,7 +190,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'keywords': keywords,
                    'language': language,
                    'rights': content_model.metadata.rights,
-                   'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
                    'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
@@ -269,13 +268,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
-    grps_member_of = []
-    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-    # for each group set group dynamic attributes
-    for g in groups:
-        g.is_user_member = user in g.gaccess.members
-        if g.is_user_member:
-            grps_member_of.append(g)
     try:
         citation_id = content_model.metadata.citation.first().id
     except:
@@ -290,7 +282,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'readme': readme,
                'contributors': content_model.metadata.contributors.all(),
                'relations': content_model.metadata.relations.all(),
-               'sources': content_model.metadata.sources.all(),
                'fundingagencies': content_model.metadata.funding_agencies.all(),
                'temporal_coverage': temporal_coverage_data_dict,
                'spatial_coverage': spatial_coverage_data_dict,
@@ -311,9 +302,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'just_created': just_created,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and
-                                              type_value != 'isVersionOf' and
-                                              type_value != 'hasPart'),
+                                              if type_value not in Relation.NOT_USER_EDITABLE and
+                                              type_value not in Relation.DEPRECATED_RELATION_TYPES),
                'show_web_reference_note': has_web_ref,
                'belongs_to_collections': belongs_to_collections,
                'maps_key': maps_key,

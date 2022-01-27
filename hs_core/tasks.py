@@ -331,6 +331,11 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                     istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
                 except SessionException:
                     logger.error("cannot copy {}".format(aggregation.schema_file_path))
+                if aggregation.is_model_instance:
+                    try:
+                        istorage.copyFiles(aggregation.schema_values_file_path, temp_folder_name)
+                    except SessionException:
+                        logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
             for file in aggregation.files.all():
                 try:
                     istorage.copyFiles(file.storage_path, temp_folder_name)
@@ -407,9 +412,17 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)
 
-        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        if hs_identifier:
-            new_res.metadata.create_element('source', derived_from=hs_identifier.url)
+        if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+            # the resource to be copied is a versioned resource, need to delete this isVersionOf
+            # relation element to maintain the single versioning obsolescence chain
+            new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
+
+        # create the relation element for the new_res
+        today = date.today().strftime("%m/%d/%Y")
+        derived_from = "{}, accessed on: {}".format(ori_res.get_citation(), today)
+        # since we are allowing user to add relation of type source, need to check we don't already have it
+        if not new_res.metadata.relations.all().filter(type='source', value=derived_from).exists():
+            new_res.metadata.create_element('relation', type='source', value=derived_from)
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection
@@ -451,18 +464,15 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         utils.copy_and_create_metadata(ori_res, new_res)
 
         # add or update Relation element to link source and target resources
-        hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
+        ori_res.metadata.create_element('relation', type='isReplacedBy', value=new_res.get_citation())
 
         if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
             # the original resource is already a versioned resource, and its isVersionOf relation
             # element is copied over to this new version resource, needs to delete this element so
             # it can be created to link to its original resource correctly
-            eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
-            new_res.metadata.delete_element('relation', eid)
+            new_res.metadata.relations.all().filter(type='isVersionOf').first().delete()
 
-        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
+        new_res.metadata.create_element('relation', type='isVersionOf', value=ori_res.get_citation())
 
         if ori_res.resource_type.lower() == "collectionresource":
             # clone contained_res list of original collection and add to new collection

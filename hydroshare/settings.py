@@ -304,6 +304,7 @@ INSTALLED_APPS = (
     "hs_file_types",
     "hs_composite_resource",
     "hs_rest_api",
+    "hs_rest_api2",
     "hs_dictionary",
     "hs_odm2",
     "security",
@@ -311,6 +312,10 @@ INSTALLED_APPS = (
     "hs_communities",
     "hs_discover"
 )
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_GENERATOR_CLASS': 'hs_rest_api2.serializers.NestedSchemaGenerator'
+}
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 
@@ -471,6 +476,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 
 SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
