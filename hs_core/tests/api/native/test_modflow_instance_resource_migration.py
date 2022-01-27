@@ -1127,8 +1127,8 @@ class TestMODFLOWInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
     def test_migrate_modflow_resource_with_folder_4(self):
         """
-        Migrate a modflow mi resource that has 3 folders - one folder contains a file the other one is a nested folder (both
-        parent and child each has a file)
+        Migrate a modflow mi resource that has 3 folders - one folder contains a file the other one is a nested
+        folder (both parent and child each has a file)
         When converted to composite resource, it should have a mi aggregation (based on the folder)
         and should have aggregation level metadata. The original 3 folders will be moved into the
         new aggregation folder.
