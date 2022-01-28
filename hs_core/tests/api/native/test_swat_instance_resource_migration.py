@@ -182,7 +182,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
                                        soilDataSourceURL='q',
                                        )
 
-        mi_res.metadata.create_element('SimulationType', simulation_type_name='Normal Simulation')
+        mi_res.metadata.create_element('SimulationType', simulation_type_name='Auto-Calibration')
 
         # check that there exists all the swat model specific metadata
         self.assertNotEqual(mi_res.metadata.model_objective, None)
@@ -256,7 +256,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
         self.assertNotEqual(mi_aggr.metadata.metadata_json['simulationType'], {})
         simulation_type = mi_aggr.metadata.metadata_json['simulationType']
-        self.assertEqual(simulation_type, 'Normal Simulation')
+        self.assertEqual(simulation_type, 'Auto-Calibration')
         self._validate_meta_with_schema(mi_aggr)
 
     def test_migrate_swat_specific_metadata_all_metadata_partial_1(self):

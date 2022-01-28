@@ -255,7 +255,7 @@
             "enum": [
                 "Normal Simulation",
                 "Sensitivity Analysis",
-                "Auto Calibration"
+                "Auto-Calibration"
             ],
             "type": "string",
             "title": "Simulation Type",
