@@ -40,6 +40,7 @@ celerybeat.pid
 .c9
 /nginx/cert*
 pg.deploy.sql
+pylint.out
 
 # Frontend
 node_modules/
