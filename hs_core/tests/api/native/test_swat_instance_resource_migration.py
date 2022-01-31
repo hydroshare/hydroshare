@@ -472,30 +472,35 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
 
     def test_extended_meta(self):
         """
-         Here we are testing that we migrate a swat mi resource, the resource abstract is copied to the extended
+         Here we are testing migration of 2 swat model instance resources.
+         When we migrate a swat mi resource, the resource abstract is copied to the extended
          metadata of the newly created mi aggregation with key set to 'description'. Also any resource level
          extended metadata gets moved to the mi aggregation level extended metadata.
         """
         mi_res = self._create_swat_resource()
-        abstract = 'This is the abstract of the SWAT Model Instance Resource'
+        mi_res_2 = self._create_swat_resource()
+        abstract = 'This is the abstract of the SWAT Model Instance Resource-1'
         mi_res.metadata.create_element('description', abstract=abstract)
         mi_res.extra_metadata = {"SWATShareModelID": "dcb9b7a11c286a62b7967f13efa0a85d",
                                  "SWATShareModelLastModifiedTime": "2017-06-14T17:53:34.000000 00:00"}
         mi_res.save()
-        self.assertEqual(SWATModelInstanceResource.objects.count(), 1)
-        # migrate the swat resource
+        abstract2 = 'This is the abstract of the SWAT Model Instance Resource-2'
+        mi_res_2.metadata.create_element('description', abstract=abstract2)
+
+        self.assertEqual(SWATModelInstanceResource.objects.count(), 2)
+        # migrate the 2 swat mi resources
         call_command(self.mi_migration_command)
         self.assertEqual(SWATModelInstanceResource.objects.count(), 0)
-        self.assertEqual(CompositeResource.objects.count(), 1)
-        cmp_res = CompositeResource.objects.first()
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        cmp_res = CompositeResource.objects.filter(short_id=mi_res.short_id).first()
         self.assertEqual(cmp_res.files.count(), 0)
         self.assertEqual(mi_res.short_id, cmp_res.short_id)
         self.assertFalse(self.EXECUTED_BY_EXTRA_META_KEY in cmp_res.extra_data)
         self.assertEqual(cmp_res.extra_metadata[self.MIGRATED_FROM_EXTRA_META_KEY], self.MIGRATING_RESOURCE_TYPE)
         # test that the converted resource contains one mi aggregation
         self.assertEqual(len(list(cmp_res.logical_files)), 1)
-        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
-        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(ModelInstanceLogicalFile.objects.count(), 2)
+        mi_aggr = cmp_res.modelinstancelogicalfile_set.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
         # check the resource abstract is copied to mi aggr extra_metadata
         self.assertEqual(cmp_res.metadata.description.abstract, abstract)
@@ -506,7 +511,23 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.metadata.extra_metadata['SWATShareModelID'], 'dcb9b7a11c286a62b7967f13efa0a85d')
         self.assertEqual(mi_aggr.metadata.extra_metadata['SWATShareModelLastModifiedTime'],
                          '2017-06-14T17:53:34.000000 00:00')
+        self.assertNotIn('MIGRATED_FROM', mi_aggr.metadata.extra_metadata)
+
+        # get the 2nd composite resource (migrated from the 2nd swat mi resource)
+        cmp_res_2 = CompositeResource.objects.filter(short_id=mi_res_2.short_id).first()
+        mi_aggr_2 = cmp_res_2.modelinstancelogicalfile_set.first()
+
+        self.assertEqual(mi_aggr_2.folder, self.MI_FOLDER_NAME)
+        # check the resource abstract is copied to mi aggr extra_metadata
+        self.assertEqual(cmp_res_2.metadata.description.abstract, abstract2)
+        # resource level abstract should have been copied to mi aggr extended metadata
+        self.assertEqual(mi_aggr_2.metadata.extra_metadata['description'], abstract2)
+        self.assertNotIn('MIGRATED_FROM', mi_aggr_2.metadata.extra_metadata)
+        cmp_res_2.extra_metadata.pop("MIGRATED_FROM")
+        self.assertEqual(len(cmp_res_2.extra_metadata), 0)
+        self.assertEqual(len(mi_aggr_2.metadata.extra_metadata), 1)
         self._validate_meta_with_schema(mi_aggr)
+        self._validate_meta_with_schema(mi_aggr_2)
 
     def test_executed_by(self):
         """
@@ -572,14 +593,6 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
         self.assertEqual(mi_aggr.files.count(), 0)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
-
-    def _create_swat_resource(self, model_instance_type="SWATModelInstanceResource", add_keywords=False):
-        res = hydroshare.create_resource(model_instance_type, self.user,
-                                         "Testing migrating to composite resource")
-        if add_keywords:
-            res.metadata.create_element('subject', value='kw-1')
-            res.metadata.create_element('subject', value='kw-2')
-        return res
 
     def test_migrate_mi_resource_with_file_1(self):
         """
@@ -1213,6 +1226,14 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(mi_aggr.metadata.keywords), cmp_res.metadata.subjects.count())
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
+
+    def _create_swat_resource(self, model_instance_type="SWATModelInstanceResource", add_keywords=False):
+        res = hydroshare.create_resource(model_instance_type, self.user,
+                                         "Testing migrating to composite resource")
+        if add_keywords:
+            res.metadata.create_element('subject', value='kw-1')
+            res.metadata.create_element('subject', value='kw-2')
+        return res
 
     def _create_mp_resource(self, add_keywords=False):
         mp_res = hydroshare.create_resource("ModelProgramResource", self.user,
