@@ -158,7 +158,7 @@ def data_store_structure(request):
             if not main_extension:
                 # accept any extension
                 main_extension = ""
-            if main_extension.endswith(f.extension):
+            if f.extension and main_extension.endswith(f.extension):
                 aggregations.append({'logical_file_id': f.logical_file.id,
                                      'name': f.logical_file.dataset_name,
                                      'logical_type': f.logical_file.get_aggregation_class_name(),

@@ -1119,20 +1119,21 @@ def listfolders(istorage, path):
     return istorage.listdir(path)[0]
 
 
-def create_folder(res_id, folder_path):
+def create_folder(res_id, folder_path, migrating_resource=False):
     """
     create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
     :param res_id: resource uuid
     :param folder_path: relative path for the new folder to be created under
     res_id collection/directory
+    :param migrating_resource: A flag to indicate if the folder is being created as part of resource migration
     :return:
     """
     if __debug__:
         assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published:
+    if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)

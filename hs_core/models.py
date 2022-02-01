@@ -3138,7 +3138,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         elif path.startswith(locpath):
             # strip optional local path prefix
             if test_exists and not storage.exists(path):
-                raise ValidationError("Local path does not exist in irods")
+                raise ValidationError("Local path ({}) does not exist in irods".format(path))
             plen = len(locpath)
             relpath = relpath[plen:]  # strip local prefix, omit /
 
@@ -3213,13 +3213,14 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # TODO: move to BaseResource as instance method
     @classmethod
-    def create_folder(cls, resource, folder):
+    def create_folder(cls, resource, folder, migrating_resource=False):
         """Create a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import create_folder
         path_is_allowed(folder)
         # TODO: move code from location used below to here
-        create_folder(resource.short_id, os.path.join('data', 'contents', folder))
+        create_folder(resource.short_id, os.path.join('data', 'contents', folder),
+                      migrating_resource=migrating_resource)
 
     # TODO: move to BaseResource as instance method
     @classmethod
