@@ -1277,7 +1277,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "value": "1.12"
             },
             "supportedrestypes": {
-                "supported_res_types": ["NetcdfResource", "TimeSeriesResource"]
+                "supported_res_types": ["CompositeResource", "CollectionResource"]
             },
             "supportedsharingstatuses": {
                 "sharing_status": ["Public", "Discoverable"]
@@ -1339,7 +1339,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "value": "1.12"
             },
             "supportedrestypes": {
-                "supported_res_types": ["NetcdfResource", "TimeSeriesResource"]
+                "supported_res_types": ["CompositeResource", "CollectionResource"]
             },
             "supportedsharingstatuses": {
                 "sharing_status": ["Public", "Discoverable"]
