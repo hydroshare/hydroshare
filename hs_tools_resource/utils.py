@@ -45,7 +45,7 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
 def get_SupportedResTypes_choices():
     """
     This function harvests all existing resource types in system,
-    and puts them in a list (except for WebApp (ToolResource) Resource type):
+    and puts them in a list only for CompositeResource and CollectionResource types:
     [
         ["RESOURCE_CLASS_NAME_1", "RESOURCE_VERBOSE_NAME_1"],
         ["RESOURCE_CLASS_NAME_2", "RESOURCE_VERBOSE_NAME_2"],
@@ -58,9 +58,10 @@ def get_SupportedResTypes_choices():
     res_types_list = get_resource_types()
     for r_type in res_types_list:
         class_name = r_type.__name__
+        if class_name not in ("CompositeResource", "CollectionResource") or class_name == "ToolResource":
+            continue
         verbose_name = r_type._meta.verbose_name
-        if "toolresource" != class_name.lower():
-            result_list.append([class_name, verbose_name])
+        result_list.append([class_name, verbose_name])
     return result_list
 
 
