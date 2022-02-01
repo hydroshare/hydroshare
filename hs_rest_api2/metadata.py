@@ -59,6 +59,7 @@ def resource_metadata(resource):
     """
     file_with_path = resource.scimeta_path
     istorage = resource.get_irods_storage()
+    resource.update_relation_meta()
     metadata_dirty = resource.getAVU('metadata_dirty')
     if metadata_dirty:
         save_resource_metadata_xml(resource)

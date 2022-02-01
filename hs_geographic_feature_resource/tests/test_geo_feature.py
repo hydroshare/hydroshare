@@ -122,12 +122,8 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                                          value='http://hydroshare.org/resource/001')
 
         # add another relation element of non-uri type
-        resource.create_metadata_element(self.resGeoFeature.short_id, 'relation', type='isDataFor',
+        resource.create_metadata_element(self.resGeoFeature.short_id, 'relation', type='isReferencedBy',
                                          value='This resource is for another resource')
-
-        # add a source element of uri type
-        resource.create_metadata_element(self.resGeoFeature.short_id, 'source',
-                                         derived_from='http://hydroshare.org/resource/0002')
 
         # add a subject element
         resource.create_metadata_element(self.resGeoFeature.short_id, 'subject', value='sub-1')

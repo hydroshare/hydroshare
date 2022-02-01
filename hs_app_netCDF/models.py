@@ -513,26 +513,26 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
     def update_element(self, element_model_name, element_id, **kwargs):
         super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
         if self.resource.files.all() and element_model_name in ['variable', 'title', 'description',
-                                                                'rights', 'source', 'coverage',
+                                                                'rights', 'coverage',
                                                                 'relation', 'creator',
                                                                 'contributor']:
 
             if element_model_name != 'relation':
                 self.is_dirty = True
-            elif kwargs.get('type', None) == 'cites':
+            elif kwargs.get('type', None) in ('references', 'source'):
                 self.is_dirty = True
 
             self.save()
 
     def create_element(self, element_model_name, **kwargs):
         element = super(NetcdfMetaData, self).create_element(element_model_name, **kwargs)
-        if self.resource.files.all() and element_model_name in ['description', 'subject', 'source',
+        if self.resource.files.all() and element_model_name in ['description', 'subject',
                                                                 'coverage', 'relation', 'creator',
                                                                 'contributor']:
 
             if element_model_name != 'relation':
                 self.is_dirty = True
-            elif kwargs.get('type', None) == 'cites':
+            elif kwargs.get('type', None) in ('references', 'source'):
                 self.is_dirty = True
 
             self.save()

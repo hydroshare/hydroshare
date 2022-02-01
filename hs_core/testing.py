@@ -413,14 +413,14 @@ class TestCaseCommonUtilities(object):
                              "Oct. 2009 to June 2010 for TWDEF site in Utah."
         self.assertEqual(self.resNetcdf.metadata.description.abstract, extracted_abstract)
 
-        # there should be one source element
-        self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 1)
+        # there should be one relation element of type 'source'
+        self.assertEqual(self.resNetcdf.metadata.relations.filter(type='source').count(), 1)
 
         # there should be one license element:
         self.assertNotEqual(self.resNetcdf.metadata.rights.statement, 1)
 
         # there should be one relation element
-        self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
+        self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='references').count(), 1)
 
         # there should be creators equal to expected_creators_count
         self.assertEqual(self.resNetcdf.metadata.creators.all().count(), expected_creators_count)

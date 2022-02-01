@@ -327,8 +327,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.composite_resource.metadata.relations.count(), 0)
         # there should be 1 rights element
         self.assertNotEqual(self.composite_resource.metadata.rights, None)
-        # there shouldn't be any source element
-        self.assertEqual(self.composite_resource.metadata.sources.count(), 0)
         # there should not be any subject elements
         self.assertEqual(self.composite_resource.metadata.subjects.count(), 0)
         # there should be 1 type element
@@ -405,10 +403,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                 value='http://hydroshare.org/resource/001')
         # there should be 1 relation element
         self.assertEqual(self.composite_resource.metadata.relations.count(), 1)
-        # add a source element of uri type
-        metadata.create_element('source', derived_from='http://hydroshare.org/resource/0001')
-        # there should be 1 source element
-        self.assertEqual(self.composite_resource.metadata.sources.count(), 1)
+
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
         metadata.create_element('subject', value='sub-2')
@@ -467,12 +462,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         rel_to_update = self.composite_resource.metadata.relations.all().filter(
             type='isVersionOf').first()
         self.assertEqual(rel_to_update.value, "dummy value 2")
-        src_1 = self.composite_resource.metadata.sources.all().filter(
-            derived_from='http://hydroshare.org/resource/0001').first()
-        metadata.update_element('source', src_1.id,
-                                derived_from='http://hydroshare.org/resource/0002')
-        src_1 = self.composite_resource.metadata.sources.first()
-        self.assertEqual(src_1.derived_from, 'http://hydroshare.org/resource/0002')
+
         # change the point coverage to type box
         # even if we deleted the content file, the resource should still have the 2 coverage
         # elements
@@ -910,8 +900,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # add a relation element of uri type
         metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
-        # add a source element of uri type
-        metadata.create_element('source', derived_from='http://hydroshare.org/resource/0001')
+
         # add 2 subject elements
         metadata.create_element('subject', value='sub-1')
         metadata.create_element('subject', value='sub-2')

@@ -1,19 +1,18 @@
 import json
+
 from dateutil import parser
-
-from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
+from django.test import TransactionTestCase, Client
 
-from hs_core.hydroshare import create_resource, create_account, \
-     create_empty_resource, create_new_version_resource, \
-     update_science_metadata, copy_resource
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
-from hs_core.hydroshare.resource import ResourceFile
-
 from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
+from hs_collection_resource.utils import update_collection_list_csv
 from hs_collection_resource.views import _update_collection_coverages
-from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE, update_collection_list_csv
+from hs_core.hydroshare import create_resource, create_account, \
+    create_empty_resource, create_new_version_resource, \
+    update_science_metadata, copy_resource
+from hs_core.hydroshare.resource import ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -928,15 +927,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         hasPart = "hasPart"
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 
@@ -952,15 +951,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.metadata.relations.count(), 2)
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id -- should be 0
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 0)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = self.resGen3.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 

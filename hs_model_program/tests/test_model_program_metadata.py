@@ -109,9 +109,6 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be rights element
         self.assertNotEqual(self.resModelProgram.metadata.rights, None)
 
-        # there shouldn't any source element
-        self.assertEqual(self.resModelProgram.metadata.sources.count(), 0)
-
         # there shouldn't any relation element
         self.assertEqual(self.resModelProgram.metadata.relations.count(), 0)
 
