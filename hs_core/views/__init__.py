@@ -51,6 +51,7 @@ from hs_core.task_utils import get_all_tasks, revoke_task_by_id, dismiss_task_by
     set_task_delivered_by_id, get_or_create_task_notification, get_task_user_id, get_resource_delete_task
 from hs_core.tasks import copy_resource_task, replicate_resource_bag_to_user_zone_task, \
     create_new_version_resource_task, delete_resource_task
+from hs_core.enums import RelationTypes
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
@@ -768,7 +769,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
     if usertext != "DELETE":
         return HttpResponse("'usertext' path parameter must be provided with value 'DELETE'",
                             status=status.HTTP_400_BAD_REQUEST)
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+    if res.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).exists():
         return HttpResponse('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.',
                             status=status.HTTP_400_BAD_REQUEST)
     if request.is_ajax():
