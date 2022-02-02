@@ -487,7 +487,7 @@ class ToolIcon(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'value' in kwargs and "data_url" not in kwargs:
             url = kwargs["value"]
-            data_url = cls._validate_tool_icon(url)
+            data_url = cls._validate_tool_icon(url) if url else url
 
             metadata_obj = kwargs['content_object']
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
@@ -510,7 +510,7 @@ class ToolIcon(AbstractMetaDataElement):
         meta_instance = ToolIcon.objects.get(id=element_id)
         if 'value' in kwargs:
             url = kwargs["value"]
-            data_url = cls._validate_tool_icon(url)
+            data_url = cls._validate_tool_icon(url) if url else url
             meta_instance.value = url
             meta_instance.data_url = data_url
             meta_instance.save()
