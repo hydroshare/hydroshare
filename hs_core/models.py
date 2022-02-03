@@ -4015,7 +4015,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 'Identifier',
                 'Language',
                 'Subject',
-                'Source',
                 'Relation',
                 'Publisher',
                 'FundingAgency']
