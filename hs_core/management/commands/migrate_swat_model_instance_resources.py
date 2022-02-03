@@ -118,14 +118,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(msg))
 
         for mi_res in SWATModelInstanceResource.objects.all().iterator():
-            msg = "Migrating SWAT instance resource:{}".format(mi_res.short_id)
+            msg = "Migrating SWAT model instance resource:{}".format(mi_res.short_id)
             self.stdout.write(self.style.SUCCESS(msg))
             self.stdout.flush()
             # check resource exists on irods
             istorage = mi_res.get_irods_storage()
             if not istorage.exists(mi_res.root_path):
                 err_resource_counter += 1
-                err_msg = "{}SWAT instance resource not found in iRODS (ID: {})"
+                err_msg = "{}SWAT model instance resource was not found in iRODS (ID: {})"
                 err_msg = err_msg.format(self._MIGRATION_ISSUE, mi_res.short_id)
                 logger.error(err_msg)
                 self.stdout.write(self.style.ERROR(err_msg))
@@ -170,6 +170,11 @@ class Command(BaseCommand):
                 self.stdout.flush()
                 mi_metadata_obj.delete()
                 continue
+
+            # set appkey as aggregation extended metadata to link with web app connector
+            mi_aggr.metadata.extra_metadata['appkey'] = 'swat-model'
+            mi_aggr.metadata.save()
+
             # copy the resource level keywords to aggregation level
             if comp_res.metadata.subjects:
                 keywords = [sub.value for sub in comp_res.metadata.subjects.all()]

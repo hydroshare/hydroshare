@@ -41,6 +41,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.MIGRATING_RESOURCE_TYPE = "SWAT Model Instance Resource"
         self.EXECUTED_BY_EXTRA_META_KEY = "EXECUTED_BY_RES_ID"
         self.MI_FOLDER_NAME = "swat-model-instance"
+        self.APP_KEY = 'appkey'
+        self.APP_KEY_VALUE = 'swat-model'
         # delete all resources in case a test isn't cleaning up after itself
         CompositeResource.objects.all().delete()
         ModelInstanceResource.objects.all().delete()
@@ -81,6 +83,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
         # check the json metadata in mi aggregation - there should not me any swat specific metadata
@@ -121,6 +125,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
         # check the json metadata in mi aggregation - there should be swat specific metadata
@@ -206,6 +212,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
         # check the json metadata in mi aggregation - there should be swat specific metadata
@@ -314,6 +322,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
         # check the json metadata in mi aggregation - there should be swat specific metadata
@@ -418,6 +428,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         # check the mi aggregation has meta schema
         self.assertNotEqual(mi_aggr.metadata_schema_json, {})
         # check the json metadata in mi aggregation - there should be swat specific metadata
@@ -505,6 +517,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check the resource abstract is copied to mi aggr extra_metadata
         self.assertEqual(cmp_res.metadata.description.abstract, abstract)
         self.assertEqual(mi_aggr.metadata.extra_metadata['description'], abstract)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
         # check that all resource level extended metadata moved to mi aggr extended metadata
         self.assertNotIn('SWATShareModelID', cmp_res.extra_metadata)
         self.assertNotIn('SWATShareModelLastModifiedTime', cmp_res.extra_metadata)
@@ -512,7 +525,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(mi_aggr.metadata.extra_metadata['SWATShareModelLastModifiedTime'],
                          '2017-06-14T17:53:34.000000 00:00')
         self.assertNotIn('MIGRATED_FROM', mi_aggr.metadata.extra_metadata)
-
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 4)
         # get the 2nd composite resource (migrated from the 2nd swat mi resource)
         cmp_res_2 = CompositeResource.objects.filter(short_id=mi_res_2.short_id).first()
         mi_aggr_2 = cmp_res_2.modelinstancelogicalfile_set.first()
@@ -525,7 +538,7 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertNotIn('MIGRATED_FROM', mi_aggr_2.metadata.extra_metadata)
         cmp_res_2.extra_metadata.pop("MIGRATED_FROM")
         self.assertEqual(len(cmp_res_2.extra_metadata), 0)
-        self.assertEqual(len(mi_aggr_2.metadata.extra_metadata), 1)
+        self.assertEqual(len(mi_aggr_2.metadata.extra_metadata), 2)
         self._validate_meta_with_schema(mi_aggr)
         self._validate_meta_with_schema(mi_aggr_2)
 
@@ -593,6 +606,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertNotEqual(mi_aggr.resource.short_id, mp_aggr.resource.short_id)
         self.assertEqual(mi_aggr.files.count(), 0)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
 
     def test_migrate_mi_resource_with_file_1(self):
         """
@@ -633,6 +648,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 1)
         res_file = cmp_res.files.first()
         self.assertEqual(res_file.file_folder, self.MI_FOLDER_NAME)
@@ -693,6 +710,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 2)
         self.assertFalse(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
@@ -737,6 +756,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(ModelInstanceLogicalFile.objects.count(), 1)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
 
@@ -791,6 +812,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.files.count(), 1)
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that mi_aggr metadata is set to dirty
         self.assertTrue(mi_aggr.metadata.is_dirty)
@@ -834,6 +857,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 1)
         res_file = cmp_res.files.first()
         expected_file_folder = "{}/{}".format(self.MI_FOLDER_NAME, upload_folder)
@@ -900,6 +925,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 2)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
@@ -956,6 +983,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 1)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
@@ -1021,6 +1050,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 1)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
@@ -1095,6 +1126,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 3)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
@@ -1146,6 +1179,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         expected_aggr_folder_name = "{}-1".format(self.MI_FOLDER_NAME)
         self.assertEqual(mi_aggr.folder, expected_aggr_folder_name)
         self.assertEqual(mi_aggr.aggregation_name, expected_aggr_folder_name)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         res_file = cmp_res.files.first()
         expected_file_folder = "{}-1/{}".format(self.MI_FOLDER_NAME, upload_folder)
         self.assertEqual(res_file.file_folder, expected_file_folder)
@@ -1219,6 +1254,8 @@ class TestSWATInstanceResourceMigration(MockIRODSTestCaseMixin, TestCase):
         # check mi aggregation is folder based
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertEqual(mi_aggr.folder, self.MI_FOLDER_NAME)
+        self.assertEqual(mi_aggr.metadata.extra_metadata[self.APP_KEY], self.APP_KEY_VALUE)
+        self.assertEqual(len(mi_aggr.metadata.extra_metadata), 1)
         self.assertEqual(mi_aggr.files.count(), 1)
         self.assertTrue(mi_aggr.metadata.has_model_output)
         # check that the resource level keywords copied to the mi aggregation
