@@ -3,7 +3,6 @@ import base64
 import imghdr
 from hs_core.hydroshare.utils import get_file_mime_type
 
-
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -461,6 +460,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
 
 
 class ToolIcon(AbstractMetaDataElement):
+    # 
     term = 'ToolIcon'
     value = models.CharField(max_length=1024, blank=True, default="")
     data_url = models.TextField(blank=True, default="")
