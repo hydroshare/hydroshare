@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group, User
 from hs_core.hydroshare import resource
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
-    Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
+    Type, Subject, Description, Date, Format, Relation, FundingAgency
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.templatetags.hydroshare_tags import name_without_commas
@@ -52,7 +52,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         Description.objects.all().delete()
         Relation.objects.all().delete()
         Subject.objects.all().delete()
-        Source.objects.all().delete()
         Identifier.objects.all().delete()
         Type.objects.all().delete()
         Format.objects.all().delete()
@@ -1586,8 +1585,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
         self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Publisher metadata objects
