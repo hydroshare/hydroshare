@@ -136,7 +136,6 @@ class ToolMetaDataSerializer(CoreMetaDataSerializer):
     supported_resource_types = SupportedResTypesMetaDataSerializer(required=False, many=False)
     supported_aggregation_types = SupportedAggTypesMetaDataSerializer(required=False, many=False)
     app_icon = ToolIconMetaDataSerializer(required=False, many=False)
-    # app_icon = ToolIconMetaDataSerializer(required=False, many=True)
     supported_sharing_statuses = SupportedSharingStatusMetaDataSerializer(required=False,
                                                                           many=False)
     supported_file_extensions = SupportedFileExtensionsMetaDataSerializer(required=False,
