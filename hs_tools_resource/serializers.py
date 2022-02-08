@@ -89,7 +89,7 @@ class SupportedSharingStatusMetaDataSerializer(serializers.ModelSerializer):
 class ToolIconMetaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToolIcon
-        fields = ('value',)
+        fields = ('value', 'data_url')
 
 
 class MailingListSerializer(serializers.ModelSerializer):
@@ -136,6 +136,7 @@ class ToolMetaDataSerializer(CoreMetaDataSerializer):
     supported_resource_types = SupportedResTypesMetaDataSerializer(required=False, many=False)
     supported_aggregation_types = SupportedAggTypesMetaDataSerializer(required=False, many=False)
     app_icon = ToolIconMetaDataSerializer(required=False, many=False)
+    # app_icon = ToolIconMetaDataSerializer(required=False, many=True)
     supported_sharing_statuses = SupportedSharingStatusMetaDataSerializer(required=False,
                                                                           many=False)
     supported_file_extensions = SupportedFileExtensionsMetaDataSerializer(required=False,
