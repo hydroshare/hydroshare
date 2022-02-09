@@ -41,6 +41,8 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_core.enums import RelationTypes
+
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -692,7 +694,7 @@ def show_relations_section(res_obj):
     """
 
     all_relation_count = res_obj.metadata.relations.count()
-    has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    has_part_count = res_obj.metadata.relations.filter(type=RelationTypes.hasPart).count()
     if all_relation_count > has_part_count:
         return True
     return False

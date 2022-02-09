@@ -1,54 +1,50 @@
 """Declare critical models for Hydroshare hs_core app."""
 import copy
-import os.path
 import json
-import arrow
 import logging
+import os.path
 import re
+import unicodedata
 from uuid import uuid4
 
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
-from .languages_iso import languages as iso_languages
+import arrow
 from dateutil import parser
-from lxml import etree
-from markdown import markdown
-
-from django_irods.icommands import SessionException
-
-from django.contrib.postgres.fields import HStoreField
+from django.conf import settings
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.db.models import Q, Sum
-from django.db.models.signals import post_save
-from django.db import transaction
-from django.dispatch import receiver
-from django.utils.timezone import now
-from django_irods.storage import IrodsStorage
-from django.conf import settings
-from django.core.files import File
+from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
+from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
+from django.db import models
+from django.db import transaction
+from django.db.models import Q, Sum
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.forms.models import model_to_dict
-
-from mezzanine.pages.models import Page
+from django.utils.timezone import now
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+from lxml import etree
+from markdown import markdown
+from mezzanine.conf import settings as s
 from mezzanine.core.managers import PublishedManager
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
-
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4
-
-from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from mezzanine.pages.models import Page
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 
-import unicodedata
+from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
+from hs_core.enums import RelationTypes
+from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
+from .languages_iso import languages as iso_languages
 
 
 def clean_for_xml(s):
@@ -312,8 +308,8 @@ def page_permissions_page_processor(request, page):
 
     users_json = json.dumps(users_json)
 
-    is_replaced_by = cm.get_relation_version_res_url('isReplacedBy')
-    is_version_of = cm.get_relation_version_res_url('isVersionOf')
+    is_replaced_by = cm.get_relation_version_res_url(RelationTypes.isReplacedBy)
+    is_version_of = cm.get_relation_version_res_url(RelationTypes.isVersionOf)
 
     permissions_allow_copy = False
     if request.user.is_authenticated:
@@ -942,34 +938,29 @@ class Relation(AbstractMetaDataElement):
     """Define Relation custom metadata model."""
 
     SOURCE_TYPES = (
-        ('isHostedBy', 'The content of this resource is hosted by'),
-        ('isCopiedFrom', 'The content of this resource was copied from'),
-        ('isDataFor', 'The content of this resource serves as the data for'),
-        ('cites', 'This resource cites'),
-        ('isPartOf', 'The content of this resource is part of'),
-        ('hasPart', 'This resource includes'),
-        ('isExecutedBy', 'The content of this resource can be executed by'),
-        ('isCreatedBy', 'The content of this resource was created by a related App or software program'),
-        ('isVersionOf', 'This resource updates and replaces a previous version'),
-        ('isReplacedBy', 'This resource has been replaced by a newer version'),
-        ('isDescribedBy', 'This resource is described by'),
-        ('conformsTo', 'This resource conforms to established standard described by'),
-        ('hasFormat', 'This resource has a related resource in another format'),
-        ('isFormatOf', 'This resource is a different format of'),
-        ('isRequiredBy', 'This resource is required by'),
-        ('requires', 'This resource requires'),
-        ('isReferencedBy', 'This resource is referenced by'),
-        ('references', 'The content of this resource references'),
-        ('replaces', 'This resource replaces'),
-        ('source', 'The content of this resource is derived from')
+        (RelationTypes.isPartOf.value, 'The content of this resource is part of'),
+        (RelationTypes.hasPart.value, 'This resource includes'),
+        (RelationTypes.isExecutedBy.value, 'The content of this resource can be executed by'),
+        (RelationTypes.isCreatedBy.value,
+         'The content of this resource was created by a related App or software program'),
+        (RelationTypes.isVersionOf.value, 'This resource updates and replaces a previous version'),
+        (RelationTypes.isReplacedBy.value, 'This resource has been replaced by a newer version'),
+        (RelationTypes.isDescribedBy.value, 'This resource is described by'),
+        (RelationTypes.conformsTo.value, 'This resource conforms to established standard described by'),
+        (RelationTypes.hasFormat.value, 'This resource has a related resource in another format'),
+        (RelationTypes.isFormatOf.value, 'This resource is a different format of'),
+        (RelationTypes.isRequiredBy.value, 'This resource is required by'),
+        (RelationTypes.requires.value, 'This resource requires'),
+        (RelationTypes.isReferencedBy.value, 'This resource is referenced by'),
+        (RelationTypes.references.value, 'The content of this resource references'),
+        (RelationTypes.replaces.value, 'This resource replaces'),
+        (RelationTypes.source.value, 'The content of this resource is derived from')
     )
 
     # these are hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isExecutedBy', 'isCreatedBy', 'isDescribedBy')
-    NOT_USER_EDITABLE = ('isVersionOf', 'isReplacedBy', 'isPartOf', 'hasPart', 'replaces')
-    # keeping these deprecated types for now for migrating these types to other relation types
-    # using a management command
-    DEPRECATED_RELATION_TYPES = ('isHostedBy', 'isCopiedFrom', 'isDataFor', 'cites')
+    HS_RELATION_TERMS = (RelationTypes.isExecutedBy, RelationTypes.isCreatedBy, RelationTypes.isDescribedBy)
+    NOT_USER_EDITABLE = (RelationTypes.isVersionOf, RelationTypes.isReplacedBy,
+                         RelationTypes.isPartOf, RelationTypes.hasPart, RelationTypes.replaces)
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.TextField()
@@ -984,9 +975,7 @@ class Relation(AbstractMetaDataElement):
 
     @classmethod
     def get_supported_types(cls):
-        supported_types = [rel_type for rel_type in dict(cls.SOURCE_TYPES) if rel_type not
-                           in cls.DEPRECATED_RELATION_TYPES]
-        return supported_types
+        return dict(cls.SOURCE_TYPES).keys()
 
     def type_description(self):
         return dict(self.SOURCE_TYPES)[self.type]
@@ -1019,9 +1008,6 @@ class Relation(AbstractMetaDataElement):
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
-        if kwargs['type'] in cls.DEPRECATED_RELATION_TYPES:
-            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
-
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
@@ -1046,9 +1032,6 @@ class Relation(AbstractMetaDataElement):
             ValidationError("Type of relation element is missing.")
         if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
-
-        if kwargs['type'] in cls.DEPRECATED_RELATION_TYPES:
-            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
         if not kwargs['type'] in list(dict(cls.SOURCE_TYPES).keys()):
             raise ValidationError('Invalid relation type:%s' % kwargs['type'])
@@ -1815,24 +1798,6 @@ class Subject(AbstractMetaDataElement):
     def ingest_rdf(cls, graph, subject, content_object):
         for _, _, o in graph.triples((subject, cls.get_class_term(), None)):
             Subject.create(value=str(o), content_object=content_object)
-
-
-# TODO: Source model class needs to be deleted after metadata stored in this object is moved to Relation meta object
-# @rdf_terms(DC.source, derived_from=HSTERMS.isDerivedFrom)
-class Source(AbstractMetaDataElement):
-    """Define Source custom metadata element model."""
-
-    term = 'Source'
-    derived_from = models.TextField()
-
-    class Meta:
-        """Define meta properties for Source model."""
-
-        unique_together = ("derived_from", "content_type", "object_id")
-
-    def __unicode__(self):
-        """Return derived_from field for unicode representation."""
-        return self.derived_from
 
 
 @rdf_terms(DC.rights, statement=HSTERMS.rightsStatement, url=HSTERMS.URL)
@@ -3696,7 +3661,7 @@ class BaseResource(Page, AbstractResource):
     def replaced_by(self):
         """ return a list or resources that replaced this one """
         from hs_core.hydroshare import get_resource_by_shortkey, current_site_url   # prevent import loop
-        replacedby = self.metadata.relations.all().filter(type='isReplacedBy')
+        replacedby = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy)
         rlist = []
         for r in replacedby:
             citation = r.value
@@ -3770,18 +3735,18 @@ class BaseResource(Page, AbstractResource):
                     relation_updated = True
             return relation_updated
 
-        replace_relation = self.metadata.relations.all().filter(type='isReplacedBy').first()
+        replace_relation = self.metadata.relations.all().filter(type=RelationTypes.isReplacedBy).first()
         replace_relation_updated = False
         if replace_relation is not None:
             replace_relation_updated = _update_relation_meta(replace_relation)
 
         part_of_relation_updated = False
-        for part_of_relation in self.metadata.relations.filter(type='isPartOf').all():
+        for part_of_relation in self.metadata.relations.filter(type=RelationTypes.isPartOf).all():
             if _update_relation_meta(part_of_relation):
                 part_of_relation_updated = True
 
         has_part_relation_updated = False
-        for has_part_relation in self.metadata.relations.filter(type='hasPart').all():
+        for has_part_relation in self.metadata.relations.filter(type=RelationTypes.hasPart).all():
             if _update_relation_meta(has_part_relation):
                 has_part_relation_updated = True
 
@@ -3850,7 +3815,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     identifiers = GenericRelation(Identifier)
     _language = GenericRelation(Language)
     subjects = GenericRelation(Subject)
-    sources = GenericRelation(Source)
     relations = GenericRelation(Relation)
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
@@ -4051,7 +4015,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 'Identifier',
                 'Language',
                 'Subject',
-                'Source',
                 'Relation',
                 'Publisher',
                 'FundingAgency']
@@ -4152,7 +4115,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         self.coverages.all().delete()
         self.formats.all().delete()
         self.subjects.all().delete()
-        self.sources.all().delete()
         self.relations.all().delete()
         self.funding_agencies.all().delete()
 
@@ -4436,21 +4398,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
                 terms_type.text = rel.value
-
-        # TODO: need to remove sources meta element
-        for src in self.sources.all():
-            dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
-            dc_source_rdf_Description = etree.SubElement(dc_source,
-                                                         '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_derived_from = etree.SubElement(
-                dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
-
-            # if the source value starts with 'http://' or 'https://' add value as an attribute
-            if src.derived_from.lower().find('http://') == 0 or \
-                    src.derived_from.lower().find('https://') == 0:
-                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
-            else:
-                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])
