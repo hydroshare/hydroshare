@@ -2,6 +2,7 @@
  * Created by Mauriel on 8/16/2016.
  */
 
+
 var sourcePaths = {path: null, selected:[]};
 var pathLog = [];
 var pathLogIndex = 0;
@@ -986,22 +987,26 @@ function showFileTypeMetadata(file_type_time_series, url){
             if (resource_mode === 'view') {
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['start']['format'] = "datetime";
                 json_response.metadata.json_schema['definitions']['PeriodCoverage']['properties']['end']['format'] = "datetime";
-                let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
-                    schema: json_response.metadata.json_schema,
-                    startval: json_response.metadata.json_value,
-                    theme: "bootstrap4",
-                    disable_properties: true,
-                    disable_edit_json: true,
-                    disable_array_add: true,
-                    disable_array_delete: true,
-                    disable_array_delete_all_rows: true,
-                    disable_array_delete_last_row: true,
-                    disable_array_reorder: true,
-                    disable_collapse: true,
-                    format: "table",
-                    remove_empty_properties: true
-                });
-                editor.disable();
+                $('#fileTypeMetaData').alpaca({
+                    "data": json_response.metadata.json_value,
+                    "schema": json_response.metadata.json_schema,
+                    /*"options": {
+                        "fields": {
+                            "url": {
+                                "hidden": true,
+                                "readonly": true
+                            },
+                            "type": {
+                                "readonly": true
+                            },
+                            "rights": {
+                            },
+                            "rights_statement": {
+                                "hidden": true
+                            }
+                        }
+                    }*/
+                })
                 // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
                 $(".property-selector").removeAttr("style");
                 $(".file-browser-container, #fb-files-container").css("cursor", "auto");
@@ -1043,38 +1048,18 @@ function showFileTypeMetadata(file_type_time_series, url){
                     json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['north']['options'] = get_coord_je_option('north');
                     json_response.metadata.json_schema['definitions']['PointSpatialReference']['properties']['east']['options'] = get_coord_je_option('east');
                 }
-
-                let editor = new JSONEditor(document.getElementById('fileTypeMetaData'), {
-                    schema: json_response.metadata.json_schema,
-                    theme: 'bootstrap4',
-                    startval: json_response.metadata.json_value,
-                    disable_edit_json: true,
-                    disable_properties: true,
-                    disable_collapse: true,
-                    keep_oneof_values: false,
-                    remove_empty_properties: true,
-                    display_required_only: false,
-                    format: "table",
-                    show_errors: "always"
-                });
+                $('#fileTypeMetaData').alpaca({
+                    "data": json_response.metadata.json_value,
+                    "schema": json_response.metadata.json_schema,
+                })
                 $(".coord_picker_class").coordinatesPicker();
                 $("#fileTypeMetaData").append('<div id="metadata_schema_save_info" class="label-file-name icon-blue hidden-form">' +
                     'Click anywhere outside the input box after making changes to see the Save button</div>');
                 $("#fileTypeMetaData").append('<button type="submit" id="metadata_schema_value_submit" ' +
                     'class="btn btn-primary pull-right btn-form-submit hidden-form">Save changes</button>');
+                /*
+                TODO onchange
                 var get_editor_ready = true;
-                editor.on('change', function() {
-                    $('.invalid-feedback').css('color', 'red');
-                    if (get_editor_ready === true) {
-                        get_editor_ready = false
-                        $('#metadata_schema_save_info').show();
-                    }
-                    else {
-                        $('#metadata_schema_save_info').hide();
-                        $('#metadata_schema_value_submit').show();
-                    }
-
-                });
 
                 $('#metadata_schema_value_submit').click(function update_schema_metadata(event) {
                     let errors = editor.validate();
@@ -1087,6 +1072,7 @@ function showFileTypeMetadata(file_type_time_series, url){
                         console.log(JSON.stringify(editor.getValue()));
                     }
                 });
+                */
                 // removing the style attribute set by the JSONEditor in order to customize the look of the UI that lists object properties
                 $(".property-selector").removeAttr("style");
                 $(".file-browser-container, #fb-files-container").css("cursor", "auto");

@@ -487,14 +487,12 @@ def get_logical_file_metadata_json_schema(lf):
         # hide the url and aggregation type fields since they are required but should be hidden from metadata
         # view and update
 
-        json_schema_dict['properties']['url']['options'] = {
-            "hidden": True
-        }
-        json_schema_dict['properties']['type']['options'] = {
-            "hidden": True
-        }
+        json_schema_dict['properties']['url']['readonly'] = True
+        json_schema_dict['properties']['type']['readonly'] = True
 
         # json_schema_dict['properties']['additional_metadata']['items']['required'] = []
         json_schema = json.dumps(json_schema_dict)
         return json_value, json_schema
     return {}, {}
+
+
