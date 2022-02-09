@@ -55,7 +55,8 @@ function getFolderTemplateInstance(folder) {
         }
         return "<li class='fb-folder droppable draggable' data-url='" +
             folder['url'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] +
-            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] + "' >" +
+            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] +
+            "' data-aggregation-appkey='" + folder['folder_aggregation_appkey']  +"' >" +
             iconTemplate +
             "<span class='fb-file-name'>" + folder['name'] + "</span>" +
             "<span class='fb-file-type'>File Folder</span>" +
@@ -136,7 +137,7 @@ function getFileTemplateInstance(file) {
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
         file.is_single_file_aggregation + "' data-has-model-program-aggr-folder='" +
         file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
-        file.has_model_instance_aggr_folder +"'>" +
+        file.has_model_instance_aggr_folder + "' data-aggregation-appkey='" + file.aggregation_appkey  + "'>" +
         iconTemplate +
         "<span class='fb-file-name'>" + file.name + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
@@ -801,35 +802,121 @@ function bindFileBrowserItemEvents() {
             }
             menu = $("#right-click-menu");
 
-            var fileAggType = [];
+            let fileAggType = '';
+            let aggrAppKey = '';
             let target = $(event.target).closest("li");
+            let fileSelected = false;
+            let aggrFolderBased = false;
+            const virtualFolderAggregationTypes = ["NetCDFLogicalFile", "GeoFeatureLogicalFile",
+                "GeoRasterLogicalFile", "TimeSeriesLogicalFile", "RefTimeseriesLogicalFile"]
 
-            // main-file is available on the aggregation folder and only single file aggregations have a data-pk of 1 on the file
-            if (isVirtualFolder(target) || target.attr("main-file") || target.attr("is-single-file-aggregation") === "true"){
+            // get the aggregation type from the user right clicked file/folder element
+            if (target.find("span.fb-logical-file-type").attr("data-logical-file-type")) {
                 fileAggType = target.find("span.fb-logical-file-type").attr("data-logical-file-type");
             }
-            var fileName = target.find("span.fb-file-name").text();
-            var fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
+            if (fileAggType) {
+                if (virtualFolderAggregationTypes.includes(fileAggType)) {
+                    aggrFolderBased = true;
+                }
+                else if (fileAggType === 'ModelInstanceLogicalFile') {
+                    if (target.attr("data-has-model-instance-aggr-folder") === 'true') {
+                        aggrFolderBased = true;
+                    }
+                }
+                else if (fileAggType === 'ModelProgramLogicalFile') {
+                    if (target.attr("data-has-model-program-aggr-folder") === 'true') {
+                        aggrFolderBased = true;
+                    }
+                }
+            }
 
-            // toggle apps by file extension and aggregations
+            if (target.hasClass('fb-file')) {
+                fileSelected = true;
+            }
+            if (target.attr("data-aggregation-appkey")) {
+                aggrAppKey = target.attr("data-aggregation-appkey");
+            }
+
+            let fileName = '';
+            let fileExtension = '';
+            if (fileSelected) {
+                fileName = target.find("span.fb-file-name").text();
+                fileExtension = fileName.substr(fileName.lastIndexOf("."), fileName.length);
+            }
+
+            // toggle apps by file extension, appkey and aggregation type
             let hasTools = false;
             menu.find("li.btn-open-with").each(function() {
-                let agg_app = false;
-                if ($(this).attr("data-agg-types")){
-                    agg_app = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
-                }
-                var extension_app = false;
-                if ($(this).attr("data-file-extensions")){
-                    let extensions = $(this).attr("data-file-extensions").split(",");
-                    for (let i = 0; i < extensions.length; ++i) {
-                        if (fileExtension.toLowerCase() === extensions[i].trim().toLowerCase()){
-                            extension_app = true;
-                            break;
+                let extensionApp = false;
+                let appKeyApp = false;
+                let aggrApp = false;
+                let toolExtensions = '';
+                let toolAppKey = '';
+                if (fileSelected) {
+                    if ($(this).attr("data-file-extensions")) {
+                        toolExtensions = $(this).attr("data-file-extensions").split(",");
+                        for (let i = 0; i < toolExtensions.length; ++i) {
+                            if (fileExtension.toLowerCase() === toolExtensions[i].trim().toLowerCase()) {
+                                extensionApp = true;
+                                break;
+                            }
                         }
                     }
                 }
-                $(this).toggle(agg_app || extension_app);
-                hasTools = hasTools || agg_app || extension_app;
+                if (fileSelected) {
+                    if (!toolExtensions && !extensionApp) {
+                        // check for appkey
+                        if (!aggrFolderBased) {
+                            // file based aggregation selected (single file aggregation, model program/instance aggregation)
+                            if ($(this).attr("data-tool-appkey")) {
+                                toolAppKey = $(this).attr("data-tool-appkey");
+                            }
+                        }
+                        // file selected
+                        else if ($(this).attr("data-tool-appkey") && $(this).attr("data-url-file")) {
+                            toolAppKey = $(this).attr("data-tool-appkey");
+                        }
+
+                        if (aggrAppKey || toolAppKey) {
+                            if (aggrAppKey === toolAppKey) {
+                                appKeyApp = true;
+                            }
+                        }
+                        if (!toolAppKey && !appKeyApp) {
+                            // check for aggregation type match
+                             if (!aggrFolderBased) {
+                                // file based aggregation selected (single file aggregation, model program/instance aggregation)
+                                if ($(this).attr("data-agg-types")) {
+                                    aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                                }
+                             }
+                             // file selected
+                             else if ($(this).attr("data-agg-types") && $(this).attr("data-url-file")) {
+                                aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                            }
+                        }
+                    }
+                }
+                else {  //folder selected (right-clicked)
+                    // check for matching appkey
+                    if ($(this).attr("data-tool-appkey")) {
+                        toolAppKey = $(this).attr("data-tool-appkey");
+                    }
+                    if (aggrAppKey || toolAppKey) {
+                        if (aggrAppKey === toolAppKey) {
+                            appKeyApp = true;
+                        }
+                    }
+                    // check for matching aggregation type
+                    if (!aggrAppKey && !toolAppKey && !appKeyApp) {
+                        if ($(this).attr("data-agg-types")) {
+                            aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                        }
+                    }
+                }
+
+                $(this).toggle(extensionApp || appKeyApp || aggrApp);
+                hasTools = hasTools || extensionApp || appKeyApp || aggrApp;
             });
             $("#tools-separator").toggleClass("hidden", !hasTools);
         }
