@@ -472,8 +472,10 @@ class ToolIconFormHelper(BaseFormHelper):
                 Column(
                     Field('data_url', css_class=field_width, type="hidden"),
                     HTML("""
-                        <input id="icon-select" class="upload-picture" type="file" accept="image/*" style="display: none;">
-                        <a type="button" id="icon-select-btn" class="btn btn-success btn-xs" title="Upload from computer">
+                        <input id="icon-select" class="upload-picture"
+                            type="file" accept="image/*" style="display: none;">
+                        <a type="button" id="icon-select-btn"
+                            class="btn btn-success btn-xs" title="Upload from computer">
                             <span class="glyphicon glyphicon-plus"></span>
                             Browse for file
                         </a>
@@ -483,36 +485,18 @@ class ToolIconFormHelper(BaseFormHelper):
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                     </a>
                     """),
-                css_class='form-group col-md-6 mb-0'
+                    css_class='form-group col-md-6 mb-0'
                 ),
                 css_class='form-row'
             ),
             Row(
                 HTML("""
-                        <span id="icon-preview-label" class="control-label">Preview</span>
-                        <br>
-                        <img id="tool-icon-preview" src="{data_url_db}">
-                        """.format(data_url_db=data_url_db)
-                    ),
+                    <span id="icon-preview-label" class="control-label">Preview</span>
+                    <br>
+                    <img id="tool-icon-preview" src="{data_url_db}">
+                    """.format(data_url_db=data_url_db)),
                 css_class='form-row'
                 ),
-            # FieldWithButtons('value',
-            #     StrictButton("Upload file", name="picture", css_class="upload-picture", type="file", accept="image/*"),
-            #     css_class=field_width,
-            # ),
-
-
-            # Field('value',
-            #     css_class=field_width,
-            # ),
-            # HTML("""
-            #             <input class="upload-picture" type="file" name="picture"  accept="image/*">
-            #             """),
-            # HTML("""
-            #             <span id="icon-preview-label" class="control-label">Preview</span>
-            #             <br>
-            #             <img id="tool-icon-preview" src="{data_url}">
-            #             """.format(data_url=data_url)),
         )
         kwargs['element_name_label'] = 'Icon URL or File'
         super(ToolIconFormHelper, self).__init__(allow_edit,
@@ -537,7 +521,7 @@ class ToolIconForm(ModelForm):
 
     class Meta:
         model = ToolIcon
-        fields = ['value','data_url']
+        fields = ['value', 'data_url']
         exclude = ['content_object']
 
 
