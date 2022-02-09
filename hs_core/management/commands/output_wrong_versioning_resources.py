@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
         replaced_by_dict = {}
         for obj in replace_by_qs:
-            replace_by_id = obj.value.split('/')[-1]
+            replace_by_id = obj.value.split('/')[-1][-32:]
             if not BaseResource.objects.filter(short_id=replace_by_id).exists():
                 obj.delete()
                 msg = f'{replace_by_id} does not exist, so delete the corresponding isReplacedBy relation ' \
@@ -44,7 +44,7 @@ class Command(BaseCommand):
         print(msg, flush=True)
 
         for obj in version_of_qs:
-            version_of_id = obj.value.split('/')[-1]
+            version_of_id = obj.value.split('/')[-1][-32:]
             if not BaseResource.objects.filter(short_id=version_of_id).exists():
                 obj.delete()
                 msg = f'{version_of_id} does not exist, so delete the corresponding isVersionOf relation ' \

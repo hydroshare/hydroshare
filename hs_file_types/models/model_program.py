@@ -443,9 +443,11 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                                                                    name='mi_json_schema_file', id='mi-json-schema-file')
 
                                         if json_schema:
-                                            dom_tags.button("Show Model Instance Metadata JSON Schema", type="button",
+                                            dom_tags.button("Show/Hide Model Instance Metadata JSON Schema",
+                                                            type="button",
                                                             cls="btn btn-success btn-block",
-                                                            data_toggle="collapse", data_target="#meta-schema")
+                                                            data_toggle="collapse",
+                                                            data_target="#meta-schema")
                                             mi_schema_div = dom_tags.div(cls="content-block collapse", id="meta-schema",
                                                                          style="margin-top:10px; padding-bottom: 20px;")
                                             with mi_schema_div:

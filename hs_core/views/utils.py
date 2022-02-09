@@ -41,6 +41,8 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_core.enums import RelationTypes
+
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -692,7 +694,7 @@ def show_relations_section(res_obj):
     """
 
     all_relation_count = res_obj.metadata.relations.count()
-    has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    has_part_count = res_obj.metadata.relations.filter(type=RelationTypes.hasPart).count()
     if all_relation_count > has_part_count:
         return True
     return False
@@ -1119,20 +1121,21 @@ def listfolders(istorage, path):
     return istorage.listdir(path)[0]
 
 
-def create_folder(res_id, folder_path):
+def create_folder(res_id, folder_path, migrating_resource=False):
     """
     create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
     :param res_id: resource uuid
     :param folder_path: relative path for the new folder to be created under
     res_id collection/directory
+    :param migrating_resource: A flag to indicate if the folder is being created as part of resource migration
     :return:
     """
     if __debug__:
         assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    if resource.raccess.published:
+    if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
