@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError as RF_ValidationError
 
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
-from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
+from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder, delete_resource_file
 from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFile, FileSetLogicalFile, \
     ModelProgramResourceFileType
 
@@ -853,7 +853,7 @@ def test_resource_copy(composite_resource, mock_irods):
     meta_schema_json = json.loads(meta_schema_json)
     mp_aggr.metadata_schema_json = meta_schema_json
     mp_aggr.save()
-    mi_aggr.executed_by = mp_aggr
+    mi_aggr.metadata.executed_by = mp_aggr
     mi_aggr.save()
     # set mi metadata json from the content of the following file
     schema_file_path = 'pytest/assets/mi_metadata.json'
@@ -876,6 +876,79 @@ def test_resource_copy(composite_resource, mock_irods):
     assert copy_mp_aggr.metadata_schema_json
     assert copy_mi_aggr.files.count() == 1
     assert copy_mp_aggr.files.count() == 1
+    assert copy_mi_aggr.metadata.executed_by == copy_mp_aggr
+
+@pytest.mark.django_db(transaction=True)
+def test_resource_copy_with_aggregations_with_no_files(composite_resource, mock_irods):
+    """Test copying a resource that has both mi and mp folder based aggregations (aggregations have no files)"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    mp_folder = 'mp_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    file_path = 'pytest/assets/logan.vrt'
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+
+    assert res.files.count() == 2
+    # create folder based model aggregations
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=mp_folder)
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    assert ModelInstanceLogicalFile.objects.filter(resource=res).count() == 1
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert ModelProgramLogicalFile.objects.filter(resource=res).count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 1
+    assert mp_aggr.files.count() == 1
+    assert mi_aggr.folder == mi_folder
+    assert mp_aggr.folder == mp_folder
+
+    # set json schema for mp aggregation
+    schema_file_path = 'pytest/assets/mi_schema.json'
+    with open(schema_file_path, 'r') as file_obj:
+        meta_schema_json = file_obj.read()
+    assert len(meta_schema_json) > 0
+    meta_schema_json = json.loads(meta_schema_json)
+    mp_aggr.metadata_schema_json = meta_schema_json
+    mp_aggr.save()
+    mi_aggr.metadata.executed_by = mp_aggr
+    mi_aggr.metadata.save()
+    # set mi metadata json from the content of the following file
+    schema_file_path = 'pytest/assets/mi_metadata.json'
+    with open(schema_file_path, 'r') as file_obj:
+        meta_json = file_obj.read()
+    assert len(meta_json) > 0
+    meta_json = json.loads(meta_json)
+    mi_aggr.metadata.metadata_json = meta_json
+    mi_aggr.metadata.save()
+    mi_aggr.metadata_schema_json = mp_aggr.metadata_schema_json
+    mi_aggr.save()
+    # delete the res file in mi aggregation and mp aggregation
+    mi_res_file = mi_aggr.files.first()
+    mp_res_file = mp_aggr.files.first()
+    delete_resource_file(res.short_id, mi_res_file.id, user)
+    delete_resource_file(res.short_id, mp_res_file.id, user)
+    # create a copy fo the resource
+    copy_res = hydroshare.create_empty_resource(res.short_id, user, action='copy')
+    copy_res = hydroshare.copy_resource(res, copy_res)
+    assert ModelInstanceLogicalFile.objects.filter(resource=copy_res).count() == 1
+    copy_mi_aggr = ModelInstanceLogicalFile.objects.filter(resource=copy_res).first()
+    assert ModelProgramLogicalFile.objects.filter(resource=copy_res).count() == 1
+    copy_mp_aggr = ModelProgramLogicalFile.objects.filter(resource=copy_res).first()
+    assert copy_mi_aggr.metadata_schema_json
+    assert copy_mi_aggr.metadata.metadata_json
+    assert copy_mp_aggr.metadata_schema_json
+    assert copy_mi_aggr.files.count() == 0
+    assert copy_mp_aggr.files.count() == 0
+    assert copy_mi_aggr.metadata.executed_by == copy_mp_aggr
+    assert copy_mi_aggr.folder == mi_folder
+    assert copy_mp_aggr.folder == mp_folder
 
 
 @pytest.mark.django_db(transaction=True)

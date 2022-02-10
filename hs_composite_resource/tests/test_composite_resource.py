@@ -16,7 +16,7 @@ from hs_core.models import BaseResource, ResourceFile
 from hs_core.hydroshare.utils import resource_file_add_process, get_resource_by_shortkey, ResourceVersioningException, \
     add_file_to_resource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder, \
-    unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource
+    unzip_file, add_reference_url_to_resource, edit_reference_url_in_resource, delete_resource_file
 from hs_composite_resource.models import CompositeResource
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData, \
     RefTimeseriesLogicalFile, FileSetLogicalFile, NetCDFLogicalFile, TimeSeriesLogicalFile, \
@@ -2017,6 +2017,41 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase,
                          new_composite_resource.files.count())
         self.assertEqual(new_composite_resource.files.count(), 2)
         self.assertEqual(FileSetLogicalFile.objects.count(), 4)
+
+    def test_copy_resource_with_file_set_aggregation_4(self):
+        """Here we are testing that we can create a copy of a composite resource that contains one
+        file set aggregation where the file set aggregation has no files"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the the txt file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
+        # set folder to fileset logical file type (aggregation)
+        FileSetLogicalFile.set_file_type(self.composite_resource, self.user, folder_path=new_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+        self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 1)
+        # delete the file that's part of the fileset aggregation
+        res_file = FileSetLogicalFile.objects.first().files.first()
+        delete_resource_file(self.composite_resource.short_id, res_file.id, self.user)
+        self.assertEqual(FileSetLogicalFile.objects.first().files.count(), 0)
+        # create a copy of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(self.composite_resource.short_id,
+                                                                  self.user,
+                                                                  action='copy')
+        new_composite_resource = hydroshare.copy_resource(self.composite_resource,
+                                                          new_composite_resource)
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.title.value,
+                         new_composite_resource.metadata.title.value)
+        self.assertEqual(self.composite_resource.files.count(),
+                         new_composite_resource.files.count())
+        self.assertEqual(new_composite_resource.files.count(), 0)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 2)
+        for fs in FileSetLogicalFile.objects.all():
+            self.assertEqual(fs.folder, new_folder)
+            self.assertEqual(fs.files.count(), 0)
 
     def test_copy_resource_with_netcdf_aggregation(self):
         """Here were testing that we can create a copy of a composite resource that contains a
