@@ -184,6 +184,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     eastlimit = indexes.FloatField(null=True)
     southlimit = indexes.FloatField(null=True)
     westlimit = indexes.FloatField(null=True)
+    location = indexes.LocationField()
+
+    def prepare_location(self, obj):
+        if hasattr(obj, 'east') and hasattr(obj, 'north'):
+            return "%s,%s" % (obj.north, obj.east)
+        elif hasattr(obj, 'northlimit') and hasattr(obj, 'eastlimit') and hasattr(obj, 'southlimit') and hasattr(obj, 'westlimit'):
+            coords = (obj.eastlimit, obj.westlimit, obj.southlimit, obj.northlimit)
+            import numpy
+            centerx, centery = (numpy.average(coords[:2]), numpy.average(coords[2:]))
+            return "%s,%s" % (centerx, centery)
+
     start_date = indexes.DateField(null=True)
     end_date = indexes.DateField(null=True)
     storage_type = indexes.CharField(stored=False)

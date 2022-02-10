@@ -1459,6 +1459,18 @@ class Coverage(AbstractMetaDataElement):
         """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
 
+    def get_location(self):
+        from django.contrib.gis.geos import Point
+
+        if self.east and self.north:
+            return Point(self.north, self.east)
+        elif self.northlimit and self.eastlimit and self.southlimit and self.westlimit:
+            coords = (self.eastlimit, self.westlimit, self.southlimit, self.northlimit)
+            import numpy
+            centerx, centery = (numpy.average(coords[:2]), numpy.average(coords[2:]))
+            return Point(centerx, centery)
+        return None
+
     def add_to_xml_container(self, container):
         """Update etree SubElement container with coverage values."""
         NAMESPACES = CoreMetaData.NAMESPACES

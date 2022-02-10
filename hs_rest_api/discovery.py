@@ -26,14 +26,13 @@ class DiscoveryResourceSerializer(HaystackSerializer):
             "modified",
             "start_date",
             "end_date",
-            "east",
-            "north",
-            "eastlimit",
-            "westlimit",
-            "northlimit",
-            "southlimit"
+            "location"
         ]
 
+from drf_haystack.filters import HaystackGEOSpatialFilter
+
+class CustomHaystackGEOSpatialFilter(HaystackGEOSpatialFilter):
+    point_field = 'location'
 
 class DiscoverResourceValidator(serializers.Serializer):
     text = HaystackCharField(required=False,
@@ -64,23 +63,12 @@ class DiscoverResourceValidator(serializers.Serializer):
                                    help_text='Search by start date')
     end_date = HaystackDateField(required=False,
                                  help_text='Search by end date')
-    east = HaystackFloatField(required=False,
-                              help_text='Search by location or box center east longitude')
-    north = HaystackFloatField(required=False,
-                               help_text='Search by location or box center north latitude')
-    eastlimit = HaystackFloatField(required=False,
-                                   help_text='Search by east limit longitude')
-    westlimit = HaystackFloatField(required=False,
-                                   help_text='Search by west limit longitude')
-    northlimit = HaystackFloatField(required=False,
-                                    help_text='Search by north limit latitude')
-    southlimit = HaystackFloatField(required=False,
-                                    help_text='Search by south limit latitude')
 
 
 class DiscoverSearchView(HaystackViewSet):
     index_models = [BaseResource]
     serializer_class = DiscoveryResourceSerializer
+    filter_backends = [CustomHaystackGEOSpatialFilter]
 
     @action(detail=True, methods=['get'])
     @swagger_auto_schema(operation_description="Search HydroShare Resources using solr conventions."
