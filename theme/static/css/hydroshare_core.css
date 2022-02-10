@@ -2765,6 +2765,8 @@ span.you-flag {
 .resource-custom-table tbody td {
 	border-bottom: 1px solid #EEE;
 	padding: 8px 10px;
+	word-break: keep-all;
+	word-wrap: anywhere;
 }
 
 .resource-custom-table thead th {
