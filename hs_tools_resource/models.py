@@ -485,35 +485,32 @@ class ToolIcon(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs or "data_url" in kwargs:
-            if kwargs["value"]:
-                url = kwargs["value"]
-                data_url = cls._validate_tool_icon(url) if url else url
-                metadata_obj = kwargs['content_object']
-                new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
-                new_meta_instance.value = url
-                new_meta_instance.data_url = data_url
-                new_meta_instance.save()
-                return new_meta_instance
-            elif kwargs["data_url"]:
-                metadata_obj = kwargs['content_object']
-                new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
-                new_meta_instance.value = kwargs["value"] if "value" in kwargs else ""
-                new_meta_instance.data_url = kwargs["data_url"]
-                new_meta_instance.save()
-                return new_meta_instance
-            else:
-                raise ValidationError("Value and data_url parameter were empty")
+        if "value" in kwargs:
+            url = kwargs["value"]
+            data_url = cls._validate_tool_icon(url) if url else ""
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
+            new_meta_instance.value = url
+            new_meta_instance.data_url = data_url
+            new_meta_instance.save()
+            return new_meta_instance
+        elif "data_url" in kwargs:
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
+            new_meta_instance.value = ""
+            new_meta_instance.data_url = kwargs["data_url"]
+            new_meta_instance.save()
+            return new_meta_instance
         else:
-            raise ValidationError("No value/data_url parameter was found in the **kwargs list")
+            raise ValidationError("Value and data_url parameter were empty")
 
     @classmethod
     def update(cls, element_id, **kwargs):
         meta_instance = ToolIcon.objects.get(id=element_id)
-        if 'value' in kwargs or "data_url" in kwargs:
+        if "value" in kwargs or "data_url" in kwargs:
             if kwargs["value"]:
                 url = kwargs["value"]
-                data_url = cls._validate_tool_icon(url) if url else url
+                data_url = cls._validate_tool_icon(url) if url else ""
                 meta_instance.value = url
                 meta_instance.data_url = data_url
                 meta_instance.save()
