@@ -79,7 +79,7 @@ div.olControlMousePosition {
     right: 3px;
     display: block;
     position: absolute;
-    font-family: Arial;
+    font-family: 'Roboto', sans-serif;
     font-size: smaller;
 }
 
@@ -311,7 +311,7 @@ div.olControlSaveFeaturesItemInactive {
     top: 25px;
     right: 0;
     width: 20em;
-    font-family: sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-weight: bold;
     margin-top: 3px;
     margin-left: 3px;
