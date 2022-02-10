@@ -878,6 +878,7 @@ def test_resource_copy(composite_resource, mock_irods):
     assert copy_mp_aggr.files.count() == 1
     assert copy_mi_aggr.metadata.executed_by == copy_mp_aggr
 
+
 @pytest.mark.django_db(transaction=True)
 def test_resource_copy_with_aggregations_with_no_files(composite_resource, mock_irods):
     """Test copying a resource that has both mi and mp folder based aggregations (aggregations have no files)"""
